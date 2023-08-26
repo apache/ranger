@@ -21,13 +21,31 @@
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
+    private static final Logger logger = LoggerFactory.getLogger(XXPolicyExportAuditDao.class);
 
     public XXPolicyExportAuditDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
+    }
+
+    public long deleteOlderThan(int olderThanInDays) {
+        Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
+
+        logger.info("Deleting x_policy_export_audit records that are older than {} days, that is, older than {}", olderThanInDays, since);
+
+        long ret = getEntityManager().createNamedQuery("XXPolicyExportAudit.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
+
+        logger.info("Deleted x_policy_export_audit {} records", ret);
+
+        return ret;
     }
 }
 

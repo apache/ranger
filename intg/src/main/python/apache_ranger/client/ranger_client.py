@@ -299,6 +299,9 @@ class RangerClient:
     def delete_policy_deltas(self, days, reloadServicePoliciesCache):
         self.client_http.call_api(RangerClient.DELETE_POLICY_DELTAS, { 'days': days, 'reloadServicePoliciesCache': reloadServicePoliciesCache})
 
+    def purge_records(self, record_type, retention_days):
+        return self.client_http.call_api(RangerClient.PURGE_RECORDS, { 'type': record_type, 'retentionDays': retention_days})
+
 
 
 
@@ -338,6 +341,7 @@ class RangerClient:
     URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
     URI_POLICY_DELTAS       = URI_BASE + "/server/policydeltas"
+    URI_PURGE_RECORDS       = URI_BASE + "/server/purge/records"
 
     # APIs
     CREATE_SERVICEDEF         = API(URI_SERVICEDEF, HttpMethod.POST, HTTPStatus.OK)
@@ -397,6 +401,7 @@ class RangerClient:
     GET_SERVICE_TAGS          = API(URI_SERVICE_TAGS, HttpMethod.GET, HTTPStatus.OK)
     GET_PLUGIN_INFO           = API(URI_PLUGIN_INFO, HttpMethod.GET, HTTPStatus.OK)
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    PURGE_RECORDS             = API(URI_PURGE_RECORDS, HttpMethod.DELETE, HTTPStatus.OK)
 
 
 
@@ -531,6 +536,8 @@ class RangerClientHttp:
         elif response.status_code == HTTPStatus.NOT_FOUND:
             LOG.error("Not found. HTTP Status: %s", HTTPStatus.NOT_FOUND)
 
+            ret = None
+        elif response.status_code == HTTPStatus.NOT_MODIFIED:
             ret = None
         else:
             raise RangerServiceException(api, response)
