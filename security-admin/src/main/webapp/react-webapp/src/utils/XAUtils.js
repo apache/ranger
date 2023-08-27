@@ -1417,3 +1417,22 @@ export const requestDataTitle = (serviceType) => {
   }
   return title;
 };
+
+//Policy condition evaluation
+
+export const policyConditionUpdatedJSON = (policyCond) => {
+  let newPolicyConditionJSON = [...policyCond];
+  newPolicyConditionJSON.filter(function (key, val) {
+    if (!key?.uiHint || key?.uiHint == "") {
+      if (
+        key.evaluatorOptions &&
+        key.evaluatorOptions?.["ui.isMultiline"] == "true"
+      ) {
+        key["uiHint"] = '{ "isMultiline":true }';
+      } else {
+        key["uiHint"] = '{ "isMultiValue":true }';
+      }
+    }
+  });
+  return newPolicyConditionJSON;
+};

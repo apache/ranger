@@ -124,6 +124,7 @@ import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
@@ -134,7 +135,6 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
-import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPluginInfoList;
@@ -188,6 +188,10 @@ public class ServiceREST {
 	final static public String POLICY_MATCHING_ALGO_BY_POLICYNAME = "matchByName";
 	final static public String POLICY_MATCHING_ALGO_BY_RESOURCE  = "matchByPolicySignature";
 	final static public String PARAM_POLICY_MATCHING_ALGORITHM = "policyMatchingAlgorithm";
+
+	public static final String PURGE_RECORD_TYPE_LOGIN_LOGS         = "login_records";
+	public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
+	public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -248,9 +252,6 @@ public class ServiceREST {
 
 	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	RangerTransactionService transactionService;
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
@@ -3944,32 +3945,34 @@ public class ServiceREST {
 	@DELETE
 	@Path("/server/purge/records")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
+	public List<RangerPurgeResult> purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.purgeRecords(" + recordType + ", " + olderThan + ")");
 		}
 
-		if (!"login_records".equalsIgnoreCase(recordType) && !"trx_records".equalsIgnoreCase(recordType)) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Invalid record type - " + recordType, true);
-		}
-
-		if (olderThan < 1) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Retention days can't be lesser than 1", true);
-		}
-
-		RangerPerfTracer perf = null;
+		List<RangerPurgeResult> ret  = new ArrayList<>();
+		RangerPerfTracer        perf = null;
 
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.purgeRecords(recordType=" + recordType + ", olderThan=" + olderThan + ")");
 			}
 
-			if ("login_records".equalsIgnoreCase(recordType)) {
-				svcStore.removeAuthSessions(olderThan);
-			} else if ("trx_records".equalsIgnoreCase(recordType)) {
-				svcStore.removeTransactionLogs(olderThan);
+			if (olderThan < 1) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Retention days can't be lesser than 1", true);
 			}
 
+			if (PURGE_RECORD_TYPE_LOGIN_LOGS.equalsIgnoreCase(recordType)) {
+				svcStore.removeAuthSessions(olderThan, ret);
+			} else if (PURGE_RECORD_TYPE_TRX_LOGS.equalsIgnoreCase(recordType)) {
+				svcStore.removeTransactionLogs(olderThan, ret);
+			} else if (PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS.equalsIgnoreCase(recordType)) {
+				svcStore.removePolicyExportLogs(olderThan, ret);
+			} else {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST,
+														recordType + ": invalid record type. Valid values: [ " + PURGE_RECORD_TYPE_LOGIN_LOGS + ", " + PURGE_RECORD_TYPE_TRX_LOGS + ", " + PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS + " ]",
+														true);
+			}
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -3980,8 +3983,10 @@ public class ServiceREST {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.purgeRecords(" + recordType + ", " + olderThan + ")");
+			LOG.debug("<== ServiceREST.purgeRecords(" + recordType + ", " + olderThan + "): ret=" + ret);
 		}
+
+		return ret;
 	}
 
 	private HashMap<String, Object> getCSRFPropertiesMap(HttpServletRequest request) {

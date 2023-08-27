@@ -28,7 +28,13 @@ import { toast } from "react-toastify";
 import Editable from "Components/Editable";
 import { RangerPolicyType } from "Utils/XAEnums";
 import TagBasePermissionItem from "./TagBasePermissionItem";
-import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
+import {
+  dragStart,
+  dragEnter,
+  drop,
+  dragOver,
+  policyConditionUpdatedJSON
+} from "../../utils/XAUtils";
 
 const noneOptions = {
   label: "None",
@@ -171,13 +177,14 @@ export default function PolicyPermissionItem(props) {
 
   const required = (value) => (value ? undefined : "Required");
 
-  const requiredForPermission = (fieldVals, index) => {
+  const requiredForPolicyItem = (fieldVals, index) => {
     if (fieldVals && !isEmpty(fieldVals[index])) {
       let error, accTypes;
       let users = (fieldVals[index]?.users || []).length > 0;
       let grps = (fieldVals[index]?.groups || []).length > 0;
       let roles = (fieldVals[index]?.roles || []).length > 0;
       let delegateAdmin = fieldVals[index]?.delegateAdmin;
+      let policyConditionVal = fieldVals[index]?.conditions;
       if (fieldVals[index]?.accesses && !isArray(fieldVals[index]?.accesses)) {
         if (serviceCompDetails?.name == "tag") {
           accTypes =
@@ -208,26 +215,29 @@ export default function PolicyPermissionItem(props) {
             "Please select users/groups/roles for selected permission item";
         }
       }
-      return error;
-    }
-  };
-
-  const requiredForDeleGateAdmin = (fieldVals, index) => {
-    if (
-      !isEmpty(fieldVals?.[index]) &&
-      has(fieldVals?.[index], "delegateAdmin")
-    ) {
-      let delError;
-      let users = (fieldVals[index]?.users || []).length > 0;
-      let grps = (fieldVals[index]?.groups || []).length > 0;
-      let roles = (fieldVals[index]?.roles || []).length > 0;
-      let delegateAdmin = fieldVals[index]?.delegateAdmin;
-
       if (delegateAdmin && !users && !grps && !roles) {
-        delError =
-          "Please select user/group/role for the selected delegate Admin";
+        error = "Please select user/group/role for the selected delegate Admin";
       }
-      return delError;
+      if (policyConditionVal) {
+        for (const key in policyConditionVal) {
+          if (
+            policyConditionVal[key] == null ||
+            policyConditionVal[key] == ""
+          ) {
+            delete policyConditionVal[key];
+          }
+        }
+        if (
+          Object.keys(policyConditionVal).length != 0 &&
+          !users &&
+          !grps &&
+          !roles
+        ) {
+          error =
+            "Please select user/group/role for the entered policy condition";
+        }
+      }
+      return error;
     }
   };
 
@@ -386,47 +396,35 @@ export default function PolicyPermissionItem(props) {
                           );
                         }
                         if (colName == "Policy Conditions") {
-                          return serviceCompDetails?.policyConditions?.length ==
-                            1 ? (
-                            <td key={colName} className="align-middle">
-                              <Field
-                                className="form-control"
-                                name={`${name}.conditions`}
-                                render={({ input, meta }) => (
-                                  <div className="table-editable">
-                                    <Editable
-                                      {...input}
-                                      placement="auto"
-                                      type="select"
-                                      conditionDefVal={
-                                        serviceCompDetails.policyConditions[0]
-                                      }
-                                      servicedefName={serviceCompDetails.name}
-                                      selectProps={{ isMulti: true }}
-                                    />
-                                  </div>
-                                )}
-                              />
-                            </td>
-                          ) : (
-                            <td key={colName} className="align-middle">
-                              <Field
-                                className="form-control"
-                                name={`${name}.conditions`}
-                                render={({ input, meta }) => (
-                                  <div className="table-editable">
-                                    <Editable
-                                      {...input}
-                                      placement="auto"
-                                      type="custom"
-                                      conditionDefVal={
-                                        serviceCompDetails.policyConditions
-                                      }
-                                    />
-                                  </div>
-                                )}
-                              />
-                            </td>
+                          return (
+                            serviceCompDetails?.policyConditions?.length >
+                              0 && (
+                              <td key={colName} className="align-middle">
+                                <Field
+                                  className="form-control"
+                                  name={`${name}.conditions`}
+                                  validate={(value, formValues) =>
+                                    requiredForPolicyItem(
+                                      formValues[attrName],
+                                      index
+                                    )
+                                  }
+                                  render={({ input, meta }) => (
+                                    <div className="table-editable">
+                                      <Editable
+                                        {...input}
+                                        placement="auto"
+                                        type="custom"
+                                        conditionDefVal={policyConditionUpdatedJSON(
+                                          serviceCompDetails.policyConditions
+                                        )}
+                                        selectProps={{ isMulti: true }}
+                                      />
+                                    </div>
+                                  )}
+                                />
+                              </td>
+                            )
                           );
                         }
                         if (colName == "Permissions") {
@@ -437,7 +435,7 @@ export default function PolicyPermissionItem(props) {
                                   className="form-control"
                                   name={`${name}.accesses`}
                                   validate={(value, formValues) =>
-                                    requiredForPermission(
+                                    requiredForPolicyItem(
                                       formValues[attrName],
                                       index
                                     )
@@ -463,7 +461,7 @@ export default function PolicyPermissionItem(props) {
                                   className="form-control"
                                   name={`${name}.accesses`}
                                   validate={(value, formValues) =>
-                                    requiredForPermission(
+                                    requiredForPolicyItem(
                                       formValues[attrName],
                                       index
                                     )
@@ -646,7 +644,7 @@ export default function PolicyPermissionItem(props) {
                                   className="form-control"
                                   name={`${name}.delegateAdmin`}
                                   validate={(value, formValues) =>
-                                    requiredForDeleGateAdmin(
+                                    requiredForPolicyItem(
                                       formValues[attrName],
                                       index
                                     )

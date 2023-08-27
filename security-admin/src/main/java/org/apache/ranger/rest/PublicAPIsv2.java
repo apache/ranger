@@ -35,6 +35,7 @@ import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -900,15 +901,17 @@ public class PublicAPIsv2 {
 	@DELETE
 	@Path("/api/server/purge/records")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
+	public List<RangerPurgeResult> purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + ")");
 		}
 
-		serviceREST.purgeRecords(recordType, olderThan, request);
+		List<RangerPurgeResult> ret = serviceREST.purgeRecords(recordType, olderThan, request);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + ")");
+			logger.debug("<== PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + "): ret=" + ret);
 		}
+
+		return ret;
 	}
 }

@@ -129,6 +129,7 @@
         <hive.version>3.1.2</hive.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <orc.version>1.5.8</orc.version>
+        <aircompressor.version>0.10</aircompressor.version>
         <hbase-shaded-protobuf>3.5.1</hbase-shaded-protobuf>
         <hbase-shaded-netty>3.5.1</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>3.5.1</hbase-shaded-miscellaneous>

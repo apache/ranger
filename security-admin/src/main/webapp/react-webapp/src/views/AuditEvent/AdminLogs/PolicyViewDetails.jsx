@@ -456,13 +456,17 @@ export function PolicyViewDetails(props) {
                       <td className="text-center">
                         {!isEmpty(items.conditions)
                           ? items.conditions.map((obj, index) => {
+                              let conditionObj =
+                                filterServiceDef.policyConditions.find((e) => {
+                                  return e.name == obj.type;
+                                });
                               return (
                                 <h6 className="d-inline mr-1" key={index}>
                                   <Badge
                                     variant="info"
                                     className="d-inline mr-1"
                                     key={obj.values}
-                                  >{`${obj.type}: ${obj.values.join(
+                                  >{`${conditionObj.label}: ${obj.values.join(
                                     ", "
                                   )}`}</Badge>
                                 </h6>
@@ -559,25 +563,12 @@ export function PolicyViewDetails(props) {
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               <tbody>
-                {serviceType == "tag" ? (
-                  conditions.map((obj) => (
-                    <tr key={obj.type} colSpan="2">
-                      <td width="40%">{getConditionLabel(obj.type)}</td>
-                      <td width="60% text-truncate">{obj.values}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr colSpan="2">
-                    <td width="20%">
-                      {filterServiceDef.policyConditions.map(
-                        (obj) => obj.label
-                      )}
-                    </td>
-                    <td className="text-left">
-                      {conditions.map((val) => val.values).join("")}
-                    </td>
+                {conditions.map((obj) => (
+                  <tr key={obj.type} colSpan="2">
+                    <td width="40%">{getConditionLabel(obj.type)}</td>
+                    <td width="60% text-truncate">{obj.values.join(", ")}</td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </Table>
           </div>
