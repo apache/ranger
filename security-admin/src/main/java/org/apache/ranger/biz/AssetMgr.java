@@ -44,7 +44,6 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
@@ -75,6 +74,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AssetMgr extends AssetMgrBase {
+	private static final String PROP_RANGER_LOG_SC_NOT_MODIFIED          = "ranger.log.SC_NOT_MODIFIED";
+	private static final String PROP_PLUGIN_ACTIVITY_AUDIT_NOT_MODIFIED  = "ranger.plugin.activity.audit.not.modified";
+	private static final String PROP_PLUGIN_ACTIVITY_AUDIT_COMMIT_INLINE = "ranger.plugin.activity.audit.commit.inline";
 
 	@Autowired
 	XPermMapService xPermMapService;
@@ -136,7 +138,9 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	ServiceMgr serviceMgr;
 
-	boolean pluginActivityAuditCommitInline = false;
+	boolean rangerLogNotModified              = false;
+	boolean pluginActivityAuditLogNotModified = false;
+	boolean pluginActivityAuditCommitInline   = false;
 
 	private static final Logger logger = LoggerFactory.getLogger(AssetMgr.class);
 
@@ -146,9 +150,13 @@ public class AssetMgr extends AssetMgrBase {
 	public void init() {
 		logger.info("==> AssetMgr.init()");
 
-		pluginActivityAuditCommitInline = RangerAdminConfig.getInstance().getBoolean("ranger.plugin.activity.audit.commit.inline", false);
+		rangerLogNotModified              = RangerAdminConfig.getInstance().getBoolean(PROP_RANGER_LOG_SC_NOT_MODIFIED, false);
+		pluginActivityAuditLogNotModified = RangerAdminConfig.getInstance().getBoolean(PROP_PLUGIN_ACTIVITY_AUDIT_NOT_MODIFIED, false);
+		pluginActivityAuditCommitInline   = RangerAdminConfig.getInstance().getBoolean(PROP_PLUGIN_ACTIVITY_AUDIT_COMMIT_INLINE, false);
 
-		logger.info("ranger.plugin.activity.audit.commit.inline={}", pluginActivityAuditCommitInline);
+		logger.info("{}={}", PROP_RANGER_LOG_SC_NOT_MODIFIED, rangerLogNotModified);
+		logger.info("{}={}", PROP_PLUGIN_ACTIVITY_AUDIT_NOT_MODIFIED, pluginActivityAuditLogNotModified);
+		logger.info("{}={}", PROP_PLUGIN_ACTIVITY_AUDIT_COMMIT_INLINE, pluginActivityAuditCommitInline);
 
 		logger.info("<== AssetMgr.init()");
 	}
@@ -662,13 +670,10 @@ public class AssetMgr extends AssetMgrBase {
 	public void createPolicyAudit(final XXPolicyExportAudit xXPolicyExportAudit) {
 		final Runnable commitWork;
 		if (xXPolicyExportAudit.getHttpRetCode() == HttpServletResponse.SC_NOT_MODIFIED) {
-			boolean logNotModified = PropertiesUtil.getBooleanProperty("ranger.log.SC_NOT_MODIFIED", false);
-			if (!logNotModified) {
-				commitWork = null;
+			if (!rangerLogNotModified) {
+				logger.debug("Not logging HttpServletResponse. SC_NOT_MODIFIED. To enable, set configuration: {}=true", PROP_RANGER_LOG_SC_NOT_MODIFIED);
 
-				logger.debug("Not logging HttpServletResponse."
-						+ "SC_NOT_MODIFIED, to enable, update "
-						+ ": ranger.log.SC_NOT_MODIFIED");
+				commitWork = null;
 			} else {
 				// Create PolicyExportAudit record after transaction is completed. If it is created in-line here
 				// then the TransactionManager will roll-back the changes because the HTTP return code is
@@ -762,34 +767,40 @@ public class AssetMgr extends AssetMgrBase {
 		final Runnable commitWork;
 
 		if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
-			// Create or update PluginInfo record after transaction is completed. If it is created in-line here
-			// then the TransactionManager will roll-back the changes because the HTTP return code is
-			// HttpServletResponse.SC_NOT_MODIFIED
+			if (!pluginActivityAuditLogNotModified) {
+				logger.debug("Not logging HttpServletResponse. SC_NOT_MODIFIED. To enable, set configuration: {}=true", PROP_PLUGIN_ACTIVITY_AUDIT_NOT_MODIFIED);
 
-			switch (entityType) {
-				case RangerPluginInfo.ENTITY_TYPE_POLICIES:
-					isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
-					break;
-				case RangerPluginInfo.ENTITY_TYPE_TAGS:
-					isTagVersionResetNeeded = false;
-					break;
-				case RangerPluginInfo.ENTITY_TYPE_ROLES:
-					isTagVersionResetNeeded = false;
-					break;
-				case RangerPluginInfo.ENTITY_TYPE_USERSTORE:
-					isTagVersionResetNeeded = false;
-					break;
-				default:
-					isTagVersionResetNeeded = false;
-					break;
-			}
+				commitWork = null;
+			} else {
+				// Create or update PluginInfo record after transaction is completed. If it is created in-line here
+				// then the TransactionManager will roll-back the changes because the HTTP return code is
+				// HttpServletResponse.SC_NOT_MODIFIED
 
-			commitWork = new Runnable() {
-				@Override
-				public void run() {
-					doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
+				switch (entityType) {
+					case RangerPluginInfo.ENTITY_TYPE_POLICIES:
+						isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
+						break;
+					case RangerPluginInfo.ENTITY_TYPE_TAGS:
+						isTagVersionResetNeeded = false;
+						break;
+					case RangerPluginInfo.ENTITY_TYPE_ROLES:
+						isTagVersionResetNeeded = false;
+						break;
+					case RangerPluginInfo.ENTITY_TYPE_USERSTORE:
+						isTagVersionResetNeeded = false;
+						break;
+					default:
+						isTagVersionResetNeeded = false;
+						break;
 				}
-			};
+
+				commitWork = new Runnable() {
+					@Override
+					public void run() {
+						doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
+					}
+				};
+			}
 		} else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
 			if ((isPolicyDownloadRequest(entityType) && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
 					|| (isTagDownloadRequest(entityType) && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))
@@ -820,10 +831,12 @@ public class AssetMgr extends AssetMgrBase {
 			};
 		}
 
-		if (pluginActivityAuditCommitInline) {
-			transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
-		} else {
-			transactionSynchronizationAdapter.executeAsyncOnTransactionComplete(commitWork);
+		if (commitWork != null) {
+			if (pluginActivityAuditCommitInline) {
+				transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
+			} else {
+				transactionSynchronizationAdapter.executeAsyncOnTransactionComplete(commitWork);
+			}
 		}
 
 		if (logger.isDebugEnabled()) {
