@@ -40,8 +40,7 @@ import {
   toString,
   toUpper,
   has,
-  filter,
-  isNull
+  filter
 } from "lodash";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
@@ -209,16 +208,18 @@ function Access() {
   );
 
   const fetchZones = async () => {
-    let zonesResp;
+    let zonesResp = [];
     try {
-      zonesResp = await fetchApi({
-        url: "zones/zones"
+      const response = await fetchApi({
+        url: "public/v2/api/zone-headers"
       });
+
+      zonesResp = response?.data || [];
     } catch (error) {
       console.error(`Error occurred while fetching Zones! ${error}`);
     }
 
-    setZones(sortBy(zonesResp.data.securityZones, ["name"]));
+    setZones(sortBy(zonesResp, ["name"]));
   };
 
   const toggleChange = (chkVal) => {
@@ -296,7 +297,6 @@ function Access() {
           <button
             className="pull-right link-tag query-icon btn btn-sm"
             size="sm"
-            variant="link"
             title="Copy"
             onClick={(e) => {
               e.stopPropagation();
