@@ -755,7 +755,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 				conditionDef.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
 				conditionDef.setEvaluator(IMPLICIT_CONDITION_EXPRESSION_EVALUATOR);
 				conditionDef.setEvaluatorOptions(options);
-
+				conditionDef.setUiHint("{ \"isMultiline\":true }");
 				conditionDefs.add(conditionDef);
 
 				serviceDef.setPolicyConditions(conditionDefs);
