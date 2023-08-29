@@ -301,13 +301,7 @@ const CustomCondition = (props) => {
                     <CreatableSelect
                       {...selectProps}
                       defaultValue={
-                        selectedInputVal == ""
-                          ? null
-                          : !isArray(selectedInputVal)
-                          ? selectedInputVal
-                              ?.split(", ")
-                              .map((obj) => ({ label: obj, value: obj }))
-                          : selectedInputVal
+                        selectedInputVal == "" ? null : selectedInputVal
                       }
                       onChange={(e) => handleChange(e, m.name)}
                       placeholder="enter expression"
