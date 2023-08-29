@@ -169,7 +169,9 @@ public class RangerServiceAtlas extends RangerBaseService {
 
             // 1. add adminUser to every policyItem
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-                defaultPolicyItem.getUsers().add(adminUser);
+                if(!defaultPolicyItem.getUsers().contains(adminUser)) {
+                    defaultPolicyItem.getUsers().add(adminUser);
+                }
             }
 
             // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
