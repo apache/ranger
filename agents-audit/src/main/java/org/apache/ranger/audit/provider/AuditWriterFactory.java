@@ -61,7 +61,7 @@ public class AuditWriterFactory {
         this.propPrefix        = propPrefix;
         this.auditProviderName = auditProviderName;
         this.auditConfigs      = auditConfigs;
-        String auditFileType   = MiscUtil.getStringProperty(props, propPrefix + ".filetype", AUDIT_FILETYPE_DEFAULT);
+        String auditFileType   = MiscUtil.getStringProperty(props, propPrefix + ".batch.filequeue.filetype", AUDIT_FILETYPE_DEFAULT);
         String writerClass     = MiscUtil.getStringProperty(props, propPrefix + ".filewriter.impl");
 
         auditWriter = StringUtils.isEmpty(writerClass) ? createWriter(getDefaultWriter(auditFileType)) : createWriter(writerClass);

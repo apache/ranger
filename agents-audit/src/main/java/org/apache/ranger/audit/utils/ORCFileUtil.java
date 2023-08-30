@@ -404,7 +404,7 @@ public class ORCFileUtil {
             case "lzo":
                 ret = CompressionKind.LZO;
                 break;
-            case "zlip":
+            case "zlib":
                 ret = CompressionKind.ZLIB;
                 break;
             case "none":
