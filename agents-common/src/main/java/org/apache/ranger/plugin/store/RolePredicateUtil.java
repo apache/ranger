@@ -67,7 +67,7 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
                         List<RangerRole.RoleMember> roles = role.getRoles();
 
                         for (RangerRole.RoleMember member : roles) {
-                            ret = StringUtils.equals(role.getName(), roleName);
+                            ret = StringUtils.equals(member.getName(), roleName);
 
                             if (ret) {
                                 break;
@@ -109,7 +109,7 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
                         List<RangerRole.RoleMember> roles = role.getRoles();
 
                         for (RangerRole.RoleMember member : roles) {
-                            ret = StringUtils.containsIgnoreCase(role.getName(), roleNamePartial);
+                            ret = StringUtils.containsIgnoreCase(member.getName(), roleNamePartial);
 
                             if (ret) {
                                 break;
