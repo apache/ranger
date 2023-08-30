@@ -161,6 +161,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getAllGroupsInfo">
+		<query>SELECT group.name, group.description, group.otherAttributes
+		         FROM XXGroup group
+		        WHERE group.isVisible = 1
+		</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -175,6 +182,13 @@
 
 	<named-query name="XXUser.getAllUserIdNames">
 		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUsersInfo">
+		<query>SELECT user.name, user.description, user.otherAttributes
+		         FROM XXUser user
+		        WHERE user.isVisible = 1
 		</query>
 	</named-query>
 

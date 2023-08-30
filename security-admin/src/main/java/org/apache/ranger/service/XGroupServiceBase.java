@@ -25,10 +25,7 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import com.google.gson.Gson;
 
-import com.google.gson.GsonBuilder;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.plugin.model.GroupInfo;
@@ -40,7 +37,6 @@ import javax.persistence.Query;
 public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		extends AbstractBaseResourceService<T, V> {
 	public static final String NAME = "XGroup";
-	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XGroupServiceBase() {
 
@@ -108,18 +104,6 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 	}
 
 	public List<GroupInfo> getGroups() {
-		List<GroupInfo> returnList = new ArrayList<>();
-
-		@SuppressWarnings("unchecked")
-		List<XXGroup> resultList = daoManager.getXXGroup().getAll();
-
-		// Iterate over the result list and create the return list
-		for (XXGroup gjXGroup : resultList) {
-			GroupInfo groupInfo = new GroupInfo(gjXGroup.getName(), gjXGroup.getDescription(), gsonBuilder.fromJson(gjXGroup.getOtherAttributes(), Map.class));
-			returnList.add(groupInfo);
-		}
-
-		return returnList;
+		return daoManager.getXXGroup().getAllGroupsInfo();
 	}
-
 }

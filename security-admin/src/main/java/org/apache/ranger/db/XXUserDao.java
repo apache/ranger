@@ -21,8 +21,12 @@ package org.apache.ranger.db;
 
 import javax.persistence.NoResultException;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,9 +38,12 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
-	private static final Logger logger = LoggerFactory.getLogger(XXResourceDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXUserDao.class);
+
+	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XXUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -121,5 +128,43 @@ public class XXUserDao extends BaseDao<XXUser> {
 			}
 		}
 		return users;
+	}
+
+	public List<UserInfo> getAllUsersInfo() {
+		List<UserInfo> ret = new ArrayList<>();
+
+		try {
+			List<Object[]> rows = getEntityManager().createNamedQuery("XXUser.getAllUsersInfo", Object[].class).getResultList();
+
+			if (rows != null) {
+				for (Object[] row : rows) {
+
+					ret.add(toUserInfo(row));
+				}
+			}
+		} catch (NoResultException excp) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(excp.getMessage());
+			}
+		}
+
+		return ret;
+	}
+
+	private UserInfo toUserInfo(Object[] row) {
+		String              name        = (String) row[0];
+		String              description = (String) row[1];
+		String              attributes  = (String) row[2];
+		Map<String, String> attrMap     = null;
+
+		if (StringUtils.isNotBlank(attributes)) {
+			try {
+				attrMap = gsonBuilder.fromJson(attributes, Map.class);
+			} catch (Exception excp) {
+				// ignore
+			}
+		}
+
+		return new UserInfo(name, description, attrMap);
 	}
 }
