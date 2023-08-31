@@ -38,8 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PatchForAllServiceDefForPolicyConditionUpdate_J10057 extends BaseLoader{
-	private static final Logger logger = LoggerFactory.getLogger(PatchForAllServiceDefForPolicyConditionUpdate_J10057.class);
+public class PatchForAllServiceDefForPolicyConditionUpdate_J10060 extends BaseLoader{
+	private static final Logger logger = LoggerFactory.getLogger(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
 
 	@Autowired
 	ServiceDBStore svcStore;
@@ -47,7 +47,7 @@ public class PatchForAllServiceDefForPolicyConditionUpdate_J10057 extends BaseLo
 	public static void main(String[] args) {
 		logger.info("main()");
 		try {
-			PatchForAllServiceDefForPolicyConditionUpdate_J10057 loader = (PatchForAllServiceDefForPolicyConditionUpdate_J10057) CLIUtil.getBean(PatchForAllServiceDefForPolicyConditionUpdate_J10057.class);
+			PatchForAllServiceDefForPolicyConditionUpdate_J10060 loader = (PatchForAllServiceDefForPolicyConditionUpdate_J10060) CLIUtil.getBean(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
 			loader.init();
 			while (loader.isMoreToProcess()) {
 				loader.load();
@@ -67,18 +67,18 @@ public class PatchForAllServiceDefForPolicyConditionUpdate_J10057 extends BaseLo
 
 	@Override
 	public void execLoad() {
-		logger.info("==> PatchForAllServiceDefForPolicyConditionUpdate_J10057.execLoad()");
+		logger.info("==> PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
 		try {
 			updateAllServiceDef();
 		} catch (Exception e) {
-			logger.error("Error whille PatchForAllServiceDefForPolicyConditionUpdate_J10057()data.", e);
+			logger.error("Error whille PatchForAllServiceDefForPolicyConditionUpdate_J10060()data.", e);
 		}
-		logger.info("<== PatchForAllServiceDefForPolicyConditionUpdate_J10057.execLoad()");
+		logger.info("<== PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
 	}
 
 	@Override
 	public void printStats() {
-		logger.info("PatchForAllServiceDefForPolicyConditionUpdate_J10057 data ");
+		logger.info("PatchForAllServiceDefForPolicyConditionUpdate_J10060 data ");
 	}
 
 	private void updateAllServiceDef() {
