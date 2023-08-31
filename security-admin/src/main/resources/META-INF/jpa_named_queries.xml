@@ -162,7 +162,7 @@
 	</named-query>
 
 	<named-query name="XXGroup.getAllGroupsInfo">
-		<query>SELECT group.name, group.description, group.otherAttributes
+		<query>SELECT group.name, group.description, group.otherAttributes, group.syncSource, group.groupSource
 		         FROM XXGroup group
 		        WHERE group.isVisible = 1
 		</query>
@@ -191,8 +191,8 @@
 			      AND p.isVisible = 1
 			    ORDER BY p.principalName</query>
 	<named-query name="XXUser.getAllUsersInfo">
-		<query>SELECT user.name, user.description, user.otherAttributes
-		         FROM XXUser user
+		<query>SELECT user.name, user.description, user.otherAttributes, user.syncSource, pUser.userSource, pUser.emailAddress
+		         FROM XXUser user LEFT OUTER JOIN XXPortalUser pUser ON pUser.loginId = user.name
 		        WHERE user.isVisible = 1
 		</query>
 	</named-query>

@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerPrincipal;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
@@ -41,6 +42,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
 
 
 @Service
@@ -189,10 +192,14 @@ public class XXUserDao extends BaseDao<XXUser> {
 	}
 
 	private UserInfo toUserInfo(Object[] row) {
-		String              name        = (String) row[0];
-		String              description = (String) row[1];
-		String              attributes  = (String) row[2];
-		Map<String, String> attrMap     = null;
+		String              name         = (String) row[0];
+		String              description  = (String) row[1];
+		String              attributes   = (String) row[2];
+		String              syncSource   = (String) row[3];
+		Number              userSource   = (Number) row[4];
+		String              emailAddress = (String) row[5];
+		Boolean             isInternal   = userSource != null && userSource.equals(RangerCommonEnums.USER_APP);
+		Map<String, String> attrMap      = null;
 
 		if (StringUtils.isNotBlank(attributes)) {
 			try {
@@ -201,6 +208,20 @@ public class XXUserDao extends BaseDao<XXUser> {
 				// ignore
 			}
 		}
+
+		if (attrMap == null) {
+			attrMap = new HashMap<>();
+		}
+
+		if (StringUtils.isNotBlank(syncSource)) {
+			attrMap.put(SCRIPT_FIELD__SYNC_SOURCE, syncSource);
+		}
+
+		if (StringUtils.isNotBlank(emailAddress)) {
+			attrMap.put(SCRIPT_FIELD__EMAIL_ADDRESS, emailAddress);
+		}
+
+		attrMap.put(SCRIPT_FIELD__IS_INTERNAL, isInternal.toString());
 
 		return new UserInfo(name, description, attrMap);
 	}
