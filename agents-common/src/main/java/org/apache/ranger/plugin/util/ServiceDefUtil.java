@@ -535,6 +535,8 @@ public class ServiceDefUtil {
 
             serviceDef.setContextEnrichers(enricherDefs);
 
+            ret = true;
+
             LOG.info("addUserStoreEnricher(serviceName={}): added userStoreEnricher {}", policies.getServiceName(), userStoreEnricher);
         }
 
