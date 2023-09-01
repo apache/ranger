@@ -48,6 +48,10 @@ public class RangerPluginConfig extends RangerConfiguration {
     private final boolean                   useForwardedIPAddress;
     private final String[]                  trustedProxyAddresses;
     private final String                    propertyPrefix;
+    private final boolean                   useRangerGroups;
+    private final boolean                   useOnlyRangerGroups;
+    private final boolean                   convertEmailToUsername;
+    private final boolean                   enableImplicitUserStoreEnricher;
     private       boolean                   isFallbackSupported;
     private       Set<String>               auditExcludedUsers  = Collections.emptySet();
     private       Set<String>               auditExcludedGroups = Collections.emptySet();
@@ -116,7 +120,12 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         this.policyEngineOptions = policyEngineOptions;
 
-        LOG.info("", policyEngineOptions);
+        useRangerGroups                 = this.getBoolean(propertyPrefix + ".use.rangerGroups", false);
+        useOnlyRangerGroups             = this.getBoolean(propertyPrefix + ".use.only.rangerGroups", false);
+        convertEmailToUsername          = this.getBoolean(propertyPrefix + ".convert.emailToUser", false);
+        enableImplicitUserStoreEnricher = useRangerGroups || convertEmailToUsername || this.getBoolean(propertyPrefix + ".enable.implicit.userstore.enricher", false);
+
+        LOG.info("" + policyEngineOptions);
     }
 
     protected RangerPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
@@ -135,6 +144,10 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         this.policyEngineOptions = sourcePluginConfig.getPolicyEngineOptions();
 
+        this.useRangerGroups                 = sourcePluginConfig.useRangerGroups;
+        this.useOnlyRangerGroups             = sourcePluginConfig.useOnlyRangerGroups;
+        this.convertEmailToUsername          = sourcePluginConfig.convertEmailToUsername;
+        this.enableImplicitUserStoreEnricher = sourcePluginConfig.enableImplicitUserStoreEnricher;
     }
 
     public String getServiceType() {
@@ -167,6 +180,22 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public String getPropertyPrefix() {
         return propertyPrefix;
+    }
+
+    public boolean isUseRangerGroups() {
+        return useRangerGroups;
+    }
+
+    public boolean isUseOnlyRangerGroups() {
+        return useOnlyRangerGroups;
+    }
+
+    public boolean isConvertEmailToUsername() {
+        return convertEmailToUsername;
+    }
+
+    public boolean isEnableImplicitUserStoreEnricher() {
+        return enableImplicitUserStoreEnricher;
     }
 
     public boolean getIsFallbackSupported() {
