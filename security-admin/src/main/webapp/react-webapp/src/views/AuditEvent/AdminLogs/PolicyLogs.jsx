@@ -241,7 +241,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
     return obj.attributeName == "Policy Resources" && obj.action == "update";
   });
 
-  /*UPDATESS*/
+  /* UPDATES */
 
   const policyDetailsUpdate = (details, resources) => {
     let tablerow = [];
@@ -1743,7 +1743,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let keynew = {};
     resources.map((obj) => {
-      keynew = !isEmpty(ovj.previousValue) && JSON.parse(obj.previousValue);
+      keynew = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
     });
 
     Object.keys(keynew).map((key, index) => {
@@ -3041,8 +3041,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               <td className="table-warning policyitem-field">
                                 <i>{`Users`}</i>
                                 {`: ${
-                                  !isEmpty(policy.suers)
-                                    ? policy.suers.join(", ")
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
                                     : "<empty>"
                                 } `}
                               </td>

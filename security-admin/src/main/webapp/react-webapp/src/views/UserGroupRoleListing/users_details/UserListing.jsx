@@ -279,7 +279,7 @@ function Users() {
           setBlockUI(false);
         } catch (error) {
           setBlockUI(false);
-          if (error.response.data.msgDesc) {
+          if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=

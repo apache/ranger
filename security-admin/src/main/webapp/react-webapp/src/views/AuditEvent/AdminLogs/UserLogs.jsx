@@ -243,14 +243,14 @@ export const UserLogs = ({ data, reportdata }) => {
       if (val == "ROLE_USER") {
         val = UserRoles.ROLE_USER.label;
       }
-      if (val == "ROLE_USER") {
-        val = UserRoles.ROLE_USER.label;
-      }
       if (val == "ROLE_SYS_ADMIN") {
         val = UserRoles.ROLE_SYS_ADMIN.label;
       }
       if (val == "ROLE_KEY_ADMIN") {
         val = UserRoles.ROLE_KEY_ADMIN.label;
+      }
+      if (val == "ROLE_ADMIN_AUDITOR") {
+        val = UserRoles.ROLE_ADMIN_AUDITOR.label;
       }
       if (val == "ROLE_KEY_ADMIN_AUDITOR") {
         val = UserRoles.ROLE_KEY_ADMIN_AUDITOR.label;

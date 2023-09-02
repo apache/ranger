@@ -261,6 +261,9 @@ public class ServiceREST {
 	private RangerPolicyEngineOptions defaultAdminOptions;
 	private final RangerAdminConfig   config = RangerAdminConfig.getInstance();
 
+	private final int maxPolicyNameLength = config.getInt("ranger.policyname.maxlength", 255);
+	private final boolean isPolicyNameLengthValidationEnabled = config.getBoolean("ranger.policyname.maxlength.validation.enabled", true);
+
 	public ServiceREST() {
 	}
 
@@ -1806,6 +1809,13 @@ public class ServiceREST {
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updatePolicy(policyId=" + policy.getId() + ")");
+			}
+			if (isPolicyNameLengthValidationEnabled) {
+				if (policy.getName().length() > maxPolicyNameLength) {
+					throw restErrorUtil.createRESTException(
+							"Policy name should not be longer than " + maxPolicyNameLength + " characters",
+							MessageEnums.INPUT_DATA_OUT_OF_BOUND, null, "policy name", "" + policy.getName());
+				}
 			}
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin() || isServiceAdmin(policy.getService()) || isZoneAdmin(policy.getZoneName()));
@@ -4470,6 +4480,12 @@ public class ServiceREST {
 			policy.setName(name);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
+			}
+		} else if (isPolicyNameLengthValidationEnabled) {
+			if (policy.getName().length() > maxPolicyNameLength) {
+				throw restErrorUtil.createRESTException(
+						"Policy name should not be longer than " + maxPolicyNameLength + " characters",
+						MessageEnums.INPUT_DATA_OUT_OF_BOUND, null, "policy name", "" + policy.getName());
 			}
 		}
 		RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);

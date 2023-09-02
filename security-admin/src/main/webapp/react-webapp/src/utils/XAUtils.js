@@ -18,7 +18,7 @@
  */
 
 import React, { useState } from "react";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { getUserProfile } from "Utils/appState";
 import { UserRoles, PathAssociateWithModule, QueryParams } from "Utils/XAEnums";
 import {
   filter,
