@@ -618,6 +618,13 @@ export const PathAssociateWithModule = {
     "/roles/create",
     "/roles/:roleId"
   ],
+  "Governed Data Sharing": [
+    "/gds/datasetlisting",
+    "/gds/create",
+    "/gds/dataset/:datasetId/detail",
+    "/gds/dataset/:datasetId/accessGrant",
+    "/gds/datasharelisting"
+  ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
   KnoxSignOut: ["/knoxSSOWarning"],

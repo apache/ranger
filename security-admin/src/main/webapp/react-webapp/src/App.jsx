@@ -92,6 +92,18 @@ const AccesLogDetailComp = lazy(() =>
 const UserAccessLayoutComp = lazy(() =>
   import("Views/Reports/UserAccessLayout")
 );
+const DatasetListingComp = lazy(() =>
+  import("Views/GovernedData/Dataset/DatasetListing")
+);
+const CreateDatasetComp = lazy(() =>
+  import("Views/GovernedData/Dataset/AddDatasetView")
+)
+const DatasetDetailLayoutComp = lazy(() =>
+  import("Views/GovernedData/Dataset/DatasetDetailLayout")
+)
+const AccessGrantFormComp = lazy(() =>
+  import("Views/GovernedData/Dataset/AccessGrantForm")
+)
 
 export default class App extends Component {
   constructor(props) {
@@ -342,6 +354,13 @@ export default class App extends Component {
                   <Route path="/locallogin" element={<Loader />} />
                   {/* NOT FOUND ROUTE */}
                   <Route path="*" />
+                  {/* GDS */}
+                    <Route path="/gds">
+                      <Route path="datasetlisting" element={<DatasetListingComp />} />
+                      <Route path="create" element={<CreateDatasetComp />} />
+                      <Route path="dataset/:datasetId/detail" element={<DatasetDetailLayoutComp />} />
+                      <Route path="dataset/:datasetId/accessGrant" element={<AccessGrantFormComp />} />
+                    </Route>
                 </Route>
               </Routes>
             </HashRouter>

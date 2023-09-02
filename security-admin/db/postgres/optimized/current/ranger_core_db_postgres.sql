@@ -2062,6 +2062,7 @@ INSERT INTO x_user(CREATE_TIME,UPDATE_TIME,user_name,status,descr)VALUES(current
 
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
+INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Governed Data Sharing','');
 INSERT INTO x_security_zone(create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (current_timestamp, current_timestamp, getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('CORE_DB_SCHEMA',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
@@ -2155,6 +2156,7 @@ INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Governed Data Sharing'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 
 
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerRole','{"Version":"1"}');

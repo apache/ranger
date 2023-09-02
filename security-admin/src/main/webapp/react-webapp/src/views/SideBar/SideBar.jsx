@@ -304,6 +304,29 @@ export const SideBar = () => {
             </li>
           )}
 
+          {hasAccessToTab("Governed Data Sharing") && (
+            <li
+              className={
+                isActive !== null && isActive === "gdsCollapse"
+                  ? "selected"
+                  : undefined
+              }
+            >
+              <Button
+                id="tagButton"
+                className={activeClass("GDS")}
+                onClick={() => {
+                  setActive("gdsCollapse");
+                  setAccountDrawer(false);
+                  setDrawer(true);
+                }}
+              >
+                <img src={tagsIcon} />
+                <span>Governed Data Sharing</span>
+              </Button>
+            </li>
+          )}
+
           {hasAccessToTab("Reports") && (
             <li>
               <NavLink

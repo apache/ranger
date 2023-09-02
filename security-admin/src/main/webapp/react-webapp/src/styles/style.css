@@ -2550,3 +2550,94 @@ li.list-group-item:hover {
 .text-word-break {
   word-break: break-all;
 }
+.gds-table {
+  margin-left: auto;
+  margin-right: auto;
+  width: 700px;
+}
+
+.gds-tr {
+  text-align: center !important;
+  padding-top: 100px;
+  padding-bottom: 20px;
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+.gds-header-wrapper {
+ background-color: #f3f8f9 ;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 1rem;
+  border-bottom: 1px solid #d6d6d6;
+  position: sticky;
+  top: 0;
+}
+
+.gds-header {
+  color: #222222;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 20px;
+  margin: 0;
+  padding: 0;
+  text-transform: none;
+  flex: 1;
+}
+
+.gds-header-btn-grp{
+  display: flex;
+  gap: 0.875rem;
+}
+
+.gds-form-wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  background-color: #fff;
+}
+
+.gds-form-header {
+  padding-top: 70px;
+  text-align: center;
+}
+
+.gds-form-step-num {
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+.gds-form-step-name {
+  font-size: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.gds-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.gds-form-input {
+  width: 100%;
+}
+
+.gds-add-principle{
+  display: inline-flex;
+  justify-content: space-between;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.gds-text-input {
+  min-height: 40px;
+}
+
+.gds-button{
+  height: 40px;
+}

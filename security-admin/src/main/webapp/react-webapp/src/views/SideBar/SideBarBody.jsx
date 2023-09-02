@@ -401,6 +401,41 @@ export const SideBarBody = (props) => {
           </div>
 
           <div
+            id="gdsCollapse"
+            className={
+              activeMenu !== null && activeMenu === "gdsCollapse"
+                ? "show-menu"
+                : "hide-menu"
+            }
+          >
+            <div className="drawer-menu-title">
+              <span>GOVERNED DATA SHARING</span>
+              <span className="drawer-menu-close">
+                <img
+                  src={closeIcon}
+                  onClick={() => {
+                    props.closeCollapse();
+                  }}
+                />
+              </span>
+            </div>
+            <ul className="list-group list-group-flush">
+              <React.Fragment>
+                <li className="list-group-item">
+                  <NavLink to="/gds/datasetlisting"
+                      onClick={() => {
+                        props.closeCollapse();
+                      }}
+                      className="list-group-item"
+                    >
+                      My Datasets
+                  </NavLink>
+                </li>
+              </React.Fragment>
+            </ul>
+          </div>
+
+          <div
             id="auditCollapse"
             className={
               activeMenu !== null && activeMenu === "auditCollapse"

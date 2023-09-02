@@ -1883,6 +1883,7 @@ DECLARE moduleIdUG bigint;
 DECLARE moduleIdTagBasedPolicies bigint;
 DECLARE moduleIdKeyManager bigint;
 DECLARE moduleIdSecurityZone bigint;
+DECLARE moduleIdGovernedDataSharing bigint;
 
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'rangerusersync','','rangerusersync','rangerusersync','70b8374d3dfe0325aaa5002a688c7e3b','rangerusersync',1,0,NULL);
@@ -1896,6 +1897,7 @@ call getXportalUIdByLoginId('rangertagsync', rangertagsyncID);
 
 INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Resource Based Policies',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Users/Groups',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Reports',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Audit',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Key Manager',''),(UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Tag Based Policies','');
 INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Security Zone','');
+INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Governed Data Sharing','');
 
 call getModulesIdByName('Reports', moduleIdReports);
 call getModulesIdByName('Resource Based Policies', moduleIdResourceBasedPolicies);
@@ -1904,6 +1906,7 @@ call getModulesIdByName('Users/Groups', moduleIdUG);
 call getModulesIdByName('Tag Based Policies', moduleIdTagBasedPolicies);
 call getModulesIdByName('Key Manager', moduleIdKeyManager);
 call getModulesIdByName('Security Zone', moduleIdSecurityZone);
+call getModulesIdByName('Governed Data Sharing', moduleIdGovernedDataSharing);
 
 INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,adminID,'ROLE_SYS_ADMIN',1);
 INSERT INTO x_group (ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_SRC, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (adminID, UTC_TIMESTAMP(), 'public group', 0, 0, 'public', 0, UTC_TIMESTAMP(), adminID);
@@ -1940,6 +1943,7 @@ INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (adminID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangerusersyncID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangertagsyncID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
+INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (adminID,moduleIdGovernedDataSharing,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerRole','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerUserStore','{"Version":"1"}');
