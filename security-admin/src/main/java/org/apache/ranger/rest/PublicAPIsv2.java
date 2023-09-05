@@ -34,6 +34,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerServiceTags;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneChangeRequest;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneResource;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -214,6 +218,65 @@ public class PublicAPIsv2 {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public Collection<String> getSecurityZoneNamesForResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
 		return securityZoneRest.getZoneNamesForResource(serviceName, request);
+	}
+
+	@POST
+	@Path("/api/zones-v2")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 createSecurityZone(RangerSecurityZoneV2 securityZone) {
+		return securityZoneRest.createSecurityZone(securityZone);
+	}
+
+	@PUT
+	@Path("/api/zones-v2/{id}")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZoneV2 securityZone) {
+		return securityZoneRest.updateSecurityZone(zoneId, securityZone);
+	}
+
+	@PUT
+	@Path("/api/zones-v2/{id}/partial")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public Boolean updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZoneChangeRequest changeRequest) {
+		return securityZoneRest.updateSecurityZone(zoneId, changeRequest);
+	}
+
+	@GET
+	@Path("/api/zones-v2/name/{name}")
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 getSecurityZoneV2(@PathParam("name") String zoneName) {
+		return securityZoneRest.getSecurityZoneV2(zoneName);
+	}
+
+	@GET
+	@Path("/api/zones-v2/{id}")
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 getSecurityZoneV2(@PathParam("id") Long zoneId) {
+		return securityZoneRest.getSecurityZoneV2(zoneId);
+	}
+
+	@GET
+	@Path("/api/zones-v2/{id}/resources/{serviceName}")
+	@Produces({ "application/json" })
+	public PList<RangerSecurityZoneResource> getResources(@PathParam("id") Long zoneId, @PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getResources(zoneId, serviceName, request);
+	}
+
+	@GET
+	@Path("/api/zones-v2/name/{name}/resources/{serviceName}")
+	@Produces({ "application/json" })
+	public PList<RangerSecurityZoneResource> getResources(@PathParam("name") String zoneName, @PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getResources(zoneName, serviceName, request);
+	}
+
+	@GET
+	@Path("/api/zones-v2")
+	@Produces({ "application/json"})
+	public PList<RangerSecurityZoneV2> getAllZonesV2(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZonesV2(request);
 	}
 
 	/*
