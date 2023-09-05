@@ -19,7 +19,7 @@
 from setuptools import setup, find_packages
 
 # External dependencies
-requirements = ['requests>=2.24']
+requirements = ['requests>=2.24','strenum>=0.4.15']
 
 long_description = ''
 with open("README.md", "r") as fh:
