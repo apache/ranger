@@ -89,7 +89,7 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
         window.location.replace("login.jsp?sessionTimeout=true");
       }
     }
-    if (config.skipNavigate !== undefined && config.skipNavigate) {
+    if (config?.skipNavigate) {
       throw error;
     }
     if (

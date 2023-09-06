@@ -39,7 +39,7 @@ import {
 } from "../../components/CommonComponents";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
-import { isEmpty, isUndefined, map, sortBy, toUpper, filter } from "lodash";
+import { isUndefined, map, sortBy, toUpper, filter } from "lodash";
 import { getServiceDef } from "../../utils/appState";
 
 function Plugin_Status() {
@@ -48,7 +48,6 @@ function Plugin_Status() {
   const servicesAvailable = context.servicesAvailable;
   const [pluginStatusListingData, setPluginStatusLogs] = useState([]);
   const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
   const [entries, setEntries] = useState([]);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const fetchIdRef = useRef(0);
@@ -90,11 +89,9 @@ function Plugin_Status() {
       if (servicesAvailable !== null) {
         let logsResp = [];
         let logs = [];
-        let totalCount = 0;
         const fetchId = ++fetchIdRef.current;
         let params = { ...searchFilterParams };
         if (fetchId === fetchIdRef.current) {
-          params["pageSize"] = pageSize;
           params["startIndex"] = pageIndex * pageSize;
           try {
             logsResp = await fetchApi({
@@ -102,7 +99,6 @@ function Plugin_Status() {
               params: params
             });
             logs = logsResp.data.pluginInfoList;
-            totalCount = logsResp.data.totalCount;
           } catch (error) {
             serverError(error);
             console.error(
@@ -111,7 +107,6 @@ function Plugin_Status() {
           }
           setPluginStatusLogs(logs);
           setEntries(logsResp.data);
-          setPageCount(Math.ceil(totalCount / pageSize));
           setResetpage({ page: gotoPage });
           setLoader(false);
         }
@@ -576,9 +571,9 @@ function Plugin_Status() {
           loading={loader}
           totalCount={entries && entries.totalCount}
           fetchData={fetchPluginStatusInfo}
-          pageCount={pageCount}
           columnSort={true}
           clientSideSorting={true}
+          showPagination={false}
         />
       </React.Fragment>
     </div>

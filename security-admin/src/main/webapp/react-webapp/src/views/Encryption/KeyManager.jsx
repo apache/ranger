@@ -30,7 +30,7 @@ import { Row, Col, Button, Modal } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
-import { find, sortBy, isUndefined, isEmpty } from "lodash";
+import { find, sortBy, isUndefined, isEmpty, reject } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
 import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
@@ -140,7 +140,7 @@ function reducer(state, action) {
   }
 }
 
-const KeyManager = (props) => {
+const KeyManager = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const params = useParams();
@@ -505,40 +505,36 @@ const KeyManager = (props) => {
         Header: "Action",
         accessor: "action",
         Cell: (rawValue) => {
-          if (isKeyAdmin()) {
-            return (
-              <div className="text-center">
-                <Button
-                  className="btn btn-outline-dark btn-sm m-r-5"
-                  size="sm"
-                  title="Edit"
-                  onClick={() => {
-                    editModal(rawValue.row.original.name);
-                  }}
-                  data-name="rolloverKey"
-                  data-id={rawValue.row.original.name}
-                  data-cy={rawValue.row.original.name}
-                >
-                  <i className="fa-fw fa fa-edit"></i>
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  title="Delete"
-                  onClick={() => {
-                    deleteModal(rawValue.row.original.name);
-                  }}
-                  data-name="deleteKey"
-                  data-id={rawValue.row.original.name}
-                  data-cy={rawValue.row.original.name}
-                >
-                  <i className="fa-fw fa fa-trash"></i>
-                </Button>
-              </div>
-            );
-          } else {
-            return <div className="text-center">--</div>;
-          }
+          return (
+            <div className="text-center">
+              <Button
+                className="btn btn-outline-dark btn-sm m-r-5"
+                size="sm"
+                title="Edit"
+                onClick={() => {
+                  editModal(rawValue.row.original.name);
+                }}
+                data-name="rolloverKey"
+                data-id={rawValue.row.original.name}
+                data-cy={rawValue.row.original.name}
+              >
+                <i className="fa-fw fa fa-edit"></i>
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                title="Delete"
+                onClick={() => {
+                  deleteModal(rawValue.row.original.name);
+                }}
+                data-name="deleteKey"
+                data-id={rawValue.row.original.name}
+                data-cy={rawValue.row.original.name}
+              >
+                <i className="fa-fw fa fa-trash"></i>
+              </Button>
+            </div>
+          );
         },
         width: 80
       }
@@ -622,7 +618,9 @@ const KeyManager = (props) => {
         <XATableLayout
           loading={loader}
           data={keydata || []}
-          columns={columns}
+          columns={
+            isKeyAdmin() ? columns : reject(columns, ["Header", "Action"])
+          }
           fetchData={selectServices}
           pageCount={pagecount}
           currentPageIndex={currentPageIndex}
