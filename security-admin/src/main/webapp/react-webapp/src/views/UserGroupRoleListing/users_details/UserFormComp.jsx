@@ -33,16 +33,15 @@ import {
 import { toast } from "react-toastify";
 import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
 import { getUserProfile } from "Utils/appState";
-import _, { isEmpty, isUndefined } from "lodash";
+import { has, isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import { BlockUi } from "../../../components/CommonComponents";
-import { InfoIcon, commonBreadcrumb } from "../../../utils/XAUtils";
+import { InfoIcon } from "../../../utils/XAUtils";
 import { RegexMessage, roleChngWarning } from "../../../utils/XAMessages";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 
 const initialState = {
-  loader: true,
   blockUI: false
 };
 
@@ -54,11 +53,6 @@ const PromtDialog = (props) => {
 
 function reducer(state, action) {
   switch (action.type) {
-    case "SET_LOADER":
-      return {
-        ...state,
-        loader: action.loader
-      };
     case "SET_BLOCK_UI":
       return {
         ...state,
@@ -70,11 +64,10 @@ function reducer(state, action) {
 }
 
 function UserFormComp(props) {
-  const params = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
   const [userFormState, dispatch] = useReducer(reducer, initialState);
-  const { loader, blockUI } = userFormState;
+  const { blockUI } = userFormState;
   const { isEditView, userInfo } = props;
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const toastId = React.useRef(null);
@@ -178,8 +171,8 @@ function UserFormComp(props) {
     navigate("/users/usertab");
   };
 
-  const groupNameList = ({ input, ...rest }) => {
-    const loadOptions = async (inputValue, callback) => {
+  const groupNameList = ({ input }) => {
+    const loadOptions = async (inputValue) => {
       let params = {},
         op = [];
       if (inputValue) {
@@ -354,7 +347,7 @@ function UserFormComp(props) {
 
     if (
       values &&
-      _.has(values, "password") &&
+      has(values, "password") &&
       !RegexValidation.PASSWORD.regexExpression.test(values.password)
     ) {
       errors.password = RegexValidation.PASSWORD.message;
@@ -362,8 +355,8 @@ function UserFormComp(props) {
 
     if (
       values &&
-      _.has(values, "password") &&
-      _.has(values, "passwordConfirm") &&
+      has(values, "password") &&
+      has(values, "passwordConfirm") &&
       values.password !== values.passwordConfirm
     ) {
       errors.passwordConfirm = "Password must be match with new password";
@@ -393,7 +386,6 @@ function UserFormComp(props) {
           values,
           invalid,
           errors,
-          pristine,
           dirty
         }) => (
           <div className="wrap user-role-grp-form">

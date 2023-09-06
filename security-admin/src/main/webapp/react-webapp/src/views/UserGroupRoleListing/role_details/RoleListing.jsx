@@ -28,7 +28,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import moment from "moment-timezone";
-import { find, isEmpty } from "lodash";
+import { find, isEmpty, map } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
 import {
@@ -267,7 +267,7 @@ function Roles() {
         Header: "Users",
         accessor: "users",
         accessor: (raw) => {
-          let usersList = _.map(raw.users, "name");
+          let usersList = map(raw.users, "name");
           return !isEmpty(usersList) ? (
             <MoreLess data={usersList} key={raw.id} />
           ) : (
@@ -279,7 +279,7 @@ function Roles() {
         Header: "Groups",
         accessor: "groups",
         accessor: (raw) => {
-          let groupsList = _.map(raw.groups, "name");
+          let groupsList = map(raw.groups, "name");
           return !isEmpty(groupsList) ? (
             <MoreLess data={groupsList} key={raw.id} />
           ) : (
@@ -291,7 +291,7 @@ function Roles() {
         Header: "Roles",
         accessor: "roles",
         accessor: (raw) => {
-          let rolesList = _.map(raw.roles, "name");
+          let rolesList = map(raw.roles, "name");
 
           return !isEmpty(rolesList) ? (
             <MoreLess data={rolesList} key={raw.id} />
