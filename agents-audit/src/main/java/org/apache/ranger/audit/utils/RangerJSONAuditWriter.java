@@ -88,7 +88,6 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     }
 
     synchronized public boolean logJSON(final Collection<String> events) throws Exception {
-        boolean     ret = true;
         PrintWriter out = null;
         try {
             if (logger.isDebugEnabled()) {
@@ -111,15 +110,15 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 logger.error("Stream encountered errors while writing audits to HDFS!");
                 closeWriter();
                 resetWriter();
-                ret = false;
-                return ret;
+                reUseLastLogFile = true;
+                return false;
             }
         } catch (Exception e) {
-            logger.error("Exception encountered while writing audits to HDFS!");
+            logger.error("Exception encountered while writing audits to HDFS!", e);
             closeWriter();
             resetWriter();
-            ret = false;
-            return ret;
+            reUseLastLogFile = true;
+            return false;
         } finally {
             if (logger.isDebugEnabled()) {
                 logger.debug("Flushing HDFS audit. Event Size:" + events.size());
@@ -130,7 +129,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             //closeWriter();
         }
 
-        return ret;
+        return true;
     }
 
     @Override

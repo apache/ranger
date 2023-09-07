@@ -66,7 +66,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public boolean                rollOverByDuration               = false;
     public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
     private boolean               isHFlushCapableStream            = false;
-    private boolean               reUseLastLogFile                 = false;
+    protected boolean               reUseLastLogFile               = false;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -214,6 +214,9 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         if (logWriter == null) {
+            if (logger.isDebugEnabled()){
+                logger.debug("Log writer is null, aborting rollover condition check!");
+            }
             return;
         }
 
@@ -223,6 +226,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             closeWriter();
             resetWriter();
             currentFileName = null;
+            reUseLastLogFile = false;
 
             if (!rollOverByDuration) {
                 try {
@@ -256,11 +260,12 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         if (logWriter == null) {
-            if (reUseLastLogFile){
+            if (reUseLastLogFile) {
+                logger.info("Appending to last log file. auditPath = {}", fullPath);
                 ostream = fileSystem.append(auditPath);
             } else {
                 // Create the file to write
-                logger.info("Creating new log file. auditPath=" + fullPath);
+                logger.info("Creating new log file. auditPath = {}", fullPath);
                 createFileSystemFolders();
                 ostream = fileSystem.create(auditPath);
             }
@@ -305,7 +310,6 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         logWriter = null;
         ostream = null;
-        reUseLastLogFile = true;
 
         if (logger.isDebugEnabled()) {
             logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
