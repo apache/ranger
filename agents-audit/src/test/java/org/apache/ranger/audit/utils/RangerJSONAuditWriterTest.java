@@ -17,9 +17,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RangerJSONAuditWriterTest {
+
     public Properties props;
     public Map<String, String> auditConfigs;
-
 
     public void setup(){
         props = new Properties();
@@ -86,7 +86,7 @@ public class RangerJSONAuditWriterTest {
 
 
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("First file created and added this line!")));
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath); // cleanup
         Thread.sleep(6000);
 
         assertFalse(jsonAuditWriter.reUseLastLogFile);
@@ -94,7 +94,7 @@ public class RangerJSONAuditWriterTest {
         assertNull(jsonAuditWriter.logWriter);
 
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Second file created since rollover happened!")));
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath); // cleanup
         jsonAuditWriter.closeWriter();
     }
 }
