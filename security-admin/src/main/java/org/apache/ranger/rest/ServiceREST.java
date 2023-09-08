@@ -2101,11 +2101,12 @@ public class ServiceREST {
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 			if (CollectionUtils.isNotEmpty(policyLists)){
-                                for (RangerPolicy rangerPolicy : policyLists) {
-                                        if (rangerPolicy != null) {
-                                                ensureAdminAndAuditAccess(rangerPolicy);
-                                        }
-                                }
+				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String>();
+				for (RangerPolicy rangerPolicy : policyLists) {
+					if (rangerPolicy != null) {
+						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
+					}
+				}
 				svcStore.getPoliciesInExcel(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -2153,12 +2154,12 @@ public class ServiceREST {
 			
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 			if (CollectionUtils.isNotEmpty(policyLists)){
-                                for (RangerPolicy rangerPolicy : policyLists) {
-                                        if (rangerPolicy != null) {
-                                                ensureAdminAndAuditAccess(rangerPolicy);
-                                        }
-                                }
-
+				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
+				for (RangerPolicy rangerPolicy : policyLists) {
+					if (rangerPolicy != null) {
+						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
+					}
+				}
 				svcStore.getPoliciesInCSV(policyLists, response);
 			}else{
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -2212,9 +2213,10 @@ public class ServiceREST {
 			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
 
 			if (CollectionUtils.isNotEmpty(policyLists)) {
+				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
 				for (RangerPolicy rangerPolicy : policyLists) {
 					if (rangerPolicy != null) {
-						ensureAdminAndAuditAccess(rangerPolicy);
+						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
 					}
 				}
 				bizUtil.blockAuditorRoleUser();
@@ -4195,6 +4197,10 @@ public class ServiceREST {
 	}
 
 	void ensureAdminAndAuditAccess(RangerPolicy policy) {
+		ensureAdminAndAuditAccess (policy, new HashMap<String, String>());
+	}
+
+	void ensureAdminAndAuditAccess(RangerPolicy policy, Map<String, String> mapServiceTypeAndImplClass) {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		String userName = bizUtil.getCurrentUserLoginId();
@@ -4221,18 +4227,25 @@ public class ServiceREST {
 						+ userName + "' does not have delegated-admin privilege on given resources", true);
 			}
 		} else {
-
-			XXService xService = daoManager.getXXService().findByName(policy.getService());
-			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-
+			if (StringUtils.isBlank(policy.getServiceType())) {
+				XXService xService = daoManager.getXXService().findByName(policy.getService());
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				mapServiceTypeAndImplClass.put(xServiceDef.getName(), xServiceDef.getImplclassname());
+				policy.setServiceType(xServiceDef.getName());
+			} else if (!mapServiceTypeAndImplClass.containsKey(policy.getServiceType())) {
+				XXService xService = daoManager.getXXService().findByName(policy.getService());
+				XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+				mapServiceTypeAndImplClass.put(xServiceDef.getName(), xServiceDef.getImplclassname());
+			}
+			String serviceDefImplClass = mapServiceTypeAndImplClass.get(policy.getServiceType());
 			if (isAdmin || isAuditAdmin) {
-				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+				if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(serviceDefImplClass)) {
 					throw restErrorUtil.createRESTException(
 							"KMS Policies/Services/Service-Defs are not accessible for user '"
 									+ userName + "'.", MessageEnums.OPER_NO_PERMISSION);
 				}
 			} else if (isKeyAdmin || isAuditKeyAdmin) {
-				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
+				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(serviceDefImplClass)) {
 					throw restErrorUtil.createRESTException("Only KMS Policies/Services/Service-Defs are accessible for user '"
 							+ userName + "'.", MessageEnums.OPER_NO_PERMISSION);
 				}
