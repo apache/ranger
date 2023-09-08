@@ -260,7 +260,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         if (logWriter == null) {
-            if (reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) { // fallback to create if append is not supported!
+            // if append is supported, reuse last log file
+            if (reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) {
                 logger.info("Appending to last log file. auditPath = {}", fullPath);
                 ostream = fileSystem.append(auditPath);
             } else {
