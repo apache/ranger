@@ -18,9 +18,11 @@
 
 package org.apache.ranger.audit.utils;
 
+import org.apache.hadoop.fs.CommonPathCapabilities;
 import org.apache.hadoop.fs.FileSystem;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
@@ -73,21 +75,24 @@ public class RangerJSONAuditWriterTest {
 
         setup();
         jsonAuditWriter.init(props, "test", "localfs", auditConfigs);
-
-        // append to org.apache.hadoop.fs.LocalFileSystem is not supported which leads to an exception
-        jsonAuditWriter.reUseLastLogFile = true;
-        jsonAuditWriter.logJSON(Collections.singleton("Append this line!"));
+        jsonAuditWriter.createFileSystemFolders();
+        // File creation should fail with an exception which will trigger append next time.
+        when(jsonAuditWriter.fileSystem.create(jsonAuditWriter.auditPath))
+                .thenThrow(new IOException("Creation not allowed!"));
+        jsonAuditWriter.logJSON(Collections.singleton("This event will not be logged!"));
+        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
 
         assertTrue(jsonAuditWriter.reUseLastLogFile);
         assertNull(jsonAuditWriter.ostream);
         assertNull(jsonAuditWriter.logWriter);
 
-        // cleanup
-        jsonAuditWriter.reUseLastLogFile = false;
-        jsonAuditWriter.logJSON(Collections.singleton("cleaning up!"));
+        jsonAuditWriter.fileSystem = mock(FileSystem.class);
+        when(jsonAuditWriter.fileSystem
+                .hasPathCapability(jsonAuditWriter.auditPath, CommonPathCapabilities.FS_APPEND)).thenReturn(true);
         jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
-        jsonAuditWriter.logJSON(Collections.singleton("cleaning up!"));
-        jsonAuditWriter.closeWriter();
+        // this will lead to an exception since append is called on mocks
+        jsonAuditWriter.logJSON(Collections.singleton(
+                "This event should be appended but won't be as appended we use mocks."));
     }
 
 
