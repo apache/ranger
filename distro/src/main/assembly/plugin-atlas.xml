@@ -89,6 +89,10 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -121,6 +125,8 @@
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
         </includes>
       </binaries>
     </moduleSet>

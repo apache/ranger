@@ -49,12 +49,13 @@ import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
 import { useQuery } from "../../components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
-import { getBaseUrl, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
+import { isAuditor, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
 import CustomBreadcrumb from "../CustomBreadcrumb";
 import moment from "moment-timezone";
 
-function UserAccessLayout(props) {
+function UserAccessLayout() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
+  const isAuditRole = isAuditor() || isKMSAuditor();
   const [show, setShow] = useState(true);
   const [contentLoader, setContentLoader] = useState(true);
   const [serviceDefs, setServiceDefs] = useState([]);
@@ -151,23 +152,21 @@ function UserAccessLayout(props) {
   };
 
   const fetchZones = async () => {
-    let zonesResp;
+    let zonesResp = [];
     try {
-      zonesResp = await fetchApi({
-        url: "zones/zones"
+      const response = await fetchApi({
+        url: "public/v2/api/zone-headers"
       });
+      zonesResp = response?.data || [];
     } catch (error) {
       console.error(`Error occurred while fetching Zones! ${error}`);
     }
 
-    let zonesList = map(
-      sortBy(zonesResp.data.securityZones, ["name"]),
-      function (zone) {
-        return { value: zone.name, label: zone.name };
-      }
-    );
+    let zonesList = map(sortBy(zonesResp, ["name"]), function (zone) {
+      return { value: zone.name, label: zone.name };
+    });
 
-    setZones(zonesResp?.data?.securityZones || []);
+    setZones(zonesResp || []);
     setZoneNameOpts(zonesList);
   };
 
@@ -774,10 +773,14 @@ function UserAccessLayout(props) {
                 <Dropdown.Item onClick={() => exportPolicy("csv")}>
                   CSV file
                 </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Item onClick={() => exportPolicy("exportJson")}>
-                  JSON file
-                </Dropdown.Item>
+                {!isAuditRole && (
+                  <React.Fragment>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={() => exportPolicy("exportJson")}>
+                      JSON file
+                    </Dropdown.Item>
+                  </React.Fragment>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </Col>

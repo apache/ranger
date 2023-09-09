@@ -241,7 +241,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
     return obj.attributeName == "Policy Resources" && obj.action == "update";
   });
 
-  /*UPDATESS*/
+  /* UPDATES */
 
   const policyDetailsUpdate = (details, resources) => {
     let tablerow = [];
@@ -1621,7 +1621,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
         <>
           <tr key={index}>
             <td className="table-warning">{key}</td>
-            <td className="table-warning"> {keynew[key].values}</td>
+            <td className="table-warning">
+               {!isEmpty(keynew[key].values)
+                 ? keynew[key].values.join(", ")
+                 : "--"}
+            </td>
           </tr>
           <tr>
             <td className="table-warning">{key + " " + "exclude"}</td>
@@ -1739,7 +1743,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let keynew = {};
     resources.map((obj) => {
-      keynew = !isEmpty(ovj.previousValue) && JSON.parse(obj.previousValue);
+      keynew = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
     });
 
     Object.keys(keynew).map((key, index) => {
@@ -1867,7 +1871,9 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </Badge>
             </div>
             <div className="font-weight-bolder">Policy Name: {objectName}</div>
-            <div className="font-weight-bolder">Service Name: {owner}</div>
+            <div className="font-weight-bolder">
+              Service Name: {parentObjectName}
+            </div>
             <div className="font-weight-bolder">
               Created Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
               India Standard Time
@@ -3035,8 +3041,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               <td className="table-warning policyitem-field">
                                 <i>{`Users`}</i>
                                 {`: ${
-                                  !isEmpty(policy.suers)
-                                    ? policy.suers.join(", ")
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
                                     : "<empty>"
                                 } `}
                               </td>

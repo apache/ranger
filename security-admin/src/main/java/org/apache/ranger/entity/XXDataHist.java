@@ -21,13 +21,11 @@ package org.apache.ranger.entity;
 import java.util.Date;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.DateUtil;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_data_hist")
 public class XXDataHist implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;

@@ -32,6 +32,7 @@ import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.metrics.sink.RangerMetricsJsonSink;
 import org.apache.ranger.metrics.sink.RangerMetricsPrometheusSink;
+import org.apache.ranger.metrics.source.RangerMetricsContainerSource;
 import org.apache.ranger.metrics.source.RangerMetricsJvmSource;
 import org.apache.ranger.metrics.wrapper.RangerMetricsSinkWrapper;
 import org.apache.ranger.metrics.wrapper.RangerMetricsSourceWrapper;
@@ -61,6 +62,7 @@ public class RangerMetricsSystemWrapper {
             sourceWrappers = new ArrayList<RangerMetricsSourceWrapper>();
         }
         sourceWrappers.add(new RangerMetricsSourceWrapper("RangerJVM", "Ranger common metric source (RangerMetricsJvmSource)", serviceName, new RangerMetricsJvmSource(serviceName)));
+        sourceWrappers.add(new RangerMetricsSourceWrapper("RangerContainer", "Ranger web container metric source (RangerMetricsContainerSource)", serviceName, new RangerMetricsContainerSource(serviceName)));
 
         for (RangerMetricsSourceWrapper sourceWrapper: sourceWrappers) {
             metricsSystem.register(sourceWrapper.getName(), sourceWrapper.getDescription(), sourceWrapper.getSource());

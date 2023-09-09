@@ -17,18 +17,18 @@
  * under the License.
  */
 
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useEffect, useReducer } from "react";
 import { Tab, Button, Nav, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { getUserProfile } from "Utils/appState";
 import UserFormComp from "Views/UserGroupRoleListing/users_details/UserFormComp";
 import { Loader, scrollToError } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import withRouter from "Hooks/withRouter";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { commonBreadcrumb } from "../../../utils/XAUtils";
+import { has } from "lodash";
+import { commonBreadcrumb, InfoIcon } from "../../../utils/XAUtils";
 
 const initialState = {
   userInfo: {},
@@ -79,7 +79,7 @@ function AddUserView(props) {
       });
     } catch (error) {
       console.error(
-        `Error occurred while fetching Zones or CSRF headers! ${error}`
+        `Error occurred while fetching Users or CSRF headers! ${error}`
       );
     }
     dispatch({
@@ -88,16 +88,6 @@ function AddUserView(props) {
       loader: false
     });
   };
-
-  const Error = ({ name }) => (
-    <Field name={name}>
-      {({ meta: { error, touched } }) => {
-        return error && touched ? (
-          <div className="col-sm-2">{error}</div>
-        ) : null;
-      }}
-    </Field>
-  );
 
   const validateForm = (values) => {
     const errors = {};
@@ -110,7 +100,10 @@ function AddUserView(props) {
     }
     if (!values.reEnterPassword) {
       errors.reEnterPassword = "Required";
-    } else if (values.newPassword !== values.reEnterPassword) {
+    } else if (
+      has(values, "newPassword") &&
+      values.newPassword !== values.reEnterPassword
+    ) {
       errors.reEnterPassword = "Password must be match with new password";
     }
     return errors;
@@ -132,7 +125,8 @@ function AddUserView(props) {
       toast.success("User password change successfully!!");
       navigate("/users/usertab");
     } catch (error) {
-      console.error(`Error occurred while updating user password! ${error}`);
+      toast.error("Error occured while updating user details!");
+      console.error(`Error occurred while updating user details! ${error}`);
     }
   };
 
@@ -187,7 +181,6 @@ function AddUserView(props) {
             <Tab.Content>
               <Tab.Pane eventKey="edit-password">
                 <>
-                  <h4 className="wrap-header bold">User Password Change</h4>
                   <Form
                     onSubmit={handleSubmit}
                     validate={validateForm}
@@ -241,6 +234,18 @@ function AddUserView(props) {
                                     }
                                     data-cy="newPassword"
                                   />
+                                  <InfoIcon
+                                    css="info-user-role-grp-icon"
+                                    position="right"
+                                    message={
+                                      <p
+                                        className="pd-10 mb-0"
+                                        style={{ fontSize: "small" }}
+                                      >
+                                        {RegexValidation.PASSWORD.message}
+                                      </p>
+                                    }
+                                  />
                                   {meta.error && meta.touched && (
                                     <span className="invalid-field">
                                       {meta.error}
@@ -276,6 +281,18 @@ function AddUserView(props) {
                                         : "form-control"
                                     }
                                     data-cy="reEnterPassword"
+                                  />
+                                  <InfoIcon
+                                    css="info-user-role-grp-icon"
+                                    position="right"
+                                    message={
+                                      <p
+                                        className="pd-10 mb-0"
+                                        style={{ fontSize: "small" }}
+                                      >
+                                        {RegexValidation.PASSWORD.message}
+                                      </p>
+                                    }
                                   />
                                   {meta.error && meta.touched && (
                                     <span className="invalid-field">

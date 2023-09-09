@@ -183,7 +183,7 @@ function Roles() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.info("Please select atleast one role!!");
+      toast.warning("Please select atleast one role!!");
     }
   };
 
@@ -406,15 +406,14 @@ function Roles() {
           <Modal show={showModal} onHide={toggleConfirmModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                {" "}
-                Are you sure you want to delete group&nbsp;
+                Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                    <b>"{selectedRows.current[0].original.name}"</b> role ?
                   </>
                 ) : (
                   <>
-                    "<b>{selectedRows.current.length}</b>" ?
+                    selected<b> {selectedRows.current.length}</b> roles?
                   </>
                 )}
               </span>

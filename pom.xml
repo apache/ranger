@@ -129,6 +129,7 @@
         <hive.version>3.1.2</hive.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <orc.version>1.5.8</orc.version>
+        <aircompressor.version>0.10</aircompressor.version>
         <hbase-shaded-protobuf>3.5.1</hbase-shaded-protobuf>
         <hbase-shaded-netty>3.5.1</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>3.5.1</hbase-shaded-miscellaneous>
@@ -177,7 +178,7 @@
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
-        <netty-all.version>4.1.85.Final</netty-all.version>
+        <netty-all.version>4.1.94.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
@@ -199,9 +200,9 @@
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
-        <springframework.security.version>5.7.8</springframework.security.version>
-        <springframework.test.version>5.3.27</springframework.test.version>
-        <springframework.version>5.3.27</springframework.version>
+        <springframework.security.version>5.7.10</springframework.security.version>
+        <springframework.test.version>5.3.29</springframework.test.version>
+        <springframework.version>5.3.29</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
@@ -1200,6 +1201,7 @@
                         <exclude>**/docs/src/site/resources/ranger-logo.svg</exclude>
                         <exclude>**/docs/src/site/resources/override-banner.js</exclude>
                         <exclude>**/docs/src/site/resources/smooth-scroll.js</exclude>
+                        <exclude>**/importRole/*.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>

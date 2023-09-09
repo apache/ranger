@@ -26,6 +26,8 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.RangerUserStoreUtil;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -35,12 +37,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RangerAuthContext {
     private final Map<RangerContextEnricher, Object> requestContextEnrichers;
     private       RangerRolesUtil                    rolesUtil;
-
+    private       RangerUserStoreUtil                userStoreUtil;
 
     public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles) {
+        this(requestContextEnrichers, roles, null);
+    }
+
+    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles, RangerUserStore userStore) {
         this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
 
         setRoles(roles);
+        setUserStore(userStore);
     }
 
     public Map<RangerContextEnricher, Object> getRequestContextEnrichers() {
@@ -51,6 +58,10 @@ public class RangerAuthContext {
         // concurrentHashMap does not allow null to be inserted into it, so insert a dummy which is checked
         // when enrich() is called
         requestContextEnrichers.put(enricher, database != null ? database : enricher);
+
+        if (database instanceof RangerUserStore) {
+            setUserStore((RangerUserStore) database);
+        }
     }
 
     public void cleanupRequestContextEnricher(RangerContextEnricher enricher) {
@@ -58,7 +69,7 @@ public class RangerAuthContext {
     }
 
     public void setRoles(RangerRoles roles) {
-        this.rolesUtil = roles != null ? new RangerRolesUtil(roles) : new RangerRolesUtil(null);
+        this.rolesUtil = new RangerRolesUtil(roles);
     }
 
     public Set<String> getRolesForUserAndGroups(String user, Set<String> groups) {
@@ -100,5 +111,17 @@ public class RangerAuthContext {
 
     public RangerRolesUtil getRangerRolesUtil() {
         return this.rolesUtil;
+    }
+
+    public long getUserStoreVersion() {
+        return this.userStoreUtil.getUserStoreVersion();
+    }
+
+    public RangerUserStoreUtil getUserStoreUtil() {
+        return this.userStoreUtil;
+    }
+
+    public void setUserStore(RangerUserStore userStore) {
+        this.userStoreUtil = new RangerUserStoreUtil(userStore);
     }
 }

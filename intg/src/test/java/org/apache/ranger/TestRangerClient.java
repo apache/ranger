@@ -23,6 +23,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.junit.Assert;
 import org.junit.Test;
@@ -201,5 +202,18 @@ public class TestRangerClient {
         List<RangerSecurityZone> securityZones = client.findSecurityZones(filter);
 
         Assert.assertEquals(Collections.emptyList(), securityZones);
+    }
+
+    @Test
+    public void testPurgeRecords() throws RangerServiceException {
+        RangerClient client        = Mockito.mock(RangerClient.class);
+        String       recordType    = "login_records";
+        int          retentionDays = 180;
+
+        when(client.purgeRecords(recordType, retentionDays)).thenReturn(Collections.emptyList());
+
+        List<RangerPurgeResult> purgeResults = client.purgeRecords(recordType, retentionDays);
+
+        Assert.assertEquals(Collections.emptyList(), purgeResults);
     }
 }

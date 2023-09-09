@@ -366,40 +366,41 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		}
 
 		while (true) {
-			UploadWorkItem uploadWorkItem;
+			if (TagSyncConfig.isTagSyncServiceActive()) {
+				UploadWorkItem uploadWorkItem;
 
-			try {
-				uploadWorkItem = uploadWorkItems.take();
+				try {
+					uploadWorkItem = uploadWorkItems.take();
 
-				ServiceTags toUpload = uploadWorkItem.getServiceTags();
+					ServiceTags toUpload = uploadWorkItem.getServiceTags();
 
-				boolean doRetry;
+					boolean doRetry;
 
-				do {
-					doRetry = false;
+					do {
+						doRetry = false;
 
-					try {
-						ServiceTags uploaded = doUpload(toUpload);
-						if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
+						try {
+							ServiceTags uploaded = doUpload(toUpload);
+							if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
+								doRetry = true;
+								Thread.sleep(rangerAdminConnectionCheckInterval);
+							} else {
+								// ServiceTags uploaded successfully
+								uploadWorkItem.uploadCompleted(uploaded);
+							}
+						} catch (InterruptedException interrupted) {
+							LOG.error("Caught exception..: ", interrupted);
+							return;
+						} catch (Exception exception) {
 							doRetry = true;
 							Thread.sleep(rangerAdminConnectionCheckInterval);
-						} else {
-							// ServiceTags uploaded successfully
-							uploadWorkItem.uploadCompleted(uploaded);
 						}
-					} catch (InterruptedException interrupted) {
-						LOG.error("Caught exception..: ", interrupted);
-						return;
-					} catch (Exception exception) {
-						doRetry = true;
-						Thread.sleep(rangerAdminConnectionCheckInterval);
-					}
-				} while (doRetry);
+					} while (doRetry);
 
-			}
-			catch (InterruptedException exception) {
-				LOG.error("Interrupted..: ", exception);
-				return;
+				} catch (InterruptedException exception) {
+					LOG.error("Interrupted..: ", exception);
+					return;
+				}
 			}
 		}
 

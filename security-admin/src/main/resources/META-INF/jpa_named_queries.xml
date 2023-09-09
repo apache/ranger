@@ -161,6 +161,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getAllGroupsInfo">
+		<query>SELECT group.name, group.description, group.otherAttributes, group.syncSource, group.groupSource
+		         FROM XXGroup group
+		        WHERE group.isVisible = 1
+		</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -175,6 +182,13 @@
 
 	<named-query name="XXUser.getAllUserIdNames">
 		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUsersInfo">
+		<query>SELECT user.name, user.description, user.otherAttributes, user.syncSource, pUser.userSource, pUser.emailAddress
+		         FROM XXUser user LEFT OUTER JOIN XXPortalUser pUser ON pUser.loginId = user.name
+		        WHERE user.isVisible = 1
 		</query>
 	</named-query>
 
@@ -451,6 +465,11 @@
 
 	<named-query name="XXPolicy.findByServiceIdAndResourceSignature">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId and obj.resourceSignature = :resSignature</query>
+	</named-query>
+
+	<!-- XXPolicyExportAudit -->
+	<named-query name="XXPolicyExportAudit.deleteOlderThan">
+		<query>DELETE FROM XXPolicyExportAudit obj WHERE obj.createTime &lt; :olderThan</query>
 	</named-query>
 
 	<!-- XXServiceDef -->
@@ -1529,6 +1548,13 @@
 		          AND obj.attributeName = :attrName
 		</query>
     </named-query>
+	<named-query name="XXTrxLog.deleteOlderThan">
+		<query>delete from XXTrxLog obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+	<named-query name="XXTrxLog.updateSessIdWithNull">
+		<query>UPDATE XXTrxLog obj SET obj.sessionId = null WHERE obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<named-query name="XXAuthSession.getAuthSessionByUserId">
 		<query>SELECT obj FROM XXAuthSession obj WHERE obj.userId = :userId
 		</query>

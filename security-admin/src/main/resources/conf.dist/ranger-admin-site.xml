@@ -393,4 +393,13 @@
 			<name>ranger.admin.init.purge.login_records.retention.days</name>
 			<value>0</value>
 		</property>
+		<property>
+			<name>ranger.admin.init.purge.transaction_records</name>
+			<value>false</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.transaction_records.retention.days
+			</name>
+			<value>0</value>
+		</property>
 </configuration>

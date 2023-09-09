@@ -56,7 +56,8 @@ import {
   has,
   split,
   without,
-  maxBy
+  maxBy,
+  isArray
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { RangerPolicyType } from "../../utils/XAEnums";
@@ -191,7 +192,8 @@ class ServiceForm extends Component {
 
     if (values?.customConfigs !== undefined) {
       values.customConfigs?.map((config) => {
-        config !== undefined &&
+        config?.name !== undefined &&
+          config?.value !== undefined &&
           (serviceJson["configs"][config.name] = config.value);
       });
     }
@@ -219,8 +221,8 @@ class ServiceForm extends Component {
             obj.isAudited = value === "true";
           }
 
-          if (key === "accessResult") {
-            obj.accessResult = value.value;
+          if (key === "accessResult" && !isEmpty(value)) {
+            obj.accessResult = value?.value;
           }
 
           if (key === "resources" && !isEmpty(value)) {
@@ -238,7 +240,9 @@ class ServiceForm extends Component {
                 value[`value-${level}`] !== undefined
               ) {
                 obj.resources[value[`resourceName-${level}`].name] = {
-                  values: map(value[`value-${level}`], "value")
+                  values: isArray(value[`value-${level}`])
+                    ? map(value[`value-${level}`], "value")
+                    : [value[`value-${level}`].value]
                 };
 
                 if (

@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
@@ -40,16 +40,18 @@ import {
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
 import { isEmpty, isUndefined, map, sortBy, toUpper, filter } from "lodash";
+import { getServiceDef } from "../../utils/appState";
 
 function Plugin_Status() {
+  const context = useOutletContext();
+  const services = context.services;
+  const servicesAvailable = context.servicesAvailable;
   const [pluginStatusListingData, setPluginStatusLogs] = useState([]);
   const [loader, setLoader] = useState(true);
   const [pageCount, setPageCount] = React.useState(0);
   const [entries, setEntries] = useState([]);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const fetchIdRef = useRef(0);
-  const [serviceDefs, setServiceDefs] = useState([]);
-  const [services, setServices] = useState([]);
   const [contentLoader, setContentLoader] = useState(true);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,13 +60,10 @@ function Plugin_Status() {
   );
   const [resetPage, setResetpage] = useState({ page: null });
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
+  const { allServiceDefs } = getServiceDef();
 
   useEffect(() => {
-    if (isEmpty(serviceDefs)) {
-      fetchServiceDefs(), fetchServices();
-    }
-
-    if (!isEmpty(serviceDefs)) {
+    if (servicesAvailable !== null) {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams(
           "pluginStatus",
@@ -74,69 +73,21 @@ function Plugin_Status() {
 
       // Updating the states for search params, search filter, default search filter and localStorage
       setSearchParams(searchParam);
-      setSearchFilterParams(searchFilterParam);
+      if (
+        JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      ) {
+        setSearchFilterParams(searchFilterParam);
+      }
       setDefaultSearchFilterParams(defaultSearchFilterParam);
       localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
       setContentLoader(false);
     }
-  }, [serviceDefs]);
-
-  useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
-      fetchSearchFilterParams(
-        "pluginStatus",
-        searchParams,
-        searchFilterOptions
-      );
-
-    // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
-    if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
-    ) {
-      setSearchFilterParams(searchFilterParam);
-    }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
-
-  const fetchServiceDefs = async () => {
-    setLoader(true);
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: "plugins/definitions"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
-      );
-    }
-
-    setServiceDefs(serviceDefsResp.data.serviceDefs);
-    setLoader(false);
-  };
-
-  const fetchServices = async () => {
-    let servicesResp = [];
-    try {
-      servicesResp = await fetchApi({
-        url: "plugins/services"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Services or CSRF headers! ${error}`
-      );
-    }
-    setServices(servicesResp.data.services);
-    setContentLoader(false);
-  };
+  }, [searchParams, servicesAvailable]);
 
   const fetchPluginStatusInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
-      if (!isEmpty(serviceDefs)) {
+      if (servicesAvailable !== null) {
         let logsResp = [];
         let logs = [];
         let totalCount = 0;
@@ -166,7 +117,7 @@ function Plugin_Status() {
         }
       }
     },
-    [updateTable, searchFilterParams]
+    [updateTable, searchFilterParams, servicesAvailable]
   );
 
   const isDateDifferenceMoreThanHr = (date1, date2) => {
@@ -535,7 +486,7 @@ function Plugin_Status() {
   const getServiceDefType = () => {
     let serviceDefType = [];
 
-    serviceDefType = map(serviceDefs, function (serviceDef) {
+    serviceDefType = map(allServiceDefs, function (serviceDef) {
       return {
         label: toUpper(serviceDef.displayName),
         value: serviceDef.name

@@ -82,6 +82,9 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_FIELD_FORWARDED_ADDRESSES     = "forwardedAddresses";
 	public static final String SCRIPT_FIELD__MATCH_TYPE             = "_matchType";
 	public static final String SCRIPT_FIELD__NAME                   = "_name";
+	public static final String SCRIPT_FIELD__SYNC_SOURCE            = "_syncSource";
+	public static final String SCRIPT_FIELD__IS_INTERNAL            = "_isInternal";
+	public static final String SCRIPT_FIELD__EMAIL_ADDRESS          = "_emailAddress";
 	public static final String SCRIPT_FIELD__OWNER_USER             = "_ownerUser";
 	public static final String SCRIPT_FIELD_REMOTE_IP_ADDRESS       = "remoteIPAddress";
 	public static final String SCRIPT_FIELD_REQUEST                 = "request";

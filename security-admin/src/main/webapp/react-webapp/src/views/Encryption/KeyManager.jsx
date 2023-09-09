@@ -31,7 +31,6 @@ import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
 import { find, sortBy, isUndefined, isEmpty } from "lodash";
-import { commonBreadcrumb } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
 import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
@@ -60,7 +59,7 @@ function init(props) {
     updatetable: moment.now(),
     currentPageIndex: 0,
     currentPageSize: 25,
-    resetPage: { page: null }
+    resetPage: { page: 0 }
   };
 }
 
@@ -166,7 +165,8 @@ const KeyManager = (props) => {
     currentPageIndex,
     currentPageSize,
     pagecount,
-    updatetable
+    updatetable,
+    resetPage
   } = keyState;
 
   useEffect(() => {
@@ -331,9 +331,8 @@ const KeyManager = (props) => {
       setBlockUI(false);
       toast.success(`Success! Key deleted successfully`);
       if (keydata.length == 1 && currentPageIndex > 1) {
-        let page = currentPageIndex - currentPageIndex;
         if (typeof resetPage?.page === "function") {
-          resetPage.page(page);
+          resetPage.page(0);
         }
       } else {
         dispatch({
@@ -344,7 +343,7 @@ const KeyManager = (props) => {
     } catch (error) {
       setBlockUI(false);
       let errorMsg = "";
-      if (error.response.data.msgDesc) {
+      if (error?.response?.data?.msgDesc) {
         errorMsg = toast.error("Error! " + error.response.data.msgDesc + "\n");
       } else {
         errorMsg = `Error occurred during deleting Key` + "\n";
@@ -410,7 +409,7 @@ const KeyManager = (props) => {
       });
       dispatch({
         type: "SET_RESET_PAGE",
-        resetPage: gotoPage
+        resetPage: { page: gotoPage }
       });
       dispatch({
         type: "SET_LOADER",
@@ -506,36 +505,40 @@ const KeyManager = (props) => {
         Header: "Action",
         accessor: "action",
         Cell: (rawValue) => {
-          return (
-            <div className="text-center">
-              <Button
-                className="btn btn-outline-dark btn-sm m-r-5"
-                size="sm"
-                title="Edit"
-                onClick={() => {
-                  editModal(rawValue.row.original.name);
-                }}
-                data-name="rolloverKey"
-                data-id={rawValue.row.original.name}
-                data-cy={rawValue.row.original.name}
-              >
-                <i className="fa-fw fa fa-edit"></i>
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                title="Delete"
-                onClick={() => {
-                  deleteModal(rawValue.row.original.name);
-                }}
-                data-name="deleteKey"
-                data-id={rawValue.row.original.name}
-                data-cy={rawValue.row.original.name}
-              >
-                <i className="fa-fw fa fa-trash"></i>
-              </Button>
-            </div>
-          );
+          if (isKeyAdmin()) {
+            return (
+              <div className="text-center">
+                <Button
+                  className="btn btn-outline-dark btn-sm m-r-5"
+                  size="sm"
+                  title="Edit"
+                  onClick={() => {
+                    editModal(rawValue.row.original.name);
+                  }}
+                  data-name="rolloverKey"
+                  data-id={rawValue.row.original.name}
+                  data-cy={rawValue.row.original.name}
+                >
+                  <i className="fa-fw fa fa-edit"></i>
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  title="Delete"
+                  onClick={() => {
+                    deleteModal(rawValue.row.original.name);
+                  }}
+                  data-name="deleteKey"
+                  data-id={rawValue.row.original.name}
+                  data-cy={rawValue.row.original.name}
+                >
+                  <i className="fa-fw fa fa-trash"></i>
+                </Button>
+              </div>
+            );
+          } else {
+            return <div className="text-center">--</div>;
+          }
         },
         width: 80
       }
@@ -601,7 +604,7 @@ const KeyManager = (props) => {
               defaultSelected={defaultSearchFilterParams}
             />
           </Col>
-          {isKeyAdmin && (
+          {isKeyAdmin() && (
             <Col sm={2} className="text-right">
               <Button
                 className={onchangeval !== null ? "" : "button-disabled"}

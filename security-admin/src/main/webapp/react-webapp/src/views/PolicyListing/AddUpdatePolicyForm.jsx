@@ -53,7 +53,7 @@ import PolicyPermissionItem from "../PolicyListing/PolicyPermissionItem";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
-import { getAllTimeZoneList } from "Utils/XAUtils";
+import { getAllTimeZoneList, policyConditionUpdatedJSON } from "Utils/XAUtils";
 import moment from "moment";
 import {
   InfoIcon,
@@ -256,7 +256,7 @@ export default function AddUpdatePolicyForm(props) {
       });
       data = resp.data || null;
     } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
+      console.error(`Error occurred while fetching policy details ! ${error}`);
     }
     return data;
   };
@@ -305,7 +305,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.policyItems,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.allowExceptions =
@@ -314,7 +315,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.allowExceptions,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyPolicyItems =
@@ -323,7 +325,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.denyPolicyItems,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyExceptions =
@@ -332,7 +335,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.denyExceptions,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.dataMaskPolicyItems =
@@ -341,7 +345,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.dataMaskPolicyItems,
             serviceCompData?.dataMaskDef?.accessTypes,
             serviceCompData?.dataMaskDef?.maskTypes,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.rowFilterPolicyItems =
@@ -350,7 +355,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.rowFilterPolicyItems,
             serviceCompData?.rowFilterDef?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     if (policyId) {
@@ -433,8 +439,23 @@ export default function AddUpdatePolicyForm(props) {
       /* Policy condition */
       if (policyData?.conditions?.length > 0) {
         data.conditions = {};
+
         for (let val of policyData.conditions) {
-          data.conditions[val?.type] = val?.values?.join(",");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+            function (m) {
+              if (m.name == val.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? val?.values
+              : val?.values.toString();
+          }
         }
       }
     }
@@ -492,39 +513,22 @@ export default function AddUpdatePolicyForm(props) {
             obj.dataMaskInfo.valueExpr = key.dataMaskInfo.valueExpr;
           }
         }
-
-        if (
-          key?.conditions &&
-          isObject(key.conditions) &&
-          serviceCompDetails.name == "tag"
-        ) {
+        if (key?.conditions) {
           obj.conditions = [];
-          Object.entries(key.conditions).map(([key, value]) => {
-            if (!isEmpty(value)) {
+          Object.entries(key.conditions).map(
+            ([conditionKey, conditionValue]) => {
               return obj.conditions.push({
-                type: key,
-                values: value?.split(", ")
+                type: conditionKey,
+                values: isArray(conditionValue)
+                  ? conditionValue.map((m) => {
+                      return m.value;
+                    })
+                  : [conditionValue]
               });
             }
-          });
-        } else if (
-          !isEmpty(key?.conditions) &&
-          isObject(key.conditions) &&
-          serviceCompDetails.name == "knox"
-        ) {
-          obj.conditions = [
-            {
-              type: "ip-range",
-              values:
-                !isEmpty(Object.keys(key.conditions)) &&
-                !isArray(key.conditions)
-                  ? key.conditions["ip-range"]?.split(", ")
-                  : key.conditions.map((value) => {
-                      return value.value;
-                    })
-            }
-          ];
+          );
         }
+
         if (
           !isEmpty(obj) &&
           !isEmpty(obj?.delegateAdmin) &&
@@ -544,7 +548,13 @@ export default function AddUpdatePolicyForm(props) {
     return policyResourceItem;
   };
 
-  const setPolicyItemVal = (formData, accessTypes, maskTypes, serviceType) => {
+  const setPolicyItemVal = (
+    formData,
+    accessTypes,
+    maskTypes,
+    serviceType,
+    serviceData
+  ) => {
     return formData.map((val) => {
       let obj = {},
         accessTypesObj = [];
@@ -620,13 +630,32 @@ export default function AddUpdatePolicyForm(props) {
           obj.dataMaskInfo.valueExpr = val.dataMaskInfo.valueExpr;
         }
       }
-      /* Policy Condition*/
+
+      /* Policy Condition */
       if (val?.conditions?.length > 0) {
         obj.conditions = {};
+
         for (let data of val.conditions) {
-          obj.conditions[data.type] = data.values.join(", ");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceData?.policyConditions),
+            function (m) {
+              if (m.name == data.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? data?.values.map((m) => {
+                  return { value: m, label: m };
+                })
+              : data?.values.toString();
+          }
         }
       }
+
       return obj;
     });
   };
@@ -730,11 +759,11 @@ export default function AddUpdatePolicyForm(props) {
 
     /*Policy Condition*/
     if (values?.conditions) {
+      data.conditions = [];
       Object.entries(values.conditions).map(([key, value]) => {
-        data.conditions = [];
         return data.conditions.push({
           type: key,
-          values: value?.split(",")
+          values: isArray(value) ? value : [value]
         });
       });
     } else {
@@ -1329,9 +1358,9 @@ export default function AddUpdatePolicyForm(props) {
                                         name="conditions"
                                         render={({ input }) => (
                                           <PolicyConditionsComp
-                                            policyConditionDetails={
+                                            policyConditionDetails={policyConditionUpdatedJSON(
                                               serviceCompDetails.policyConditions
-                                            }
+                                            )}
                                             inputVal={input}
                                             showModal={showModal}
                                             handleCloseModal={
@@ -1360,27 +1389,33 @@ export default function AddUpdatePolicyForm(props) {
                                   !isEmpty(values.conditions) ? (
                                     Object.keys(values.conditions).map(
                                       (keyName, keyIndex) => {
-                                        return (
-                                          <tr>
-                                            <>
+                                        if (
+                                          values.conditions[keyName] != "" &&
+                                          values.conditions[keyName] != null
+                                        ) {
+                                          let conditionObj = find(
+                                            serviceCompDetails?.policyConditions,
+                                            function (m) {
+                                              if (m.name == keyName) {
+                                                return m;
+                                              }
+                                            }
+                                          );
+                                          return (
+                                            <tr key={keyName}>
                                               <td>
-                                                <center> {keyName} </center>
+                                                <center>
+                                                  {conditionObj.label}
+                                                </center>
                                               </td>
                                               <td>
-                                                {isObject(
-                                                  values.conditions[keyName]
+                                                {isArray(
+                                                  values?.conditions[keyName]
                                                 ) ? (
                                                   <center>
-                                                    {values.conditions[keyName]
-                                                      .length > 1
-                                                      ? values.conditions[
-                                                          keyName
-                                                        ].map((m) => {
-                                                          return ` ${m.label} `;
-                                                        })
-                                                      : values.conditions[
-                                                          keyName
-                                                        ].label}
+                                                    {values.conditions[
+                                                      keyName
+                                                    ].join(", ")}
                                                   </center>
                                                 ) : (
                                                   <center>
@@ -1388,9 +1423,9 @@ export default function AddUpdatePolicyForm(props) {
                                                   </center>
                                                 )}
                                               </td>
-                                            </>
-                                          </tr>
-                                        );
+                                            </tr>
+                                          );
+                                        }
                                       }
                                     )
                                   ) : (

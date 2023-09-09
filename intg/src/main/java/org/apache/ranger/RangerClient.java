@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.GenericType;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
@@ -49,6 +50,8 @@ public class RangerClient {
     private static final String PARAM_POLICY_NAME                   = "policyname";
     private static final String PARAM_SERVICE_NAME                  = "serviceName";
     private static final String PARAM_ZONE_NAME                     = "zoneName";
+    private static final String PARAM_PURGE_RECORD_TYPE             = "type";
+    private static final String PARAM_PURGE_RETENTION_DAYS          = "retentionDays";
 
     private static final String PARAM_RELOAD_SERVICE_POLICIES_CACHE = "reloadServicePoliciesCache";
 
@@ -87,6 +90,7 @@ public class RangerClient {
     private static final String URI_SERVICE_TAGS          = URI_SERVICE + "/%s/tags";
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
+    private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
 
 
     // APIs
@@ -146,6 +150,7 @@ public class RangerClient {
     public static final API GET_SERVICE_TAGS     = new API(URI_SERVICE_TAGS, HttpMethod.GET, Response.Status.OK);
     public static final API GET_PLUGIN_INFO      = new API(URI_PLUGIN_INFO, HttpMethod.GET, Response.Status.OK);
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
+    public static final API PURGE_RECORDS        = new API(URI_PURGE_RECORDS, HttpMethod.DELETE, Response.Status.OK);
 
 
     private final RangerRESTClient restClient;
@@ -454,6 +459,15 @@ public class RangerClient {
         queryParams.put(PARAM_RELOAD_SERVICE_POLICIES_CACHE, String.valueOf(reloadServicePoliciesCache));
 
         callAPI(DELETE_POLICY_DELTAS, queryParams);
+    }
+
+    public List<RangerPurgeResult> purgeRecords(String recordType, int retentionDays) throws RangerServiceException {
+        Map<String, String> queryParams = new HashMap<>();
+
+        queryParams.put(PARAM_PURGE_RECORD_TYPE, recordType);
+        queryParams.put(PARAM_PURGE_RETENTION_DAYS, String.valueOf(retentionDays));
+
+        return callAPI(PURGE_RECORDS, queryParams, null, new GenericType<List<RangerPurgeResult>>(){});
     }
 
     private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {

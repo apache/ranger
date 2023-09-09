@@ -180,7 +180,7 @@
 			  "isRecursive": true
 		  },
 		  "tests": [
-			  {"name": "seemingly-correct-path", "input": "/home/", "result": false},
+			  {"name": "seemingly-correct-path", "input": "/home/", "result": true},
 			  {"name": "correct-path", "input": "/home/a.txt", "result": true}
 		  ]
 	  },
@@ -265,7 +265,7 @@
 		  },
 		  "policyResource": {"values": ["/home/"], "isRecursive": true},
 		  "tests": [
-			  {"name": "slash-at-end-path", "input": "/home/", "result": false},
+			  {"name": "slash-at-end-path", "input": "/home/", "result": true},
 			  {"name": "correct-path", "input": "/home/a.txt", "result": true},
 			  {"name": "incomplete-path", "input": "/home", "result": false}
 		  ]

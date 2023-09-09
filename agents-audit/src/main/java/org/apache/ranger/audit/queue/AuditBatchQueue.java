@@ -56,8 +56,13 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public boolean log(AuditEventBase event) {
-		// Add to batchQueue. Block if full
-		queue.add(event);
+		try {
+			// Add to batchQueue. Block if full
+			queue.put(event);
+		} catch (InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
+
 		return true;
 	}
 

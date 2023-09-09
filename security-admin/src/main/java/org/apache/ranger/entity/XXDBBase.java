@@ -32,14 +32,12 @@ import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 
 
 @MappedSuperclass @EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
-@XmlRootElement
 public abstract class XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

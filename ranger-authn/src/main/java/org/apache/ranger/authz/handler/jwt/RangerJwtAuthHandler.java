@@ -101,7 +101,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         }
     }
 
-    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie) {
+    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("===>>> RangerJwtAuthHandler.authenticate()");
         }
@@ -115,17 +115,27 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                     final SignedJWT jwtToken = SignedJWT.parse(serializedJWT);
                     boolean         valid    = validateToken(jwtToken);
                     if (valid) {
-                        final String userName = jwtToken.getJWTClaimsSet().getSubject();
-                        LOG.info("Issuing AuthenticationToken for user: [{}]", userName);
+                        String userName;
+
+                        if (StringUtils.isNotBlank(doAsUser)) {
+                            userName = doAsUser.trim();
+                        } else {
+                            userName = jwtToken.getJWTClaimsSet().getSubject();
+                        }
+
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("RangerJwtAuthHandler.authenticate(): Issuing AuthenticationToken for user: [{}]", userName);
+                            LOG.debug("RangerJwtAuthHandler.authenticate(): Authentication successful for user [{}] and doAs user is [{}]", jwtToken.getJWTClaimsSet().getSubject(), doAsUser);
+                        }
                         token = new AuthenticationToken(userName, userName, TYPE);
                     } else {
-                        LOG.warn("Validation failed for JWT token: [{}] ", jwtToken.serialize());
+                        LOG.warn("RangerJwtAuthHandler.authenticate(): Validation failed for JWT token: [{}] ", jwtToken.serialize());
                     }
                 } catch (ParseException pe) {
-                    LOG.warn("Unable to parse the JWT token", pe);
+                    LOG.warn("RangerJwtAuthHandler.authenticate(): Unable to parse the JWT token", pe);
                 }
             } else {
-                LOG.warn("JWT token not found.");
+                LOG.warn("RangerJwtAuthHandler.authenticate(): JWT token not found.");
             }
         }
 

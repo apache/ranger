@@ -172,7 +172,7 @@ class ZoneListing extends Component {
     return (
       <React.Fragment>
         <div className="header-wraper">
-          <h3 className="wrap-header bold">Security Zones</h3>
+          <h3 className="wrap-header bold">Security Zone</h3>
           <CustomBreadcrumb />
         </div>
         {this.state.loader ? (
