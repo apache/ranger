@@ -340,7 +340,7 @@ public class RangerPluginInfo implements Serializable {
 
 	@JsonIgnore
 	public Long getRoleActiveVersion() {
-		String activeVersionString = getInfo().get(PLUGIN_INFO_POLICY_ACTIVE_VERSION);
+		String activeVersionString = getInfo().get(PLUGIN_INFO_ROLE_ACTIVE_VERSION);
 		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
 	}
 
