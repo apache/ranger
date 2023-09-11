@@ -57,6 +57,11 @@ public class RangerPolicyResourceSignature {
 		}
 	}
 
+	public RangerPolicyResourceSignature(Map<String, List<String>> resources) {
+		this(toSignatureString(toPolicyResources(resources)));
+	}
+
+
 	/**
 	 * Only added for testability.  Do not make public
 	 * @param string
@@ -199,6 +204,16 @@ public class RangerPolicyResourceSignature {
 			Collections.sort(signatures);
 
 			ret = signatures.toString();
+		}
+
+		return ret;
+	}
+
+	private static Map<String, RangerPolicyResource> toPolicyResources(Map<String, List<String>> resources) {
+		Map<String, RangerPolicyResource> ret = new TreeMap<>();
+
+		for (Map.Entry<String, List<String>> entry : resources.entrySet()) {
+			ret.put(entry.getKey(), new RangerPolicyResource(entry.getValue(), false, false));
 		}
 
 		return ret;

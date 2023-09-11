@@ -24,6 +24,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -460,6 +461,8 @@ public class RangerSecurityZoneValidator extends RangerValidator {
             } else {
                 if (CollectionUtils.isNotEmpty(securityZoneService.getResources())) {
                     // For each resource-spec, verify that it forms valid hierarchy for some policy-type
+                    Set<String> resourceSignatures = new HashSet<>();
+
                     for (Map<String, List<String>> resource : securityZoneService.getResources()) {
                         Set<String>            resourceDefNames = resource.keySet();
                         RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
@@ -502,6 +505,18 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                                         .errorCode(error.getErrorCode()).build());
                                 ret = false;
                             }
+                        }
+
+                        RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(resource);
+
+                        if (!resourceSignatures.add(resourceSignature.getSignature())) {
+                            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY;
+
+                            failures.add(new ValidationFailureDetailsBuilder().field("security zone resources")
+                                                 .subField("resources")
+                                                 .becauseOf(error.getMessage(resource, serviceName))
+                                                 .errorCode(error.getErrorCode()).build());
+                            ret = false;
                         }
                     }
                 }
