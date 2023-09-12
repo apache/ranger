@@ -88,12 +88,10 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     }
 
     synchronized public boolean logJSON(final Collection<String> events) throws Exception {
-        boolean     ret = false;
         PrintWriter out = null;
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("UGI=" + MiscUtil.getUGILoginUser()
-                        + ". Will write to HDFS file=" + currentFileName);
+                logger.debug("UGI = {}, will write to HDFS file = {}", MiscUtil.getUGILoginUser(), currentFileName);
             }
             out = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<PrintWriter>() {
                 @Override
@@ -108,28 +106,30 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // flush and check the stream for errors
             if (out.checkError()) {
                 // In theory, this count may NOT be accurate as part of the messages may have been successfully written.
-                // However, in practice, since client does buffering, either all of none would succeed.
-                out.close();
+                // However, in practice, since client does buffering, either all or none would succeed.
+                logger.error("Stream encountered errors while writing audits to HDFS!");
                 closeWriter();
-                return ret;
+                resetWriter();
+                reUseLastLogFile = true;
+                return false;
             }
         } catch (Exception e) {
-            if (out != null) {
-                out.close();
-            }
+            logger.error("Exception encountered while writing audits to HDFS!", e);
             closeWriter();
-            return ret;
+            resetWriter();
+            reUseLastLogFile = true;
+            return false;
         } finally {
-            ret = true;
             if (logger.isDebugEnabled()) {
                 logger.debug("Flushing HDFS audit. Event Size:" + events.size());
             }
             if (out != null) {
                 out.flush();
             }
+            //closeWriter();
         }
 
-        return ret;
+        return true;
     }
 
     @Override
@@ -166,8 +166,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // close the file inline with audit logging.
             closeFileIfNeeded();
         }
-        // Either there are no open log file or the previous one has been rolled
-        // over
+        // Either there are no open log file or the previous one has been rolled over
         PrintWriter logWriter = createWriter();
         return logWriter;
     }
