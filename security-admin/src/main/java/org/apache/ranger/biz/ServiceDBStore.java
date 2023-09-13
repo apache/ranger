@@ -3611,9 +3611,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 						MessageEnums.INVALID_INPUT_DATA);
 			}
 
-			if (StringUtils.equals(svcConfDef.getName(), RANGER_PLUGIN_AUDIT_FILTERS) && !configs.containsKey(RANGER_PLUGIN_AUDIT_FILTERS)) {
-				if (svcConfDef.getDefaultvalue() != null) {
+			if (StringUtils.equals(svcConfDef.getName(), RANGER_PLUGIN_AUDIT_FILTERS)) {
+				if (svcConfDef.getDefaultvalue() != null && !configs.containsKey(RANGER_PLUGIN_AUDIT_FILTERS)) {
 					configs.put(RANGER_PLUGIN_AUDIT_FILTERS, svcConfDef.getDefaultvalue());
+				}
+				if (!stringUtil.isEmpty(configs.get(RANGER_PLUGIN_AUDIT_FILTERS)) && JsonUtils.jsonToAuditFilterList(configs.get(RANGER_PLUGIN_AUDIT_FILTERS)) == null) {
+					throw restErrorUtil.createRESTException("Invalid value for " + svcConfDef.getName());
 				}
 			}
 		}
