@@ -57,8 +57,13 @@ public class RangerPolicyResourceSignature {
 		}
 	}
 
-	public RangerPolicyResourceSignature(Map<String, List<String>> resources) {
-		this(toSignatureString(toPolicyResources(resources)));
+	public RangerPolicyResourceSignature(Map<String, RangerPolicyResource> resources) {
+		this(toSignatureString(resources));
+	}
+
+	// alternate to constructor that takes Map<String, List<String>>
+	public static RangerPolicyResourceSignature from(Map<String, List<String>> resources) {
+		return new RangerPolicyResourceSignature(toPolicyResources(resources));
 	}
 
 

@@ -507,7 +507,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                             }
                         }
 
-                        RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(resource);
+                        RangerPolicyResourceSignature resourceSignature = RangerPolicyResourceSignature.from(resource);
 
                         if (!resourceSignatures.add(resourceSignature.getSignature())) {
                             ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY;
