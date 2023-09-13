@@ -22,7 +22,7 @@ import { Col, Form as FormB, Row, Modal, Button } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { find } from "lodash";
+import { find, isEmpty } from "lodash";
 import { InfoIcon } from "../../utils/XAUtils";
 import { RegexMessage } from "../../utils/XAMessages";
 const esprima = require("esprima");
@@ -79,17 +79,17 @@ export default function PolicyConditionsComp(props) {
   };
 
   const handleChange = (val, input) => {
-    let value = null;
+    let value = [];
     if (val) {
-      value = val.map((m) => m.value).join(",");
+      value = val.map((m) => m.value);
     }
     input.onChange(value);
   };
 
   const ipRangeVal = (val) => {
-    let value = null;
-    if (val) {
-      value = val.split(",").map((m) => ({ label: m, value: m }));
+    let value = [];
+    if (!isEmpty(val)) {
+      value = val.map((m) => ({ label: m, value: m }));
     }
     return value;
   };

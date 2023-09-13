@@ -22,10 +22,88 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerUserStoreUtil {
     public static final String CLOUD_IDENTITY_NAME = "cloud_id";
+
+    private final RangerUserStore                  userStore;
+    private final long                             userStoreVersion;
+    private final Map<String, Set<String>>         userGroups;
+    private final Map<String, Map<String, String>> userAttributes;
+    private final Map<String, Map<String, String>> groupAttributes;
+
+    private volatile Map<String, String> userEmailToName = null;
+
+    public RangerUserStoreUtil(RangerUserStore userStore) {
+        this.userStore = userStore;
+
+        if (userStore != null) {
+            this.userStoreVersion = userStore.getUserStoreVersion() != null ? userStore.getUserStoreVersion() : -1;
+            this.userGroups       = userStore.getUserGroupMapping() != null ? userStore.getUserGroupMapping() : Collections.emptyMap();
+            this.userAttributes   = userStore.getUserAttrMapping() != null ? userStore.getUserAttrMapping() : Collections.emptyMap();
+            this.groupAttributes  = userStore.getGroupAttrMapping() != null ? userStore.getGroupAttrMapping() : Collections.emptyMap();
+        } else {
+            this.userStoreVersion = -1;
+            this.userGroups       = Collections.emptyMap();
+            this.userAttributes   = Collections.emptyMap();
+            this.groupAttributes  = Collections.emptyMap();
+            this.userEmailToName  = Collections.emptyMap();
+        }
+    }
+
+    public RangerUserStore getUserStore() { return userStore; }
+
+    public long getUserStoreVersion() { return userStoreVersion; }
+
+    public Set<String> getUserGroups(String userName) { return userGroups.get(userName); }
+
+    public Map<String, String> getUserAttributes(String userName) { return userAttributes.get(userName); }
+
+    public Map<String, String> getGroupAttributes(String groupName) { return groupAttributes.get(groupName); }
+
+    public String getUserNameFromEmail(String emailAddress) {
+        Map<String, String> userEmailToName = this.userEmailToName;
+
+        if (userEmailToName == null) {
+            synchronized (this) {
+                userEmailToName = this.userEmailToName;
+
+                if (userEmailToName == null) {
+                    this.userEmailToName = buildUserEmailToNameMap();
+
+                    userEmailToName = this.userEmailToName;
+                }
+            }
+        }
+
+        return userEmailToName != null ? userEmailToName.get(emailAddress) : null;
+    }
+
+    private Map<String, String> buildUserEmailToNameMap() {
+        final Map<String, String> ret;
+
+        if (!userAttributes.isEmpty()) {
+            ret = new HashMap<>();
+
+            for (Map.Entry<String, Map<String, String>> entry : userAttributes.entrySet()) {
+                String              userName  = entry.getKey();
+                Map<String, String> userAttrs = entry.getValue();
+                String              emailAddr = userAttrs != null ? userAttrs.get(RangerCommonConstants.SCRIPT_FIELD__EMAIL_ADDRESS) : null;
+
+                if (StringUtils.isNotBlank(emailAddr)) {
+                    ret.put(emailAddr, userName);
+                }
+            }
+        } else {
+            ret = Collections.emptyMap();
+        }
+
+        return ret;
+    }
 
     public static String getPrintableOptions(Map<String, String> otherAttributes) {
         if (MapUtils.isEmpty(otherAttributes)) return "{}";
@@ -51,9 +129,7 @@ public class RangerUserStoreUtil {
     }
 
     public String getCloudId(Map<String, Map<String, String>> attrMap, String name) {
-        String cloudId = null;
-        cloudId = getAttrVal(attrMap, name, CLOUD_IDENTITY_NAME);
-        return cloudId;
+        return getAttrVal(attrMap, name, CLOUD_IDENTITY_NAME);
     }
 }
 

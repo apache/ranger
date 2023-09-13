@@ -305,7 +305,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.policyItems,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.allowExceptions =
@@ -314,7 +315,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.allowExceptions,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyPolicyItems =
@@ -323,7 +325,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData?.denyPolicyItems,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyExceptions =
@@ -332,7 +335,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.denyExceptions,
             serviceCompData?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.dataMaskPolicyItems =
@@ -341,7 +345,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.dataMaskPolicyItems,
             serviceCompData?.dataMaskDef?.accessTypes,
             serviceCompData?.dataMaskDef?.maskTypes,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.rowFilterPolicyItems =
@@ -350,7 +355,8 @@ export default function AddUpdatePolicyForm(props) {
             policyData.rowFilterPolicyItems,
             serviceCompData?.rowFilterDef?.accessTypes,
             null,
-            serviceCompData?.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     if (policyId) {
@@ -433,8 +439,23 @@ export default function AddUpdatePolicyForm(props) {
       /* Policy condition */
       if (policyData?.conditions?.length > 0) {
         data.conditions = {};
+
         for (let val of policyData.conditions) {
-          data.conditions[val?.type] = val?.values?.join(",");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+            function (m) {
+              if (m.name == val.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? val?.values
+              : val?.values.toString();
+          }
         }
       }
     }
@@ -498,11 +519,11 @@ export default function AddUpdatePolicyForm(props) {
             ([conditionKey, conditionValue]) => {
               return obj.conditions.push({
                 type: conditionKey,
-                values: !isArray(conditionValue)
-                  ? conditionValue?.split(",")
-                  : conditionValue.map((m) => {
+                values: isArray(conditionValue)
+                  ? conditionValue.map((m) => {
                       return m.value;
                     })
+                  : [conditionValue]
               });
             }
           );
@@ -527,7 +548,13 @@ export default function AddUpdatePolicyForm(props) {
     return policyResourceItem;
   };
 
-  const setPolicyItemVal = (formData, accessTypes, maskTypes, serviceType) => {
+  const setPolicyItemVal = (
+    formData,
+    accessTypes,
+    maskTypes,
+    serviceType,
+    serviceData
+  ) => {
     return formData.map((val) => {
       let obj = {},
         accessTypesObj = [];
@@ -603,13 +630,32 @@ export default function AddUpdatePolicyForm(props) {
           obj.dataMaskInfo.valueExpr = val.dataMaskInfo.valueExpr;
         }
       }
-      /* Policy Condition*/
+
+      /* Policy Condition */
       if (val?.conditions?.length > 0) {
         obj.conditions = {};
+
         for (let data of val.conditions) {
-          obj.conditions[data.type] = data.values.join(", ");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceData?.policyConditions),
+            function (m) {
+              if (m.name == data.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? data?.values.map((m) => {
+                  return { value: m, label: m };
+                })
+              : data?.values.toString();
+          }
         }
       }
+
       return obj;
     });
   };
@@ -717,7 +763,7 @@ export default function AddUpdatePolicyForm(props) {
       Object.entries(values.conditions).map(([key, value]) => {
         return data.conditions.push({
           type: key,
-          values: value?.split(",")
+          values: isArray(value) ? value : [value]
         });
       });
     } else {
@@ -1359,25 +1405,17 @@ export default function AddUpdatePolicyForm(props) {
                                             <tr key={keyName}>
                                               <td>
                                                 <center>
-                                                  {" "}
-                                                  {conditionObj.label}{" "}
+                                                  {conditionObj.label}
                                                 </center>
                                               </td>
                                               <td>
-                                                {isObject(
-                                                  values.conditions[keyName]
+                                                {isArray(
+                                                  values?.conditions[keyName]
                                                 ) ? (
                                                   <center>
-                                                    {values.conditions[keyName]
-                                                      .length > 1
-                                                      ? values.conditions[
-                                                          keyName
-                                                        ].map((m) => {
-                                                          return ` ${m.label} `;
-                                                        })
-                                                      : values.conditions[
-                                                          keyName
-                                                        ].label}
+                                                    {values.conditions[
+                                                      keyName
+                                                    ].join(", ")}
                                                   </center>
                                                 ) : (
                                                   <center>

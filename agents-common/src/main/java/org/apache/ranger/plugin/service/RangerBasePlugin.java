@@ -70,7 +70,6 @@ public class RangerBasePlugin {
 	private       RangerAccessResultProcessor resultProcessor;
 	private       RangerRoles                 roles;
 	private final List<RangerChainedPlugin>   chainedPlugins;
-	private final boolean                     enableImplicitUserStoreEnricher;
 	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
 
@@ -101,9 +100,7 @@ public class RangerBasePlugin {
 
 		RangerRequestScriptEvaluator.init(pluginConfig);
 
-		this.enableImplicitUserStoreEnricher = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".enable.implicit.userstore.enricher", false);
-		this.dedupStrings                    = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".dedup.strings", true);
-
+		this.dedupStrings   = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".dedup.strings", true);
 		this.chainedPlugins = initChainedPlugins();
 	}
 
@@ -283,13 +280,15 @@ public class RangerBasePlugin {
 			LOG.debug("==> setPolicies(" + policies + ")");
 		}
 
-		if (enableImplicitUserStoreEnricher && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
-			String retrieverClassName = getConfig().get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
-			String retrieverPollIntMs = getConfig().get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
+		if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
+			String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
+			String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
 
 			// in case of delta, policies will only have changes; hence add userStoreEnricher if it was implicitly added previous calls to setPolicies()
 			if (RangerPolicyDeltaUtil.hasPolicyDeltas(policies) == Boolean.TRUE && isUserStoreEnricherAddedImplcitly) {
 				ServiceDefUtil.addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
+			} else if (pluginConfig.isUseRangerGroups() || pluginConfig.isConvertEmailToUsername()) {
+				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
 			} else {
 				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricherIfNeeded(policies, retrieverClassName, retrieverPollIntMs);
 			}
