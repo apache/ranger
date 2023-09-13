@@ -1803,6 +1803,7 @@ CREATE TABLE `x_gds_shared_resource`(
   , `additional_info`      TEXT         NULL     DEFAULT NULL
   , PRIMARY KEY(`id`)
   , UNIQUE KEY `x_gds_shared_resource_UK_name`(`data_share_id`, `name`)
+  , UNIQUE KEY `x_gds_shared_resource_UK_resource_signature`(`data_share_id`, `resource_signature`)
   , CONSTRAINT `x_gds_shared_resource_FK_added_by_id`   FOREIGN KEY(`added_by_id`)   REFERENCES `x_portal_user`(`id`)
   , CONSTRAINT `x_gds_shared_resource_FK_upd_by_id`     FOREIGN KEY(`upd_by_id`)     REFERENCES `x_portal_user`(`id`)
   , CONSTRAINT `x_gds_shared_resource_FK_data_share_id` FOREIGN KEY(`data_share_id`) REFERENCES `x_gds_data_share`(`id`)
