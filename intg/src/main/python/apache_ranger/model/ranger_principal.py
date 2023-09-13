@@ -18,7 +18,7 @@
 
 from apache_ranger.model.ranger_base import RangerBase
 from apache_ranger.utils             import *
-
+from strenum                         import StrEnum
 
 class PrincipalType(StrEnum):
   USER  = 'USER'
@@ -47,7 +47,13 @@ class RangerPrincipal(RangerBase):
         self.type = attrs.get('type')
         self.name = attrs.get('name')
 
+    def __hash__(self):
+        return hash((self.type, self.name))
+
+    def __eq__(self, other):
+        return (self.type, self.name) == (other.type, other.name)
+
     def type_coerce_attrs(self):
         super(RangerPrincipal, self).type_coerce_attrs()
 
-        self.type = type_coerce(self.type, PrincipalType)
+        self.type = PrincipalType.value_of(self.type)

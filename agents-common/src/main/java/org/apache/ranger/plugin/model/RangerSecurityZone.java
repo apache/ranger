@@ -23,6 +23,8 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneResourceBase;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -147,14 +149,20 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	public static class RangerSecurityZoneService implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
-        private List<HashMap<String, List<String>>> resources;
+        private List<HashMap<String, List<String>>>  resources;
+        private List<RangerSecurityZoneResourceBase> resourcesBaseInfo;
 
         public RangerSecurityZoneService() {
-            this(null);
+            this(null, null);
         }
 
         public RangerSecurityZoneService(List<HashMap<String, List<String>>> resources) {
+            this(resources, null);
+        }
+
+        public RangerSecurityZoneService(List<HashMap<String, List<String>>> resources, List<RangerSecurityZoneResourceBase> resourcesBaseInfo) {
             setResources(resources);
+            setResourcesBaseInfo(resourcesBaseInfo);
         }
 
         public List<HashMap<String, List<String>>> getResources() { return resources; }
@@ -163,22 +171,40 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
             this.resources = resources == null ? new ArrayList<>() : resources;
         }
 
+        public List<RangerSecurityZoneResourceBase> getResourcesBaseInfo() { return resourcesBaseInfo; }
+
+        public void setResourcesBaseInfo(List<RangerSecurityZoneResourceBase> resourcesBaseInfo) {
+            this.resourcesBaseInfo = resourcesBaseInfo == null ? new ArrayList<>() : resourcesBaseInfo;
+        }
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("{resources={");
-            for (Map<String, List<String>> resource : resources) {
-                sb.append("[ ");
-                for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
-                    sb.append("{resource-def-name=").append(entry.getKey()).append(", values=").append(entry.getValue()).append("},");
+            sb.append("{resources=[");
+            if (resources != null) {
+                for (int i = 0; i < resources.size(); i++) {
+                    HashMap<String, List<String>>  resource = resources.get(i);
+                    RangerSecurityZoneResourceBase baseInfo = (resourcesBaseInfo != null && resourcesBaseInfo.size() > i) ? resourcesBaseInfo.get(i) : null;
+
+                    sb.append("{resource=");
+                    if (resource != null) {
+                        for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
+                            sb.append("{resource-def-name=").append(entry.getKey()).append(", values=").append(entry.getValue()).append("} ");
+                        }
+                    }
+                    sb.append("} ");
+
+                    sb.append("{baseInfo=");
+                    if (baseInfo != null) {
+                        baseInfo.toString(sb);
+                    }
+                    sb.append("} ");
                 }
-                sb.append(" ],");
             }
-            sb.append("}}");
+            sb.append("]}");
 
             return sb.toString();
         }
-
     }
 }
 

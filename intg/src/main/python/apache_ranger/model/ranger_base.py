@@ -73,28 +73,23 @@ class RangerBaseModelObject(RangerBase):
         self.version    = attrs.get('version')
 
 class PList(RangerBase):
-  def __init__(self, attrs=None):
-    if attrs is None:
-      attrs = {}
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
 
-    RangerBase.__init__(self, attrs)
+        RangerBase.__init__(self, attrs)
 
-    self.startIndex  = attrs.get('startIndex')
-    self.pageSize    = attrs.get('pageSize')
-    self.totalCount  = attrs.get('totalCount')
-    self.resultSize  = attrs.get('resultSize')
-    self.sortType    = attrs.get('sortType')
-    self.sortBy      = attrs.get('sortBy')
-    self.queryTimeMS = attrs.get('queryTimeMS')
-    self.list        = attrs.get('list')
+        self.startIndex  = attrs.get('startIndex')
+        self.pageSize    = attrs.get('pageSize')
+        self.totalCount  = attrs.get('totalCount')
+        self.resultSize  = attrs.get('resultSize')
+        self.sortType    = attrs.get('sortType')
+        self.sortBy      = attrs.get('sortBy')
+        self.queryTimeMS = attrs.get('queryTimeMS')
+        self.list        = attrs.get('list')
 
-  @classmethod
-  def type_coerce_plist(cls, obj, objType):
-    if isinstance(obj, dict):
-        ret = PList(obj)
+    def type_coerce_attrs(self):
+        super(PList, self).type_coerce_attrs()
 
-        ret.list = type_coerce_list(ret.list, objType)
-    else:
-        ret = None
-
-    return ret
+    def type_coerce_list(self, elemType):
+        self.list = type_coerce_list(self.list, elemType)

@@ -124,6 +124,7 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
     SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
+    SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY(3052, "Resource [{0}] specified more than once in service [{1}]"),
 
     //RANGER ROLE Validations
     ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT(4001, "Internal error: RangerRole object passed in was null"),
