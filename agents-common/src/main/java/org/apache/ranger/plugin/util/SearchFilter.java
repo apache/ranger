@@ -111,6 +111,7 @@ public class SearchFilter {
 	public static final String OWNER_TYPE               = "ownerType";            // search: valid-values(user, group, role)
 	public static final String DATA_SHARE_IN_DATASET_ID = "dataShareInDatasetId"; // search, sort
 	public static final String DATASET_IN_PROJECT_ID    = "datasetInProjectId";   // search, sort
+	public static final String GDS_PERMISSION    	    = "gdsPermission";   // search, sort
 
 	private Map<String, String> params;
 	private int                 startIndex;

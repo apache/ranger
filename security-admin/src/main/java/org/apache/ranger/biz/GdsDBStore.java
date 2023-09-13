@@ -244,11 +244,30 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDatasets({})", filter);
 
+        String        gdsPermissionStr = filter.getParam(SearchFilter.GDS_PERMISSION);
+        GdsPermission gdsPermission    = null;
+
+        if (StringUtils.isNotEmpty(gdsPermissionStr)) {
+            try {
+                gdsPermission = GdsPermission.valueOf(gdsPermissionStr);
+            } catch (IllegalArgumentException ex) {
+                LOG.info("Ignoring invalid GdsPermission: {}", gdsPermissionStr);
+            }
+        }
+
+        if (gdsPermission == null) {
+            gdsPermission = GdsPermission.VIEW;
+        }
+
         RangerDatasetList   result   = datasetService.searchDatasets(filter);
         List<RangerDataset> datasets = new ArrayList<>();
 
         for (RangerDataset dataset : result.getList()) {
-            if (dataset != null && validator.hasPermission(dataset.getAcl(), GdsPermission.VIEW)) {
+            if (dataset != null && validator.hasPermission(dataset.getAcl(), gdsPermission)) {
+                if (gdsPermission.equals(GdsPermission.LIST)) {
+                    scrubForListing(dataset);
+                }
+
                 datasets.add(dataset);
             }
         }
@@ -258,6 +277,12 @@ public class GdsDBStore extends AbstractGdsStore {
         LOG.debug("<== searchDatasets({}): ret={}", filter, ret);
 
         return ret;
+    }
+
+    private void scrubForListing(RangerDataset dataset) {
+        dataset.setAcl(null);
+        dataset.setOptions(null);
+        dataset.setAdditionalInfo(null);
     }
 
     @Override
