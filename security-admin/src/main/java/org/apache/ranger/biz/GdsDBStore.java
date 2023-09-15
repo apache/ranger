@@ -19,6 +19,7 @@
 
 package org.apache.ranger.biz;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -224,16 +225,16 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<String> getDatasetNames(SearchFilter filter) throws Exception {
         LOG.debug("==> getDatasetNames({})", filter);
 
-        RangerDatasetList result = datasetService.searchDatasets(filter);
-        List<String>      names  = new ArrayList<>();
+        PList<RangerDataset> datasets = searchDatasets(filter);
+        PList<String>        ret      = new PList<>(new ArrayList<>(), datasets.getStartIndex(), datasets.getPageSize(), datasets.getTotalCount(), datasets.getResultSize(), datasets.getSortType(), datasets.getSortBy());
 
-        for (RangerDataset dataset : result.getList()) {
-            if (dataset != null && validator.hasPermission(dataset.getAcl(), GdsPermission.LIST)) {
-               names.add(dataset.getName());
+        ret.setQueryTimeMS(datasets.getQueryTimeMS());
+
+        if (CollectionUtils.isNotEmpty(datasets.getList())) {
+            for (RangerDataset dataset : datasets.getList()) {
+                ret.getList().add(dataset.getName());
             }
         }
-
-        PList<String> ret = new PList<>(names, 0, names.size(), names.size(), names.size(), result.getSortType(), result.getSortBy());
 
         LOG.debug("<== getDatasetNames({}): ret={}", filter, ret);
 
@@ -243,6 +244,11 @@ public class GdsDBStore extends AbstractGdsStore {
     @Override
     public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDatasets({})", filter);
+
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
 
         String        gdsPermissionStr = filter.getParam(SearchFilter.GDS_PERMISSION);
         GdsPermission gdsPermission    = null;
@@ -272,7 +278,9 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
 
-        PList<RangerDataset> ret = new PList<>(datasets, 0, datasets.size(), datasets.size(), datasets.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), datasets.size());
+        List<RangerDataset> paginatedDatasets = datasets.subList(startIndex, endIndex);
+        PList<RangerDataset> ret = new PList<>(paginatedDatasets, startIndex, maxRows, datasets.size(), paginatedDatasets.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDatasets({}): ret={}", filter, ret);
 
@@ -391,16 +399,16 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<String> getProjectNames(SearchFilter filter) throws Exception {
         LOG.debug("==> getProjectNames({})", filter);
 
-        RangerProjectList result = projectService.searchProjects(filter);
-        List<String>      names  = new ArrayList<>();
+        PList<RangerProject> projects = searchProjects(filter);
+        PList<String>        ret      = new PList<>(new ArrayList<>(), projects.getStartIndex(), projects.getPageSize(), projects.getTotalCount(), projects.getResultSize(), projects.getSortType(), projects.getSortBy());
 
-        for (RangerProject project : result.getList()) {
-            // TODO: enforce RangerProject.acl
+        ret.setQueryTimeMS(projects.getQueryTimeMS());
 
-            names.add(project.getName());
+        if (CollectionUtils.isNotEmpty(projects.getList())) {
+            for (RangerProject project : projects.getList()) {
+                ret.getList().add(project.getName());
+            }
         }
-
-        PList<String> ret = new PList<>(names, 0, names.size(), names.size(), names.size(), result.getSortType(), result.getSortBy());
 
         LOG.debug("<== getProjectNames({}): ret={}", filter, ret);
 
@@ -411,6 +419,11 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerProject> searchProjects(SearchFilter filter) throws Exception {
         LOG.debug("==> searchProjects({})", filter);
 
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
         RangerProjectList   result   = projectService.searchProjects(filter);
         List<RangerProject> projects = new ArrayList<>();
 
@@ -420,7 +433,9 @@ public class GdsDBStore extends AbstractGdsStore {
             projects.add(project);
         }
 
-        PList<RangerProject> ret = new PList<>(projects, 0, projects.size(), projects.size(), projects.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), projects.size());
+        List<RangerProject> paginatedProjects = projects.subList(startIndex, endIndex);
+        PList<RangerProject> ret = new PList<>(paginatedProjects, startIndex, maxRows, projects.size(), paginatedProjects.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchProjects({}): ret={}", filter, ret);
 
@@ -514,6 +529,11 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDataShares({})", filter);
 
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
         RangerDataShareList   result     = dataShareService.searchDataShares(filter);
         List<RangerDataShare> dataShares = new ArrayList<>();
 
@@ -523,13 +543,14 @@ public class GdsDBStore extends AbstractGdsStore {
             dataShares.add(dataShare);
         }
 
-        PList<RangerDataShare> ret = new PList<>(dataShares, 0, dataShares.size(), dataShares.size(), dataShares.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), dataShares.size());
+        List<RangerDataShare> paginatedDataShares = dataShares.subList(startIndex, endIndex);
+        PList<RangerDataShare> ret = new PList<>(paginatedDataShares, startIndex, maxRows, dataShares.size(), paginatedDataShares.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDataShares({}): ret={}", filter, ret);
 
         return ret;
     }
-
 
     @Override
     public RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception {
@@ -612,6 +633,11 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerSharedResource> searchSharedResources(SearchFilter filter) throws Exception {
         LOG.debug("==> searchSharedResources({})", filter);
 
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
         RangerSharedResourceList   result          = sharedResourceService.searchSharedResources(filter);
         List<RangerSharedResource> sharedResources = new ArrayList<>();
 
@@ -621,7 +647,9 @@ public class GdsDBStore extends AbstractGdsStore {
             sharedResources.add(dataShare);
         }
 
-        PList<RangerSharedResource> ret = new PList<>(sharedResources, 0, sharedResources.size(), sharedResources.size(), sharedResources.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), sharedResources.size());
+        List<RangerSharedResource> paginatedSharedResources = sharedResources.subList(startIndex, endIndex);
+        PList<RangerSharedResource> ret = new PList<>(paginatedSharedResources, startIndex, maxRows, sharedResources.size(), paginatedSharedResources.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchSharedResources({}): ret={}", filter, ret);
 
@@ -702,6 +730,11 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDataShareInDatasets({})", filter);
 
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
         List<RangerDataShareInDataset> dataShareInDatasets = new ArrayList<>();
         RangerDataShareInDatasetList   result              = dataShareInDatasetService.searchDataShareInDatasets(filter);
 
@@ -711,7 +744,9 @@ public class GdsDBStore extends AbstractGdsStore {
             dataShareInDatasets.add(dataShareInDataset);
         }
 
-        PList<RangerDataShareInDataset> ret = new PList<>(dataShareInDatasets, 0, dataShareInDatasets.size(), dataShareInDatasets.size(), dataShareInDatasets.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), dataShareInDatasets.size());
+        List<RangerDataShareInDataset> paginatedDataShareInDatasets = dataShareInDatasets.subList(startIndex, endIndex);
+        PList<RangerDataShareInDataset> ret = new PList<>(paginatedDataShareInDatasets, startIndex, maxRows, dataShareInDatasets.size(), paginatedDataShareInDatasets.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDataShareInDatasets({}): ret={}", filter, ret);
 
@@ -794,6 +829,11 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDatasetInProjects({})", filter);
 
+        int maxRows = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
         List<RangerDatasetInProject> datasetInProjects = new ArrayList<>();
         RangerDatasetInProjectList   result            = datasetInProjectService.searchDatasetInProjects(filter);
 
@@ -803,7 +843,9 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetInProjects.add(datasetInProject);
         }
 
-        PList<RangerDatasetInProject> ret = new PList<>(datasetInProjects, 0, datasetInProjects.size(), datasetInProjects.size(), datasetInProjects.size(), result.getSortBy(), result.getSortType());
+        int endIndex = Math.min((startIndex + maxRows), datasetInProjects.size());
+        List<RangerDatasetInProject> paginatedDatasetInProjects = datasetInProjects.subList(startIndex, endIndex);
+        PList<RangerDatasetInProject> ret = new PList<>(paginatedDatasetInProjects, startIndex, maxRows, datasetInProjects.size(), paginatedDatasetInProjects.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDatasetInProjects({}): ret={}", filter, ret);
 

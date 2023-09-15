@@ -172,11 +172,25 @@ public class PList<T> implements java.io.Serializable {
 	}
 	public String getSortBy() { return sortBy; }
 
+	/**
+	 * This method sets the value to the member attribute <b>queryTimeMS</b>. You
+	 * cannot set null to the attribute.
+	 *
+	 * @param queryTimeMS
+	 *            Value to set member attribute <b>queryTimeMS</b>
+	 */
+	public void setQueryTimeMS(long queryTimeMS) {
+		this.queryTimeMS = queryTimeMS;
+	}
 
-
-
-
-
+	/**
+	 * Returns the value for the member attribute <b>queryTimeMS</b>
+	 *
+	 * @return long - value of member attribute <b>queryTimeMS</b>.
+	 */
+	public long getQueryTimeMS() {
+		return queryTimeMS;
+	}
 
 	/*
 	 * (non-Javadoc)
