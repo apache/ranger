@@ -500,6 +500,483 @@ public class StarRocksClient extends BaseClient implements Closeable {
         return columnList;
     }
 
+    public List<String> getViewList(String needle, List<String> catalogs, List<String> schemas, List<String> tables)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            if (catalogs != null && !catalogs.isEmpty()
+                    && schemas != null && !schemas.isEmpty()) {
+                try {
+                    for (String catalog : catalogs) {
+                        for (String schema : schemas) {
+                            try {
+                                sql = "SELECT TABLE_NAME FROM information_schema.views WHERE TABLE_SCHEMA = '"
+                                        + StringEscapeUtils.escapeSql(schema) + "'";
+
+                                if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                                    sql += " AND TABLE_NAME LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                                }
+                                stat = con.createStatement();
+                                rs = stat.executeQuery(sql);
+                                while (rs.next()) {
+                                    String table = rs.getString(1);
+                                    if (tables != null && tables.contains(table)) {
+                                        continue;
+                                    }
+                                    ret.add(table);
+                                }
+                            } finally {
+                                close(rs);
+                                close(stat);
+                                rs = null;
+                                stat = null;
+                            }
+                        }
+                    }
+                } catch (SQLTimeoutException sqlt) {
+                    String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                            + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqlt);
+                    hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                    }
+                    throw hdpException;
+                } catch (SQLException sqle) {
+                    String msgDesc = "Unable to execute SQL [" + sql + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqle);
+                    hdpException.generateResponseDataMap(false, getMessage(sqle),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                    }
+                    throw hdpException;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getMaterializedViewList(String needle, List<String> catalogs, List<String> schemas, List<String> tables)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            if (catalogs != null && !catalogs.isEmpty()
+                    && schemas != null && !schemas.isEmpty()) {
+                try {
+                    for (String catalog : catalogs) {
+                        for (String schema : schemas) {
+                            try {
+                                sql = "SELECT TABLE_NAME FROM information_schema.materialized_views WHERE TABLE_SCHEMA = '"
+                                        + StringEscapeUtils.escapeSql(schema) + "'";
+
+                                if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                                    sql += " AND TABLE_NAME LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                                }
+                                stat = con.createStatement();
+                                rs = stat.executeQuery(sql);
+                                while (rs.next()) {
+                                    String table = rs.getString(1);
+                                    if (tables != null && tables.contains(table)) {
+                                        continue;
+                                    }
+                                    ret.add(table);
+                                }
+                            } finally {
+                                close(rs);
+                                close(stat);
+                                rs = null;
+                                stat = null;
+                            }
+                        }
+                    }
+                } catch (SQLTimeoutException sqlt) {
+                    String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                            + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqlt);
+                    hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                    }
+                    throw hdpException;
+                } catch (SQLException sqle) {
+                    String msgDesc = "Unable to execute SQL [" + sql + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqle);
+                    hdpException.generateResponseDataMap(false, getMessage(sqle),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                    }
+                    throw hdpException;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getFunctionList(String needle, List<String> catalogs, List<String> schemas, List<String> tables)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            if (catalogs != null && !catalogs.isEmpty()
+                    && schemas != null && !schemas.isEmpty()) {
+                try {
+                    for (String catalog : catalogs) {
+                        for (String schema : schemas) {
+                            try {
+                                sql = "SHOW FULL FUNCTIONS FROM `" + schema + "`";
+
+                                if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                                    sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                                }
+                                stat = con.createStatement();
+                                rs = stat.executeQuery(sql);
+                                while (rs.next()) {
+                                    String table = rs.getString(1);
+                                    if (tables != null && tables.contains(table)) {
+                                        continue;
+                                    }
+                                    ret.add(table);
+                                }
+                            } finally {
+                                close(rs);
+                                close(stat);
+                                rs = null;
+                                stat = null;
+                            }
+                        }
+                    }
+                } catch (SQLTimeoutException sqlt) {
+                    String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                            + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqlt);
+                    hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                    }
+                    throw hdpException;
+                } catch (SQLException sqle) {
+                    String msgDesc = "Unable to execute SQL [" + sql + "].";
+                    HadoopException hdpException = new HadoopException(msgDesc,
+                            sqle);
+                    hdpException.generateResponseDataMap(false, getMessage(sqle),
+                            msgDesc + ERR_MSG, null, null);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                    }
+                    throw hdpException;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getFunctionList(String needle, List<String> functions)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            try {
+                try {
+                    sql = "SHOW FULL GLOBAL FUNCTIONS";
+
+                    if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                        sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                    }
+                    stat = con.createStatement();
+                    rs = stat.executeQuery(sql);
+                    while (rs.next()) {
+                        String table = rs.getString(1);
+                        if (functions != null && functions.contains(table)) {
+                            continue;
+                        }
+                        ret.add(table);
+                    }
+                } finally {
+                    close(rs);
+                    close(stat);
+                    rs = null;
+                    stat = null;
+                }
+            } catch (SQLTimeoutException sqlt) {
+                String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                        + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqlt);
+                hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                }
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqle);
+                hdpException.generateResponseDataMap(false, getMessage(sqle),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                }
+                throw hdpException;
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getResourceList(String needle, List<String> functions)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            try {
+                try {
+                    sql = "SHOW RESOURCES";
+                    /*
+                    if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                        sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                    }
+
+                     */
+                    stat = con.createStatement();
+                    rs = stat.executeQuery(sql);
+                    while (rs.next()) {
+                        String table = rs.getString(1);
+                        if (functions != null && functions.contains(table)) {
+                            continue;
+                        }
+                        ret.add(table);
+                    }
+                } finally {
+                    close(rs);
+                    close(stat);
+                    rs = null;
+                    stat = null;
+                }
+            } catch (SQLTimeoutException sqlt) {
+                String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                        + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqlt);
+                hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                }
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqle);
+                hdpException.generateResponseDataMap(false, getMessage(sqle),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                }
+                throw hdpException;
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getResourceGroupList(String needle, List<String> functions)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            try {
+                try {
+                    sql = "SHOW RESOURCE GROUPS";
+                    /*
+                    if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                        sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                    }
+
+                     */
+                    stat = con.createStatement();
+                    rs = stat.executeQuery(sql);
+                    while (rs.next()) {
+                        String table = rs.getString(1);
+                        if (functions != null && functions.contains(table)) {
+                            continue;
+                        }
+                        ret.add(table);
+                    }
+                } finally {
+                    close(rs);
+                    close(stat);
+                    rs = null;
+                    stat = null;
+                }
+            } catch (SQLTimeoutException sqlt) {
+                String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                        + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqlt);
+                hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                }
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqle);
+                hdpException.generateResponseDataMap(false, getMessage(sqle),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                }
+                throw hdpException;
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getStorageVolumeList(String needle, List<String> functions)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            try {
+                try {
+                    sql = "SHOW STORAGE VOLUMES";
+
+                    if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                        sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                    }
+                    stat = con.createStatement();
+                    rs = stat.executeQuery(sql);
+                    while (rs.next()) {
+                        String table = rs.getString(1);
+                        if (functions != null && functions.contains(table)) {
+                            continue;
+                        }
+                        ret.add(table);
+                    }
+                } finally {
+                    close(rs);
+                    close(stat);
+                    rs = null;
+                    stat = null;
+                }
+            } catch (SQLTimeoutException sqlt) {
+                String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                        + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqlt);
+                hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                }
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqle);
+                hdpException.generateResponseDataMap(false, getMessage(sqle),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                }
+                throw hdpException;
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getUserList(String needle, List<String> users)
+            throws HadoopException {
+        List<String> ret = new ArrayList<>();
+        if (con != null) {
+            Statement stat = null;
+            ResultSet rs = null;
+            String sql = null;
+
+            try {
+                try {
+                    sql = "show users";
+                    /*
+                    if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
+                        sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                    }
+                     */
+                    stat = con.createStatement();
+                    rs = stat.executeQuery(sql);
+                    while (rs.next()) {
+                        String originUser = rs.getString(1);
+                        String user = originUser.split("@")[0].replace("'", "");
+                        if (users != null && users.contains(user)) {
+                            continue;
+                        }
+                        ret.add(user);
+                    }
+                } finally {
+                    close(rs);
+                    close(stat);
+                    rs = null;
+                    stat = null;
+                }
+            } catch (SQLTimeoutException sqlt) {
+                String msgDesc = "Time Out, Unable to execute SQL [" + sql
+                        + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqlt);
+                hdpException.generateResponseDataMap(false, getMessage(sqlt),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqlt);
+                }
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                HadoopException hdpException = new HadoopException(msgDesc,
+                        sqle);
+                hdpException.generateResponseDataMap(false, getMessage(sqle),
+                        msgDesc + ERR_MSG, null, null);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<== StarRocksClient.getTables() Error : ", sqle);
+                }
+                throw hdpException;
+            }
+        }
+        return ret;
+    }
+
     public static Map<String, Object> connectionTest(String serviceName,
                                                      Map<String, String> connectionProperties)
             throws Exception {

@@ -53,11 +53,20 @@ public class StarRocksConnectionManager {
                             return new StarRocksClient(serviceName, configs);
                         }
                     };
+
+                    LOG.error("start");
                     try {
                         starrocksClient = TimedEventUtil.timedTask(connectStarRocks, 5, TimeUnit.SECONDS);
                     } catch (Exception e) {
                         LOG.error("Error connecting to StarRocks repository: " +
                                 serviceName + " using config: " + configs, e);
+                    }
+
+                    LOG.error("end");
+                    if (starrocksClient == null) {
+                        LOG.error("null");
+                    } else {
+                        LOG.error("not null");
                     }
 
                     StarRocksClient oldClient = null;
