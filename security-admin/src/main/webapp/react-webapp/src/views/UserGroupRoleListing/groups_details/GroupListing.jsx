@@ -578,8 +578,7 @@ function Groups() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  style={{ display: "inline-block" }}
-                  className="ml-2"
+                  className="ml-2 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
