@@ -79,9 +79,6 @@ class ServiceForm extends Component {
       service: {},
       tagService: [],
       editInitialValues: {},
-      usersDataRef: null,
-      groupsDataRef: null,
-      rolesDataRef: null,
       showDelete: false,
       loader: true,
       blockUI: false,
@@ -702,7 +699,7 @@ class ServiceForm extends Component {
               </Field>
             );
             break;
-          case "enum":
+          case "enum": {
             const paramEnum = serviceDef.enums.find(
               (e) => e.name == configParam.subType
             );
@@ -760,6 +757,7 @@ class ServiceForm extends Component {
               </Field>
             );
             break;
+          }
           case "bool":
             formField.push(
               <Field
@@ -931,52 +929,58 @@ class ServiceForm extends Component {
   fetchUsers = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    const userResp = await fetchApi({
-      url: "xusers/lookup/users",
-      params: params
-    });
-    op = userResp?.data?.vXStrings;
 
-    return op?.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/lookup/users",
+        params: params
+      });
+      op = userResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
+    }
+
+    return map(op, function (obj) {
+      return { value: obj.value, label: obj.value };
+    });
   };
 
   fetchGroups = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    const userResp = await fetchApi({
-      url: "xusers/lookup/groups",
-      params: params
-    });
-    op = userResp?.data?.vXStrings;
-    if (!inputValue) {
-      this.state.groupsDataRef = op;
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/lookup/groups",
+        params: params
+      });
+      op = groupResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
     }
 
-    return op?.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    return map(op, function (obj) {
+      return { label: obj.value, value: obj.value };
+    });
   };
 
   fetchRoles = async (inputValue) => {
-    let params = { roleNamePartial: inputValue || "", isVisible: 1 };
+    let params = { roleNamePartial: inputValue || "" };
     let op = [];
-    const roleResp = await fetchApi({
-      url: "roles/roles",
-      params: params
-    });
-    op = roleResp.data.roles;
-    if (!inputValue) {
-      this.state.rolesDataRef = op;
+
+    try {
+      const roleResp = await fetchApi({
+        url: "roles/roles",
+        params: params
+      });
+      op = roleResp.data?.roles;
+    } catch (error) {
+      console.error(`Error occurred while fetching Roles ! ${error}`);
     }
 
-    return op.map((obj) => ({
-      label: obj.name,
-      value: obj.name
-    }));
+    return map(op, function (obj) {
+      return { label: obj.name, value: obj.name };
+    });
   };
   ServiceDefnBreadcrumb = () => {
     let serviceDetails = {};
@@ -1034,13 +1038,12 @@ class ServiceForm extends Component {
                   }
                   render={({
                     handleSubmit,
-                    form,
                     submitting,
                     values,
                     invalid,
                     errors,
                     form: {
-                      mutators: { push: addItem, pop: removeItem }
+                      mutators: { push: addItem }
                     }
                   }) => (
                     <form

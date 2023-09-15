@@ -30,9 +30,9 @@ import {
   isEmpty,
   pickBy,
   find,
-  has,
   maxBy,
-  sortBy
+  sortBy,
+  map
 } from "lodash";
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
@@ -60,7 +60,7 @@ const PromtDialog = (props) => {
   return null;
 };
 
-const SecurityZoneForm = (props) => {
+const SecurityZoneForm = () => {
   const navigate = useNavigate();
   const params = useParams();
   const toastId = useRef(null);
@@ -179,7 +179,7 @@ const SecurityZoneForm = (props) => {
 
     let resourceServices = [];
 
-    for (var key of Object.keys(servicesByType)) {
+    for (let key of Object.keys(servicesByType)) {
       resourceServices.push({
         label: <span className="font-weight-bold text-body h6">{key}</span>,
         options: servicesByType[key].map((name) => {
@@ -289,14 +289,14 @@ const SecurityZoneForm = (props) => {
     zoneData.description = values.description || "";
     zoneData.adminUsers = [];
     if (values.adminUsers) {
-      for (var key of Object.keys(values.adminUsers)) {
+      for (let key of Object.keys(values.adminUsers)) {
         zoneData.adminUsers.push(values.adminUsers[key].value);
       }
     }
     zoneData.adminUserGroups = [];
 
     if (values.adminUserGroups) {
-      for (var key of Object.keys(values.adminUserGroups)) {
+      for (let key of Object.keys(values.adminUserGroups)) {
         zoneData.adminUserGroups.push(values.adminUserGroups[key].label || "");
       }
     }
@@ -304,14 +304,14 @@ const SecurityZoneForm = (props) => {
     zoneData.auditUsers = [];
 
     if (values.auditUsers) {
-      for (var key of Object.keys(values.auditUsers)) {
+      for (let key of Object.keys(values.auditUsers)) {
         zoneData.auditUsers.push(values.auditUsers[key].label || "");
       }
     }
 
     zoneData.auditUserGroups = [];
     if (values.auditUserGroups) {
-      for (var key of Object.keys(values.auditUserGroups)) {
+      for (let key of Object.keys(values.auditUserGroups)) {
         zoneData.auditUserGroups.push(values.auditUserGroups[key].label || "");
       }
     }
@@ -319,14 +319,14 @@ const SecurityZoneForm = (props) => {
     zoneData.tagServices = [];
 
     if (values.tagServices) {
-      for (var key of Object.keys(values.tagServices)) {
+      for (let key of Object.keys(values.tagServices)) {
         zoneData.tagServices.push(values.tagServices[key].label || "");
       }
     }
 
     zoneData.services = {};
 
-    for (key of Object.keys(values.tableList)) {
+    for (let key of Object.keys(values.tableList)) {
       let serviceName = values.tableList[key].serviceName;
       let resourcesName = values.tableList[key].resources;
       zoneData.services[serviceName] = {};
@@ -373,7 +373,7 @@ const SecurityZoneForm = (props) => {
       setBlockUI(false);
       toast.dismiss(toastId.current);
       toast.current = toast.success(
-        `Success! Service zone ${apiSuccess} successfully`
+        `Success! Security zone ${apiSuccess} successfully`
       );
       navigate(`/zones/zone/${zoneResp.data.id}`);
     } catch (error) {
@@ -484,41 +484,51 @@ const SecurityZoneForm = (props) => {
   };
 
   const fetchUsers = async (inputValue) => {
-    let params = {},
-      op = [];
+    let params = { isVisible: 1 };
+    let usersOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const userResp = await fetchApi({
-      url: "xusers/users",
-      params: params
-    });
 
-    if (userResp.data && userResp.data.vXUsers) {
-      op = userResp.data.vXUsers.map((obj) => {
-        return {
-          label: obj.name,
-          value: obj.name
-        };
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/lookup/users",
+        params: params
       });
+      usersOp = userResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
+      serverError(error);
     }
 
-    return op;
+    return map(usersOp, function (user) {
+      return { value: user.value, label: user.value };
+    });
   };
 
   const fetchGroups = async (inputValue) => {
-    let params = {};
+    let params = { isVisible: 1 };
+    let groupsOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const groupResp = await fetchApi({
-      url: "xusers/groups",
-      params: params
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/lookup/groups",
+        params: params
+      });
+      groupsOp = groupResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
+      serverError(error);
+    }
+
+    return map(groupsOp, function (group) {
+      return { label: group.value, value: group.value };
     });
-    return groupResp.data.vXGroups.map(({ name }) => ({
-      label: name,
-      value: name
-    }));
   };
 
   const fetchTagServices = async (inputValue) => {
