@@ -293,6 +293,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>plugin-starrocks</module>
                 <module>plugin-kudu</module>
                 <module>ugsync-util</module>
                 <module>ugsync</module>
@@ -364,6 +365,7 @@
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
                 <module>plugin-trino</module>
+                <module>plugin-starrocks</module>
                 <module>plugin-kudu</module>
                 <module>ugsync-util</module>
                 <module>ugsync</module>
@@ -650,6 +652,19 @@
             </modules>
         </profile>
         <profile>
+            <id>ranger-starrocks-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+                <module>plugin-starrocks</module>
+            </modules>
+        </profile>
+        <profile>
             <id>ranger-nestedstructure-plugin</id>
             <modules>
                 <module>agents-audit</module>
@@ -723,6 +738,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-presto</module>
                 <module>ranger-presto-plugin-shim</module>
+                <module>plugin-starrocks</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
@@ -780,6 +796,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>plugin-starrocks</module>
                 <module>ugsync-util</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
