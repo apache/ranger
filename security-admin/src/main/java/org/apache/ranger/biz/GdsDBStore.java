@@ -36,7 +36,6 @@ import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.*;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.*;
 import org.apache.ranger.service.*;
 import org.apache.ranger.validation.RangerGdsValidator;
 import org.apache.ranger.view.RangerGdsVList.*;
@@ -46,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletResponse;
 
 import java.util.*;
 
@@ -106,6 +104,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     RESTErrorUtil restErrorUtil;
+
+    @Autowired
+    ServiceGdsInfoCache serviceGdsInfoCache;
 
     @PostConstruct
     public void initStore() {
@@ -1186,28 +1187,9 @@ public class GdsDBStore extends AbstractGdsStore {
     public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
         LOG.debug("==> GdsDBStore.getGdsInfoIfUpdated({}, {})", serviceName , lastKnownVersion);
 
-        Long serviceId = daoMgr.getXXService().findIdByName(serviceName);
-
-        if (serviceId == null) {
-            LOG.error("Requested Service not found. serviceName={}", serviceName);
-
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName), false);
-        }
-
-        ServiceGdsInfo       ret                = null;
-        XXServiceVersionInfo serviceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceId);
-        Long                 currentGdsVersion  = serviceVersionInfo != null ? serviceVersionInfo.getGdsVersion() : null;
-
-        if (currentGdsVersion == null || !currentGdsVersion.equals(lastKnownVersion)) {
-            ret = retrieveServiceGdsInfo(serviceId, serviceName);
-
-            Date lastUpdateTime = serviceVersionInfo != null ? serviceVersionInfo.getGdsUpdateTime() : null;
-
-            ret.setGdsLastUpdateTime(lastUpdateTime != null ? lastUpdateTime.getTime() : null);
-            ret.setGdsVersion(currentGdsVersion);
-        } else {
-            LOG.debug("No change in gdsVersionInfo: serviceName={}, lastKnownVersion={}", serviceName, lastKnownVersion);
-        }
+        ServiceGdsInfo latest        = serviceGdsInfoCache.get(serviceName);
+        Long           latestVersion = latest != null ? latest.getGdsVersion() : null;
+        ServiceGdsInfo ret           = (lastKnownVersion == null || lastKnownVersion == -1 || !lastKnownVersion.equals(latestVersion)) ? latest : null;
 
         LOG.debug("<== GdsDBStore.getGdsInfoIfUpdated({}, {}): ret={}", serviceName, lastKnownVersion, ret);
 
@@ -1913,121 +1895,6 @@ public class GdsDBStore extends AbstractGdsStore {
             if (objToUpdate.getAdditionalInfo() == null) {
                 objToUpdate.setAdditionalInfo(existingObj.getAdditionalInfo());
             }
-        }
-    }
-
-    private ServiceGdsInfo retrieveServiceGdsInfo(Long serviceId, String serviceName) throws Exception {
-        ServiceGdsInfo ret = new ServiceGdsInfo();
-
-        ret.setServiceName(serviceName);
-        ret.setGdsServiceDef(svcStore.getServiceDefByName(EMBEDDED_SERVICEDEF_GDS_NAME));
-
-        SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_ID, serviceId.toString());
-
-        populateDatasets(ret, filter);
-        populateProjects(ret, filter);
-        populateDataShares(ret, filter);
-        populateSharedResources(ret, filter);
-        populateDataSharesInDataset(ret, filter);
-        populateDatasetsInProject(ret, filter);
-
-        return ret;
-    }
-
-    private void populateDatasets(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        for (RangerDataset dataset : datasetService.searchDatasets(filter).getList()) {
-            DatasetInfo dsInfo = new DatasetInfo();
-
-            dsInfo.setId(dataset.getId());
-            dsInfo.setName(dataset.getName());
-            dsInfo.setPolicies(getPolicies(daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(dataset.getId())));
-
-            gdsInfo.addDataset(dsInfo);
-        }
-    }
-
-    private void populateProjects(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        for (RangerProject project : projectService.searchProjects(filter).getList()) {
-            ProjectInfo projInfo = new ProjectInfo();
-
-            projInfo.setId(project.getId());
-            projInfo.setName(project.getName());
-            projInfo.setPolicies(getPolicies(daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(project.getId())));
-
-            gdsInfo.addProject(projInfo);
-        }
-    }
-
-    private void populateDataShares(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        RangerDataShareList dataShares  = dataShareService.searchDataShares(filter);
-
-        for (RangerDataShare dataShare : dataShares.getList()) {
-            DataShareInfo dshInfo = new DataShareInfo();
-
-            dshInfo.setId(dataShare.getId());
-            dshInfo.setName(dataShare.getName());
-            dshInfo.setZoneName(dataShare.getZone());
-            dshInfo.setConditionExpr(dataShare.getConditionExpr());
-            dshInfo.setDefaultAccessTypes(dataShare.getDefaultAccessTypes());
-            dshInfo.setDefaultTagMasks(dataShare.getDefaultTagMasks());
-
-            gdsInfo.addDataShare(dshInfo);
-        }
-    }
-
-    private void populateSharedResources(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        for (RangerSharedResource resource : sharedResourceService.searchSharedResources(filter).getList()) {
-            SharedResourceInfo resourceInfo = new SharedResourceInfo();
-
-            resourceInfo.setId(resource.getId());
-            resourceInfo.setName(resource.getName());
-            resourceInfo.setDataShareId(resource.getDataShareId());
-            resourceInfo.setResource(resource.getResource());
-            resourceInfo.setSubResource(resource.getSubResource());
-            resourceInfo.setSubResourceType(resource.getSubResourceType());
-            resourceInfo.setConditionExpr(resource.getConditionExpr());
-            resourceInfo.setAccessTypes(resource.getAccessTypes());
-            resourceInfo.setRowFilter(resource.getRowFilter());
-            resourceInfo.setSubResourceMasks(resource.getSubResourceMasks());
-            resourceInfo.setProfiles(resource.getProfiles());
-
-            gdsInfo.addResource(resourceInfo);
-        }
-    }
-
-    private void populateDataSharesInDataset(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        for (RangerDataShareInDataset dshInDs : dataShareInDatasetService.searchDataShareInDatasets(filter).getList()) {
-            if (dshInDs.getStatus() != GdsShareStatus.ACTIVE) {
-                continue;
-            }
-
-            DataShareInDatasetInfo dshInDsInfo = new DataShareInDatasetInfo();
-
-            dshInDsInfo.setDatasetId(dshInDs.getDatasetId());
-            dshInDsInfo.setDataShareId(dshInDs.getDataShareId());
-            dshInDsInfo.setStatus(dshInDs.getStatus());
-            dshInDsInfo.setValiditySchedule(dshInDs.getValiditySchedule());
-            dshInDsInfo.setProfiles(dshInDs.getProfiles());
-
-            gdsInfo.addDataShareInDataset(dshInDsInfo);
-        }
-    }
-
-    private void populateDatasetsInProject(ServiceGdsInfo gdsInfo, SearchFilter filter) {
-        for (RangerDatasetInProject dip : datasetInProjectService.searchDatasetInProjects(filter).getList()) {
-            if (dip.getStatus() != GdsShareStatus.ACTIVE) {
-                continue;
-            }
-
-            DatasetInProjectInfo dipInfo = new DatasetInProjectInfo();
-
-            dipInfo.setDatasetId(dip.getDatasetId());
-            dipInfo.setProjectId(dip.getProjectId());
-            dipInfo.setStatus(dip.getStatus());
-            dipInfo.setValiditySchedule(dip.getValiditySchedule());
-            dipInfo.setProfiles(dip.getProfiles());
-
-            gdsInfo.addDatasetInProjectInfo(dipInfo);
         }
     }
 }
