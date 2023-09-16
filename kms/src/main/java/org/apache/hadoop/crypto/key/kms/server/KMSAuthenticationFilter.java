@@ -30,14 +30,14 @@ import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAu
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticationHandler;
 import org.apache.ranger.kms.metrics.KMSMetrics;
 
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import org.apache.hadoop.shaded.javax.servlet.FilterChain;
+import org.apache.hadoop.shaded.javax.servlet.FilterConfig;
+import org.apache.hadoop.shaded.javax.servlet.ServletException;
+import org.apache.hadoop.shaded.javax.servlet.ServletRequest;
+import org.apache.hadoop.shaded.javax.servlet.ServletResponse;
+import org.apache.hadoop.shaded.javax.servlet.http.HttpServletRequest;
+import org.apache.hadoop.shaded.javax.servlet.http.HttpServletResponse;
+import org.apache.hadoop.shaded.javax.servlet.http.HttpServletResponseWrapper;
 
 import java.io.IOException;
 import java.util.Map;

@@ -78,7 +78,6 @@
           <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
           <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
           <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
-          <include>org.apache.thrift:libfb303:jar:${libfb303.version}</include>
           <include>org.apache.thrift:libthrift:jar:${libthrift.version}</include>
         </includes>
       </binaries>
@@ -238,7 +237,7 @@
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
-          <include>org.apache.hadoop:hadoop-common</include>
+          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>commons-logging:commons-logging</include>
           <include>com.sun.jersey.contribs:jersey-multipart</include>
           <include>commons-collections:commons-collections</include>
@@ -272,7 +271,7 @@
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
-          <include>org.apache.ranger:ugsyn-util</include>
+          <include>org.apache.ranger:ugsync-util</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>

@@ -45,10 +45,8 @@
               <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
               <include>log4j:log4j</include>
               <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-              <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
               <include>org.eclipse.persistence:eclipselink</include>
               <include>org.eclipse.persistence:javax.persistence</include>
               <include>commons-collections:commons-collections</include>
@@ -71,7 +69,6 @@
               <include>net.java.dev.jna:jna:jar:${jna.version}</include>
               <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
               <include>org.slf4j:slf4j-api</include>
-              <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
               <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
               <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
               <include>ch.qos.logback:logback-core:jar:${logback.version}</include>

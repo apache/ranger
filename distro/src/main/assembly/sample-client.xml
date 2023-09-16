@@ -48,8 +48,8 @@
                     <include>org.slf4j:slf4j-log4j12</include>
                     <include>log4j:log4j</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>commons-collections:commons-collections</include>
@@ -68,7 +68,6 @@
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
