@@ -332,17 +332,11 @@
       "level": 10,
       "parent": "",
       "mandatory": true,
-      "isValidLeaf": true,
       "lookupSupported": true,
       "recursiveSupported": false,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard": true,
-        "ignoreCase": true
-      },
-      "validationRegEx": "",
-      "validationMessage": "",
+      "validationRegEx": "\\*",
+      "validationMessage": "System only supports wildcard '*'",
       "uiHint": "",
       "label": "StarRocks System",
       "description": "StarRocks System",
@@ -508,7 +502,8 @@
       "validationRegEx": "",
       "validationMessage": "",
       "uiHint": "",
-      "label": "Username"
+      "label": "Username",
+      "defaultValue": "root"
     },
     {
       "itemId": 2,
@@ -535,10 +530,10 @@
       "name": "jdbc.url",
       "type": "string",
       "mandatory": true,
-      "defaultValue": "jdbc:mysql://127.0.0.1:9030",
       "validationRegEx": "",
       "validationMessage": "",
-      "uiHint": ""
+      "uiHint": "",
+      "defaultValue": "jdbc:mysql://127.0.0.1:9030"
     }
   ],
   "enums": [
