@@ -122,7 +122,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 
 		searchFields.add(new SearchField("syncSource", "obj.syncSource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
