@@ -180,6 +180,8 @@
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <netty-all.version>4.1.94.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
+        <opensearch-java.version>2.6.0</opensearch-java.version>
+        <opensearch-rest-client.version>2.9.0</opensearch-rest-client.version>
         <orc.core.version>1.6.7</orc.core.version>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
