@@ -187,7 +187,7 @@ public class RangerSecurityZoneHelper {
         private final String                               currentUser;
         private final List<HashMap<String, List<String>>>  resources;
         private final List<RangerSecurityZoneResourceBase> resourcesBaseInfo;
-        private       long                                 nextResourceId = 0;
+        private       long                                 nextResourceId = 1;
 
         public RangerSecurityZoneServiceHelper(RangerSecurityZoneService zoneService, String currentUser) {
             this.zoneService = zoneService;
