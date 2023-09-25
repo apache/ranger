@@ -410,7 +410,9 @@ public class RangerBasePlugin {
 						newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
 					}
 
+					LOG.info("Switching policy engine from [" + getPolicyVersion() + "]");
 					this.policyEngine       = newPolicyEngine;
+					LOG.info("Switched policy engine to [" + getPolicyVersion() + "]");
 					this.currentAuthContext = pluginContext.getAuthContext();
 
 					pluginContext.notifyAuthContextChanged();
@@ -516,7 +518,6 @@ public class RangerBasePlugin {
 		if (resultProcessor != null) {
 			resultProcessor.processResult(ret);
 		}
-
 		return ret;
 	}
 
@@ -1326,5 +1327,9 @@ public class RangerBasePlugin {
 		}
 
 		return ret;
+	}
+
+	public Long getPolicyVersion() {
+		return this.policyEngine == null ? -1L : this.policyEngine.getPolicyVersion();
 	}
 }
