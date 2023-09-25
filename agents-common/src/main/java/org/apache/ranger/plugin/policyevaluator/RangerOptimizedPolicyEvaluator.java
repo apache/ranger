@@ -45,6 +45,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean     hasPublicGroup;
     private boolean     hasCurrentUser;
     private boolean     hasResourceOwner;
+    private boolean     hasAllEvaluatorsInitialized;
 
     // For computation of priority
     private static final String RANGER_POLICY_EVAL_MATCH_ANY_PATTERN_STRING   = "*";
@@ -252,23 +253,29 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
         boolean ret = false;
 
-        if (hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups()) || (CollectionUtils.isNotEmpty(roles) && CollectionUtils.containsAny(roles, RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext())))) {
-           if (hasAllPerms || request.isAccessTypeAny()) {
-                ret = true;
-            } else {
-               ret = accessPerms.contains(request.getAccessType());
+        if (isUseAclSummaryForEvaluation()) {
+            ret = true;
+        } else if (checkIfAllEvaluatorsInitialized()) {
+            if (hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups()) || (CollectionUtils.isNotEmpty(roles) && CollectionUtils.containsAny(roles, RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext())))) {
+                if (hasAllPerms || request.isAccessTypeAny()) {
+                    ret = true;
+                } else {
+                    ret = accessPerms.contains(request.getAccessType());
 
-               if (!ret) {
-                   Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
-                   ret = CollectionUtils.containsAny(accessPerms, allRequestedAccesses);
-               }
+                    if (!ret) {
+                        Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
+                        ret = CollectionUtils.containsAny(accessPerms, allRequestedAccesses);
+                    }
 
-               if (!ret) {
-                   if (request.isAccessTypeDelegatedAdmin()) {
-                       ret = delegateAdmin;
-                   }
-               }
-           }
+                    if (!ret) {
+                        if (request.isAccessTypeDelegatedAdmin()) {
+                            ret = delegateAdmin;
+                        }
+                    }
+                }
+            }
+        } else {
+            ret = true;
         }
 
         return ret;
@@ -293,26 +300,32 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean hasMatchablePolicyItem(String user, Set<String> userGroups, Set<String> rolesFromContext, String owner, String accessType) {
         boolean ret = false;
 
-        boolean hasRole = false;
-        if (CollectionUtils.isNotEmpty(roles)) {
-            if (CollectionUtils.isNotEmpty(rolesFromContext)) {
-                hasRole = CollectionUtils.containsAny(roles, rolesFromContext);
+        if (isUseAclSummaryForEvaluation()) {
+            ret = true;
+        } else if (checkIfAllEvaluatorsInitialized()) {
+            boolean hasRole = false;
+            if (CollectionUtils.isNotEmpty(roles)) {
+                if (CollectionUtils.isNotEmpty(rolesFromContext)) {
+                    hasRole = CollectionUtils.containsAny(roles, rolesFromContext);
+                }
             }
-        }
 
-        if (hasPublicGroup || hasCurrentUser || users.contains(user) || CollectionUtils.containsAny(groups, userGroups) || hasRole || (hasResourceOwner && StringUtils.equals(user, owner))) {
-            if (hasAllPerms) {
-                ret = true;
-            } else {
-                boolean isAccessTypeAny = StringUtils.isEmpty(accessType) || StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-                ret = isAccessTypeAny || accessPerms.contains(accessType);
+            if (hasPublicGroup || hasCurrentUser || users.contains(user) || CollectionUtils.containsAny(groups, userGroups) || hasRole || (hasResourceOwner && StringUtils.equals(user, owner))) {
+                if (hasAllPerms) {
+                    ret = true;
+                } else {
+                    boolean isAccessTypeAny = StringUtils.isEmpty(accessType) || StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+                    ret = isAccessTypeAny || accessPerms.contains(accessType);
 
-                if (!ret) {
-                    if (StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS)) {
-                        ret = delegateAdmin;
+                    if (!ret) {
+                        if (StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS)) {
+                            ret = delegateAdmin;
+                        }
                     }
                 }
             }
+        } else {
+            ret = true;
         }
 
         return ret;
@@ -363,6 +376,35 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         }
 
         return result;
+    }
+
+    private boolean checkIfAllEvaluatorsInitialized() {
+        if (!hasAllEvaluatorsInitialized) {
+            hasAllEvaluatorsInitialized = checkIfWithImpliedGrantsInitialized (getAllowEvaluators()) &&
+                    checkIfWithImpliedGrantsInitialized(getAllowExceptionEvaluators()) &&
+                    checkIfWithImpliedGrantsInitialized(getDenyEvaluators()) &&
+                    checkIfWithImpliedGrantsInitialized(getDenyExceptionEvaluators()) &&
+                    checkIfWithImpliedGrantsInitialized(getDataMaskEvaluators()) &&
+                    checkIfWithImpliedGrantsInitialized(getRowFilterEvaluators());
+        }
+        return hasAllEvaluatorsInitialized;
+    }
+
+    private boolean checkIfWithImpliedGrantsInitialized(List<? extends RangerPolicyItemEvaluator> evaluators) {
+        boolean ret = true;
+        for (RangerPolicyItemEvaluator evaluator: evaluators) {
+            if (evaluator.getWithImpliedGrants() == null) {
+                ret = false;
+                break;
+            } else {
+                for (RangerPolicy.RangerPolicyItemAccess access : evaluator.getWithImpliedGrants().getAccesses()) {
+                    if (access.getIsAllowed()) {
+                        accessPerms.add(access.getType());
+                    }
+                }
+            }
+        }
+        return ret;
     }
 
 }

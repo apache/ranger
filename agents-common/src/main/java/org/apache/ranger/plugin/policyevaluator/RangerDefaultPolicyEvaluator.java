@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestWrapper;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -79,6 +80,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	private PolicyACLSummary aclSummary                 = null;
 	private boolean          useAclSummaryForEvaluation = false;
 	private boolean          disableRoleResolution      = true;
+
+	List<RangerPolicyItemEvaluator> getAllowEvaluators() { return allowEvaluators; }
+	List<RangerPolicyItemEvaluator> getAllowExceptionEvaluators() { return allowExceptionEvaluators; }
+	List<RangerPolicyItemEvaluator> getDenyEvaluators() { return denyEvaluators; }
+	List<RangerPolicyItemEvaluator> getDenyExceptionEvaluators() { return denyExceptionEvaluators; }
+	List<RangerDataMaskPolicyItemEvaluator> getDataMaskEvaluators() { return dataMaskEvaluators; }
+	List<RangerRowFilterPolicyItemEvaluator> getRowFilterEvaluators() { return rowFilterEvaluators; }
+
+	boolean isUseAclSummaryForEvaluation() { return useAclSummaryForEvaluation; }
 
 	@Override
 	public int getCustomConditionsCount() {
@@ -610,24 +620,26 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if (isUsableForEvaluation || isCreationForced) {
 			ret = new PolicyACLSummary();
+			Map<String, Collection<String>> impliedAccessGrants = PolicyEngine.getImpliedAccessGrants(getServiceDef());
+
 
 			for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
-				ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY, hasNonPublicGroupOrConditionsInDenyExceptions || hasPublicGroupInDenyAndUsersInDenyExceptions);
+				ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY, hasNonPublicGroupOrConditionsInDenyExceptions || hasPublicGroupInDenyAndUsersInDenyExceptions, impliedAccessGrants);
 			}
 
 			if (!hasNonPublicGroupOrConditionsInDenyExceptions && !hasPublicGroupInDenyAndUsersInDenyExceptions) {
 				for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
-					ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS, false);
+					ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS, false, impliedAccessGrants);
 				}
 			}
 
 			for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
-				ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW, hasNonPublicGroupOrConditionsInAllowExceptions || hasPublicGroupInAllowAndUsersInAllowExceptions);
+				ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW, hasNonPublicGroupOrConditionsInAllowExceptions || hasPublicGroupInAllowAndUsersInAllowExceptions, impliedAccessGrants);
 			}
 
 			if (!hasNonPublicGroupOrConditionsInAllowExceptions && !hasPublicGroupInAllowAndUsersInAllowExceptions) {
 				for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
-					ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS, false);
+					ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS, false, impliedAccessGrants);
 				}
 			}
 
@@ -1153,6 +1165,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policy == null || (!hasAllow() && !hasDeny()) || serviceDef == null) {
 			return;
 		}
+		/*
 
 		Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
 
@@ -1166,6 +1179,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		preprocessPolicyItems(policy.getDenyExceptions(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getDataMaskPolicyItems(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getRowFilterPolicyItems(), impliedAccessGrants);
+
+		 */
 	}
 
 	protected void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {
@@ -1203,33 +1218,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-	protected Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
-		Map<String, Collection<String>> ret = null;
-
-		if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
-			for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
-					if(ret == null) {
-						ret = new HashMap<>();
-					}
-
-					Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
-
-					if(impliedAccessGrants == null) {
-						impliedAccessGrants = new HashSet<>();
-
-						ret.put(accessTypeDef.getName(), impliedAccessGrants);
-					}
-
-					impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
-				}
-			}
-		}
-
-		return ret;
-	}
-
-	private RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {
+	static RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {
 		RangerPolicyItemAccess ret = null;
 
 		if(policyItem != null && CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
