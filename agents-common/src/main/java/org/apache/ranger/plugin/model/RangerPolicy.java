@@ -959,6 +959,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this(null, null, null, null, null, null);
 		}
 
+                public RangerPolicyItem(RangerPolicyItem other) {
+                        this(other.accesses, other.users, other.groups, other.roles, other.conditions, other.delegateAdmin);
+                }
+
 		public RangerPolicyItem(List<RangerPolicyItemAccess> accessTypes, List<String> users, List<String> groups, List<String> roles, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
 			setAccesses(accessTypes);
 			setUsers(users);
