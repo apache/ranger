@@ -538,6 +538,9 @@ h3.wrap-header {
 .editable-popover {
   min-width: 250px;
 }
+.popover-minHeight {
+  min-width: 200px;
+}
 
 .table-editable {
   text-align: center !important;
