@@ -1791,6 +1791,18 @@
         </query>
     </named-query>
 
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByServiceId">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefService ref where ref.serviceId = :serviceId)
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByTagServiceId">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefTagService ref where ref.tagServiceId = :tagServiceId)
+		</query>
+	</named-query>
+
     <named-query name="XXGlobalState.findByStateId">
         <query>
             select obj from XXGlobalState obj where obj.id = :stateId

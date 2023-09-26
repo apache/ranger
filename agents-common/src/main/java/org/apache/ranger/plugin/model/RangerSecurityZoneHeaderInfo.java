@@ -46,4 +46,11 @@ public class RangerSecurityZoneHeaderInfo extends RangerBaseModelObject implemen
     public void setName(String name) {
         this.name = name;
     }
+
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("id={").append(getId()).append("} ");
+        sb.append("name={").append(name).append("} ");
+        sb.append("isEnabled={").append(getIsEnabled()).append("} ");
+        return sb;
+    }
 }

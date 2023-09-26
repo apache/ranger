@@ -245,4 +245,11 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
         return services;
     }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService ) {
+        if(serviceId == null){
+            throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
+        }
+        return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId,isTagService);
+    }
 }

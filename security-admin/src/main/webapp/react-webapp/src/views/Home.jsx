@@ -23,7 +23,6 @@ import { Tab, Tabs } from "react-bootstrap";
 import withRouter from "Hooks/withRouter";
 import { hasAccessToTab } from "../utils/XAUtils";
 import CustomBreadcrumb from "./CustomBreadcrumb";
-import { isEmpty } from "lodash";
 
 class Home extends Component {
   constructor(props) {
@@ -34,9 +33,11 @@ class Home extends Component {
       loader: false
     };
   }
+
   tabChange = (tabName) => {
     this.props.navigate(`/policymanager/${tabName}`, { replace: true });
   };
+
   componentDidUpdate(nextProps, prevState) {
     let activeTabVal = this.activeTab();
 
@@ -44,6 +45,7 @@ class Home extends Component {
       this.setState({ activeKey: this.activeTab() });
     }
   }
+
   activeTab = () => {
     let activeTabVal;
     if (this.props.location.pathname) {
@@ -91,6 +93,7 @@ class Home extends Component {
         .getElementById("tagSelectedZone")
         ?.classList?.remove("disabledEvents");
   };
+
   render() {
     return (
       <>
@@ -114,10 +117,6 @@ class Home extends Component {
                 <ServiceDefinitions
                   isTagView={this.state.isTagView}
                   disableTabs={this.disableTabs}
-                  key={
-                    !isEmpty(localStorage.getItem("zoneDetails")) &&
-                    JSON.parse(localStorage.getItem("zoneDetails"))?.value
-                  }
                 ></ServiceDefinitions>
               )}
             </Tab>
@@ -132,10 +131,6 @@ class Home extends Component {
                 <ServiceDefinitions
                   isTagView={this.state.isTagView}
                   disableTabs={this.disableTabs}
-                  key={
-                    !isEmpty(localStorage.getItem("zoneDetails")) &&
-                    JSON.parse(localStorage.getItem("zoneDetails"))?.value
-                  }
                 ></ServiceDefinitions>
               )}
             </Tab>
