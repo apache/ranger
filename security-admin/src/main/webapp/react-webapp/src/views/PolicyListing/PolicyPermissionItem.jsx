@@ -18,12 +18,12 @@
  */
 
 import React, { useMemo, useRef, useState } from "react";
-import { Table, Button, Badge, Form } from "react-bootstrap";
+import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
-import { Field, useFormState } from "react-final-form";
+import { Field } from "react-final-form";
 import AsyncSelect from "react-select/async";
-import { find, groupBy, isEmpty, isArray, has } from "lodash";
+import { find, groupBy, isEmpty, isArray } from "lodash";
 import { toast } from "react-toastify";
 import Editable from "Components/Editable";
 import { RangerPolicyType } from "Utils/XAEnums";
@@ -60,8 +60,6 @@ export default function PolicyPermissionItem(props) {
   const [roleLoading, setRoleLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
-
-  let { values, errors, change, error, ...args } = useFormState();
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
 
@@ -308,7 +306,7 @@ export default function PolicyPermissionItem(props) {
                               <Field
                                 className="form-control"
                                 name={`${name}.roles`}
-                                render={({ input, meta }) => (
+                                render={({ input }) => (
                                   <div className="d-flex">
                                     <AsyncSelect
                                       {...input}
@@ -339,7 +337,7 @@ export default function PolicyPermissionItem(props) {
                               <Field
                                 className="form-control"
                                 name={`${name}.groups`}
-                                render={({ input, meta }) => (
+                                render={({ input }) => (
                                   <div>
                                     <AsyncSelect
                                       {...input}
@@ -370,7 +368,7 @@ export default function PolicyPermissionItem(props) {
                               <Field
                                 className="form-control"
                                 name={`${name}.users`}
-                                render={({ input, meta }) => (
+                                render={({ input }) => (
                                   <div>
                                     <AsyncSelect
                                       {...input}
@@ -409,7 +407,7 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div className="table-editable">
                                       <Editable
                                         {...input}
@@ -440,7 +438,7 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div className="table-editable">
                                       <TagBasePermissionItem
                                         options={getAccessTypeOptions()}
@@ -467,7 +465,7 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div className="table-editable">
                                       <Editable
                                         {...input}
@@ -491,7 +489,7 @@ export default function PolicyPermissionItem(props) {
                                 <Field
                                   className="form-control"
                                   name={`${name}.dataMaskInfo`}
-                                  render={({ input, meta }) =>
+                                  render={({ input }) =>
                                     fields?.value[index]?.accesses?.tableList
                                       ?.length > 0 ? (
                                       <div className="table-editable">
@@ -538,11 +536,11 @@ export default function PolicyPermissionItem(props) {
                                       </div>
                                     ) : (
                                       <div>
-                                        <span className="editable-add-text">
+                                        <span className="editable-add-text text-secondary">
                                           Select Masking Option
                                         </span>
                                         <Button
-                                          className="mg-10 btn-mini text-secondary"
+                                          className="mg-10 mx-auto btn-mini d-block text-secondary"
                                           variant="outline-dark"
                                           size="sm"
                                           type="button"
@@ -568,7 +566,7 @@ export default function PolicyPermissionItem(props) {
                                 <Field
                                   className="form-control"
                                   name={`${name}.dataMaskInfo`}
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div className="table-editable">
                                       <Editable
                                         {...input}
@@ -654,7 +652,7 @@ export default function PolicyPermissionItem(props) {
                                   data-cy="delegatedAdmin"
                                   type="checkbox"
                                 >
-                                  {({ input, meta }) => (
+                                  {({ input }) => (
                                     <div>
                                       <input {...input} type="checkbox" />
                                     </div>

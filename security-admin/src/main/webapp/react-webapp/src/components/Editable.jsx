@@ -86,8 +86,8 @@ const CheckboxComp = (props) => {
           />
         </Form.Group>
       ))}
-      {showSelectAll && (
-        <Form.Group className="mb-3">
+      {showSelectAll && options?.length > 1 && (
+        <Form.Group className="mb-3" controlId={selectAllLabel}>
           <Form.Check
             checked={isAllChecked()}
             type="checkbox"
@@ -160,7 +160,7 @@ const CustomCondition = (props) => {
   return (
     <>
       {conditionDefVal?.length > 0 &&
-        conditionDefVal.map((m, index) => {
+        conditionDefVal.map((m) => {
           let uiHintAttb =
             m.uiHint != undefined && m.uiHint != "" ? JSON.parse(m.uiHint) : "";
           if (uiHintAttb != "") {
@@ -683,7 +683,7 @@ const Editable = (props) => {
     }
   };
 
-  const handleClose = (e) => {
+  const handleClose = () => {
     setValidated({ state: false, errorMSG: "" });
     dispatch({
       type: "SET_POPOVER",
@@ -696,7 +696,7 @@ const Editable = (props) => {
     <Popover
       id="popover-basic"
       className={`editable-popover ${
-        type === TYPE_CHECKBOX && "popover-maxHeight"
+        type === TYPE_CHECKBOX && "popover-maxHeight popover-minHeight"
       }`}
     >
       <Popover.Title>
