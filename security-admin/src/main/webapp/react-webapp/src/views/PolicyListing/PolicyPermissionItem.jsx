@@ -448,6 +448,7 @@ export default function PolicyPermissionItem(props) {
                                         formValues={formValues}
                                         dataMaskIndex={index}
                                         serviceCompDetails={serviceCompDetails}
+                                        attrName={attrName}
                                       />
                                     </div>
                                   )}
