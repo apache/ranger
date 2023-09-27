@@ -162,6 +162,10 @@ abstract class ResourceMatcher {
                 ret = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
                 break;
 
+            case NONE:
+                ret = false;
+                break;
+
             default:
                 LOG.error("invalid ResourceElementMatchType: {}}", matchType);
 
