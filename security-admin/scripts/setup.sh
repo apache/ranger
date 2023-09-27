@@ -129,6 +129,7 @@ LOGFILES=$(eval echo "$(get_prop 'LOGFILES' $PROPFILE)")
 JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
 JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
 JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
+java_opts=$(get_prop 'java_opts' $PROPFILE)
 mysql_core_file=$(get_prop 'mysql_core_file' $PROPFILE)
 mysql_audit_file=$(get_prop 'mysql_audit_file' $PROPFILE)
 oracle_core_file=$(get_prop 'oracle_core_file' $PROPFILE)
@@ -381,6 +382,8 @@ check_java_version() {
 		log "[E] The java version must be greater than or equal to $JAVA_VERSION_REQUIRED, the current java version is $version"
 		exit 1;
 	fi
+
+	if [[ ${JAVA_OPTS} == "" ]] ;then  export JAVA_OPTS="${java_opts}" ;fi
 }
 
 sanity_check_files() {
