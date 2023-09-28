@@ -17,6 +17,7 @@
 
 package org.apache.ranger.biz;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -115,8 +117,16 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             throw restErrorUtil.createRESTException("security-zone with id: " + securityZone.getId() + " does not exist");
         }
 
-        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        RangerSecurityZone oldSecurityZone = gsonBuilder.fromJson(xxSecurityZone.getJsonData(), RangerSecurityZone.class);
+        Gson   gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
+        String json        = xxSecurityZone.getJsonData();
+
+        try {
+            json = StringUtil.decompressString(json);
+        } catch (IOException excp) {
+            LOG.error("updateSecurityZoneById(): json decompression failed. Will treat as uncompressed json", excp);
+        }
+
+        RangerSecurityZone oldSecurityZone = gsonBuilder.fromJson(json, RangerSecurityZone.class);
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
