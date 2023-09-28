@@ -209,6 +209,13 @@ public class RangerSecurityZoneHelper {
                 zoneService.setResourcesBaseInfo(this.resourcesBaseInfo);
             }
 
+            // compute nextResourceId
+            for (RangerSecurityZoneResourceBase baseInfo : resourcesBaseInfo) {
+                if (baseInfo.getId() != null && nextResourceId <= baseInfo.getId()) {
+                    nextResourceId = baseInfo.getId() + 1;
+                }
+            }
+
             // make sure resourcesBaseInfo has as many entries as resources
             for (int i = resourcesBaseInfo.size(); i < resources.size(); i++) {
                 RangerSecurityZoneResourceBase baseInfo = new RangerSecurityZoneResourceBase();
@@ -221,13 +228,6 @@ public class RangerSecurityZoneHelper {
             // remove any additional resourcesBaseInfo entries
             for (int i = resources.size(); i < resourcesBaseInfo.size(); ) {
                 resourcesBaseInfo.remove(i);
-            }
-
-            // compute nextResourceId
-            for (RangerSecurityZoneResourceBase baseInfo : resourcesBaseInfo) {
-                if (baseInfo.getId() != null && nextResourceId <= baseInfo.getId()) {
-                    nextResourceId = baseInfo.getId() + 1;
-                }
             }
 
             // set missing IDs
