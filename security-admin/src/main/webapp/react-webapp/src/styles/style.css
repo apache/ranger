@@ -2529,7 +2529,8 @@ li.list-group-item:hover {
   background-color: #e9ecef;
 }
 .manage-service .dropdown-toggle:focus,
-.manage-export .dropdown-toggle:focus {
+.manage-export .dropdown-toggle:focus,
+.manage-visibility .dropdown-toggle:focus {
   color: #0b7fad;
   background-color: #fff;
   border-color: #0062cc;

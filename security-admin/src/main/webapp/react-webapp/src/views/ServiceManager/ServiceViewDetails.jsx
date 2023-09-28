@@ -18,8 +18,8 @@
  */
 
 import React from "react";
-import { Row, Col, Table, Badge } from "react-bootstrap";
-import { difference, isEmpty, keys, map, omit, pick, upperCase } from "lodash";
+import { Alert, Row, Col, Table, Badge } from "react-bootstrap";
+import { difference, isEmpty, keys, map, omit, pick } from "lodash";
 
 export const ServiceViewDetails = (props) => {
   let { serviceData, serviceDefData } = props;
@@ -135,9 +135,22 @@ export const ServiceViewDetails = (props) => {
       return tableRow;
     }
 
-    auditFilters = JSON.parse(
-      auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
-    );
+    try {
+      auditFilters = JSON.parse(
+        auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
+      );
+    } catch (error) {
+      tableRow.push(
+        <tr key="error-service-audit-filter">
+          <td className="text-center" colSpan="8">
+            <Alert variant="danger">
+              Error occured while parsing service audit filter!
+            </Alert>
+          </td>
+        </tr>
+      );
+      return tableRow;
+    }
 
     auditFilters?.map((a, index) =>
       tableRow.push(

@@ -198,7 +198,7 @@ export default function AddUpdatePolicyForm(props) {
   };
 
   const fetchRolesData = async (inputValue) => {
-    let params = { roleNamePartial: inputValue || "", isVisible: 1 };
+    let params = { roleNamePartial: inputValue || "" };
     let op = [];
 
     const roleResp = await fetchApi({

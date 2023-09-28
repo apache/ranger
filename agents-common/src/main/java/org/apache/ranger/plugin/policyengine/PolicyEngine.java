@@ -71,6 +71,13 @@ public class PolicyEngine {
 
     private final RangerReadWriteLock                 lock;
 
+    static private Map<String, Map<String, Collection<String>>> impliedAccessGrants = null;
+
+    static public Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
+        return impliedAccessGrants == null ? null : impliedAccessGrants.get(serviceDef.getName());
+    }
+
+
     public RangerReadWriteLock.RangerLock getReadLock() {
         return lock.getReadLock();
     }
@@ -196,6 +203,8 @@ public class PolicyEngine {
 
             PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
         }
+
+        buildImpliedAccessGrants(servicePolicies);
 
         this.pluginContext = pluginContext;
         this.lock          = new RangerReadWriteLock(isUseReadWriteLock);
@@ -471,6 +480,41 @@ public class PolicyEngine {
         }
     }
 
+    synchronized static private void buildImpliedAccessGrants(ServicePolicies servicePolicies) {
+        buildImpliedAccessGrants(servicePolicies.getServiceDef());
+        if (servicePolicies.getTagPolicies() != null) {
+            buildImpliedAccessGrants(servicePolicies.getTagPolicies().getServiceDef());
+        }
+    }
+
+    static private void buildImpliedAccessGrants(RangerServiceDef serviceDef) {
+        Map<String, Collection<String>> ret = null;
+
+        if (serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
+            for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+                if (!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
+                    if (ret == null) {
+                        ret = new HashMap<>();
+                    }
+
+                    Collection<String> impliedGrants = ret.get(accessTypeDef.getName());
+
+                    if (impliedGrants == null) {
+                        impliedGrants = new HashSet<>();
+
+                        ret.put(accessTypeDef.getName(), impliedGrants);
+                    }
+
+                    impliedGrants.addAll(accessTypeDef.getImpliedGrants());
+                }
+            }
+
+            if (impliedAccessGrants == null) {
+                impliedAccessGrants = Collections.synchronizedMap(new HashMap<>());
+            }
+            impliedAccessGrants.put(serviceDef.getName(), ret);
+        }
+    }
     private Set<String> getMatchedZonesForResourceAndChildren(Map<String, ?> resource, RangerAccessResource accessResource) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> PolicyEngine.getMatchedZonesForResourceAndChildren(" + resource + ", " + accessResource + ")");

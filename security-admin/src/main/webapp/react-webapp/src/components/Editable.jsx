@@ -17,13 +17,7 @@
  * under the License.
  */
 
-import React, {
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-  useCallback
-} from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import {
   OverlayTrigger,
   Popover,
@@ -33,7 +27,7 @@ import {
   Col,
   Badge
 } from "react-bootstrap";
-import { find, findIndex, isArray, isEmpty, map } from "lodash";
+import { find, findIndex, isArray, isEmpty, sortBy } from "lodash";
 import { isObject } from "Utils/XAUtils";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
@@ -82,7 +76,7 @@ const CheckboxComp = (props) => {
 
   return (
     <>
-      {options.map((obj, index) => (
+      {options.map((obj) => (
         <Form.Group className="mb-3" controlId={obj.label} key={obj.label}>
           <Form.Check
             checked={isChecked(obj)}
@@ -409,7 +403,7 @@ const Editable = (props) => {
     const policyConditionDisplayValue = () => {
       let ipRangVal, uiHintVal;
       if (selectVal) {
-        return _.sortBy(Object.keys(selectVal)).map((property, index) => {
+        return sortBy(Object.keys(selectVal)).map((property, index) => {
           let conditionObj = find(conditionDefVal, function (m) {
             if (m.name == property) {
               return m;
@@ -651,7 +645,7 @@ const Editable = (props) => {
   const handleApply = (e) => {
     let errors, uiHintVal;
     if (selectValRef?.current) {
-      _.sortBy(Object.keys(selectValRef.current)).map((property) => {
+      sortBy(Object.keys(selectValRef.current)).map((property) => {
         let conditionObj = find(conditionDefVal, function (m) {
           if (m.name == property) {
             return m;

@@ -340,7 +340,7 @@ public class RangerBasePlugin {
 						// Rebuild policies from deltas
 						RangerPolicyEngineImpl policyEngine = (RangerPolicyEngineImpl) oldPolicyEngine;
 
-						servicePolicies = applyDelta(policies, policyEngine);
+						servicePolicies = ServicePolicies.applyDelta(policies, policyEngine);
 
 						if (servicePolicies != null) {
 							usePolicyDeltas = true;
@@ -410,7 +410,9 @@ public class RangerBasePlugin {
 						newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
 					}
 
+					LOG.info("Switching policy engine from [" + getPolicyVersion() + "]");
 					this.policyEngine       = newPolicyEngine;
+					LOG.info("Switched policy engine to [" + getPolicyVersion() + "]");
 					this.currentAuthContext = pluginContext.getAuthContext();
 
 					pluginContext.notifyAuthContextChanged();
@@ -516,7 +518,6 @@ public class RangerBasePlugin {
 		if (resultProcessor != null) {
 			resultProcessor.processResult(ret);
 		}
-
 		return ret;
 	}
 
@@ -1328,89 +1329,7 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
-	public static ServicePolicies applyDelta(final ServicePolicies servicePolicies, RangerPolicyEngineImpl policyEngine) {
-		ServicePolicies ret = ServicePolicies.copyHeader(servicePolicies);
-
-		List<RangerPolicy> oldResourcePolicies = policyEngine.getResourcePolicies();
-		List<RangerPolicy> oldTagPolicies      = policyEngine.getTagPolicies();
-		List<RangerPolicy> oldGdsPolicies      = Collections.emptyList(); // TODO: policyEngine.getGdsPolicies();
-
-		List<RangerPolicy> newResourcePolicies = RangerPolicyDeltaUtil.applyDeltas(oldResourcePolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
-
-		ret.setPolicies(newResourcePolicies);
-
-		final List<RangerPolicy> newTagPolicies;
-		if (servicePolicies.getTagPolicies() != null) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("applyingDeltas for tag policies");
-			}
-			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("No need to apply deltas for tag policies");
-			}
-			newTagPolicies = oldTagPolicies;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("New tag policies:[" + Arrays.toString(newTagPolicies.toArray()) + "]");
-		}
-
-		final List<RangerPolicy> newGdsPolicies;
-		if (servicePolicies.getGdsPolicies() != null) {
-			LOG.debug("applyingDeltas for gds policies");
-
-			newGdsPolicies = RangerPolicyDeltaUtil.applyDeltas(oldGdsPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getGdsPolicies().getServiceDef().getName());
-		} else {
-			LOG.debug("No need to apply deltas for gds policies");
-
-			newGdsPolicies = oldGdsPolicies;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("New gds policies:[" + Arrays.toString(newGdsPolicies.toArray()) + "]");
-		}
-
-		if (ret.getTagPolicies() != null) {
-			ret.getTagPolicies().setPolicies(newTagPolicies);
-		}
-
-		if (ret.getGdsPolicies() != null) {
-			ret.getGdsPolicies().setPolicies(newGdsPolicies);
-		}
-
-		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
-			Map<String, ServicePolicies.SecurityZoneInfo> newSecurityZones = new HashMap<>();
-
-			for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
-				String 			 zoneName = entry.getKey();
-				ServicePolicies.SecurityZoneInfo zoneInfo = entry.getValue();
-
-				List<RangerPolicy> zoneResourcePolicies = policyEngine.getResourcePolicies(zoneName);
-				// There are no separate tag-policy-repositories for each zone
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Applying deltas for security-zone:[" + zoneName + "]");
-				}
-
-				final List<RangerPolicy> newZonePolicies = RangerPolicyDeltaUtil.applyDeltas(zoneResourcePolicies, zoneInfo.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("New resource policies for security-zone:[" + zoneName + "], zoneResourcePolicies:[" + Arrays.toString(newZonePolicies.toArray())+ "]");
-				}
-
-				ServicePolicies.SecurityZoneInfo newZoneInfo = new ServicePolicies.SecurityZoneInfo();
-
-				newZoneInfo.setZoneName(zoneName);
-				newZoneInfo.setResources(zoneInfo.getResources());
-				newZoneInfo.setPolicies(newZonePolicies);
-
-				newSecurityZones.put(zoneName, newZoneInfo);
-			}
-
-			ret.setSecurityZones(newSecurityZones);
-		}
-
-		return ret;
+	public Long getPolicyVersion() {
+		return this.policyEngine == null ? -1L : this.policyEngine.getPolicyVersion();
 	}
 }

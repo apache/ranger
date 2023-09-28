@@ -1305,14 +1305,14 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         void toString(StringBuilder sb) {
             String nodeValue = this.str;
 
-            sb.append("nodeValue=").append(nodeValue);
+            sb.append("nodeValue=").append(nodeValue == null ? "ROOT" : nodeValue);
             sb.append("; isSetup=").append(isSetup);
             sb.append("; isSharingParentWildcardEvaluators=").append(isSharingParentWildcardEvaluators);
             sb.append("; childCount=").append(children.size());
-            sb.append("; evaluators=[ ");
+            sb.append("; evaluators=[");
             if (evaluators != null) {
                 for (U evaluator : evaluators) {
-                    sb.append(evaluator.getId()).append(" ");
+                    sb.append(evaluator.getId()).append(",");
                 }
             }
             sb.append("]");
@@ -1320,7 +1320,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
             sb.append("; wildcardEvaluators=[ ");
             if (wildcardEvaluators != null) {
                 for (U evaluator : wildcardEvaluators) {
-                    sb.append(evaluator.getId()).append(" ");
+                    sb.append(evaluator.getId()).append(",");
                 }
             }
             sb.append("]");
@@ -1328,6 +1328,10 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
 
         void toString(String prefix, StringBuilder sb) {
             String nodeValue = prefix + (str != null ? str : "");
+
+            if (!nodeValue.equals(prefix)) {
+                prefix = prefix + "|";
+            }
 
             sb.append(prefix);
             toString(sb);
