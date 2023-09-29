@@ -264,7 +264,6 @@ public class GdsDBStore extends AbstractGdsStore {
         if (gdsPermission == null) {
             gdsPermission = GdsPermission.VIEW;
         }
-
         RangerDatasetList   result   = datasetService.searchDatasets(filter);
         List<RangerDataset> datasets = new ArrayList<>();
 

@@ -61,6 +61,7 @@ public class SearchFilter {
     public static final String POLICY_LABEL_ID       = "policyLabelId";      // search, sort
     public static final String ZONE_ID               = "zoneId";      // search, sort
     public static final String ZONE_NAME             = "zoneName";      // search, sort
+    public static final String ZONE_NAME_PARTIAL     = "zoneNamePartial";      // search, sort
     public static final String NOT_ZONE_NAME         = "notZoneName";   // search
 	public static final String ROLE_ID               = "roleId";      // search, sort
 	public static final String ROLE_NAME             = "roleName";      // search, sort
@@ -99,10 +100,13 @@ public class SearchFilter {
 	public static final String SERVICE_TYPE_DISPLAY_NAME	= "serviceTypeDisplayName";		// search, sort
 
 	public static final String DATASET_NAME             = "datasetName";          // search, sort
+	public static final String DATASET_NAME_PARTIAL     = "datasetNamePartial";   // search, sort
 	public static final String DATASET_ID               = "datasetId";            // search, sort
 	public static final String PROJECT_NAME             = "projectName";          // search, sort
+	public static final String PROJECT_NAME_PARTIAL     = "projectNamePartial";   // search, sort
 	public static final String PROJECT_ID               = "projectId";            // search, sort
 	public static final String DATA_SHARE_NAME          = "dataShareName";        // search, sort
+	public static final String DATA_SHARE_NAME_PARTIAL  = "dataShareNamePartial"; // search, sort
 	public static final String DATA_SHARE_ID            = "dataShareId";          // search, sort
 	public static final String SHARED_RESOURCE_NAME     = "sharedResourceName";   // search, sort
 	public static final String SHARED_RESOURCE_ID       = "sharedResourceId";     // search, sort
@@ -111,7 +115,7 @@ public class SearchFilter {
 	public static final String OWNER_TYPE               = "ownerType";            // search: valid-values(user, group, role)
 	public static final String DATA_SHARE_IN_DATASET_ID = "dataShareInDatasetId"; // search, sort
 	public static final String DATASET_IN_PROJECT_ID    = "datasetInProjectId";   // search, sort
-	public static final String GDS_PERMISSION    	    = "gdsPermission";   // search, sort
+	public static final String IS_DISTINCT = "isDistinct"; // search, sort
 
 	private Map<String, String> params;
 	private int                 startIndex;
@@ -119,6 +123,7 @@ public class SearchFilter {
 	private boolean             getCount   = true;
 	private String              sortBy;
 	private String              sortType;
+	private boolean isDistinct = true;
 
 	public SearchFilter() {
 		this((Map<String, String>) null);
@@ -245,6 +250,14 @@ public class SearchFilter {
 		this.sortType = sortType;
 	}
 
+	public boolean isDistinct() {
+		return isDistinct;
+	}
+
+	public void setDistinct(boolean isDistinct) {
+		this.isDistinct = isDistinct;
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (object == null || !(object instanceof SearchFilter)) {
@@ -277,6 +290,7 @@ public class SearchFilter {
 		sb.append("sortBy={").append(sortBy).append("} ");
 		sb.append("sortType={").append(sortType).append("} ");
 		sb.append("startIndex={").append(startIndex).append("} ");
+		sb.append("isDistinct={").append(isDistinct).append("} ");
 		sb.append("}");
 
 		return sb;

@@ -77,6 +77,8 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.PLUGIN_ENTITY_TYPE, request.getParameter(SearchFilter.PLUGIN_ENTITY_TYPE));
 		ret.setParam(SearchFilter.PLUGIN_IP_ADDRESS, request.getParameter(SearchFilter.PLUGIN_IP_ADDRESS));
 		ret.setParam(SearchFilter.ZONE_NAME, request.getParameter(SearchFilter.ZONE_NAME));
+		ret.setParam(SearchFilter.ZONE_NAME_PARTIAL, request.getParameter(SearchFilter.ZONE_NAME_PARTIAL));
+		ret.setParam(SearchFilter.ZONE_ID, request.getParameter(SearchFilter.ZONE_ID));
 		ret.setParam(SearchFilter.TAG_SERVICE_ID, request.getParameter(SearchFilter.TAG_SERVICE_ID));
 		ret.setParam(SearchFilter.ROLE_NAME, request.getParameter(SearchFilter.ROLE_NAME));
 		ret.setParam(SearchFilter.ROLE_ID, request.getParameter(SearchFilter.ROLE_ID));
@@ -100,16 +102,18 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.RESOURCE_MATCH_SCOPE, request.getParameter(SearchFilter.RESOURCE_MATCH_SCOPE));
 
 		ret.setParam(SearchFilter.DATASET_NAME, request.getParameter(SearchFilter.DATASET_NAME));
+		ret.setParam(SearchFilter.DATASET_NAME_PARTIAL, request.getParameter(SearchFilter.DATASET_NAME_PARTIAL));
 		ret.setParam(SearchFilter.DATASET_ID, request.getParameter(SearchFilter.DATASET_ID));
 		ret.setParam(SearchFilter.PROJECT_NAME, request.getParameter(SearchFilter.PROJECT_NAME));
+		ret.setParam(SearchFilter.PROJECT_NAME_PARTIAL, request.getParameter(SearchFilter.PROJECT_NAME_PARTIAL));
 		ret.setParam(SearchFilter.PROJECT_ID, request.getParameter(SearchFilter.PROJECT_ID));
 		ret.setParam(SearchFilter.DATA_SHARE_NAME, request.getParameter(SearchFilter.DATA_SHARE_NAME));
+		ret.setParam(SearchFilter.DATA_SHARE_NAME_PARTIAL, request.getParameter(SearchFilter.DATA_SHARE_NAME_PARTIAL));
 		ret.setParam(SearchFilter.DATA_SHARE_ID, request.getParameter(SearchFilter.DATA_SHARE_ID));
 		ret.setParam(SearchFilter.SHARED_RESOURCE_ID, request.getParameter(SearchFilter.SHARED_RESOURCE_ID));
 		ret.setParam(SearchFilter.PROFILE_NAME, request.getParameter(SearchFilter.PROFILE_NAME));
 		ret.setParam(SearchFilter.OWNER_NAME, request.getParameter(SearchFilter.OWNER_NAME));
 		ret.setParam(SearchFilter.OWNER_TYPE, request.getParameter(SearchFilter.OWNER_TYPE));
-		ret.setParam(SearchFilter.GDS_PERMISSION, request.getParameter(SearchFilter.GDS_PERMISSION));
 
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 
