@@ -114,6 +114,11 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.PROFILE_NAME, request.getParameter(SearchFilter.PROFILE_NAME));
 		ret.setParam(SearchFilter.OWNER_NAME, request.getParameter(SearchFilter.OWNER_NAME));
 		ret.setParam(SearchFilter.OWNER_TYPE, request.getParameter(SearchFilter.OWNER_TYPE));
+		ret.setParam(SearchFilter.GDS_PERMISSION, request.getParameter(SearchFilter.GDS_PERMISSION));
+		ret.setParam(SearchFilter.CREATE_TIME_START, request.getParameter(SearchFilter.CREATE_TIME_START));
+		ret.setParam(SearchFilter.CREATE_TIME_END, request.getParameter(SearchFilter.CREATE_TIME_END));
+		ret.setParam(SearchFilter.UPDATE_TIME_START, request.getParameter(SearchFilter.UPDATE_TIME_START));
+		ret.setParam(SearchFilter.UPDATE_TIME_END, request.getParameter(SearchFilter.UPDATE_TIME_END));
 
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 

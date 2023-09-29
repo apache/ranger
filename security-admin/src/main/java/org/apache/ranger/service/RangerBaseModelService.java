@@ -398,7 +398,8 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return resultList;
 	}
 
-	protected long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+	//If not efficient we need to review this and add jpa_named queries to get the count
+	public long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
 		String q     = searchCriteria.isDistinct() ? distinctCountQueryStr : countQueryStr;
 		Query  query = createQuery(q, null, searchCriteria, searchFieldList, true);
 		Long   count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);

@@ -68,6 +68,10 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         searchFields.add(new SearchField(SearchFilter.ZONE_NAME,                 "z.name",            SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShareInDataset dshid, XXGdsDataShare dsh, XXSecurityZone z", "obj.id = dshid.datasetId and dshid.dataShareId = dsh.id and dsh.zoneId = z.id"));
         searchFields.add(new SearchField(SearchFilter.ZONE_NAME_PARTIAL,         "z.name",            SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShareInDataset dshid, XXGdsDataShare dsh, XXSecurityZone z", "obj.id = dshid.datasetId and dshid.dataShareId = dsh.id and dsh.zoneId = z.id"));
         searchFields.add(new SearchField(SearchFilter.ZONE_ID,                   "dsh.zoneId",        SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShareInDataset dshid, XXGdsDataShare dsh, XXSecurityZone z", "obj.id = dshid.datasetId and dshid.dataShareId = dsh.id  and dsh.zoneId = z.id"));
+        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_START,       "obj.createTime",    SearchField.DATA_TYPE.DATE,	SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+	searchFields.add(new SearchField(SearchFilter.CREATE_TIME_END,         "obj.createTime",    SearchField.DATA_TYPE.DATE,	SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_START,       "obj.updateTime",    SearchField.DATA_TYPE.DATE,	SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_END,         "obj.createTime",    SearchField.DATA_TYPE.DATE,	SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));

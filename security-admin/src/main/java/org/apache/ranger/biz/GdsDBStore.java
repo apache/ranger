@@ -31,14 +31,21 @@ import org.apache.ranger.db.XXGdsProjectDao;
 import org.apache.ranger.entity.XXGdsDataShareInDataset;
 import org.apache.ranger.entity.XXGdsDataset;
 import org.apache.ranger.entity.XXGdsDatasetInProject;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
+import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
 import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -48,6 +55,7 @@ import org.apache.ranger.service.RangerGdsDatasetService;
 import org.apache.ranger.service.RangerGdsDatasetInProjectService;
 import org.apache.ranger.service.RangerGdsProjectService;
 import org.apache.ranger.service.RangerGdsSharedResourceService;
+import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.validation.RangerGdsValidator;
 import org.apache.ranger.view.RangerGdsVList.RangerDataShareList;
@@ -68,6 +76,8 @@ import java.util.*;
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_DATASET;
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_DATA_SHARE;
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_PROJECT;
+import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
+
 
 @Component
 public class GdsDBStore extends AbstractGdsStore {
@@ -103,6 +113,13 @@ public class GdsDBStore extends AbstractGdsStore {
     @Autowired
     GUIDUtil guidUtil;
 
+    @Autowired
+    RangerPolicyService policyService;
+
+    @Autowired
+    RangerBizUtil bizUtil;
+
+
     @PostConstruct
     public void initStore() {
         if (LOG.isDebugEnabled()) {
@@ -112,6 +129,20 @@ public class GdsDBStore extends AbstractGdsStore {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== GdsInMemoryStore.initStore()");
         }
+    }
+
+    public PList<RangerDatasetHeaderInfo> getDatasetHeaders(SearchFilter filter) throws Exception {
+        LOG.debug("==> getDatasetHeaders({})", filter);
+
+        PList<RangerDataset>           datasets       = getUnscrubbedDatasets(filter);
+        List<RangerDatasetHeaderInfo>  datasetHeaders = toDatasetHeaders(datasets.getList(), getGdsPermissionFromFilter(filter));
+        PList<RangerDatasetHeaderInfo> ret            = new PList<>(datasetHeaders, datasets.getStartIndex(), datasets.getPageSize(), datasets.getTotalCount(), datasets.getResultSize(), datasets.getSortType(), datasets.getSortBy());
+
+        ret.setQueryTimeMS(datasets.getQueryTimeMS());
+
+        LOG.debug("<== getDatasetHeaders({}): ret={}", filter, ret);
+
+        return ret;
     }
 
     @Override
@@ -245,51 +276,19 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDatasets({})", filter);
 
-        int maxRows = filter.getMaxRows();
-        int startIndex = filter.getStartIndex();
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
+	PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
+	List<RangerDataset>  datasets      = ret.getList();
+	GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
 
-        String        gdsPermissionStr = filter.getParam(SearchFilter.GDS_PERMISSION);
-        GdsPermission gdsPermission    = null;
-
-        if (StringUtils.isNotEmpty(gdsPermissionStr)) {
-            try {
-                gdsPermission = GdsPermission.valueOf(gdsPermissionStr);
-            } catch (IllegalArgumentException ex) {
-                LOG.info("Ignoring invalid GdsPermission: {}", gdsPermissionStr);
+        for (RangerDataset dataset : datasets) {
+            if (gdsPermission.equals(GdsPermission.LIST)) {
+                scrubDatasetForListing(dataset);
             }
         }
-
-        if (gdsPermission == null) {
-            gdsPermission = GdsPermission.VIEW;
-        }
-        RangerDatasetList   result   = datasetService.searchDatasets(filter);
-        List<RangerDataset> datasets = new ArrayList<>();
-
-        for (RangerDataset dataset : result.getList()) {
-            if (dataset != null && validator.hasPermission(dataset.getAcl(), gdsPermission)) {
-                if (gdsPermission.equals(GdsPermission.LIST)) {
-                    scrubForListing(dataset);
-                }
-
-                datasets.add(dataset);
-            }
-        }
-
-        int endIndex = Math.min((startIndex + maxRows), datasets.size());
-        List<RangerDataset> paginatedDatasets = datasets.subList(startIndex, endIndex);
-        PList<RangerDataset> ret = new PList<>(paginatedDatasets, startIndex, maxRows, datasets.size(), paginatedDatasets.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDatasets({}): ret={}", filter, ret);
 
         return ret;
-    }
-
-    private void scrubForListing(RangerDataset dataset) {
-        dataset.setAcl(null);
-        dataset.setOptions(null);
-        dataset.setAdditionalInfo(null);
     }
 
     @Override
@@ -752,7 +751,6 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-
     @Override
     public RangerDatasetInProject addDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception {
         LOG.debug("==> addDatasetInProject({})", datasetInProject);
@@ -874,4 +872,143 @@ public class GdsDBStore extends AbstractGdsStore {
         }
     }
 
+    private List<RangerDatasetHeaderInfo> toDatasetHeaders(List<RangerDataset> datasets, GdsPermission gdsPermission) {
+        List<RangerDatasetHeaderInfo> ret = new ArrayList<>();
+
+        for (RangerDataset dataset : datasets) {
+            RangerDatasetHeaderInfo datasetHeader = new RangerDatasetHeaderInfo();
+
+            if (gdsPermission.equals(GdsPermission.LIST)) {
+                final GdsPermission permissionForUser = validator.getGdsPermissionForUser(dataset.getAcl(), bizUtil.getCurrentUserLoginId());
+
+                if (permissionForUser.equals(GdsPermission.NONE)) {
+                    continue;
+                } else {
+                    datasetHeader.setPermissionForCaller(permissionForUser.toString());
+                }
+            } else {
+                datasetHeader.setDataSharesCountByStatus(getDataSharesInDatasetCountByStatus(dataset.getId()));
+                datasetHeader.setProjectsCount(getDIPCountForDataset(dataset.getId()));
+                datasetHeader.setPrincipalsCountByType(getPrincipalCountForDataset(dataset.getName()));
+
+                datasetHeader.setResourceCount(getResourceCountInDataset(dataset.getId()));
+            }
+
+            datasetHeader.setId(dataset.getId());
+            datasetHeader.setName(dataset.getName());
+            datasetHeader.setCreateTime(dataset.getCreateTime());
+            datasetHeader.setUpdateTime(dataset.getUpdateTime());
+            datasetHeader.setCreatedBy(dataset.getCreatedBy());
+            datasetHeader.setUpdatedBy(dataset.getUpdatedBy());
+            datasetHeader.setIsEnabled(dataset.getIsEnabled());
+            datasetHeader.setGuid(dataset.getGuid());
+            datasetHeader.setVersion(dataset.getVersion());
+
+            ret.add(datasetHeader);
+        }
+
+        return ret;
+    }
+
+    private Map<GdsShareStatus, Long> getDataSharesInDatasetCountByStatus(Long datasetId) {
+        Map<GdsShareStatus, Long> ret            = new HashMap<>();
+        Map<Short, Long>          countsByStatus = daoMgr.getXXGdsDataShareInDataset().getDataSharesInDatasetCountByStatus(datasetId);
+
+        for (Map.Entry<Short, Long> entry : countsByStatus.entrySet()) {
+            ret.put(RangerGdsDatasetInProjectService.toShareStatus(entry.getKey()), entry.getValue());
+        }
+
+        return ret;
+    }
+
+    private Long getDIPCountForDataset(Long datasetId) {
+        return datasetInProjectService.getDatasetsInProjectCount(datasetId);
+    }
+
+    private Long getResourceCountInDataset(Long datasetId) {
+        return sharedResourceService.getResourceCountInDataset(datasetId);
+    }
+
+    private Map<PrincipalType, Long> getPrincipalCountForDataset(String datasetName) {
+        Map<PrincipalType, Long> ret    = new HashMap<>();
+        Set<String>              users  = new HashSet<>();
+        Set<String>              groups = new HashSet<>();
+        Set<String>              roles  = new HashSet<>();
+
+        if (StringUtils.isNotEmpty(datasetName)) {
+            List<XXPolicy> policies = daoMgr.getXXPolicy().findByServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
+
+            for (XXPolicy policyFromDb : policies) {
+                RangerPolicy                     policy    = policyService.getPopulatedViewObject(policyFromDb);
+                Collection<RangerPolicyResource> resources = policy.getResources().values();
+
+                for (RangerPolicyResource resource : resources) {
+                    if (resource.getValues().contains(datasetName)){
+                        List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+
+                        for (RangerPolicyItem policyItem : policyItems) {
+                            users.addAll(policyItem.getUsers());
+                            groups.addAll(policyItem.getGroups());
+                            roles.addAll(policyItem.getRoles());
+                        }
+                    }
+                }
+            }
+        }
+
+        ret.put(PrincipalType.USER,  (long) users.size());
+        ret.put(PrincipalType.GROUP, (long) groups.size());
+        ret.put(PrincipalType.ROLE,  (long) roles.size());
+
+        return ret;
+    }
+
+    private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) throws Exception {
+        int maxRows    = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
+        GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
+        RangerDatasetList   result        = datasetService.searchDatasets(filter);
+        List<RangerDataset> datasets      = new ArrayList<>();
+
+        for (RangerDataset dataset : result.getList()) {
+            if (dataset != null && validator.hasPermission(dataset.getAcl(), gdsPermission)) {
+                datasets.add(dataset);
+            }
+        }
+
+        int                  endIndex          = Math.min((startIndex + maxRows), datasets.size());
+        List<RangerDataset>  paginatedDatasets = datasets.subList(startIndex, endIndex);
+        PList<RangerDataset> ret               = new PList<>(paginatedDatasets, startIndex, maxRows, datasets.size(), paginatedDatasets.size(), result.getSortBy(), result.getSortType());
+
+        return ret;
+    }
+
+    private GdsPermission getGdsPermissionFromFilter(SearchFilter filter) {
+        String        gdsPermissionStr = filter.getParam(SearchFilter.GDS_PERMISSION);
+        GdsPermission gdsPermission    = null;
+
+        if (StringUtils.isNotEmpty(gdsPermissionStr)) {
+            try {
+                gdsPermission = GdsPermission.valueOf(gdsPermissionStr);
+            } catch (IllegalArgumentException ex) {
+                LOG.info("Ignoring invalid GdsPermission: {}", gdsPermissionStr);
+            }
+        }
+
+        if (gdsPermission == null) {
+            gdsPermission = GdsPermission.VIEW;
+        }
+
+        return gdsPermission;
+    }
+
+    private void scrubDatasetForListing(RangerDataset dataset) {
+        dataset.setAcl(null);
+        dataset.setOptions(null);
+        dataset.setAdditionalInfo(null);
+    }
 }

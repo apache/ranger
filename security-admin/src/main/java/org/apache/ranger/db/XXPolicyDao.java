@@ -18,6 +18,7 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -416,5 +417,21 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		} catch (NoResultException e) {
 			return new ArrayList<XXPolicy>();
 		}
+	}
+
+	public List<XXPolicy> findByServiceType(String serviceType) {
+		List<XXPolicy> ret = Collections.emptyList();
+
+		if (serviceType != null && !serviceType.isEmpty()) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXPolicy.findByServiceType", tClass)
+				                        .setParameter("serviceType", serviceType)
+				                        .getResultList();
+			} catch (NoResultException e) {
+			    // ignore
+			}
+		}
+
+		return ret;
 	}
 }

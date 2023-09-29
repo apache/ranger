@@ -28,8 +28,10 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class XXGdsDataShareInDatasetDao extends BaseDao<XXGdsDataShareInDataset> {
@@ -98,5 +100,29 @@ public class XXGdsDataShareInDatasetDao extends BaseDao<XXGdsDataShareInDataset>
 		}
 
 		return ret != null ? ret : Collections.emptyList();
+	}
+
+	public Map<Short, Long> getDataSharesInDatasetCountByStatus(Long datasetId) {
+		Map<Short, Long> ret = Collections.emptyMap();
+
+		if (datasetId != null) {
+			try {
+				List<Object[]> rows = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.getDataSharesInDatasetCountByStatus", Object[].class)
+				                                        .setParameter("datasetId", datasetId).getResultList();
+				if (rows != null) {
+					ret = new HashMap<>();
+
+					for (Object[] row : rows) {
+						if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+							ret.put((Short) row[0], (Long) row[1]);
+						}
+					}
+				}
+			} catch (NoResultException e) {
+				LOG.debug("getDataSharesInDatasetCountByStatus({}): ", datasetId, e);
+			}
+		}
+
+		return ret;
 	}
 }

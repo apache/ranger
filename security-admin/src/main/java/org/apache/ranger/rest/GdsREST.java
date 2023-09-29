@@ -33,6 +33,8 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.RangerGdsDatasetService;
+import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,6 +261,34 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.listDatasetNames(): {}", ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/dataset/info")
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASETS_HEADER + "\")")
+    public PList<RangerDatasetHeaderInfo> getDatasetHeaderInfo(@Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getDatasetHeaderInfo()");
+
+        PList<RangerDatasetHeaderInfo> ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+
+            ret = gdsStore.getDatasetHeaders(filter);
+        } catch (WebApplicationException we) {
+            LOG.error("getDatasets() failed", we);
+
+            throw restErrorUtil.createRESTException(we.getMessage());
+        } catch (Throwable ex) {
+            LOG.error("getDatasets() failed", ex);
+
+            throw restErrorUtil.createRESTException(ex.getMessage());
+        }
+
+        LOG.debug("<== GdsREST.getDatasetHeaderInfo(): {}", ret);
 
         return ret;
     }

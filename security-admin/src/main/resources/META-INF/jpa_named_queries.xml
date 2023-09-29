@@ -2122,6 +2122,13 @@
 		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findByServiceType">
+		<query>SELECT obj FROM XXPolicy obj
+		         JOIN XXService xs ON obj.service = xs.id
+		         JOIN XXServiceDef xsd ON xsd.id = xs.type
+		        WHERE xsd.name = :serviceType</query>
+	</named-query>
+
 	<named-query name="XXGdsDataset.findByGuid">
 		<query>select obj from XXGdsDataset obj where obj.guid = :guid</query>
 	</named-query>
@@ -2249,5 +2256,11 @@
 
 	<named-query name="XXGdsDatasetInProject.findByProjectId">
 		<query>select obj from XXGdsDatasetInProject obj where obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.getDataSharesInDatasetCountByStatus">
+		<query>SELECT obj.status, COUNT(obj) FROM XXGdsDataShareInDataset obj
+		        WHERE obj.datasetId = :datasetId
+		        GROUP BY obj.status</query>
 	</named-query>
 </entity-mappings>

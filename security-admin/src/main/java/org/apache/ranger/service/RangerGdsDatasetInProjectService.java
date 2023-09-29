@@ -262,4 +262,18 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
 
         return ret;
     }
+
+    public Long getDatasetsInProjectCount(long datasetId) {
+        LOG.debug("==> getDatasetsInProjectCount({})", datasetId);
+
+        SearchFilter filter = new SearchFilter();
+
+        filter.setParam(SearchFilter.DATASET_ID, String.valueOf(datasetId));
+
+        Long ret = super.getCountForSearchQuery(filter, searchFields);
+
+        LOG.debug("<== getDatasetsInProjectCount({}): ret={}", datasetId, ret);
+
+        return ret;
+    }
 }

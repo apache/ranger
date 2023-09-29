@@ -247,4 +247,18 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
 
         return ret;
     }
+
+    public Long getResourceCountInDataset(long datasetId) {
+        LOG.debug("==> getResourceCountInDataset({})", datasetId);
+
+        SearchFilter filter = new SearchFilter();
+
+        filter.setParam(SearchFilter.DATASET_ID, String.valueOf(datasetId));
+
+        Long ret = super.getCountForSearchQuery(filter, searchFields);
+
+        LOG.debug("<== getResourceCountInDataset({}): ret={}", datasetId, ret);
+
+        return ret;
+    }
 }

@@ -17,6 +17,7 @@
 
 package org.apache.ranger.validation;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
@@ -50,9 +51,42 @@ public class RangerGdsValidator {
     @Autowired
     RESTErrorUtil restErrorUtil;
 
-
     public RangerGdsValidator(RangerGdsValidationDataProvider dataProvider) {
         this.dataProvider = dataProvider;
+    }
+
+    public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
+        if (dataProvider.isAdminUser()) {
+            return GdsPermission.ADMIN;
+        }
+
+        GdsPermission permission = GdsPermission.NONE;
+
+		if (acl.getUsers() != null) {
+            permission = getHigherPrivilegePermission(permission, acl.getUsers().get(user));
+		}
+
+		if (acl.getGroups() != null) {
+			Set<String> groups = dataProvider.getGroupsForUser(user);
+
+            if (CollectionUtils.isNotEmpty(groups)) {
+                for (String group : groups) {
+                    permission = getHigherPrivilegePermission(permission, acl.getGroups().get(group));
+                }
+            }
+		}
+
+		if (acl.getRoles() != null) {
+            Set<String> roles = dataProvider.getRolesForUser(user);
+
+            if (CollectionUtils.isNotEmpty(roles)) {
+                for (String role : roles) {
+                    permission = getHigherPrivilegePermission(permission, acl.getRoles().get(role));
+                }
+            }
+		}
+
+		return permission;
     }
 
     public void validateCreate(RangerDataset dataset) {
@@ -744,6 +778,17 @@ public class RangerGdsValidator {
             default:
                 ret = false;
             break;
+        }
+
+        return ret;
+    }
+
+
+    private GdsPermission getHigherPrivilegePermission(GdsPermission permission1, GdsPermission permission2) {
+        GdsPermission ret = permission1;
+
+        if (permission2 != null) {
+            ret = permission1.compareTo(permission2) > 0 ? permission1 : permission2;
         }
 
         return ret;
