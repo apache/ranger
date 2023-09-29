@@ -422,13 +422,36 @@ export const SideBarBody = (props) => {
             <ul className="list-group list-group-flush">
               <React.Fragment>
                 <li className="list-group-item">
-                  <NavLink to="/gds/datasetlisting"
-                      onClick={() => {
-                        props.closeCollapse();
-                      }}
-                      className="list-group-item"
-                    >
-                      My Datasets
+                  <NavLink
+                    to="/gds/datasetlisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Datasets
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="/gds/datasharelisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Datashares
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/request/list"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Requests
                   </NavLink>
                 </li>
               </React.Fragment>

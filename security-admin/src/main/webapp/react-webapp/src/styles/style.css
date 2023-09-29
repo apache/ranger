@@ -124,6 +124,10 @@ a:active {
   margin-bottom: 10px;
 }
 
+.mg-y-10 {
+  margin: 10px 0;
+}
+
 .mg-b-15 {
   margin-bottom: 15px;
 }
@@ -2566,19 +2570,32 @@ li.list-group-item:hover {
 }
 
 .gds-header-wrapper {
- background-color: #f3f8f9 ;
- display: flex;
- justify-content: space-between;
- align-items: center;
- padding: 1rem;
+  background-color: #f3f8f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
   border-bottom: 1px solid #d6d6d6;
   position: sticky;
   top: 0;
+  z-index: 1;
+}
+
+.gds-form-header-wrapper {
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #d6d6d6;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .gds-header {
   color: #222222;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 300;
   line-height: 20px;
   margin: 0;
@@ -2587,7 +2604,7 @@ li.list-group-item:hover {
   flex: 1;
 }
 
-.gds-header-btn-grp{
+.gds-header-btn-grp {
   display: flex;
   gap: 0.875rem;
 }
@@ -2624,11 +2641,12 @@ li.list-group-item:hover {
   width: 100%;
 }
 
-.gds-add-principle{
+.gds-add-principle {
   display: inline-flex;
   justify-content: space-between;
   gap: 0.875rem;
   width: 100%;
+  align-items: flex-start;
 }
 
 .flex-1 {
@@ -2637,8 +2655,210 @@ li.list-group-item:hover {
 
 .gds-text-input {
   min-height: 40px;
+  margin-bottom: 2rem;
 }
 
-.gds-button{
+.gds-button {
   height: 40px;
+}
+
+.gds-tab-content {
+  width: 760px; /* 52.77% . Max screen size 1440px*/
+  margin-left: 120px;
+  margin-top: 40px;
+}
+
+.gds-inline-field-grp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.gds-right-inline-field-grp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.gds-left-inline-field {
+  width: 160px;
+}
+
+.gds-right-inline-field {
+  width: 160px;
+  text-align: right;
+}
+
+.gds-description {
+  border: none;
+}
+
+.gds-content-border {
+  border: 1px solid #eeeeee;
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem 2.5rem 1.25rem;
+}
+
+.gds-content-header {
+  font-size: 1.125rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.gds-card-heading {
+  font-size: 1.125rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dddddd;
+}
+
+.gds-acc-card-header {
+  padding: 0.5rem 0.75rem;
+}
+
+.gds-heading-5 {
+  font-size: 1.125rem;
+}
+
+/* .gds-section-title {
+  padding: 1.5rem 1rem 0rem 1rem;
+} */
+
+.gds-flex {
+  display: inline-flex;
+  gap: 0.875rem;
+}
+
+.gds-section-card {
+  padding: 1.5rem 1rem;
+}
+
+.gds-principle-listing {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0rem;
+}
+
+.gds-bg-white {
+  background: white;
+}
+
+.gds-bg-light {
+  background: #fafafa;
+  gap: 0.875rem;
+}
+
+.gds-input {
+  height: 38px;
+}
+
+.gap-1 {
+  gap: 1rem;
+}
+
+.gap-half {
+  gap: 0.5rem;
+}
+
+.gap-one-fourth {
+  gap: 0.25rem;
+}
+
+.gds-access-grant-form {
+  max-width: 1208px;
+  padding: 0.5rem;
+  margin: 0 auto;
+}
+
+.gds-grant-det-cond {
+  margin-bottom: 3rem;
+  flex: 1;
+}
+
+.gds-grant-row {
+  display: grid;
+  grid-gap: 0.5rem;
+  grid-template-columns: 80px 1fr 80px;
+}
+
+.gds-flex {
+  display: flex;
+}
+
+.top-0 {
+  top: 0;
+}
+
+input.gds-placeholder::placeholder,
+textarea.gds-placeholder::placeholder,
+.gds-form-wrap input::placeholder,
+.gds-form-wrap textarea::placeholder {
+  font-size: 13px;
+}
+
+.gds-resource-options .card-header {
+  padding: 0.75rem;
+  background-color: #f2f2f2;
+  border-bottom: 1px solid #ced4da;
+}
+
+.gds-resource-options.card {
+  border: 1px solid #ced4da;
+  overflow: unset;
+}
+
+.gds-chips {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gds-chips .badge {
+  padding: 0.5rem;
+  background-color: #f2f2f2;
+  font-weight: normal;
+  font-size: 14px;
+}
+
+.gds-res-acc-header a {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 0.875rem;
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+.gds-res-acc-header i {
+  font-size: 1rem;
+  line-height: 1;
+  height: 16px;
+}
+
+.gds-res-card-body {
+  padding: 1.25rem 0 0 0;
+}
+
+.gds-hr {
+  background: #ced4da;
+}
+
+.gds-added-res-listing .form-label {
+  text-transform: capitalize;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.gds-opacity-lowest {
+  opacity: 0.2;
+}
+
+.badge-sm {
+  padding: 4px 6px !important;
+  font-size: 12px !important;
+}
+
+.gds-principle-width {
+  max-width: 760px;
+  margin: 0 auto;
 }

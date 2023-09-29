@@ -97,13 +97,28 @@ const DatasetListingComp = lazy(() =>
 );
 const CreateDatasetComp = lazy(() =>
   import("Views/GovernedData/Dataset/AddDatasetView")
-)
+);
 const DatasetDetailLayoutComp = lazy(() =>
   import("Views/GovernedData/Dataset/DatasetDetailLayout")
-)
+);
 const AccessGrantFormComp = lazy(() =>
   import("Views/GovernedData/Dataset/AccessGrantForm")
-)
+);
+const DatashareListingComp = lazy(() =>
+  import("Views/GovernedData/Datashare/DatashareListing")
+);
+const CreateDatashareComp = lazy(() =>
+  import("Views/GovernedData/Datashare/AddDatashareView")
+);
+const DatashareDetailLayoutComp = lazy(() =>
+  import("Views/GovernedData/Datashare/DatashareDetailLayout")
+);
+const DatashareAddSharedResourceComp = lazy(() =>
+  import("Views/GovernedData/Datashare/AddSharedResourceComp")
+);
+const GDSRequestListingComp = lazy(() =>
+  import("Views/GovernedData/Request/RequestListing")
+);
 
 export default class App extends Component {
   constructor(props) {
@@ -355,12 +370,41 @@ export default class App extends Component {
                   {/* NOT FOUND ROUTE */}
                   <Route path="*" />
                   {/* GDS */}
-                    <Route path="/gds">
-                      <Route path="datasetlisting" element={<DatasetListingComp />} />
-                      <Route path="create" element={<CreateDatasetComp />} />
-                      <Route path="dataset/:datasetId/detail" element={<DatasetDetailLayoutComp />} />
-                      <Route path="dataset/:datasetId/accessGrant" element={<AccessGrantFormComp />} />
-                    </Route>
+                  <Route path="/gds">
+                    <Route
+                      path="datasetlisting"
+                      element={<DatasetListingComp />}
+                    />
+                    <Route path="create" element={<CreateDatasetComp />} />
+                    <Route
+                      path="dataset/:datasetId/detail"
+                      element={<DatasetDetailLayoutComp />}
+                    />
+                    <Route
+                      path="dataset/:datasetId/accessGrant"
+                      element={<AccessGrantFormComp />}
+                    />
+                    <Route
+                      path="datasharelisting"
+                      element={<DatashareListingComp />}
+                    />
+                    <Route
+                      path="datashare/create"
+                      element={<CreateDatashareComp />}
+                    />
+                    <Route
+                      path="datashare/:datashareId/detail"
+                      element={<DatashareDetailLayoutComp />}
+                    />
+                    <Route
+                      path="datashare/resource/:datashareId"
+                      element={<DatashareAddSharedResourceComp />}
+                    />
+                    <Route
+                      path="request/list"
+                      element={<GDSRequestListingComp />}
+                    />
+                  </Route>
                 </Route>
               </Routes>
             </HashRouter>

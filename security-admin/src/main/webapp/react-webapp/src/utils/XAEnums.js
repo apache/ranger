@@ -623,7 +623,11 @@ export const PathAssociateWithModule = {
     "/gds/create",
     "/gds/dataset/:datasetId/detail",
     "/gds/dataset/:datasetId/accessGrant",
-    "/gds/datasharelisting"
+    "/gds/datasharelisting",
+    "/gds/datashare/create",
+    "/gds/request/list",
+    "/gds/datashare/:datashareId/detail",
+    "/gds/datashare/resource/:datashareId"
   ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
@@ -817,14 +821,14 @@ export const ServiceRequestDataRangerAcl = [
 export const ServiceRequestDataHadoopAcl = [ServiceType.Service_HDFS.label];
 
 export const UsersyncDetailsKeyDisplayMap = {
-    'unixBackend': 'Unix',
-    'fileName': 'File Name',
-    'syncTime': 'Sync time',
-    'lastModified': 'Last modified time',
-    'minUserId': 'Minimum user id',
-    'minGroupId': 'Minimum group id',
-    'totalUsersSynced': 'Total number of users synced',
-    'totalGroupsSynced': 'Total number of groups synced',
-    'totalUsersDeleted': 'Total number of users marked for delete',
-    'totalGroupsDeleted': 'Total number of groups marked for delete'
-}
+  unixBackend: "Unix",
+  fileName: "File Name",
+  syncTime: "Sync time",
+  lastModified: "Last modified time",
+  minUserId: "Minimum user id",
+  minGroupId: "Minimum group id",
+  totalUsersSynced: "Total number of users synced",
+  totalGroupsSynced: "Total number of groups synced",
+  totalUsersDeleted: "Total number of users marked for delete",
+  totalGroupsDeleted: "Total number of groups marked for delete"
+};

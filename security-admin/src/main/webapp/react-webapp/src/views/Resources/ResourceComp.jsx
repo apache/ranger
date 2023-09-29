@@ -40,7 +40,8 @@ export default function ResourceComp(props) {
     serviceDetails,
     policyType,
     policyItem,
-    policyId
+    policyId,
+    isGds
   } = props;
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
   const toastId = useRef(null);
@@ -90,7 +91,11 @@ export default function ResourceComp(props) {
 
   const RenderValidateField = ({ name }) =>
     (formValues && formValues[name]?.mandatory && (
-      <span className="compulsory-resource">*</span>
+      <span
+        className={!isGds ? "compulsory-resource" : "compulsory-resource top-0"}
+      >
+        *
+      </span>
     )) ||
     null;
 
@@ -235,7 +240,7 @@ export default function ResourceComp(props) {
                       onChange={(value) =>
                         handleResourceChange(value, input, index)
                       }
-                      styles={customStyles}
+                      styles={!isGds ? customStyles : ""}
                       isSearchable={false}
                     />
                     <RenderValidateField name={`resourceName-${levelKey}`} />
@@ -248,7 +253,7 @@ export default function ResourceComp(props) {
 
         {formValues[`resourceName-${levelKey}`] && (
           <>
-            <Col sm={5}>
+            <Col sm={!isGds ? 5 : 9}>
               <ResourceSelectComp
                 levelKey={levelKey}
                 formValues={formValues}
@@ -258,7 +263,8 @@ export default function ResourceComp(props) {
             </Col>
           </>
         )}
-        {formValues[`resourceName-${levelKey}`] && (
+
+        {formValues[`resourceName-${levelKey}`] && !isGds && (
           <Col sm={4}>
             <Row>
               {formValues[`resourceName-${levelKey}`]["excludesSupported"] && (

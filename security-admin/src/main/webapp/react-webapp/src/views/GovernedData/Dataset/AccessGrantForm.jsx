@@ -17,615 +17,574 @@
  * under the License.
  */
 
-
-import React, { useState, useEffect } from "react";
-import { Form as FormB, Button, Row, Col, Table, InputGroup, FormControl } from "react-bootstrap";
+import React, { useState, useEffect, useReducer } from "react";
+import { Form as FormB, Button } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
-import AsyncSelect from "react-select/async";
-import Select from "react-select";
-import { FieldArray } from "react-final-form-arrays";
 import moment from "moment-timezone";
-import BootstrapSwitchButton from "bootstrap-switch-button-react";
-import Datetime from "react-datetime";
-import PolicyValidityPeriodComp from "../../PolicyListing/PolicyValidityPeriodComp";
 import { getAllTimeZoneList } from "../../../utils/XAUtils";
-import { isEmpty } from "lodash";
+import DatasetPolicyItemComp from "./DatasetPolicyItemComp";
+import { fetchApi } from "Utils/fetchAPI";
+import { maxBy, find } from "lodash";
+import userGreyIcon from "../../../images/user-grey.svg";
+import groupGreyIcon from "../../../images/group-grey.svg";
+import roleGreyIcon from "../../../images/role-grey.svg";
+import AsyncCreatableSelect from "react-select/async-creatable";
+import PolicyValidityPeriodComp from "../../PolicyListing/PolicyValidityPeriodComp";
+import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
+import { isEqual, isEmpty, isObject } from "lodash";
+import { policyConditionUpdatedJSON } from "Utils/XAUtils";
+import { Loader } from "Components/CommonComponents";
 
+const initialState = {
+  loader: true,
+  serviceDetails: null,
+  serviceCompDetails: null,
+  policyData: null,
+  formData: {},
+};
 
-function AccessGrantForm(props) {
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_DATA":
+      return {
+        ...state,
+        loader: false,
+        serviceDetails: action.serviceDetails,
+        serviceCompDetails: action.serviceCompDetails,
+        policyData: action?.policyData,
+        formData: action.formData,
+      };
+    default:
+      throw new Error();
+  }
+}
 
-  const { addPolicyItem } = props;
-  const [validitySchedules, setValiditySchedules] = useState([{name: "validitySchedules[0]",
-      value: ''}]);
+function AccessGrantForm({ dataset, onDataChange }) {
+  const [policyState, dispatch] = useReducer(reducer, initialState);
+  const { loader, serviceCompDetails, policyData, formData } = policyState;
+  const [showModal, policyConditionState] = useState(false);
 
+  useEffect(() => {
+    fetchInitalData();
+  }, []);
 
-  // useEffect(() => {
-  //   // Should not ever set state during rendering, so do this in useEffect instead.
-  //   const newObj = {
-  //     name: "validitySchedules[0]",
-  //     value: ''
-  //   };
-  //   setValiditySchedules(newObj);
-  //   console.log(validitySchedules)
-  // }, []);
-
-     const handleSubmit = async (formData) => {
-     }
-    
-    const serviceSelectTheme = (theme) => {
-    return {
-      ...theme,
-      colors: {
-        ...theme.colors,
-        primary: "#0081ab"
-      }
-    };
-    };
-    
-    const RenderInput = (props, openCalendar, closeCalendar) => {
-    function clear() {
-      props.dateProps.onChange({ target: { value: "" } });
+  const fetchInitalData = async () => {
+    let policyData = null;
+    if (dataset.name) {
+      policyData = await fetchPolicyData();
     }
-    return (
-      <>
-        <InputGroup className="mb-2">
-          <FormControl {...props.dateProps} readOnly />
-          <InputGroup.Prepend>
-            <InputGroup.Text onClick={clear}> X </InputGroup.Text>
-          </InputGroup.Prepend>
-        </InputGroup>
-      </>
-    );
-    };
-
-    const calStartDate = (sDate, currentDate) => {
-        if (sDate && sDate?.startTime) {
-        return currentDate.isAfter(sDate.startTime);
-        } else {
-        let yesterday = moment().subtract(1, "day");
-        return currentDate.isAfter(yesterday);
-        }
-    };
-  
-  const calEndDate = (sDate, currentDate) => {
-    if (sDate && sDate?.endTime) {
-      return currentDate.isBefore(sDate.endTime);
-    } else {
-      return true;
-    }
+    let serviceData = await fetchServiceDetails(policyData.service);
+    let serviceCompData = await getServiceDefData(policyData.serviceType);
+    dispatch({
+      type: "SET_DATA",
+      serviceDetails: serviceData,
+      serviceCompDetails: serviceCompData,
+      policyData: policyData || null,
+      formData: generateFormData(policyData, serviceCompData),
+    });
   };
 
-  const removeValiditySchedule = (index) => { 
-    validitySchedules.splice(index, 1);
-    renderValiditySchedule();
-  }
+  const fetchPolicyData = async () => {
+    let data = null;
+    let params = {};
+    params["resource:dataset"] = dataset.name;
+    try {
+      const resp = await fetchApi({
+        url: "plugins/policies/gds/for-resource",
+        params: params,
+      });
+      data = resp.data[0];
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching dataset policy details ! ${error}`
+      );
+    }
+    return data;
+  };
 
-    const serviceSelectCustomStyles = {
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "black"
-    }),
-    control: (provided) => ({
-      ...provided,
-      maxHeight: "32px",
-      minHeight: "32px"
-    }),
-      indicatorsContainer: (provided) => ({
-      
-      ...provided,
-      maxHeight: "30px"
-    }),
-    dropdownIndicator: (provided) => ({
-      ...provided,
-      padding: "5px"
-    }),
-    clearIndicator: (provided) => ({
-      ...provided,
-      padding: "5px"
-    }),
-    container: (styles) => ({ ...styles, width: "150px" })
-    };
-  
-  
-  const addValiditySchedule = (e) => {
-    const size = validitySchedules.length == undefined ? 0 : validitySchedules.length;
-    const newObj = {
-      name: "validitySchedules["+size+"]",
-      value: ''
-    };
-    setValiditySchedules([...validitySchedules, newObj]);
-  }
+  const fetchServiceDetails = async (serviceName) => {
+    let data = null;
+    try {
+      const resp = await fetchApi({
+        url: `plugins/services/name/${serviceName}`,
+      });
+      data = resp.data || null;
+    } catch (error) {
+      console.error(`Error occurred while fetching service details ! ${error}`);
+    }
+    return data;
+  };
 
+  const generateFormData = (policyData, serviceCompData) => {
+    let data = {};
+    data.policyType = 0;
+    if (policyData != undefined && policyData != null) {
+      data.policyItems =
+        policyData.id && policyData?.policyItems?.length > 0
+          ? setPolicyItemVal(
+              policyData?.policyItems,
+              serviceCompData?.accessTypes
+            )
+          : [{}];
+      if (policyData.id) {
+        data.policyName = policyData?.name;
+        data.isEnabled = policyData?.isEnabled;
+        data.policyPriority = policyData?.policyPriority == 0 ? false : true;
+        data.description = policyData?.description;
+        data.isAuditEnabled = policyData?.isAuditEnabled;
+        data.policyLabel =
+          policyData &&
+          policyData?.policyLabels?.map((val) => {
+            return { label: val, value: val };
+          });
+        let serviceCompResourcesDetails = serviceCompData?.resources;
+        if (policyData?.resources) {
+          let lastResourceLevel = [];
+          Object.entries(policyData?.resources).map(([key, value]) => {
+            let setResources = find(serviceCompResourcesDetails, ["name", key]);
+            data[`resourceName-${setResources?.level}`] = setResources;
+            data[`value-${setResources?.level}`] = value.values.map((m) => {
+              return { label: m, value: m };
+            });
+            lastResourceLevel.push({
+              level: setResources.level,
+              name: setResources.name,
+            });
+          });
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(serviceCompResourcesDetails, [
+            "parent",
+            lastResourceLevel.name,
+          ]);
+          if (setLastResources && setLastResources?.isValidLeaf) {
+            data[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none",
+            };
+          }
+        }
+        if (policyData?.validitySchedules) {
+          data["validitySchedules"] = [];
+          policyData?.validitySchedules.filter((val) => {
+            let obj = {};
+            if (val.endTime) {
+              obj["endTime"] = moment(val.endTime, "YYYY/MM/DD HH:mm:ss");
+            }
+            if (val.startTime) {
+              obj["startTime"] = moment(val.startTime, "YYYY/MM/DD HH:mm:ss");
+            }
+            if (val.timeZone) {
+              obj["timeZone"] = getAllTimeZoneList().find((tZoneVal) => {
+                return tZoneVal.id == val.timeZone;
+              });
+            }
+            data["validitySchedules"].push(obj);
+          });
+        }
 
+        if (policyData?.conditions?.length > 0) {
+          data.conditions = {};
+          for (let val of policyData.conditions) {
+            data.conditions[val?.type] = val?.values?.join(",");
+          }
+        }
+      }
+    }
+    return data;
+  };
 
-  const renderValiditySchedule = () => { 
-    return validitySchedules?.map((obj, index) => {
-      return <tr key={obj.name}>
-                <td className="text-center">
-                                        <Field
-                                          className="form-control"
-                                          name={`${obj.name}.startTime`}
-                                          placeholder="&#xF007; Username"
-                                          render={({ input, meta }) => (
-                                            <div>
-                                              <Datetime
-                                                {...input}
-                                                renderInput={(props) => (
-                                                  <RenderInput dateProps={props} />
-                                                )}
-                                                dateFormat="MM-DD-YYYY"
-                                                timeFormat="HH:mm:ss"
-                                                closeOnSelect
-                                                isValidDate={(currentDate, selectedDate) =>
-                                                  calEndDate(validitySchedules[index], currentDate)
-                                                }
-                                              />
-                                              {meta.touched && meta.error && (
-                                                <span>{meta.error}</span>
-                                              )}
-                                            </div>
-                                          )}
-                                        />
-                    </td>
-                    <td className="text-center">
-                        <Field
-                          className="form-control"
-                          name={`${obj.name}.endTime`}
-                          render={({ input, meta }) => (
-                            <div>
-                              <Datetime
-                                {...input}
-                                renderInput={(props) => (
-                                  <RenderInput dateProps={props} />
-                                )}
-                                dateFormat="MM-DD-YYYY"
-                                timeFormat="HH:mm:ss"
-                                closeOnSelect
-                                isValidDate={(currentDate, selectedDate) =>
-                                  calStartDate(validitySchedules[index], currentDate)
-                                }
-                              />
-                              {meta.touched && meta.error && (
-                                <span>{meta.error}</span>
-                              )}
-                            </div>
-                          )}
-                        />
-                      </td>
-                      <td className="text-center">
-                        <Field
-                          className="form-control"
-                          name={`${obj.name}.timeZone`}
-                          render={({ input, meta }) => (
-                            <div>
-                              <Select
-                                {...input}
-                                options={getAllTimeZoneList()}
-                                getOptionLabel={(obj) => obj.text}
-                                getOptionValue={(obj) => obj.id}
-                                isClearable={true}
-                                /*isDisabled={
-                                  isEmpty(validitySchedules?.[index]?.startTime) &&
-                                  isEmpty(validitySchedules?.[index]?.endTime)
-                                    ? true
-                                    : false
-                                }*/
-                              />
-                              {meta.touched && meta.error && (
-                                <span>{meta.error}</span>
-                              )}
-                            </div>
-                          )}
-                        />
-                      </td>
-                      <td className="text-center">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="btn-mini"
-                          title="Remove"
-                          onClick={() => removeValiditySchedule(index)}
-                          data-action="delete"
-                          data-cy="delete"
-                        >
-                          <i className="fa-fw fa fa-remove"></i>
-                        </Button>
-                      </td>
-              </tr>
-    })
-  }
-    
-    return (
-        <>
-            <div className="wrap-gds">
-                <Form
-                    onSubmit={handleSubmit}
-                    mutators={{
-                    ...arrayMutators
-                    }}
-                    render={({
-                    handleSubmit,
-                    form: {
-                    mutators: { push, pop }
-                    },
-                    form,
-                    submitting,
-                    invalid,
-                    errors,
-                    values,
-                    fields,
-                    pristine,
-                    dirty
-                }) => (
-                    <div className="wrap user-role-grp-form">
+  const getServiceDefData = async (serviceDefName) => {
+    let data = null;
+    let resp = {};
+    try {
+      resp = await fetchApi({
+        url: `plugins/definitions/name/${serviceDefName}`,
+      });
+      data = resp.data;
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
+      );
+    }
+    return data;
+  };
 
-                    <form
-                        onSubmit={(event) => {
-                        handleSubmit(event);
-                        }}
-                    >
-                    <Row className="form-group">
-                        <Col sm={5}>    <p className="formHeader">Basic Details</p>   </Col>
-                    </Row>
-                        <Field name="policyName">
+  const setPolicyItemVal = (formData, accessTypes) => {
+    return formData.map((val) => {
+      let obj = {},
+        accessTypesObj = [];
+
+      if (val.hasOwnProperty("delegateAdmin")) {
+        obj.delegateAdmin = val.delegateAdmin;
+      }
+
+      for (let i = 0; val?.accesses?.length > i; i++) {
+        accessTypes.map((opt) => {
+          if (val.accesses[i].type == opt.name) {
+            accessTypesObj.push({ label: opt.label, value: opt.name });
+          }
+        });
+      }
+      obj["accesses"] = accessTypesObj;
+      let principle = [];
+      if (val?.groups?.length > 0) {
+        val.groups.map((opt) => {
+          principle.push({
+            label: (
+              <div>
+                <img src={groupGreyIcon} height="20px" width="20px" />
+                {opt}
+              </div>
+            ),
+            value: opt,
+            type: "GROUP",
+          });
+        });
+      }
+      if (val?.users?.length > 0) {
+        val.users.map((opt) => {
+          principle.push({
+            label: (
+              <div>
+                <img src={userGreyIcon} height="20px" width="20px" />
+                {opt}
+              </div>
+            ),
+            value: opt,
+            type: "USER",
+          });
+        });
+      }
+      if (val?.roles?.length > 0) {
+        val.roles.map((opt) => {
+          principle.push({
+            label: (
+              <div>
+                <img src={roleGreyIcon} height="20px" width="20px" />
+                {opt}
+              </div>
+            ),
+            value: opt,
+            type: "ROLE",
+          });
+        });
+      }
+      obj.principle = principle;
+      /* Policy Condition*/
+      if (val?.conditions?.length > 0) {
+        obj.conditions = {};
+        for (let data of val.conditions) {
+          obj.conditions[data.type] = data.values.join(", ");
+        }
+      }
+      return obj;
+    });
+  };
+
+  const handleSubmit = async (values) => {
+    saveAccessGrant(values);
+  };
+
+  const fetchPrincipleData = async (inputValue) => {
+    let params = { name: inputValue || "", isVisible: 1 };
+    let op = [];
+    const principleResp = await fetchApi({
+      url: "xusers/lookup/principals",
+      params: params,
+    });
+    op = principleResp.data;
+
+    return op.map((obj) => ({
+      label: (
+        <div>
+          <img
+            src={
+              obj.type == "USER"
+                ? userGreyIcon
+                : obj.type == "GROUP"
+                ? groupGreyIcon
+                : roleGreyIcon
+            }
+            height="20px"
+            width="20px"
+          />{" "}
+          {obj.name}{" "}
+        </div>
+      ),
+      value: obj.name,
+      type: obj.type,
+    }));
+  };
+
+  const FormChange = (props) => {
+    const { isDirtyField, formValues } = props;
+    if (isDirtyField) onDataChange(formValues, policyData);
+    return null;
+  };
+
+  const onRemovingPolicyItem = (index) => {
+    onDataChange(undefined, undefined);
+  };
+
+  const isDirtyFieldCheck = (dirtyFields, modified, values, initialValues) => {
+    let modifiedVal = false;
+    if (!isEmpty(dirtyFields)) {
+      for (let dirtyFieldVal in dirtyFields) {
+        modifiedVal = modified?.[dirtyFieldVal];
+        if (
+          values?.validitySchedules ||
+          modified?.validitySchedules ||
+          values?.conditions ||
+          modified?.conditions ||
+          modifiedVal == true
+        ) {
+          modifiedVal = true;
+          break;
+        }
+      }
+    }
+    if (
+      !isEqual(values?.validitySchedules, initialValues?.validitySchedules) ||
+      !isEqual(values?.conditions, initialValues?.conditions)
+    ) {
+      modifiedVal = true;
+    }
+    return modifiedVal;
+  };
+
+  return (
+    <>
+      {loader ? (
+        <Loader />
+      ) : (
+        <div className="wrap-gds">
+          <Form
+            onSubmit={handleSubmit}
+            mutators={{
+              ...arrayMutators,
+            }}
+            initialValues={formData}
+            render={({
+              form: {
+                mutators: { push: addPolicyItem, pop },
+              },
+              values,
+              dirtyFields,
+              dirty,
+              modified,
+              initialValues,
+            }) => (
+              <div className="gds-access-grant-form">
+                <FormChange
+                  isDirtyField={
+                    dirty == true || !isEqual(initialValues, values)
+                      ? isDirtyFieldCheck(
+                          dirtyFields,
+                          modified,
+                          values,
+                          initialValues
+                        )
+                      : false
+                  }
+                  formValues={values}
+                />
+                <div className="d-flex gap-1">
+                  <div className="gds-grant-det-cond gds-content-border">
+                    <div className="form-group">
+                      <p className="formHeader">Basic Details</p>{" "}
+                    </div>
+                    <div>
+                      <Field name="policyName">
                         {({ input, meta }) => (
-                            <Row className="form-group">
-                                <Col sm={5}>
-                                    <FormB.Control
-                                      {...input}
-                                      placeholder="Policy Name"
-                                      id={
-                                        meta.error && meta.touched
-                                          ? "isError"
-                                          : "name"
-                                      }
-                                      className={
-                                        meta.error && meta.touched
-                                          ? "form-control border-danger"
-                                          : "form-control"
-                                      }
-                                      data-cy="policyName"
-                                    />
-                                    {meta.touched && meta.error && (
-                                      <span className="invalid-field">
-                                        {meta.error.text}
-                                      </span>
-                                    )}
-                                    </Col>
+                          <div className="form-group">
+                            <FormB.Control
+                              {...input}
+                              placeholder="Policy Name"
+                              id={
+                                meta.error && meta.touched ? "isError" : "name"
+                              }
+                              className={
+                                meta.error && meta.touched
+                                  ? "form-control border-danger"
+                                  : "form-control"
+                              }
+                              data-cy="policyName"
+                            />
+                            {meta.touched && meta.error && (
+                              <span className="invalid-field">
+                                {meta.error.text}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </Field>
+
+                      <Field
+                        name="policyLabel"
+                        render={({ input, meta }) => (
+                          <FormB.Group>
+                            <div className="form-group">
+                              <div>
+                                <FormB.Label>
+                                  <span className="pull-right fnt-14">
+                                    Policy Label
+                                  </span>
+                                </FormB.Label>
+                                <AsyncCreatableSelect
+                                  {...input}
+                                  isMulti
+                                  data-cy="policyDescription"
+                                />
+                              </div>
+                            </div>
+                          </FormB.Group>
+                        )}
+                      />
+
+                      <Field name="description">
+                        {({ input, meta }) => (
+                          <div className="form-group">
+                            <div>
+                              <FormB.Control
+                                {...input}
+                                as="textarea"
+                                rows={3}
+                                placeholder="Policy Description"
+                                data-cy="policyDescription"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className=" gds-grant-det-cond  gds-content-border">
+                    <div className="mb-4">
+                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
+                    </div>
+                    <br />
+                    {serviceCompDetails?.policyConditions?.length > 0 && (
+                      <div className="table-responsive">
+                        <table className="table table-bordered condition-group-table">
+                          <thead>
+                            <tr>
+                              <th colSpan="2">
+                                Policy Conditions :
+                                {showModal && (
                                   <Field
                                     className="form-control"
-                                    name="enableAccessGrant"
+                                    name="conditions"
                                     render={({ input }) => (
-                                    <>
-                                        <FormB.Label column sm={3}>
-                                            <span className="pull-right fnt-14">
-                                                Enable Access Grant
-                                            </span>
-                                        </FormB.Label>                
-                                        <>
-                                            <Col sm={1}>
-                                                <BootstrapSwitchButton
-                                                {...input}
-                                                className="abcd"
-                                                checked={!(input.value === false)}
-                                                onstyle="primary"
-                                                offstyle="outline-secondary"
-                                                style="w-100"
-                                                size="xs"
-                                                key="isEnabled"
-                                                />
-                                            </Col>
-                                         </>
-                                    </>
-                                     )}
-                                    />  
-                            </Row>
-                        )}
-                        </Field>
-                                
-                        <Field name="policyLabel">
-                        {({ input, meta }) => (
-                            <Row className="form-group">
-                                <Col sm={5}>
-                                    <FormB.Control
-                                      {...input}
-                                      placeholder="Policy Label"
-                                      id={
-                                        meta.error && meta.touched
-                                          ? "isError"
-                                          : "name"
-                                      }
-                                      className={
-                                        meta.error && meta.touched
-                                          ? "form-control border-danger"
-                                          : "form-control"
-                                      }
-                                      data-cy="policyLabel"
-                                    />
-                                    {meta.touched && meta.error && (
-                                      <span className="invalid-field">
-                                        {meta.error.text}
-                                      </span>
+                                      <PolicyConditionsComp
+                                        policyConditionDetails={policyConditionUpdatedJSON(
+                                          serviceCompDetails.policyConditions
+                                        )}
+                                        inputVal={input}
+                                        showModal={showModal}
+                                        handleCloseModal={policyConditionState}
+                                      />
                                     )}
-                                    </Col>
-                                     <Col sm={5}>    <p className="formHeader">Conditions</p>   </Col>
-                            </Row>
-                        )}
-                        </Field>
-                                
-
-                        <Field name="policyDscription">
-                        {({ input, meta }) => (
-                            <Row className="form-group">
-                              <Col sm={5}>
-                                <FormB.Control
-                                  {...input}
-                                  as="textarea"
-                                  rows={3}
-                                  placeholder="Policy Description"
-                                  data-cy="description"
-                                />
-                                 </Col>
-                                <Col sm={5}>
-                                <FormB.Control
-                                  {...input}
-                                  as="textarea"
-                                  rows={3}
-                                  placeholder="Enter Boolean Expression"
-                                  data-cy="policyCondition"
-                                />
-                              </Col>
-                            </Row>
-                        )}
-                         </Field>
-                                
-                        <Row className="form-group">
-                            <Col sm={10}>    <p className="formHeader">Validity Period</p>   </Col>
-                        </Row>
-                        <Row key={name}>
-                            <FieldArray name="validitySchedules">
-                                  {/*validitySchedules.map((obj, index) => (
-                                    <Col sm={3}>
-                                        <Field
-                                          className="form-control"
-                                          name={`${obj.name}.endTime`}
-                                          render={({ input, meta }) => (
-                                           <div>
-                                              <Datetime
-                                                {...input}
-                                                renderInput={(props) => (
-                                                  <RenderInput dateProps={props} />
-                                                )}
-                                                dateFormat="MM-DD-YYYY"
-                                                                    timeFormat="HH:mm:ss"
-                                                                    closeOnSelect
-                                                                    isValidDate={(currentDate, selectedDate) =>
-                                                                        calStartDate(validitySchedules.value[index], currentDate)
-                                                                    }
-                                                                />
-                                                                {meta.touched && meta.error && (
-                                                                    <span>{meta.error}</span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                       />
-                                    </Col>
-                                                                ))*/}
-                              
-                              {/*({ validitySchedules, ...arg }) =>
-                                validitySchedules?.map((obj, index) => (
-                                    <tr key={obj.name}>
-                                      <td className="text-center">
-                                        <Field
-                                          className="form-control"
-                                          name={`${obj.name}.startTime`}
-                                          placeholder="&#xF007; Username"
-                                          render={({ input, meta }) => (
-                                            <div>
-                                              <Datetime
-                                                {...input}
-                                                renderInput={(props) => (
-                                                  <RenderInput dateProps={props} />
-                                                )}
-                                                dateFormat="MM-DD-YYYY"
-                                                timeFormat="HH:mm:ss"
-                                                closeOnSelect
-                                                isValidDate={(currentDate, selectedDate) =>
-                                                  calEndDate(validitySchedules.value[index], currentDate)
-                                                }
-                                              />
-                                              {meta.touched && meta.error && (
-                                                <span>{meta.error}</span>
-                                              )}
-                                            </div>
-                                          )}
-                                        />
-                                      </td>
-
-                                    </tr>
-                                  ))*/
-                                
-                              }
-                              { /*renderValiditySchedule*/}
-
-                              {({ fields, ...arg }) =>
-                                fields.map((name, index) => (
-                                  <tr key={name}>
-                                    <td className="text-center">
-                                      <Field
-                                        className="form-control"
-                                        name={`${name}.startTime`}
-                                        placeholder="&#xF007; Username"
-                                        render={({ input, meta }) => (
-                                          <div>
-                                            <Datetime
-                                              {...input}
-                                              renderInput={(props) => (
-                                                <RenderInput dateProps={props} />
-                                              )}
-                                              dateFormat="MM-DD-YYYY"
-                                              timeFormat="HH:mm:ss"
-                                              closeOnSelect
-                                              isValidDate={(currentDate, selectedDate) =>
-                                                calEndDate(fields.value[index], currentDate)
-                                              }
-                                            />
-                                            {meta.touched && meta.error && (
-                                              <span>{meta.error}</span>
+                                  />
+                                )}
+                                <Button
+                                  className="pull-right btn btn-mini"
+                                  onClick={() => {
+                                    policyConditionState(true);
+                                  }}
+                                  data-js="customPolicyConditions"
+                                  data-cy="customPolicyConditions"
+                                >
+                                  <i className="fa-fw fa fa-plus"></i>
+                                </Button>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody data-id="conditionData">
+                            <>
+                              {values?.conditions &&
+                              !isEmpty(values.conditions) ? (
+                                Object.keys(values.conditions).map(
+                                  (keyName) => {
+                                    if (
+                                      values.conditions[keyName] != "" &&
+                                      values.conditions[keyName] != null
+                                    ) {
+                                      let conditionObj = find(
+                                        serviceCompDetails?.policyConditions,
+                                        function (m) {
+                                          if (m.name == keyName) {
+                                            return m;
+                                          }
+                                        }
+                                      );
+                                      return (
+                                        <tr key={keyName}>
+                                          <td>
+                                            <center>
+                                              {" "}
+                                              {conditionObj.label}{" "}
+                                            </center>
+                                          </td>
+                                          <td>
+                                            {isObject(
+                                              values.conditions[keyName]
+                                            ) ? (
+                                              <center>
+                                                {values.conditions[keyName]
+                                                  .length > 1
+                                                  ? values.conditions[
+                                                      keyName
+                                                    ].map((m) => {
+                                                      return ` ${m.label} `;
+                                                    })
+                                                  : values.conditions[keyName]
+                                                      .label}
+                                              </center>
+                                            ) : (
+                                              <center>
+                                                {values.conditions[keyName]}
+                                              </center>
                                             )}
-                                          </div>
-                                        )}
-                                      />
-                                    </td>
-                                    <td className="text-center">
-                                      <Field
-                                        className="form-control"
-                                        name={`${name}.endTime`}
-                                        render={({ input, meta }) => (
-                                          <div>
-                                            <Datetime
-                                              {...input}
-                                              renderInput={(props) => (
-                                                <RenderInput dateProps={props} />
-                                              )}
-                                              dateFormat="MM-DD-YYYY"
-                                              timeFormat="HH:mm:ss"
-                                              closeOnSelect
-                                              isValidDate={(currentDate, selectedDate) =>
-                                                calStartDate(fields.value[index], currentDate)
-                                              }
-                                            />
-                                            {meta.touched && meta.error && (
-                                              <span>{meta.error}</span>
-                                            )}
-                                          </div>
-                                        )}
-                                      />
-                                    </td>
-                                    <td className="text-center">
-                                      <Field
-                                        className="form-control"
-                                        name={`${name}.timeZone`}
-                                        render={({ input, meta }) => (
-                                          <div>
-                                            <Select
-                                              {...input}
-                                              options={getAllTimeZoneList()}
-                                              getOptionLabel={(obj) => obj.text}
-                                              getOptionValue={(obj) => obj.id}
-                                              isClearable={true}
-                                              isDisabled={
-                                                isEmpty(fields?.value?.[index]?.startTime) &&
-                                                isEmpty(fields?.value?.[index]?.endTime)
-                                                  ? true
-                                                  : false
-                                              }
-                                            />
-                                            {meta.touched && meta.error && (
-                                              <span>{meta.error}</span>
-                                            )}
-                                          </div>
-                                        )}
-                                      />
-                                    </td>
-                                    <td className="text-center">
-                                      <Button
-                                        variant="danger"
-                                        size="sm"
-                                        className="btn-mini"
-                                        title="Remove"
-                                        onClick={() => fields.remove(index)}
-                                        data-action="delete"
-                                        data-cy="delete"
-                                      >
-                                        <i className="fa-fw fa fa-remove"></i>
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                ))
-                              }
-                                </FieldArray>
-                                </Row> 
-                                <Row>
-                                    <Button
-                                        type="button"
-                                        className="btn-mini"
-                                        onClick={addValiditySchedule}
-                                        data-action="addTime"
-                                        data-cy="addTime"
-                                    >
-                                        Add More
-                                    </Button>                                
-                          </Row>
-                          <div className="mb-4">
-                            <PolicyValidityPeriodComp
-                              addPolicyItem={push}
-                            />
-                          </div>
-                        <Row className="form-group">
-                            <Col sm={10}>    <p className="formHeader">Grants</p>   </Col>
-                                </Row>
-                                <Row>
-                                    <Col sm={1}>1</Col>
-                                    <Field name="principle">
-                                        {({ input }) => (
-                                        <Col sm={9}>
-                                            <AsyncSelect
-                                                placeholder="Select users, groups, roles"
-                                                defaultOptions
-                                                isMulti
-                                                data-name="usersSelect"
-                                                data-cy="usersSelect"
-                                            />
-                                        </Col>
-                                        )}
-                                    </Field>
-                                </Row>
-                                <Row>
-                                    <Col sm={1}></Col>
-                                    <Field name="conditions">
-                                        {({ input, meta }) => (
-                                        <Col sm={5}>
-                                            <FormB.Control
-                                                {...input}
-                                                placeholder="consitions"
-                                                id={
-                                                    meta.error && meta.touched
-                                                    ? "isError"
-                                                    : "name"
-                                                }
-                                                className={
-                                                    meta.error && meta.touched
-                                                    ? "form-control border-danger"
-                                                    : "form-control"
-                                                }
-                                                data-cy="consitions"
-                                                />
-                                        </Col>
-                                        )}
-                                    </Field>
-                                    <Field name="permissions">
-                                        {({ input }) => (
-                                        <Col sm={4}>
-                                            <AsyncSelect
-                                                placeholder="Add permissions"
-                                                defaultOptions
-                                                isMulti
-                                                data-name="usersSelect"
-                                                data-cy="usersSelect"
-                                            />
-                                        </Col>
-                                        )}
-                                    </Field>
-                                </Row>
-                    </form>
-                    </div>
-                )}
-                />
-             </div>
-        </>
-    );
+                                          </td>
+                                        </tr>
+                                      );
+                                    }
+                                  }
+                                )
+                              ) : (
+                                <tr>
+                                  <td>
+                                    <center> No Conditions </center>
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="datasetPolicyItem">
+                  <DatasetPolicyItemComp
+                    formValues={values}
+                    addPolicyItem={addPolicyItem}
+                    attrName="policyItems"
+                    serviceCompDetails={serviceCompDetails}
+                    fetchPrincipleData={fetchPrincipleData}
+                    onRemovingPolicyItem={onRemovingPolicyItem}
+                  />
+                </div>
+              </div>
+            )}
+          />
+        </div>
+      )}
+    </>
+  );
 }
 
 export default AccessGrantForm;
