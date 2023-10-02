@@ -625,8 +625,8 @@ public class RangerServiceDefHelper {
 			Map<String, Collection<String>> ret = new HashMap<>();
 
 			if (_serviceDef != null && CollectionUtils.isNotEmpty(_serviceDef.getAccessTypes())) {
-				for(RangerAccessTypeDef accessTypeDef : _serviceDef.getAccessTypes()) {
-					if(CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+				for (RangerAccessTypeDef accessTypeDef : _serviceDef.getAccessTypes()) {
+					if (CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
 						Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
 
 						if(impliedAccessGrants == null) {
