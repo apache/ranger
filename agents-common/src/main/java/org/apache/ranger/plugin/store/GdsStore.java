@@ -73,7 +73,7 @@ public interface GdsStore {
 
     RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception;
 
-    void deleteDataShare(Long dataShareId) throws Exception;
+    void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception;
 
     RangerDataShare getDataShare(Long dataShareId) throws Exception;
 

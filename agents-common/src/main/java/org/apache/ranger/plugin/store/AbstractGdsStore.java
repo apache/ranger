@@ -105,7 +105,7 @@ public abstract class AbstractGdsStore implements GdsStore {
     public RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception { return null; }
 
     @Override
-    public void deleteDataShare(Long dataShareId) throws Exception { }
+    public void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception { }
 
     @Override
     public RangerDataShare getDataShare(Long dataShareId) throws Exception { return null; }

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -558,7 +559,7 @@ public class GdsREST {
     @DELETE
     @Path("/datashare/{id}")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_DATA_SHARE + "\")")
-    public void deleteDataShare(@PathParam("id") Long dataShareId) {
+    public void deleteDataShare(@PathParam("id") Long dataShareId, @Context HttpServletRequest request) {
         LOG.debug("==> GdsREST.deleteDataShare({})", dataShareId);
 
         RangerPerfTracer perf = null;
@@ -568,7 +569,10 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.deleteDataShare(" + dataShareId + ")");
             }
 
-            gdsStore.deleteDataShare(dataShareId);
+            String forceDeleteStr = request.getParameter("forceDelete");
+            boolean forceDelete = !StringUtils.isEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr);
+
+            gdsStore.deleteDataShare(dataShareId, forceDelete);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {

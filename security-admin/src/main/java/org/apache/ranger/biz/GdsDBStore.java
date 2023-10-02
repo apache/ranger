@@ -21,7 +21,10 @@ package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGdsDataShareInDatasetDao;
@@ -119,6 +122,8 @@ public class GdsDBStore extends AbstractGdsStore {
     @Autowired
     RangerBizUtil bizUtil;
 
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
     @PostConstruct
     public void initStore() {
@@ -488,8 +493,8 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteDataShare(Long dataShareId) throws Exception {
-        LOG.debug("==> deleteDataShare({})", dataShareId);
+    public void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception {
+        LOG.debug("==> deleteDataShare(dataShareId: {}, forceDelete: {})", dataShareId, forceDelete);
 
         RangerDataShare existing = null;
 
@@ -501,13 +506,18 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(dataShareId, existing);
 
+        if(forceDelete) {
+            removeDshInDsForDataShare(dataShareId);
+            removeSharedResourcesForDataShare(dataShareId);
+        }
+
         dataShareService.delete(existing);
 
         dataShareService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
 
-        LOG.debug("<== deleteDataShare({})", dataShareId);
+        LOG.debug("<== deleteDataShare(dataShareId: {}, forceDelete: {})", dataShareId, forceDelete);
     }
 
     @Override
@@ -1010,5 +1020,33 @@ public class GdsDBStore extends AbstractGdsStore {
         dataset.setAcl(null);
         dataset.setOptions(null);
         dataset.setAdditionalInfo(null);
+    }
+
+    private void removeDshInDsForDataShare(Long dataShareId) {
+        SearchFilter filter = new SearchFilter();
+        filter.setParam(SearchFilter.DATA_SHARE_ID, dataShareId.toString());
+        final RangerDataShareInDatasetList dshInDsList = dataShareInDatasetService.searchDataShareInDatasets(filter);
+
+        for(RangerDataShareInDataset dshInDs : dshInDsList.getList()) {
+            final boolean dshInDsDeleted = dataShareInDatasetService.delete(dshInDs);
+
+            if(!dshInDsDeleted) {
+                throw restErrorUtil.createRESTException("DataShareInDataset could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, dshInDs.getId(), "DataSHareInDatasetId", null, 500);
+            }
+        }
+    }
+
+    private void removeSharedResourcesForDataShare(Long dataShareId) {
+        SearchFilter filter  = new SearchFilter();
+        filter.setParam(SearchFilter.DATA_SHARE_ID, dataShareId.toString());
+        final RangerSharedResourceList sharedResources = sharedResourceService.searchSharedResources(filter);
+
+        for(RangerSharedResource sharedResource : sharedResources.getList()) {
+            final boolean sharedResourceDeleted = sharedResourceService.delete(sharedResource);
+
+            if(!sharedResourceDeleted) {
+                throw restErrorUtil.createRESTException("SharedResource could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, sharedResource.getId(), "SharedResourceId", null, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }
