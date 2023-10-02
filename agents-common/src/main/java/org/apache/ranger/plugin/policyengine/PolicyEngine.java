@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -488,33 +489,17 @@ public class PolicyEngine {
     }
 
     static private void buildImpliedAccessGrants(RangerServiceDef serviceDef) {
-        Map<String, Collection<String>> ret = null;
-
-        if (serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
-            for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-                if (!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
-                    if (ret == null) {
-                        ret = new HashMap<>();
-                    }
-
-                    Collection<String> impliedGrants = ret.get(accessTypeDef.getName());
-
-                    if (impliedGrants == null) {
-                        impliedGrants = new HashSet<>();
-
-                        ret.put(accessTypeDef.getName(), impliedGrants);
-                    }
-
-                    impliedGrants.addAll(accessTypeDef.getImpliedGrants());
-                }
-            }
+        if (serviceDef != null) {
+            RangerServiceDefHelper helper = new RangerServiceDefHelper(serviceDef, false);
 
             if (impliedAccessGrants == null) {
                 impliedAccessGrants = Collections.synchronizedMap(new HashMap<>());
             }
-            impliedAccessGrants.put(serviceDef.getName(), ret);
+
+            impliedAccessGrants.put(serviceDef.getName(), helper.getImpliedAccessGrants());
         }
     }
+
     private Set<String> getMatchedZonesForResourceAndChildren(Map<String, ?> resource, RangerAccessResource accessResource) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> PolicyEngine.getMatchedZonesForResourceAndChildren(" + resource + ", " + accessResource + ")");
