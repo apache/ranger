@@ -10,35 +10,35 @@
   "resources": [
     {
       "itemId":              1,
-      "name":               "dataset",
+      "name":               "dataset-id",
       "type":               "string",
       "level":              1,
       "parent":             "",
       "mandatory":          true,
-      "lookupSupported":    true,
+      "lookupSupported":    false,
       "recursiveSupported": false,
       "excludesSupported":  false,
       "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
       "matcherOptions":     { "wildCard": false, "ignoreCase": false },
       "uiHint":             "{ \"singleValue\": true }",
-      "label":              "Dataset",
-      "description":        "Dataset"
+      "label":              "Dataset ID",
+      "description":        "Dataset ID"
     },
     {
       "itemId":              2,
-      "name":               "project",
+      "name":               "project-id",
       "type":               "string",
       "level":              1,
       "parent":             "",
       "mandatory":          true,
-      "lookupSupported":    true,
+      "lookupSupported":    false,
       "recursiveSupported": false,
       "excludesSupported":  false,
       "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
       "matcherOptions":     { "wildCard": false, "ignoreCase": false },
       "uiHint":             "{ \"singleValue\": true }",
-      "label":              "Project",
-      "description":        "Project"
+      "label":              "Project ID",
+      "description":        "Project ID"
     }
   ],
 

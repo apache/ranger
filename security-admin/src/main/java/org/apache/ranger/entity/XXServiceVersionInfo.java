@@ -76,13 +76,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Column(name="role_update_time"   )
 	protected Date roleUpdateTime = DateUtil.getUTCDate();
 
-	@Column(name = "gds_version")
-	protected Long gdsVersion;
-
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "gds_update_time")
-	protected Date gdsUpdateTime;
-
 	@Version
 	@Column(name = "version")
 	protected Long version;
@@ -173,22 +166,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		return this.roleUpdateTime;
 	}
 
-	public void setGdsVersion(Long gdsVersion) {
-		this.gdsVersion = gdsVersion;
-	}
-
-	public Long getGdsVersion() {
-		return this.gdsVersion;
-	}
-
-	public void setGdsUpdateTime(Date gdsUpdateTime) {
-		this.gdsUpdateTime = gdsUpdateTime;
-	}
-
-	public Date getGdsUpdateTime() {
-		return this.gdsUpdateTime;
-	}
-
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -205,8 +182,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		str += "tagUpdateTime={" + tagUpdateTime + "} ";
 		str += "setRoleVersion={" + roleVersion + "}" ;
 		str += "setRoleUpdateTime={" + roleUpdateTime + "}" ;
-		str += "gdsVersion={" + gdsVersion + "}" ;
-		str += "gdsUpdateTime={" + gdsUpdateTime + "}" ;
 		str += "}";
 		return str;
 	}
@@ -235,9 +210,7 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 				  Objects.equals(tagVersion, other.tagVersion) &&
 				  Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
 				  Objects.equals(roleVersion, other.roleVersion) &&
-				  Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
-				  Objects.equals(gdsVersion, other.gdsVersion) &&
-				  Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
+				  Objects.equals(roleUpdateTime, other.roleUpdateTime);
 		}
 
 		return ret;

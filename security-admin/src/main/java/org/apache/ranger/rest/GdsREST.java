@@ -23,18 +23,24 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.service.RangerGdsDatasetInProjectService;
+import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
+import org.apache.ranger.service.RangerGdsDataShareService;
 import org.apache.ranger.service.RangerGdsDatasetService;
-import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
+import org.apache.ranger.service.RangerGdsProjectService;
+import org.apache.ranger.service.RangerGdsSharedResourceService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import java.util.List;
 
 @Path("gds")
 @Component
@@ -62,6 +69,21 @@ public class GdsREST {
 
     @Autowired
     RangerGdsDatasetService datasetService;
+
+    @Autowired
+    RangerGdsProjectService projectService;
+
+    @Autowired
+    RangerGdsDataShareService dataShareService;
+
+    @Autowired
+    RangerGdsSharedResourceService sharedResourceService;
+
+    @Autowired
+    RangerGdsDataShareInDatasetService dshidService;
+
+    @Autowired
+    RangerGdsDatasetInProjectService dipService;
 
     @Autowired
     RangerSearchUtil searchUtil;
@@ -245,7 +267,7 @@ public class GdsREST {
 
         try {
             if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDatasets()");
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.listDatasetNames()");
             }
 
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
@@ -279,10 +301,8 @@ public class GdsREST {
             SearchFilter filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
             ret = gdsStore.getDatasetHeaders(filter);
-        } catch (WebApplicationException we) {
-            LOG.error("getDatasets() failed", we);
-
-            throw restErrorUtil.createRESTException(we.getMessage());
+        } catch (WebApplicationException excp) {
+            throw excp;
         } catch (Throwable ex) {
             LOG.error("getDatasets() failed", ex);
 
@@ -290,6 +310,142 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.getDatasetHeaderInfo(): {}", ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path(("/dataset/{id}/policy"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
+    public RangerPolicy addDatasetPolicy(@PathParam("id") Long datasetId, RangerPolicy policy) {
+        LOG.debug("==> GdsREST.addDatasetPolicy({}, {})", datasetId, policy);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addDatasetPolicy()");
+
+        try {
+            ret = gdsStore.addDatasetPolicy(datasetId, policy);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("addDatasetPolicy({}) failed", datasetId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
+
+        return ret;
+    }
+
+    @PUT
+    @Path(("/dataset/{id}/policy/{policyId}"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
+    public RangerPolicy updateDatasetPolicy(@PathParam("id") Long datasetId, @PathParam("policyId") Long policyId, RangerPolicy policy) {
+        LOG.debug("==> GdsREST.updateDatasetPolicy({}, {})", datasetId, policy);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.updateDatasetPolicy()");
+
+        try {
+            policy.setId(policyId);
+            ret = gdsStore.updateDatasetPolicy(datasetId, policy);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateDatasetPolicy({}) failed", datasetId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.updateDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
+
+        return ret;
+    }
+
+    @DELETE
+    @Path(("/dataset/{id}/policy/{policyId}"))
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
+    public void deleteDatasetPolicy(@PathParam("id") Long datasetId, @PathParam("policyId") Long policyId) {
+        LOG.debug("==> GdsREST.deleteDatasetPolicy({}, {})", datasetId, policyId);
+
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.deleteDatasetPolicy()");
+
+        try {
+            gdsStore.deleteDatasetPolicy(datasetId, policyId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("deleteDatasetPolicy({}, {}) failed", datasetId, policyId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.deleteDatasetPolicy({}, {})", datasetId, policyId);
+    }
+
+    @GET
+    @Path(("/dataset/{id}/policy/{policyId}"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
+    public RangerPolicy getDatasetPolicy(@PathParam("id") Long datasetId, @PathParam("policyId") Long policyId) {
+        LOG.debug("==> GdsREST.getDatasetPolicy({}, {})", datasetId, policyId);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDatasetPolicy()");
+
+        try {
+            ret = gdsStore.getDatasetPolicy(datasetId, policyId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getDatasetPolicy({}, {}) failed", datasetId, policyId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getDatasetPolicy({}, {}): ret={}", datasetId, policyId, ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path(("/dataset/{id}/policy"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
+    public List<RangerPolicy> getDatasetPolicies(@PathParam("id") Long datasetId, @Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getDatasetPolicies({})", datasetId);
+
+        List<RangerPolicy> ret;
+        RangerPerfTracer   perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDatasetPolicies()");
+
+        try {
+            ret = gdsStore.getDatasetPolicies(datasetId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getDatasetPolicies({}) failed", datasetId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getDatasetPolicies({}): ret={}", datasetId, ret);
 
         return ret;
     }
@@ -438,7 +594,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, projectService.sortFields);
 
             ret = gdsStore.searchProjects(filter);
         } catch(WebApplicationException excp) {
@@ -472,7 +628,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, projectService.sortFields);
 
             ret = gdsStore.getProjectNames(filter);
         } catch(WebApplicationException excp) {
@@ -486,6 +642,142 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.listProjectNames(): {}", ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path(("/project/{id}/policy"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
+    public RangerPolicy addProjectPolicy(@PathParam("id") Long projectId, RangerPolicy policy) {
+        LOG.debug("==> GdsREST.addProjectPolicy({}, {})", projectId, policy);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addProjectPolicy()");
+
+        try {
+            ret = gdsStore.addProjectPolicy(projectId, policy);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("addProjectPolicy({}) failed", projectId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addProjectPolicy({}, {}): ret={}", projectId, policy, ret);
+
+        return ret;
+    }
+
+    @PUT
+    @Path(("/project/{id}/policy/{policyId}"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
+    public RangerPolicy updateProjectPolicy(@PathParam("id") Long projectId, @PathParam("policyId") Long policyId, RangerPolicy policy) {
+        LOG.debug("==> GdsREST.updateProjectPolicy({}, {})", projectId, policy);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.updateProjectPolicy()");
+
+        try {
+            policy.setId(policyId);
+            ret = gdsStore.updateProjectPolicy(projectId, policy);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateProjectPolicy({}) failed", projectId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.updateProjectPolicy({}, {}): ret={}", projectId, policy, ret);
+
+        return ret;
+    }
+
+    @DELETE
+    @Path(("/project/{id}/policy/{policyId}"))
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
+    public void deleteProjectPolicy(@PathParam("id") Long projectId, @PathParam("policyId") Long policyId) {
+        LOG.debug("==> GdsREST.deleteProjectPolicy({}, {})", projectId, policyId);
+
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.deleteProjectPolicy()");
+
+        try {
+            gdsStore.deleteProjectPolicy(projectId, policyId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("deleteProjectPolicy({}, {}) failed", projectId, policyId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.deleteProjectPolicy({}, {})", projectId, policyId);
+    }
+
+    @GET
+    @Path(("/project/{id}/policy/{policyId}"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
+    public RangerPolicy getProjectPolicy(@PathParam("id") Long projectId, @PathParam("policyId") Long policyId) {
+        LOG.debug("==> GdsREST.getProjectPolicy({}, {})", projectId, policyId);
+
+        RangerPolicy     ret;
+        RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getProjectPolicy()");
+
+        try {
+            ret = gdsStore.getProjectPolicy(projectId, policyId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getProjectPolicy({}, {}) failed", projectId, policyId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getProjectPolicy({}, {}): ret={}", projectId, policyId, ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path(("/project/{id}/policy"))
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
+    public List<RangerPolicy> getProjectPolicies(@PathParam("id") Long projectId, @Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getProjectPolicies({})", projectId);
+
+        List<RangerPolicy> ret;
+        RangerPerfTracer   perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getProjectPolicies()");
+
+        try {
+            ret = gdsStore.getProjectPolicies(projectId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getProjectPolicies({}) failed", projectId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getProjectPolicies({}): ret={}", projectId, ret);
 
         return ret;
     }
@@ -637,7 +929,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShares()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, dataShareService.sortFields);
 
             ret = gdsStore.searchDataShares(filter);
         } catch(WebApplicationException excp) {
@@ -799,7 +1091,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchSharedResources()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, sharedResourceService.sortFields);
 
             ret = gdsStore.searchSharedResources(filter);
         } catch(WebApplicationException excp) {
@@ -958,7 +1250,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShareInDatasets()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, dshidService.sortFields);
 
             ret = gdsStore.searchDataShareInDatasets(filter);
         } catch(WebApplicationException excp) {
@@ -1118,7 +1410,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDatasetInProjects()");
             }
 
-            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, dipService.sortFields);
 
             ret = gdsStore.searchDatasetInProjects(filter);
         } catch(WebApplicationException excp) {

@@ -267,11 +267,6 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 						RangerService oldService = this.populateViewBean(mObj);
 						oldValue=oldService.getTagService();
 					}
-				} else if ("gdsService".equalsIgnoreCase(fieldName)) {
-					if(!StringUtils.isEmpty(oldValue) && !"null".equalsIgnoreCase(oldValue)){
-						RangerService oldService = this.populateViewBean(mObj);
-						oldValue = oldService.getGdsService();
-					}
 				}
 				if (oldValue == null || value.equalsIgnoreCase(oldValue)) {
 					return null;
@@ -348,8 +343,6 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		serviceVersionInfo.setPolicyUpdateTime(now);
 		serviceVersionInfo.setTagUpdateTime(now);
 		serviceVersionInfo.setRoleUpdateTime(now);
-		serviceVersionInfo.setGdsVersion(1L);
-		serviceVersionInfo.setGdsUpdateTime(now);
 
 		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 

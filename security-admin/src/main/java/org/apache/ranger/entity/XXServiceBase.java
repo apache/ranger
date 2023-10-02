@@ -85,9 +85,6 @@ public abstract class XXServiceBase extends XXDBBase {
 	@Column(name = "tag_service")
 	protected Long tagService;
 
-	@Column(name = "gds_service")
-	protected Long gdsService;
-
 	/**
 	 * policyVersion of the XXService
 	 * <ul>
@@ -247,24 +244,6 @@ public abstract class XXServiceBase extends XXDBBase {
 	}
 
 	/**
-	 * This method sets the value to the member attribute <b> gdsService</b> .
-	 *
-	 * @param gdsService - Value to set member attribute <b> gdsService</b>
-	 */
-	public void setGdsService(Long gdsService) {
-		this.gdsService = gdsService;
-	}
-
-	/**
-	 * Returns the value for the member attribute <b>gdsService</b>
-	 *
-	 * @return Long - value of member attribute <b>gdsService</b> .
-	 */
-	public Long getGdsService() {
-		return this.gdsService;
-	}
-
-	/**
 	 * This method sets the value to the member attribute <b> policyVersion</b>
 	 * . You cannot set null to the attribute.
 	 *
@@ -409,7 +388,6 @@ public abstract class XXServiceBase extends XXDBBase {
 				  Objects.equals(tagService, other.tagService) &&
 				  Objects.equals(tagVersion, other.tagVersion) &&
 				  Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
-				  Objects.equals(gdsService, other.gdsService) &&
 				  Objects.equals(type, other.type) &&
 				  Objects.equals(version, other.version) &&
 				  Objects.equals(guid, other.guid);
@@ -426,7 +404,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	@Override
 	public String toString() {
 		return "XXServiceBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", type=" + type
-				+ ", name=" + name +", displayName=" + displayName + ", tagService=" + tagService + ", gdsService=" + gdsService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
+				+ ", name=" + name +", displayName=" + displayName + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
 				+ ", tagVersion=" + tagVersion + ", tagUpdateTime=" + tagUpdateTime
 				+ ", description=" + description + ", isEnabled=" + isEnabled + "]";
 	}

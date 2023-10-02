@@ -1587,4 +1587,12 @@ public class RangerBizUtil {
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
 	}
+
+	public boolean isGdsServiceDef(XXDBBase xxdbBase) {
+		return (xxdbBase instanceof XXServiceDef) && EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(((XXServiceDef) xxdbBase).getName());
+	}
+
+	public boolean isGdsService(XXDBBase xxdbBase) {
+		return (xxdbBase instanceof XXService) && EmbeddedServiceDefsUtil.instance().getGdsServiceDefId() == ((XXService) xxdbBase).getType();
+	}
 }

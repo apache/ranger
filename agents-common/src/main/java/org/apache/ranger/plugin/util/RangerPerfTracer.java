@@ -46,19 +46,25 @@ public class RangerPerfTracer {
 	}
 
 	public static RangerPerfTracer getPerfTracer(Logger logger, String tag) {
-		String data = "";
-		String realTag = "";
+		if (logger.isDebugEnabled()) {
+			String data    = "";
+			String realTag = "";
 
-		if (tag != null) {
-			int indexOfTagEndMarker = StringUtils.indexOf(tag, tagEndMarker);
-			if (indexOfTagEndMarker != -1) {
-				realTag = StringUtils.substring(tag, 0, indexOfTagEndMarker);
-				data = StringUtils.substring(tag, indexOfTagEndMarker);
-			} else {
-				realTag = tag;
+			if (tag != null) {
+				int indexOfTagEndMarker = StringUtils.indexOf(tag, tagEndMarker);
+
+				if (indexOfTagEndMarker != -1) {
+					realTag = StringUtils.substring(tag, 0, indexOfTagEndMarker);
+					data    = StringUtils.substring(tag, indexOfTagEndMarker);
+				} else {
+					realTag = tag;
+				}
 			}
+
+			return RangerPerfTracerFactory.getPerfTracer(logger, realTag, data);
+		} else {
+			return null;
 		}
-		return RangerPerfTracerFactory.getPerfTracer(logger, realTag, data);
 	}
 
 	public static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {

@@ -644,13 +644,14 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int CLASS_TYPE_GDS_DATA_SHARE            = 1064;
 	public static final int CLASS_TYPE_GDS_SHARED_RESOURCE       = 1065;
 	public static final int CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET = 1066;
-	public static final int CLASS_TYPE_GDS_DATA_SHARE_IN_PROJECT = 1067;
-	public static final int CLASS_TYPE_GDS_DATASET_IN_PROJECT    = 1068;
+	public static final int CLASS_TYPE_GDS_DATASET_IN_PROJECT    = 1067;
+	public static final int CLASS_TYPE_GDS_DATASET_POLICY_MAP    = 1068;
+	public static final int CLASS_TYPE_GDS_PROJECT_POLICY_MAP    = 1069;
 
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1062;
+	public static final int ClassTypes_MAX = 1069;
 
 	
 	/***************************************************************

@@ -65,12 +65,36 @@ class RangerGdsClient:
     def find_datasets(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.FIND_DATASETS, filter)
 
-        return PList.type_coerce_plist(resp, RangerDataset)
+        return PList(resp).type_coerce_list(RangerDataset)
 
     def get_dataset_names(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.GET_DATASET_NAMES, filter)
 
-        return PList.type_coerce_plist(resp, str)
+        return PList(resp).type_coerce_list(str)
+
+    def add_dataset_policy(self, datasetId, policy):
+        resp = self.client_http.call_api(RangerGdsClient.ADD_DATASET_POLICY.format_path({ 'id': datasetId }), request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
+    def update_dataset_policy(self, datasetId, policy):
+        resp = self.client_http.call_api(RangerGdsClient.UPDATE_DATASET_POLICY.format_path({ 'id': datasetId, 'policyId': policy.id }), request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
+    def delete_dataset_policy(self, datasetId, policyId):
+        self.client_http.call_api(RangerGdsClient.DELETE_DATASET_POLICY.format_path({ 'id': datasetId, 'policyId': policyId }))
+
+    def get_dataset_policy(self, datasetId, policyId):
+        resp = self.client_http.call_api(RangerGdsClient.GET_DATASET_POLICY.format_path({ 'id': datasetId, 'policyId': policyId }))
+
+        return type_coerce(resp, RangerPolicy)
+
+    def get_dataset_policies(self, datasetId):
+        resp = self.client_http.call_api(RangerGdsClient.GET_DATASET_POLICIES.format_path({ 'id': datasetId }))
+
+        return type_coerce_list(resp, RangerPolicy)
+
 
     def create_project(self, project):
       resp = self.client_http.call_api(RangerGdsClient.CREATE_PROJECT, request_data=project)
@@ -93,12 +117,36 @@ class RangerGdsClient:
     def find_projects(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.FIND_PROJECTS, filter)
 
-        return PList.type_coerce_plist(resp, RangerDataset)
+        return PList(resp).type_coerce_list(RangerDataset)
 
     def get_project_names(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.GET_PROJECT_NAMES, filter)
 
-        return PList.type_coerce_plist(resp, str)
+        return PList(resp).type_coerce_list(str)
+
+    def add_project_policy(self, projectId, policy):
+        resp = self.client_http.call_api(RangerGdsClient.ADD_PROJECT_POLICY.format_path({ 'id': projectId }), request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
+    def update_project_policy(self, projectId, policy):
+        resp = self.client_http.call_api(RangerGdsClient.UPDATE_PROJECT_POLICY.format_path({ 'id': projectId, 'policyId': policy.id }), request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
+    def delete_project_policy(self, projectId, policyId):
+        self.client_http.call_api(RangerGdsClient.DELETE_PROJECT_POLICY.format_path({ 'id': projectId, 'policyId': policyId }))
+
+    def get_project_policy(self, projectId, policyId):
+        resp = self.client_http.call_api(RangerGdsClient.GET_PROJECT_POLICY.format_path({ 'id': projectId, 'policyId': policyId }))
+
+        return type_coerce(resp, RangerPolicy)
+
+    def get_project_policies(self, projectId):
+        resp = self.client_http.call_api(RangerGdsClient.GET_PROJECT_POLICIES.format_path({ 'id': projectId }))
+
+        return type_coerce_list(resp, RangerPolicy)
+
 
     def create_data_share(self, data_share):
       resp = self.client_http.call_api(RangerGdsClient.CREATE_DATA_SHARE, request_data=data_share)
@@ -121,7 +169,7 @@ class RangerGdsClient:
     def find_data_shares(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.FIND_DATA_SHARES, filter)
 
-        return PList.type_coerce_plist(resp, RangerDataShare)
+        return PList(resp).type_coerce_list(RangerDataShare)
 
     def add_shared_resource(self, resource):
       resp = self.client_http.call_api(RangerGdsClient.ADD_SHARED_RESOURCE, request_data=resource)
@@ -144,7 +192,8 @@ class RangerGdsClient:
     def find_shared_resources(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.FIND_SHARED_RESOURCES, filter)
 
-        return PList.type_coerce_plist(resp, RangerSharedResource)
+        return PList(resp).type_coerce_list(RangerSharedResource)
+
 
     def add_data_share_in_dataset(self, dshid):
       resp = self.client_http.call_api(RangerGdsClient.ADD_DATA_SHARE_IN_DATASET, request_data=dshid)
@@ -167,7 +216,8 @@ class RangerGdsClient:
     def find_data_share_in_datasets(self, filter=None):
       resp = self.client_http.call_api(RangerGdsClient.FIND_DATA_SHARE_IN_DATASETS, filter)
 
-      return PList.type_coerce_plist(resp, RangerDataShareInDataset)
+      return PList(resp).type_coerce_list(RangerDataShareInDataset)
+
 
     def add_dataset_in_project(self, dip):
       resp = self.client_http.call_api(RangerGdsClient.ADD_DATASET_IN_PROJECT, request_data=dip)
@@ -190,7 +240,7 @@ class RangerGdsClient:
     def find_dataset_in_projects(self, filter=None):
       resp = self.client_http.call_api(RangerGdsClient.FIND_DATASET_IN_PROJECTS, filter)
 
-      return PList.type_coerce_plist(resp, RangerDatasetInProject)
+      return PList(resp).type_coerce_list(RangerDatasetInProject)
 
 
     # URIs
@@ -198,9 +248,13 @@ class RangerGdsClient:
     URI_DATASET                   = URI_GDS + "/dataset"
     URI_DATASET_BY_ID             = URI_DATASET + "/{id}"
     URI_DATASET_NAMES             = URI_DATASET + "/names"
+    URI_DATASET_POLICY            = URI_DATASET_BY_ID + "/policy"
+    URI_DATASET_POLICY_ID         = URI_DATASET_POLICY + "/{policyId}"
     URI_PROJECT                   = URI_GDS + "/project"
     URI_PROJECT_BY_ID             = URI_PROJECT + "/{id}"
     URI_PROJECT_NAMES             = URI_PROJECT + "/names"
+    URI_PROJECT_POLICY            = URI_PROJECT_BY_ID + "/policy"
+    URI_PROJECT_POLICY_ID         = URI_PROJECT_POLICY + "/{policyId}"
     URI_DATA_SHARE                = URI_GDS + "/datashare"
     URI_DATA_SHARE_BY_ID          = URI_DATA_SHARE + "/{id}"
     URI_SHARED_RESOURCE           = URI_GDS + "/resource"
@@ -221,6 +275,11 @@ class RangerGdsClient:
     GET_DATASET_BY_ID         = API(URI_DATASET_BY_ID, HttpMethod.GET, HTTPStatus.OK)
     FIND_DATASETS             = API(URI_DATASET, HttpMethod.GET, HTTPStatus.OK)
     GET_DATASET_NAMES         = API(URI_DATASET_NAMES, HttpMethod.GET, HTTPStatus.OK)
+    ADD_DATASET_POLICY        = API(URI_DATASET_POLICY, HttpMethod.POST, HTTPStatus.OK)
+    UPDATE_DATASET_POLICY     = API(URI_DATASET_POLICY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    DELETE_DATASET_POLICY     = API(URI_DATASET_POLICY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    GET_DATASET_POLICY        = API(URI_DATASET_POLICY_ID, HttpMethod.GET, HTTPStatus.OK)
+    GET_DATASET_POLICIES      = API(URI_DATASET_POLICY, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_PROJECT            = API(URI_PROJECT, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_PROJECT_BY_ID      = API(URI_PROJECT_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
@@ -228,6 +287,11 @@ class RangerGdsClient:
     GET_PROJECT_BY_ID         = API(URI_PROJECT_BY_ID, HttpMethod.GET, HTTPStatus.OK)
     FIND_PROJECTS             = API(URI_PROJECT, HttpMethod.GET, HTTPStatus.OK)
     GET_PROJECT_NAMES         = API(URI_PROJECT_NAMES, HttpMethod.GET, HTTPStatus.OK)
+    ADD_PROJECT_POLICY        = API(URI_PROJECT_POLICY, HttpMethod.POST, HTTPStatus.OK)
+    UPDATE_PROJECT_POLICY     = API(URI_PROJECT_POLICY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    DELETE_PROJECT_POLICY     = API(URI_PROJECT_POLICY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    GET_PROJECT_POLICY        = API(URI_PROJECT_POLICY_ID, HttpMethod.GET, HTTPStatus.OK)
+    GET_PROJECT_POLICIES      = API(URI_PROJECT_POLICY, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_DATA_SHARE         = API(URI_DATA_SHARE, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_DATA_SHARE_BY_ID   = API(URI_DATA_SHARE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)

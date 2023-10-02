@@ -90,6 +90,8 @@ DROP TABLE IF EXISTS xa_access_audit CASCADE;
 DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
+DROP TABLE IF EXISTS x_gds_dataset_policy_map;
+DROP TABLE IF EXISTS x_gds_project_policy_map;
 DROP TABLE IF EXISTS x_gds_dataset CASCADE;
 DROP TABLE IF EXISTS x_gds_project CASCADE;
 DROP TABLE IF EXISTS x_gds_data_share CASCADE;
@@ -575,14 +577,12 @@ is_enabled BOOLEAN DEFAULT '0' NOT NULL,
 tag_service BIGINT DEFAULT NULL NULL,
 tag_version BIGINT DEFAULT 0 NOT NULL,
 tag_update_time TIMESTAMP DEFAULT NULL NULL,
-gds_service BIGINT DEFAULT NULL NULL,
 primary key(id),
 CONSTRAINT x_service_name UNIQUE(name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_FK_type FOREIGN KEY(type) REFERENCES x_service_def(id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id),
-CONSTRAINT x_service_FK_gds_service FOREIGN KEY (gds_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
 );
 
 CREATE SEQUENCE x_security_zone_seq;
@@ -1196,8 +1196,6 @@ tag_version bigint NOT NULL DEFAULT '0',
 tag_update_time TIMESTAMP DEFAULT NULL,
 role_version bigint NOT NULL DEFAULT '0',
 role_update_time TIMESTAMP DEFAULT NULL,
-gds_version bigint NOT NULL DEFAULT '0',
-gds_update_time TIMESTAMP DEFAULT NULL,
 version bigint NOT NULL DEFAULT '1',
 primary key (id),
 CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
@@ -1867,6 +1865,34 @@ CREATE TABLE x_gds_dataset_in_project(
 CREATE INDEX x_gds_dip_guid       ON x_gds_dataset_in_project(guid);
 CREATE INDEX x_gds_dip_dataset_id ON x_gds_dataset_in_project(dataset_id);
 CREATE INDEX x_gds_dip_project_id ON x_gds_dataset_in_project(project_id);
+commit;
+
+CREATE SEQUENCE x_gds_dataset_policy_map_seq;
+CREATE TABLE x_gds_dataset_policy_map(
+    id         BIGINT NOT NULL DEFAULT nextval('x_gds_dataset_policy_map_seq'::regclass)
+  , dataset_id BIGINT NOT NULL
+  , policy_id  BIGINT NOT NULL
+  , PRIMARY KEY(id)
+  , CONSTRAINT x_gds_dpm_FK_dataset_id FOREIGN KEY(dataset_id) REFERENCES x_gds_dataset(id)
+  , CONSTRAINT x_gds_dpm_FK_policy_id  FOREIGN KEY(policy_id)  REFERENCES x_policy(id)
+  , CONSTRAINT x_gds_dpm_UK_dataset_id_policy_id UNIQUE(dataset_id, policy_id)
+);
+CREATE INDEX x_gds_dpm_dataset_id ON x_gds_dataset_policy_map(dataset_id);
+CREATE INDEX x_gds_dpm_policy_id  ON x_gds_dataset_policy_map(policy_id);
+commit;
+
+CREATE SEQUENCE x_gds_project_policy_map_seq;
+CREATE TABLE x_gds_project_policy_map(
+    id         BIGINT NOT NULL DEFAULT nextval('x_gds_project_policy_map_seq'::regclass)
+  , project_id BIGINT NOT NULL
+  , policy_id  BIGINT NOT NULL
+  , PRIMARY KEY(id)
+  , CONSTRAINT x_gds_ppm_FK_project_id FOREIGN KEY(project_id) REFERENCES x_gds_project(id)
+  , CONSTRAINT x_gds_ppm_FK_policy_id  FOREIGN KEY(policy_id)  REFERENCES x_policy(id)
+  , CONSTRAINT x_gds_ppm_UK_project_id_policy_id UNIQUE(project_id, policy_id)
+);
+CREATE INDEX x_gds_ppm_project_id ON x_gds_project_policy_map(project_id);
+CREATE INDEX x_gds_ppm_policy_id  ON x_gds_project_policy_map(policy_id);
 commit;
 
 

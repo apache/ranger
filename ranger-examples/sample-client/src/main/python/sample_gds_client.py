@@ -131,6 +131,13 @@ dshid_2.validitySchedule = { 'startTime': '2023/02/01', 'endTime': '2023/03/01' 
 dshid_2 = gds.update_data_share_in_dataset(dshid_2.id, dshid_2)
 print(f'  updated data_share_in_dataset: {dshid_2}')
 
+print(f'Adding policy for dataset {dataset_1.name}: ')
+policy = gds.add_dataset_policy(dataset_1.id, RangerPolicy({ 'name': dataset_1.name }))
+print(f'  added policy for dataset {dataset_1.name}: {policy}')
+
+policies = gds.get_dataset_policies(dataset_1.id)
+print(f'  policies for dataset {dataset_1.name}: {policies}')
+
 
 d1_in_p1 = RangerDatasetInProject({ 'datasetId': dataset_1.id, 'projectId': project_1.id, 'status': GdsShareStatus.GRANTED, 'validitySchedule': { 'startTime': '2023/01/01', 'endTime': '2023/04/01' }})
 d1_in_p2 = RangerDatasetInProject({ 'datasetId': dataset_1.id, 'projectId': project_2.id, 'status': GdsShareStatus.GRANTED, 'validitySchedule': { 'startTime': '2023/01/01', 'endTime': '2023/04/01' }})
@@ -152,6 +159,13 @@ print(f'Updating dataset_in_project: id={d2_in_p2.id}')
 d2_in_p2.status = GdsShareStatus.GRANTED
 d2_in_p2        = gds.update_dataset_in_project(d2_in_p2.id, d2_in_p2)
 print(f'  updated dataset_in_project: {d2_in_p2}')
+
+print(f'Adding policy for project {project_1.name}: ')
+policy = gds.add_project_policy(project_1.id, RangerPolicy({ 'name': project_1.name }))
+print(f'  added policy for project {project_1.name}: {policy}')
+
+policies = gds.get_project_policies(project_1.id)
+print(f'  policies for project {project_1.name}: {policies}')
 
 
 print(f'Removing dataset_in_project: id={d1_in_p1.id}')

@@ -26,34 +26,9 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public abstract class AbstractGdsStore implements GdsStore {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractGdsStore.class);
-
-    protected ServiceStore svcStore;
-
-    @Override
-    public void init() throws Exception {
-        LOG.info("==> AbstractGdsStore.init()");
-
-        LOG.info("<== AbstractGdsStore.init()");
-    }
-
-    @Override
-    public void setServiceStore(ServiceStore svcStore) {
-        LOG.info("==> AbstractGdsStore.setServiceStore()");
-
-        this.svcStore = svcStore;
-
-        LOG.info("<== AbstractGdsStore.setServiceStore()");
-    }
-
-    @Override
-    public ServiceStore getServiceStore() { return svcStore; }
-
     @Override
     public RangerDataset createDataset(RangerDataset dataset) throws Exception { return null; }
 

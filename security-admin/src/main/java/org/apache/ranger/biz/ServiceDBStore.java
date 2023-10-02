@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -245,6 +246,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	public static final String SERVICE_ADMIN_USERS     = "service.admin.users";
 	public static final String SERVICE_ADMIN_GROUPS    = "service.admin.groups";
+	public static final String GDS_SERVICE_NAME        = "_gds";
 
 	private static boolean isRolesDownloadedByService = false;
 
@@ -1720,43 +1722,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			hasTagServiceValueChanged = true;
 		}
 
-		boolean hasGdsServiceValueChanged = false;
-		Long    existingGdsServiceId      = existing.getGdsService();
-		String  newGdsServiceName         = service.getGdsService(); // null/empty for old clients; blank string to remove existing association
-		Long    newGdsServiceId           = null;
-
-		if (StringUtils.isEmpty(newGdsServiceName)) { // old client; don't update existing gdsService
-			if (existingGdsServiceId != null) {
-				newGdsServiceName = getServiceName(existingGdsServiceId);
-
-				service.setGdsService(newGdsServiceName);
-
-				LOG.info("ServiceDBStore.updateService(id=" + service.getId() + "; name=" + service.getName() + "): gdsService is null; using existing gdsService '" + newGdsServiceName + "'");
-			}
-		}
-
-		if (StringUtils.isNotBlank(newGdsServiceName)) {
-			RangerService tmp = getServiceByName(newGdsServiceName);
-
-			if (tmp == null || !EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(tmp.getType())) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("ServiceDBStore.updateService() - " + newGdsServiceName + " does not refer to a valid gds service.(" + service + ")");
-				}
-
-				throw restErrorUtil.createRESTException("Invalid gds service name " + newGdsServiceName, MessageEnums.ERROR_CREATING_OBJECT);
-			} else {
-				newGdsServiceId = tmp.getId();
-			}
-		}
-
-		if (existingGdsServiceId == null) {
-			if (newGdsServiceId != null) {
-				hasGdsServiceValueChanged = true;
-			}
-		} else if (!existingGdsServiceId.equals(newGdsServiceId)) {
-			hasGdsServiceValueChanged = true;
-		}
-
 		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
 
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
@@ -1774,7 +1739,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setVersion(existing.getVersion());
 			service = svcService.update(service);
 
-			if (hasTagServiceValueChanged || hasGdsServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
+			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
 				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null,false);
 			}
 		}
@@ -2977,7 +2942,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						copy.setGdsPolicies(null);
 					}
 
-					List<RangerPolicy>     copyPolicies      = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
+					List<RangerPolicy>      copyPolicies     = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
 					List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
 
 					copy.setPolicies(copyPolicies);
@@ -3091,9 +3056,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
 		}
 
-		if (serviceDbObj.getGdsService() != null) {
-			gdsServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getGdsService());
-		}
+		gdsServiceDbObj = daoMgr.getXXService().findByName(GDS_SERVICE_NAME);
 
 		if (tagServiceDbObj != null) {
 			tagServiceDef = getServiceDef(tagServiceDbObj.getType());
@@ -3120,7 +3083,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			ServiceDefUtil.normalizeAccessTypeDefs(gdsServiceDef, serviceType);
 
-			gdsServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getGdsService());
+			gdsServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(GDS_SERVICE_NAME);
 
 			if (gdsServiceVersionInfoDbObj == null) {
 				LOG.warn("serviceVersionInfo does not exist. name=" + gdsServiceDbObj.getName());
@@ -3774,7 +3737,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean isGdsService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getGdsServiceDefId();
 
 		if (isTagService || isGdsService) {
-			List<Long> referringServiceIds = isTagService ? serviceDao.findIdsByTagServiceId(serviceId) : serviceDao.findIdsByGdsServiceId(serviceId);
+			List<Long> referringServiceIds = isTagService ? serviceDao.findIdsByTagServiceId(serviceId) : serviceDao.findIdsExcludingServiceTypes(Arrays.asList(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME));
 
 			for (Long referringServiceId : referringServiceIds) {
 				Runnable policyVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.POLICY_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
@@ -3853,8 +3816,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
 				serviceVersionInfoDbObj.setRoleVersion(nextVersion);
 				serviceVersionInfoDbObj.setRoleUpdateTime(now);
-				serviceVersionInfoDbObj.setGdsVersion(nextVersion);
-				serviceVersionInfoDbObj.setGdsUpdateTime(now);
 
 				serviceVersionUpdater.version = nextVersion;
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);

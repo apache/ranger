@@ -160,6 +160,8 @@ import com.google.gson.JsonSyntaxException;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
+
 
 @Path("plugins")
 @Component
@@ -779,7 +781,7 @@ public class ServiceREST {
 			String serviceType = xxServiceDef != null ? xxServiceDef.getName() : null;
 
 			if (!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, serviceType) &&
-				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME, serviceType) &&
+				!StringUtils.equals(EMBEDDED_SERVICEDEF_GDS_NAME, serviceType) &&
 				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , serviceType)) {
 				createOrGetLinkedServices(service);
 			}
@@ -1270,6 +1272,7 @@ public class ServiceREST {
 	
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+							ensureAdminAccess(policy);
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processGrantRequest processing failed");
@@ -1310,6 +1313,7 @@ public class ServiceREST {
 						policy.getPolicyItems().add(policyItem);
 						policy.setZoneName(zoneName);
 
+						ensureAdminAccess(policy);
 						svcStore.createPolicy(policy);
 					}
 				} catch(WebApplicationException excp) {
@@ -1342,6 +1346,7 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		bizUtil.blockAuditorRoleUser();
 
 		if(grantRequest != null) {
@@ -1387,6 +1392,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureGrantRequest processing failed");
@@ -1427,6 +1435,8 @@ public class ServiceREST {
 							policy.getPolicyItems().add(policyItem);
 							policy.setZoneName(zoneName);
 
+							ensureAdminAccess(policy);
+
 							svcStore.createPolicy(policy);
 						}
 					}else{
@@ -1463,6 +1473,7 @@ public class ServiceREST {
 
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		if(revokeRequest!=null){
 			if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
@@ -1508,6 +1519,9 @@ public class ServiceREST {
 
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy);
+
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processRevokeRequest processing failed");
@@ -1544,6 +1558,7 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		bizUtil.blockAuditorRoleUser();
 
 		if (revokeRequest != null) {
@@ -1590,6 +1605,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureRevokeRequest processing failed");
@@ -1634,6 +1652,7 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createPolicy(policyName=" + policy.getName() + ")");
 			}
+
 			if(request != null) {
 				boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
 				if(deleteIfExists) {
@@ -1713,7 +1732,6 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		if (policy != null && StringUtils.isNotBlank(policy.getService())) {
-
 			try {
 
 				final              RangerPolicy existingPolicy;
@@ -1821,7 +1839,8 @@ public class ServiceREST {
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin() || isServiceAdmin(policy.getService()) || isZoneAdmin(policy.getZoneName()));
 
 			ensureAdminAccess(policy);
-                        bizUtil.blockAuditorRoleUser();
+			bizUtil.blockAuditorRoleUser();
+
 			ret = svcStore.updatePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -3665,6 +3684,8 @@ public class ServiceREST {
 	}
 
 	void ensureAdminAccess(RangerPolicy policy) {
+		blockIfGdsService(policy.getService());
+
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		String userName = bizUtil.getCurrentUserLoginId();
@@ -3706,6 +3727,14 @@ public class ServiceREST {
 							MessageEnums.OPER_NO_PERMISSION);
 				}
 			}
+		}
+	}
+
+	public void blockIfGdsService(String serviceName) {
+		String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
+
+		if (EMBEDDED_SERVICEDEF_GDS_NAME.equals(serviceType)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, EMBEDDED_SERVICEDEF_GDS_NAME.toUpperCase() + " policies can't be managed via this API", true);
 		}
 	}
 
@@ -4265,20 +4294,20 @@ public class ServiceREST {
 			}
 		};
 
-		Runnable createAndLinkGdsServiceTask = new Runnable() {
+		Runnable createGdsServiceTask = new Runnable() {
 			@Override
 			public void run() {
-				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EMBEDDED_SERVICEDEF_GDS_NAME, ServiceDBStore.GDS_SERVICE_NAME, true, false);
 
 				creator.doCreateAndLinkService();
 			}
 		};
 
 		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
-		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkGdsServiceTask);
+		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createGdsServiceTask);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== createOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("<== createOrGetLinkedServices(resourceService=" + resourceService.getName() + ")");
 		}
 	}
 
@@ -4297,6 +4326,14 @@ public class ServiceREST {
 			this.linkedServiceName   = computeLinkedServiceName();
 			this.isAutoCreate        = config.getBoolean("ranger." + linkedServiceType + "service.auto.create", true);
 			this.isAutoLink          = config.getBoolean("ranger." + linkedServiceType + "service.auto.link", true);
+		}
+
+		LinkedServiceCreator(@Nonnull String resourceServiceName, @Nonnull String linkedServiceType, String linkedServiceName, boolean autoCreate, boolean autoLink) {
+			this.resourceServiceName = resourceServiceName;
+			this.linkedServiceType   = linkedServiceType;
+			this.linkedServiceName   = linkedServiceName;
+			this.isAutoCreate        = autoCreate;
+			this.isAutoLink          = autoLink;
 		}
 
 		void doCreateAndLinkService() {
@@ -4376,16 +4413,6 @@ public class ServiceREST {
 						resourceService.setTagService(linkedService.getName());
 
 						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + linkedService.getName() + "]");
-
-						RangerService service = svcStore.updateService(resourceService, null);
-
-						LOG.info("Updated resource-service:[" + service.getName() + "]");
-					}
-				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(linkedServiceType)) {
-					if (!StringUtils.equals(linkedService.getName(), resourceService.getGdsService())) {
-						resourceService.setGdsService(linkedService.getName());
-
-						LOG.info("Linking resource-service[" + resourceService.getName() + "] with gds-service [" + linkedService.getName() + "]");
 
 						RangerService service = svcStore.updateService(resourceService, null);
 

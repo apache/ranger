@@ -126,19 +126,6 @@ public class XXServiceDao extends BaseDao<XXService> {
 		return ret != null ? ret : Collections.emptyList();
 	}
 
-	public List<Long> findIdsByGdsServiceId(Long gdsServiceId) {
-		List<Long> ret = null;
-
-		try {
-			ret =  getEntityManager().createNamedQuery("XXService.findIdsByGdsServiceId", Long.class)
-					.setParameter("gdsServiceId", gdsServiceId).getResultList();
-		} catch (NoResultException e) {
-			// ignre
-		}
-
-		return ret != null ? ret : Collections.emptyList();
-	}
-
 	public XXService findAssociatedTagService(String serviceName) {
 		try {
 			return getEntityManager().createNamedQuery("XXService.findAssociatedTagService", tClass)
@@ -165,6 +152,16 @@ public class XXServiceDao extends BaseDao<XXService> {
 		}
 
 		updateSequence("X_SERVICE_SEQ", maxId + 1);
+	}
+
+	public List<Long> findIdsExcludingServiceTypes(List<String> excludedServiceTypes) {
+		try {
+			return getEntityManager().createNamedQuery("XXService.findIdsExcludingServiceTypes", Long.class)
+					.setParameter("excludedServiceTypes", excludedServiceTypes)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
 	}
 
 	public List<Long> getAllServiceIds() {

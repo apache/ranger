@@ -694,8 +694,11 @@
 		<query>select obj.id from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
-	<named-query name="XXService.findIdsByGdsServiceId">
-		<query>select obj.id from XXService obj where obj.gdsService = :gdsServiceId</query>
+	<named-query name="XXService.findIdsExcludingServiceTypes">
+		<query>SELECT obj.id
+		         FROM XXService obj
+		         JOIN XXServiceDef sd ON sd.id = obj.type
+		        WHERE sd.name NOT IN :excludedServiceTypes</query>
 	</named-query>
 
 	<named-query name="XXService.findAssociatedTagService">
@@ -2262,5 +2265,29 @@
 		<query>SELECT obj.status, COUNT(obj) FROM XXGdsDataShareInDataset obj
 		        WHERE obj.datasetId = :datasetId
 		        GROUP BY obj.status</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyMap">
+		<query>SELECT obj FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId AND obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyMaps">
+		<query>SELECT obj FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyIds">
+		<query>SELECT obj.policyId FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyMap">
+		<query>SELECT obj FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId AND obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyMaps">
+		<query>SELECT obj FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyIds">
+		<query>SELECT obj.policyId FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId</query>
 	</named-query>
 </entity-mappings>

@@ -49,16 +49,13 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	private Date                policyUpdateTime;
 	private Long                tagVersion;
 	private Date                tagUpdateTime;
-	private String              gdsService;
-	private Long                gdsVersion;
-	private Date                gdsUpdateTime;
 
 
 	/**
 	 * @param
 	 */
 	public RangerService() {
-		this(null, null, null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
 	/**
@@ -69,24 +66,12 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 * @param tagService
 	 */
 	public RangerService(String type, String name, String description, String tagService, Map<String, String> configs) {
-		this(type, name, description, tagService, null, configs);
-	}
-
-	/**
-	 * @param type
-	 * @param name
-	 * @param description
-	 * @param configs
-	 * @param tagService
-	 */
-	public RangerService(String type, String name, String description, String tagService, String gdsService, Map<String, String> configs) {
 		super();
 
 		setType(type);
 		setName(name);
 		setDescription(description);
 		setTagService(tagService);
-		setGdsService(gdsService);
 		setConfigs(configs);
 	}
 
@@ -106,9 +91,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		setPolicyUpdateTime(other.getPolicyUpdateTime());
 		setTagVersion(other.getTagVersion());
 		setTagUpdateTime(other.getTagUpdateTime());
-		setGdsService(other.getGdsService());
-		setGdsVersion(other.getGdsVersion());
-		setGdsUpdateTime(other.getGdsUpdateTime());
 	}
 
 	/**
@@ -260,49 +242,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		this.tagUpdateTime = tagUpdateTime;
 	}
 
-	/**
-	 * @return the gdsService
-	 */
-	public String getGdsService() {
-		return gdsService;
-	}
-
-	/**
-	 * @param gdsService the gdsServiceName to set
-	 */
-	public void setGdsService(String gdsService) {
-		this.gdsService = gdsService;
-	}
-
-	/**
-	 * @return the gdsVersion
-	 */
-	public Long getGdsVersion() {
-		return gdsVersion;
-	}
-
-	/**
-	 * @param gdsVersion the gdsVersion to set
-	 */
-	public void setGdsVersion(Long gdsVersion) {
-		this.gdsVersion = gdsVersion;
-	}
-
-
-	/**
-	 * @return the gdsUpdateTime
-	 */
-	public Date getGdsUpdateTime() {
-		return gdsUpdateTime;
-	}
-
-	/**
-	 * @param gdsUpdateTime the gdsUpdateTime to set
-	 */
-	public void setGdsUpdateTime(Date gdsUpdateTime) {
-		this.gdsUpdateTime = gdsUpdateTime;
-	}
-
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -338,9 +277,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 		sb.append("tagVersion={").append(tagVersion).append("} ");
 		sb.append("tagUpdateTime={").append(tagUpdateTime).append("} ");
-		sb.append("gdsService={").append(gdsService).append("} ");
-		sb.append("gdsVersion={").append(gdsVersion).append("} ");
-		sb.append("gdsUpdateTime={").append(gdsUpdateTime).append("} ");
 
 		sb.append("}");
 

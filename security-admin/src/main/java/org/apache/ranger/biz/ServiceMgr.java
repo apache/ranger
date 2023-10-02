@@ -52,7 +52,6 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.service.RangerServiceService;
-import org.apache.ranger.services.gds.RangerServiceGds;
 import org.apache.ranger.services.tag.RangerServiceTag;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
@@ -86,9 +85,6 @@ public class ServiceMgr {
 	
 	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	GdsDBStore gdsStore;
 
 	@Autowired
 	RoleDBStore rolesStore;
@@ -349,8 +345,6 @@ public class ServiceMgr {
 
 					if(ret instanceof RangerServiceTag) {
 						((RangerServiceTag)ret).setTagStore(tagStore);
-					} else if (ret instanceof RangerServiceGds) {
-						((RangerServiceGds)ret).setGdsStore(gdsStore);
 					}
 				} else {
 					LOG.warn("ServiceMgr.getRangerServiceByService(" + service + "): could not find service class '"

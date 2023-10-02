@@ -72,6 +72,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		xObj.setGuid(guid);
 		
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(vObj.getType());
+
 		if(xServiceDef == null) {
 			throw restErrorUtil.createRESTException(
 					"No ServiceDefinition found with name :" + vObj.getType(),
@@ -92,27 +93,10 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 			tagServiceId = xTagService.getId();
 		}
 
-		Long   gdsServiceId   = null;
-		String gdsServiceName = vObj.getGdsService();
-
-		if (StringUtils.isNotBlank(gdsServiceName)) {
-			XXService xGdsService = daoMgr.getXXService().findByName(gdsServiceName);
-
-			if (xGdsService == null) {
-				throw restErrorUtil.createRESTException(
-						"No Service found with name :" + gdsServiceName,
-						MessageEnums.INVALID_INPUT_DATA);
-			}
-
-			gdsServiceId = xGdsService.getId();
-		}
-
 		xObj.setType(xServiceDef.getId());
 		xObj.setName(vObj.getName());
 		xObj.setDisplayName(vObj.getDisplayName());
 		xObj.setTagService(tagServiceId);
-		xObj.setGdsService(gdsServiceId);
-
 		if (OPERATION_CONTEXT == OPERATION_CREATE_CONTEXT) {
 			xObj.setTagVersion(vObj.getTagVersion());
 		}
@@ -125,7 +109,6 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 	protected V mapEntityToViewBean(V vObj, T xObj) {
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
 		XXService    xTagService = xObj.getTagService() != null ? daoMgr.getXXService().getById(xObj.getTagService()) : null;
-		XXService    xGdsService = xObj.getGdsService() != null ? daoMgr.getXXService().getById(xObj.getGdsService()) : null;
 		vObj.setType(xServiceDef.getName());
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
@@ -133,15 +116,12 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		vObj.setDisplayName(xObj.getDisplayName());
 		vObj.setDescription(xObj.getDescription());
 		vObj.setTagService(xTagService != null ? xTagService.getName() : null);
-		vObj.setGdsService(xGdsService != null ? xGdsService.getName() : null);
 		XXServiceVersionInfo versionInfoObj = daoMgr.getXXServiceVersionInfo().findByServiceId(xObj.getId());
 		if (versionInfoObj != null) {
 			vObj.setPolicyVersion(versionInfoObj.getPolicyVersion());
 			vObj.setTagVersion(versionInfoObj.getTagVersion());
 			vObj.setPolicyUpdateTime(versionInfoObj.getPolicyUpdateTime());
 			vObj.setTagUpdateTime(versionInfoObj.getTagUpdateTime());
-			vObj.setGdsVersion(versionInfoObj.getGdsVersion());
-			vObj.setGdsUpdateTime(versionInfoObj.getGdsUpdateTime());
 		} else {
 			vObj.setPolicyVersion(xObj.getPolicyVersion());
 			vObj.setTagVersion(xObj.getTagVersion());
@@ -165,7 +145,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 
 		for (T xSvc : xSvcList) {
 			if(bizUtil.hasAccess(xSvc, null)){
-				permittedServices.add(xSvc);
+				if (!bizUtil.isGdsService(xSvc)) {
+					permittedServices.add(xSvc);
+				}
 			}
 		}
 

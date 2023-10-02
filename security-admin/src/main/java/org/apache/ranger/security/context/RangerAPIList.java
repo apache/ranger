@@ -223,6 +223,7 @@ public class RangerAPIList {
 	public static final String GET_DATASET         = "GdsREST.getDataset";
 	public static final String SEARCH_DATASETS     = "GdsREST.searchDatasets";
 	public static final String LIST_DATASET_NAMES  = "GdsREST.listDatasetNames";
+	public static final String DATASET_POLICY      = "GdsREST.datasetPolicy";
 
 	public static final String CREATE_PROJECT      = "GdsREST.createProject";
 	public static final String UPDATE_PROJECT      = "GdsREST.updateProject";
@@ -230,6 +231,7 @@ public class RangerAPIList {
 	public static final String GET_PROJECT         = "GdsREST.getProject";
 	public static final String SEARCH_PROJECTS     = "GdsREST.searchProjects";
 	public static final String LIST_PROJECT_NAMES  = "GdsREST.listProjectNames";
+	public static final String PROJECT_POLICY      = "GdsREST.projectPolicy";
 
 	public static final String CREATE_DATA_SHARE   = "GdsREST.createDataShare";
 	public static final String UPDATE_DATA_SHARE   = "GdsREST.updateDataShare";

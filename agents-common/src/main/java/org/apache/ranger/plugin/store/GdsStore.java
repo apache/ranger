@@ -25,20 +25,16 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.SearchFilter;
+
+import java.util.List;
 
 /**
  * Interface to backing store for Data share model objects
  */
 
 public interface GdsStore {
-    void init() throws Exception;
-
-    void setServiceStore(ServiceStore svcStore);
-
-    ServiceStore getServiceStore();
-
-
     RangerDataset createDataset(RangerDataset dataset) throws Exception;
 
     RangerDataset updateDataset(RangerDataset dataset) throws Exception;
@@ -52,6 +48,18 @@ public interface GdsStore {
     PList<String> getDatasetNames(SearchFilter filter) throws Exception;
 
     PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception;
+
+    RangerPolicy addDatasetPolicy(Long datasetId, RangerPolicy policy) throws Exception;
+
+    RangerPolicy updateDatasetPolicy(Long datasetId, RangerPolicy policy) throws Exception;
+
+    void deleteDatasetPolicy(Long datasetId, Long policyId) throws Exception;
+
+    void deleteDatasetPolicies(Long datasetId) throws Exception;
+
+    RangerPolicy getDatasetPolicy(Long datasetId, Long policyId) throws Exception;
+
+    List<RangerPolicy> getDatasetPolicies(Long datasetId) throws Exception;
 
 
     RangerProject createProject(RangerProject dataset) throws Exception;
@@ -67,6 +75,18 @@ public interface GdsStore {
     PList<String> getProjectNames(SearchFilter filter) throws Exception;
 
     PList<RangerProject> searchProjects(SearchFilter filter) throws Exception;
+
+    RangerPolicy addProjectPolicy(Long projectId, RangerPolicy policy) throws Exception;
+
+    RangerPolicy updateProjectPolicy(Long projectId, RangerPolicy policy) throws Exception;
+
+    void deleteProjectPolicy(Long projectId, Long policyId) throws Exception;
+
+    void deleteProjectPolicies(Long projectId) throws Exception;
+
+    RangerPolicy getProjectPolicy(Long projectId, Long policyId) throws Exception;
+
+    List<RangerPolicy> getProjectPolicies(Long projectId) throws Exception;
 
 
     RangerDataShare createDataShare(RangerDataShare dataShare) throws Exception;

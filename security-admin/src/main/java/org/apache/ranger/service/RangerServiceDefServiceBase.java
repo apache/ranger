@@ -617,7 +617,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		List<T> permittedServiceDefs = new ArrayList<T>();
 		for (T xSvcDef : xSvcDefList) {
 			if ((bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage)) || ("true".equals(denyCondition))) {
-				permittedServiceDefs.add(xSvcDef);
+				if (!bizUtil.isGdsServiceDef(xSvcDef)) {
+					permittedServiceDefs.add(xSvcDef);
+				}
 			}
 		}
 		if (!permittedServiceDefs.isEmpty()) {

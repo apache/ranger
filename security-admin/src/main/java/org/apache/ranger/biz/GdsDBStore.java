@@ -34,8 +34,10 @@ import org.apache.ranger.db.XXGdsProjectDao;
 import org.apache.ranger.entity.XXGdsDataShareInDataset;
 import org.apache.ranger.entity.XXGdsDataset;
 import org.apache.ranger.entity.XXGdsDatasetInProject;
+import org.apache.ranger.entity.XXGdsDatasetPolicyMap;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.entity.XXGdsProjectPolicyMap;
 import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
@@ -51,6 +53,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
 import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerGdsDataShareService;
 import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
@@ -85,6 +88,14 @@ import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SE
 @Component
 public class GdsDBStore extends AbstractGdsStore {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDBStore.class);
+
+    public static final String RESOURCE_NAME_DATASET_ID = "dataset-id";
+    public static final String RESOURCE_NAME_PROJECT_ID = "project-id";
+
+    public static final String NOT_AUTHORIZED_FOR_DATASET_POLICIES     = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES = "User is not authorized to view policies for this dataset";
+    public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
 
     @Autowired
     RangerGdsValidator validator;
@@ -121,6 +132,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     RangerBizUtil bizUtil;
+
+    @Autowired
+    ServiceStore svcStore;
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -210,6 +224,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(datasetId, existing);
 
+        deleteDatasetPolicies(existing);
         datasetService.delete(existing);
 
         datasetService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
@@ -224,7 +239,6 @@ public class GdsDBStore extends AbstractGdsStore {
         LOG.debug("==> getDataset({})", datasetId);
 
         RangerDataset ret = datasetService.read(datasetId);
-
 
         if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
             throw new Exception("no permission on dataset id=" + datasetId);
@@ -281,9 +295,9 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
         LOG.debug("==> searchDatasets({})", filter);
 
-	PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
-	List<RangerDataset>  datasets      = ret.getList();
-	GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
+        PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
+        List<RangerDataset>  datasets      = ret.getList();
+        GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
 
         for (RangerDataset dataset : datasets) {
             if (gdsPermission.equals(GdsPermission.LIST)) {
@@ -292,6 +306,137 @@ public class GdsDBStore extends AbstractGdsStore {
         }
 
         LOG.debug("<== searchDatasets({}): ret={}", filter, ret);
+
+        return ret;
+    }
+
+    @Override
+    public RangerPolicy addDatasetPolicy(Long datasetId, RangerPolicy policy) throws Exception {
+        LOG.debug("==> addDatasetPolicy({}, {})", datasetId, policy);
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_DATASET_POLICIES);
+        }
+
+        prepareDatasetPolicy(dataset, policy);
+
+        RangerPolicy ret = svcStore.createPolicy(policy);
+
+        daoMgr.getXXGdsDatasetPolicyMap().create(new XXGdsDatasetPolicyMap(datasetId, ret.getId()));
+
+        LOG.debug("<== addDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
+
+        return ret;
+    }
+
+    @Override
+    public RangerPolicy updateDatasetPolicy(Long datasetId, RangerPolicy policy) throws Exception {
+        LOG.debug("==> updateDatasetPolicy({}, {})", datasetId, policy);
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_DATASET_POLICIES);
+        }
+
+        XXGdsDatasetPolicyMap existing = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyMap(datasetId, policy.getId());
+
+        if (existing == null) {
+            throw new Exception("no policy exists: datasetId=" + datasetId + ", policyId=" + policy.getId());
+        }
+
+        prepareDatasetPolicy(dataset, policy);
+
+        RangerPolicy ret = svcStore.updatePolicy(policy);
+
+        LOG.debug("<== updateDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
+
+        return ret;
+    }
+
+    @Override
+    public void deleteDatasetPolicy(Long datasetId, Long policyId) throws Exception {
+        LOG.debug("==> deleteDatasetPolicy({}, {})", datasetId, policyId);
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_DATASET_POLICIES);
+        }
+
+        XXGdsDatasetPolicyMap existing = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyMap(datasetId, policyId);
+
+        if (existing == null) {
+            throw new Exception("no policy exists: datasetId=" + datasetId + ", policyId=" + policyId);
+        }
+
+        RangerPolicy policy = svcStore.getPolicy(policyId);
+
+        daoMgr.getXXGdsDatasetPolicyMap().remove(existing);
+        svcStore.deletePolicy(policy);
+
+        LOG.debug("<== deleteDatasetPolicy({}, {})", datasetId, policyId);
+    }
+
+    @Override
+    public void deleteDatasetPolicies(Long datasetId) throws Exception {
+        LOG.debug("==> deleteDatasetPolicies({})", datasetId);
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        deleteDatasetPolicies(dataset);
+
+        LOG.debug("<== deleteDatasetPolicy({})", datasetId);
+    }
+
+    @Override
+    public RangerPolicy getDatasetPolicy(Long datasetId, Long policyId) throws Exception {
+        LOG.debug("==> getDatasetPolicy({}, {})", datasetId, policyId);
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.AUDIT)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+        }
+
+        XXGdsDatasetPolicyMap existing = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyMap(datasetId, policyId);
+
+        if (existing == null) {
+            throw new Exception("no policy exists: datasetId=" + datasetId + ", policyId=" + policyId);
+        }
+
+        RangerPolicy ret = svcStore.getPolicy(policyId);
+
+        LOG.debug("<== getDatasetPolicy({}, {}): ret={}", datasetId, policyId, ret);
+
+        return ret;
+    }
+
+    @Override
+    public List<RangerPolicy> getDatasetPolicies(Long datasetId) throws Exception {
+        LOG.debug("==> getDatasetPolicies({})", datasetId);
+
+        List<RangerPolicy> ret = null;
+
+        RangerDataset dataset = datasetService.read(datasetId);
+
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.AUDIT)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+        }
+
+        List<Long> policyIds = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(datasetId);
+
+        if (policyIds != null) {
+            ret = new ArrayList<>(policyIds.size());
+
+            for (Long policyId : policyIds) {
+                ret.add(svcStore.getPolicy(policyId));
+            }
+        }
+
+        LOG.debug("<== getDatasetPolicies({}): ret={}", datasetId, ret);
 
         return ret;
     }
@@ -356,6 +501,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(projectId, existing);
 
+        deleteProjectPolicies(existing);
         projectService.delete(existing);
 
         projectService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
@@ -441,6 +587,137 @@ public class GdsDBStore extends AbstractGdsStore {
         PList<RangerProject> ret = new PList<>(paginatedProjects, startIndex, maxRows, projects.size(), paginatedProjects.size(), result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchProjects({}): ret={}", filter, ret);
+
+        return ret;
+    }
+
+    @Override
+    public RangerPolicy addProjectPolicy(Long projectId, RangerPolicy policy) throws Exception {
+        LOG.debug("==> addProjectPolicy({}, {})", projectId, policy);
+
+        RangerProject project = projectService.read(projectId);
+
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_PROJECT_POLICIES);
+        }
+
+        prepareProjectPolicy(project, policy);
+
+        RangerPolicy ret = svcStore.createPolicy(policy);
+
+        daoMgr.getXXGdsProjectPolicyMap().create(new XXGdsProjectPolicyMap(projectId, ret.getId()));
+
+        LOG.debug("<== addProjectPolicy({}, {}): ret={}", projectId, policy, ret);
+
+        return ret;
+    }
+
+    @Override
+    public RangerPolicy updateProjectPolicy(Long projectId, RangerPolicy policy) throws Exception {
+        LOG.debug("==> updateProjectPolicy({}, {})", projectId, policy);
+
+        RangerProject project = projectService.read(projectId);
+
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_PROJECT_POLICIES);
+        }
+
+        XXGdsProjectPolicyMap existing = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyMap(projectId, policy.getId());
+
+        if (existing == null) {
+            throw new Exception("no policy exists: projectId=" + projectId + ", policyId=" + policy.getId());
+        }
+
+        prepareProjectPolicy(project, policy);
+
+        RangerPolicy ret = svcStore.updatePolicy(policy);
+
+        LOG.debug("<== updateProjectPolicy({}, {}): ret={}", projectId, policy, ret);
+
+        return ret;
+    }
+
+    @Override
+    public void deleteProjectPolicy(Long projectId, Long policyId) throws Exception {
+        LOG.debug("==> deleteProjectPolicy({}, {})", projectId, policyId);
+
+        RangerProject project = projectService.read(projectId);
+
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_DATASET_POLICIES);
+        }
+
+        XXGdsProjectPolicyMap existing = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyMap(projectId, policyId);
+
+        if (existing == null) {
+            throw new Exception("no policy exists: projectId=" + projectId + ", policyId=" + policyId);
+        }
+
+        RangerPolicy policy = svcStore.getPolicy(policyId);
+
+        daoMgr.getXXGdsProjectPolicyMap().remove(existing);
+        svcStore.deletePolicy(policy);
+
+        LOG.debug("<== deleteProjectPolicy({}, {})", projectId, policyId);
+    }
+
+    @Override
+    public void deleteProjectPolicies(Long projectId) throws Exception {
+        LOG.debug("==> deleteProjectPolicies({})", projectId);
+
+        RangerProject project = projectService.read(projectId);
+
+        deleteProjectPolicies(project);
+
+        LOG.debug("<== deleteProjectPolicy({})", projectId);
+    }
+
+    @Override
+    public RangerPolicy getProjectPolicy(Long projectId, Long policyId) throws Exception {
+        LOG.debug("==> getProjectPolicy({}, {})", projectId, policyId);
+
+        RangerProject project = projectService.read(projectId);
+
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.AUDIT)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+        }
+
+        XXGdsProjectPolicyMap existing = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyMap(projectId, policyId);
+
+        if (existing == null) {
+            throw new Exception("no policy exists: projectId=" + projectId + ", policyId=" + policyId);
+        }
+
+        RangerPolicy ret = svcStore.getPolicy(policyId);
+
+        LOG.debug("<== getProjectPolicy({}, {}): ret={}", projectId, policyId, ret);
+
+        return ret;
+    }
+
+    @Override
+    public List<RangerPolicy> getProjectPolicies(Long projectId) throws Exception {
+        LOG.debug("==> getProjectPolicies({})", projectId);
+
+        List<RangerPolicy> ret = null;
+
+        RangerProject project = projectService.read(projectId);
+
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.AUDIT)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+        }
+
+        List<Long> policyIds = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(projectId);
+
+        if (policyIds != null) {
+            ret = new ArrayList<>(policyIds.size());
+
+            for (Long policyId : policyIds) {
+                ret.add(svcStore.getPolicy(policyId));
+            }
+        }
+
+        LOG.debug("<== getProjectPolicies({}): ret={}", projectId, ret);
 
         return ret;
     }
@@ -1046,6 +1323,74 @@ public class GdsDBStore extends AbstractGdsStore {
 
             if(!sharedResourceDeleted) {
                 throw restErrorUtil.createRESTException("SharedResource could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, sharedResource.getId(), "SharedResourceId", null, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+    private void prepareDatasetPolicy(RangerDataset dataset, RangerPolicy policy) {
+        policy.setName("DATASET: " + dataset.getName() + "@" + System.currentTimeMillis());
+        policy.setDescription("Policy for dataset: " + dataset.getName());
+        policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
+        policy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+        policy.setZoneName(null);
+        policy.setResources(Collections.singletonMap(RESOURCE_NAME_DATASET_ID, new RangerPolicyResource(dataset.getId().toString())));
+        policy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        policy.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+        policy.setAllowExceptions(Collections.emptyList());
+        policy.setDenyPolicyItems(Collections.emptyList());
+        policy.setDenyExceptions(Collections.emptyList());
+        policy.setDataMaskPolicyItems(Collections.emptyList());
+        policy.setRowFilterPolicyItems(Collections.emptyList());
+        policy.setIsDenyAllElse(Boolean.FALSE);
+    }
+
+    private void prepareProjectPolicy(RangerProject project, RangerPolicy policy) {
+        policy.setName("PROJECT: " + project.getName() + "@" + System.currentTimeMillis());
+        policy.setDescription("Policy for project: " + project.getName());
+        policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
+        policy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+        policy.setZoneName(null);
+        policy.setResources(Collections.singletonMap(RESOURCE_NAME_PROJECT_ID, new RangerPolicyResource(project.getId().toString())));
+        policy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        policy.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+        policy.setAllowExceptions(Collections.emptyList());
+        policy.setDenyPolicyItems(Collections.emptyList());
+        policy.setDenyExceptions(Collections.emptyList());
+        policy.setDataMaskPolicyItems(Collections.emptyList());
+        policy.setRowFilterPolicyItems(Collections.emptyList());
+        policy.setIsDenyAllElse(Boolean.FALSE);
+    }
+
+    private void deleteDatasetPolicies(RangerDataset dataset) throws Exception {
+        if (!validator.hasPermission(dataset.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_DATASET_POLICIES);
+        }
+
+        List<XXGdsDatasetPolicyMap> existingMaps = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyMaps(dataset.getId());
+
+        if (existingMaps != null) {
+            for (XXGdsDatasetPolicyMap existing : existingMaps) {
+                RangerPolicy policy = svcStore.getPolicy(existing.getPolicyId());
+
+                daoMgr.getXXGdsDatasetPolicyMap().remove(existing);
+                svcStore.deletePolicy(policy);
+            }
+        }
+    }
+
+    private void deleteProjectPolicies(RangerProject project) throws Exception {
+        if (!validator.hasPermission(project.getAcl(), GdsPermission.POLICY_ADMIN)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_FOR_PROJECT_POLICIES);
+        }
+
+        List<XXGdsProjectPolicyMap> existingMaps = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyMaps(project.getId());
+
+        if (existingMaps != null) {
+            for (XXGdsProjectPolicyMap existing : existingMaps) {
+                RangerPolicy policy = svcStore.getPolicy(existing.getPolicyId());
+
+                daoMgr.getXXGdsProjectPolicyMap().remove(existing);
+                svcStore.deletePolicy(policy);
             }
         }
     }

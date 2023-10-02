@@ -330,5 +330,7 @@ public abstract class RangerDaoManagerBase {
 	public XXGdsSharedResourceDao getXXGdsSharedResource() { return new XXGdsSharedResourceDao(this); }
 	public XXGdsDataShareInDatasetDao getXXGdsDataShareInDataset() { return new XXGdsDataShareInDatasetDao(this); }
 	public XXGdsDatasetInProjectDao getXXGdsDatasetInProject() { return new XXGdsDatasetInProjectDao(this); }
+	public XXGdsDatasetPolicyMapDao getXXGdsDatasetPolicyMap() { return new XXGdsDatasetPolicyMapDao(this); }
+	public XXGdsProjectPolicyMapDao getXXGdsProjectPolicyMap() { return new XXGdsProjectPolicyMapDao(this); }
 }
 

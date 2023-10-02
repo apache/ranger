@@ -44,8 +44,6 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 		addPredicateForServiceId(filter.getParam(SearchFilter.SERVICE_ID), predicates);
 		addPredicateForTagSeviceName(filter.getParam(SearchFilter.TAG_SERVICE_NAME), predicates);
 		addPredicateForTagSeviceId(filter.getParam(SearchFilter.TAG_SERVICE_ID), predicates);
-		addPredicateForGdsSeviceName(filter.getParam(SearchFilter.GDS_SERVICE_NAME), predicates);
-		addPredicateForGdsSeviceId(filter.getParam(SearchFilter.GDS_SERVICE_ID), predicates);
 	}
 
 	private String getServiceType(String serviceName) {
@@ -217,81 +215,6 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 						}
 
 						ret = tagService != null && tagService.getId() != null && StringUtils.equals(tagServiceId, tagService.getId().toString());
-					}
-				} else {
-					ret = true;
-				}
-
-				return ret;
-			}
-		};
-
-		if(predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForGdsSeviceName(final String gdsServiceName, List<Predicate> predicates) {
-		if(StringUtils.isEmpty(gdsServiceName)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if(object == null) {
-					return false;
-				}
-
-				boolean ret = false;
-
-				if(object instanceof RangerService) {
-					RangerService service = (RangerService)object;
-
-					ret = StringUtils.equals(gdsServiceName, service.getGdsService());
-				} else {
-					ret = true;
-				}
-
-				return ret;
-			}
-		};
-
-		if(predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForGdsSeviceId(final String gdsServiceId, List<Predicate> predicates) {
-		if(StringUtils.isEmpty(gdsServiceId)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if(object == null) {
-					return false;
-				}
-
-				boolean ret = false;
-
-				if(object instanceof RangerService) {
-					RangerService service = (RangerService)object;
-
-					if(! StringUtils.isEmpty(service.getGdsService())) {
-						RangerService gdsService = null;
-
-						try {
-							gdsService = serviceStore.getServiceByName(service.getGdsService());
-						} catch(Exception excp) {
-						}
-
-						ret = gdsService != null && gdsService.getId() != null && StringUtils.equals(gdsServiceId, gdsService.getId().toString());
 					}
 				} else {
 					ret = true;
