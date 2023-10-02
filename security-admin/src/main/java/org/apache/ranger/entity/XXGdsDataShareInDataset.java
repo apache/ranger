@@ -73,6 +73,8 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
     @Column(name = "additional_info")
     protected String additionalInfo;
 
+    @Column(name = "approver_id")
+    protected Long approverId;
 
     @Override
     public void setId(Long id) { this.id = id; }
@@ -124,12 +126,16 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
 
     public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
 
+    public Long getApproverId() { return approverId; }
+
+    public void setApproverId(Long approverId) { this.approverId = approverId; }
+
     @Override
     public int getMyClassType() { return AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET; }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, dataShareId, datasetId, status, validityPeriod, profiles, options, additionalInfo);
+        return Objects.hash(id, guid, dataShareId, datasetId, status, validityPeriod, profiles, options, additionalInfo, approverId);
     }
 
     @Override
@@ -154,7 +160,8 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
                Objects.equals(validityPeriod, other.validityPeriod) &&
                Objects.equals(profiles, other.profiles) &&
                Objects.equals(options, other.options) &&
-               Objects.equals(additionalInfo, other.additionalInfo);
+               Objects.equals(additionalInfo, other.additionalInfo) &&
+               Objects.equals(approverId, other.approverId);
     }
 
     @Override
@@ -176,6 +183,7 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
           .append("profiles={").append(profiles).append("} ")
           .append("options={").append(options).append("} ")
           .append("additionalInfo={").append(additionalInfo).append("} ")
+          .append("approverId={").append(approverId).append("} ")
           .append(" }");
 
         return sb;

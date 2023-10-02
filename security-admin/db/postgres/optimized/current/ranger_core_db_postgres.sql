@@ -1822,12 +1822,14 @@ CREATE TABLE x_gds_data_share_in_dataset(
   , profiles             TEXT         NULL     DEFAULT NULL
   , options              TEXT         NULL     DEFAULT NULL
   , additional_info      TEXT         NULL     DEFAULT NULL
+  , approver_id          BIGINT       NULL     DEFAULT NULL
   , PRIMARY KEY(id)
   , CONSTRAINT x_gds_dshid_FK_added_by_id   FOREIGN KEY(added_by_id)   REFERENCES x_portal_user(id)
   , CONSTRAINT x_gds_dshid_FK_upd_by_id     FOREIGN KEY(upd_by_id)     REFERENCES x_portal_user(id)
   , CONSTRAINT x_gds_dshid_FK_data_share_id FOREIGN KEY(data_share_id) REFERENCES x_gds_data_share(id)
   , CONSTRAINT x_gds_dshid_FK_dataset_id    FOREIGN KEY(dataset_id)    REFERENCES x_gds_dataset(id)
   , CONSTRAINT x_gds_dshid_UK_data_share_id_dataset_id UNIQUE(data_share_id, dataset_id)
+  , CONSTRAINT x_gds_dshid_FK_approver_id   FOREIGN KEY(approver_id)   REFERENCES x_portal_user(id)
 );
 CREATE INDEX x_gds_dshid_guid                     ON x_gds_data_share_in_dataset(guid);
 CREATE INDEX x_gds_dshid_data_share_id            ON x_gds_data_share_in_dataset(data_share_id);
@@ -1853,12 +1855,14 @@ CREATE TABLE x_gds_dataset_in_project(
   , profiles             TEXT         NULL     DEFAULT NULL
   , options              TEXT         NULL     DEFAULT NULL
   , additional_info      TEXT         NULL     DEFAULT NULL
+  , approver_id          BIGINT       NULL     DEFAULT NULL
   , PRIMARY KEY(id)
   , CONSTRAINT x_gds_dip_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id)
   , CONSTRAINT x_gds_dip_FK_upd_by_id   FOREIGN KEY(upd_by_id)   REFERENCES x_portal_user(id)
   , CONSTRAINT x_gds_dip_FK_dataset_id  FOREIGN KEY(dataset_id)  REFERENCES x_gds_dataset(id)
   , CONSTRAINT x_gds_dip_FK_project_id  FOREIGN KEY(project_id)  REFERENCES x_gds_project(id)
   , CONSTRAINT x_gds_dip_UK_data_share_id_dataset_id UNIQUE(dataset_id, project_id)
+  , CONSTRAINT x_gds_dip_FK_approver_id FOREIGN KEY(approver_id) REFERENCES x_portal_user(id)
 );
 CREATE INDEX x_gds_dip_guid       ON x_gds_dataset_in_project(guid);
 CREATE INDEX x_gds_dip_dataset_id ON x_gds_dataset_in_project(dataset_id);

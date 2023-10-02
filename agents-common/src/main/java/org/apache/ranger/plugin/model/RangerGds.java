@@ -329,6 +329,7 @@ public class RangerGds {
         private GdsShareStatus         status;
         private RangerValiditySchedule validitySchedule;
         private Set<String>            profiles;
+        private String                 approver;
 
 
         public RangerDataShareInDataset() { }
@@ -353,6 +354,10 @@ public class RangerGds {
 
         public void setProfiles(Set<String> profiles) { this.profiles = profiles; }
 
+        public String getApprover() { return approver; }
+
+        public void setApprover(String approver) { this.approver = approver; }
+
         @Override
         public StringBuilder toString(StringBuilder sb) {
             sb.append("RangerDataShareInDataset={");
@@ -364,6 +369,7 @@ public class RangerGds {
               .append("status={").append(status).append("} ")
               .append("validitySchedule={").append(validitySchedule).append("} ")
               .append("profiles={").append(profiles).append("} ")
+              .append("approver={").append(approver).append("} ")
               .append("}");
 
             return sb;
@@ -383,6 +389,7 @@ public class RangerGds {
         private GdsShareStatus         status;
         private RangerValiditySchedule validitySchedule;
         private Set<String>            profiles;
+        private String                 approver;
 
 
         public RangerDatasetInProject() { }
@@ -407,6 +414,10 @@ public class RangerGds {
 
         public void setProfiles(Set<String> profiles) { this.profiles = profiles; }
 
+        public String getApprover() { return approver; }
+
+        public void setApprover(String approver) { this.approver = approver; }
+
         @Override
         public StringBuilder toString(StringBuilder sb) {
             sb.append("RangerDatasetInProject={");
@@ -418,6 +429,7 @@ public class RangerGds {
               .append("status={").append(status).append("} ")
               .append("validitySchedule={").append(validitySchedule).append("} ")
               .append("profiles={").append(profiles).append("} ")
+              .append("approver={").append(approver).append("} ")
               .append("}");
 
             return sb;

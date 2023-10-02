@@ -25,9 +25,11 @@ import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.entity.XXGdsDataShare;
 import org.apache.ranger.entity.XXGdsDataShareInDataset;
 import org.apache.ranger.entity.XXGdsDataset;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -50,6 +52,9 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
 
     @Autowired
     GUIDUtil guidUtil;
+
+    @Autowired
+    XXPortalUserDao xxPortalUserDao;
 
     public RangerGdsDataShareInDatasetService() {
         super();
@@ -222,6 +227,9 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
         xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
         xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
 
+        final XXPortalUser user = xxPortalUserDao.findByLoginId(vObj.getApprover());
+        xObj.setApproverId(user == null? null : user.getId());
+
         return xObj;
     }
 
@@ -238,6 +246,7 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
         vObj.setProfiles(JsonUtils.jsonToSetString(xObj.getProfiles()));
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
         vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));
+        vObj.setApprover(getUserName(xObj.getApproverId()));
 
         return vObj;
     }
