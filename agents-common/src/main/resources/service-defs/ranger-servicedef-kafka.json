@@ -223,7 +223,7 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES','ATLAS_HOOK','ATLAS_SPARK_HOOK']}},'users':['atlas'],'actions':['describe','publish','consume'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['hive','hbase','impala','nifi'],'actions':['publish','describe'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['*']}},'users':['atlas','rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false}]"
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES','ATLAS_HOOK','ATLAS_SPARK_HOOK']}},'users':['atlas'],'actions':['describe','publish','consume'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['hive','hbase','impala','nifi'],'actions':['publish','describe'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['*']}},'users':['atlas','rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false},{'resources':{'topic':{'values':['__CruiseControlMetrics']}},'users':['cc_metric_reporter'],'actions':['describe','publish','consume'],'isAudited':false}]"
 		}
 	],
 	"enums":[
