@@ -64,6 +64,9 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         searchFields.add(new SearchField(SearchFilter.DATASET_ID,           "dshid.datasetId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXGdsDataShareInDataset dshid", "obj.dataShareId = dsh.id and dsh.id = dshid.dataShareId"));
         searchFields.add(new SearchField(SearchFilter.PROJECT_NAME,         "p.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXGdsDataShareInDataset dshid, XXGdsDatasetInProject dip, XXGdsProject p", "obj.dataShareId = dsh.id and dsh.id = dshid.dataShareId and dshid.datasetId = dip.datasetId and dip.projectId = p.id"));
         searchFields.add(new SearchField(SearchFilter.PROJECT_ID,           "dip.projectId",   SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXGdsDataShareInDataset dshid, XXGdsDatasetInProject dip", "obj.dataShareId = dsh.id and dsh.id = dshid.dataShareId and dshid.datasetId = dip.datasetId"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_ID,              "dsh.zoneId",      SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh", "obj.dataShareId = dsh.id"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_NAME,            "z.name",          SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_NAME_PARTIAL,    "z.name",          SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
