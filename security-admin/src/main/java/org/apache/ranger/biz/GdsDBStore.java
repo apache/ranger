@@ -46,6 +46,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -173,6 +174,12 @@ public class GdsDBStore extends AbstractGdsStore {
         if (StringUtils.isBlank(dataset.getGuid())) {
             dataset.setGuid(guidUtil.genGUID());
         }
+
+        if (dataset.getAcl() == null) {
+            dataset.setAcl(new RangerGdsObjectACL());
+        }
+
+        addCreatorAsAclAdmin(dataset.getAcl());
 
         RangerDataset ret = datasetService.create(dataset);
 
@@ -450,6 +457,12 @@ public class GdsDBStore extends AbstractGdsStore {
         if (StringUtils.isBlank(project.getGuid())) {
             project.setGuid(guidUtil.genGUID());
         }
+
+        if (project.getAcl() == null) {
+            project.setAcl(new RangerGdsObjectACL());
+        }
+
+        addCreatorAsAclAdmin(project.getAcl());
 
         RangerProject ret = projectService.create(project);
 
@@ -732,6 +745,12 @@ public class GdsDBStore extends AbstractGdsStore {
         if (StringUtils.isBlank(dataShare.getGuid())) {
             dataShare.setGuid(guidUtil.genGUID());
         }
+
+        if (dataShare.getAcl() == null) {
+            dataShare.setAcl(new RangerGdsObjectACL());
+        }
+
+        addCreatorAsAclAdmin(dataShare.getAcl());
 
         RangerDataShare ret = dataShareService.create(dataShare);
 
@@ -1392,6 +1411,21 @@ public class GdsDBStore extends AbstractGdsStore {
                 daoMgr.getXXGdsProjectPolicyMap().remove(existing);
                 svcStore.deletePolicy(policy);
             }
+        }
+    }
+
+    private void addCreatorAsAclAdmin(RangerGdsObjectACL acl) {
+        String                     currentUser = bizUtil.getCurrentUserLoginId();
+        Map<String, GdsPermission> userAcl     = acl.getUsers();
+
+        if (userAcl == null) {
+            userAcl = new HashMap<>();
+
+            acl.setUsers(userAcl);
+        }
+
+        if (acl.getUsers().get(currentUser) != GdsPermission.ADMIN) {
+            acl.getUsers().put(currentUser, GdsPermission.ADMIN);
         }
     }
 }
