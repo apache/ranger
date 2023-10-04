@@ -22,6 +22,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
@@ -62,21 +63,23 @@ public class RangerGdsValidator {
 
         GdsPermission permission = GdsPermission.NONE;
 
-		if (acl.getUsers() != null) {
+        if (acl.getUsers() != null) {
             permission = getHigherPrivilegePermission(permission, acl.getUsers().get(user));
-		}
+        }
 
-		if (acl.getGroups() != null) {
-			Set<String> groups = dataProvider.getGroupsForUser(user);
+        if (acl.getGroups() != null) {
+            permission = getHigherPrivilegePermission(permission, acl.getGroups().get(RangerConstants.GROUP_PUBLIC));
+
+            Set<String> groups = dataProvider.getGroupsForUser(user);
 
             if (CollectionUtils.isNotEmpty(groups)) {
                 for (String group : groups) {
                     permission = getHigherPrivilegePermission(permission, acl.getGroups().get(group));
                 }
             }
-		}
+        }
 
-		if (acl.getRoles() != null) {
+        if (acl.getRoles() != null) {
             Set<String> roles = dataProvider.getRolesForUser(user);
 
             if (CollectionUtils.isNotEmpty(roles)) {
@@ -84,9 +87,9 @@ public class RangerGdsValidator {
                     permission = getHigherPrivilegePermission(permission, acl.getRoles().get(role));
                 }
             }
-		}
+        }
 
-		return permission;
+        return permission;
     }
 
     public void validateCreate(RangerDataset dataset) {
@@ -564,13 +567,17 @@ public class RangerGdsValidator {
             }
 
             if (!ret && acl.getGroups() != null) {
-                Set<String> userGroups = dataProvider.getGroupsForUser(userName);
+                ret = isAllowed(acl.getGroups().get(RangerConstants.GROUP_PUBLIC), permission);
 
-                for (String userGroup : userGroups) {
-                    ret = isAllowed(acl.getGroups().get(userGroup), permission);
+                if(!ret) {
+                    Set<String> userGroups = dataProvider.getGroupsForUser(userName);
 
-                    if (ret) {
-                        break;
+                    for (String userGroup : userGroups) {
+                        ret = isAllowed(acl.getGroups().get(userGroup), permission);
+
+                        if (ret) {
+                            break;
+                        }
                     }
                 }
             }
@@ -648,14 +655,18 @@ public class RangerGdsValidator {
             }
 
             if (!isAdmin && MapUtils.isNotEmpty(acl.getGroups())) {
-                Set<String> userGroups = dataProvider.getGroupsForUser(userName);
+                isAdmin = isAllowed(acl.getGroups().get(RangerConstants.GROUP_PUBLIC), GdsPermission.ADMIN);
 
-                if (userGroups != null) {
-                    for (String userGroup : userGroups) {
-                        isAdmin = isAllowed(acl.getGroups().get(userGroup), GdsPermission.ADMIN);
+                if (!isAdmin) {
+                    Set<String> userGroups = dataProvider.getGroupsForUser(userName);
 
-                        if (isAdmin) {
-                            break;
+                    if (userGroups != null) {
+                        for (String userGroup : userGroups) {
+                            isAdmin = isAllowed(acl.getGroups().get(userGroup), GdsPermission.ADMIN);
+
+                            if (isAdmin) {
+                                break;
+                            }
                         }
                     }
                 }
