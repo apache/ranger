@@ -73,10 +73,7 @@ export const TopNavBar = (props) => {
     handleZoneChange,
     getZones,
     allZonesData
-    //zoneServicesData
   } = props;
-
-  //let localStorageZoneDetails = localStorage.getItem("zoneDetails");
 
   const serviceSelectCustomStyles = {
     option: (provided, state) => ({
@@ -216,9 +213,6 @@ export const TopNavBar = (props) => {
           styles={serviceSelectCustomStyles}
           className={`${policyLoader ? "not-allowed" : ""}`}
           isDisabled={policyLoader ? true : false}
-          /* options={getServices(
-            localStorageZoneDetails != null ? zoneServicesData : allServicesData
-          )} */
           options={getServices(allServicesData)}
           formatOptionLabel={formatOptionLabel}
           onChange={(e) => handleServiceChange(e)}

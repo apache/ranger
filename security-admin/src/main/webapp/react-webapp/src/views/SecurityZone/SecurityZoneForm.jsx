@@ -106,7 +106,7 @@ const SecurityZoneForm = () => {
     if (isEmpty(values.adminUsers) && isEmpty(values.adminUserGroups)) {
       errors.adminUserGroups = {
         required: true,
-        text: "Please provide atleast one audit user or group!"
+        text: "Please provide atleast one admin user or group!"
       };
       errors.adminUsers = {
         required: true,

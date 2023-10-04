@@ -182,6 +182,22 @@ public class PublicAPIsv2 {
         return ret;
     }
 
+	/**
+	 * Get {@link List} of security zone header info.
+	 * This API is authorized to every authenticated user.
+	 * @param serviceId
+	 * @param isTagService
+	 * @return {@link List} of {@link RangerSecurityZoneHeaderInfo} if present.
+	 */
+	@GET
+	@Path("/api/zones/zone-headers/for-service/{serviceId}")
+	@Produces({ "application/json" })
+	public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId( @PathParam("serviceId") Long serviceId
+			, @DefaultValue("false") @QueryParam("isTagService") Boolean isTagService
+	) {
+		return securityZoneRest.getSecurityZoneHeaderInfoListByServiceId(serviceId,isTagService);
+	}
+
     /**
      * Get service header info {@link List} for given zone.
      * This API is authorized to every authenticated user.

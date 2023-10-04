@@ -121,8 +121,7 @@ class ServiceDefinitions extends Component {
       loader: false
     });
     this.props.disableTabs(false);
-    this.state.selectedZone != "" &&
-      this.getSelectedZone(this.state.selectedZone);
+    this.getSelectedZone(this.state.selectedZone);
   };
 
   fetchServices = async () => {
@@ -250,8 +249,10 @@ class ServiceDefinitions extends Component {
   deleteService = async (sid) => {
     let localStorageZoneDetails = localStorage.getItem("zoneDetails");
     let zonesResp = [];
+
     try {
       this.setState({ blockUI: true });
+
       await fetchApi({
         url: `plugins/services/${sid}`,
         method: "delete"
@@ -268,17 +269,20 @@ class ServiceDefinitions extends Component {
         });
 
         if (isEmpty(zonesResp?.data)) {
-          localStorage.removeItem("zoneDetails");
           this.setState({
-            selectedZone: ""
+            zones: this.state.zones.filter(
+              (z) => z.id !== JSON.parse(localStorageZoneDetails)?.value
+            )
           });
         }
       }
+
       this.setState({
         services: this.state.services.filter((s) => s.id !== sid),
         filterServices: this.state.filterServices.filter((s) => s.id !== sid),
         blockUI: false
       });
+
       toast.success("Successfully deleted the service");
       this.props.navigate(this.props.location.pathname);
     } catch (error) {
@@ -299,11 +303,13 @@ class ServiceDefinitions extends Component {
       }
     };
   };
+
   formatOptionLabel = ({ label }) => (
     <div title={label} className="text-truncate">
       {label}
     </div>
   );
+
   render() {
     const {
       filterServiceDefs,

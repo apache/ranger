@@ -30,15 +30,22 @@ import {
   findIndex,
   isEmpty,
   includes,
-  difference
+  difference,
+  map
 } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
 export default function TagBasePermissionItem(props) {
   const serviceDefs = getServiceDef();
-  const { options, inputVal, formValues, serviceCompDetails, dataMaskIndex } =
-    props;
+  const {
+    options,
+    inputVal,
+    formValues,
+    serviceCompDetails,
+    dataMaskIndex,
+    attrName
+  } = props;
   const [showTagPermissionItem, tagPermissionItem] = useState(false);
 
   const msgStyles = {
@@ -133,39 +140,47 @@ export default function TagBasePermissionItem(props) {
         }));
       }
     } else {
-      let enableDenyAndExceptions = [];
-      let filterAccessOptions = [];
-      enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
-        (access) => {
-          if (
-            includes(
-              serviceDefs?.allServiceDefs
-                ?.map((servicedef) => {
-                  if (
-                    servicedef?.options?.enableDenyAndExceptionsInPolicies ==
-                    "false"
-                  ) {
-                    return servicedef.name;
-                  }
-                })
-                .filter(Boolean),
-              access.name.substr(0, access.name.indexOf(":"))
-            )
-          ) {
-            return access;
-          }
-        }
-      );
-      filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
-        let val = obj.name;
-        return val.substr(0, val.indexOf(":"));
-      });
-      return difference(keys(tagServicePerms), keys(filterAccessOptions))?.map(
-        (m) => ({
+      if (attrName === "policyItems") {
+        return map(keys(tagServicePerms), (m) => ({
           value: m,
           label: m.toUpperCase()
-        })
-      );
+        }));
+      } else {
+        let enableDenyAndExceptions = [];
+        let filterAccessOptions = [];
+        enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
+          (access) => {
+            if (
+              includes(
+                serviceDefs?.allServiceDefs
+                  ?.map((servicedef) => {
+                    if (
+                      servicedef?.options?.enableDenyAndExceptionsInPolicies ==
+                      "false"
+                    ) {
+                      return servicedef.name;
+                    }
+                  })
+                  .filter(Boolean),
+                access.name.substr(0, access.name.indexOf(":"))
+              )
+            ) {
+              return access;
+            }
+          }
+        );
+        filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
+          let val = obj.name;
+          return val.substr(0, val.indexOf(":"));
+        });
+        return difference(
+          keys(tagServicePerms),
+          keys(filterAccessOptions)
+        )?.map((m) => ({
+          value: m,
+          label: m.toUpperCase()
+        }));
+      }
     }
   };
 
