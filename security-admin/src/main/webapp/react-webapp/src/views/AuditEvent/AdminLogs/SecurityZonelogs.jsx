@@ -25,21 +25,57 @@ import { isEmpty } from "lodash";
 
 export const SecurityZonelogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;
-
-  const updateZoneDetails = reportdata.filter(
-    (zone) => zone.action == "update" && zone.attributeName !== "Zone Services"
-  );
-
-  const updateZoneServices = reportdata.filter(
-    (zone) => zone.action == "update" && zone.attributeName == "Zone Services"
-  );
-
   const createZoneDetails = (newvalue) => {
     return !isEmpty(newvalue.replace(/[[\]]/g, ""))
       ? newvalue.replace(/[[\]]/g, "")
       : "--";
   };
 
+  const zoneServiceData = (reportdata, action, attributeName) => {
+    return reportdata.filter(
+      (zone) => zone.action == action && zone.attributeName == attributeName
+    );
+  };
+  const createZoneServices = zoneServiceData(
+    reportdata,
+    "create",
+    "Zone Services"
+  );
+
+  const deleteZoneServices = zoneServiceData(
+    reportdata,
+    "delete",
+    "Zone Services"
+  );
+  const parseAndFilterData = (zones, zoneValues) => {
+    return zones.map(
+      (zone) => !isEmpty(zone[zoneValues]) && JSON.parse(zone[zoneValues])
+    );
+  };
+
+  const newZoneServiceData = parseAndFilterData(createZoneServices, "newValue");
+  const oldZoneServiceData = parseAndFilterData(
+    deleteZoneServices,
+    "previousValue"
+  );
+  const updateZoneDetails = reportdata.filter(
+    (zone) => zone.action == "update" && zone.attributeName != "Zone Services"
+  );
+
+  const updateZoneServices = zoneServiceData(
+    reportdata,
+    "update",
+    "Zone Services"
+  );
+
+  const updateZoneOldServices = parseAndFilterData(
+    updateZoneServices,
+    "previousValue"
+  );
+  const updateZoneNewServices = parseAndFilterData(
+    updateZoneServices,
+    "newValue"
+  );
   return (
     <div>
       {/* CREATE  */}
@@ -83,31 +119,31 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 })}
             </Table>
             <br />
-            <h5 className="bold wrap-header m-t-sm">Zone Service Details:</h5>
-            <Table className="table table-striped table-bordered w-75">
-              <thead className="thead-light">
-                <tr>
-                  <th>Service Name</th>
+            {!isEmpty(Object.keys(newZoneServiceData[0] || {})) && (
+              <>
+                <h5 className="bold wrap-header m-t-sm">
+                  Zone Service Details:
+                </h5>
+                <Table className="table table-striped table-bordered w-75">
+                  <thead className="thead-light">
+                    <tr>
+                      <th>Service Name</th>
 
-                  <th>Zone Service Resources</th>
-                </tr>
-              </thead>
+                      <th>Zone Service Resources</th>
+                    </tr>
+                  </thead>
 
-              {reportdata
-                .filter((obj) => obj.attributeName == "Zone Services")
-                .map((key) => {
-                  return (
-                    !isEmpty(key.newValue) &&
-                    Object.keys(JSON.parse(key.newValue)).map((c) => {
-                      return (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning align-middle">
-                              <strong> {c}</strong>
-                            </td>
-                            <td className="table-warning ">
+                  {Object.entries(newZoneServiceData[0])?.map(([key]) => {
+                    return (
+                      <tbody>
+                        <tr>
+                          <td className="table-warning align-middle">
+                            <strong> {key}</strong>
+                          </td>
+                          {!isEmpty(newZoneServiceData[0][key].resources) ? (
+                            <td className="table-warning">
                               {Object.values(
-                                JSON.parse(key.newValue)[c].resources
+                                newZoneServiceData[0][key].resources
                               ).map((resource) => (
                                 <div className="zone-resource">
                                   {Object.keys(resource).map((policy) => {
@@ -122,13 +158,16 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                                 </div>
                               ))}
                             </td>
-                          </tr>
-                        </tbody>
-                      );
-                    })
-                  );
-                })}
-            </Table>
+                          ) : (
+                            <td className="text-center table-warning">--</td>
+                          )}
+                        </tr>
+                      </tbody>
+                    );
+                  })}
+                </Table>
+              </>
+            )}
           </div>
         )}
 
@@ -136,188 +175,220 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
 
       {action == "update" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value && (
-          <div>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="font-weight-bolder">Name: {objectName}</div>
-                <div className="font-weight-bolder">
-                  Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                  India Standard Time
+          <>
+            <div>
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="font-weight-bolder">Name: {objectName}</div>
+                  <div className="font-weight-bolder">
+                    Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
+                    India Standard Time
+                  </div>
+                  <div className="font-weight-bolder">Updated By: {owner}</div>
                 </div>
-                <div className="font-weight-bolder">Updated By: {owner}</div>
+                <div className="col-md-6 text-right">
+                  <div className="bg-success legend"></div> {" Added "}
+                  <div className="bg-danger legend"></div> {" Deleted "}
+                </div>
               </div>
-              <div className="col-md-6 text-right">
-                <div className="bg-success legend"></div> {" Added "}
-                <div className="bg-danger legend"></div> {" Deleted "}
-              </div>
-            </div>
-            <br />
-            {action == "update" && !isEmpty(updateZoneDetails) && (
-              <>
-                <h5 className="bold wrap-header m-t-sm">Zone Details:</h5>
+              <br />
+              {action == "update" && !isEmpty(updateZoneDetails) && (
+                <>
+                  <h5 className="bold wrap-header m-t-sm">Zone Details:</h5>
 
-                <Table className="table  table-bordered table-striped  w-auto">
-                  <thead className="thead-light">
-                    <tr>
-                      <th>Fields</th>
-                      <th>Old Value</th>
-                      <th>New Value</th>
-                    </tr>
-                  </thead>
-                  {updateZoneDetails.map((obj) => (
-                    <tbody>
-                      <tr key={obj.id}>
-                        <td className="table-warning text-nowrap">
-                          {obj.attributeName}
-                        </td>
-
-                        <td className="table-warning text-nowrap">
-                          {!isEmpty(obj.previousValue.replace(/[[\]]/g, "")) ? (
-                            isEmpty(obj.newValue.replace(/[[\]]/g, "")) ? (
-                              <h6>
-                                <Badge
-                                  className="d-inline mr-1"
-                                  variant="danger"
-                                >
-                                  {obj.previousValue.replace(/[[\]]/g, "")}
-                                </Badge>
-                              </h6>
-                            ) : (
-                              obj.previousValue.replace(/[[\]]/g, "")
-                            )
-                          ) : (
-                            "--"
-                          )}
-                        </td>
-                        <td className="table-warning text-nowrap">
-                          {!isEmpty(obj.newValue.replace(/[[\]]/g, "")) ? (
-                            isEmpty(obj.previousValue.replace(/[[\]]/g, "")) ? (
-                              <h6>
-                                <Badge
-                                  className="d-inline mr-1"
-                                  variant="success"
-                                >
-                                  {obj.newValue.replace(/[[\]]/g, "")}
-                                </Badge>
-                              </h6>
-                            ) : (
-                              obj.newValue.replace(/[[\]]/g, "")
-                            )
-                          ) : (
-                            "--"
-                          )}
-                        </td>
+                  <Table className="table  table-bordered table-striped  w-auto">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Fields</th>
+                        <th>Old Value</th>
+                        <th>New Value</th>
                       </tr>
-                    </tbody>
-                  ))}
-                </Table>
-                <br />
-              </>
+                    </thead>
+                    {updateZoneDetails.map((obj) => (
+                      <tbody>
+                        <tr key={obj.id}>
+                          <td className="table-warning text-nowrap">
+                            {!isEmpty(obj.attributeName)
+                              ? obj.attributeName
+                              : "--"}
+                          </td>
+
+                          <td className="table-warning text-nowrap">
+                            {!isEmpty(
+                              obj.previousValue.replace(/[[\]]/g, "")
+                            ) ? (
+                              isEmpty(obj.newValue.replace(/[[\]]/g, "")) ? (
+                                <h6>
+                                  <Badge
+                                    className="d-inline mr-1"
+                                    variant="danger"
+                                  >
+                                    {obj.previousValue.replace(/[[\]]/g, "")}
+                                  </Badge>
+                                </h6>
+                              ) : (
+                                obj.previousValue.replace(/[[\]]/g, "")
+                              )
+                            ) : (
+                              "--"
+                            )}
+                          </td>
+                          <td className="table-warning text-nowrap">
+                            {!isEmpty(obj.newValue.replace(/[[\]]/g, "")) ? (
+                              isEmpty(
+                                obj.previousValue.replace(/[[\]]/g, "")
+                              ) ? (
+                                <h6>
+                                  <Badge
+                                    className="d-inline mr-1"
+                                    variant="success"
+                                  >
+                                    {obj.newValue.replace(/[[\]]/g, "")}
+                                  </Badge>
+                                </h6>
+                              ) : (
+                                obj.newValue.replace(/[[\]]/g, "")
+                              )
+                            ) : (
+                              "--"
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    ))}
+                  </Table>
+                  <br />
+                </>
+              )}
+            </div>
+            {(!isEmpty(Object.keys(updateZoneOldServices[0] || {})) ||
+              !isEmpty(Object.keys(updateZoneNewServices[0] || {}))) && (
+              <div className="row">
+                <div className="col">
+                  <h5 className="bold wrap-header m-t-sm">
+                    Old Zone Service Details:
+                  </h5>
+
+                  <Table className="table  table-bordered table-striped w-100">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Service Name</th>
+
+                        <th> Zone Service Resources</th>
+                      </tr>
+                    </thead>
+                    {!isEmpty(Object.keys(updateZoneOldServices[0] || {})) ? (
+                      Object.entries(updateZoneOldServices[0]).map(([key]) => {
+                        return (
+                          <tbody>
+                            <tr>
+                              <td className="old-value-bg">
+                                <strong> {key}</strong>
+                              </td>
+                              {!isEmpty(
+                                updateZoneOldServices[0][key].resources
+                              ) ? (
+                                <td className="old-value-bg">
+                                  {Object.values(
+                                    updateZoneOldServices[0][key].resources
+                                  ).map((resource) => (
+                                    <div className="zone-resource">
+                                      {Object.keys(resource).map((policy) => {
+                                        return (
+                                          <>
+                                            <strong>{`${policy} : `}</strong>
+                                            {resource[policy].join(", ")}
+                                            <br />
+                                          </>
+                                        );
+                                      })}
+                                    </div>
+                                  ))}
+                                </td>
+                              ) : (
+                                <td className="text-center old-value-bg">--</td>
+                              )}
+                            </tr>
+                          </tbody>
+                        );
+                      })
+                    ) : (
+                      <tbody>
+                        <tr>
+                          <td colSpan={2} className="text-center old-value-bg">
+                            --
+                          </td>
+                        </tr>
+                      </tbody>
+                    )}
+                  </Table>
+                </div>
+                <div className="col">
+                  <h5 className="bold wrap-header m-t-sm">
+                    New Zone Service Details:
+                  </h5>
+
+                  <Table className="table  table-bordered table-striped w-100">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Service Name </th>
+
+                        <th> Zone Service Resources</th>
+                      </tr>
+                    </thead>
+                    {!isEmpty(Object.keys(updateZoneNewServices[0] || {})) ? (
+                      Object.entries(updateZoneNewServices[0]).map(([key]) => {
+                        return (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning align-middle">
+                                <strong> {key}</strong>
+                              </td>
+                              {!isEmpty(
+                                updateZoneNewServices[0][key].resources
+                              ) ? (
+                                <td className="table-warning ">
+                                  {Object.values(
+                                    updateZoneNewServices[0][key].resources
+                                  ).map((resource) => (
+                                    <div className="zone-resource">
+                                      {Object.keys(resource).map((policy) => {
+                                        return (
+                                          <>
+                                            <strong>{`${policy} : `}</strong>
+                                            {resource[policy].join(", ")}
+                                            <br />
+                                          </>
+                                        );
+                                      })}
+                                    </div>
+                                  ))}
+                                </td>
+                              ) : (
+                                <td className="text-center table-warning">
+                                  --
+                                </td>
+                              )}
+                            </tr>
+                          </tbody>
+                        );
+                      })
+                    ) : (
+                      <tbody>
+                        <tr>
+                          <td colSpan={2} className="text-center table-warning">
+                            --
+                          </td>
+                        </tr>
+                      </tbody>
+                    )}
+                  </Table>
+                  <br />
+                </div>
+              </div>
             )}
-          </div>
+          </>
         )}
-
-      {action == "update" && !isEmpty(updateZoneServices) && (
-        <div className="row">
-          <div className="col">
-            <h5 className="bold wrap-header m-t-sm">
-              Old Zone Service Details:
-            </h5>
-
-            <Table className="table  table-bordered table-striped w-100">
-              <thead className="thead-light">
-                <tr>
-                  <th>Service Name</th>
-
-                  <th> Zone Service Resources</th>
-                </tr>
-              </thead>
-              {updateZoneServices.map((key) => {
-                return (
-                  !isEmpty(key.previousValue) &&
-                  Object.keys(JSON.parse(key.previousValue)).map((c) => {
-                    return (
-                      <tbody>
-                        <tr>
-                          <td className="old-value-bg">
-                            <strong> {c}</strong>
-                          </td>
-                          <td className="old-value-bg">
-                            {Object.values(
-                              JSON.parse(key.previousValue)[c].resources
-                            ).map((resource) => (
-                              <div className="zone-resource">
-                                {Object.keys(resource).map((policy) => {
-                                  return (
-                                    <>
-                                      <strong>{`${policy} : `}</strong>
-                                      {resource[policy].join(", ")}
-                                      <br />
-                                    </>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    );
-                  })
-                );
-              })}
-            </Table>
-          </div>
-          <div className="col">
-            <h5 className="bold wrap-header m-t-sm">
-              New Zone Service Details:
-            </h5>
-
-            <Table className="table  table-bordered table-striped w-100">
-              <thead className="thead-light">
-                <tr>
-                  <th>Service Name </th>
-
-                  <th> Zone Service Resources</th>
-                </tr>
-              </thead>
-              {updateZoneServices.map((key) => {
-                return (
-                  !isEmpty(key.newValue) &&
-                  Object.keys(JSON.parse(key.newValue)).map((c) => {
-                    return (
-                      <tbody>
-                        <tr>
-                          <td className="table-warning align-middle">
-                            <strong> {c}</strong>
-                          </td>
-                          <td className="table-warning ">
-                            {Object.values(
-                              JSON.parse(key.newValue)[c].resources
-                            ).map((resource) => (
-                              <div className="zone-resource">
-                                {Object.keys(resource).map((policy) => {
-                                  return (
-                                    <>
-                                      <strong>{`${policy} : `}</strong>
-                                      {resource[policy].join(", ")}
-                                      <br />
-                                    </>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    );
-                  })
-                );
-              })}
-            </Table>
-            <br />
-          </div>
-        </div>
-      )}
 
       {/* DELETE  */}
 
@@ -360,31 +431,31 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 })}
             </Table>
             <br />
-            <h5 className="bold wrap-header m-t-sm">Zone Service Details:</h5>
-            <Table className="table table-striped table-bordered w-75">
-              <thead className="thead-light">
-                <tr>
-                  <th>Service Name</th>
+            {!isEmpty(Object.keys(oldZoneServiceData[0] || {})) && (
+              <>
+                <h5 className="bold wrap-header m-t-sm">
+                  Zone Service Details:
+                </h5>
+                <Table className="table table-striped table-bordered w-75">
+                  <thead className="thead-light">
+                    <tr>
+                      <th>Service Name</th>
 
-                  <th>Zone Service Resources</th>
-                </tr>
-              </thead>
+                      <th>Zone Service Resources</th>
+                    </tr>
+                  </thead>
 
-              {reportdata
-                .filter((obj) => obj.attributeName == "Zone Services")
-                .map((key) => {
-                  return (
-                    !isEmpty(key.previousValue) &&
-                    Object.keys(JSON.parse(key.previousValue)).map((c) => {
-                      return (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning align-middle">
-                              <strong> {c}</strong>
-                            </td>
+                  {Object.entries(oldZoneServiceData[0]).map(([key]) => {
+                    return (
+                      <tbody>
+                        <tr>
+                          <td className="table-warning align-middle">
+                            <strong> {key}</strong>
+                          </td>
+                          {!isEmpty(oldZoneServiceData[0][key].resources) ? (
                             <td className="table-warning">
                               {Object.values(
-                                JSON.parse(key.previousValue)[c].resources
+                                oldZoneServiceData[0][key].resources
                               ).map((resource) => (
                                 <div className="zone-resource">
                                   {Object.keys(resource).map((policy) => {
@@ -399,13 +470,16 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                                 </div>
                               ))}
                             </td>
-                          </tr>
-                        </tbody>
-                      );
-                    })
-                  );
-                })}
-            </Table>
+                          ) : (
+                            <td className="text-center table-warning">--</td>
+                          )}
+                        </tr>
+                      </tbody>
+                    );
+                  })}
+                </Table>
+              </>
+            )}
           </div>
         )}
     </div>

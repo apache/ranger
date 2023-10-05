@@ -30,7 +30,7 @@ import {
   Modal
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { find } from "lodash";
+import { find, isEmpty } from "lodash";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 
 class ZoneDisplay extends Component {
@@ -104,7 +104,7 @@ class ZoneDisplay extends Component {
             {this.state.isAdminRole && (
               <div className="float-right d-flex align-items-start">
                 <Link
-                  className="btn btn-sm btn-outline-primary m-r-5 "
+                  className="btn btn-sm btn-outline-primary m-r-5"
                   title="Edit"
                   to={`/zones/edit/${this.props.zone.id}`}
                   data-id="editZone"
@@ -181,7 +181,7 @@ class ZoneDisplay extends Component {
                 <Accordion.Collapse eventKey="0">
                   <Card.Body className="p-0">
                     <Form className="border border-white shadow-none p-0">
-                      <Form.Group as={Row} className="mb-3 ">
+                      <Form.Group as={Row} className="mb-3">
                         <Form.Label className="text-right" column sm="3">
                           Admin Users
                         </Form.Label>
@@ -210,20 +210,18 @@ class ZoneDisplay extends Component {
                         </Form.Label>
                         <Col sm="9" className="pt-2">
                           {this.props?.zone?.adminUserGroups?.length > 0 ? (
-                            this.props?.zone?.adminUserGroups?.map(
-                              (obj, index) => {
-                                return (
-                                  <Badge
-                                    variant="secondary"
-                                    className="mr-1 more-less-width text-truncate"
-                                    key={obj}
-                                    title={obj}
-                                  >
-                                    {obj}
-                                  </Badge>
-                                );
-                              }
-                            )
+                            this.props?.zone?.adminUserGroups?.map((obj) => {
+                              return (
+                                <Badge
+                                  variant="secondary"
+                                  className="mr-1 more-less-width text-truncate"
+                                  key={obj}
+                                  title={obj}
+                                >
+                                  {obj}
+                                </Badge>
+                              );
+                            })
                           ) : (
                             <span className="mt-1">--</span>
                           )}
@@ -258,20 +256,18 @@ class ZoneDisplay extends Component {
                         </Form.Label>
                         <Col sm="9" className="pt-2">
                           {this.props?.zone?.auditUserGroups?.length > 0 ? (
-                            this.props?.zone?.auditUserGroups?.map(
-                              (obj, index) => {
-                                return (
-                                  <Badge
-                                    variant="secondary"
-                                    className="mr-1 more-less-width text-truncate"
-                                    key={obj}
-                                    title={obj}
-                                  >
-                                    {obj}
-                                  </Badge>
-                                );
-                              }
-                            )
+                            this.props?.zone?.auditUserGroups?.map((obj) => {
+                              return (
+                                <Badge
+                                  variant="secondary"
+                                  className="mr-1 more-less-width text-truncate"
+                                  key={obj}
+                                  title={obj}
+                                >
+                                  {obj}
+                                </Badge>
+                              );
+                            })
                           ) : (
                             <span className="mt-1">--</span>
                           )}
@@ -360,44 +356,70 @@ class ZoneDisplay extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {Object.keys(this.props?.zone?.services)?.map(
-                          (key, index) => {
-                            let servicetype = find(this.props.services, {
-                              name: key
-                            });
+                        {!isEmpty(this.props?.zone?.services) ? (
+                          Object.keys(this.props?.zone?.services)?.map(
+                            (key, index) => {
+                              let servicetype = find(this.props.services, {
+                                name: key
+                              });
 
-                            return (
-                              <tr className="bg-white" key={index}>
-                                <td className="align-middle" width="20%">
-                                  {key}
-                                </td>
-                                <td className="align-middle" width="20%">
-                                  {servicetype &&
-                                    servicetype.type.toUpperCase()}
-                                </td>
-                                <td
-                                  className="text-center"
-                                  width="32%"
-                                  height="55px"
-                                >
-                                  {this.props?.zone?.services[
-                                    key
-                                  ]?.resources?.map((resource, index) => (
-                                    <div className="resource-group" key={index}>
-                                      {Object.keys(resource)?.map(
-                                        (resourceKey, index) => (
-                                          <p key={index} className="text-break">
-                                            <strong>{`${resourceKey} : `}</strong>
-                                            {resource[resourceKey].join(", ")}
-                                          </p>
-                                        )
-                                      )}
-                                    </div>
-                                  ))}
-                                </td>
-                              </tr>
-                            );
-                          }
+                              return (
+                                <tr className="bg-white" key={index}>
+                                  <td className="align-middle" width="20%">
+                                    {key}
+                                  </td>
+                                  <td className="align-middle" width="20%">
+                                    {servicetype &&
+                                      servicetype.type.toUpperCase()}
+                                  </td>
+                                  <td
+                                    className="text-center"
+                                    width="32%"
+                                    height="55px"
+                                  >
+                                    {!isEmpty(
+                                      this.props?.zone?.services[key]?.resources
+                                    )
+                                      ? this.props?.zone?.services[
+                                          key
+                                        ]?.resources?.map((resource, index) => (
+                                          <div
+                                            className="resource-group"
+                                            key={index}
+                                          >
+                                            {Object.keys(resource)?.map(
+                                              (resourceKey, index) => (
+                                                <p
+                                                  key={index}
+                                                  className="text-break"
+                                                >
+                                                  <strong>{`${resourceKey} : `}</strong>
+                                                  {resource[resourceKey].join(
+                                                    ", "
+                                                  )}
+                                                </p>
+                                              )
+                                            )}
+                                          </div>
+                                        ))
+                                      : "--"}
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          )
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="3"
+                              className="text-center text-secondary bg-light"
+                            >
+                              <h6 className="text-muted large mt-2">
+                                No resource based services are associated with
+                                this zone
+                              </h6>
+                            </td>
+                          </tr>
                         )}
                       </tbody>
                     </Table>

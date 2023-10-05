@@ -124,14 +124,6 @@ const SecurityZoneForm = () => {
         text: ""
       };
     }
-
-    if (isEmpty(values.resourceServices)) {
-      errors.resourceServices = {
-        required: true,
-        text: "Required"
-      };
-    }
-
     return errors;
   };
 
@@ -325,33 +317,29 @@ const SecurityZoneForm = () => {
     }
 
     zoneData.services = {};
-
-    for (let key of Object.keys(values.tableList)) {
-      let serviceName = values.tableList[key].serviceName;
-      let resourcesName = values.tableList[key].resources;
-      zoneData.services[serviceName] = {};
-      zoneData.services[serviceName].resources = [];
-      resourcesName.map((obj) => {
-        let serviceResourceData = {};
-        pickBy(obj, (key, val) => {
-          if (
-            obj[`value-${key.level}`] &&
-            obj[`value-${key.level}`].length > 0
-          ) {
-            if (val.includes("resourceName")) {
-              serviceResourceData[key.name] = obj[`value-${key.level}`].map(
-                (value) => value.value
-              );
+    if (!isEmpty(Object.keys(values.tableList || {}))) {
+      for (let key of Object.keys(values.tableList)) {
+        let serviceName = values.tableList[key].serviceName;
+        let resourcesName = values.tableList[key].resources;
+        zoneData.services[serviceName] = {};
+        zoneData.services[serviceName].resources = [];
+        resourcesName.map((obj) => {
+          let serviceResourceData = {};
+          pickBy(obj, (key, val) => {
+            if (
+              obj[`value-${key.level}`] &&
+              obj[`value-${key.level}`].length > 0
+            ) {
+              if (val.includes("resourceName")) {
+                serviceResourceData[key.name] = obj[`value-${key.level}`].map(
+                  (value) => value.value
+                );
+              }
             }
-          }
-        });
-        return zoneData.services[serviceName].resources.push(
-          serviceResourceData
-        );
-      });
-      if (zoneData.services[serviceName].resources.length === 0) {
-        toast.error("Please add at least one resource for  service", {
-          toastId: "error1"
+          });
+          return zoneData.services[serviceName].resources.push(
+            serviceResourceData
+          );
         });
       }
     }
@@ -431,7 +419,7 @@ const SecurityZoneForm = () => {
     }
 
     zoneData.tableList = [];
-    for (let name of Object.keys(zone.services)) {
+    for (let name of Object.keys(zone.services || {})) {
       let tableValues = {};
 
       tableValues["serviceName"] = name;
@@ -450,33 +438,36 @@ const SecurityZoneForm = () => {
       }
 
       tableValues["resources"] = [];
-      zone.services[name].resources.map((obj) => {
-        let serviceResource = {};
-        let lastResourceLevel = [];
-        Object.entries(obj).map(([key, value]) => {
-          let setResources = find(filterServiceDef.resources, ["name", key]);
-          serviceResource[`resourceName-${setResources.level}`] = setResources;
-          serviceResource[`value-${setResources.level}`] = value.map((m) => {
-            return { label: m, value: m };
+      if (!isEmpty(zone.services[name].resources)) {
+        zone.services[name].resources?.map((obj) => {
+          let serviceResource = {};
+          let lastResourceLevel = [];
+          Object.entries(obj).map(([key, value]) => {
+            let setResources = find(filterServiceDef.resources, ["name", key]);
+            serviceResource[`resourceName-${setResources.level}`] =
+              setResources;
+            serviceResource[`value-${setResources.level}`] = value.map((m) => {
+              return { label: m, value: m };
+            });
+            lastResourceLevel.push({
+              level: setResources.level,
+              name: setResources.name
+            });
           });
-          lastResourceLevel.push({
-            level: setResources.level,
-            name: setResources.name
-          });
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(
+            sortBy(filterServiceDef.resources, "itemId"),
+            ["parent", lastResourceLevel.name]
+          );
+          if (setLastResources && setLastResources?.isValidLeaf) {
+            serviceResource[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
+          }
+          tableValues["resources"].push(serviceResource);
         });
-        lastResourceLevel = maxBy(lastResourceLevel, "level");
-        let setLastResources = find(
-          sortBy(filterServiceDef.resources, "itemId"),
-          ["parent", lastResourceLevel.name]
-        );
-        if (setLastResources && setLastResources?.isValidLeaf) {
-          serviceResource[`resourceName-${setLastResources.level}`] = {
-            label: "None",
-            value: "none"
-          };
-        }
-        tableValues["resources"].push(serviceResource);
-      });
+      }
 
       zoneData.tableList.push(tableValues);
     }
@@ -930,22 +921,16 @@ const SecurityZoneForm = () => {
                     />
                     <Field
                       name="resourceServices"
-                      render={({ input, meta }) => (
+                      render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
                             <label className="form-label pull-right">
-                              Select Resource Services *
+                              Select Resource Services
                             </label>
                           </Col>
                           <Col xs={6}>
                             <Select
                               {...input}
-                              styles={
-                                meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
-                              }
-                              id={meta.error && meta.touched ? "isError" : ""}
                               onChange={(values, e) =>
                                 resourceServicesOnChange(
                                   e,
@@ -965,11 +950,6 @@ const SecurityZoneForm = () => {
                               isSearchable={true}
                               placeholder="Select Service Name"
                             />
-                            {meta.error && meta.touched && (
-                              <span className="invalid-field">
-                                {meta.error.text}
-                              </span>
-                            )}
                           </Col>
                         </Row>
                       )}

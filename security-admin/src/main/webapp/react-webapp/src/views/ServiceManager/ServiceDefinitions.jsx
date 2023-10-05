@@ -18,7 +18,7 @@
  */
 
 import React, { Component } from "react";
-import { Button, Row } from "react-bootstrap";
+import { Button, Col, Row } from "react-bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { filter, map, sortBy, uniq, isEmpty } from "lodash";
@@ -37,6 +37,7 @@ import ImportPolicy from "./ImportPolicy";
 import { serverError } from "../../utils/XAUtils";
 import { BlockUi, Loader } from "../../components/CommonComponents";
 import { getServiceDef } from "../../utils/appState";
+import noServiceImage from "Images/no-service.svg";
 
 class ServiceDefinitions extends Component {
   constructor(props) {
@@ -454,28 +455,41 @@ class ServiceDefinitions extends Component {
           <Loader />
         ) : (
           <div className="wrap policy-manager">
-            <Row>
-              {filterServiceDefs?.map((serviceDef) => (
-                <ServiceDefinition
-                  key={serviceDef && serviceDef.id}
-                  serviceDefData={serviceDef}
-                  servicesData={sortBy(
-                    filterServices.filter(
-                      (service) => service.type === serviceDef.name
-                    ),
-                    "name"
-                  )}
-                  deleteService={this.deleteService}
-                  selectedZone={selectedZone}
-                  zones={zones}
-                  isAdminRole={isAdminRole}
-                  isUserRole={isUserRole}
-                  showBlockUI={this.showBlockUI}
-                  allServices={this.state.allServices}
-                ></ServiceDefinition>
-              ))}
-            </Row>
-
+            {!isEmpty(filterServiceDefs) ? (
+              <Row>
+                {filterServiceDefs?.map((serviceDef) => (
+                  <ServiceDefinition
+                    key={serviceDef && serviceDef.id}
+                    serviceDefData={serviceDef}
+                    servicesData={sortBy(
+                      filterServices.filter(
+                        (service) => service.type === serviceDef.name
+                      ),
+                      "name"
+                    )}
+                    deleteService={this.deleteService}
+                    selectedZone={selectedZone}
+                    zones={zones}
+                    isAdminRole={isAdminRole}
+                    isUserRole={isUserRole}
+                    showBlockUI={this.showBlockUI}
+                    allServices={this.state.allServices}
+                  ></ServiceDefinition>
+                ))}
+              </Row>
+            ) : (
+              <Row className="justify-content-md-center">
+                <Col md="auto">
+                  <div className="pt-5 pr-5">
+                    <img
+                      alt="No Services"
+                      className="w-50 p-3 d-block mx-auto"
+                      src={noServiceImage}
+                    />
+                  </div>
+                </Col>
+              </Row>
+            )}
             <BlockUi isUiBlock={this.state.blockUI} />
           </div>
         )}

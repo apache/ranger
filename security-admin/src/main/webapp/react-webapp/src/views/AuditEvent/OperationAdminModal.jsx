@@ -43,17 +43,20 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
   const rowModal = async () => {
     setLoader(true);
+    let authlogs = [];
+
     try {
       const authResp = await fetchApi({
         url: `assets/report/${transactionId}`
       });
-      let authlogs = authResp.data.vXTrxLogs;
-      setShowview(objectId);
-      setReportData(authlogs);
-      setLoader(false);
+      authlogs = authResp?.data?.vXTrxLogs || [];
     } catch (error) {
       console.error(`Error occurred while fetching Admin logs! ${error}`);
     }
+
+    setShowview(objectId);
+    setReportData(authlogs);
+    setLoader(false);
   };
 
   return (
