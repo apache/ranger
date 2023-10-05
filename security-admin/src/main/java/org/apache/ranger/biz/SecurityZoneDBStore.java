@@ -19,6 +19,7 @@ package org.apache.ranger.biz;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,17 +27,25 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
+import org.apache.ranger.plugin.model.RangerSecurityZone.ZoneServiceSummary;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -70,6 +79,9 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     RangerBizUtil bizUtil;
 
     AbstractPredicateUtil predicateUtil = null;
+
+    @Autowired
+    ServiceMgr serviceMgr;
 
     public void init() throws Exception {}
 
@@ -251,5 +263,96 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
         }
         return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId,isTagService);
+    }
+
+    public PList<SecurityZoneSummary> getZonesSummary(SearchFilter filter) throws Exception {
+        int maxRows    = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
+        List<RangerSecurityZone>  securityZones = getSecurityZones(filter);
+        List<SecurityZoneSummary> summaryList   = new ArrayList<>();
+
+        for (RangerSecurityZone securityZone : securityZones) {
+            if (serviceMgr.isZoneAdmin(securityZone.getName()) || serviceMgr.isZoneAuditor(securityZone.getName())) {
+                summaryList.add(toSecurityZoneSummary(securityZone));
+            }
+        }
+
+        List<SecurityZoneSummary>  paginatedList;
+
+        if (summaryList.size() > startIndex) {
+            int endIndex = Math.min((startIndex + maxRows), summaryList.size());
+
+            paginatedList = summaryList.subList(startIndex, endIndex);
+        } else {
+            paginatedList = Collections.emptyList();
+        }
+
+        PList<SecurityZoneSummary> ret = new PList<>(paginatedList, startIndex, maxRows, summaryList.size(), paginatedList.size(), filter.getSortType(), filter.getSortBy());
+
+        return ret;
+    }
+
+    private SecurityZoneSummary toSecurityZoneSummary(RangerSecurityZone securityZone) {
+        SecurityZoneSummary ret = new SecurityZoneSummary();
+
+        ret.setId(securityZone.getId());
+        ret.setName(securityZone.getName());
+        ret.setDescription(securityZone.getDescription());
+        ret.setGuid(securityZone.getGuid());
+        ret.setCreateTime(securityZone.getCreateTime());
+        ret.setUpdateTime(securityZone.getUpdateTime());
+        ret.setCreatedBy(securityZone.getCreatedBy());
+        ret.setUpdatedBy(securityZone.getUpdatedBy());
+        ret.setVersion(ret.getVersion());
+        ret.setIsEnabled(securityZone.getIsEnabled());
+        ret.setTagServices(securityZone.getTagServices());
+
+        Map<PrincipalType, Integer> adminCount   = new HashMap<>();
+        Map<PrincipalType, Integer> auditorCount = new HashMap<>();
+
+        adminCount.put(PrincipalType.USER, securityZone.getAdminUsers().size());
+        adminCount.put(PrincipalType.GROUP, securityZone.getAdminUserGroups().size());
+        adminCount.put(PrincipalType.ROLE, securityZone.getAdminRoles().size());
+
+        auditorCount.put(PrincipalType.USER, securityZone.getAuditUsers().size());
+        auditorCount.put(PrincipalType.GROUP, securityZone.getAuditUserGroups().size());
+        auditorCount.put(PrincipalType.ROLE, securityZone.getAuditRoles().size());
+
+        ret.setAdminCount(adminCount);
+        ret.setAuditorCount(auditorCount);
+
+        List<ZoneServiceSummary> services = getSecurityZoneServiceSummary(securityZone);
+
+        ret.setServices(services);
+        ret.setTotalResourceCount(services.stream().mapToLong(ZoneServiceSummary::getResourceCount).sum());
+
+        return ret;
+    }
+
+    private List<ZoneServiceSummary> getSecurityZoneServiceSummary(RangerSecurityZone securityZone) {
+        List<ZoneServiceSummary> ret = new ArrayList<>();
+
+        if(MapUtils.isNotEmpty(securityZone.getServices())) {
+            for(Map.Entry<String, RangerSecurityZoneService> entry : securityZone.getServices().entrySet()) {
+                String                    serviceName = entry.getKey();
+                RangerSecurityZoneService zoneService = entry.getValue();
+                XXService                 xService    = daoMgr.getXXService().findByName(serviceName);
+                XXServiceDef              serviceDef  = daoMgr.getXXServiceDef().getById(xService.getType());
+                ZoneServiceSummary        summary     = new ZoneServiceSummary();
+
+                summary.setId(xService.getId());
+                summary.setName(serviceName);
+                summary.setType(serviceDef.getName());
+                summary.setResourceCount((long)zoneService.getResources().size());
+
+                ret.add(summary);
+            }
+        }
+
+        return ret;
     }
 }

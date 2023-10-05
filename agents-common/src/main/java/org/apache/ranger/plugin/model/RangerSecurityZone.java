@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -204,6 +206,118 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
             sb.append("]}");
 
             return sb.toString();
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown=true)
+    public static class SecurityZoneSummary extends RangerBaseModelObject implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String                      name;
+        private String                      description;
+        private Long                        totalResourceCount;
+        private Map<PrincipalType, Integer> adminCount;
+        private Map<PrincipalType, Integer> auditorCount;
+        private List<String>                tagServices;
+        private List<ZoneServiceSummary>    services;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public Long getTotalResourceCount() {
+            return totalResourceCount;
+        }
+
+        public void setTotalResourceCount(Long totalResourceCount) {
+            this.totalResourceCount = totalResourceCount;
+        }
+
+        public Map<PrincipalType, Integer> getAdminCount() {
+            return adminCount;
+        }
+
+        public void setAdminCount(Map<PrincipalType, Integer> adminCount) {
+            this.adminCount = adminCount;
+        }
+
+        public Map<PrincipalType, Integer> getAuditorCount() {
+            return auditorCount;
+        }
+
+        public void setAuditorCount(Map<PrincipalType, Integer> auditorCount) {
+            this.auditorCount = auditorCount;
+        }
+
+        public List<String> getTagServices() {
+            return tagServices;
+        }
+
+        public void setTagServices(List<String> tagServices) {
+            this.tagServices = tagServices;
+        }
+
+        public List<ZoneServiceSummary> getServices() {
+            return services;
+        }
+
+        public void setServices(List<ZoneServiceSummary> services) {
+            this.services = services;
+        }
+    }
+
+    public static class ZoneServiceSummary implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private Long   id;
+        private String name;
+        private String type;
+        private Long   resourceCount;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public Long getResourceCount() {
+            return resourceCount;
+        }
+
+        public void setResourceCount(Long resourceCount) {
+            this.resourceCount = resourceCount;
         }
     }
 }
