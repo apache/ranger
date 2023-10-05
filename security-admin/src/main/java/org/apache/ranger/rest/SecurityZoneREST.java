@@ -62,6 +62,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
+import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.store.PList;
@@ -110,10 +111,10 @@ public class SecurityZoneREST {
 
     @Autowired
     RangerValidatorFactory validatorFactory;
-    
+
     @Autowired
     RangerBizUtil bizUtil;
-    
+
 	@Autowired
 	ServiceREST serviceRest;
 
@@ -416,6 +417,36 @@ public class SecurityZoneREST {
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId():" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/summary")
+    @Produces({ "application/json" })
+    public PList<SecurityZoneSummary> getZonesSummary(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getZonesSummary()");
+        }
+
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        PList<SecurityZoneSummary>   ret    = null;
+        SearchFilter                 filter = searchUtil.getSearchFilter(request, securityZoneService.sortFields);
+        try {
+            ret = securityZoneStore.getZonesSummary(filter);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getZonesSummary() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getZonesSummary():" + ret);
         }
         return ret;
     }
