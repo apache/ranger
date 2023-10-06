@@ -4404,11 +4404,12 @@ public class ServiceREST {
 				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
 
 				RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
-				LOG.info("Successfully retrieved service:[" + linkedService.getName() + "]");
 
 				if (linkedService == null) {
 					LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]: " + linkedServiceName + " not found");
 				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(linkedServiceType)) {
+					LOG.info("Successfully retrieved service:[" + linkedService.getName() + "]");
+
 					if (!StringUtils.equals(linkedService.getName(), resourceService.getTagService())) {
 						resourceService.setTagService(linkedService.getName());
 
