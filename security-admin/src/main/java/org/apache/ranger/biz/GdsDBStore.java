@@ -221,8 +221,8 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteDataset(Long datasetId) throws Exception {
-        LOG.debug("==> deleteDataset({})", datasetId);
+    public void deleteDataset(Long datasetId, boolean forceDelete) throws Exception {
+        LOG.debug("==> deleteDataset({}, {})", datasetId, forceDelete);
 
         RangerDataset existing = null;
 
@@ -235,6 +235,11 @@ public class GdsDBStore extends AbstractGdsStore {
         validator.validateDelete(datasetId, existing);
 
         if (existing != null) {
+            if (forceDelete) {
+                removeDSHIDForDataset(datasetId);
+                removeDIPForDataset(datasetId);
+            }
+
             deleteDatasetPolicies(existing);
             datasetService.delete(existing);
 
@@ -243,7 +248,7 @@ public class GdsDBStore extends AbstractGdsStore {
             updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
         }
 
-        LOG.debug("<== deleteDataset({})", datasetId);
+        LOG.debug("<== deleteDataset({}, {})", datasetId, forceDelete);
     }
 
     @Override
@@ -1434,6 +1439,36 @@ public class GdsDBStore extends AbstractGdsStore {
 
                 daoMgr.getXXGdsProjectPolicyMap().remove(existing);
                 svcStore.deletePolicy(policy);
+            }
+        }
+    }
+
+    private void removeDIPForDataset(Long datasetId) {
+        XXGdsDatasetInProjectDao    dipDao    = daoMgr.getXXGdsDatasetInProject();
+        List<XXGdsDatasetInProject> dshidList = dipDao.findByDatasetId(datasetId);
+
+        for (XXGdsDatasetInProject dip : dshidList) {
+            boolean dipDeleted = dipDao.remove(dip.getId());
+
+            if (!dipDeleted) {
+                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted",
+                                                        MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null,
+                                                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+    private void removeDSHIDForDataset(Long datasetId) {
+        XXGdsDataShareInDatasetDao    dshidDao  = daoMgr.getXXGdsDataShareInDataset();
+        List<XXGdsDataShareInDataset> dshidList = dshidDao.findByDatasetId(datasetId);
+
+        for (XXGdsDataShareInDataset dshid : dshidList) {
+            boolean dshidDeleted = dshidDao.remove(dshid.getId());
+
+            if (!dshidDeleted) {
+                throw restErrorUtil.createRESTException("DataShareInDataset could not be deleted",
+                                                        MessageEnums.ERROR_DELETE_OBJECT, dshid.getId(), "DataShareInDataset", null,
+                                                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
             }
         }
     }

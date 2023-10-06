@@ -36,7 +36,7 @@ public abstract class AbstractGdsStore implements GdsStore {
     public RangerDataset updateDataset(RangerDataset dataset) throws Exception { return null; }
 
     @Override
-    public void deleteDataset(Long datasetId) throws Exception { }
+    public void deleteDataset(Long datasetId, boolean forceDelete) throws Exception { }
 
     @Override
     public RangerDataset getDataset(Long datasetId) throws Exception { return null; }

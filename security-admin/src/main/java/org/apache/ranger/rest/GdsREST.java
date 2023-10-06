@@ -161,7 +161,7 @@ public class GdsREST {
     @DELETE
     @Path("/dataset/{id}")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_DATASET + "\")")
-    public void deleteDataset(@PathParam("id") Long datasetId) {
+    public void deleteDataset(@PathParam("id") Long datasetId, @Context HttpServletRequest request) {
         LOG.debug("==> deleteDataset({})", datasetId);
 
         RangerPerfTracer perf = null;
@@ -171,7 +171,9 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.deleteDataset(datasetId=" + datasetId + ")");
             }
 
-            gdsStore.deleteDataset(datasetId);
+            boolean forceDelete = Boolean.parseBoolean(request.getParameter("forceDelete"));
+
+            gdsStore.deleteDataset(datasetId, forceDelete);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {

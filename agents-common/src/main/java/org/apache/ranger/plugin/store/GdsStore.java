@@ -39,7 +39,7 @@ public interface GdsStore {
 
     RangerDataset updateDataset(RangerDataset dataset) throws Exception;
 
-    void deleteDataset(Long datasetId) throws Exception;
+    void deleteDataset(Long datasetId, boolean forceDelete) throws Exception;
 
     RangerDataset getDataset(Long datasetId) throws Exception;
 
