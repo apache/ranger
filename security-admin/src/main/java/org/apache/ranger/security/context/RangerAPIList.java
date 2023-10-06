@@ -216,7 +216,7 @@ public class RangerAPIList {
 	/**
 	 * List of APIs for DataShareREST
 	 */
-	public static final String GET_DATASETS_HEADER = "GdsREST.getDatasetHeaderInfo";
+	public static final String GET_DATASET_SUMMARY = "GdsREST.getDatasetSummary";
 	public static final String CREATE_DATASET      = "GdsREST.createDataset";
 	public static final String UPDATE_DATASET      = "GdsREST.updateDataset";
 	public static final String DELETE_DATASET      = "GdsREST.deleteDataset";

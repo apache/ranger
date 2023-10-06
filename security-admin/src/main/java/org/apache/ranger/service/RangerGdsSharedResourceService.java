@@ -159,7 +159,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
             msgList.add(MessageEnums.NO_INPUT_DATA.getMessage(null, "dataShareId"));
         }
 
-        if (!Objects.equals(vObj.getDataShareId(), xDataShare.getId())) {
+        if ((xDataShare != null) && !Objects.equals(vObj.getDataShareId(), xDataShare.getId())) {
             msgList = getOrCreateMessageList(msgList);
 
             msgList.add(MessageEnums.NO_INPUT_DATA.getMessage(null, "dataShareId"));
@@ -251,16 +251,16 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         return ret;
     }
 
-    public Long getResourceCountInDataset(long datasetId) {
-        LOG.debug("==> getResourceCountInDataset({})", datasetId);
+    public Long getResourceCountForDataShare(long dataShareId) {
+        LOG.debug("==> getResourceCountForDataShare({})", dataShareId);
 
         SearchFilter filter = new SearchFilter();
 
-        filter.setParam(SearchFilter.DATASET_ID, String.valueOf(datasetId));
+        filter.setParam(SearchFilter.DATA_SHARE_ID, String.valueOf(dataShareId));
 
         Long ret = super.getCountForSearchQuery(filter, searchFields);
 
-        LOG.debug("<== getResourceCountInDataset({}): ret={}", datasetId, ret);
+        LOG.debug("<== getResourceCountForDataShare({}): ret={}", dataShareId, ret);
 
         return ret;
     }

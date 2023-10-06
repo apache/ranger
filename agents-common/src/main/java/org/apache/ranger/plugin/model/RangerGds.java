@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.model;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -474,6 +475,200 @@ public class RangerGds {
             sb.append("users={").append(users).append("} ")
               .append("groups={").append(groups).append("} ")
               .append("roles={").append(roles).append("} ")
+              .append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DatasetSummary extends RangerBaseModelObject implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String                          name;
+        private GdsPermission                   permissionForCaller;
+        private Map<PrincipalType, Long>        principalsCount;
+        private Long                            projectsCount;
+        private Long                            totalResourceCount;
+        private List<DataShareInDatasetSummary> dataShares;
+
+        public DatasetSummary() {
+            super();
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public GdsPermission getPermissionForCaller() {
+            return permissionForCaller;
+        }
+
+        public void setPermissionForCaller(GdsPermission permissionForCaller) {
+            this.permissionForCaller = permissionForCaller;
+        }
+
+        public Map<PrincipalType, Long> getPrincipalsCount() {
+            return principalsCount;
+        }
+
+        public void setPrincipalsCount(Map<PrincipalType, Long> principalsCount) {
+            this.principalsCount = principalsCount;
+        }
+
+        public Long getProjectsCount() {
+            return projectsCount;
+        }
+
+        public void setProjectsCount(Long projectsCount) {
+            this.projectsCount = projectsCount;
+        }
+
+        public Long getTotalResourceCount() {
+            return totalResourceCount;
+        }
+
+        public void setTotalResourceCount(Long totalResourceCount) {
+            this.totalResourceCount = totalResourceCount;
+        }
+
+        public List<DataShareInDatasetSummary> getDataShares() {
+            return dataShares;
+        }
+
+        public void setDataShares(List<DataShareInDatasetSummary> dataShares) {
+            this.dataShares = dataShares;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("DatasetSummary={");
+
+            super.toString(sb);
+
+            sb.append("name={").append(name).append("} ")
+              .append("permissionForCaller={").append(permissionForCaller).append("} ")
+              .append("principalsCount={").append(principalsCount).append("} ")
+              .append("projectsCount={").append(projectsCount).append("} ")
+              .append("totalResourceCount={").append(totalResourceCount).append("} ")
+              .append("dataShares={").append(dataShares).append("} ")
+              .append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DataShareInDatasetSummary extends RangerBaseModelObject implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String         name;
+        private Long           serviceId;
+        private String         serviceName;
+        private Long           zoneId;
+        private String         zoneName;
+        private Long           resourceCount;
+        private GdsShareStatus shareStatus;
+        private String         approver;
+
+        public DataShareInDatasetSummary() {
+            super();
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Long getServiceId() {
+            return serviceId;
+        }
+
+        public void setServiceId(Long serviceId) {
+            this.serviceId = serviceId;
+        }
+
+        public String getServiceName() {
+            return serviceName;
+        }
+
+        public void setServiceName(String serviceName) {
+            this.serviceName = serviceName;
+        }
+
+        public Long getZoneId() {
+            return zoneId;
+        }
+
+        public void setZoneId(Long zoneId) {
+            this.zoneId = zoneId;
+        }
+
+        public String getZoneName() {
+            return zoneName;
+        }
+
+        public void setZoneName(String zoneName) {
+            this.zoneName = zoneName;
+        }
+
+        public Long getResourceCount() {
+            return resourceCount;
+        }
+
+        public void setResourceCount(Long resourceCount) {
+            this.resourceCount = resourceCount;
+        }
+
+        public GdsShareStatus getShareStatus() {
+            return shareStatus;
+        }
+
+        public void setShareStatus(GdsShareStatus shareStatus) {
+            this.shareStatus = shareStatus;
+        }
+
+        public String getApprover() {
+            return approver;
+        }
+
+        public void setApprover(String approver) {
+            this.approver = approver;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("DatasetSummary={");
+
+            super.toString(sb);
+
+            sb.append("name={").append(name).append("} ")
+              .append("serviceId={").append(serviceId).append("} ")
+              .append("serviceName={").append(serviceName).append("} ")
+              .append("zoneId={").append(zoneId).append("} ")
+              .append("zoneName={").append(zoneName).append("} ")
+              .append("resourceCount={").append(resourceCount).append("} ")
+              .append("shareStatus={").append(shareStatus).append("} ")
+              .append("approver={").append(approver).append("} ")
               .append("}");
 
             return sb;

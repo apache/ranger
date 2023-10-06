@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.plugin.model.RangerDatasetHeader.RangerDatasetHeaderInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
@@ -31,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -289,27 +289,27 @@ public class GdsREST {
     }
 
     @GET
-    @Path("/dataset/info")
+    @Path("/dataset/summary")
     @Produces({ "application/json" })
-    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASETS_HEADER + "\")")
-    public PList<RangerDatasetHeaderInfo> getDatasetHeaderInfo(@Context HttpServletRequest request) {
-        LOG.debug("==> GdsREST.getDatasetHeaderInfo()");
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASET_SUMMARY + "\")")
+    public PList<DatasetSummary> getDatasetSummary(@Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getDatasetSummary()");
 
-        PList<RangerDatasetHeaderInfo> ret;
+        PList<DatasetSummary> ret;
 
         try {
             SearchFilter filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
-            ret = gdsStore.getDatasetHeaders(filter);
-        } catch (WebApplicationException excp) {
-            throw excp;
+            ret = gdsStore.getDatasetSummary(filter);
+        } catch (WebApplicationException we) {
+            throw we;
         } catch (Throwable ex) {
-            LOG.error("getDatasets() failed", ex);
+            LOG.error("getDatasetSummary() failed", ex);
 
             throw restErrorUtil.createRESTException(ex.getMessage());
         }
 
-        LOG.debug("<== GdsREST.getDatasetHeaderInfo(): {}", ret);
+        LOG.debug("<== GdsREST.getDatasetSummary(): {}", ret);
 
         return ret;
     }
