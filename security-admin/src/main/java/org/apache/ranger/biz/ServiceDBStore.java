@@ -6081,8 +6081,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	/**
 	 * Removes given service from security zones.
-	 * And if given service is the only service
-	 * associated with security zone, remove zone.
 	 * @param service
 	 * @throws Exception
 	 */
@@ -6099,9 +6097,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					securityZone.setServices(zoneServices);
 					securityZoneStore.updateSecurityZoneById(securityZone);
 
-					if (zoneServices.isEmpty()) {
-						securityZoneStore.deleteSecurityZoneByName(zoneName);
-					}
 				}
 			}
 		}
