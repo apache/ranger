@@ -56,42 +56,6 @@ public class RangerGdsValidator {
         this.dataProvider = dataProvider;
     }
 
-    public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
-        if (dataProvider.isAdminUser()) {
-            return GdsPermission.ADMIN;
-        }
-
-        GdsPermission permission = GdsPermission.NONE;
-
-        if (acl.getUsers() != null) {
-            permission = getHigherPrivilegePermission(permission, acl.getUsers().get(user));
-        }
-
-        if (acl.getGroups() != null) {
-            permission = getHigherPrivilegePermission(permission, acl.getGroups().get(RangerConstants.GROUP_PUBLIC));
-
-            Set<String> groups = dataProvider.getGroupsForUser(user);
-
-            if (CollectionUtils.isNotEmpty(groups)) {
-                for (String group : groups) {
-                    permission = getHigherPrivilegePermission(permission, acl.getGroups().get(group));
-                }
-            }
-        }
-
-        if (acl.getRoles() != null) {
-            Set<String> roles = dataProvider.getRolesForUser(user);
-
-            if (CollectionUtils.isNotEmpty(roles)) {
-                for (String role : roles) {
-                    permission = getHigherPrivilegePermission(permission, acl.getRoles().get(role));
-                }
-            }
-        }
-
-        return permission;
-    }
-
     public void validateCreate(RangerDataset dataset) {
         LOG.debug("==> validateCreate(dataset={})", dataset);
 
@@ -119,10 +83,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_NAME_NOT_FOUND, "name", dataset.getName()));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", existing.getName(), existing.getAcl(), result);
-            }
-
+            validateDatasetAdmin(existing, result);
             validateAcl(dataset.getAcl(), "acl", result);
         }
 
@@ -141,9 +102,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "id", datasetId));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", existing.getName(), existing.getAcl(), result);
-            }
+            validateDatasetAdmin(existing, result);
         }
 
         if (!result.isSuccess()) {
@@ -180,10 +139,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_NAME_NOT_FOUND, "name", project.getName()));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "project", existing.getName(), existing.getAcl(), result);
-            }
-
+            validateProjectAdmin(existing, result);
             validateAcl(project.getAcl(), "acl", result);
         }
 
@@ -202,9 +158,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "id", projectId));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "project", existing.getName(), existing.getAcl(), result);
-            }
+            validateProjectAdmin(existing, result);
         }
 
         if (!result.isSuccess()) {
@@ -245,10 +199,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NAME_NOT_FOUND, "name", dataShare.getName()));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", existing.getName(), existing.getAcl(), result);
-            }
-
+            validateDataShareAdmin(existing, result);
             validateAcl(dataShare.getAcl(), "acl", result);
             validateAccessTypes(dataShare.getService(), "defaultAccessTypes", dataShare.getDefaultAccessTypes(), result);
             validateMaskTypes(dataShare.getService(), "defaultMasks", dataShare.getDefaultMasks(), result);
@@ -269,9 +220,7 @@ public class RangerGdsValidator {
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "id", dataShareId));
         } else {
-            if (!dataProvider.isAdminUser()) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", existing.getName(), existing.getAcl(), result);
-            }
+            validateDataShareAdmin(existing, result);
         }
 
         if (!result.isSuccess()) {
@@ -295,9 +244,7 @@ public class RangerGdsValidator {
             if (existing != null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT, "name", resource.getName(), dataShare.getName(), existing));
             } else {
-                if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
-                }
+                validateDataShareAdmin(dataShare, result);
             }
         }
 
@@ -321,9 +268,7 @@ public class RangerGdsValidator {
             if (dataShare == null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", resource.getDataShareId()));
             } else {
-                if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
-                }
+                validateDataShareAdmin(dataShare, result);
             }
         }
 
@@ -347,9 +292,7 @@ public class RangerGdsValidator {
             if (dataShare == null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", existing.getDataShareId()));
             } else {
-                if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
-                }
+                validateDataShareAdmin(dataShare, result);
             }
         }
 
@@ -556,6 +499,42 @@ public class RangerGdsValidator {
         LOG.debug("<== validateDelete(dsInProjectId={}, existing={})", dsInProjectId, existing);
     }
 
+    public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
+        if (dataProvider.isAdminUser()) {
+            return GdsPermission.ADMIN;
+        }
+
+        GdsPermission permission = GdsPermission.NONE;
+
+        if (acl.getUsers() != null) {
+            permission = getHigherPrivilegePermission(permission, acl.getUsers().get(user));
+        }
+
+        if (acl.getGroups() != null) {
+            permission = getHigherPrivilegePermission(permission, acl.getGroups().get(RangerConstants.GROUP_PUBLIC));
+
+            Set<String> groups = dataProvider.getGroupsForUser(user);
+
+            if (CollectionUtils.isNotEmpty(groups)) {
+                for (String group : groups) {
+                    permission = getHigherPrivilegePermission(permission, acl.getGroups().get(group));
+                }
+            }
+        }
+
+        if (acl.getRoles() != null) {
+            Set<String> roles = dataProvider.getRolesForUser(user);
+
+            if (CollectionUtils.isNotEmpty(roles)) {
+                for (String role : roles) {
+                    permission = getHigherPrivilegePermission(permission, acl.getRoles().get(role));
+                }
+            }
+        }
+
+        return permission;
+    }
+
     public boolean hasPermission(RangerGdsObjectACL acl, GdsPermission permission) {
         boolean ret = dataProvider.isAdminUser();
 
@@ -598,6 +577,24 @@ public class RangerGdsValidator {
         }
 
         return ret;
+    }
+
+    private void validateDatasetAdmin(RangerDataset dataset, ValidationResult result) {
+        if (!dataProvider.isAdminUser()) {
+            validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+        }
+    }
+
+    private void validateProjectAdmin(RangerProject project, ValidationResult result) {
+        if (!dataProvider.isAdminUser()) {
+            validateAdmin(dataProvider.getCurrentUserLoginId(), "project", project.getName(), project.getAcl(), result);
+        }
+    }
+
+    private void validateDataShareAdmin(RangerDataShare dataShare, ValidationResult result) {
+        if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
+            validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+        }
     }
 
     private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {

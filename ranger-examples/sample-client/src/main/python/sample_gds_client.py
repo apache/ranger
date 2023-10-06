@@ -109,7 +109,7 @@ hdfs_resource_1 = gds.add_shared_resource(hdfs_resource_1)
 print(f'  created shared resource: {hdfs_resource_1}')
 
 
-dshid_1 = RangerDataShareInDataset({ 'dataShareId': hive_share_1.id, 'datasetId': dataset_1.id, 'status': GdsShareStatus.GRANTED, 'validitySchedule': { 'startTime': '2023/01/01', 'endTime': '2023/04/01' } })
+dshid_1 = RangerDataShareInDataset({ 'dataShareId': hive_share_1.id, 'datasetId': dataset_1.id, 'status': GdsShareStatus.REQUESTED, 'validitySchedule': { 'startTime': '2023/01/01', 'endTime': '2023/04/01' } })
 dshid_2 = RangerDataShareInDataset({ 'dataShareId': hdfs_share_1.id, 'datasetId': dataset_2.id, 'status': GdsShareStatus.REQUESTED })
 
 print(f'Adding data_share_in_dataset: ')
@@ -119,6 +119,11 @@ print(f'  created data_share_in_dataset: {dshid_1}')
 print(f'Adding data_share_in_dataset: ')
 dshid_2 = gds.add_data_share_in_dataset(dshid_2)
 print(f'  created data_share_in_dataset: {dshid_2}')
+
+print(f'Updating data_share_in_dataset: id={dshid_1.id}')
+dshid_1.status = GdsShareStatus.GRANTED
+dshid_1 = gds.update_data_share_in_dataset(dshid_1.id, dshid_1)
+print(f'  updated data_share_in_dataset: {dshid_1}')
 
 print(f'Updating data_share_in_dataset: id={dshid_1.id}')
 dshid_1.status = GdsShareStatus.ACTIVE

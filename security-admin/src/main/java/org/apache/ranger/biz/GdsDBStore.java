@@ -169,7 +169,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataset createDataset(RangerDataset dataset) throws Exception {
+    public RangerDataset createDataset(RangerDataset dataset) {
         LOG.debug("==> createDataset({})", dataset);
 
         validator.validateCreate(dataset);
@@ -196,7 +196,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataset updateDataset(RangerDataset dataset) throws Exception {
+    public RangerDataset updateDataset(RangerDataset dataset) {
         LOG.debug("==> updateDataset({})", dataset);
 
         RangerDataset existing = null;
@@ -234,12 +234,14 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(datasetId, existing);
 
-        deleteDatasetPolicies(existing);
-        datasetService.delete(existing);
+        if (existing != null) {
+            deleteDatasetPolicies(existing);
+            datasetService.delete(existing);
 
-        datasetService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            datasetService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
+            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
+        }
 
         LOG.debug("<== deleteDataset({})", datasetId);
     }
@@ -282,7 +284,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<String> getDatasetNames(SearchFilter filter) throws Exception {
+    public PList<String> getDatasetNames(SearchFilter filter) {
         LOG.debug("==> getDatasetNames({})", filter);
 
         PList<RangerDataset> datasets = searchDatasets(filter);
@@ -302,7 +304,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
+    public PList<RangerDataset> searchDatasets(SearchFilter filter) {
         LOG.debug("==> searchDatasets({})", filter);
 
         PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
@@ -452,7 +454,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerProject createProject(RangerProject project) throws Exception {
+    public RangerProject createProject(RangerProject project) {
         LOG.debug("==> createProject({})", project);
 
         validator.validateCreate(project);
@@ -479,7 +481,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerProject updateProject(RangerProject project) throws Exception {
+    public RangerProject updateProject(RangerProject project) {
         LOG.debug("==> updateProject({})", project);
 
         RangerProject existing = null;
@@ -517,12 +519,14 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(projectId, existing);
 
-        deleteProjectPolicies(existing);
-        projectService.delete(existing);
+        if (existing != null) {
+            deleteProjectPolicies(existing);
+            projectService.delete(existing);
 
-        projectService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            projectService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
+            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
+        }
 
         LOG.debug("<== deleteProject({})", projectId);
     }
@@ -533,7 +537,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerProject ret = projectService.read(projectId);
 
-        // TODO: enforce RangerProject.acl
+        if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
+            throw new Exception("no permission on project id=" + projectId);
+        }
 
         LOG.debug("<== getProject({}): ret={}", projectId, ret);
 
@@ -553,7 +559,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerProject ret = projectService.getPopulatedViewObject(existing);
 
-        // TODO: enforce RangerProject.acl
+        if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
+            throw new Exception("no permission on project name=" + name);
+        }
 
         LOG.debug("<== getProjectByName({}): ret={}", name, ret);
 
@@ -561,7 +569,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<String> getProjectNames(SearchFilter filter) throws Exception {
+    public PList<String> getProjectNames(SearchFilter filter) {
         LOG.debug("==> getProjectNames({})", filter);
 
         PList<RangerProject> projects = searchProjects(filter);
@@ -581,19 +589,23 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerProject> searchProjects(SearchFilter filter) throws Exception {
+    public PList<RangerProject> searchProjects(SearchFilter filter) {
         LOG.debug("==> searchProjects({})", filter);
 
-        int maxRows = filter.getMaxRows();
+        int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
+
         filter.setStartIndex(0);
         filter.setMaxRows(0);
 
-        RangerProjectList   result   = projectService.searchProjects(filter);
-        List<RangerProject> projects = new ArrayList<>();
+        GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
+        RangerProjectList   result        = projectService.searchProjects(filter);
+        List<RangerProject> projects      = new ArrayList<>();
 
         for (RangerProject project : result.getList()) {
-            // TODO: enforce RangerProject.acl
+            if (gdsPermission.equals(GdsPermission.LIST)) {
+                scrubProjectForListing(project);
+            }
 
             projects.add(project);
         }
@@ -695,7 +707,7 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerProject project = projectService.read(projectId);
 
         if (!validator.hasPermission(project.getAcl(), GdsPermission.AUDIT)) {
-            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES);
         }
 
         XXGdsProjectPolicyMap existing = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyMap(projectId, policyId);
@@ -720,7 +732,7 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerProject project = projectService.read(projectId);
 
         if (!validator.hasPermission(project.getAcl(), GdsPermission.AUDIT)) {
-            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES);
         }
 
         List<Long> policyIds = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(projectId);
@@ -740,7 +752,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
 
     @Override
-    public RangerDataShare createDataShare(RangerDataShare dataShare) throws Exception {
+    public RangerDataShare createDataShare(RangerDataShare dataShare) {
         LOG.debug("==> createDataShare({})", dataShare);
 
         validator.validateCreate(dataShare);
@@ -767,7 +779,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception {
+    public RangerDataShare updateDataShare(RangerDataShare dataShare) {
         LOG.debug("==> updateDataShare({})", dataShare);
 
         RangerDataShare existing = null;
@@ -792,7 +804,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception {
+    public void deleteDataShare(Long dataShareId, boolean forceDelete) {
         LOG.debug("==> deleteDataShare(dataShareId: {}, forceDelete: {})", dataShareId, forceDelete);
 
         RangerDataShare existing = null;
@@ -810,17 +822,19 @@ public class GdsDBStore extends AbstractGdsStore {
             removeSharedResourcesForDataShare(dataShareId);
         }
 
-        dataShareService.delete(existing);
+        if (existing != null) {
+            dataShareService.delete(existing);
 
-        dataShareService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            dataShareService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
+            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
+        }
 
         LOG.debug("<== deleteDataShare(dataShareId: {}, forceDelete: {})", dataShareId, forceDelete);
     }
 
     @Override
-    public RangerDataShare getDataShare(Long dataShareId) throws Exception {
+    public RangerDataShare getDataShare(Long dataShareId) {
         LOG.debug("==> getDataShare({})", dataShareId);
 
         RangerDataShare ret = dataShareService.read(dataShareId);
@@ -833,7 +847,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception {
+    public PList<RangerDataShare> searchDataShares(SearchFilter filter) {
         LOG.debug("==> searchDataShares({})", filter);
 
         int maxRows = filter.getMaxRows();
@@ -860,7 +874,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception {
+    public RangerSharedResource addSharedResource(RangerSharedResource resource) {
         LOG.debug("==> addSharedResource({})", resource);
 
         validator.validateCreate(resource);
@@ -879,7 +893,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception {
+    public RangerSharedResource updateSharedResource(RangerSharedResource resource) {
         LOG.debug("==> updateSharedResource({})", resource);
 
         RangerSharedResource existing = null;
@@ -902,7 +916,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void removeSharedResource(Long sharedResourceId) throws Exception {
+    public void removeSharedResource(Long sharedResourceId) {
         LOG.debug("==> removeSharedResource({})", sharedResourceId);
 
 
@@ -916,15 +930,17 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(sharedResourceId, existing);
 
-        sharedResourceService.delete(existing);
+        if (existing != null) {
+            sharedResourceService.delete(existing);
 
-        sharedResourceService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            sharedResourceService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+        }
 
         LOG.debug("<== removeSharedResource({})", sharedResourceId);
     }
 
     @Override
-    public RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception {
+    public RangerSharedResource getSharedResource(Long sharedResourceId) {
         LOG.debug("==> getSharedResource({})", sharedResourceId);
 
         RangerSharedResource ret = sharedResourceService.read(sharedResourceId);
@@ -937,7 +953,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerSharedResource> searchSharedResources(SearchFilter filter) throws Exception {
+    public PList<RangerSharedResource> searchSharedResources(SearchFilter filter) {
         LOG.debug("==> searchSharedResources({})", filter);
 
         int maxRows = filter.getMaxRows();
@@ -975,7 +991,7 @@ public class GdsDBStore extends AbstractGdsStore {
             throw new Exception("data share '" + dataShareInDataset.getDataShareId() + "' already shared with dataset " + dataShareInDataset.getDatasetId() + " - id=" + existing.getId());
         }
 
-        // TODO: enforce RangerDataShareInDataset.acl
+        validator.validateCreate(dataShareInDataset);
 
         if (StringUtils.isBlank(dataShareInDataset.getGuid())) {
             dataShareInDataset.setGuid(guidUtil.genGUID());
@@ -991,12 +1007,12 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataShareInDataset updateDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception {
+    public RangerDataShareInDataset updateDataShareInDataset(RangerDataShareInDataset dataShareInDataset) {
         LOG.debug("==> updateDataShareInDataset({})", dataShareInDataset);
 
         RangerDataShareInDataset existing = dataShareInDatasetService.read(dataShareInDataset.getId());
 
-        // TODO: enforce RangerDataShareInDataset.acl
+        validator.validateUpdate(dataShareInDataset, existing);
 
         RangerDataShareInDataset ret = dataShareInDatasetService.update(dataShareInDataset);
 
@@ -1008,12 +1024,12 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void removeDataShareInDataset(Long dataShareInDatasetId) throws Exception {
+    public void removeDataShareInDataset(Long dataShareInDatasetId) {
         LOG.debug("==> removeDataShareInDataset({})", dataShareInDatasetId);
 
         RangerDataShareInDataset existing = dataShareInDatasetService.read(dataShareInDatasetId);
 
-        // TODO: enforce RangerDataShareInDataset.acl
+        validator.validateDelete(dataShareInDatasetId, existing);
 
         dataShareInDatasetService.delete(existing);
 
@@ -1023,7 +1039,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) throws Exception {
+    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) {
         LOG.debug("==> getDataShareInDataset({})", dataShareInDatasetId);
 
         RangerDataShareInDataset ret = dataShareInDatasetService.read(dataShareInDatasetId);
@@ -1034,7 +1050,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) throws Exception {
+    public PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) {
         LOG.debug("==> searchDataShareInDatasets({})", filter);
 
         int maxRows = filter.getMaxRows();
@@ -1071,7 +1087,7 @@ public class GdsDBStore extends AbstractGdsStore {
             throw new Exception("dataset '" + datasetInProject.getDatasetId() + "' already shared with project " + datasetInProject.getProjectId() + " - id=" + existing.getId());
         }
 
-        // TODO: enforce RangerDatasetInProject.acl
+        validator.validateCreate(datasetInProject);
 
         if (StringUtils.isBlank(datasetInProject.getGuid())) {
             datasetInProject.setGuid(guidUtil.genGUID());
@@ -1087,12 +1103,12 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDatasetInProject updateDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception {
+    public RangerDatasetInProject updateDatasetInProject(RangerDatasetInProject datasetInProject) {
         LOG.debug("==> updateDatasetInProject({})", datasetInProject);
 
         RangerDatasetInProject existing = datasetInProjectService.read(datasetInProject.getId());
 
-        // TODO: enforce RangerDatasetInProject.acl
+        validator.validateUpdate(datasetInProject, existing);
 
         RangerDatasetInProject ret = datasetInProjectService.update(datasetInProject);
 
@@ -1104,12 +1120,12 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void removeDatasetInProject(Long datasetInProjectId) throws Exception {
+    public void removeDatasetInProject(Long datasetInProjectId) {
         LOG.debug("==> removeDatasetInProject({})", datasetInProjectId);
 
         RangerDatasetInProject existing = datasetInProjectService.read(datasetInProjectId);
 
-        // TODO: enforce RangerDatasetInProject.acl
+        validator.validateDelete(datasetInProjectId, existing);
 
         datasetInProjectService.delete(existing);
 
@@ -1119,7 +1135,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) throws Exception {
+    public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) {
         LOG.debug("==> getDatasetInProject({})", datasetInProjectId);
 
         RangerDatasetInProject ret = datasetInProjectService.read(datasetInProjectId);
@@ -1132,7 +1148,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception {
+    public PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) {
         LOG.debug("==> searchDatasetInProjects({})", filter);
 
         int maxRows = filter.getMaxRows();
@@ -1273,7 +1289,7 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) throws Exception {
+    private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
@@ -1320,6 +1336,12 @@ public class GdsDBStore extends AbstractGdsStore {
         dataset.setAcl(null);
         dataset.setOptions(null);
         dataset.setAdditionalInfo(null);
+    }
+
+    private void scrubProjectForListing(RangerProject project) {
+        project.setAcl(null);
+        project.setOptions(null);
+        project.setAdditionalInfo(null);
     }
 
     private void removeDshInDsForDataShare(Long dataShareId) {
