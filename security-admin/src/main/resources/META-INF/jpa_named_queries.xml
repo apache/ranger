@@ -331,7 +331,7 @@
 	</named-query>
 
 	<named-query name="XXTrxLog.findByTrxId">
-		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
+		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId order by obj.id
 		</query>
 	</named-query>
 

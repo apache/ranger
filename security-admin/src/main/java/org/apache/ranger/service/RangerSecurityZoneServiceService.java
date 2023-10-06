@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -306,8 +308,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 					}
 				}
 				if("services".equalsIgnoreCase(fieldName)) {
-					Gson gson = new Gson();
-					value = gson.toJson(vSecurityZone.getServices(), HashMap.class);
+					value = toTrxLog(vSecurityZone.getServices());
 				}
 				if ("create".equalsIgnoreCase(action)) {
 					xTrxLog.setNewValue(value);
@@ -325,8 +326,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 						String mFieldName = mField.getName();
 						if (fieldName.equalsIgnoreCase(mFieldName)) {
 							if("services".equalsIgnoreCase(mFieldName)) {
-								Gson gson = new Gson();
-								oldValue = gson.toJson(securityZoneDB.getServices(), HashMap.class);
+								oldValue = toTrxLog(securityZoneDB.getServices());
 							}
 							else {
 								oldValue = mField.get(securityZoneDB) + "";
@@ -357,4 +357,33 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 		}
 		return trxLogList;
 	}
+
+    private String toTrxLog(Map<String, RangerSecurityZoneService> services) {
+        String ret;
+
+        if (services == null) {
+            services = Collections.emptyMap();
+        }
+
+        if (compressJsonData) { // when compression is enabled, summarize services info for trx log
+            Map<String, RangerSecurityZoneService> servicesSummary = new HashMap<>(services.size());
+
+            for (Map.Entry<String, RangerSecurityZoneService> entry : services.entrySet()) {
+                String                    serviceName        = entry.getKey();
+                RangerSecurityZoneService zoneService        = entry.getValue();
+                Integer                   resourceCount      = (zoneService != null && zoneService.getResources() != null) ? zoneService.getResources().size() : 0;
+                RangerSecurityZoneService zoneServiceSummary = new RangerSecurityZoneService();
+
+                zoneServiceSummary.getResources().add(new HashMap<String, List<String>>() {{ put("resourceCount", Collections.singletonList(resourceCount.toString())); }});
+
+                servicesSummary.put(serviceName, zoneServiceSummary);
+            }
+
+            ret = new Gson().toJson(servicesSummary, Map.class);
+        } else {
+            ret = new Gson().toJson(services, Map.class);
+        }
+
+        return ret;
+    }
 }

@@ -258,7 +258,7 @@ class ZoneListing extends Component {
                       <Col md="auto">
                         <div className="pt-5 pr-5">
                           <img
-                            alt="Avatar"
+                            alt="No Zones"
                             className="w-50 p-3 d-block mx-auto"
                             src={noZoneImage}
                           />
