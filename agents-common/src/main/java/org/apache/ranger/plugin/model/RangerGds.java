@@ -488,6 +488,7 @@ public class RangerGds {
         private static final long serialVersionUID = 1L;
 
         private String                          name;
+        private String                          description;
         private GdsPermission                   permissionForCaller;
         private Map<PrincipalType, Long>        principalsCount;
         private Long                            projectsCount;
@@ -502,9 +503,11 @@ public class RangerGds {
             return name;
         }
 
-        public void setName(String name) {
-            this.name = name;
-        }
+        public void setName(String name) { this.name = name; }
+
+        public String getDescription() { return description; }
+
+        public void setDescription(String description) { this.description = description; }
 
         public GdsPermission getPermissionForCaller() {
             return permissionForCaller;
@@ -557,6 +560,7 @@ public class RangerGds {
             super.toString(sb);
 
             sb.append("name={").append(name).append("} ")
+              .append("description={").append(description).append("} ")
               .append("permissionForCaller={").append(permissionForCaller).append("} ")
               .append("principalsCount={").append(principalsCount).append("} ")
               .append("projectsCount={").append(projectsCount).append("} ")

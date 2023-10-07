@@ -1217,6 +1217,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
             datasetSummary.setId(dataset.getId());
             datasetSummary.setName(dataset.getName());
+            datasetSummary.setDescription(dataset.getDescription());
             datasetSummary.setCreateTime(dataset.getCreateTime());
             datasetSummary.setUpdateTime(dataset.getUpdateTime());
             datasetSummary.setCreatedBy(dataset.getCreatedBy());
