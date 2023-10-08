@@ -35,7 +35,6 @@ import org.apache.ranger.entity.XXGdsDataShareInDataset;
 import org.apache.ranger.entity.XXGdsDataset;
 import org.apache.ranger.entity.XXGdsDatasetInProject;
 import org.apache.ranger.entity.XXGdsDatasetPolicyMap;
-import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXGdsProject;
@@ -65,7 +64,6 @@ import org.apache.ranger.service.RangerGdsDatasetService;
 import org.apache.ranger.service.RangerGdsDatasetInProjectService;
 import org.apache.ranger.service.RangerGdsProjectService;
 import org.apache.ranger.service.RangerGdsSharedResourceService;
-import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.validation.RangerGdsValidator;
 import org.apache.ranger.view.RangerGdsVList.RangerDataShareList;
@@ -130,9 +128,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     GUIDUtil guidUtil;
-
-    @Autowired
-    RangerPolicyService policyService;
 
     @Autowired
     RangerBizUtil bizUtil;
@@ -435,15 +430,14 @@ public class GdsDBStore extends AbstractGdsStore {
     public List<RangerPolicy> getDatasetPolicies(Long datasetId) throws Exception {
         LOG.debug("==> getDatasetPolicies({})", datasetId);
 
-        List<RangerPolicy> ret = null;
-
         RangerDataset dataset = datasetService.read(datasetId);
 
         if (!validator.hasPermission(dataset.getAcl(), GdsPermission.AUDIT)) {
             throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
         }
 
-        List<Long> policyIds = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(datasetId);
+        List<RangerPolicy> ret;
+        List<Long>         policyIds = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(datasetId);
 
         if (policyIds != null) {
             ret = new ArrayList<>(policyIds.size());
@@ -451,6 +445,8 @@ public class GdsDBStore extends AbstractGdsStore {
             for (Long policyId : policyIds) {
                 ret.add(svcStore.getPolicy(policyId));
             }
+        } else {
+            ret = Collections.emptyList();
         }
 
         LOG.debug("<== getDatasetPolicies({}): ret={}", datasetId, ret);
@@ -615,9 +611,7 @@ public class GdsDBStore extends AbstractGdsStore {
             projects.add(project);
         }
 
-        int endIndex = Math.min((startIndex + maxRows), projects.size());
-        List<RangerProject> paginatedProjects = projects.subList(startIndex, endIndex);
-        PList<RangerProject> ret = new PList<>(paginatedProjects, startIndex, maxRows, projects.size(), paginatedProjects.size(), result.getSortBy(), result.getSortType());
+        PList<RangerProject> ret = getPList(projects, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchProjects({}): ret={}", filter, ret);
 
@@ -869,9 +863,7 @@ public class GdsDBStore extends AbstractGdsStore {
             dataShares.add(dataShare);
         }
 
-        int endIndex = Math.min((startIndex + maxRows), dataShares.size());
-        List<RangerDataShare> paginatedDataShares = dataShares.subList(startIndex, endIndex);
-        PList<RangerDataShare> ret = new PList<>(paginatedDataShares, startIndex, maxRows, dataShares.size(), paginatedDataShares.size(), result.getSortBy(), result.getSortType());
+        PList<RangerDataShare> ret = getPList(dataShares, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDataShares({}): ret={}", filter, ret);
 
@@ -975,9 +967,7 @@ public class GdsDBStore extends AbstractGdsStore {
             sharedResources.add(dataShare);
         }
 
-        int endIndex = Math.min((startIndex + maxRows), sharedResources.size());
-        List<RangerSharedResource> paginatedSharedResources = sharedResources.subList(startIndex, endIndex);
-        PList<RangerSharedResource> ret = new PList<>(paginatedSharedResources, startIndex, maxRows, sharedResources.size(), paginatedSharedResources.size(), result.getSortBy(), result.getSortType());
+        PList<RangerSharedResource> ret = getPList(sharedResources, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchSharedResources({}): ret={}", filter, ret);
 
@@ -1072,9 +1062,7 @@ public class GdsDBStore extends AbstractGdsStore {
             dataShareInDatasets.add(dataShareInDataset);
         }
 
-        int endIndex = Math.min((startIndex + maxRows), dataShareInDatasets.size());
-        List<RangerDataShareInDataset> paginatedDataShareInDatasets = dataShareInDatasets.subList(startIndex, endIndex);
-        PList<RangerDataShareInDataset> ret = new PList<>(paginatedDataShareInDatasets, startIndex, maxRows, dataShareInDatasets.size(), paginatedDataShareInDatasets.size(), result.getSortBy(), result.getSortType());
+        PList<RangerDataShareInDataset> ret = getPList(dataShareInDatasets, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDataShareInDatasets({}): ret={}", filter, ret);
 
@@ -1170,9 +1158,7 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetInProjects.add(datasetInProject);
         }
 
-        int endIndex = Math.min((startIndex + maxRows), datasetInProjects.size());
-        List<RangerDatasetInProject> paginatedDatasetInProjects = datasetInProjects.subList(startIndex, endIndex);
-        PList<RangerDatasetInProject> ret = new PList<>(paginatedDatasetInProjects, startIndex, maxRows, datasetInProjects.size(), paginatedDatasetInProjects.size(), result.getSortBy(), result.getSortType());
+        PList<RangerDatasetInProject> ret = getPList(datasetInProjects, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchDatasetInProjects({}): ret={}", filter, ret);
 
@@ -1202,7 +1188,7 @@ public class GdsDBStore extends AbstractGdsStore {
         }
     }
 
-    private List<DatasetSummary> toDatasetSummary(List<RangerDataset> datasets, GdsPermission gdsPermission) {
+    private List<DatasetSummary> toDatasetSummary(List<RangerDataset> datasets, GdsPermission gdsPermission) throws Exception {
         List<DatasetSummary> ret         = new ArrayList<>();
         String               currentUser = bizUtil.getCurrentUserLoginId();
 
@@ -1229,7 +1215,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
             if (!gdsPermission.equals(GdsPermission.LIST)) {
                 datasetSummary.setProjectsCount(getDIPCountForDataset(dataset.getId()));
-                datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset.getName()));
+                datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset.getId()));
 
                 List<DataShareInDatasetSummary> dshInDsSummaryList = getDshInDsSummaryList(dataset.getId());
 
@@ -1261,36 +1247,23 @@ public class GdsDBStore extends AbstractGdsStore {
         return datasetInProjectService.getDatasetsInProjectCount(datasetId);
     }
 
-    private Map<PrincipalType, Long> getPrincipalCountForDataset(String datasetName) {
-        Map<PrincipalType, Long> ret    = new HashMap<>();
-        Set<String>              users  = new HashSet<>();
-        Set<String>              groups = new HashSet<>();
-        Set<String>              roles  = new HashSet<>();
+    private Map<PrincipalType, Integer> getPrincipalCountForDataset(Long datasetId) throws Exception {
+        Map<PrincipalType, Integer> ret    = new HashMap<>();
+        Set<String>                 users  = new HashSet<>();
+        Set<String>                 groups = new HashSet<>();
+        Set<String>                 roles  = new HashSet<>();
 
-        if (StringUtils.isNotEmpty(datasetName)) {
-            List<XXPolicy> policies = daoMgr.getXXPolicy().findByServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
-
-            for (XXPolicy policyFromDb : policies) {
-                RangerPolicy                     policy    = policyService.getPopulatedViewObject(policyFromDb);
-                Collection<RangerPolicyResource> resources = policy.getResources().values();
-
-                for (RangerPolicyResource resource : resources) {
-                    if (resource.getValues().contains(datasetName)){
-                        List<RangerPolicyItem> policyItems = policy.getPolicyItems();
-
-                        for (RangerPolicyItem policyItem : policyItems) {
-                            users.addAll(policyItem.getUsers());
-                            groups.addAll(policyItem.getGroups());
-                            roles.addAll(policyItem.getRoles());
-                        }
-                    }
-                }
+        for (RangerPolicy policy : getDatasetPolicies(datasetId)) {
+            for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+                users.addAll(policyItem.getUsers());
+                groups.addAll(policyItem.getGroups());
+                roles.addAll(policyItem.getRoles());
             }
         }
 
-        ret.put(PrincipalType.USER,  (long) users.size());
-        ret.put(PrincipalType.GROUP, (long) groups.size());
-        ret.put(PrincipalType.ROLE,  (long) roles.size());
+        ret.put(PrincipalType.USER,  users.size());
+        ret.put(PrincipalType.GROUP, groups.size());
+        ret.put(PrincipalType.ROLE,  roles.size());
 
         return ret;
     }
@@ -1312,11 +1285,13 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
 
-        int                  endIndex          = Math.min((startIndex + maxRows), datasets.size());
-        List<RangerDataset>  paginatedDatasets = datasets.subList(startIndex, endIndex);
-        PList<RangerDataset> ret               = new PList<>(paginatedDatasets, startIndex, maxRows, datasets.size(), paginatedDatasets.size(), result.getSortBy(), result.getSortType());
+        return getPList(datasets, startIndex, maxRows, result.getSortBy(), result.getSortType());
+    }
 
-        return ret;
+    private <T> PList<T> getPList(List<T> list, int startIndex, int maxEntries, String sortBy, String sortType) {
+        List<T> subList = startIndex < list.size() ? list.subList(startIndex, Math.min(startIndex + maxEntries, list.size())) : Collections.emptyList();
+
+        return new PList<>(subList, startIndex, maxEntries, list.size(), subList.size(), sortBy, sortType);
     }
 
     private GdsPermission getGdsPermissionFromFilter(SearchFilter filter) {

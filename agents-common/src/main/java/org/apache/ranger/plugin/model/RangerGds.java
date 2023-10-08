@@ -490,7 +490,7 @@ public class RangerGds {
         private String                          name;
         private String                          description;
         private GdsPermission                   permissionForCaller;
-        private Map<PrincipalType, Long>        principalsCount;
+        private Map<PrincipalType, Integer>     principalsCount;
         private Long                            projectsCount;
         private Long                            totalResourceCount;
         private List<DataShareInDatasetSummary> dataShares;
@@ -517,11 +517,11 @@ public class RangerGds {
             this.permissionForCaller = permissionForCaller;
         }
 
-        public Map<PrincipalType, Long> getPrincipalsCount() {
+        public Map<PrincipalType, Integer> getPrincipalsCount() {
             return principalsCount;
         }
 
-        public void setPrincipalsCount(Map<PrincipalType, Long> principalsCount) {
+        public void setPrincipalsCount(Map<PrincipalType, Integer> principalsCount) {
             this.principalsCount = principalsCount;
         }
 
