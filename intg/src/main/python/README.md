@@ -36,7 +36,7 @@ Verify if apache-ranger client is installed:
 
 Package      Version
 ------------ ---------
-apache-ranger 0.0.11
+apache-ranger 0.0.12
 ```
 
 ## Usage
@@ -229,4 +229,140 @@ kms_client.delete_key(key_name)
 print('delete_key(' + key_name + ')')
 ```
 
-For more examples, checkout `sample-client` python  project in [ranger-examples](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_client.py) module.
+```python test_ranger_user_mgmt.py```
+```python
+# test_ranger_user_mgmt.py
+from apache_ranger.client.ranger_client           import *
+from apache_ranger.utils                          import *
+from apache_ranger.model.ranger_user_mgmt         import *
+from apache_ranger.client.ranger_user_mgmt_client import *
+from datetime                                     import datetime
+
+##
+## Step 1: create a client to connect to Apache Ranger
+##
+ranger_url  = 'http://localhost:6080'
+ranger_auth = ('admin', 'rangerR0cks!')
+
+# For Kerberos authentication
+#
+# from requests_kerberos import HTTPKerberosAuth
+#
+# ranger_auth = HTTPKerberosAuth()
+#
+# For HTTP Basic authentication
+#
+# ranger_auth = ('admin', 'rangerR0cks!')
+
+ranger    = RangerClient(ranger_url, ranger_auth)
+user_mgmt = RangerUserMgmtClient(ranger)
+
+
+
+##
+## Step 2: Let's call User Management APIs
+##
+
+print('\nListing users')
+
+users = user_mgmt.find_users()
+
+print(f'    {len(users.list)} users found')
+
+for user in users.list:
+    print(f'        id: {user.id}, name: {user.name}')
+
+
+print('\nListing groups')
+
+groups = user_mgmt.find_groups()
+
+print(f'    {len(groups.list)} groups found')
+
+for group in groups.list:
+    print(f'        id: {group.id}, name: {group.name}')
+
+print('\nListing group-users')
+
+group_users = user_mgmt.find_group_users()
+
+print(f'    {len(group_users.list)} group-users found')
+
+for group_user in group_users.list:
+    print(f'        id: {group_user.id}, groupId: {group_user.parentGroupId}, userId: {group_user.userId}')
+
+
+now = datetime.now()
+
+name_suffix = '-' + now.strftime('%Y%m%d-%H%M%S-%f')
+user_name   = 'test-user' + name_suffix
+group_name  = 'test-group' + name_suffix
+
+
+user = RangerUser({ 'name': user_name, 'firstName': user_name, 'lastName': 'user', 'emailAddress': user_name + '@test.org', 'password': 'Welcome1', 'userRoleList': [ 'ROLE_USER' ], 'otherAttributes': '{ "dept": "test" }' })
+
+print(f'\nCreating user: name={user.name}')
+
+created_user = user_mgmt.create_user(user)
+
+print(f'    created user: {created_user}')
+
+
+group = RangerGroup({ 'name': group_name, 'otherAttributes': '{ "dept": "test" }' })
+
+print(f'\nCreating group: name={group.name}')
+
+created_group = user_mgmt.create_group(group)
+
+print(f'    created group: {created_group}')
+
+
+group_user = RangerGroupUser({ 'name': created_group.name, 'parentGroupId': created_group.id, 'userId': created_user.id })
+
+print(f'\nAdding user {created_user.name} to group {created_group.name}')
+
+created_group_user = user_mgmt.create_group_user(group_user)
+
+print(f'    created group-user: {created_group_user}')
+
+
+print('\nListing group-users')
+
+group_users = user_mgmt.find_group_users()
+
+print(f'    {len(group_users.list)} group-users found')
+
+for group_user in group_users.list:
+    print(f'        id: {group_user.id}, groupId: {group_user.parentGroupId}, userId: {group_user.userId}')
+
+
+print(f'\nListing users for group {group.name}')
+
+users = user_mgmt.get_users_in_group(group.name)
+
+print(f'    users: {users}')
+
+
+print(f'\nListing groups for user {user.name}')
+
+groups = user_mgmt.get_groups_for_user(user.name)
+
+print(f'    groups: {groups}')
+
+
+print(f'\nDeleting group-user {created_group_user.id}')
+
+user_mgmt.delete_group_user_by_id(created_group_user.id)
+
+
+print(f'\nDeleting group {group.name}')
+
+user_mgmt.delete_group_by_id(created_group.id, True)
+
+
+print(f'\nDeleting user {user.name}')
+
+user_mgmt.delete_user_by_id(created_user.id, True)
+```
+
+For more examples, checkout `sample-client` python  project in [ranger-examples](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python) module.
