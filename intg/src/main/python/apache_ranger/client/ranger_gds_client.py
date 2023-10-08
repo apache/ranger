@@ -72,6 +72,11 @@ class RangerGdsClient:
 
         return PList(resp).type_coerce_list(str)
 
+    def get_dataset_summary(self, filter=None):
+        resp = self.client_http.call_api(RangerGdsClient.GET_DATASET_SUMMARY, filter)
+
+        return PList(resp).type_coerce_list(DatasetSummary)
+
     def add_dataset_policy(self, datasetId, policy):
         resp = self.client_http.call_api(RangerGdsClient.ADD_DATASET_POLICY.format_path({ 'id': datasetId }), request_data=policy)
 
@@ -248,6 +253,7 @@ class RangerGdsClient:
     URI_DATASET                   = URI_GDS + "/dataset"
     URI_DATASET_BY_ID             = URI_DATASET + "/{id}"
     URI_DATASET_NAMES             = URI_DATASET + "/names"
+    URI_DATASET_SUMMARY           = URI_DATASET + "/summary"
     URI_DATASET_POLICY            = URI_DATASET_BY_ID + "/policy"
     URI_DATASET_POLICY_ID         = URI_DATASET_POLICY + "/{policyId}"
     URI_PROJECT                   = URI_GDS + "/project"
@@ -275,6 +281,7 @@ class RangerGdsClient:
     GET_DATASET_BY_ID         = API(URI_DATASET_BY_ID, HttpMethod.GET, HTTPStatus.OK)
     FIND_DATASETS             = API(URI_DATASET, HttpMethod.GET, HTTPStatus.OK)
     GET_DATASET_NAMES         = API(URI_DATASET_NAMES, HttpMethod.GET, HTTPStatus.OK)
+    GET_DATASET_SUMMARY       = API(URI_DATASET_SUMMARY, HttpMethod.GET, HTTPStatus.OK)
     ADD_DATASET_POLICY        = API(URI_DATASET_POLICY, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_DATASET_POLICY     = API(URI_DATASET_POLICY_ID, HttpMethod.PUT, HTTPStatus.OK)
     DELETE_DATASET_POLICY     = API(URI_DATASET_POLICY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)

@@ -83,6 +83,16 @@ def type_coerce_list_dict(obj, objType):
         return [ type_coerce_dict(entry, objType) for entry in obj ]
     return None
 
+def type_coerce_kv(obj, keyType, valType):
+    if isinstance(obj, dict):
+        ret = {}
+        for k, v in obj.items():
+            ret[type_coerce(k, keyType)] = type_coerce(v, valType)
+    else:
+        ret = None
+
+    return ret
+
 class API:
     def __init__(self, path, method, expected_status, consumes=APPLICATION_JSON, produces=APPLICATION_JSON):
         self.path            = path

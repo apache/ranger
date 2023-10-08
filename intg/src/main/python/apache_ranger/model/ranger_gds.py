@@ -18,15 +18,16 @@
 
 from apache_ranger.model.ranger_base      import RangerBase, RangerBaseModelObject
 from apache_ranger.model.ranger_policy    import *
-from apache_ranger.model.ranger_principal import RangerPrincipal
+from apache_ranger.model.ranger_principal import *
 from apache_ranger.utils                  import *
 
 class GdsPermission(StrEnum):
-    NONE  = 'NONE'
-    LIST  = 'LIST'
-    VIEW  = 'VIEW'
-    AUDIT = 'AUDIT'
-    ADMIN = 'ADMIN'
+    NONE         = 'NONE'
+    LIST         = 'LIST'
+    VIEW         = 'VIEW'
+    AUDIT        = 'AUDIT'
+    POLICY_ADMIN = 'POLICY_ADMIN'
+    ADMIN        = 'ADMIN'
 
     @classmethod
     def value_of(cls, val):
@@ -36,8 +37,7 @@ class GdsPermission(StrEnum):
             for key, member in cls.__members__.items():
                 if val == member.name or val == member.value:
                     return member
-                else:
-                    raise ValueError(f"'{cls.__name__}' enum not found for '{val}'")
+            raise ValueError(f"'{cls.__name__}' enum not found for '{val}'")
 
 class GdsShareStatus(StrEnum):
   NONE      = 'NONE'
@@ -211,3 +211,48 @@ class RangerGdsObjectACL(RangerBase):
         self.users  = type_coerce_dict(self.users, GdsPermission)
         self.groups = type_coerce_dict(self.groups, GdsPermission)
         self.roles  = type_coerce_dict(self.roles, GdsPermission)
+
+
+class DataShareInDatasetSummary(RangerBaseModelObject):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.name          = attrs.get('name')
+        self.serviceId     = attrs.get('serviceId')
+        self.serviceName   = attrs.get('serviceName')
+        self.zoneId        = attrs.get('zoneId')
+        self.zoneName      = attrs.get('zoneName')
+        self.resourceCount = attrs.get('resourceCount')
+        self.shareStatus   = attrs.get('shareStatus')
+        self.approver      = attrs.get('approver')
+
+    def type_coerce_attrs(self):
+        super(DataShareInDatasetSummary, self).type_coerce_attrs()
+
+        self.shareStatus = type_coerce(self.shareStatus, GdsShareStatus)
+
+
+class DatasetSummary(RangerBaseModelObject):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.name                = attrs.get('name')
+        self.description         = attrs.get('description')
+        self.permissionForCaller = attrs.get('permissionForCaller')
+        self.principalsCount     = attrs.get('principalsCount')
+        self.projectsCount       = attrs.get('projectsCount')
+        self.totalResourceCount  = attrs.get('totalResourceCount')
+        self.dataShares          = attrs.get('dataShares')
+
+    def type_coerce_attrs(self):
+        super(DatasetSummary, self).type_coerce_attrs()
+
+        self.permissionForCaller = type_coerce(self.permissionForCaller, GdsPermission)
+        self.principalsCount     = type_coerce_kv(self.principalsCount, PrincipalType, int)
+        self.dataShares          = type_coerce_list(self.dataShares, DataShareInDatasetSummary)
