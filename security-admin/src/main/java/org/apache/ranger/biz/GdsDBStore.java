@@ -44,7 +44,6 @@ import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
-import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
@@ -967,13 +966,39 @@ public class GdsDBStore extends AbstractGdsStore {
         filter.setStartIndex(0);
         filter.setMaxRows(0);
 
+        final String resourceContains = filter.getParam(SearchFilter.RESOURCE_CONTAINS);
+
+        filter.removeParam(SearchFilter.RESOURCE_CONTAINS);
+
         RangerSharedResourceList   result          = sharedResourceService.searchSharedResources(filter);
         List<RangerSharedResource> sharedResources = new ArrayList<>();
 
-        for (RangerSharedResource dataShare : result.getList()) {
+        for (RangerSharedResource sharedResource : result.getList()) {
             // TODO: enforce RangerSharedResource.acl
+            boolean includeResource = true;
 
-            sharedResources.add(dataShare);
+            if (StringUtils.isNotEmpty(resourceContains)) {
+                includeResource = false;
+
+                if (sharedResource.getResource() != null) {
+                    final Collection<RangerPolicyResource> resources = sharedResource.getResource().values();
+
+                    if (CollectionUtils.isNotEmpty(resources)) {
+                        includeResource = resources.stream().filter(Objects::nonNull)
+                                                            .map(RangerPolicyResource::getValues).filter(Objects::nonNull)
+                                                            .anyMatch(res -> hasResource(res, resourceContains));
+
+                        if (!includeResource && CollectionUtils.isNotEmpty(sharedResource.getSubResourceNames())) {
+                            includeResource = sharedResource.getSubResourceNames().stream().filter(Objects::nonNull)
+                                                                                           .anyMatch(value -> value.contains(resourceContains));
+                        }
+                    }
+                }
+            }
+
+            if (includeResource) {
+                sharedResources.add(sharedResource);;
+            }
         }
 
         PList<RangerSharedResource> ret = getPList(sharedResources, startIndex, maxRows, result.getSortBy(), result.getSortType());
@@ -1660,5 +1685,9 @@ public class GdsDBStore extends AbstractGdsStore {
         }
 
         return ret;
+    }
+
+    private boolean hasResource(List<String> resources, String resourceValue) {
+        return resources.stream().filter(Objects::nonNull).anyMatch(resource -> resource.contains(resourceValue));
     }
 }
