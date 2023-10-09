@@ -318,14 +318,27 @@ public class RangerGdsValidator {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dshInDataset.getDatasetId()));
         }
 
-        if (dataShare != null) {
+        if (dataShare != null && dataset != null) {
             if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
                 validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
             }
-        }
 
-        if (dshInDataset.getStatus() != RangerGds.GdsShareStatus.NONE && dshInDataset.getStatus() != RangerGds.GdsShareStatus.REQUESTED) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_ADD_DATA_SHARE_IN_DATASET_INVALID_STATUS, "status", dshInDataset.getStatus()));
+            switch (dshInDataset.getStatus()) {
+                case GRANTED:
+                case DENIED:
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                break;
+
+                case ACTIVE:
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                break;
+
+                case NONE:
+                case REQUESTED:
+                default:
+                break;
+            }
         }
 
         if (!result.isSuccess()) {
@@ -460,9 +473,36 @@ public class RangerGdsValidator {
     public void validateCreate(RangerDatasetInProject dsInProject) {
         LOG.debug("==> validateCreate(dsInProject={})", dsInProject);
 
-        ValidationResult result = new ValidationResult();
+        ValidationResult result  = new ValidationResult();
+        RangerDataset    dataset = dataProvider.getDataset(dsInProject.getDatasetId());
+        RangerProject    project = dataProvider.getProject(dsInProject.getProjectId());
 
-        // TODO:
+        if (dataset == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dsInProject.getDatasetId()));
+        }
+
+        if (project == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "project", dsInProject.getProjectId()));
+        }
+
+        if (dataset != null && project != null) {
+            switch (dsInProject.getStatus()) {
+                case GRANTED:
+                case DENIED:
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                break;
+
+                case ACTIVE:
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "project", project.getName(), project.getAcl(), result);
+                break;
+
+                case NONE:
+                case REQUESTED:
+                default:
+                break;
+            }
+        }
 
         if (!result.isSuccess()) {
             result.throwRESTException();
