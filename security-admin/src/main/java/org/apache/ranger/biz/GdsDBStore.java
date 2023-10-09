@@ -40,6 +40,7 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXGdsProject;
 import org.apache.ranger.entity.XXGdsProjectPolicyMap;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
+import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
@@ -159,6 +160,20 @@ public class GdsDBStore extends AbstractGdsStore {
         ret.setQueryTimeMS(datasets.getQueryTimeMS());
 
         LOG.debug("<== getDatasetSummary({}): ret={}", filter, ret);
+
+        return ret;
+    }
+
+    public PList<DataShareSummary> getDataShareSummary(SearchFilter filter) {
+        LOG.debug("==> getDataShareSummary({})", filter);
+
+        PList<RangerDataShare>  dataShares       = getUnscrubbedDataShares(filter);
+        List<DataShareSummary>  dataShareSummary = toDataShareSummary(dataShares.getList(), getGdsPermissionFromFilter(filter));
+        PList<DataShareSummary> ret              = new PList<>(dataShareSummary, dataShares.getStartIndex(), dataShares.getPageSize(), dataShares.getTotalCount(), dataShares.getResultSize(), dataShares.getSortType(), dataShares.getSortBy());
+
+        ret.setQueryTimeMS(dataShares.getQueryTimeMS());
+
+        LOG.debug("<== getDataShareSummary({}): ret={}", filter, ret);
 
         return ret;
     }
@@ -849,21 +864,15 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataShare> searchDataShares(SearchFilter filter) {
         LOG.debug("==> searchDataShares({})", filter);
 
-        int maxRows = filter.getMaxRows();
-        int startIndex = filter.getStartIndex();
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
+        PList<RangerDataShare> ret           = getUnscrubbedDataShares(filter);
+        List<RangerDataShare>  dataShares    = ret.getList();
+        GdsPermission          gdsPermission = getGdsPermissionFromFilter(filter);
 
-        RangerDataShareList   result     = dataShareService.searchDataShares(filter);
-        List<RangerDataShare> dataShares = new ArrayList<>();
-
-        for (RangerDataShare dataShare : result.getList()) {
-            // TODO: enforce RangerDataShare.acl
-
-            dataShares.add(dataShare);
-        }
-
-        PList<RangerDataShare> ret = getPList(dataShares, startIndex, maxRows, result.getSortBy(), result.getSortType());
+        for (RangerDataShare dataShare : dataShares) {
+            if (gdsPermission.equals(GdsPermission.LIST)) {
+                scrubDataShareForListing(dataShare);
+            }
+	}
 
         LOG.debug("<== searchDataShares({}): ret={}", filter, ret);
 
@@ -1217,10 +1226,12 @@ public class GdsDBStore extends AbstractGdsStore {
                 datasetSummary.setProjectsCount(getDIPCountForDataset(dataset.getId()));
                 datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset.getId()));
 
-                List<DataShareInDatasetSummary> dshInDsSummaryList = getDshInDsSummaryList(dataset.getId());
+                SearchFilter                    filter            = new SearchFilter(SearchFilter.DATASET_ID, dataset.getId().toString());
+                RangerDataShareList             dataShares        = dataShareService.searchDataShares(filter);
+                List<DataShareInDatasetSummary> dataSharesSummary = getDataSharesSummary(dataShares, filter);
 
-                datasetSummary.setDataShares(dshInDsSummaryList);
-                datasetSummary.setTotalResourceCount(dshInDsSummaryList.stream()
+                datasetSummary.setDataShares(dataSharesSummary);
+                datasetSummary.setTotalResourceCount(dataSharesSummary.stream()
                         .map(DataShareInDatasetSummary::getResourceCount)
                         .mapToLong(Long::longValue)
                         .sum());
@@ -1232,12 +1243,48 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    private Map<GdsShareStatus, Long> getDataSharesInDatasetCountByStatus(Long datasetId) {
-        Map<GdsShareStatus, Long> ret            = new HashMap<>();
-        Map<Short, Long>          countsByStatus = daoMgr.getXXGdsDataShareInDataset().getDataSharesInDatasetCountByStatus(datasetId);
+    private List<DataShareSummary> toDataShareSummary(List<RangerDataShare> dataShares, GdsPermission gdsPermission) {
+        List<DataShareSummary> ret         = new ArrayList<>();
+        String                 currentUser = bizUtil.getCurrentUserLoginId();
 
-        for (Map.Entry<Short, Long> entry : countsByStatus.entrySet()) {
-            ret.put(RangerGdsDatasetInProjectService.toShareStatus(entry.getKey()), entry.getValue());
+        for (RangerDataShare dataShare : dataShares) {
+            GdsPermission permissionForCaller = validator.getGdsPermissionForUser(dataShare.getAcl(), currentUser);
+
+            if (permissionForCaller.equals(GdsPermission.NONE)) {
+                continue;
+            }
+
+            DataShareSummary dataShareSummary = new DataShareSummary();
+
+            dataShareSummary.setId(dataShare.getId());
+            dataShareSummary.setName(dataShare.getName());
+            dataShareSummary.setDescription(dataShare.getDescription());
+            dataShareSummary.setCreateTime(dataShare.getCreateTime());
+            dataShareSummary.setUpdateTime(dataShare.getUpdateTime());
+            dataShareSummary.setCreatedBy(dataShare.getCreatedBy());
+            dataShareSummary.setUpdatedBy(dataShare.getUpdatedBy());
+            dataShareSummary.setIsEnabled(dataShare.getIsEnabled());
+            dataShareSummary.setGuid(dataShare.getGuid());
+            dataShareSummary.setVersion(dataShare.getVersion());
+            dataShareSummary.setPermissionForCaller(permissionForCaller);
+
+            dataShareSummary.setZoneName(dataShare.getZone());
+            dataShareSummary.setZoneId(getZoneId(dataShare.getZone()));
+
+            dataShareSummary.setServiceName(dataShare.getService());
+            dataShareSummary.setServiceId(getServiceId(dataShare.getService()));
+            dataShareSummary.setServiceType(getServiceType(dataShare.getService()));
+
+            if (!gdsPermission.equals(GdsPermission.LIST)) {
+                SearchFilter                    filter          = new SearchFilter(SearchFilter.DATA_SHARE_ID, dataShare.getId().toString());
+                RangerDatasetList               datasets        = datasetService.searchDatasets(filter);
+                List<DataShareInDatasetSummary> datasetsSummary = getDatasetsSummary(datasets, filter);
+
+                dataShareSummary.setDatasets(datasetsSummary);
+                dataShareSummary.setResourceCount(sharedResourceService.getResourceCountForDataShare(dataShare.getId()));
+            }
+
+            ret.add(dataShareSummary);
         }
 
         return ret;
@@ -1288,6 +1335,26 @@ public class GdsDBStore extends AbstractGdsStore {
         return getPList(datasets, startIndex, maxRows, result.getSortBy(), result.getSortType());
     }
 
+    private PList<RangerDataShare> getUnscrubbedDataShares(SearchFilter filter) {
+        int maxRows    = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
+        GdsPermission         gdsPermission = getGdsPermissionFromFilter(filter);
+        RangerDataShareList   result        = dataShareService.searchDataShares(filter);
+        List<RangerDataShare> dataShares    = new ArrayList<>();
+
+        for (RangerDataShare dataShare : result.getList()) {
+            if (dataShare != null && validator.hasPermission(dataShare.getAcl(), gdsPermission)) {
+                dataShares.add(dataShare);
+            }
+        }
+
+        return getPList(dataShares, startIndex, maxRows, result.getSortBy(), result.getSortType());
+    }
+
     private <T> PList<T> getPList(List<T> list, int startIndex, int maxEntries, String sortBy, String sortType) {
         List<T> subList = startIndex < list.size() ? list.subList(startIndex, Math.min(startIndex + maxEntries, list.size())) : Collections.emptyList();
 
@@ -1323,6 +1390,12 @@ public class GdsDBStore extends AbstractGdsStore {
         project.setAcl(null);
         project.setOptions(null);
         project.setAdditionalInfo(null);
+    }
+
+    private void scrubDataShareForListing(RangerDataShare dataShare) {
+        dataShare.setAcl(null);
+        dataShare.setOptions(null);
+        dataShare.setAdditionalInfo(null);
     }
 
     private void removeDshInDsForDataShare(Long dataShareId) {
@@ -1464,19 +1537,31 @@ public class GdsDBStore extends AbstractGdsStore {
         }
     }
 
-    private List<DataShareInDatasetSummary> getDshInDsSummaryList(Long datasetId) {
-        List<DataShareInDatasetSummary> ret        = new ArrayList<>();
-        SearchFilter                    filter     = new SearchFilter(SearchFilter.DATASET_ID, datasetId.toString());
-        RangerDataShareList             dataShares = dataShareService.searchDataShares(filter);
+    private List<DataShareInDatasetSummary> getDataSharesSummary(RangerDataShareList dataShares, SearchFilter filter) {
+        List<DataShareInDatasetSummary> ret = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(dataShares.getList())) {
             RangerDataShareInDatasetList dshInDsList = dataShareInDatasetService.searchDataShareInDatasets(filter);
 
             if (CollectionUtils.isNotEmpty(dshInDsList.getList())) {
                 for (RangerDataShare dataShare : dataShares.getList()) {
-                    DataShareInDatasetSummary summary = toDshInDsSummary(dataShare, dshInDsList.getList());
+                    ret.add(toDshInDsSummary(dataShare, dshInDsList.getList()));
+                }
+            }
+        }
 
-                    ret.add(summary);
+        return ret;
+    }
+
+    private List<DataShareInDatasetSummary> getDatasetsSummary(RangerDatasetList datasets, SearchFilter filter) {
+        List<DataShareInDatasetSummary> ret = new ArrayList<>();
+
+        if (CollectionUtils.isNotEmpty(datasets.getList())) {
+            RangerDataShareInDatasetList dshInDsList = dataShareInDatasetService.searchDataShareInDatasets(filter);
+
+            if (CollectionUtils.isNotEmpty(dshInDsList.getList())) {
+                for (RangerDataset dataset : datasets.getList()) {
+                    ret.add(toDshInDsSummary(dataset, dshInDsList.getList()));
                 }
             }
         }
@@ -1488,12 +1573,14 @@ public class GdsDBStore extends AbstractGdsStore {
         Optional<RangerDataShareInDataset> dshInDs = dshInDsList.stream().filter(d -> d.getDataShareId().equals(dataShare.getId())).findFirst();
 
         if (!dshInDs.isPresent()) {
-            throw restErrorUtil.createRESTException("RequestStatus for DataShareInDataset not found", MessageEnums.DATA_NOT_FOUND, dataShare.getId(), "SharedResourceId", null, HttpStatus.SC_NOT_FOUND);
+            throw restErrorUtil.createRESTException("DataShareInDataset not found", MessageEnums.DATA_NOT_FOUND, dataShare.getId(), "SharedResourceId", null, HttpStatus.SC_NOT_FOUND);
         }
 
         DataShareInDatasetSummary summary = new DataShareInDatasetSummary();
 
-        summary.setId(dataShare.getId());
+        summary.setId(dshInDs.get().getId());
+        summary.setDataShareId(dataShare.getId());
+        summary.setDataShareName(dataShare.getName());
         summary.setCreatedBy(dataShare.getCreatedBy());
         summary.setCreateTime(dataShare.getCreateTime());
         summary.setUpdatedBy(dataShare.getUpdatedBy());
@@ -1502,7 +1589,6 @@ public class GdsDBStore extends AbstractGdsStore {
         summary.setIsEnabled(dataShare.getIsEnabled());
         summary.setVersion(dataShare.getVersion());
 
-        summary.setName(dataShare.getName());
         summary.setServiceId(getServiceId(dataShare.getService()));
         summary.setServiceName(dataShare.getService());
         summary.setZoneId(getZoneId(dataShare.getZone()));
@@ -1510,6 +1596,32 @@ public class GdsDBStore extends AbstractGdsStore {
         summary.setShareStatus(dshInDs.get().getStatus());
         summary.setApprover(dshInDs.get().getApprover());
         summary.setResourceCount(sharedResourceService.getResourceCountForDataShare(dataShare.getId()));
+
+        return summary;
+    }
+
+    private DataShareInDatasetSummary toDshInDsSummary(RangerDataset dataset, List<RangerDataShareInDataset> dshInDsList) {
+        Optional<RangerDataShareInDataset> dshInDs = dshInDsList.stream().filter(d -> d.getDatasetId().equals(dataset.getId())).findFirst();
+
+        if (!dshInDs.isPresent()) {
+            throw restErrorUtil.createRESTException("DataShareInDataset not found", MessageEnums.DATA_NOT_FOUND, dataset.getId(), "DatasetId", null, HttpStatus.SC_NOT_FOUND);
+        }
+
+        DataShareInDatasetSummary summary = new DataShareInDatasetSummary();
+
+        summary.setId(dshInDs.get().getId());
+        summary.setDatasetId(dataset.getId());
+        summary.setDatasetName(dataset.getName());
+        summary.setCreatedBy(dataset.getCreatedBy());
+        summary.setCreateTime(dataset.getCreateTime());
+        summary.setUpdatedBy(dataset.getUpdatedBy());
+        summary.setUpdateTime(dataset.getUpdateTime());
+        summary.setGuid(dataset.getGuid());
+        summary.setIsEnabled(dataset.getIsEnabled());
+        summary.setVersion(dataset.getVersion());
+
+        summary.setShareStatus(dshInDs.get().getStatus());
+        summary.setApprover(dshInDs.get().getApprover());
 
         return summary;
     }
@@ -1522,6 +1634,16 @@ public class GdsDBStore extends AbstractGdsStore {
         }
 
         return xService.getId();
+    }
+
+    private String getServiceType(String serviceName) {
+        String serviceTpe = daoMgr.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
+
+        if (StringUtils.isEmpty(serviceTpe)) {
+            throw restErrorUtil.createRESTException("Service type not found", MessageEnums.DATA_NOT_FOUND, null, "ServiceName", null, HttpStatus.SC_NOT_FOUND);
+        }
+
+        return serviceTpe;
     }
 
     private Long getZoneId(String zoneName) {

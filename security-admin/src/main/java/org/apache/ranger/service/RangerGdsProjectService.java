@@ -71,8 +71,8 @@ public class RangerGdsProjectService extends RangerGdsBaseModelService<XXGdsProj
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
-        sortFields.add(new SortField(SearchFilter.DATASET_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
-        sortFields.add(new SortField(SearchFilter.DATASET_NAME, "obj.name"));
+        sortFields.add(new SortField(SearchFilter.PROJECT_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.PROJECT_NAME, "obj.name"));
     }
 
     @Override

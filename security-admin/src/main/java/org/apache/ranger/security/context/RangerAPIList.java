@@ -233,11 +233,12 @@ public class RangerAPIList {
 	public static final String LIST_PROJECT_NAMES  = "GdsREST.listProjectNames";
 	public static final String PROJECT_POLICY      = "GdsREST.projectPolicy";
 
-	public static final String CREATE_DATA_SHARE   = "GdsREST.createDataShare";
-	public static final String UPDATE_DATA_SHARE   = "GdsREST.updateDataShare";
-	public static final String DELETE_DATA_SHARE   = "GdsREST.deleteDataShare";
-	public static final String GET_DATA_SHARE      = "GdsREST.getDataShare";
-	public static final String SEARCH_DATA_SHARES  = "GdsREST.searchDataShares";
+	public static final String CREATE_DATA_SHARE      = "GdsREST.createDataShare";
+	public static final String UPDATE_DATA_SHARE      = "GdsREST.updateDataShare";
+	public static final String DELETE_DATA_SHARE      = "GdsREST.deleteDataShare";
+	public static final String GET_DATA_SHARE         = "GdsREST.getDataShare";
+	public static final String SEARCH_DATA_SHARES     = "GdsREST.searchDataShares";
+	public static final String GET_DATA_SHARE_SUMMARY = "GdsREST.getDataShareSummary";
 
 	public static final String ADD_SHARED_RESOURCE     = "GdsREST.addSharedResource";
 	public static final String UPDATE_SHARED_RESOURCE  = "GdsREST.updateSharedResource";

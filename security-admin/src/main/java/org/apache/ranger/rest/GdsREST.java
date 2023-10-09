@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
+import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -298,17 +299,21 @@ public class GdsREST {
         LOG.debug("==> GdsREST.getDatasetSummary()");
 
         PList<DatasetSummary> ret;
+        RangerPerfTracer      perf   = null;
+        SearchFilter          filter = null;
 
         try {
-            SearchFilter filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
             ret = gdsStore.getDatasetSummary(filter);
         } catch (WebApplicationException we) {
             throw we;
         } catch (Throwable ex) {
-            LOG.error("getDatasetSummary() failed", ex);
+            LOG.error("getDatasetSummary({}) failed", filter, ex);
 
             throw restErrorUtil.createRESTException(ex.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
         }
 
         LOG.debug("<== GdsREST.getDatasetSummary(): {}", ret);
@@ -588,14 +593,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchProjects()");
 
         PList<RangerProject> ret;
-        RangerPerfTracer     perf   = null;
+        RangerPerfTracer     perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");;
         SearchFilter         filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
-            }
-
             filter = searchUtil.getSearchFilter(request, projectService.sortFields);
 
             ret = gdsStore.searchProjects(filter);
@@ -622,14 +623,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.listProjectNames()");
 
         PList<String>    ret;
-        RangerPerfTracer perf   = null;
+        RangerPerfTracer perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
         SearchFilter     filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
-            }
-
             filter = searchUtil.getSearchFilter(request, projectService.sortFields);
 
             ret = gdsStore.getProjectNames(filter);
@@ -923,14 +920,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchDataShares()");
 
         PList<RangerDataShare> ret;
-        RangerPerfTracer       perf   = null;
+        RangerPerfTracer       perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShares()");
         SearchFilter           filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShares()");
-            }
-
             filter = searchUtil.getSearchFilter(request, dataShareService.sortFields);
 
             ret = gdsStore.searchDataShares(filter);
@@ -945,6 +938,35 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.searchDataShares({}): {}", filter, ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/datashare/summary")
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATA_SHARE_SUMMARY + "\")")
+    public PList<DataShareSummary> getDataShareSummary(@Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getDataShareSummary()");
+
+        PList<DataShareSummary> ret;
+        RangerPerfTracer        perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDataShareSummary()");
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, dataShareService.sortFields);
+
+            ret = gdsStore.getDataShareSummary(filter);
+        } catch (WebApplicationException we) {
+            throw we;
+        } catch (Throwable ex) {
+            LOG.error("getDataShareSummary() failed", ex);
+
+            throw restErrorUtil.createRESTException(ex.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getDataShareSummary(): {}", ret);
 
         return ret;
     }
@@ -1085,14 +1107,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchSharedResources()");
 
         PList<RangerSharedResource> ret;
-        RangerPerfTracer       perf   = null;
-        SearchFilter           filter = null;
+        RangerPerfTracer            perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchSharedResources()");
+        SearchFilter                filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchSharedResources()");
-            }
-
             filter = searchUtil.getSearchFilter(request, sharedResourceService.sortFields);
 
             ret = gdsStore.searchSharedResources(filter);
@@ -1120,7 +1138,7 @@ public class GdsREST {
         LOG.debug("==> GdsREST.addDataShareInDataset({})", datasetData);
 
         RangerDataShareInDataset ret;
-        RangerPerfTracer  perf = null;
+        RangerPerfTracer         perf = null;
 
         try {
             if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
@@ -1152,7 +1170,7 @@ public class GdsREST {
         LOG.debug("==> GdsREST.updateDataShareInDataset({}, {})", id, dataShareInDataset);
 
         RangerDataShareInDataset ret;
-        RangerPerfTracer  perf = null;
+        RangerPerfTracer         perf = null;
 
         try {
             if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
@@ -1244,14 +1262,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchDataShareInDatasets()");
 
         PList<RangerDataShareInDataset> ret;
-        RangerPerfTracer         perf   = null;
+        RangerPerfTracer         perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShareInDatasets()");
         SearchFilter             filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDataShareInDatasets()");
-            }
-
             filter = searchUtil.getSearchFilter(request, dshidService.sortFields);
 
             ret = gdsStore.searchDataShareInDatasets(filter);
@@ -1404,14 +1418,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchDatasetInProjects()");
 
         PList<RangerDatasetInProject> ret;
-        RangerPerfTracer              perf   = null;
+        RangerPerfTracer              perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDatasetInProjects()");
         SearchFilter                  filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchDatasetInProjects()");
-            }
-
             filter = searchUtil.getSearchFilter(request, dipService.sortFields);
 
             ret = gdsStore.searchDatasetInProjects(filter);

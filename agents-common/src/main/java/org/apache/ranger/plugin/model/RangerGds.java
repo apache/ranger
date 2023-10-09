@@ -575,10 +575,100 @@ public class RangerGds {
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DataShareSummary extends RangerBaseModelObject implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String                          name;
+        private String                          description;
+        private GdsPermission                   permissionForCaller;
+        private Long                            resourceCount;
+        private Long                            serviceId;
+        private String                          serviceName;
+        private String                          serviceType;
+        private Long                            zoneId;
+        private String                          zoneName;
+        private List<DataShareInDatasetSummary> datasets;
+
+        public DataShareSummary() {
+            super();
+        }
+
+        public String getName() { return name; }
+
+        public void setName(String name) { this.name = name; }
+
+        public String getDescription() { return description; }
+
+        public void setDescription(String description) { this.description = description; }
+
+        public GdsPermission getPermissionForCaller() { return permissionForCaller; }
+
+        public void setPermissionForCaller(GdsPermission permissionForCaller) { this.permissionForCaller = permissionForCaller; }
+
+        public Long getResourceCount() { return resourceCount; }
+
+        public void setResourceCount(Long resourceCount) { this.resourceCount = resourceCount; }
+
+        public Long getServiceId() { return serviceId; }
+
+        public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
+
+        public String getServiceName() { return serviceName; }
+
+        public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+
+        public String getServiceType() { return serviceType; }
+
+        public void setServiceType(String serviceType) { this.serviceType = serviceType; }
+
+        public Long getZoneId() { return zoneId; }
+
+        public void setZoneId(Long zoneId) { this.zoneId = zoneId; }
+
+        public String getZoneName() { return zoneName; }
+
+        public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+
+        public List<DataShareInDatasetSummary> getDatasets() { return datasets; }
+
+        public void setDatasets(List<DataShareInDatasetSummary> datasets) { this.datasets = datasets; }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("DataShareSummary={");
+
+            super.toString(sb);
+
+            sb.append("name={").append(name).append("} ")
+              .append("description={").append(description).append("} ")
+              .append("permissionForCaller={").append(permissionForCaller).append("} ")
+              .append("resourceCount={").append(resourceCount).append("} ")
+              .append("serviceId={").append(serviceId).append("} ")
+              .append("serviceName={").append(serviceName).append("} ")
+              .append("serviceType={").append(serviceType).append("} ")
+              .append("zoneName={").append(zoneName).append("} ")
+              .append("zoneId={").append(zoneId).append("} ")
+              .append("datasets={").append(datasets).append("} ")
+              .append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DataShareInDatasetSummary extends RangerBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String         name;
+        private Long           datasetId;
+        private String         datasetName;
+        private Long           dataShareId;
+        private String         dataShareName;
         private Long           serviceId;
         private String         serviceName;
         private Long           zoneId;
@@ -591,81 +681,63 @@ public class RangerGds {
             super();
         }
 
-        public String getName() {
-            return name;
-        }
+        public String getDatasetName() { return datasetName; }
 
-        public void setName(String name) {
-            this.name = name;
-        }
+        public void setDatasetName(String datasetName) { this.datasetName = datasetName; }
 
-        public Long getServiceId() {
-            return serviceId;
-        }
+        public Long getDatasetId() { return datasetId; }
 
-        public void setServiceId(Long serviceId) {
-            this.serviceId = serviceId;
-        }
+        public void setDatasetId(Long datasetId) { this.datasetId = datasetId; }
 
-        public String getServiceName() {
-            return serviceName;
-        }
+        public Long getDataShareId() { return dataShareId; }
 
-        public void setServiceName(String serviceName) {
-            this.serviceName = serviceName;
-        }
+        public void setDataShareId(Long dataShareId) { this.dataShareId = dataShareId; }
 
-        public Long getZoneId() {
-            return zoneId;
-        }
+        public String getDataShareName() { return dataShareName; }
 
-        public void setZoneId(Long zoneId) {
-            this.zoneId = zoneId;
-        }
+        public void setDataShareName(String dataShareName) { this.dataShareName = dataShareName; }
 
-        public String getZoneName() {
-            return zoneName;
-        }
+        public Long getServiceId() { return serviceId; }
 
-        public void setZoneName(String zoneName) {
-            this.zoneName = zoneName;
-        }
+        public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
 
-        public Long getResourceCount() {
-            return resourceCount;
-        }
+        public String getServiceName() { return serviceName; }
 
-        public void setResourceCount(Long resourceCount) {
-            this.resourceCount = resourceCount;
-        }
+        public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
-        public GdsShareStatus getShareStatus() {
-            return shareStatus;
-        }
+        public Long getZoneId() { return zoneId; }
 
-        public void setShareStatus(GdsShareStatus shareStatus) {
-            this.shareStatus = shareStatus;
-        }
+        public void setZoneId(Long zoneId) { this.zoneId = zoneId; }
 
-        public String getApprover() {
-            return approver;
-        }
+        public String getZoneName() { return zoneName; }
 
-        public void setApprover(String approver) {
-            this.approver = approver;
-        }
+        public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+
+        public Long getResourceCount() { return resourceCount; }
+
+        public void setResourceCount(Long resourceCount) { this.resourceCount = resourceCount; }
+
+        public GdsShareStatus getShareStatus() { return shareStatus; }
+
+        public void setShareStatus(GdsShareStatus shareStatus) { this.shareStatus = shareStatus; }
+
+        public String getApprover() { return approver; }
+
+        public void setApprover(String approver) { this.approver = approver; }
 
         @Override
-        public String toString() {
-            return toString(new StringBuilder()).toString();
-        }
+        public String toString() {return toString(new StringBuilder()).toString(); }
 
         public StringBuilder toString(StringBuilder sb) {
-            sb.append("DatasetSummary={");
+            sb.append("DataShareInDatasetSummary={");
 
             super.toString(sb);
 
-            sb.append("name={").append(name).append("} ")
+            sb.append("name={").append(datasetName).append("} ")
+              .append("datasetId={").append(datasetId).append("} ")
+              .append("datasetName={").append(datasetName).append("} ")
+              .append("dataShareId={").append(dataShareId).append("} ")
+              .append("dataShareName={").append(dataShareName).append("} ")
               .append("serviceId={").append(serviceId).append("} ")
               .append("serviceName={").append(serviceName).append("} ")
               .append("zoneId={").append(zoneId).append("} ")
