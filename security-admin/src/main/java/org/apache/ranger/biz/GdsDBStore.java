@@ -1247,22 +1247,24 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetSummary.setVersion(dataset.getVersion());
             datasetSummary.setPermissionForCaller(permissionForCaller);
 
-            if (!gdsPermission.equals(GdsPermission.LIST)) {
-                datasetSummary.setProjectsCount(getDIPCountForDataset(dataset.getId()));
-                datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset.getId()));
+            ret.add(datasetSummary);
 
-                SearchFilter                    filter            = new SearchFilter(SearchFilter.DATASET_ID, dataset.getId().toString());
-                RangerDataShareList             dataShares        = dataShareService.searchDataShares(filter);
-                List<DataShareInDatasetSummary> dataSharesSummary = getDataSharesSummary(dataShares, filter);
-
-                datasetSummary.setDataShares(dataSharesSummary);
-                datasetSummary.setTotalResourceCount(dataSharesSummary.stream()
-                        .map(DataShareInDatasetSummary::getResourceCount)
-                        .mapToLong(Long::longValue)
-                        .sum());
+            if (gdsPermission.equals(GdsPermission.LIST)) {
+                continue;
             }
 
-            ret.add(datasetSummary);
+            datasetSummary.setProjectsCount(getDIPCountForDataset(dataset.getId()));
+            datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset));
+
+            SearchFilter                    filter            = new SearchFilter(SearchFilter.DATASET_ID, dataset.getId().toString());
+            RangerDataShareList             dataShares        = dataShareService.searchDataShares(filter);
+            List<DataShareInDatasetSummary> dataSharesSummary = getDataSharesSummary(dataShares, filter);
+
+            datasetSummary.setDataShares(dataSharesSummary);
+            datasetSummary.setTotalResourceCount(dataSharesSummary.stream()
+                .map(DataShareInDatasetSummary::getResourceCount)
+                .mapToLong(Long::longValue)
+                .sum());
         }
 
         return ret;
@@ -1319,17 +1321,23 @@ public class GdsDBStore extends AbstractGdsStore {
         return datasetInProjectService.getDatasetsInProjectCount(datasetId);
     }
 
-    private Map<PrincipalType, Integer> getPrincipalCountForDataset(Long datasetId) throws Exception {
+    private Map<PrincipalType, Integer> getPrincipalCountForDataset(RangerDataset dataset) throws Exception {
         Map<PrincipalType, Integer> ret    = new HashMap<>();
-        Set<String>                 users  = new HashSet<>();
-        Set<String>                 groups = new HashSet<>();
-        Set<String>                 roles  = new HashSet<>();
+        Set<String>                 users  = Collections.emptySet();
+        Set<String>                 groups = Collections.emptySet();
+        Set<String>                 roles  = Collections.emptySet();
 
-        for (RangerPolicy policy : getDatasetPolicies(datasetId)) {
-            for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
-                users.addAll(policyItem.getUsers());
-                groups.addAll(policyItem.getGroups());
-                roles.addAll(policyItem.getRoles());
+        if (validator.hasPermission(dataset.getAcl(), GdsPermission.AUDIT)) {
+            users  = new HashSet<>();
+            groups = new HashSet<>();
+            roles  = new HashSet<>();
+
+            for (RangerPolicy policy : getDatasetPolicies(dataset.getId())) {
+                for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+                    users.addAll(policyItem.getUsers());
+                    groups.addAll(policyItem.getGroups());
+                    roles.addAll(policyItem.getRoles());
+                }
             }
         }
 
