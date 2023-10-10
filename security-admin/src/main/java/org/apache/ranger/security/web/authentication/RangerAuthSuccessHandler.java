@@ -80,7 +80,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request,
 	    HttpServletResponse response, Authentication authentication)
     throws ServletException, IOException {
-    	
+
 	RangerSessionFixationProtectionStrategy rangerSessionFixationProtectionStrategy=new RangerSessionFixationProtectionStrategy();
 	rangerSessionFixationProtectionStrategy.onAuthentication(authentication, request, response);
     	WebAuthenticationDetails details = (WebAuthenticationDetails) authentication
@@ -88,26 +88,27 @@ SavedRequestAwareAuthenticationSuccessHandler {
     	String remoteAddress = details != null ? details.getRemoteAddress()
     		: "";
     	String sessionId = details != null ? details.getSessionId() : "";
-    	
+		String userAgent = request.getHeader("User-Agent");
+
     	boolean isValidUser = sessionMgr.isValidXAUser(authentication.getName());
     	String rangerAuthenticationMethod=PropertiesUtil.getProperty("ranger.authentication.method","NONE");
     	if(!isValidUser && !"NONE".equalsIgnoreCase(rangerAuthenticationMethod)){
     		xUserMgr.createServiceConfigUser(authentication.getName());
     		isValidUser = sessionMgr.isValidXAUser(authentication.getName());
     	}
-    	
+
     	response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Cache-Control", "no-cache");
 		response.setHeader("X-Frame-Options", "DENY");
 		VXResponse vXResponse = new VXResponse();
-    	
+
     	if(!isValidUser) {
     		sessionMgr.processFailureLogin(
     				XXAuthSession.AUTH_STATUS_USER_NOT_FOUND,
     				XXAuthSession.AUTH_TYPE_PASSWORD, authentication.getName(),
-    				remoteAddress, sessionId);
+					remoteAddress, sessionId, userAgent);
     		authentication.setAuthenticated(false);
-    		
+
 			vXResponse.setStatusCode(HttpServletResponse.SC_PRECONDITION_FAILED);
 			vXResponse.setMsgDesc("Auth Succeeded but user is not synced yet for " + authentication.getName());
 
@@ -117,9 +118,9 @@ SavedRequestAwareAuthenticationSuccessHandler {
 			// response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
 			logger.info("Auth Succeeded but user is not synced yet for "
 					+ authentication.getName());
-    		
+
     	} else {
-    	
+
 			String ajaxRequestHeader = request.getHeader("X-Requested-With");
 			if (logger.isDebugEnabled()) {
 			    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
@@ -132,7 +133,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
 				// }
 				// request.getRequestDispatcher(ajaxLoginSuccessPage).forward(request,
 				// response);
-				
+
 				String jsonResp = "";
 				try {
 					vXResponse.setStatusCode(HttpServletResponse.SC_OK);

@@ -310,7 +310,7 @@ public class SessionMgr {
 	}
 
 	public XXAuthSession processFailureLogin(int authStatus, int authType,
-			String loginId, String remoteAddr, String sessionId) {
+			String loginId, String remoteAddr, String sessionId, String userAgent) {
 		XXAuthSession gjAuthSession = new XXAuthSession();
 		gjAuthSession.setLoginId(loginId);
 		gjAuthSession.setUserId(null);
@@ -320,7 +320,7 @@ public class SessionMgr {
 		gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
 		gjAuthSession.setExtSessionId(sessionId);
 		gjAuthSession.setRequestIP(remoteAddr);
-		gjAuthSession.setRequestUserAgent(null);
+		gjAuthSession.setRequestUserAgent(userAgent);
 
 		gjAuthSession = storeAuthSession(gjAuthSession);
 		return gjAuthSession;
