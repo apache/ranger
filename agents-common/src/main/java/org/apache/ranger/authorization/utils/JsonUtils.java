@@ -24,6 +24,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
+import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
@@ -47,6 +48,7 @@ public class JsonUtils {
     private static final Type TYPE_LIST_AUDIT_FILTER               = new TypeToken<List<AuditFilter>>() {}.getType();
     private static final Type TYPE_LIST_RANGER_VALIDITY_RECURRENCE = new TypeToken<List<RangerValidityRecurrence>>() {}.getType();
     private static final Type TYPE_LIST_RANGER_PRINCIPAL           = new TypeToken<List<RangerPrincipal>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_TAG_MASK_INFO       = new TypeToken<List<RangerTagDataMaskInfo>>() {}.getType();
     private static final Type TYPE_MAP_RANGER_MASK_INFO            = new TypeToken<Map<String, RangerPolicyItemDataMaskInfo>>() {}.getType();
     private static final Type TYPE_MAP_RANGER_POLICY_RESOURCE      = new TypeToken<Map<String, RangerPolicyResource>>() {}.getType();
 
@@ -164,7 +166,7 @@ public class JsonUtils {
         try {
             return gson.get().fromJson(jsonStr, TYPE_LIST_AUDIT_FILTER);
         } catch (Exception e) {
-            LOG.error("failed to create audit filters from: " + jsonStr, e);
+            LOG.error("Cannot get List<AuditFilter> from " + jsonStr, e);
             return null;
         }
     }
@@ -182,7 +184,7 @@ public class JsonUtils {
         try {
             return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_PRINCIPAL);
         } catch (Exception e) {
-            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            LOG.error("Cannot get List<RangerPrincipal> from " + jsonStr, e);
             return null;
         }
     }
@@ -191,7 +193,16 @@ public class JsonUtils {
         try {
             return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_MASK_INFO);
         } catch (Exception e) {
-            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            LOG.error("Cannot get Map<String, RangerPolicyItemDataMaskInfo> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static List<RangerTagDataMaskInfo> jsonToListTagMaskInfo(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_TAG_MASK_INFO);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerTagDataMaskInfo> from " + jsonStr, e);
             return null;
         }
     }
@@ -200,7 +211,7 @@ public class JsonUtils {
         try {
             return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_POLICY_RESOURCE);
         } catch (Exception e) {
-            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            LOG.error("Cannot get Map<String, RangerPolicyResource> from " + jsonStr, e);
             return null;
         }
     }

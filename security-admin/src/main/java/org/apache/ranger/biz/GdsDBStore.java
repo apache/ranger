@@ -988,8 +988,8 @@ public class GdsDBStore extends AbstractGdsStore {
                                                             .map(RangerPolicyResource::getValues).filter(Objects::nonNull)
                                                             .anyMatch(res -> hasResource(res, resourceContains));
 
-                        if (!includeResource && CollectionUtils.isNotEmpty(sharedResource.getSubResourceNames())) {
-                            includeResource = sharedResource.getSubResourceNames().stream().filter(Objects::nonNull)
+                        if (!includeResource && sharedResource.getSubResource() != null && CollectionUtils.isNotEmpty(sharedResource.getSubResource().getValues())) {
+                            includeResource = sharedResource.getSubResource().getValues().stream().filter(Objects::nonNull)
                                                                                            .anyMatch(value -> value.contains(resourceContains));
                         }
                     }

@@ -70,8 +70,8 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
     @Column(name = "default_access_types")
     protected String defaultAccessTypes;
 
-    @Column(name = "default_masks")
-    protected String defaultMasks;
+    @Column(name = "default_tag_masks")
+    protected String defaultTagMasks;
 
     @Column(name = "terms_of_use")
     protected String termsOfUse;
@@ -129,9 +129,9 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     public void setDefaultAccessTypes(String defaultAccessTypes) { this.defaultAccessTypes = defaultAccessTypes; }
 
-    public String getDefaultMasks() { return defaultMasks; }
+    public String getDefaultTagMasks() { return defaultTagMasks; }
 
-    public void setDefaultMasks(String defaultMasks) { this.defaultMasks = defaultMasks; }
+    public void setDefaultTagMasks(String defaultMasks) {this.defaultTagMasks = defaultMasks; }
 
     public String getTermsOfUse() { return termsOfUse; }
 
@@ -150,7 +150,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, acl, conditionExpr, defaultAccessTypes, defaultMasks, termsOfUse, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, acl, conditionExpr, defaultAccessTypes, defaultTagMasks, termsOfUse, options, additionalInfo);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
                Objects.equals(acl, other.acl) &&
                Objects.equals(conditionExpr, other.conditionExpr) &&
                Objects.equals(defaultAccessTypes, other.defaultAccessTypes) &&
-               Objects.equals(defaultMasks, other.defaultMasks) &&
+               Objects.equals(defaultTagMasks, other.defaultTagMasks) &&
                Objects.equals(termsOfUse, other.termsOfUse) &&
                Objects.equals(options, other.options) &&
                Objects.equals(additionalInfo, other.additionalInfo);
@@ -201,7 +201,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
           .append("acl={").append(acl).append("} ")
           .append("conditionExpr={").append(conditionExpr).append("} ")
           .append("defaultAccessTypes={").append(defaultAccessTypes).append("} ")
-          .append("defaultMasks={").append(defaultMasks).append("} ")
+          .append("defaultMasks={").append(defaultTagMasks).append("} ")
           .append("termsOfUse={").append(termsOfUse).append("} ")
           .append("options={").append(options).append("} ")
           .append("additionalInfo={").append(additionalInfo).append("} ")

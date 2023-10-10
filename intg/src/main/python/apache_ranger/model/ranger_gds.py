@@ -119,14 +119,14 @@ class RangerDataShare(RangerGdsBaseModelObject):
         self.zone               = attrs.get('zone')
         self.conditionExpr      = attrs.get('conditionExpr')
         self.defaultAccessTypes = attrs.get('defaultAccessTypes')
-        self.defaultMasks       = attrs.get('defaultMasks')
+        self.defaultTagMasks    = attrs.get('defaultTagMasks')
         self.termsOfUse         = attrs.get('termsOfUse')
 
     def type_coerce_attrs(self):
         super(RangerDataShare, self).type_coerce_attrs()
 
-        self.acl          = type_coerce_dict(self.acl, RangerGdsObjectACL)
-        self.defaultMasks = type_coerce_dict(self.defaultMasks, RangerPolicyItemDataMaskInfo)
+        self.acl             = type_coerce_dict(self.acl, RangerGdsObjectACL)
+        self.defaultTagMasks = type_coerce_list(self.defaultTagMasks, RangerTagDataMaskInfo)
 
 
 class RangerSharedResource(RangerBaseModelObject):
@@ -139,7 +139,8 @@ class RangerSharedResource(RangerBaseModelObject):
         self.name              = attrs.get('name')
         self.dataShareId       = attrs.get('dataShareId')
         self.resource          = attrs.get('resource')
-        self.subResourceNames  = attrs.get('subResourceNames')
+        self.subResource       = attrs.get('subResource')
+        self.subResourceType   = attrs.get('subResourceType')
         self.conditionExpr     = attrs.get('conditionExpr')
         self.accessTypes       = attrs.get('accessTypes')
         self.rowFilter         = attrs.get('rowFilter')
@@ -150,6 +151,7 @@ class RangerSharedResource(RangerBaseModelObject):
         super(RangerSharedResource, self).type_coerce_attrs()
 
         self.resource         = type_coerce_dict(self.resource, RangerPolicyResource)
+        self.subResource      = type_coerce(self.subResource, RangerPolicyResource)
         self.rowFilter        = type_coerce(self.rowFilter, RangerPolicyItemRowFilterInfo)
         self.subResourceMasks = type_coerce_dict(self.subResourceMasks, RangerPolicyItemDataMaskInfo)
 
@@ -211,6 +213,23 @@ class RangerGdsObjectACL(RangerBase):
         self.users  = type_coerce_dict(self.users, GdsPermission)
         self.groups = type_coerce_dict(self.groups, GdsPermission)
         self.roles  = type_coerce_dict(self.roles, GdsPermission)
+
+
+class RangerTagDataMaskInfo(RangerBase):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBase.__init__(self, attrs)
+
+        self.tagName       = attrs.get('tagName')
+        self.conditionExpr = attrs.get('conditionExpr')
+        self.maskInfo      = attrs.get('maskInfo')
+
+    def type_coerce_attrs(self):
+        super(RangerTagDataMaskInfo, self).type_coerce_attrs()
+
+        self.maskInfo  = type_coerce(self.maskInfo, RangerPolicyItemDataMaskInfo)
 
 
 class DataShareInDatasetSummary(RangerBaseModelObject):

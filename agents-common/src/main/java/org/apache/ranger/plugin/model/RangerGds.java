@@ -171,14 +171,14 @@ public class RangerGds {
     public static class RangerDataShare extends RangerGdsBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String                                    name;
-        private RangerGdsObjectACL                        acl;
-        private String                                    service;
-        private String                                    zone;
-        private String                                    conditionExpr;
-        private Set<String>                               defaultAccessTypes;
-        private Map<String, RangerPolicyItemDataMaskInfo> defaultMasks;
-        private String                                    termsOfUse;
+        private String                      name;
+        private RangerGdsObjectACL          acl;
+        private String                      service;
+        private String                      zone;
+        private String                      conditionExpr;
+        private Set<String>                 defaultAccessTypes;
+        private List<RangerTagDataMaskInfo> defaultTagMasks;
+        private String                      termsOfUse;
 
         public RangerDataShare() { }
 
@@ -210,12 +210,12 @@ public class RangerGds {
             this.defaultAccessTypes = defaultAccessTypes;
         }
 
-        public Map<String, RangerPolicyItemDataMaskInfo> getDefaultMasks() {
-            return defaultMasks;
+        public List<RangerTagDataMaskInfo> getDefaultTagMasks() {
+            return defaultTagMasks;
         }
 
-        public void setDefaultMasks(Map<String, RangerPolicyItemDataMaskInfo> defaultMasks) {
-            this.defaultMasks = defaultMasks;
+        public void setDefaultTagMasks(List<RangerTagDataMaskInfo> defaultTagMasks) {
+            this.defaultTagMasks = defaultTagMasks;
         }
 
         public String getTermsOfUse() { return termsOfUse; }
@@ -234,7 +234,7 @@ public class RangerGds {
               .append("zone={").append(zone).append("} ")
               .append("conditionExpr={").append(conditionExpr).append("} ")
               .append("defaultAccessTypes={").append(defaultAccessTypes).append("} ")
-              .append("defaultMasks={").append(defaultMasks).append("} ")
+              .append("defaultTagMasks={").append(defaultTagMasks).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
               .append("}");
 
@@ -248,7 +248,8 @@ public class RangerGds {
         private String                                    name;
         private Long                                      dataShareId;
         private Map<String, RangerPolicyResource>         resource;
-        private List<String>                              subResourceNames;
+        private RangerPolicyResource                      subResource;
+        private String                                    subResourceType;
         private String                                    conditionExpr;
         private Set<String>                               accessTypes;
         private RangerPolicyItemRowFilterInfo             rowFilter;
@@ -269,9 +270,13 @@ public class RangerGds {
 
         public void setResource(Map<String, RangerPolicyResource> resource) { this.resource = resource; }
 
-        public List<String> getSubResourceNames() { return subResourceNames; }
+        public RangerPolicyResource getSubResource() { return subResource; }
 
-        public void setSubResourceNames(List<String> subResourceNames) { this.subResourceNames = subResourceNames; }
+        public void setSubResource(RangerPolicyResource subResource) { this.subResource = subResource; }
+
+        public String getSubResourceType() { return subResourceType; }
+
+        public void setSubResourceType(String subResourceType) { this.subResourceType = subResourceType; }
 
         public String getConditionExpr() { return conditionExpr; }
 
@@ -305,7 +310,8 @@ public class RangerGds {
             sb.append("name").append(name).append("} ")
               .append("dataShareId={").append(dataShareId).append("} ")
               .append("resource={").append(resource).append("} ")
-              .append("subResourceNames={").append(subResourceNames).append("} ")
+              .append("subResource={").append(subResource).append("} ")
+              .append("subResourceType={").append(subResourceType).append("} ")
               .append("conditionExpr={").append(conditionExpr).append("} ")
               .append("accessTypes={").append(accessTypes).append("} ")
               .append("rowFilterInfo={").append(rowFilter).append("} ")
@@ -475,6 +481,61 @@ public class RangerGds {
             sb.append("users={").append(users).append("} ")
               .append("groups={").append(groups).append("} ")
               .append("roles={").append(roles).append("} ")
+              .append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerTagDataMaskInfo implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String                       tagName;
+        private String                       conditionExpr;
+        private RangerPolicyItemDataMaskInfo maskInfo;
+
+        public RangerTagDataMaskInfo() { }
+
+        public String getTagName() {
+            return tagName;
+        }
+
+        public void setTagName(String tagName) {
+            this.tagName = tagName;
+        }
+
+        public String getConditionExpr() {
+            return conditionExpr;
+        }
+
+        public void setConditionExpr(String conditionExpr) {
+            this.conditionExpr = conditionExpr;
+        }
+
+        public RangerPolicyItemDataMaskInfo getMaskInfo() {
+            return maskInfo;
+        }
+
+        public void setMaskInfo(RangerPolicyItemDataMaskInfo maskInfo) {
+            this.maskInfo = maskInfo;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("RangerTagDataMaskInfo={");
+
+            sb.append("tagName={").append(tagName).append("} ")
+              .append("conditionExpr={").append(conditionExpr).append("} ")
+              .append("maskInfo={").append(maskInfo).append("} ")
               .append("}");
 
             return sb;

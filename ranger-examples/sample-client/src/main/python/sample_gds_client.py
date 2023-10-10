@@ -43,14 +43,14 @@ hive_share_1.service            = 'dev_hive'
 hive_share_1.zone               = None
 hive_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"
 hive_share_1.defaultAccessTypes = [ '_READ' ]
-hive_share_1.defaultMasks       = { 'HAS_TAG("PII")': { 'dataMaskType': 'MASK' } }
+hive_share_1.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hdfs_share_1 = RangerDataShare({ 'name': 'datashare-2', 'description': 'the second datashare!', 'acl': { 'groups': { 'finance': GdsPermission.ADMIN } }, 'termsOfUse': None })
 hdfs_share_1.service            = 'dev_hdfs'
 hdfs_share_1.zone               = None
 hdfs_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"
 hdfs_share_1.defaultAccessTypes = [ '_READ' ]
-hdfs_share_1.defaultMasks       = None
+hdfs_share_1.defaultTagMasks    = None
 
 print(f'Creating dataset: name={dataset_1.name}')
 dataset_1 = gds.create_dataset(dataset_1)
@@ -79,7 +79,8 @@ print(f'  created data_share: {hdfs_share_1}')
 
 hive_resource_1 = RangerSharedResource({ 'dataShareId': hive_share_1.id, 'name': 'db1.tbl1' })
 hive_resource_1.resource         = { 'database': { 'values': ['db1'] }, 'table': { 'values': ['tbl1'] } }
-hive_resource_1.subResourceNames = [ 'col1', 'col2' ]
+hive_resource_1.subResource      = { 'values': [ 'col1', 'col2' ] }
+hive_resource_1.subResourceType  = 'columnn'
 hive_resource_1.conditionExpr    = "HAS_TAG('SCAN_COMPLETE') && !HAS_TAG('PII') && TAGS['DATA_QUALITY'].score > 0.8"
 hive_resource_1.accessTypes      = [ '_READ' ]
 hive_resource_1.rowFilter        = { 'filterExpr': "country = 'US'" }
@@ -88,7 +89,8 @@ hive_resource_1.profiles         = [ 'GDPR', 'HIPPA' ]
 
 hive_resource_2 = RangerSharedResource({ 'dataShareId': hive_share_1.id, 'name': 'db2.tbl2' })
 hive_resource_2.resource         = { 'database': { 'values': ['db2'] }, 'table': { 'values': ['tbl2'] } }
-hive_resource_2.subResourceNames = [ '*' ]
+hive_resource_2.subResource      = { 'values': [ '*' ] }
+hive_resource_2.subResourceType  = 'column'
 hive_resource_2.accessTypes      = [ '_READ', '_WRITE' ]
 hive_resource_2.profiles         = [ 'GDPR' ]
 

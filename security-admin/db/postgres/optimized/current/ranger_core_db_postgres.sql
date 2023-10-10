@@ -1752,7 +1752,7 @@ CREATE TABLE x_gds_data_share(
   , zone_id              BIGINT       NOT NULL
   , condition_expr       TEXT         NULL
   , default_access_types TEXT         NULL
-  , default_masks        TEXT         NULL
+  , default_tag_masks    TEXT         NULL
   , terms_of_use         TEXT         NULL     DEFAULT NULL
   , options              TEXT         NULL     DEFAULT NULL
   , additional_info      TEXT         NULL     DEFAULT NULL
@@ -1783,7 +1783,8 @@ CREATE TABLE x_gds_shared_resource(
   , data_share_id        BIGINT       NOT NULL
   , resource             TEXT         NOT NULL
   , resource_signature   VARCHAR(128) NOT NULL
-  , sub_resource_names   TEXT         NULL     DEFAULT NULL
+  , sub_resource        TEXT         NULL     DEFAULT NULL
+  , sub_resource_type   TEXT         NULL     DEFAULT NULL
   , condition_expr       TEXT         NULL     DEFAULT NULL
   , access_types         TEXT         NULL     DEFAULT NULL
   , row_filter           TEXT         NULL     DEFAULT NULL

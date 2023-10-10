@@ -61,8 +61,11 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
     @Column(name = "resource")
     protected String resource;
 
-    @Column(name = "sub_resource_names")
-    protected String subResourceNames;
+    @Column(name = "sub_resource")
+    protected String subResource;
+
+    @Column(name = "sub_resource_type")
+    protected String subResourceType;
 
     @Column(name = "resource_signature")
     protected String resourceSignature;
@@ -123,9 +126,13 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
 
     public void setResource(String resource) { this.resource = resource; }
 
-    public String getSubResourceNames() { return subResourceNames; }
+    public String getSubResource() { return subResource; }
 
-    public void setSubResourceNames(String subResourceNames) { this.subResourceNames = subResourceNames; }
+    public void setSubResource(String subResource) {this.subResource = subResource; }
+
+    public String getSubResourceType() { return subResourceType; }
+
+    public void setSubResourceType(String subResourceType) {this.subResourceType = subResourceType; }
 
     public String getResourceSignature() { return resourceSignature; }
 
@@ -164,7 +171,7 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, name, description, dataShareId, resource, subResourceNames, resourceSignature, conditionExpr, accessTypes, rowFilter, subResourceMasks, profiles, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, name, description, dataShareId, resource, subResource, subResourceType, resourceSignature, conditionExpr, accessTypes, rowFilter, subResourceMasks, profiles, options, additionalInfo);
     }
 
     @Override
@@ -187,7 +194,8 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
                Objects.equals(description, other.description) &&
                Objects.equals(dataShareId, other.dataShareId) &&
                Objects.equals(resource, other.resource) &&
-               Objects.equals(subResourceNames, other.subResourceNames) &&
+               Objects.equals(subResource, other.subResource) &&
+               Objects.equals(subResourceType, other.subResourceType) &&
                Objects.equals(resourceSignature, other.resourceSignature) &&
                Objects.equals(conditionExpr, other.conditionExpr) &&
                Objects.equals(accessTypes, other.accessTypes) &&
@@ -215,7 +223,8 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
           .append("description={").append(description).append("} ")
           .append("dataShareId={").append(dataShareId).append("} ")
           .append("resource={").append(resource).append("} ")
-          .append("subResourceNames={").append(subResourceNames).append("} ")
+          .append("subResource={").append(subResource).append("} ")
+          .append("subResourceType={").append(subResourceType).append("} ")
           .append("conditionExpr={").append(conditionExpr).append("} ")
           .append("accessTypes={").append(accessTypes).append("} ")
           .append("rowFilter={").append(rowFilter).append("} ")

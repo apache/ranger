@@ -236,7 +236,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         xObj.setZoneId(zoneId);
         xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setDefaultAccessTypes(JsonUtils.objectToJson(vObj.getDefaultAccessTypes()));
-        xObj.setDefaultMasks(JsonUtils.objectToJson(vObj.getDefaultMasks()));
+        xObj.setDefaultTagMasks(JsonUtils.objectToJson(vObj.getDefaultTagMasks()));
         xObj.setTermsOfUse(vObj.getTermsOfUse());
         xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
         xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
@@ -262,7 +262,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         vObj.setZone(zoneName);
         vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setDefaultAccessTypes(JsonUtils.jsonToSetString(xObj.getDefaultAccessTypes()));
-        vObj.setDefaultMasks(JsonUtils.jsonToMapMaskInfo(xObj.getDefaultMasks()));
+        vObj.setDefaultTagMasks(JsonUtils.jsonToListTagMaskInfo(xObj.getDefaultTagMasks()));
         vObj.setTermsOfUse(xObj.getTermsOfUse());
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
         vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));
