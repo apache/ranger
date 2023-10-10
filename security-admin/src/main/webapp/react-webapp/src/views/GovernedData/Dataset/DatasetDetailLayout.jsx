@@ -27,14 +27,23 @@ import React, {
 import withRouter from "Hooks/withRouter";
 import { fetchApi } from "../../../utils/fetchAPI";
 import dateFormat from "dateformat";
-import { Button, Tab, Tabs, Modal, Accordion, Card } from "react-bootstrap";
+import {
+  Button,
+  Tab,
+  Tabs,
+  Modal,
+  Accordion,
+  Card,
+  DropdownButton,
+  Dropdown
+} from "react-bootstrap";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import AccessGrantForm from "./AccessGrantForm";
 import { toast } from "react-toastify";
 import { Form } from "react-final-form";
 import { CustomTooltip, Loader } from "../../../components/CommonComponents";
 import moment from "moment-timezone";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { serverError } from "../../../utils/XAUtils";
 import Select from "react-select";
 import userColourIcon from "../../../images/user-colour.svg";
@@ -43,6 +52,7 @@ import roleColourIcon from "../../../images/role-colour.svg";
 import arrayMutators from "final-form-arrays";
 import { groupBy, isEmpty, isArray } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
+import ReactPaginate from "react-paginate";
 
 const initialState = {
   loader: false,
@@ -88,6 +98,7 @@ const DatasetDetailLayout = () => {
     datasetFormReducer,
     initialState
   );
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [dataShareRequestsList, setDatashareRequestsList] = useState([]);
   const [userSharedWithAccordion, setUserSharedWithAccordion] = useState(false);
   const [groupSharedWithAccordion, setGroupSharedWithAccordion] =
@@ -110,6 +121,7 @@ const DatasetDetailLayout = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const navigate = useNavigate();
   const [accessGrantFormValues, setAccessGrantFormValues] = useState();
+  const [blockUI, setBlockUI] = useState(false);
   const [policyData, setPolicyData] = useState();
   const [
     showDatashareRequestDeleteConfirmModal,
@@ -122,19 +134,64 @@ const DatasetDetailLayout = () => {
     granted: "",
     active: ""
   });
+  const [showDeleteDatasetModal, setShowDeleteDatasetModal] = useState(false);
+  const [requestCurrentPage, setRequestCurrentPage] = useState(0);
+  const [requestPageCount, setRequestPageCount] = useState();
+  const [requestAccordionState, setRequestAccordionState] = useState({});
+  const itemsPerPage = 5;
+  const [showActivateRequestModal, setShowActivateRequestModal] =
+    useState(false);
+  const [datashareInfo, setDatashareInfo] = useState();
+  const [datashareRequestInfo, setDatashareRequestInfo] = useState();
+
+  const toggleConfirmModalForDatasetDelete = () => {
+    setShowDeleteDatasetModal(true);
+  };
+
+  const handleDatasetDeleteClick = async () => {
+    toggleClose();
+    try {
+      setBlockUI(true);
+      await fetchApi({
+        url: `gds/dataset/${datasetId}`,
+        method: "DELETE"
+      });
+      setBlockUI(false);
+      toast.success(" Success! Dataset deleted successfully");
+      navigate("/gds/mydatasetlisting");
+    } catch (error) {
+      setBlockUI(false);
+      let errorMsg = "Failed to delete dataset : ";
+      if (error?.response?.data?.msgDesc) {
+        errorMsg += error.response.data.msgDesc;
+      }
+      toast.error(errorMsg);
+      console.error("Error occurred during deleting dataset : " + error);
+    }
+  };
 
   useEffect(() => {
     fetchDatasetInfo(datasetId);
   }, []);
 
-  const fetchDatashareRequestInfo = async () => {
+  const fetchDatashareRequestList = async (datashareName, currentPage) => {
     try {
       let params = {};
+      params["pageSize"] = itemsPerPage;
+      params["page"] = currentPage;
+      params["startIndex"] = currentPage * itemsPerPage;
       params["datasetId"] = datasetId;
       const resp = await fetchApi({
         url: `gds/datashare/dataset`,
         params: params
       });
+      let accordianState = {};
+      resp.data.list.map(
+        (item) =>
+          (accordianState = { ...accordianState, ...{ [item.id]: false } })
+      );
+      setRequestAccordionState(accordianState);
+      setRequestPageCount(Math.ceil(resp.data.totalCount / itemsPerPage));
       setDatashareRequestsList(resp.data.list);
       tabTitle.all = "All (" + resp.data.totalCount + ")";
     } catch (error) {
@@ -171,6 +228,9 @@ const DatasetDetailLayout = () => {
     let tempUserList = [];
     let tempGroupList = [];
     let tempRoleList = [];
+    let userList = [];
+    let groupList = [];
+    let roleList = [];
     if (userPrinciples != undefined) {
       Object.entries(userPrinciples).map(([key, value]) => {
         tempUserList.push({ name: key, type: "USER", perm: value });
@@ -197,7 +257,7 @@ const DatasetDetailLayout = () => {
     params["resource:dataset"] = datasetName;
     try {
       const resp = await fetchApi({
-        url: "plugins/policies/gds/for-resource",
+        url: `gds/dataset/${datasetId}/policy`,
         params: params
       });
       policyData = resp.data[0];
@@ -262,15 +322,18 @@ const DatasetDetailLayout = () => {
 
   const fetchDatasetInfo = async (datasetId) => {
     try {
+      setLoader(true);
       const resp = await fetchApi({
         url: `gds/dataset/${datasetId}`
       });
+      setLoader(false);
       setDatasetInfo(resp.data);
       setDatasetDescription(resp.data.description);
       setDatasetTerms(resp.data.termsOfUse);
       if (resp.data.acl != undefined) setPrincipleAccordianData(resp.data.acl);
       setLoader(false);
     } catch (error) {
+      setLoader(false);
       console.error(`Error occurred while fetching dataset details ! ${error}`);
     }
   };
@@ -298,6 +361,8 @@ const DatasetDetailLayout = () => {
 
   const toggleClose = () => {
     setDatashareModal(false);
+    setShowDeleteDatasetModal(false);
+    setShowActivateRequestModal(false);
   };
 
   const toggleConfirmModalClose = () => {
@@ -344,7 +409,7 @@ const DatasetDetailLayout = () => {
       });
       toast.success("Request created successfully!!");
       setDatashareModal(false);
-      fetchDatashareRequestInfo();
+      fetchDatashareRequestList(undefined, requestCurrentPage);
     } catch (error) {
       dispatch({
         type: "SET_BLOCK_UI",
@@ -442,6 +507,10 @@ const DatasetDetailLayout = () => {
     })
   };
 
+  const dropDownStyle = {
+    control: (provided) => ({ ...provided, display: none })
+  };
+
   const onChangeSharedWithPrincipleName = (event) => {
     setSharedWithPrincipleName(event.target.value);
     filterSharedWithPrincipleList(event.target.value, true, undefined, false);
@@ -530,7 +599,7 @@ const DatasetDetailLayout = () => {
       if (key == "sharedWith") {
         fetchAccessGrantInfo(datasetInfo.name);
       } else if (key == "dataShares") {
-        fetchDatashareRequestInfo();
+        fetchDatashareRequestList(undefined, 0);
       }
     }
   };
@@ -665,7 +734,7 @@ const DatasetDetailLayout = () => {
     try {
       setLoader(true);
       const resp = await fetchApi({
-        url: `plugins/policies/${policyData.id}`,
+        url: `gds/dataset/${datasetId}/policy/${policyData.id}`,
         method: "PUT",
         data: dataVal
       });
@@ -715,6 +784,7 @@ const DatasetDetailLayout = () => {
 
         if (key?.conditions) {
           obj.conditions = [];
+          viewDatashareDetail;
           Object.entries(key.conditions).map(
             ([conditionKey, conditionValue]) => {
               return obj.conditions.push({
@@ -749,11 +819,13 @@ const DatasetDetailLayout = () => {
   };
 
   const back = () => {
-    navigate("/gds/datasetlisting");
+    navigate("/gds/mydatasetlisting");
   };
 
   const removeChanges = () => {
-    window.location.reload();
+    fetchDatasetInfo(datasetId);
+    showSaveCancelButton(false);
+    toggleConfirmModalClose();
   };
 
   const viewDatashareDetail = (datashareId) => {
@@ -773,7 +845,6 @@ const DatasetDetailLayout = () => {
   };
 
   const deleteDatashareRequest = async () => {
-    setShowDatashareRequestDeleteConfirmModal(false);
     try {
       setLoader(true);
       await fetchApi({
@@ -786,8 +857,9 @@ const DatasetDetailLayout = () => {
       } else {
         successMsg = "Success! Datashare request deleted successfully";
       }
+      setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
-      fetchDatashareRequestInfo();
+      fetchDatashareRequestList(undefined, requestCurrentPage);
       //fetchSharedResourceForDatashare(datashareInfo.name);
       setLoader(false);
     } catch (error) {
@@ -806,6 +878,78 @@ const DatasetDetailLayout = () => {
         "Error occurred during deleting Datashare request  : " + error
       );
     }
+  };
+
+  const termsCheckBocChange = () => {
+    setAcceptTerms(true);
+  };
+
+  const copyURL = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      toast.success("URL copied!!");
+    });
+  };
+
+  const handleRequestPageClick = ({ selected }) => {
+    setRequestCurrentPage(selected);
+    fetchDatashareRequestList(undefined, selected);
+  };
+
+  const onRequestAccordionChange = (id) => {
+    setRequestAccordionState({
+      ...requestAccordionState,
+      ...{ [id]: !requestAccordionState[id] }
+    });
+  };
+
+  const showActiveateRequestModal = (requestInfo) => {
+    setShowActivateRequestModal(true);
+    setDatashareRequestInfo(requestInfo);
+    fetchDatashareById(requestInfo.dataShareId);
+  };
+
+  const fetchDatashareById = async (datashareId) => {
+    let resp = {};
+    try {
+      resp = await fetchApi({
+        url: `gds/datashare/${datashareId}`
+      });
+    } catch (error) {
+      let errorMsg = "Failed to delete dataset : ";
+      if (error?.response?.data?.msgDesc) {
+        errorMsg += error.response.data.msgDesc;
+      }
+      console.error("Error occurred during deleting dataset : " + error);
+    }
+    setDatashareInfo(resp.data);
+  };
+
+  const activateDatashareRequest = async (datashareInfo) => {
+    if (datashareInfo.termsOfUse != undefined && !acceptTerms) {
+      toast.error("Please accept terms & conditions");
+      return null;
+    }
+    datashareRequestInfo["status"] = "ACTIVE";
+    try {
+      setLoader(true);
+      const resp = await fetchApi({
+        url: `gds/datashare/dataset/${datashareRequestInfo.id}`,
+        method: "PUT",
+        data: datashareRequestInfo
+      });
+      setLoader(false);
+      toast.success("Request updated successfully!!");
+      //showSaveCancelButton(false);
+    } catch (error) {
+      setLoader(false);
+      let errorMsg = `Failed to update request`;
+      if (error?.response?.data?.msgDesc) {
+        errorMsg = `Error! ${error.response.data.msgDesc}`;
+      }
+      toast.error(errorMsg);
+      console.error(`Error while updating request! ${error}`);
+    }
+    setShowActivateRequestModal(false);
   };
 
   return (
@@ -862,16 +1006,58 @@ const DatasetDetailLayout = () => {
             </div>
           )}
           <div>
-            <Button
-              variant="light"
-              className="border-0 bg-transparent"
-              //onClick={back}
+            <DropdownButton
+              id="dropdown-item-button"
+              title={<i className="fa fa-ellipsis-v" fontSize="36px" />}
               size="sm"
-              data-id="back"
-              data-cy="back"
+              className="hide-arrow"
             >
-              <i className="fa fa-ellipsis-v" fontSize="36px" />
-            </Button>
+              <Dropdown.Item
+                as="button"
+                // onClick={() => {
+                //   showViewModal(serviceData?.id);
+                // }}
+                data-name="fullView"
+                data-id="fullView"
+                data-cy="fullView"
+              >
+                Full View
+              </Dropdown.Item>
+              <Dropdown.Item
+                as="button"
+                onClick={() => {
+                  copyURL();
+                }}
+                data-name="copyDatasetLink"
+                data-id="copyDatasetLink"
+                data-cy="copyDatasetLink"
+              >
+                Copy Dataset Link
+              </Dropdown.Item>
+              <Dropdown.Item
+                as="button"
+                // onClick={() => {
+                //   showViewModal(serviceData?.id);
+                // }}
+                data-name="downloadJson"
+                data-id="downloadJson"
+                data-cy="downloadJson"
+              >
+                Download Json
+              </Dropdown.Item>
+              <hr />
+              <Dropdown.Item
+                as="button"
+                onClick={() => {
+                  toggleConfirmModalForDatasetDelete();
+                }}
+                data-name="deleteDataset"
+                data-id="deleteDataset"
+                data-cy="deleteDataset"
+              >
+                Delete Dataset
+              </Dropdown.Item>
+            </DropdownButton>
           </div>
         </div>
         {loader ? (
@@ -974,154 +1160,206 @@ const DatasetDetailLayout = () => {
                           <Tabs id="DatashareTabs" className="mg-b-10">
                             <Tab eventKey="All" title={tabTitle.all}>
                               <Card className="border-0">
-                                {dataShareRequestsList.length > 0 ? (
-                                  dataShareRequestsList.map((obj, index) => {
-                                    return (
-                                      <div>
-                                        <Accordion
-                                          className="mg-b-10"
-                                          defaultActiveKey="0"
-                                        >
-                                          <div className="border-bottom">
-                                            <Accordion.Toggle
-                                              as={Card.Header}
-                                              eventKey="1"
-                                              onClick={changeDatashareAccordion(
-                                                obj
-                                              )}
-                                              className="border-bottom-0"
-                                              data-id="panel"
-                                              data-cy="panel"
-                                            >
-                                              {obj["status"] == "GRANTED" ? (
-                                                <div>
-                                                  Data access granted. Activate
-                                                  Datashare
+                                <div>
+                                  {dataShareRequestsList.length > 0 ? (
+                                    dataShareRequestsList.map((obj, index) => {
+                                      return (
+                                        <div>
+                                          <Accordion
+                                            className="mg-b-10"
+                                            defaultActiveKey="0"
+                                          >
+                                            <div className="border-bottom">
+                                              <Accordion.Toggle
+                                                as={Card.Header}
+                                                eventKey="1"
+                                                onClick={() =>
+                                                  onRequestAccordionChange(
+                                                    obj.id
+                                                  )
+                                                }
+                                                className="border-bottom-0"
+                                                data-id="panel"
+                                                data-cy="panel"
+                                              >
+                                                {obj["status"] == "GRANTED" ? (
+                                                  <div>
+                                                    <span>
+                                                      Data access granted.
+                                                    </span>
+                                                    <Link
+                                                      className="mb-3"
+                                                      to=""
+                                                      onClick={() =>
+                                                        showActiveateRequestModal(
+                                                          obj
+                                                        )
+                                                      }
+                                                    >
+                                                      Activate Datashare
+                                                    </Link>
+                                                  </div>
+                                                ) : (
+                                                  <div></div>
+                                                )}
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                  <div className="d-flex align-items-center gap-1">
+                                                    {requestAccordionState[
+                                                      obj.id
+                                                    ] ? (
+                                                      <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
+                                                    ) : (
+                                                      <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                                    )}
+                                                    <h5 className="gds-heading-5 m-0">
+                                                      {/* {obj.name} */}{" "}
+                                                      Datashare{" "}
+                                                      {obj.dataShareId}
+                                                    </h5>
+                                                  </div>
+                                                  <div className="d-flex align-items-center gap-1">
+                                                    <span
+                                                      //className="badge badge-light gds-requested-status"
+                                                      className={
+                                                        obj["status"] ===
+                                                        "REQUESTED"
+                                                          ? "badge badge-light gds-requested-status"
+                                                          : obj["status"] ===
+                                                            "GRANTED"
+                                                          ? "badge badge-light gds-granted-status"
+                                                          : obj["status"] ===
+                                                            "ACTIVE"
+                                                          ? "badge badge-light gds-active-status"
+                                                          : "badge badge-light gds-denied-status"
+                                                      }
+                                                    >
+                                                      {obj["status"]}
+                                                    </span>
+                                                    <Button
+                                                      variant="outline-dark"
+                                                      size="sm"
+                                                      className="mr-2"
+                                                      title="View"
+                                                      data-name="viewDatashare"
+                                                      onClick={() =>
+                                                        viewDatashareDetail(
+                                                          obj.dataShareId
+                                                        )
+                                                      }
+                                                      data-id={obj.id}
+                                                    >
+                                                      <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
+                                                    </Button>
+                                                    <Button
+                                                      variant="danger"
+                                                      size="sm"
+                                                      title="Delete"
+                                                      onClick={() =>
+                                                        toggleConfirmModalForDelete(
+                                                          obj.id,
+                                                          obj.name,
+                                                          obj.status
+                                                        )
+                                                      }
+                                                      data-name="deleteDatashareRequest"
+                                                      data-id={obj["id"]}
+                                                      data-cy={obj["id"]}
+                                                    >
+                                                      <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                                                    </Button>
+                                                  </div>
                                                 </div>
-                                              ) : (
-                                                <div></div>
-                                              )}
-                                              <div className="d-flex justify-content-between align-items-center">
-                                                <div className="d-flex align-items-center gap-1">
-                                                  {true ? (
-                                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                                  ) : (
-                                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                  )}
-                                                  <h5 className="gds-heading-5 m-0">
-                                                    {/* {obj.name} */} Datashare{" "}
-                                                    {obj.id}
-                                                  </h5>
-                                                </div>
-                                                <div className="d-flex align-items-center gap-1">
-                                                  {obj["status"]}
-                                                  <Button
-                                                    variant="outline-dark"
-                                                    size="sm"
-                                                    className="mr-2"
-                                                    title="View"
-                                                    data-name="viewDatashare"
-                                                    onClick={() =>
-                                                      viewDatashareDetail(
-                                                        obj.dataShareId
-                                                      )
-                                                    }
-                                                    data-id={obj.id}
-                                                  >
-                                                    <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
-                                                  </Button>
-                                                  <Button
-                                                    variant="danger"
-                                                    size="sm"
-                                                    title="Delete"
-                                                    onClick={() =>
-                                                      toggleConfirmModalForDelete(
-                                                        obj.id,
-                                                        obj.name,
-                                                        obj.status
-                                                      )
-                                                    }
-                                                    data-name="deleteDatashareRequest"
-                                                    data-id={obj["id"]}
-                                                    data-cy={obj["id"]}
-                                                  >
-                                                    <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            </Accordion.Toggle>
-                                            <Accordion.Collapse eventKey="1">
-                                              <Card.Body>
-                                                <div className="d-flex justify-content-between">
-                                                  <div className="gds-inline-field-grp">
-                                                    <div className="wrapper">
-                                                      <div
-                                                        className="gds-left-inline-field"
-                                                        height="30px"
-                                                      >
-                                                        Service
+                                              </Accordion.Toggle>
+                                              <Accordion.Collapse eventKey="1">
+                                                <Card.Body>
+                                                  <div className="d-flex justify-content-between">
+                                                    <div className="gds-inline-field-grp">
+                                                      <div className="wrapper">
+                                                        <div
+                                                          className="gds-left-inline-field"
+                                                          height="30px"
+                                                        >
+                                                          Service
+                                                        </div>
+                                                        <div line-height="30px">
+                                                          {obj["service"]}
+                                                        </div>
                                                       </div>
-                                                      <div line-height="30px">
-                                                        {obj["service"]}
+                                                      <div className="wrapper">
+                                                        <div
+                                                          className="gds-left-inline-field"
+                                                          height="30px"
+                                                        >
+                                                          Zone
+                                                        </div>
+                                                        <div line-height="30px">
+                                                          {obj["zone"]}
+                                                        </div>
+                                                      </div>
+                                                      <div className="wrapper">
+                                                        <div
+                                                          className="gds-left-inline-field"
+                                                          height="30px"
+                                                        >
+                                                          Resource Count
+                                                        </div>
+                                                        <div line-height="30px">
+                                                          {obj["resourceCount"]}
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                    <div className="wrapper">
-                                                      <div
-                                                        className="gds-left-inline-field"
-                                                        height="30px"
-                                                      >
-                                                        Zone
+                                                    <div className="gds-right-inline-field-grp">
+                                                      <div className="wrapper">
+                                                        <div>Added</div>
+                                                        <div className="gds-right-inline-field">
+                                                          {dateFormat(
+                                                            obj["createTime"],
+                                                            "mm/dd/yyyy hh:MM:ss TT"
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                      <div line-height="30px">
-                                                        {obj["zone"]}
+                                                      <div className="wrapper">
+                                                        <div>Updated</div>
+                                                        <div className="gds-right-inline-field">
+                                                          {dateFormat(
+                                                            obj["updateTime"],
+                                                            "mm/dd/yyyy hh:MM:ss TT"
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    </div>
-                                                    <div className="wrapper">
-                                                      <div
-                                                        className="gds-left-inline-field"
-                                                        height="30px"
-                                                      >
-                                                        Resource Count
-                                                      </div>
-                                                      <div line-height="30px">
-                                                        {obj["resourceCount"]}
+                                                      <div className="w-100 text-right">
+                                                        <div>View Request</div>
                                                       </div>
                                                     </div>
                                                   </div>
-                                                  <div className="gds-right-inline-field-grp">
-                                                    <div className="wrapper">
-                                                      <div>Added</div>
-                                                      <div className="gds-right-inline-field">
-                                                        {dateFormat(
-                                                          obj["createTime"],
-                                                          "mm/dd/yyyy hh:MM:ss TT"
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                    <div className="wrapper">
-                                                      <div>Updated</div>
-                                                      <div className="gds-right-inline-field">
-                                                        {dateFormat(
-                                                          obj["updateTime"],
-                                                          "mm/dd/yyyy hh:MM:ss TT"
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                    <div className="w-100 text-right">
-                                                      <div>View Request</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </Card.Body>
-                                            </Accordion.Collapse>
-                                          </div>
-                                        </Accordion>
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <div></div>
-                                )}
+                                                </Card.Body>
+                                              </Accordion.Collapse>
+                                            </div>
+                                          </Accordion>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div></div>
+                                  )}
+                                  <ReactPaginate
+                                    previousLabel={"Previous"}
+                                    nextLabel={"Next"}
+                                    pageClassName="page-item"
+                                    pageLinkClassName="page-link"
+                                    previousClassName="page-item"
+                                    previousLinkClassName="page-link"
+                                    nextClassName="page-item"
+                                    nextLinkClassName="page-link"
+                                    breakLabel={"..."}
+                                    pageCount={requestPageCount}
+                                    onPageChange={handleRequestPageClick}
+                                    breakClassName="page-item"
+                                    breakLinkClassName="page-link"
+                                    containerClassName="pagination"
+                                    activeClassName="active"
+                                  />
+                                </div>
                               </Card>
                             </Tab>
                             <Tab eventKey="Active" title="Active" />
@@ -1371,7 +1609,7 @@ const DatasetDetailLayout = () => {
                 <Tab
                   eventKey="termsOfUse"
                   title="TERMS OF USE"
-                  onClick={() => handleTabClick("TERMS OF USE")}
+                  //onClick={() => handleTabClick("TERMS OF USE")}
                 >
                   {activeKey == "termsOfUse" ? (
                     <div className="gds-tab-content gds-content-border">
@@ -1509,6 +1747,67 @@ const DatasetDetailLayout = () => {
                   onClick={submitDatashareRequest}
                 >
                   Send Request
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+            <Modal show={showDeleteDatasetModal} onHide={toggleClose}>
+              <Modal.Header closeButton>
+                <span className="text-word-break">
+                  Are you sure you want to delete dataset&nbsp;"
+                  <b>{datasetInfo.name}</b>" ?
+                </span>
+              </Modal.Header>
+              <Modal.Footer>
+                <Button variant="secondary" size="sm" onClick={toggleClose}>
+                  No
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleDatasetDeleteClick()}
+                >
+                  Yes
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+            <Modal show={showActivateRequestModal} onHide={toggleClose}>
+              <Modal.Header closeButton>
+                <span className="text-word-break">Activate Datashare</span>
+              </Modal.Header>
+              <Modal.Body>
+                <div>
+                  <p>Terms & Conditions</p>
+                  <span>{datashareInfo?.termsOfUse}</span>
+                </div>
+                {datashareInfo?.termsOfUse != undefined ? (
+                  <div className="d-flex align-items-center gap-half my-2">
+                    <input
+                      type="checkbox"
+                      name="acceptTerms"
+                      //value={obj.id}
+                      onChange={termsCheckBocChange}
+                    />
+                    <span className="fnt-14">
+                      {" "}
+                      I accept the terms and conditions
+                    </span>
+                  </div>
+                ) : (
+                  <div></div>
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" size="sm" onClick={toggleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => activateDatashareRequest(datashareInfo)}
+                >
+                  Activate
                 </Button>
               </Modal.Footer>
             </Modal>

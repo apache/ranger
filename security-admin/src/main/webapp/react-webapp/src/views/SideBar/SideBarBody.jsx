@@ -423,7 +423,7 @@ export const SideBarBody = (props) => {
               <React.Fragment>
                 <li className="list-group-item">
                   <NavLink
-                    to="/gds/datasetlisting"
+                    to="/gds/mydatasetlisting"
                     onClick={() => {
                       props.closeCollapse();
                     }}
@@ -434,7 +434,7 @@ export const SideBarBody = (props) => {
                 </li>
                 <li className="list-group-item">
                   <NavLink
-                    to="/gds/datasharelisting"
+                    to="/gds/mydatasharelisting"
                     onClick={() => {
                       props.closeCollapse();
                     }}
@@ -452,6 +452,28 @@ export const SideBarBody = (props) => {
                     className="list-group-item"
                   >
                     My Requests
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/datasetlisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    Datasets
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/datasharelisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    Datashares
                   </NavLink>
                 </li>
               </React.Fragment>

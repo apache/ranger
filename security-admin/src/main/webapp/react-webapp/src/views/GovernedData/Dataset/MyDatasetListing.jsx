@@ -19,25 +19,21 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
-import { Button, Row, Col, Modal } from "react-bootstrap";
+import { Button, Row, Col } from "react-bootstrap";
 import XATableLayout from "../../../components/XATableLayout";
 import dateFormat from "dateformat";
 import { fetchApi } from "../../../utils/fetchAPI";
-import moment from "moment-timezone";
-import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader, BlockUi } from "../../../components/CommonComponents";
 import {
-  isKeyAdmin,
-  isKMSAuditor,
   getTableSortBy,
   getTableSortType,
   serverError,
-  parseSearchFilter,
+  parseSearchFilter
 } from "../../../utils/XAUtils";
 
-const DatasetListing = () => {
+const MyDatasetListing = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const [pageCount, setPageCount] = useState(
@@ -51,7 +47,6 @@ const DatasetListing = () => {
   );
   const [datasetListData, setDatasetListData] = useState([]);
   const [loader, setLoader] = useState(true);
-  const [updateTable, setUpdateTable] = useState(moment.now());
   const [entries, setEntries] = useState([]);
   const fetchIdRef = useRef(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -63,17 +58,7 @@ const DatasetListing = () => {
   const [pageLoader, setPageLoader] = useState(true);
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [blockUI, setBlockUI] = useState(false);
-
-  const [deleteDatasetModal, setConfirmModal] = useState({
-    datasetDetails: {},
-  });
-
-  const toggleConfirmModalForDelete = (datasetID, datasetName) => {
-    setConfirmModal({
-      datasetDetails: { datasetID: datasetID, datasetName: datasetName },
-      showPopup: true,
-    });
-  };
+  const isMyDatasetPage = window.location.href.includes("mydatasetlisting");
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -88,7 +73,7 @@ const DatasetListing = () => {
       searchFilterParam[category] = value;
       defaultSearchFilterParam.push({
         category: category,
-        value: value,
+        value: value
       });
     }
 
@@ -110,39 +95,10 @@ const DatasetListing = () => {
     }
   }, [totalCount]);
 
-  const handleDeleteClick = async (datasetID) => {
-    toggleClose();
-    try {
-      setBlockUI(true);
-      await fetchApi({
-        url: `gds/dataset/${datasetID}`,
-        method: "DELETE",
-      });
-      setBlockUI(false);
-      toast.success(" Success! Dataset deleted successfully");
-    } catch (error) {
-      setBlockUI(false);
-      let errorMsg = "Failed to delete dataset : ";
-      if (error?.response?.data?.msgDesc) {
-        errorMsg += error.response.data.msgDesc;
-      }
-      toast.error(errorMsg);
-      console.error("Error occurred during deleting dataset : " + error);
-    }
-    if (datasetListData.length == 1 && currentpageIndex > 0) {
-      let page = currentpageIndex - currentpageIndex;
-      if (typeof resetPage?.page === "function") {
-        resetPage.page(page);
-      }
-    } else {
-      setUpdateTable(moment.now());
-    }
-  };
-
   const toggleClose = () => {
     setConfirmModal({
       datasetDetails: {},
-      showPopup: false,
+      showPopup: false
     });
   };
 
@@ -169,10 +125,16 @@ const DatasetListing = () => {
           params["sortBy"] = getTableSortBy(sortBy);
           params["sortType"] = getTableSortType(sortBy);
         }
+        if (isMyDatasetPage) {
+          params["gdsPermission"] = "ADMIN";
+        } else {
+          params["gdsPermission"] = "LIST";
+        }
+
         try {
           resp = await fetchApi({
-            url: "gds/dataset",
-            params: params,
+            url: "gds/dataset/summary",
+            params: params
           });
           datasetList = resp.data.list;
           totalCount = resp.data.totalCount;
@@ -180,6 +142,26 @@ const DatasetListing = () => {
           serverError(error);
           console.error(`Error occurred while fetching Dataset list! ${error}`);
         }
+        for (let i = 0; i < datasetList.length; i++) {
+          let datashareActiveCount = 0;
+          let datasharePendingCount = 0;
+
+          if (datasetList[i].dataShares != undefined) {
+            for (let j = 0; j < datasetList[i].dataShares.length; j++) {
+              if (datasetList[i].dataShares[j].shareStatus === "ACTIVE") {
+                datashareActiveCount++;
+              } else if (
+                datasetList[i].dataShares[j].shareStatus !== "ACTIVE" &&
+                datasetList[i].dataShares[j].shareStatus !== "DENIED"
+              ) {
+                datasharePendingCount++;
+              }
+            }
+          }
+          datasetList[i]["datashareActiveCount"] = datashareActiveCount;
+          datasetList[i]["datasharePendingCount"] = datasharePendingCount;
+        }
+
         setTotalCount(totalCount);
         setDatasetListData(datasetList);
         setEntries(resp.data);
@@ -190,14 +172,14 @@ const DatasetListing = () => {
         setLoader(false);
       }
     },
-    [updateTable, searchFilterParams]
+    [searchFilterParams, isMyDatasetPage]
   );
 
   const addDataset = () => {
     navigate("/gds/create");
   };
 
-  const columns = React.useMemo(
+  const myDatasetColumns = React.useMemo(
     () => [
       {
         Header: "Id",
@@ -214,15 +196,15 @@ const DatasetListing = () => {
               </Link>
             </div>
           );
-        },
+        }
       },
       {
         Header: "Name",
         accessor: "name",
-        width: 250,
+        width: 470,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Created",
@@ -232,7 +214,7 @@ const DatasetListing = () => {
         },
         width: 170,
         disableResizing: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Last Updated",
@@ -242,7 +224,7 @@ const DatasetListing = () => {
         },
         width: 170,
         disableResizing: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "DATASHARE",
@@ -251,21 +233,21 @@ const DatasetListing = () => {
         columns: [
           {
             Header: "Active",
-            accessor: "active",
+            accessor: "datashareActiveCount",
             width: 80,
             disableResizing: true,
             disableSortBy: true,
-            getResizerProps: () => {},
+            getResizerProps: () => {}
           },
           {
             Header: "Pending",
-            accessor: "pending",
+            accessor: "datasharePendingCount",
             width: 80,
             disableResizing: true,
             disableSortBy: true,
-            getResizerProps: () => {},
-          },
-        ],
+            getResizerProps: () => {}
+          }
+        ]
       },
       {
         Header: "SHARED WITH",
@@ -274,61 +256,135 @@ const DatasetListing = () => {
         columns: [
           {
             Header: "Users",
-            //accessor: "users",
+            accessor: "principalsCount",
+            accessor: (raw) => {
+              let userCount = raw.USER;
+
+              return userCount != undefined ? (
+                <span>{userCount}</span>
+              ) : (
+                <span>0</span>
+              );
+            },
             width: 60,
             disableResizing: true,
-            getResizerProps: () => {},
+            getResizerProps: () => {}
           },
           {
             Header: "Groups",
-            //accessor: "groups",
+            accessor: "principalsCount",
+            accessor: (raw) => {
+              let groupCount = raw.GROUP;
+
+              return groupCount != undefined ? (
+                <span>{groupCount}</span>
+              ) : (
+                <span>0</span>
+              );
+            },
             width: 60,
             disableResizing: true,
-            getResizerProps: () => {},
+            getResizerProps: () => {}
           },
           {
             Header: "Roles",
-            //accessor: "roles",
+            accessor: "principalsCount",
+            accessor: (raw) => {
+              let roleCount = raw.ROLE;
+
+              return roleCount != undefined ? (
+                <span>{roleCount}</span>
+              ) : (
+                <span>0</span>
+              );
+            },
             width: 60,
             disableResizing: true,
-            getResizerProps: () => {},
-          },
-          {
-            Header: "Projects",
-            accessor: "projects",
-            width: 70,
-            disableResizing: true,
-            getResizerProps: () => {},
-          },
-        ],
+            getResizerProps: () => {}
+          }
+        ]
+      }
+    ],
+    []
+  );
+
+  const datasetColumns = React.useMemo(
+    () => [
+      {
+        Header: "Id",
+        accessor: "id",
+        width: 25,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {},
+        Cell: ({ row }) => {
+          const permissionForCaller = row.original.permissionForCaller;
+          if (
+            permissionForCaller === "ADMIN" ||
+            permissionForCaller === "VIEW"
+          ) {
+            return (
+              <div className="position-relative text-center">
+                <Link
+                  title="Edit"
+                  to={`/gds/dataset/${row.original.id}/detail`}
+                >
+                  {row.original.id}
+                </Link>
+              </div>
+            );
+          } else {
+            return (
+              <div className="position-relative text-center">
+                <span>{row.original.id}</span>
+              </div>
+            );
+          }
+        }
       },
       {
-        Header: "Actions",
-        accessor: "actions",
-        Cell: ({ row: { original } }) => {
+        Header: "Name",
+        accessor: "name",
+        width: 600,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Permission",
+        accessor: "permissionForCaller",
+        width: 120,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {},
+        Cell: (rawValue) => {
           return (
-            <div>
-              <>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  title="Delete"
-                  onClick={() =>
-                    toggleConfirmModalForDelete(original.id, original.name)
-                  }
-                  data-name="deletePolicy"
-                  data-id={original.id}
-                  data-cy={original.id}
-                >
-                  <i className="fa-fw fa fa-trash fa-fw fa fa-large"></i>
-                </Button>
-              </>
+            <div className="position-relative text-center">
+              <span>{rawValue.value}</span>
             </div>
           );
-        },
-        width: 60,
-        disableSortBy: true,
+        }
       },
+      {
+        Header: "Created",
+        accessor: "createTime",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Last Updated",
+        accessor: "updateTime",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
+      }
     ],
     []
   );
@@ -337,8 +393,8 @@ const DatasetListing = () => {
     () => [
       {
         id: "eventTime",
-        desc: true,
-      },
+        desc: true
+      }
     ],
     []
   );
@@ -360,11 +416,11 @@ const DatasetListing = () => {
 
   const searchFilterOptions = [
     {
-      category: "datasetName",
-      label: "Dataset Name",
-      urlLabel: "datasetName",
-      type: "text",
-    },
+      category: "datasetNamePartial",
+      label: "DatasetName Name",
+      urlLabel: "datasetNamePartial",
+      type: "text"
+    }
   ];
 
   return (
@@ -374,7 +430,9 @@ const DatasetListing = () => {
       ) : (
         <>
           <div className="gds-header-wrapper">
-            <h3 className="gds-header bold">My Datasets</h3>
+            <h3 className="gds-header bold">
+              {isMyDatasetPage ? "My" : ""} Datasets
+            </h3>
           </div>
           <div className="wrap">
             <React.Fragment>
@@ -389,58 +447,58 @@ const DatasetListing = () => {
                     defaultSelected={defaultSearchFilterParams}
                   />
                 </Col>
-                <Col sm={2} className="gds-button">
-                  <Button variant="primary" size="md" onClick={addDataset}>
-                    Create Dataset
-                  </Button>
-                </Col>
+                {isMyDatasetPage && (
+                  <Col sm={2} className="gds-button">
+                    <Button variant="primary" size="md" onClick={addDataset}>
+                      Create Dataset
+                    </Button>
+                  </Col>
+                )}
               </Row>
-              <XATableLayout
-                data={datasetListData}
-                columns={columns}
-                fetchData={fetchDatasetList}
-                totalCount={entries && entries.totalCount}
-                loading={loader}
-                pageCount={pageCount}
-                getRowProps={(row) => ({
-                  onClick: (e) => {
-                    e.stopPropagation();
-                    //rowModal(row);
-                  },
-                })}
-                currentpageIndex={currentpageIndex}
-                currentpageSize={currentpageSize}
-                columnHide={false}
-                columnResizable={false}
-                columnSort={true}
-                defaultSort={getDefaultSort}
-              />
+              {isMyDatasetPage ? (
+                <XATableLayout
+                  data={datasetListData}
+                  columns={myDatasetColumns}
+                  fetchData={fetchDatasetList}
+                  totalCount={entries && entries.totalCount}
+                  loading={loader}
+                  pageCount={pageCount}
+                  getRowProps={(row) => ({
+                    onClick: (e) => {
+                      e.stopPropagation();
+                      //rowModal(row);
+                    }
+                  })}
+                  currentpageIndex={currentpageIndex}
+                  currentpageSize={currentpageSize}
+                  columnHide={false}
+                  columnResizable={false}
+                  columnSort={true}
+                  defaultSort={getDefaultSort}
+                />
+              ) : (
+                <XATableLayout
+                  data={datasetListData}
+                  columns={datasetColumns}
+                  fetchData={fetchDatasetList}
+                  totalCount={entries && entries.totalCount}
+                  loading={loader}
+                  pageCount={pageCount}
+                  getRowProps={(row) => ({
+                    onClick: (e) => {
+                      e.stopPropagation();
+                      //rowModal(row);
+                    }
+                  })}
+                  currentpageIndex={currentpageIndex}
+                  currentpageSize={currentpageSize}
+                  columnHide={false}
+                  columnResizable={false}
+                  columnSort={true}
+                  defaultSort={getDefaultSort}
+                />
+              )}
             </React.Fragment>
-
-            <Modal show={deleteDatasetModal.showPopup} onHide={toggleClose}>
-              <Modal.Header closeButton>
-                <span className="text-word-break">
-                  Are you sure you want to delete dataset&nbsp;"
-                  <b>{deleteDatasetModal?.datasetDetails?.datasetName}</b>" ?
-                </span>
-              </Modal.Header>
-              <Modal.Footer>
-                <Button variant="secondary" size="sm" onClick={toggleClose}>
-                  Close
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() =>
-                    handleDeleteClick(
-                      deleteDatasetModal.datasetDetails.datasetID
-                    )
-                  }
-                >
-                  OK
-                </Button>
-              </Modal.Footer>
-            </Modal>
           </div>
         </>
       )}
@@ -448,4 +506,4 @@ const DatasetListing = () => {
   );
 };
 
-export default DatasetListing;
+export default MyDatasetListing;

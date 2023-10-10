@@ -32,7 +32,7 @@ import { fetchApi } from "../../../utils/fetchAPI";
 import { findIndex } from "lodash";
 
 const initialState = {
-  selectedPrinciple: [],
+  selectedPrinciple: []
 };
 
 const principleFormReducer = (state, action) => {
@@ -40,7 +40,7 @@ const principleFormReducer = (state, action) => {
     case "SET_SELECTED_PRINCIPLE":
       return {
         ...state,
-        selectedPrinciple: action.selectedPrinciple,
+        selectedPrinciple: action.selectedPrinciple
       };
     default:
       throw new Error();
@@ -51,7 +51,7 @@ const PrinciplePermissionComp = ({
   userList,
   groupList,
   roleList,
-  onDataChange,
+  onDataChange
 }) => {
   const [userOgList, setUserList] = useState(userList);
   const [groupOgList, setGroupList] = useState(groupList);
@@ -72,26 +72,26 @@ const PrinciplePermissionComp = ({
 
   const [selectedAccess, setSelectedAccess] = useState({
     value: "LIST",
-    label: "LIST",
+    label: "LIST"
   });
 
   const accessOptions = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
-    { value: "ADMIN", label: "ADMIN" },
+    { value: "ADMIN", label: "ADMIN" }
   ];
 
   const accessOptionsWithRemove = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
     { value: "ADMIN", label: "ADMIN" },
-    { value: "Remove Access", label: "Remove Access" },
+    { value: "Remove Access", label: "Remove Access" }
   ];
 
   const selectedPrincipal = (e, input) => {
     dispatch({
       type: "SET_SELECTED_PRINCIPLE",
-      selectedPrinciple: e,
+      selectedPrinciple: e
     });
     input.onChange(e);
     console.log("Adding to selectedPrinciple");
@@ -122,7 +122,7 @@ const PrinciplePermissionComp = ({
     let data = [];
     const principalResp = await fetchApi({
       url: "xusers/lookup/principals",
-      params: params,
+      params: params
     });
     data = principalResp.data;
     return data.map((obj) => ({
@@ -143,7 +143,7 @@ const PrinciplePermissionComp = ({
         </div>
       ),
       value: obj.name,
-      type: obj.type,
+      type: obj.type
     }));
   };
 
@@ -201,7 +201,7 @@ const PrinciplePermissionComp = ({
 
     dispatch({
       type: "SET_SELECTED_PRINCIPLE",
-      selectedPrinciple: [],
+      selectedPrinciple: []
     });
     console.log("After clearing selectedPrinciple");
     console.log(selectedPrinciple);
@@ -224,8 +224,8 @@ const PrinciplePermissionComp = ({
       ...theme,
       colors: {
         ...theme.colors,
-        primary: "#0081ab",
-      },
+        primary: "#0081ab"
+      }
     };
   };
 
@@ -233,11 +233,11 @@ const PrinciplePermissionComp = ({
     control: (provided) => ({
       ...provided,
       maxHeight: "40px",
-      width: "172px",
+      width: "172px"
     }),
     indicatorsContainer: (provided) => ({
-      ...provided,
-    }),
+      ...provided
+    })
   };
 
   const onChangePrincipleName = (event) => {
@@ -384,7 +384,7 @@ const PrinciplePermissionComp = ({
                 loadOptions={fetchPrincipleOp}
                 components={{
                   DropdownIndicator: () => null,
-                  IndicatorSeparator: () => null,
+                  IndicatorSeparator: () => null
                 }}
                 defaultOptions
                 isMulti

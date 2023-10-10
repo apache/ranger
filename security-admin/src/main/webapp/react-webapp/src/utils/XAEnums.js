@@ -619,13 +619,16 @@ export const PathAssociateWithModule = {
     "/roles/:roleId"
   ],
   "Governed Data Sharing": [
+    "/gds/mydatasetlisting",
     "/gds/datasetlisting",
     "/gds/create",
     "/gds/dataset/:datasetId/detail",
     "/gds/dataset/:datasetId/accessGrant",
+    "/gds/mydatasharelisting",
     "/gds/datasharelisting",
     "/gds/datashare/create",
     "/gds/request/list",
+    "/gds/request/detail/:requestId",
     "/gds/datashare/:datashareId/detail",
     "/gds/datashare/resource/:datashareId"
   ],

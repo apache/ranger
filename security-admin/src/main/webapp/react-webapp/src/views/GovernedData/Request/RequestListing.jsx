@@ -18,14 +18,21 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  useSearchParams,
+  useNavigate,
+  useLocation,
+  Link
+} from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import XATableLayout from "../../../components/XATableLayout";
+import { fetchApi } from "../../../utils/fetchAPI";
+import dateFormat from "dateformat";
 import {
   CustomTooltip,
   Loader,
-  BlockUi,
+  BlockUi
 } from "../../../components/CommonComponents";
 import moment from "moment-timezone";
 import {
@@ -37,7 +44,7 @@ import {
   isSystemAdmin,
   requestDataTitle,
   fetchSearchFilterParams,
-  parseSearchFilter,
+  parseSearchFilter
 } from "../../../utils/XAUtils";
 
 const RequestListing = () => {
@@ -84,7 +91,7 @@ const RequestListing = () => {
         try {
           resp = await fetchApi({
             url: "gds/datashare/dataset",
-            params: params,
+            params: params
           });
           requestList = resp.data.list;
           totalCount = resp.data.totalCount;
@@ -114,12 +121,12 @@ const RequestListing = () => {
         Cell: (rawValue) => {
           return (
             <div className="position-relative text-center">
-              <Link title="Edit" to={`/gds/dataset/${rawValue.value}/detail`}>
+              <Link title="Edit" to={`/gds/request/detail/${rawValue.value}`}>
                 {rawValue.value}
               </Link>
             </div>
           );
-        },
+        }
       },
       {
         Header: "Name",
@@ -127,7 +134,7 @@ const RequestListing = () => {
         width: 250,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Type",
@@ -135,7 +142,7 @@ const RequestListing = () => {
         width: 250,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Status",
@@ -143,7 +150,7 @@ const RequestListing = () => {
         width: 250,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Created",
@@ -153,7 +160,7 @@ const RequestListing = () => {
         },
         width: 170,
         disableResizing: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Last Updated",
@@ -163,7 +170,7 @@ const RequestListing = () => {
         },
         width: 170,
         disableResizing: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
         Header: "Created By",
@@ -171,16 +178,16 @@ const RequestListing = () => {
         width: 250,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
+        getResizerProps: () => {}
       },
       {
-        Header: "Approved By",
+        Header: "Approver",
         accessor: "approvedBy",
         width: 250,
         disableResizing: true,
         disableSortBy: true,
-        getResizerProps: () => {},
-      },
+        getResizerProps: () => {}
+      }
     ],
     []
   );
@@ -216,8 +223,8 @@ const RequestListing = () => {
             getRowProps={(row) => ({
               onClick: (e) => {
                 e.stopPropagation();
-                rowModal(row);
-              },
+                // rowModal(row);
+              }
             })}
             columnHide={false}
             columnResizable={false}

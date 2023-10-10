@@ -2671,6 +2671,11 @@ li.list-group-item:hover {
   margin-top: 40px;
 }
 
+.gds-request-content {
+  width: 920px;
+  margin: 0 auto;
+}
+
 .gds-inline-field-grp {
   display: inline-flex;
   flex-direction: column;
@@ -2689,11 +2694,13 @@ li.list-group-item:hover {
 
 .gds-left-inline-field {
   width: 160px;
+  flex-shrink: 0;
 }
 
 .gds-right-inline-field {
   width: 160px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .gds-description {
@@ -2864,4 +2871,31 @@ textarea.gds-placeholder::placeholder,
 .gds-principle-width {
   max-width: 760px;
   margin: 0 auto;
+}
+
+.hide-arrow .dropdown-toggle::after {
+  display: none; /* Hide the down arrow */
+}
+
+.gds-requested-status {
+  background: #ffc107;
+}
+
+.gds-granted-status {
+  background: #28a745;
+  color: #ffffff;
+}
+
+.gds-active-status {
+  background: #007bff;
+  color: #ffffff;
+}
+
+.gds-denied-status {
+  background: #dc3545;
+  color: #ffffff;
+}
+
+.w-50 {
+  width: 50% !important;
 }

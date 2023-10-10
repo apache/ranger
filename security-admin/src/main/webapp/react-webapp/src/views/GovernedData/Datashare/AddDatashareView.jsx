@@ -20,9 +20,10 @@
 import React, { useState, useReducer, useEffect, useMemo } from "react";
 import {
   serverError,
-  policyConditionUpdatedJSON,
+  policyConditionUpdatedJSON
 } from "../../../utils/XAUtils";
 import Editable from "Components/Editable";
+import { useNavigate } from "react-router-dom";
 import { Button, Form as FormB, Card } from "react-bootstrap";
 import Select from "react-select";
 import { filter, groupBy, some, sortBy, forIn, has, isArray } from "lodash";
@@ -38,7 +39,7 @@ const initialState = {
   loader: false,
   preventUnBlock: false,
   blockUI: false,
-  formData: {},
+  formData: {}
 };
 
 function reducer(state, action) {
@@ -50,7 +51,7 @@ function reducer(state, action) {
         serviceDetails: action.serviceDetails,
         serviceCompDetails: action.serviceCompDetails,
         policyData: action?.policyData,
-        formData: action.formData,
+        formData: action.formData
       };
     default:
       throw new Error();
@@ -62,22 +63,22 @@ const datashareFormReducer = (state, action) => {
     case "SET_SELECTED_SERVICE":
       return {
         ...state,
-        selectedService: action.selectedService,
+        selectedService: action.selectedService
       };
     case "SET_SELECTED_ZONE":
       return {
         ...state,
-        selectedZone: action.selectedZone,
+        selectedZone: action.selectedZone
       };
     case "SET_PREVENT_ALERT":
       return {
         ...state,
-        preventUnBlock: action.preventUnBlock,
+        preventUnBlock: action.preventUnBlock
       };
     case "SET_BLOCK_UI":
       return {
         ...state,
-        blockUI: action.blockUI,
+        blockUI: action.blockUI
       };
     default:
       throw new Error();
@@ -101,7 +102,7 @@ const AddDatashareView = () => {
   const { loaders, serviceDetailss, serviceCompDetails, policyData, formData } =
     policyState;
   const [blockUI, setBlockUI] = useState(false);
-
+  const [tagName, setTagName] = useState();
   const [showModal, policyConditionState] = useState(false);
   const [sharedResourceList, setSharedResourceList] = useState([]);
   const [userList, setUserList] = useState([]);
@@ -110,15 +111,17 @@ const AddDatashareView = () => {
   const [maskDef, setMaskDef] = useState(false);
   const [rowFilter, setRowFilterDef] = useState(false);
   const [accessTypeOptions, setAccessTypeOptions] = useState([]);
-  const [accessType, setAccessType] = useState();
+  const [accessType, setAccessType] = useState([]);
   const [maskTypeOptions, setMaskTypeOptions] = useState([]);
-  const [selectedShareMask, setSelectedShareMask] = useState();
+  const [selectedShareMask, setSelectedShareMask] = useState({});
   const [datashareTermsAndConditions, setDatashareTermsAndConditions] =
     useState();
+  const [datashareConditionExpr, setDatashareConditionExpr] = useState();
+  const navigate = useNavigate();
 
   const cancelDatashareDetails = () => {
     if (step == 1) {
-      navigate("/gds/datasharelisting");
+      navigate("/gds/mydatasharelisting");
     } else {
       setStep(step - 1);
     }
@@ -131,7 +134,7 @@ const AddDatashareView = () => {
 
   const noneOptions = {
     label: "None",
-    value: "none",
+    value: "none"
   };
 
   const toggleMoreOptionsModalClose = () => {
@@ -144,20 +147,43 @@ const AddDatashareView = () => {
 
   const subhmitDatashareDetails = async (values) => {
     if (step == 5) {
-      let payloadMap = new Map();
-
       let dataShareInfo = {
         name: datashareName,
         acl: {
           users: {},
           groups: {},
-          roles: {},
+          roles: {}
         },
-        zone: selectedZone.label,
+        zone: selectedZone != undefined ? selectedZone.label : "",
         service: selectedService.label,
         description: datashareDescription,
         termsOfUse: datashareTermsAndConditions,
+        conditionExpr: datashareConditionExpr,
+        defaultAccessTypes:
+          values.permission != undefined
+            ? Object.entries(values.permission).map(([key, obj]) => {
+                return obj.value;
+              })
+            : [],
+        defaultMasks: {}
       };
+
+      if (values.shareDataMaskInfo != undefined) {
+        let data = {};
+        if (values.shareDataMaskInfo.valueExpr != undefined) {
+          data = {
+            [tagName]: {
+              dataMaskType: values.shareDataMaskInfo.value,
+              valueExpr: values.shareDataMaskInfo.valueExpr
+            }
+          };
+        } else {
+          data = {
+            [tagName]: { dataMaskType: values.shareDataMaskInfo.value }
+          };
+        }
+        dataShareInfo.defaultMasks = data;
+      }
 
       userList.forEach((user) => {
         dataShareInfo.acl.users[user.name] = user.perm;
@@ -171,49 +197,43 @@ const AddDatashareView = () => {
         dataShareInfo.acl.roles[role.name] = role.perm;
       });
 
-      payloadMap.set(dataShareInfo, sharedResourceList);
-
       dispatch({
         type: "SET_PREVENT_ALERT",
-        preventUnBlock: true,
+        preventUnBlock: true
       });
       try {
         dispatch({
           type: "SET_BLOCK_UI",
-          blockUI: true,
+          blockUI: true
         });
         const createDatashareResp = await fetchApi({
           url: `gds/datashare`,
           method: "post",
-          data: dataShareInfo,
+          data: dataShareInfo
         });
         toast.success("Datashare created successfully!!");
-        self.location.hash = "#/gds/datasharelisting";
+        self.location.hash = "#/gds/mydatasharelisting";
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
-          blockUI: false,
+          blockUI: false
         });
         serverError(error);
         console.error(`Error occurred while creating datashare  ${error}`);
       }
-    } else if (step == 1) {
-      if (selectedService != undefined && selectedZone != undefined) {
-        fetchServiceDef(selectedService.def);
-        fetchServiceByName(selectedService.label);
-        setStep(step + 1);
-      } else {
-        //toast.error("Please select Service and Security Zone");
-        console.error(`Error while saving policy form! `);
-      }
-      setStep(step + 1);
-    } else if (step == 6) {
+    } else if (step == 4) {
       setSaveButtonText("Create Datashare");
       setStep(step + 1);
     } else if (step == 1) {
       if (datashareName == undefined) {
-        //toast.error("Please add Datashare Name");
+        toast.error("Please add Datashare Name");
+        return;
+      } else if (selectedService == undefined) {
+        toast.error("Please add Service Name");
+        return;
       } else {
+        fetchServiceDef(selectedService.def);
+        fetchServiceByName(selectedService.label);
         setStep(step + 1);
       }
       setStep(step + 1);
@@ -227,7 +247,7 @@ const AddDatashareView = () => {
     let serviceDefsResp = [];
     try {
       serviceDefsResp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`,
+        url: `plugins/definitions/name/${serviceDefName}`
       });
     } catch (error) {
       console.error(
@@ -239,27 +259,23 @@ const AddDatashareView = () => {
       obj.recursiveSupported = false;
       obj.excludesSupported = false;
     }
-    let masDef = modifiedServiceDef.rowFilterDef;
-    let rowDef = modifiedServiceDef.dataMaskDef;
-    Object.entries(masDef).map(([key, value]) => {
+    if (Object.keys(modifiedServiceDef.rowFilterDef).length !== 0) {
       setMaskDef(true);
-    });
-    Object.entries(rowDef).map(([key, value]) => {
+    }
+    if (Object.keys(modifiedServiceDef.dataMaskDef).length !== 0) {
       setRowFilterDef(true);
-    });
-    setMaskDef(true);
-    setRowFilterDef(true);
+    }
     setAccessTypeOptions(
       modifiedServiceDef.accessTypes.map(({ label, name: value }) => ({
         label,
-        value,
+        value
       }))
     );
     setMaskTypeOptions(
       modifiedServiceDef.dataMaskDef.maskTypes.map(
         ({ label, name: value }) => ({
           label,
-          value,
+          value
         })
       )
     );
@@ -270,7 +286,7 @@ const AddDatashareView = () => {
     let serviceResp = [];
     try {
       serviceResp = await fetchApi({
-        url: "plugins/services/name/hase_service_1",
+        url: "plugins/services/name/hase_service_1"
       });
     } catch (error) {
       console.error(
@@ -283,6 +299,10 @@ const AddDatashareView = () => {
   const datashareNameChange = (event) => {
     setName(event.target.value);
     console.log("DatashareName is:", event.target.value);
+  };
+
+  const tagNameChange = (event) => {
+    setTagName(event.target.value);
   };
 
   const datashareDescriptionChange = (event) => {
@@ -302,12 +322,12 @@ const AddDatashareView = () => {
     //params["serviceName"] = "hdfs1";
     const serviceResp = await fetchApi({
       url: "plugins/services",
-      params: params,
+      params: params
     });
     return serviceResp.data.services.map(({ name, id, type }) => ({
       label: name,
       value: id,
-      def: type,
+      def: type
     }));
   };
 
@@ -319,18 +339,18 @@ const AddDatashareView = () => {
     //params["zoneName"] = "zone1";
     const zoneResp = await fetchApi({
       url: "zones/zones",
-      params: params,
+      params: params
     });
     return zoneResp.data.securityZones.map(({ name, id }) => ({
       label: name,
-      value: id,
+      value: id
     }));
   };
 
   const onServiceChange = (e, input) => {
     dispatch({
       type: "SET_SELECTED_SERVICE",
-      selectedService: e,
+      selectedService: e
     });
     input.onChange(e);
     console.log("Adding to selectedService");
@@ -340,7 +360,7 @@ const AddDatashareView = () => {
   const setZone = (e, input) => {
     dispatch({
       type: "SET_SELECTED_ZONE",
-      selectedZone: e,
+      selectedZone: e
     });
     input.onChange(e);
     console.log("Adding to selectedZone");
@@ -392,7 +412,7 @@ const AddDatashareView = () => {
         data.resources[values[`resourceName-${level}`].name] = {
           values: isArray(values[`value-${level}`])
             ? values[`value-${level}`]?.map(({ value }) => value)
-            : [values[`value-${level}`].value],
+            : [values[`value-${level}`].value]
         };
       }
     }
@@ -401,7 +421,7 @@ const AddDatashareView = () => {
       const resp = await fetchApi({
         url: "plugins/policies",
         method: "POST",
-        data,
+        data
       });
       let tblpageData = {};
       if (state && state != null) {
@@ -420,8 +440,8 @@ const AddDatashareView = () => {
       navigate(`/service/${serviceId}/policies/${policyType}`, {
         state: {
           showLastPage: true,
-          addPageData: tblpageData,
-        },
+          addPageData: tblpageData
+        }
       });
     } catch (error) {
       setBlockUI(false);
@@ -447,14 +467,14 @@ const AddDatashareView = () => {
     let srcOp = serviceDef.accessTypes;
     return srcOp.map(({ label, name: value }) => ({
       label,
-      value,
+      value
     }));
   };
 
   const getMaskingAccessTypeOptions = () => {
     return serviceDef.dataMaskDef.maskTypes.map(({ label, name: value }) => ({
       label,
-      value,
+      value
     }));
   };
 
@@ -467,6 +487,17 @@ const AddDatashareView = () => {
     setUserList(userList);
     setGroupList(groupList);
     setRoleList(roleList);
+  };
+
+  const datashareBooleanExpression = (event) => {
+    setDatashareConditionExpr(event.target.value);
+  };
+
+  const fetchMaskOptions = () => {
+    return serviceDef.dataMaskDef.maskTypes.map(({ label, name: value }) => ({
+      label,
+      value
+    }));
   };
 
   return (
@@ -592,6 +623,7 @@ const AddDatashareView = () => {
                         placeholder="Boolean Expression"
                         className="form-control"
                         id="dsBooleanExpression"
+                        onChange={datashareBooleanExpression}
                         data-cy="dsBooleanExpression"
                         rows={4}
                       />
@@ -610,95 +642,99 @@ const AddDatashareView = () => {
                   </h2>
                 </div>
                 <div>
-                  <Card className="gds-section-card gds-bg-white">
-                    <div className="gds-section-title">
-                      <p className="gds-card-heading">Conditions</p>
-                    </div>
-                    <div className="gds-flex mg-b-10">
-                      <div className="gds-flex">
-                        <div>
-                          <Field
-                            name={`permission`}
-                            render={({ input, meta }) => (
-                              <div className="flex-1">
-                                <span> Default Access Types : </span>
-                                <Select
-                                  {...input}
-                                  options={accessTypeOptions}
-                                  onChange={(e) => onAccessTypeChange(e, input)}
-                                  menuPortalTarget={document.body}
-                                  value={accessType}
-                                  menuPlacement="auto"
-                                  placeholder="All Permissions"
-                                  isClearable
-                                  isMulti
-                                />
-                              </div>
-                            )}
-                          />
-                        </div>
-
-                        {maskDef ? (
-                          <div>
-                            <div>
-                              <span>Default Mask Type : </span>
-                              <span>Tag : </span>
-                              <span>Mask : </span>
-                            </div>
-                            <div>
-                              <Field
-                                className="form-control"
-                                name={`shareDataMaskInfo`}
-                                render={({ input, meta }) => (
-                                  <div className="table-editable">
-                                    <Editable
-                                      {...input}
-                                      placement="auto"
-                                      type="radio"
-                                      value={selectedShareMask}
-                                      onChange={(e) =>
-                                        onShareMaskChange(e, input)
-                                      }
-                                      options={maskTypeOptions}
-                                      showSelectAll={false}
-                                      selectAllLabel="Select All"
-                                    />
-                                    {selectedShareMask != undefined &&
-                                      selectedShareMask.label == "Custom" && (
-                                        <>
-                                          <Field
-                                            className="form-control"
-                                            name={`shareDataMaskInfo.valueExpr`}
-                                            validate={required}
-                                            render={({ input, meta }) => (
-                                              <>
-                                                <FormB.Control
-                                                  type="text"
-                                                  {...input}
-                                                  placeholder="Enter masked value or expression..."
-                                                />
-                                                {meta.error && (
-                                                  <span className="invalid-field">
-                                                    {meta.error}
-                                                  </span>
-                                                )}
-                                              </>
-                                            )}
-                                          />
-                                        </>
-                                      )}
-                                  </div>
-                                )}
+                  <div className="gds-section-title">
+                    <p className="gds-card-heading">Access Configuration</p>
+                  </div>
+                  <div className="gds-flex mg-b-10">
+                    <div className="gds-flex">
+                      <div>
+                        <Field
+                          name={`permission`}
+                          render={({ input, meta }) => (
+                            <div className="flex-1">
+                              <span> Default Access Types : </span>
+                              <Select
+                                {...input}
+                                options={accessTypeOptions}
+                                onChange={(e) => onAccessTypeChange(e, input)}
+                                menuPortalTarget={document.body}
+                                value={accessType}
+                                menuPlacement="auto"
+                                placeholder="All Permissions"
+                                isClearable
+                                isMulti
                               />
                             </div>
-                          </div>
-                        ) : (
-                          <div></div>
-                        )}
+                          )}
+                        />
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 </div>
+                {maskDef ? (
+                  <div className="gds-section-title">
+                    <p className="gds-card-heading">Masking Configuration</p>
+                    <div>
+                      <span>Tag Name : </span>
+                      <div className="gds-form-input">
+                        <input
+                          type="text"
+                          name="tagName"
+                          className="form-control"
+                          data-cy="tagName"
+                          onChange={tagNameChange}
+                          value={tagName}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <span>Masking Type : </span>
+                      <Field
+                        className="form-control"
+                        name={`shareDataMaskInfo`}
+                        render={({ input, meta }) => (
+                          <div>
+                            <Select
+                              {...input}
+                              defaultOptions
+                              value={selectedShareMask}
+                              options={maskTypeOptions}
+                              onChange={(e) => onShareMaskChange(e, input)}
+                              isClearable={false}
+                              width="500px"
+                            />
+                            {selectedShareMask != undefined &&
+                              selectedShareMask.label == "Custom" && (
+                                <>
+                                  <Field
+                                    className="form-control"
+                                    name={`shareDataMaskInfo.valueExpr`}
+                                    validate={required}
+                                    render={({ input, meta }) => (
+                                      <>
+                                        <FormB.Control
+                                          type="text"
+                                          {...input}
+                                          placeholder="Enter masked value or expression..."
+                                        />
+                                        {meta.error && (
+                                          <span className="invalid-field">
+                                            {meta.error}
+                                          </span>
+                                        )}
+                                      </>
+                                    )}
+                                  />
+                                </>
+                              )}
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div></div>
+                )}
               </div>
             )}
 

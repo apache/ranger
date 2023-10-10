@@ -41,7 +41,7 @@ const initialState = {
   serviceDetails: null,
   serviceCompDetails: null,
   policyData: null,
-  formData: {},
+  formData: {}
 };
 
 function reducer(state, action) {
@@ -53,7 +53,7 @@ function reducer(state, action) {
         serviceDetails: action.serviceDetails,
         serviceCompDetails: action.serviceCompDetails,
         policyData: action?.policyData,
-        formData: action.formData,
+        formData: action.formData
       };
     default:
       throw new Error();
@@ -81,18 +81,15 @@ function AccessGrantForm({ dataset, onDataChange }) {
       serviceDetails: serviceData,
       serviceCompDetails: serviceCompData,
       policyData: policyData || null,
-      formData: generateFormData(policyData, serviceCompData),
+      formData: generateFormData(policyData, serviceCompData)
     });
   };
 
   const fetchPolicyData = async () => {
     let data = null;
-    let params = {};
-    params["resource:dataset"] = dataset.name;
     try {
       const resp = await fetchApi({
-        url: "plugins/policies/gds/for-resource",
-        params: params,
+        url: `/gds/dataset/${dataset.id}/policy`
       });
       data = resp.data[0];
     } catch (error) {
@@ -107,7 +104,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
     let data = null;
     try {
       const resp = await fetchApi({
-        url: `plugins/services/name/${serviceName}`,
+        url: `plugins/services/name/${serviceName}`
       });
       data = resp.data || null;
     } catch (error) {
@@ -149,18 +146,18 @@ function AccessGrantForm({ dataset, onDataChange }) {
             });
             lastResourceLevel.push({
               level: setResources.level,
-              name: setResources.name,
+              name: setResources.name
             });
           });
           lastResourceLevel = maxBy(lastResourceLevel, "level");
           let setLastResources = find(serviceCompResourcesDetails, [
             "parent",
-            lastResourceLevel.name,
+            lastResourceLevel.name
           ]);
           if (setLastResources && setLastResources?.isValidLeaf) {
             data[`resourceName-${setLastResources.level}`] = {
               label: "None",
-              value: "none",
+              value: "none"
             };
           }
         }
@@ -199,7 +196,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
     let resp = {};
     try {
       resp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`,
+        url: `plugins/definitions/name/${serviceDefName}`
       });
       data = resp.data;
     } catch (error) {
@@ -238,7 +235,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
               </div>
             ),
             value: opt,
-            type: "GROUP",
+            type: "GROUP"
           });
         });
       }
@@ -252,7 +249,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
               </div>
             ),
             value: opt,
-            type: "USER",
+            type: "USER"
           });
         });
       }
@@ -266,7 +263,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
               </div>
             ),
             value: opt,
-            type: "ROLE",
+            type: "ROLE"
           });
         });
       }
@@ -291,7 +288,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
     let op = [];
     const principleResp = await fetchApi({
       url: "xusers/lookup/principals",
-      params: params,
+      params: params
     });
     op = principleResp.data;
 
@@ -313,7 +310,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
         </div>
       ),
       value: obj.name,
-      type: obj.type,
+      type: obj.type
     }));
   };
 
@@ -362,18 +359,18 @@ function AccessGrantForm({ dataset, onDataChange }) {
           <Form
             onSubmit={handleSubmit}
             mutators={{
-              ...arrayMutators,
+              ...arrayMutators
             }}
             initialValues={formData}
             render={({
               form: {
-                mutators: { push: addPolicyItem, pop },
+                mutators: { push: addPolicyItem, pop }
               },
               values,
               dirtyFields,
               dirty,
               modified,
-              initialValues,
+              initialValues
             }) => (
               <div className="gds-access-grant-form">
                 <FormChange

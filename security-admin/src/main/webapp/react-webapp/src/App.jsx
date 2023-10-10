@@ -92,8 +92,8 @@ const AccesLogDetailComp = lazy(() =>
 const UserAccessLayoutComp = lazy(() =>
   import("Views/Reports/UserAccessLayout")
 );
-const DatasetListingComp = lazy(() =>
-  import("Views/GovernedData/Dataset/DatasetListing")
+const MyDatasetListingComp = lazy(() =>
+  import("Views/GovernedData/Dataset/MyDatasetListing")
 );
 const CreateDatasetComp = lazy(() =>
   import("Views/GovernedData/Dataset/AddDatasetView")
@@ -104,8 +104,8 @@ const DatasetDetailLayoutComp = lazy(() =>
 const AccessGrantFormComp = lazy(() =>
   import("Views/GovernedData/Dataset/AccessGrantForm")
 );
-const DatashareListingComp = lazy(() =>
-  import("Views/GovernedData/Datashare/DatashareListing")
+const MyDatashareListingComp = lazy(() =>
+  import("Views/GovernedData/Datashare/MyDatashareListing")
 );
 const CreateDatashareComp = lazy(() =>
   import("Views/GovernedData/Datashare/AddDatashareView")
@@ -118,6 +118,9 @@ const DatashareAddSharedResourceComp = lazy(() =>
 );
 const GDSRequestListingComp = lazy(() =>
   import("Views/GovernedData/Request/RequestListing")
+);
+const GDSRequestDetailComp = lazy(() =>
+  import("Views/GovernedData/Request/RequestDetailView")
 );
 
 export default class App extends Component {
@@ -372,8 +375,8 @@ export default class App extends Component {
                   {/* GDS */}
                   <Route path="/gds">
                     <Route
-                      path="datasetlisting"
-                      element={<DatasetListingComp />}
+                      path="mydatasetlisting"
+                      element={<MyDatasetListingComp />}
                     />
                     <Route path="create" element={<CreateDatasetComp />} />
                     <Route
@@ -385,8 +388,8 @@ export default class App extends Component {
                       element={<AccessGrantFormComp />}
                     />
                     <Route
-                      path="datasharelisting"
-                      element={<DatashareListingComp />}
+                      path="mydatasharelisting"
+                      element={<MyDatashareListingComp />}
                     />
                     <Route
                       path="datashare/create"
@@ -403,6 +406,18 @@ export default class App extends Component {
                     <Route
                       path="request/list"
                       element={<GDSRequestListingComp />}
+                    />
+                    <Route
+                      path="request/detail/:requestId"
+                      element={<GDSRequestDetailComp />}
+                    />
+                    <Route
+                      path="datasetlisting"
+                      element={<MyDatasetListingComp />}
+                    />
+                    <Route
+                      path="datasharelisting"
+                      element={<MyDatashareListingComp />}
                     />
                   </Route>
                 </Route>

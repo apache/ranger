@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import XATableLayout from "../../../components/XATableLayout";
 import { Loader } from "../../../components/CommonComponents";
 import { Button, Row, Col } from "react-bootstrap";
@@ -40,9 +40,8 @@ import {
 import moment from "moment-timezone";
 import { sortBy } from "lodash";
 
-const DatashareListing = () => {
+const MyDatashareListing = () => {
   const navigate = useNavigate();
-  const [blockUI, setBlockUI] = useState(false);
   const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
     []
   );
@@ -61,15 +60,55 @@ const DatashareListing = () => {
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [showrowmodal, setShowRowModal] = useState(false);
   const [rowdata, setRowData] = useState([]);
+  const isMyDatasharePage = window.location.href.includes("mydatasharelisting");
 
   const searchFilterOptions = [
     {
-      category: "datashareName",
+      category: "dataShareNamePartial",
       label: "Datashare Name",
-      urlLabel: "datashareName",
+      urlLabel: "dataShareNamePartial",
+      type: "text"
+    },
+    {
+      category: "serviceNamePartial",
+      label: "Service Name",
+      urlLabel: "serviceNamePartial",
+      type: "text"
+    },
+    {
+      category: "zoneNamePartial",
+      label: "Zone Name",
+      urlLabel: "zoneNamePartial",
       type: "text"
     }
   ];
+
+  useEffect(() => {
+    let searchFilterParam = {};
+    let searchParam = {};
+    let defaultSearchFilterParam = [];
+
+    // Get Search Filter Params from current search params
+    const currentParams = Object.fromEntries([...searchParams]);
+    for (const param in currentParams) {
+      let category = param;
+      let value = currentParams[param];
+      searchFilterParam[category] = value;
+      defaultSearchFilterParam.push({
+        category: category,
+        value: value
+      });
+    }
+    setSearchParams({ ...currentParams, ...searchParam });
+    if (
+      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+    ) {
+      setSearchFilterParams(searchFilterParam);
+    }
+    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    setContentLoader(false);
+    localStorage.setItem("newDataAdded", state && state.showLastPage);
+  }, [searchParams]);
 
   const rowModal = (row) => {
     setShowRowModal(true);
@@ -104,7 +143,7 @@ const DatashareListing = () => {
     []
   );
 
-  const columns = React.useMemo(
+  const myDatashareColumns = React.useMemo(
     () => [
       {
         Header: "Id",
@@ -133,7 +172,7 @@ const DatashareListing = () => {
       },
       {
         Header: "Service",
-        accessor: "service",
+        accessor: "serviceName",
         width: 250,
         disableResizing: true,
         disableSortBy: true,
@@ -141,7 +180,7 @@ const DatashareListing = () => {
       },
       {
         Header: "Zone",
-        accessor: "zone",
+        accessor: "zoneName",
         width: 250,
         disableResizing: true,
         disableSortBy: true,
@@ -182,7 +221,7 @@ const DatashareListing = () => {
         columns: [
           {
             Header: "Active",
-            accessor: "active",
+            accessor: "datasetActiveCount",
             width: 80,
             disableResizing: true,
             disableSortBy: true,
@@ -190,13 +229,110 @@ const DatashareListing = () => {
           },
           {
             Header: "Pending",
-            accessor: "pending",
+            accessor: "datasetPendingCount",
             width: 80,
             disableResizing: true,
             disableSortBy: true,
             getResizerProps: () => {}
           }
         ]
+      }
+    ],
+    []
+  );
+
+  const datashareColumns = React.useMemo(
+    () => [
+      {
+        Header: "Id",
+        accessor: "id",
+        width: 25,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {},
+        Cell: ({ row }) => {
+          const permissionForCaller = row.original.permissionForCaller;
+          if (
+            permissionForCaller === "ADMIN" ||
+            permissionForCaller === "VIEW"
+          ) {
+            return (
+              <div className="position-relative text-center">
+                <Link
+                  title="Edit"
+                  to={`/gds/dataset/${row.original.id}/detail`}
+                >
+                  {row.original.id}
+                </Link>
+              </div>
+            );
+          } else {
+            return (
+              <div className="position-relative text-center">
+                <span>{row.original.id}</span>
+              </div>
+            );
+          }
+        }
+      },
+      {
+        Header: "Name",
+        accessor: "name",
+        width: 250,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Service",
+        accessor: "serviceName",
+        width: 250,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Zone",
+        accessor: "zoneName",
+        width: 250,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Permission",
+        accessor: "permissionForCaller",
+        width: 120,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {},
+        Cell: (rawValue) => {
+          return (
+            <div className="position-relative text-center">
+              <span>{rawValue.value}</span>
+            </div>
+          );
+        }
+      },
+      {
+        Header: "Created",
+        accessor: "createTime",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Last Updated",
+        accessor: "updateTime",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
       }
     ],
     []
@@ -215,6 +351,11 @@ const DatashareListing = () => {
       let totalPageCount = 0;
       const fetchId = ++fetchIdRef.current;
       let params = { ...searchFilterParams };
+      if (isMyDatasharePage) {
+        params["gdsPermission"] = "ADMIN";
+      } else {
+        params["gdsPermission"] = "LIST";
+      }
       if (fetchId === fetchIdRef.current) {
         params["pageSize"] = pageSize;
         params["startIndex"] =
@@ -227,7 +368,7 @@ const DatashareListing = () => {
         }
         try {
           resp = await fetchApi({
-            url: "gds/datashare",
+            url: "gds/datashare/summary",
             params: params
           });
           datashareList = resp.data.list;
@@ -238,6 +379,25 @@ const DatashareListing = () => {
             `Error occurred while fetching Datashare list! ${error}`
           );
         }
+        for (let i = 0; i < datashareList.length; i++) {
+          let datasetActiveCount = 0;
+          let datasetPendingCount = 0;
+
+          if (datashareList[i].datasets != undefined) {
+            for (let j = 0; j < datashareList[i].datasets.length; j++) {
+              if (datashareList[i].datasets[j].shareStatus === "ACTIVE") {
+                datasetActiveCount++;
+              } else if (
+                datashareList[i].datasets[j].shareStatus !== "ACTIVE" &&
+                datashareList[i].datasets[j].shareStatus !== "DENIED"
+              ) {
+                datasetPendingCount++;
+              }
+            }
+          }
+          datashareList[i]["datasetActiveCount"] = datasetActiveCount;
+          datashareList[i]["datasetPendingCount"] = datasetPendingCount;
+        }
         setDatashareListData(datashareList);
         setEntries(resp.data);
         setPageCount(Math.ceil(totalCount / pageSize));
@@ -245,7 +405,7 @@ const DatashareListing = () => {
         setLoader(false);
       }
     },
-    [updateTable, searchFilterParams]
+    [searchFilterParams, isMyDatasharePage]
   );
 
   return contentLoader ? (
@@ -253,7 +413,9 @@ const DatashareListing = () => {
   ) : (
     <>
       <div className="gds-header-wrapper">
-        <h3 className="gds-header bold">My Datashares</h3>
+        <h3 className="gds-header bold">
+          {isMyDatasharePage ? "My" : ""} Datashares
+        </h3>
       </div>
       <div className="wrap">
         <React.Fragment>
@@ -268,7 +430,7 @@ const DatashareListing = () => {
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>
-            {isSystemAdmin() && (
+            {isMyDatasharePage && (
               <Col sm={2} className="gds-button">
                 <Button variant="primary" size="md" onClick={addDatashare}>
                   Create Datashare
@@ -276,28 +438,49 @@ const DatashareListing = () => {
               </Col>
             )}
           </Row>
-          <XATableLayout
-            data={datashareListData}
-            columns={columns}
-            fetchData={fetchDataharetList}
-            totalCount={entries && entries.totalCount}
-            loading={loader}
-            pageCount={pageCount}
-            getRowProps={(row) => ({
-              onClick: (e) => {
-                e.stopPropagation();
-                rowModal(row);
-              }
-            })}
-            columnHide={false}
-            columnResizable={false}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-          />
+          {isMyDatasharePage ? (
+            <XATableLayout
+              data={datashareListData}
+              columns={myDatashareColumns}
+              fetchData={fetchDataharetList}
+              totalCount={entries && entries.totalCount}
+              loading={loader}
+              pageCount={pageCount}
+              getRowProps={(row) => ({
+                onClick: (e) => {
+                  e.stopPropagation();
+                  rowModal(row);
+                }
+              })}
+              columnHide={false}
+              columnResizable={false}
+              columnSort={true}
+              defaultSort={getDefaultSort}
+            />
+          ) : (
+            <XATableLayout
+              data={datashareListData}
+              columns={datashareColumns}
+              fetchData={fetchDataharetList}
+              totalCount={entries && entries.totalCount}
+              loading={loader}
+              pageCount={pageCount}
+              getRowProps={(row) => ({
+                onClick: (e) => {
+                  e.stopPropagation();
+                  rowModal(row);
+                }
+              })}
+              columnHide={false}
+              columnResizable={false}
+              columnSort={true}
+              defaultSort={getDefaultSort}
+            />
+          )}
         </React.Fragment>
       </div>
     </>
   );
 };
 
-export default DatashareListing;
+export default MyDatashareListing;

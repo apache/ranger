@@ -22,15 +22,26 @@ import ResourceComp from "../../Resources/ResourceComp";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { fetchApi } from "../../../utils/fetchAPI";
 import { Loader } from "../../../components/CommonComponents";
-import { Button, Col, Accordion, Card, Modal } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Accordion,
+  Card,
+  Modal,
+  Form as FormB
+} from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import Select from "react-select";
-import { groupBy, isArray } from "lodash";
+import { groupBy, isArray, maxBy, find } from "lodash";
 import { toast } from "react-toastify";
 
-const AddSharedResourceComp = () => {
-  let { datashareId } = useParams();
+const AddSharedResourceComp = ({
+  datashareId,
+  onSharedResourceDataChange,
+  onToggleAddResourceClose,
+  loadSharedResource
+}) => {
   const [accessType, setAccessType] = useState();
   const [sharedResources, setSharedResources] = useState();
   const [conditionModalData, setConditionModalData] = useState();
@@ -44,11 +55,56 @@ const AddSharedResourceComp = () => {
   const [loader, setLoader] = useState(false);
   const navigate = useNavigate();
   const [openConfigAccordion, setOpenConfigAccordion] = useState(false);
+  const [formData, setFormData] = useState();
+  //const [accessTypeOptions, setAccessTypeOptions] = useState([]);
+  const [selectedResShareMask, setSelectedResShareMask] = useState({});
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
     fetchSharedResources(datashareId);
   }, []);
+
+  const generateFormData = (obj, serviceDef) => {
+    let data = {};
+    data.shareName = obj.name;
+    let serviceCompResourcesDetails = serviceDef?.resources;
+    if (obj?.resource) {
+      let lastResourceLevel = [];
+      Object.entries(obj?.resource).map(([key, value]) => {
+        let setResources = find(serviceCompResourcesDetails, ["name", key]);
+        data[`resourceName-${setResources?.level}`] = setResources;
+        data[`value-${setResources?.level}`] = value.values.map((m) => {
+          return { label: m, value: m };
+        });
+        lastResourceLevel.push({
+          level: setResources.level,
+          name: setResources.name
+        });
+      });
+      lastResourceLevel = maxBy(lastResourceLevel, "level");
+      let setLastResources = find(serviceCompResourcesDetails, [
+        "parent",
+        lastResourceLevel.name
+      ]);
+      if (setLastResources && setLastResources?.isValidLeaf) {
+        data[`resourceName-${setLastResources.level}`] = {
+          label: "None",
+          value: "none"
+        };
+      }
+    }
+    if (obj.accessTypes != undefined) {
+      data.permission = obj.accessTypes.map((item) => ({
+        label: item,
+        value: item
+      }));
+    }
+    if (obj.rowFilter != undefined) {
+      data.rowFilter = obj.rowFilter["filterExpr"];
+    }
+    data.booleanExpression = obj.conditionExpr;
+    return data;
+  };
 
   const onAccessConfigAccordianChange = () => {
     setOpenConfigAccordion(!openConfigAccordion);
@@ -57,7 +113,7 @@ const AddSharedResourceComp = () => {
   const fetchDatashareInfo = async (datashareId) => {
     try {
       const resp = await fetchApi({
-        url: `gds/datashare/${datashareId}`,
+        url: `gds/datashare/${datashareId}`
       });
       setDatashareInfo(resp.data);
       fetchServiceByName(resp.data.service);
@@ -72,7 +128,7 @@ const AddSharedResourceComp = () => {
     let serviceResp = [];
     try {
       serviceResp = await fetchApi({
-        url: `plugins/services/name/${serviceName}`,
+        url: `plugins/services/name/${serviceName}`
       });
       setService(serviceResp.data);
       fetchServiceDef(serviceResp.data.type);
@@ -87,7 +143,7 @@ const AddSharedResourceComp = () => {
     let serviceDefsResp = [];
     try {
       serviceDefsResp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`,
+        url: `plugins/definitions/name/${serviceDefName}`
       });
     } catch (error) {
       console.error(
@@ -99,17 +155,19 @@ const AddSharedResourceComp = () => {
       obj.recursiveSupported = false;
       obj.excludesSupported = false;
     }
-    let masDef = modifiedServiceDef.rowFilterDef;
-    let rowDef = modifiedServiceDef.dataMaskDef;
-    Object.entries(masDef).map(([key, value]) => {
+    if (Object.keys(modifiedServiceDef.rowFilterDef).length !== 0) {
       setShowMaskInput(true);
-    });
-    Object.entries(rowDef).map(([key, value]) => {
+    }
+    if (Object.keys(modifiedServiceDef.dataMaskDef).length !== 0) {
       setShowRowFilterInput(true);
-    });
-    setShowMaskInput(true);
-    setShowRowFilterInput(true);
+    }
+
+    // setShowMaskInput(true);
+    // setShowRowFilterInput(true);
     setServiceDef(modifiedServiceDef);
+    if (loadSharedResource != undefined) {
+      setFormData(generateFormData(loadSharedResource, modifiedServiceDef));
+    }
   };
 
   const fetchSharedResources = async () => {
@@ -118,7 +176,7 @@ const AddSharedResourceComp = () => {
       params["dataShareId"] = datashareId;
       const resp = await fetchApi({
         url: `gds/resource`,
-        params: params,
+        params: params
       });
       setSharedResources(resp.data.list);
     } catch (error) {
@@ -130,7 +188,7 @@ const AddSharedResourceComp = () => {
 
   const noneOptions = {
     label: "None",
-    value: "none",
+    value: "none"
   };
 
   const getAccessTypeOptions = (formValues) => {
@@ -163,9 +221,10 @@ const AddSharedResourceComp = () => {
         break;
       }
     }
+
     return srcOp.map(({ label, name: value }) => ({
       label,
-      value,
+      value
     }));
   };
 
@@ -174,7 +233,7 @@ const AddSharedResourceComp = () => {
     input.onChange(event);
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, closeModal) => {
     console.log(values);
     console.log(values);
     let data = {};
@@ -200,35 +259,54 @@ const AddSharedResourceComp = () => {
         data.resource[values[`resourceName-${level}`].name] = {
           values: isArray(values[`value-${level}`])
             ? values[`value-${level}`]?.map(({ value }) => value)
-            : [values[`value-${level}`].value],
+            : [values[`value-${level}`].value]
         };
       }
     }
     data.conditionExpr = values.booleanExpression;
     data.name = values.shareName;
-    data.accessTypes = values.permission;
+    data.accessTypes = values.permission?.map((item) => item.value);
     data.rowFilter = values.rowFilter;
     data.resourceMask = values.resourceMask;
 
     try {
       setBlockUI(true);
       setLoader(true);
-      await fetchApi({
-        url: `gds/resource`,
-        method: "post",
-        data: data,
-      });
+      if (loadSharedResource != undefined) {
+        data.guid = loadSharedResource.guid;
+        await fetchApi({
+          url: `gds/resource/${loadSharedResource.id}`,
+          method: "put",
+          data: data
+        });
+        toast.success("Shared resource updated successfully!!");
+      } else {
+        await fetchApi({
+          url: `gds/resource`,
+          method: "post",
+          data: data
+        });
+        toast.success("Shared resource created successfully!!");
+      }
       setBlockUI(false);
-      toast.success("Shared resource created successfully!!");
     } catch (error) {
       setBlockUI(false);
       setLoader(false);
       serverError(error);
-      console.error(`Error occurred while creating Shared resource  ${error}`);
+      if (loadSharedResource != undefined) {
+        toast.success("Error occurred while updating Shared resource");
+      } else {
+        toast.success("Error occurred while creating Shared resource");
+      }
+      console.error(
+        `Error occurred while creating/updating Shared resource  ${error}`
+      );
     }
-    sharedResources.push(data);
-    setSharedResources(sharedResources);
+    onSharedResourceDataChange();
     setLoader(false);
+    if (closeModal) {
+      onToggleAddResourceClose();
+    }
     console.log(data);
   };
 
@@ -245,9 +323,18 @@ const AddSharedResourceComp = () => {
     navigate(`/gds/datashare/${datashareId}/detail`);
   };
 
+  const toggleAddResourceClose = () => {
+    onToggleAddResourceClose();
+  };
+
+  const onResShareMaskChange = (event, input) => {
+    setSelectedResShareMask(event);
+    input.onChange(event);
+  };
+
   return (
     <>
-      <div className="gds-form-header-wrapper gap-half">
+      {/* <div className="gds-form-header-wrapper gap-half">
         <Button
           variant="light"
           className="border-0 bg-transparent"
@@ -259,7 +346,7 @@ const AddSharedResourceComp = () => {
           <i className="fa fa-angle-left fa-lg font-weight-bold" />
         </Button>
         <h3 className="gds-header bold">Add Resource</h3>
-      </div>
+      </div> */}
       {loader ? (
         <Loader />
       ) : (
@@ -283,10 +370,17 @@ const AddSharedResourceComp = () => {
               </div>
               <Form
                 onSubmit={handleSubmit}
+                initialValues={formData}
                 mutators={{
-                  ...arrayMutators,
+                  ...arrayMutators
                 }}
-                render={({ handleSubmit, values, invalid, errors }) => (
+                render={({
+                  handleSubmit,
+                  values,
+                  invalid,
+                  errors,
+                  required
+                }) => (
                   <div>
                     <form
                       className="mb-5"
@@ -326,7 +420,7 @@ const AddSharedResourceComp = () => {
                         </Col>
                         <Col sm={9}>
                           <Field
-                            name={`shareName`}
+                            name="shareName"
                             render={({ input, meta }) => (
                               <div className="flex-1">
                                 <input
@@ -384,7 +478,7 @@ const AddSharedResourceComp = () => {
                                   </label>
                                 </Col>
                                 <Field
-                                  name={`permission`}
+                                  name="permission"
                                   render={({ input, meta }) => (
                                     <Col sm={9}>
                                       <Select
@@ -393,8 +487,8 @@ const AddSharedResourceComp = () => {
                                         onChange={(e) =>
                                           onAccessTypeChange(e, input)
                                         }
-                                        menuPortalTarget={document.body}
-                                        value={accessType}
+                                        //menuPortalTarget={document.body}
+                                        //value={accessType}
                                         menuPlacement="auto"
                                         isClearable
                                         isMulti
@@ -421,6 +515,79 @@ const AddSharedResourceComp = () => {
                                           name="rowFilter"
                                           className="form-control gds-placeholder"
                                           data-cy="rowFilter"
+                                        />
+                                      </Col>
+                                    )}
+                                  />
+                                </div>
+                              ) : (
+                                <div></div>
+                              )}
+
+                              {showMaskInput ? (
+                                <div className="mb-3 form-group row">
+                                  <Col sm={3}>
+                                    <label className="form-label pull-right fnt-14">
+                                      Mask
+                                    </label>
+                                  </Col>
+
+                                  <Field
+                                    name={`maskType`}
+                                    render={({ input, meta }) => (
+                                      <Col sm={9}>
+                                        <Field
+                                          name="masking"
+                                          render={({ input, meta }) => (
+                                            <div>
+                                              <Col sm={9}>
+                                                <Select
+                                                  {...input}
+                                                  options={
+                                                    serviceDef.dataMaskDef
+                                                      .maskTypes
+                                                  }
+                                                  onChange={(e) =>
+                                                    onResShareMaskChange(
+                                                      e,
+                                                      input
+                                                    )
+                                                  }
+                                                  menuPlacement="auto"
+                                                  isClearable
+                                                />
+                                              </Col>
+                                              <div>
+                                                {selectedResShareMask?.label ==
+                                                  "Custom" && (
+                                                  <>
+                                                    <Field
+                                                      className="form-control"
+                                                      name={`resShareDataMaskInfo.valueExpr`}
+                                                      validate={required}
+                                                      render={({
+                                                        input,
+                                                        meta
+                                                      }) => (
+                                                        <>
+                                                          <FormB.Control
+                                                            type="text"
+                                                            {...input}
+                                                            placeholder="Enter masked value or expression..."
+                                                          />
+                                                          {meta.error && (
+                                                            <span className="invalid-field">
+                                                              {meta.error}
+                                                            </span>
+                                                          )}
+                                                        </>
+                                                      )}
+                                                    />
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
                                         />
                                       </Col>
                                     )}
@@ -461,16 +628,42 @@ const AddSharedResourceComp = () => {
                         <Col sm={3} />
                         <Col sm={9}>
                           <Button
-                            onClick={(event) => {
-                              handleSubmit(event);
-                            }}
-                            variant="primary"
+                            variant="secondary"
                             size="sm"
-                            data-id="save"
-                            data-cy="save"
+                            onClick={toggleAddResourceClose}
                           >
-                            Add Resource
+                            Cancel
                           </Button>
+                          <Button
+                            variant={
+                              loadSharedResource == undefined
+                                ? "secondary"
+                                : "primary"
+                            }
+                            size="sm"
+                            onClick={(event) => {
+                              handleSubmit(event, true);
+                            }}
+                          >
+                            {loadSharedResource != undefined
+                              ? "Update"
+                              : "Save & Close"}
+                          </Button>
+                          {loadSharedResource == undefined ? (
+                            <Button
+                              onClick={(event) => {
+                                handleSubmit(event, false);
+                              }}
+                              variant="primary"
+                              size="sm"
+                              data-id="save"
+                              data-cy="save"
+                            >
+                              Save & Add Another
+                            </Button>
+                          ) : (
+                            <div></div>
+                          )}
                         </Col>
                       </div>
 

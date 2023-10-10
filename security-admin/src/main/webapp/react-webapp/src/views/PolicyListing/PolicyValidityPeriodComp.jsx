@@ -32,9 +32,18 @@ export default function PolicyValidityPeriodComp(props) {
   const { addPolicyItem } = props;
   const [showModal, setModal] = useState(false);
   const toggleModal = () => setModal((open) => !open);
+  const [validitySchedulesSize, setValiditySchedulesSize] = useState(0);
 
   const handleBtnClick = () => {
     setModal(true);
+    if (
+      props.isGdsRequest != undefined &&
+      props.isGdsRequest == true &&
+      validitySchedulesSize == 0
+    ) {
+      addPolicyItem("validitySchedules", undefined);
+      setValiditySchedulesSize(validitySchedulesSize + 1);
+    }
   };
 
   const RenderInput = (props, openCalendar, closeCalendar) => {
@@ -194,34 +203,42 @@ export default function PolicyValidityPeriodComp(props) {
                           )}
                         />
                       </td>
-                      <td className="text-center">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="btn-mini"
-                          title="Remove"
-                          onClick={() => fields.remove(index)}
-                          data-action="delete"
-                          data-cy="delete"
-                        >
-                          <i className="fa-fw fa fa-remove"></i>
-                        </Button>
-                      </td>
+                      {props.isGdsRequest == undefined ? (
+                        <td className="text-center">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            className="btn-mini"
+                            title="Remove"
+                            onClick={() => fields.remove(index)}
+                            data-action="delete"
+                            data-cy="delete"
+                          >
+                            <i className="fa-fw fa fa-remove"></i>
+                          </Button>
+                        </td>
+                      ) : (
+                        <div></div>
+                      )}
                     </tr>
                   ))
                 }
               </FieldArray>
             </tbody>
           </Table>
-          <Button
-            type="button"
-            className="btn-mini"
-            onClick={() => addPolicyItem("validitySchedules", undefined)}
-            data-action="addTime"
-            data-cy="addTime"
-          >
-            <i className="fa-fw fa fa-plus"></i>
-          </Button>
+          {props.isGdsRequest == undefined ? (
+            <Button
+              type="button"
+              className="btn-mini"
+              onClick={() => addPolicyItem("validitySchedules", undefined)}
+              data-action="addTime"
+              data-cy="addTime"
+            >
+              <i className="fa-fw fa fa-plus"></i>
+            </Button>
+          ) : (
+            <div></div>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" size="sm" onClick={validationForTimePeriod}>

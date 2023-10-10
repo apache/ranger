@@ -32,7 +32,7 @@ const initialState = {
   loader: false,
   preventUnBlock: false,
   blockUI: false,
-  selectedPrinciple: [],
+  selectedPrinciple: []
 };
 
 const datasetFormReducer = (state, action) => {
@@ -40,17 +40,17 @@ const datasetFormReducer = (state, action) => {
     case "SET_SELECTED_PRINCIPLE":
       return {
         ...state,
-        selectedPrinciple: action.selectedPrinciple,
+        selectedPrinciple: action.selectedPrinciple
       };
     case "SET_PREVENT_ALERT":
       return {
         ...state,
-        preventUnBlock: action.preventUnBlock,
+        preventUnBlock: action.preventUnBlock
       };
     case "SET_BLOCK_UI":
       return {
         ...state,
-        blockUI: action.blockUI,
+        blockUI: action.blockUI
       };
     default:
       throw new Error();
@@ -69,13 +69,13 @@ const AddDatasetView = () => {
     acl: {
       users: {},
       groups: {},
-      roles: {},
+      roles: {}
     },
     description: "",
-    termsOfUse: "",
+    termsOfUse: ""
   });
-  const [datasetName, setName] = useState("");
-  const [datasetDescription, setDatasetDescription] = useState("");
+  const [datasetName, setName] = useState();
+  const [datasetDescription, setDatasetDescription] = useState();
   const [datasetTermsAndConditions, setDatasetTermsAndConditions] =
     useState("");
   const [saveButtonText, setSaveButtonText] = useState("Continue");
@@ -119,24 +119,24 @@ const AddDatasetView = () => {
       });
       dispatch({
         type: "SET_PREVENT_ALERT",
-        preventUnBlock: true,
+        preventUnBlock: true
       });
       try {
         dispatch({
           type: "SET_BLOCK_UI",
-          blockUI: true,
+          blockUI: true
         });
         const createDatasetResp = await fetchApi({
           url: `gds/dataset`,
           method: "post",
-          data: dataset,
+          data: dataset
         });
         toast.success("Dataset created successfully!!");
-        self.location.hash = "#/gds/datasetlisting";
+        self.location.hash = "#/gds/mydatasetlisting";
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
-          blockUI: false,
+          blockUI: false
         });
         serverError(error);
         console.error(`Error occurred while creating dataset  ${error}`);
@@ -144,7 +144,11 @@ const AddDatasetView = () => {
     } else if (step == 2) {
       setSaveButtonText("Create Dataset");
       setStep(step + 1);
-    } else {
+    } else if (step == 1) {
+      if (datasetName == undefined) {
+        toast.error("Dataset name cannot be empty!!");
+        return;
+      }
       setSaveButtonText("Continue");
       setStep(step + 1);
     }
@@ -152,7 +156,7 @@ const AddDatasetView = () => {
 
   const cancelDatasetDetails = () => {
     if (step == 1) {
-      navigate("/gds/datasetlisting");
+      navigate("/gds/mydatasetlisting");
     } else {
       let txt = "";
       for (let x in dataset.acl.users) {
@@ -168,7 +172,7 @@ const AddDatasetView = () => {
       <Form
         onSubmit={handleSubmit}
         mutators={{
-          ...arrayMutators,
+          ...arrayMutators
         }}
         render={({ handleSubmit }) => (
           <>
