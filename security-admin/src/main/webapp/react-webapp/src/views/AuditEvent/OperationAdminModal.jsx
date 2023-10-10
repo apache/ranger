@@ -29,6 +29,12 @@ import ServiceLogs from "./AdminLogs/ServiceLogs";
 import PolicyLogs from "./AdminLogs/PolicyLogs";
 import PasswordLogs from "./AdminLogs/PasswordLogs";
 import UserprofileLogs from "./AdminLogs/UserprofileLogs";
+import DatasetLogs from "./AdminLogs/DatasetLogs";
+import ProjectLogs from "./AdminLogs/ProjectLogs";
+import DataShareLogs from "./AdminLogs/DataShareLogs";
+import SharedResourceLogs from "./AdminLogs/SharedResourceLogs";
+import DataShareInDatasetLogs from "./AdminLogs/DataShareInDatasetLogs";
+import DatasetInProjectLogs from "./AdminLogs/DatasetInProjectLogs";
 import { ModalLoader } from "../../components/CommonComponents";
 
 export const OperationAdminModal = ({ onHide, show, data = {} }) => {
@@ -115,6 +121,42 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
             {objectClassType == ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value && (
               <PasswordLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATASET */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATASET.value && (
+              <DatasetLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* PROJECT */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_PROJECT.value && (
+              <ProjectLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATA_SHARE */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value && (
+              <DataShareLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* SHARED_RESOURCE */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+              <SharedResourceLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATA_SHARE_IN_DATASET */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET.value && (
+              <DataShareInDatasetLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATASET_IN_PROJECT */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT.value && (
+              <DatasetInProjectLogs reportdata={reportdata} data={data} />
             )}
           </div>
         )}

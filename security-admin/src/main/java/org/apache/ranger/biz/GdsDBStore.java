@@ -195,7 +195,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataset ret = datasetService.create(dataset);
 
-        datasetService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        datasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
 
@@ -220,7 +220,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataset ret = datasetService.update(dataset);
 
-        datasetService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        datasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
 
@@ -252,7 +252,7 @@ public class GdsDBStore extends AbstractGdsStore {
             deleteDatasetPolicies(existing);
             datasetService.delete(existing);
 
-            datasetService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            datasetService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
             updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
         }
@@ -486,7 +486,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerProject ret = projectService.create(project);
 
-        projectService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        projectService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
 
@@ -511,7 +511,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerProject ret = projectService.update(project);
 
-        projectService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        projectService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
 
@@ -538,7 +538,7 @@ public class GdsDBStore extends AbstractGdsStore {
             deleteProjectPolicies(existing);
             projectService.delete(existing);
 
-            projectService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            projectService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
             updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
         }
@@ -782,7 +782,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataShare ret = dataShareService.create(dataShare);
 
-        dataShareService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        dataShareService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
 
@@ -807,7 +807,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataShare ret = dataShareService.update(dataShare);
 
-        dataShareService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        dataShareService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
 
@@ -838,7 +838,7 @@ public class GdsDBStore extends AbstractGdsStore {
         if (existing != null) {
             dataShareService.delete(existing);
 
-            dataShareService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            dataShareService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
             updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
         }
@@ -890,7 +890,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerSharedResource ret = sharedResourceService.create(resource);
 
-        sharedResourceService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        sharedResourceService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         LOG.debug("<== addSharedResource({}): ret={}", resource, ret);
 
@@ -913,7 +913,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerSharedResource ret = sharedResourceService.update(resource);
 
-        sharedResourceService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        sharedResourceService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         LOG.debug("<== updateSharedResource({}): ret={}", resource, ret);
 
@@ -938,7 +938,7 @@ public class GdsDBStore extends AbstractGdsStore {
         if (existing != null) {
             sharedResourceService.delete(existing);
 
-            sharedResourceService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+            sharedResourceService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
         }
 
         LOG.debug("<== removeSharedResource({})", sharedResourceId);
@@ -997,7 +997,7 @@ public class GdsDBStore extends AbstractGdsStore {
             }
 
             if (includeResource) {
-                sharedResources.add(sharedResource);;
+                sharedResources.add(sharedResource);
             }
         }
 
@@ -1039,7 +1039,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataShareInDataset ret = dataShareInDatasetService.create(dataShareInDataset);
 
-        dataShareInDatasetService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        dataShareInDatasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         LOG.debug("<== addDataShareInDataset({}): ret={}", dataShareInDataset, ret);
 
@@ -1058,7 +1058,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataShareInDataset ret = dataShareInDatasetService.update(dataShareInDataset);
 
-        dataShareInDatasetService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        dataShareInDatasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         LOG.debug("<== updateDataShareInDataset({}): ret={}", dataShareInDataset, ret);
 
@@ -1075,7 +1075,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         dataShareInDatasetService.delete(existing);
 
-        dataShareInDatasetService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+        dataShareInDatasetService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
         LOG.debug("<== removeDataShareInDataset({})", dataShareInDatasetId);
     }
@@ -1135,7 +1135,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDatasetInProject ret = datasetInProjectService.create(datasetInProject);
 
-        datasetInProjectService.createObjectHistory(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        datasetInProjectService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
         LOG.debug("<== addDatasetInProject({}): ret={}", datasetInProject, ret);
 
@@ -1154,7 +1154,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDatasetInProject ret = datasetInProjectService.update(datasetInProject);
 
-        datasetInProjectService.createObjectHistory(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+        datasetInProjectService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
         LOG.debug("<== updateDatasetInProject({}): ret={}", datasetInProject, ret);
 
@@ -1171,7 +1171,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         datasetInProjectService.delete(existing);
 
-        datasetInProjectService.createObjectHistory(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+        datasetInProjectService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
         LOG.debug("<== removeDatasetInProject({})", datasetInProjectId);
     }

@@ -21,10 +21,12 @@ package org.apache.ranger.service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXGdsDataShare;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
@@ -53,7 +55,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
     GUIDUtil guidUtil;
 
     public RangerGdsDataShareService() {
-        super();
+        super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE);
 
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME,           "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME_PARTIAL,   "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL));
@@ -77,6 +79,16 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATA_SHARE_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.DATA_SHARE_NAME, "obj.name"));
+
+
+        trxLogAttrs.put("name",               new VTrxLogAttr("name", "Name", false));
+        trxLogAttrs.put("acl",                new VTrxLogAttr("acl", "ACL", false));
+        trxLogAttrs.put("service",            new VTrxLogAttr("service", "Service name", false));
+        trxLogAttrs.put("zone",               new VTrxLogAttr("zone", "Zone name", false));
+        trxLogAttrs.put("conditionExpr",      new VTrxLogAttr("conditionExpr", "Condition expression", false));
+        trxLogAttrs.put("defaultAccessTypes", new VTrxLogAttr("defaultAccessTypes", "Default access types", false));
+        trxLogAttrs.put("defaultTagMasks",    new VTrxLogAttr("defaultTagMasks", "Default tag masks", false));
+        trxLogAttrs.put("termsOfUse",         new VTrxLogAttr("termsOfUse", "Terms of use", false));
     }
 
     @Override

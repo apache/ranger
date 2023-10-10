@@ -22,9 +22,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.GUIDUtil;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXGdsDataShare;
 import org.apache.ranger.entity.XXGdsSharedResource;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
@@ -52,7 +54,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
     GUIDUtil guidUtil;
 
     public RangerGdsSharedResourceService() {
-        super();
+        super(AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE);
 
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_NAME, "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_ID,   "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
@@ -75,6 +77,17 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.SHARED_RESOURCE_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.SHARED_RESOURCE_NAME, "obj.name"));
+
+        trxLogAttrs.put("name",             new VTrxLogAttr("name", "Name", false));
+        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID", false));
+        trxLogAttrs.put("resource",         new VTrxLogAttr("resource", "Resource", false));
+        trxLogAttrs.put("subResource",      new VTrxLogAttr("subResource", "Subresource", false));
+        trxLogAttrs.put("subResourceType",  new VTrxLogAttr("subResourceType", "Subresource Type", false));
+        trxLogAttrs.put("conditionExpr",    new VTrxLogAttr("conditionExpr", "Condition expression", false));
+        trxLogAttrs.put("accessTypes",      new VTrxLogAttr("accessTypes", "Access types", false));
+        trxLogAttrs.put("rowFilter",        new VTrxLogAttr("rowFilter", "Row filter", false));
+        trxLogAttrs.put("subResourceMasks", new VTrxLogAttr("subResourceMasks", "Subresource Masks", false));
+        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles", false));
     }
 
     @Override

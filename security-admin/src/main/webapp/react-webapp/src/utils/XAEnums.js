@@ -360,6 +360,54 @@ export const ClassTypes = {
     modelName: "VXRole",
     type: "vXRole",
     tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_ROLE"
+  },
+  CLASS_TYPE_RANGER_DATASET: {
+    value: 1062,
+    label: "Ranger Dataset",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATASET",
+    modelName: "RangerDataset",
+    type: "vDataset",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATASET"
+  },
+  CLASS_TYPE_RANGER_PROJECT: {
+    value: 1063,
+    label: "Ranger Project",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_PROJECT",
+    modelName: "RangerProject",
+    type: "vProject",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_PROJECT"
+  },
+  CLASS_TYPE_RANGER_DATA_SHARE: {
+    value: 1064,
+    label: "Ranger Data Share",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE",
+    modelName: "RangerDataShare",
+    type: "vDataShare",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATA_SHARE"
+  },
+  CLASS_TYPE_RANGER_SHARED_RESOURCE: {
+    value: 1065,
+    label: "Ranger Shared Resource",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE",
+    modelName: "RangerSharedResource",
+    type: "vSharedResource",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_SHARED_RESOURCE"
+  },
+  CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET: {
+    value: 1066,
+    label: "Ranger DataShare in Dataset",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET",
+    modelName: "RangerDataShareInDataset",
+    type: "vDataShareInDataset",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET"
+  },
+  CLASS_TYPE_RANGER_DATASET_IN_PROJECT: {
+    value: 1067,
+    label: "Ranger Dataset in Project",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT",
+    modelName: "RangerDatasetInProject",
+    type: "vDatasetInProject",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATASET_IN_PROJECT"
   }
 };
 

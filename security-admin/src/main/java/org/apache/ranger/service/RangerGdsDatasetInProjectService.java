@@ -21,10 +21,12 @@ package org.apache.ranger.service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.entity.XXGdsProject;
 import org.apache.ranger.entity.XXGdsDatasetInProject;
@@ -57,7 +59,7 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
     XXPortalUserDao xxPortalUserDao;
 
     public RangerGdsDatasetInProjectService() {
-        super();
+        super(AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT);
 
         searchFields.add(new SearchField(SearchFilter.DATASET_IN_PROJECT_ID, "obj.id",        SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.GUID      ,            "obj.guid",      SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
@@ -70,6 +72,13 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,           "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,           "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATASET_IN_PROJECT_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+
+        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID", false));
+        trxLogAttrs.put("projectId",        new VTrxLogAttr("projectId", "Project ID", false));
+        trxLogAttrs.put("status",           new VTrxLogAttr("status", "Status", true));
+        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule", false));
+        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles", false));
+        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver", false));
     }
 
     @Override

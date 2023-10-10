@@ -398,6 +398,12 @@ function Admin() {
           { value: "1056", label: "Ranger Security Zone" },
           { value: "1030", label: "Ranger Service" },
           { value: "1003", label: "Ranger User" },
+          { value: "1062", label: "Ranger Dataset" },
+          { value: "1063", label: "Ranger Project" },
+          { value: "1064", label: "Ranger Data Share" },
+          { value: "1065", label: "Ranger Shared Resource" },
+          { value: "1066", label: "Ranger Data Share in Dataset" },
+          { value: "1067", label: "Ranger Dataset in Project" },
           { value: "2", label: "User Profile" }
         ];
       }

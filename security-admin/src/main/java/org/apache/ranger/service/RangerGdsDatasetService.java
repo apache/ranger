@@ -21,10 +21,12 @@ package org.apache.ranger.service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
@@ -49,7 +51,7 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
     GUIDUtil guidUtil;
 
     public RangerGdsDatasetService() {
-        super();
+        super(AppConstants.CLASS_TYPE_GDS_DATASET);
 
         searchFields.add(new SearchField(SearchFilter.DATASET_NAME,              "obj.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATASET_NAME_PARTIAL,      "obj.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL));
@@ -77,6 +79,10 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATASET_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.DATASET_NAME, "obj.name"));
+
+        trxLogAttrs.put("name",       new VTrxLogAttr("name", "Name", false));
+        trxLogAttrs.put("acl",        new VTrxLogAttr("acl", "ACL", false));
+        trxLogAttrs.put("termsOfUse", new VTrxLogAttr("termsOfUse", "Terms of use", false));
     }
 
     @Override
