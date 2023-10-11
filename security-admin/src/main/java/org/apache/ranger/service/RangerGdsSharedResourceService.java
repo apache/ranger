@@ -57,6 +57,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         super(AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE);
 
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_NAME, "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_NAME_PARTIAL, "obj.name", SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_ID,   "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.GUID      ,           "obj.guid",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.IS_ENABLED,           "obj.isEnabled",   SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));

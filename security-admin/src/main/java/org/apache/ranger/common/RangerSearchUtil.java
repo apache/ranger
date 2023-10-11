@@ -111,6 +111,8 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.DATA_SHARE_NAME_PARTIAL, request.getParameter(SearchFilter.DATA_SHARE_NAME_PARTIAL));
 		ret.setParam(SearchFilter.DATA_SHARE_ID, request.getParameter(SearchFilter.DATA_SHARE_ID));
 		ret.setParam(SearchFilter.SHARED_RESOURCE_ID, request.getParameter(SearchFilter.SHARED_RESOURCE_ID));
+		ret.setParam(SearchFilter.SHARED_RESOURCE_NAME, request.getParameter(SearchFilter.SHARED_RESOURCE_NAME));
+		ret.setParam(SearchFilter.SHARED_RESOURCE_NAME_PARTIAL, request.getParameter(SearchFilter.SHARED_RESOURCE_NAME_PARTIAL));
 		ret.setParam(SearchFilter.PROFILE_NAME, request.getParameter(SearchFilter.PROFILE_NAME));
 		ret.setParam(SearchFilter.OWNER_NAME, request.getParameter(SearchFilter.OWNER_NAME));
 		ret.setParam(SearchFilter.OWNER_TYPE, request.getParameter(SearchFilter.OWNER_TYPE));
