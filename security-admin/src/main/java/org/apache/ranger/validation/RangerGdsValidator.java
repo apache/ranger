@@ -26,6 +26,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
+import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
@@ -613,6 +614,31 @@ public class RangerGdsValidator {
                         }
                     }
                 }
+            }
+        }
+
+        return ret;
+    }
+
+    public boolean needApproverUpdate(GdsShareStatus existing, GdsShareStatus updated) {
+        boolean ret = !existing.equals(updated);
+
+        if (ret) {
+            switch (updated) {
+                case DENIED:
+                case GRANTED:
+                    break;
+
+                case ACTIVE:
+                    if (!existing.equals(GdsShareStatus.NONE) && !existing.equals(GdsShareStatus.REQUESTED)) {
+                        ret = false;
+                    }
+                    break;
+
+                case NONE:
+                case REQUESTED:
+                    ret = false;
+                    break;
             }
         }
 

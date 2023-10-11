@@ -1022,6 +1022,17 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateCreate(dataShareInDataset);
 
+        switch (dataShareInDataset.getStatus()) {
+            case GRANTED:
+            case DENIED:
+            case ACTIVE:
+                dataShareInDataset.setApprover(bizUtil.getCurrentUserLoginId());
+                break;
+            default:
+                dataShareInDataset.setApprover(null);
+                break;
+        }
+
         if (StringUtils.isBlank(dataShareInDataset.getGuid())) {
             dataShareInDataset.setGuid(guidUtil.genGUID());
         }
@@ -1042,6 +1053,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDataShareInDataset existing = dataShareInDatasetService.read(dataShareInDataset.getId());
 
         validator.validateUpdate(dataShareInDataset, existing);
+
+        dataShareInDataset.setApprover(validator.needApproverUpdate(existing.getStatus(), dataShareInDataset.getStatus()) ? bizUtil.getCurrentUserLoginId() : existing.getApprover());
 
         RangerDataShareInDataset ret = dataShareInDatasetService.update(dataShareInDataset);
 
@@ -1136,6 +1149,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDatasetInProject existing = datasetInProjectService.read(datasetInProject.getId());
 
         validator.validateUpdate(datasetInProject, existing);
+
+        datasetInProject.setApprover(validator.needApproverUpdate(existing.getStatus(), datasetInProject.getStatus()) ? bizUtil.getCurrentUserLoginId() : existing.getApprover());
 
         RangerDatasetInProject ret = datasetInProjectService.update(datasetInProject);
 
