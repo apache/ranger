@@ -94,6 +94,13 @@ public class TestPolicyACLs {
 		runTestsFromResourceFiles(tests);
 	}
 
+	@Test
+	public void testResourceACLs_resource_hierarchy_tags() throws Exception {
+		String[] tests = {"/policyengine/test_aclprovider_resource_hierarchy_tags.json"};
+
+		runTestsFromResourceFiles(tests);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);

@@ -188,6 +188,10 @@ public class RangerServiceDefHelper {
 		return _delegate.getResourceHierarchies(policyType);
 	}
 
+	public Set<Set<String>> getResourceHierarchyKeys(Integer policyType) {
+		return _delegate.getResourceHierarchyKeys(policyType);
+	}
+
 	public Set<List<RangerResourceDef>> filterHierarchies_containsOnlyMandatoryResources(Integer policyType) {
 		Set<List<RangerResourceDef>> hierarchies = getResourceHierarchies(policyType);
 		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
@@ -198,6 +202,32 @@ public class RangerServiceDefHelper {
 			}
 		}
 		return result;
+	}
+
+	public boolean isValidHierarchy(Integer policyType, Collection<String> keys, boolean requireExactMatch) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> isValidHierarchy(policyType=" + policyType + ", keys=" + StringUtils.join(keys, ", ") + ", requireExactMatch=" + requireExactMatch + ")");
+		}
+
+		boolean ret = false;
+
+		for (Set<String> hierarchyKeys : getResourceHierarchyKeys(policyType)) {
+			if (requireExactMatch) {
+				ret = hierarchyKeys.equals(keys);
+			} else {
+				ret = hierarchyKeys.containsAll(keys);
+			}
+
+			if (ret) {
+				break;
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== isValidHierarchy(policyType=" + policyType + ", keys=" + StringUtils.join(keys, ", ") + ", requireExactMatch=" + requireExactMatch + "): ret=" + ret);
+		}
+
+		return ret;
 	}
 
 	public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType, Collection<String> keys) {
@@ -265,7 +295,7 @@ public class RangerServiceDefHelper {
 	 * @param hierarchy
 	 * @return
 	 */
-	public Set<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
+	public static Set<String> getAllResourceNames(List<RangerResourceDef> hierarchy) {
 		Set<String> result = new HashSet<String>(hierarchy.size());
 		for (RangerResourceDef resourceDef : hierarchy) {
 			result.add(resourceDef.getName());
@@ -322,6 +352,7 @@ public class RangerServiceDefHelper {
 	static class Delegate {
 		final RangerServiceDef _serviceDef;
 		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
+		final Map<Integer, Set<Set<String>>>             _hierarchyKeys = new HashMap<>();
 		final Map<Integer, Map<String, RangerResourceDef>> _wildcardEnabledResourceDefs = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
@@ -347,14 +378,23 @@ public class RangerServiceDefHelper {
 				if(graph != null) {
 					Map<String, RangerResourceDef> resourceDefMap = getResourcesAsMap(resources);
 					if (isValid(graph, resourceDefMap)) {
-						Set<List<RangerResourceDef>> hierarchies = getHierarchies(graph, resourceDefMap);
+						Set<List<RangerResourceDef>> hierarchies  = getHierarchies(graph, resourceDefMap);
+						Set<Set<String>>             hierachyKeys = new HashSet<>(hierarchies.size());
+
+						for (List<RangerResourceDef> hierarchy : hierarchies) {
+							hierachyKeys.add(Collections.unmodifiableSet(getAllResourceNames(hierarchy)));
+						}
+
 						_hierarchies.put(policyType, Collections.unmodifiableSet(hierarchies));
+						_hierarchyKeys.put(policyType, Collections.unmodifiableSet(hierachyKeys));
 					} else {
 						isValid = false;
 						_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
+						_hierarchyKeys.put(policyType, Collections.emptySet());
 					}
 				} else {
 					_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
+					_hierarchyKeys.put(policyType, Collections.emptySet());
 				}
 			}
 
@@ -400,6 +440,16 @@ public class RangerServiceDefHelper {
 			}
 
 			return ret;
+		}
+
+		public Set<Set<String>> getResourceHierarchyKeys(Integer policyType) {
+			if (policyType == null || policyType == RangerPolicy.POLICY_TYPE_AUDIT) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			Set<Set<String>> ret = _hierarchyKeys.get(policyType);
+
+			return ret != null ? ret : Collections.emptySet();
 		}
 
 		public String getServiceName() {
