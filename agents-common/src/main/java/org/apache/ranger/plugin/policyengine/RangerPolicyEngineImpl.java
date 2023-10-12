@@ -282,6 +282,17 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 
 			for (int policyType : policyTypes) {
+				// if resource isn't applicable for the policyType, skip evaluating policies and gathering ACLs
+				// for example, following resources are not applicable for listed policy-types
+				//   - database: masking/row-filter policies
+				//   - table:    masking policies
+				//   - column:   row-filter policies
+				boolean requireExactMatch = (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) || (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER);
+
+				if (!policyEngine.getServiceDefHelper().isValidHierarchy(policyType, request.getResource().getKeys(), requireExactMatch)) {
+					continue;
+				}
+
 				List<RangerPolicyEvaluator> allEvaluators           = new ArrayList<>();
 				Map<Long, MatchType>        tagMatchTypeMap         = new HashMap<>();
 				Set<Long>                   policyIdForTemporalTags = new HashSet<>();
@@ -312,7 +323,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					MatchType matchType = tagMatchTypeMap.get(evaluator.getPolicyId());
 
 					boolean isMatched = false;
-					boolean isConditionalMatch = false;
+					boolean isConditionalMatch = evaluator.getPolicyConditionsCount() > 0;
 
 					if (matchType == null) {
 						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
@@ -1007,7 +1018,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					RangerTagForEval tag = tagEvaluator.getTag();
 
 					allEvaluators.add(evaluator);
-					tagMatchTypeMap.put(evaluator.getPolicyId(), tag.getMatchType());
+
+					updateMatchTypeForTagEvaluator(tagEvaluator, tagMatchTypeMap);
 
 					if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
 						policyIdForTemporalTags.add(evaluator.getPolicyId());
@@ -1018,6 +1030,38 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluator> resourcePolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
 			allEvaluators.addAll(resourcePolicyEvaluators);
+		}
+	}
+
+	// Multiple tags can be mapped to a tag-based policy. In such cases, use the match-type of the tag having the highest precedence
+	// Consider following tags:
+	//  table  table1      has tag SENSITIVE(level=normal)
+	//  column table1.col1 has tag SENSITIVE(level=high)
+	//
+	// Following 2 tags will be matched for table1:
+	//  SENSITIVE(level=normal) with MatchType.SELF
+	//  SENSITIVE(level=high)   with MatchType.DESCENDANT
+	//
+	// Following 2 tags will be matched for table1.col1:
+	//  SENSITIVE(level=high)   with MatchType.SELF
+	//  SENSITIVE(level=normal) with MatchType.SELF_AND_ALL_DESCENDANTS
+	//
+	// In these cases, matchType SELF should be used for policy evaluation
+	//
+	private void updateMatchTypeForTagEvaluator(PolicyEvaluatorForTag tag, Map<Long, MatchType> tagMatchTypeMap) {
+		Long      evaluatorId = tag.getEvaluator().getPolicyId();
+		MatchType existing    = tagMatchTypeMap.get(evaluatorId);
+
+		if (existing != MatchType.SELF) {
+			MatchType matchType = tag.getTag().getMatchType();
+
+			if (existing == null || existing == MatchType.NONE || matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS) {
+				tagMatchTypeMap.put(evaluatorId, matchType);
+			} else if (matchType == MatchType.ANCESTOR) {
+				if (existing == MatchType.DESCENDANT) {
+					tagMatchTypeMap.put(evaluatorId, MatchType.SELF_AND_ALL_DESCENDANTS);
+				}
+			}
 		}
 	}
 

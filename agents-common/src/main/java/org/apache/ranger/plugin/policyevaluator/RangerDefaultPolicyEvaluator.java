@@ -91,6 +91,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	boolean isUseAclSummaryForEvaluation() { return useAclSummaryForEvaluation; }
 
 	@Override
+	public int getPolicyConditionsCount() {
+		return conditionEvaluators.size();
+	}
+
+	@Override
 	public int getCustomConditionsCount() {
 		return customConditionsCount;
 	}
