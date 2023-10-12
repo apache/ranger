@@ -36,12 +36,16 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
     @Column(name = "jsonData")
     protected String jsonData;
 
+    @Column(name = "gz_jsonData")
+    protected byte[] gzJsonData;
+
     @Column(name = "description")
     protected String description;
 
     public Long getVersion() { return version; }
     public String getName() { return name; }
     public String getJsonData() { return jsonData; }
+    public byte[] getGzJsonData() { return gzJsonData; }
     public String getDescription() { return description; }
 
     public void setName(String name) {
@@ -50,6 +54,7 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
     public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
     }
+    public void setGzJsonData(byte[] gzJsonData) { this.gzJsonData = gzJsonData; }
     public void setDescription(String description) {
         this.description = description;
     }
@@ -70,19 +75,20 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
 
         return Objects.equals(version, other.version) &&
                 Objects.equals(name, other.name) &&
-                Objects.equals(jsonData, other.jsonData);
+                Objects.equals(jsonData, other.jsonData) &&
+                Objects.equals(gzJsonData, other.gzJsonData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), version, name, jsonData);
+        return Objects.hash(super.hashCode(), version, name, jsonData, gzJsonData);
     }
 
     @Override
     public String toString() {
         String str = "XXSecurityZoneBase={";
         str += super.toString();
-        str += " [version=" + version + ", name=" + name + ", jsonData=" + jsonData + "]";
+        str += " [version=" + version + ", name=" + name + ", jsonData=" + jsonData + ", gzJsonData=" + gzJsonData + "]";
         str += "}";
         return str;
     }
