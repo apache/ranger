@@ -98,7 +98,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
         RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-        compressJsonData = config.getBoolean("ranger.admin.store.security.zone.compress.json_data", false);
+        compressJsonData = config.getBoolean("ranger.admin.store.security.zone.compress.json_data", compressJsonData);
 
         logger.info("ranger.admin.store.security.zone.compress.json_data={}", compressJsonData);
 
@@ -128,28 +128,40 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
         if (StringUtils.isNotEmpty(json) && compressJsonData) {
             try {
-                json = StringUtil.compressString(json);
+                ret.setJsonData(null);
+                ret.setGzJsonData(StringUtil.gzipCompress(json));
             } catch (IOException excp) {
                 logger.error("mapViewToEntityBean(): json compression failed (length={}). Will save uncompressed json", json.length(), excp);
-            }
-        }
 
-        ret.setJsonData(json);
+                ret.setJsonData(json);
+                ret.setGzJsonData(null);
+            }
+        } else {
+            ret.setJsonData(json);
+            ret.setGzJsonData(null);
+        }
 
         return ret;
     }
     @Override
     protected RangerSecurityZone mapEntityToViewBean(RangerSecurityZone securityZone, XXSecurityZone xxSecurityZone) {
-        RangerSecurityZone ret  = super.mapEntityToViewBean(securityZone, xxSecurityZone);
-        String             json = xxSecurityZone.getJsonData();
+        RangerSecurityZone ret    = super.mapEntityToViewBean(securityZone, xxSecurityZone);
+        byte[]             gzJson = xxSecurityZone.getGzJsonData();
+        String             json;
+
+        if (gzJson != null) {
+            try {
+                json = StringUtil.gzipDecompress(gzJson);
+            } catch (IOException excp) {
+                json = xxSecurityZone.getJsonData();
+
+                logger.error("mapEntityToViewBean(): decompression of x_security_zone.gz_jsonData failed (length={}). Will use contents of x_security_zone.jsonData (length={})", gzJson.length, (json != null ? json.length() : 0), excp);
+            }
+        } else {
+            json = xxSecurityZone.getJsonData();
+        }
 
         if (StringUtils.isNotEmpty(json)) {
-            try {
-                json = StringUtil.decompressString(json);
-            } catch (IOException excp) {
-                logger.error("mapEntityToViewBean(): json decompression failed (length={}). Will treat as uncompressed json", json.length(), excp);
-            }
-
             RangerSecurityZone zoneFromJsonData = gsonBuilder.fromJson(json, RangerSecurityZone.class);
 
             if (zoneFromJsonData == null) {

@@ -46,8 +46,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 public class StringUtil {
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
-    private static final String COMPRESS_GZIP_MAGIC = "GZip:";
-
 
     public static boolean equals(String str1, String str2) {
 		boolean ret = false;
@@ -526,11 +524,7 @@ public class StringUtil {
 		if (StringUtils.isEmpty(input)) {
 			ret = input;
 		} else {
-			byte[] bytes = input.getBytes(StandardCharsets.ISO_8859_1);
-
-			bytes = gzipCompress(bytes);
-
-			ret = COMPRESS_GZIP_MAGIC + new String(bytes, StandardCharsets.ISO_8859_1);
+			ret = new String(gzipCompress(input), StandardCharsets.ISO_8859_1);
 		}
 
 		return ret;
@@ -541,30 +535,24 @@ public class StringUtil {
 
 		if (StringUtils.isEmpty(input)) {
 			ret = input;
-		} else if (input.startsWith(COMPRESS_GZIP_MAGIC)) {
-			byte[] bytes = input.substring(COMPRESS_GZIP_MAGIC.length()).getBytes(StandardCharsets.ISO_8859_1);
-
-			bytes = gzipDecompress(bytes);
-
-			ret = new String(bytes, StandardCharsets.ISO_8859_1);
 		} else {
-			ret = input;
+			ret = gzipDecompress(input.getBytes(StandardCharsets.ISO_8859_1));
 		}
 
 		return ret;
 	}
 
-	public static byte[] gzipCompress(byte[] input) throws IOException {
+	public static byte[] gzipCompress(String input) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		GZIPOutputStream      gos = new GZIPOutputStream(out);
 
-		gos.write(input);
+		gos.write(input.getBytes(StandardCharsets.ISO_8859_1));
 		gos.close();
 
 		return out.toByteArray();
 	}
 
-	public static byte[] gzipDecompress(byte[] input) throws IOException {
+	public static String gzipDecompress(byte[] input) throws IOException {
 		ByteArrayInputStream  in  = new ByteArrayInputStream(input);
 		GZIPInputStream       gis = new GZIPInputStream(in);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -582,6 +570,6 @@ public class StringUtil {
 
 		gis.close();
 
-		return out.toByteArray();
+		return new String(out.toByteArray(), StandardCharsets.ISO_8859_1);
 	}
 }

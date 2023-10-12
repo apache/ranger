@@ -588,6 +588,7 @@ CREATE TABLE IF NOT EXISTS `x_security_zone`(
 `version` bigint(20) NULL DEFAULT NULL,
 `name` varchar(255) NOT NULL,
 `jsonData` MEDIUMTEXT NULL DEFAULT NULL,
+`gz_jsonData` LONGBLOB NULL DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
  PRIMARY KEY (`id`),
  UNIQUE KEY `x_security_zone_UK_name`(`name`(190)),
