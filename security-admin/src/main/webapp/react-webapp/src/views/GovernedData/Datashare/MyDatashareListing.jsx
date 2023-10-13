@@ -39,6 +39,7 @@ import {
 } from "../../../utils/XAUtils";
 import moment from "moment-timezone";
 import { sortBy } from "lodash";
+import CustomBreadcrumb from "../../CustomBreadcrumb";
 
 const MyDatashareListing = () => {
   const navigate = useNavigate();
@@ -166,25 +167,49 @@ const MyDatashareListing = () => {
         Header: "Name",
         accessor: "name",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Service",
         accessor: "serviceName",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Zone",
         accessor: "zoneName",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Created",
@@ -260,7 +285,7 @@ const MyDatashareListing = () => {
               <div className="position-relative text-center">
                 <Link
                   title="Edit"
-                  to={`/gds/dataset/${row.original.id}/detail`}
+                  to={`/gds/datashare/${row.original.id}/detail`}
                 >
                   {row.original.id}
                 </Link>
@@ -279,25 +304,49 @@ const MyDatashareListing = () => {
         Header: "Name",
         accessor: "name",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Service",
         accessor: "serviceName",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Zone",
         accessor: "zoneName",
         width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Permission",
@@ -416,6 +465,7 @@ const MyDatashareListing = () => {
         <h3 className="gds-header bold">
           {isMyDatasharePage ? "My" : ""} Datashares
         </h3>
+        <CustomBreadcrumb />
       </div>
       <div className="wrap">
         <React.Fragment>

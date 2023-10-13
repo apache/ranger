@@ -2374,6 +2374,7 @@ div#ranger-content {
   padding-left: 0;
   padding-right: 0;
   color: rgb(33, 37, 41) !important;
+  text-align: right;
 }
 .header-wraper .last-response-time {
   padding-left: 1rem;
@@ -2577,7 +2578,7 @@ li.list-group-item:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0 1rem;
   border-bottom: 1px solid #d6d6d6;
   position: sticky;
   top: 0;
@@ -2898,4 +2899,8 @@ textarea.gds-placeholder::placeholder,
 
 .w-50 {
   width: 50% !important;
+}
+
+.gds-label-color {
+  color: #777777;
 }

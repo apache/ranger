@@ -40,28 +40,24 @@ const AddSharedResourceComp = ({
   datashareId,
   onSharedResourceDataChange,
   onToggleAddResourceClose,
-  loadSharedResource
+  isEdit,
+  sharedResourceId
 }) => {
   const [accessType, setAccessType] = useState();
-  const [sharedResources, setSharedResources] = useState();
-  const [conditionModalData, setConditionModalData] = useState();
-  const [showConditionModal, setShowConditionModal] = useState(false);
   const [datashareInfo, setDatashareInfo] = useState({});
   const [showMaskInput, setShowMaskInput] = useState(false);
   const [showRowFilterInput, setShowRowFilterInput] = useState(false);
   const [serviceDef, setServiceDef] = useState({});
   const [serviceDetails, setService] = useState({});
-  const [blockUI, setBlockUI] = useState(false);
   const [loader, setLoader] = useState(false);
-  const navigate = useNavigate();
+  const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [openConfigAccordion, setOpenConfigAccordion] = useState(false);
   const [formData, setFormData] = useState();
-  //const [accessTypeOptions, setAccessTypeOptions] = useState([]);
   const [selectedResShareMask, setSelectedResShareMask] = useState({});
+  const [loadSharedResource, setLoadSharedResource] = useState();
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
-    fetchSharedResources(datashareId);
   }, []);
 
   const generateFormData = (obj, serviceDef) => {
@@ -162,23 +158,20 @@ const AddSharedResourceComp = ({
       setShowRowFilterInput(true);
     }
 
-    // setShowMaskInput(true);
-    // setShowRowFilterInput(true);
     setServiceDef(modifiedServiceDef);
     if (loadSharedResource != undefined) {
       setFormData(generateFormData(loadSharedResource, modifiedServiceDef));
     }
   };
 
-  const fetchSharedResources = async () => {
+  const fetchSharedResource = async (sharedResourceId) => {
     try {
       let params = {};
-      params["dataShareId"] = datashareId;
       const resp = await fetchApi({
-        url: `gds/resource`,
-        params: params
+        url: `gds/resource/${sharedResourceId}`
       });
-      setSharedResources(resp.data.list);
+      setLoadSharedResource(resp.data);
+      setFormData(generateFormData(resp.data, serviceDef));
     } catch (error) {
       console.error(
         `Error occurred while fetching shared resource details ! ${error}`
@@ -270,9 +263,8 @@ const AddSharedResourceComp = ({
     data.resourceMask = values.resourceMask;
 
     try {
-      setBlockUI(true);
       setLoader(true);
-      if (loadSharedResource != undefined) {
+      if (isEdit) {
         data.guid = loadSharedResource.guid;
         await fetchApi({
           url: `gds/resource/${loadSharedResource.id}`,
@@ -288,9 +280,7 @@ const AddSharedResourceComp = ({
         });
         toast.success("Shared resource created successfully!!");
       }
-      setBlockUI(false);
     } catch (error) {
-      setBlockUI(false);
       setLoader(false);
       serverError(error);
       if (loadSharedResource != undefined) {
@@ -305,31 +295,27 @@ const AddSharedResourceComp = ({
     onSharedResourceDataChange();
     setLoader(false);
     if (closeModal) {
-      onToggleAddResourceClose();
+      setShowAddResourceModal(false);
     }
     console.log(data);
   };
 
-  const showConfitionModal = (data) => {
-    setConditionModalData(data);
-    setShowConditionModal(true);
-  };
-
-  const toggleConditionModalClose = () => {
-    setShowConditionModal(false);
-  };
-
-  const back = () => {
-    navigate(`/gds/datashare/${datashareId}/detail`);
-  };
-
   const toggleAddResourceClose = () => {
-    onToggleAddResourceClose();
+    setShowAddResourceModal(false);
   };
 
   const onResShareMaskChange = (event, input) => {
     setSelectedResShareMask(event);
     input.onChange(event);
+  };
+
+  const addResource = () => {
+    //setLoadSharedResource();
+    setShowAddResourceModal(true);
+  };
+
+  const toggleAddResourceModalClose = () => {
+    setShowAddResourceModal(false);
   };
 
   return (
@@ -350,18 +336,69 @@ const AddSharedResourceComp = ({
       {loader ? (
         <Loader />
       ) : (
-        <div className="gds-form-wrap">
-          <div className="gds-form-content pt-5">
+        <>
+          <div className="gds-header-btn-grp">
+            {!isEdit ? (
+              <Button
+                variant="primary"
+                onClick={addResource}
+                size="sm"
+                data-id="save"
+                data-cy="save"
+              >
+                Add Resources
+              </Button>
+            ) : (
+              <Button
+                variant="outline-dark"
+                size="sm"
+                title="Edit"
+                onClick={(e) => {
+                  // e.stopPropagation();
+                  // setLoadSharedResource(obj);
+                  fetchSharedResource(sharedResourceId);
+                  setShowAddResourceModal(true);
+                }}
+                data-name="editSharedResource"
+                data-id="editSharedResource"
+              >
+                <i className="fa-fw fa fa-edit"></i>
+              </Button>
+            )}
+          </div>
+          <Modal
+            show={showAddResourceModal}
+            onHide={toggleAddResourceModalClose}
+            //className="mb-7"
+            size="xl"
+          >
+            <Modal.Header closeButton>
+              <h5 className="mb-0">Add Resources</h5>
+            </Modal.Header>
+            {/* <div className="gds-form-wrap"> */}
+            {/* <div className="gds-form-content"> */}
             <div>
-              <div className="mb-2 gds-chips">
-                <span className="badge badge-light">
+              <div className="mb-2 gds-chips flex-wrap">
+                <span
+                  title={datashareInfo.name}
+                  className="badge badge-light text-truncate"
+                  style={{ maxWidth: "250px", display: "inline-block" }}
+                >
                   Datashare: {datashareInfo.name}
                 </span>
-                <span className="badge badge-light">
+                <span
+                  title={datashareInfo.service}
+                  className="badge badge-light text-truncate"
+                  style={{ maxWidth: "250px", display: "inline-block" }}
+                >
                   Service: {datashareInfo.service}
                 </span>
                 {datashareInfo.zone != undefined ? (
-                  <span className="badge badge-light">
+                  <span
+                    title={datashareInfo.zone}
+                    className="badge badge-light text-truncate"
+                    style={{ maxWidth: "250px", display: "inline-block" }}
+                  >
                     Security Zone: {datashareInfo.zone}
                   </span>
                 ) : (
@@ -404,163 +441,162 @@ const AddSharedResourceComp = ({
                             }
                           });
                         }
-                        handleSubmit();
                       }}
                     >
-                      <div className="mb-4 mt-4">
-                        <h6>Resource Details</h6>
-                        <hr className="mt-1 mb-1 gds-hr" />
-                      </div>
-                      <div className="mb-3 form-group row">
-                        <Col sm={3}>
-                          <label className="form-label pull-right fnt-14">
-                            Shared Resource Name
-                          </label>
-                          <span className="compulsory-resource top-0">*</span>
-                        </Col>
-                        <Col sm={9}>
-                          <Field
-                            name="shareName"
-                            render={({ input, meta }) => (
-                              <div className="flex-1">
-                                <input
-                                  {...input}
-                                  type="text"
-                                  name="shareName"
-                                  className="form-control"
-                                  data-cy="shareName"
-                                />
-                              </div>
-                            )}
-                          />
-                        </Col>
-                      </div>
-                      <div className="gds-resource-hierarchy">
-                        <ResourceComp
-                          serviceDetails={serviceDetails}
-                          serviceCompDetails={serviceDef}
-                          formValues={values}
-                          policyType={0}
-                          policyItem={false}
-                          policyId={0}
-                          isGds={true}
-                        />
-                      </div>
-
-                      <Accordion className="mb-3" defaultActiveKey="0">
-                        <Card className="border-0 gds-resource-options">
-                          <div>
-                            <Accordion.Toggle
-                              as={Card.Header}
-                              eventKey="1"
-                              onClick={onAccessConfigAccordianChange}
-                              className="d-flex align-items-center gds-res-acc-header gap-half"
-                              data-id="panel"
-                              data-cy="panel"
-                            >
-                              {openConfigAccordion ? (
-                                <i className="fa fa-angle-up pull-up fa-lg font-weight-bold"></i>
-                              ) : (
-                                <i className="fa fa-angle-down pull-down fa-lg font-weight-bold"></i>
+                      <Modal.Body>
+                        <div className="mb-4 mt-4">
+                          <h6>Resource Details</h6>
+                          <hr className="mt-1 mb-1 gds-hr" />
+                        </div>
+                        <div className="mb-3 form-group row">
+                          <Col sm={3}>
+                            <label className="form-label pull-right fnt-14">
+                              Shared Resource Name
+                            </label>
+                            <span className="compulsory-resource top-0">*</span>
+                          </Col>
+                          <Col sm={9}>
+                            <Field
+                              name="shareName"
+                              render={({ input, meta }) => (
+                                <div className="flex-1">
+                                  <input
+                                    {...input}
+                                    type="text"
+                                    name="shareName"
+                                    className="form-control"
+                                    data-cy="shareName"
+                                  />
+                                </div>
                               )}
-                              <Link to="">
-                                Add Default access type, row level filters and
-                                conditions (Optional)
-                              </Link>
-                            </Accordion.Toggle>
-                          </div>
-                          <Accordion.Collapse eventKey="1">
-                            <Card.Body className="gds-res-card-body">
-                              <div className="mb-3 form-group row">
-                                <Col sm={3}>
-                                  <label className="form-label pull-right fnt-14">
-                                    Add Permissions
-                                  </label>
-                                </Col>
-                                <Field
-                                  name="permission"
-                                  render={({ input, meta }) => (
-                                    <Col sm={9}>
-                                      <Select
-                                        {...input}
-                                        options={getAccessTypeOptions(values)}
-                                        onChange={(e) =>
-                                          onAccessTypeChange(e, input)
-                                        }
-                                        //menuPortalTarget={document.body}
-                                        //value={accessType}
-                                        menuPlacement="auto"
-                                        isClearable
-                                        isMulti
-                                      />
-                                    </Col>
-                                  )}
-                                />
-                              </div>
-                              {showRowFilterInput ? (
+                            />
+                          </Col>
+                        </div>
+                        <div className="gds-resource-hierarchy">
+                          <ResourceComp
+                            serviceDetails={serviceDetails}
+                            serviceCompDetails={serviceDef}
+                            formValues={values}
+                            policyType={0}
+                            policyItem={false}
+                            policyId={0}
+                            isGds={true}
+                          />
+                        </div>
+
+                        <Accordion className="mb-3" defaultActiveKey="0">
+                          <Card className="border-0 gds-resource-options">
+                            <div>
+                              <Accordion.Toggle
+                                as={Card.Header}
+                                eventKey="1"
+                                onClick={onAccessConfigAccordianChange}
+                                className="d-flex align-items-center gds-res-acc-header gap-half"
+                                data-id="panel"
+                                data-cy="panel"
+                              >
+                                {openConfigAccordion ? (
+                                  <i className="fa fa-angle-up pull-up fa-lg font-weight-bold"></i>
+                                ) : (
+                                  <i className="fa fa-angle-down pull-down fa-lg font-weight-bold"></i>
+                                )}
+                                <Link to="">
+                                  Add Default access type, row level filters and
+                                  conditions (Optional)
+                                </Link>
+                              </Accordion.Toggle>
+                            </div>
+                            <Accordion.Collapse eventKey="1">
+                              <Card.Body className="gds-res-card-body">
                                 <div className="mb-3 form-group row">
                                   <Col sm={3}>
                                     <label className="form-label pull-right fnt-14">
-                                      Row Filter
+                                      Add Permissions
                                     </label>
                                   </Col>
-
                                   <Field
-                                    name={`rowFilter`}
+                                    name="permission"
                                     render={({ input, meta }) => (
                                       <Col sm={9}>
-                                        <input
+                                        <Select
                                           {...input}
-                                          type="text"
-                                          name="rowFilter"
-                                          className="form-control gds-placeholder"
-                                          data-cy="rowFilter"
+                                          options={getAccessTypeOptions(values)}
+                                          onChange={(e) =>
+                                            onAccessTypeChange(e, input)
+                                          }
+                                          //menuPortalTarget={document.body}
+                                          //value={accessType}
+                                          menuPlacement="auto"
+                                          isClearable
+                                          isMulti
                                         />
                                       </Col>
                                     )}
                                   />
                                 </div>
-                              ) : (
-                                <div></div>
-                              )}
+                                {showRowFilterInput ? (
+                                  <div className="mb-3 form-group row">
+                                    <Col sm={3}>
+                                      <label className="form-label pull-right fnt-14">
+                                        Row Filter
+                                      </label>
+                                    </Col>
 
-                              {showMaskInput ? (
-                                <div className="mb-3 form-group row">
-                                  <Col sm={3}>
-                                    <label className="form-label pull-right fnt-14">
-                                      Mask
-                                    </label>
-                                  </Col>
+                                    <Field
+                                      name={`rowFilter`}
+                                      render={({ input, meta }) => (
+                                        <Col sm={9}>
+                                          <input
+                                            {...input}
+                                            type="text"
+                                            name="rowFilter"
+                                            className="form-control gds-placeholder"
+                                            data-cy="rowFilter"
+                                          />
+                                        </Col>
+                                      )}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div></div>
+                                )}
 
-                                  <Field
-                                    name={`maskType`}
-                                    render={({ input, meta }) => (
-                                      <Col sm={9}>
-                                        <Field
-                                          name="masking"
-                                          render={({ input, meta }) => (
-                                            <div>
-                                              <Col sm={9}>
-                                                <Select
-                                                  {...input}
-                                                  options={
-                                                    serviceDef.dataMaskDef
-                                                      .maskTypes
-                                                  }
-                                                  onChange={(e) =>
-                                                    onResShareMaskChange(
-                                                      e,
-                                                      input
-                                                    )
-                                                  }
-                                                  menuPlacement="auto"
-                                                  isClearable
-                                                />
-                                              </Col>
-                                              <div>
+                                {showMaskInput ? (
+                                  <div className="mb-3 form-group row">
+                                    <Col sm={3}>
+                                      <label className="form-label pull-right fnt-14">
+                                        Mask
+                                      </label>
+                                    </Col>
+
+                                    <Field
+                                      name={`maskType`}
+                                      render={({ input, meta }) => (
+                                        <Col sm={9}>
+                                          <Field
+                                            name="masking"
+                                            render={({ input, meta }) => (
+                                              <div className="d-flex ">
+                                                <div className="w-50">
+                                                  <Select
+                                                    {...input}
+                                                    options={
+                                                      serviceDef.dataMaskDef
+                                                        .maskTypes
+                                                    }
+                                                    onChange={(e) =>
+                                                      onResShareMaskChange(
+                                                        e,
+                                                        input
+                                                      )
+                                                    }
+                                                    menuPlacement="auto"
+                                                    isClearable
+                                                  />
+                                                </div>
                                                 {selectedResShareMask?.label ==
                                                   "Custom" && (
-                                                  <>
+                                                  <div className="pl-2 w-50">
                                                     <Field
                                                       className="form-control"
                                                       name={`resShareDataMaskInfo.valueExpr`}
@@ -572,6 +608,7 @@ const AddSharedResourceComp = ({
                                                         <>
                                                           <FormB.Control
                                                             type="text"
+                                                            className="gds-input"
                                                             {...input}
                                                             placeholder="Enter masked value or expression..."
                                                           />
@@ -583,50 +620,48 @@ const AddSharedResourceComp = ({
                                                         </>
                                                       )}
                                                     />
-                                                  </>
+                                                  </div>
                                                 )}
                                               </div>
-                                            </div>
-                                          )}
+                                            )}
+                                          />
+                                        </Col>
+                                      )}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div></div>
+                                )}
+
+                                <div className="mb-0 form-group row">
+                                  <Col sm={3}>
+                                    <label className="form-label pull-right fnt-14">
+                                      Add Condition
+                                    </label>
+                                  </Col>
+                                  <Field
+                                    name={`booleanExpression`}
+                                    render={({ input, meta }) => (
+                                      <Col sm={9}>
+                                        <textarea
+                                          {...input}
+                                          placeholder="Enter Boolean Expression"
+                                          className="form-control gds-placeholder"
+                                          id="booleanExpression"
+                                          data-cy="booleanExpression"
+                                          rows={4}
                                         />
                                       </Col>
                                     )}
                                   />
                                 </div>
-                              ) : (
-                                <div></div>
-                              )}
-
-                              <div className="mb-0 form-group row">
-                                <Col sm={3}>
-                                  <label className="form-label pull-right fnt-14">
-                                    Add Condition
-                                  </label>
-                                </Col>
-                                <Field
-                                  name={`booleanExpression`}
-                                  render={({ input, meta }) => (
-                                    <Col sm={9}>
-                                      <textarea
-                                        {...input}
-                                        placeholder="Enter Boolean Expression"
-                                        className="form-control gds-placeholder"
-                                        id="booleanExpression"
-                                        data-cy="booleanExpression"
-                                        rows={4}
-                                      />
-                                    </Col>
-                                  )}
-                                />
-                              </div>
-                            </Card.Body>
-                          </Accordion.Collapse>
-                        </Card>
-                      </Accordion>
-
-                      <div className="mb-3 form-group row">
-                        <Col sm={3} />
-                        <Col sm={9}>
+                              </Card.Body>
+                            </Accordion.Collapse>
+                          </Card>
+                        </Accordion>
+                      </Modal.Body>
+                      <Modal.Footer>
+                        <div className="d-flex gap-half justify-content-end w-100">
                           <Button
                             variant="secondary"
                             size="sm"
@@ -635,21 +670,15 @@ const AddSharedResourceComp = ({
                             Cancel
                           </Button>
                           <Button
-                            variant={
-                              loadSharedResource == undefined
-                                ? "secondary"
-                                : "primary"
-                            }
+                            variant="primary"
                             size="sm"
                             onClick={(event) => {
                               handleSubmit(event, true);
                             }}
                           >
-                            {loadSharedResource != undefined
-                              ? "Update"
-                              : "Save & Close"}
+                            {isEdit ? "Update" : "Save & Close"}
                           </Button>
-                          {loadSharedResource == undefined ? (
+                          {!isEdit ? (
                             <Button
                               onClick={(event) => {
                                 handleSubmit(event, false);
@@ -664,53 +693,17 @@ const AddSharedResourceComp = ({
                           ) : (
                             <div></div>
                           )}
-                        </Col>
-                      </div>
-
-                      <Modal
-                        show={showConditionModal}
-                        onHide={toggleConditionModalClose}
-                      >
-                        <Modal.Header closeButton>
-                          <h3 className="gds-header bold">Conditions</h3>
-                        </Modal.Header>
-                        <Modal.Body>
-                          <div className="p-1">
-                            <div className="gds-inline-field-grp">
-                              <div className="wrapper">
-                                <div
-                                  className="gds-left-inline-field"
-                                  height="30px"
-                                >
-                                  Boolean Expression :
-                                </div>
-                                <div line-height="30px">
-                                  {conditionModalData != undefined &&
-                                  conditionModalData.conditionExpr != undefined
-                                    ? conditionModalData.conditionExpr
-                                    : ""}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={toggleConditionModalClose}
-                          >
-                            Close
-                          </Button>
-                        </Modal.Footer>
-                      </Modal>
+                        </div>
+                      </Modal.Footer>
                     </form>
                   </div>
                 )}
               />
             </div>
-          </div>
-        </div>
+            {/* </div> */}
+            {/* </div> */}
+          </Modal>
+        </>
       )}
     </>
   );

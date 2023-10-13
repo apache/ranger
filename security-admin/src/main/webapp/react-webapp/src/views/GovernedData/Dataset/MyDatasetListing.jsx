@@ -32,6 +32,7 @@ import {
   serverError,
   parseSearchFilter
 } from "../../../utils/XAUtils";
+import CustomBreadcrumb from "../../CustomBreadcrumb";
 
 const MyDatasetListing = () => {
   const navigate = useNavigate();
@@ -202,9 +203,17 @@ const MyDatasetListing = () => {
         Header: "Name",
         accessor: "name",
         width: 470,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Created",
@@ -346,9 +355,17 @@ const MyDatasetListing = () => {
         Header: "Name",
         accessor: "name",
         width: 600,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              {val.value}
+            </span>
+          );
+        }
       },
       {
         Header: "Permission",
@@ -433,6 +450,7 @@ const MyDatasetListing = () => {
             <h3 className="gds-header bold">
               {isMyDatasetPage ? "My" : ""} Datasets
             </h3>
+            <CustomBreadcrumb />
           </div>
           <div className="wrap">
             <React.Fragment>

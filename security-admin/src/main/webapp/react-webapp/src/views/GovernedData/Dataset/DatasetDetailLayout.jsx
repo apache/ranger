@@ -53,6 +53,7 @@ import arrayMutators from "final-form-arrays";
 import { groupBy, isEmpty, isArray } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
+import CustomBreadcrumb from "../../CustomBreadcrumb";
 
 const initialState = {
   loader: false,
@@ -967,6 +968,8 @@ const DatasetDetailLayout = () => {
             <i className="fa fa-angle-left fa-lg font-weight-bold" />
           </Button>
           <h3 className="gds-header bold"> Dataset : {datasetInfo.name}</h3>
+          <CustomBreadcrumb />
+          <span className="pipe"></span>
           {saveCancelButtons ? (
             <div className="gds-header-btn-grp">
               <Button
@@ -1087,7 +1090,9 @@ const DatasetDetailLayout = () => {
                                     className="gds-left-inline-field"
                                     height="30px"
                                   >
-                                    Date Updated
+                                    <span className="gds-label-color">
+                                      Date Updated
+                                    </span>
                                   </div>
                                   <div line-height="30px">
                                     {dateFormat(
@@ -1102,7 +1107,9 @@ const DatasetDetailLayout = () => {
                                     className="gds-left-inline-field"
                                     line-height="30px"
                                   >
-                                    Date Created
+                                    <span className="gds-label-color">
+                                      Date Created
+                                    </span>
                                   </div>
                                   <div line-height="30px">
                                     {dateFormat(
@@ -1114,7 +1121,11 @@ const DatasetDetailLayout = () => {
                               </div>
 
                               <div>
-                                <div>Description</div>
+                                <div>
+                                  <span className="gds-label-color">
+                                    Description
+                                  </span>
+                                </div>
                               </div>
                               <div>
                                 <div>
@@ -1207,9 +1218,9 @@ const DatasetDetailLayout = () => {
                                                     {requestAccordionState[
                                                       obj.id
                                                     ] ? (
-                                                      <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                    ) : (
                                                       <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                                    ) : (
+                                                      <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
                                                     )}
                                                     <h5 className="gds-heading-5 m-0">
                                                       {/* {obj.name} */}{" "}
@@ -1328,7 +1339,11 @@ const DatasetDetailLayout = () => {
                                                         </div>
                                                       </div>
                                                       <div className="w-100 text-right">
-                                                        <div>View Request</div>
+                                                        <Link
+                                                          to={`/gds/request/detail/${obj.id}`}
+                                                        >
+                                                          View Request
+                                                        </Link>
                                                       </div>
                                                     </div>
                                                   </div>
@@ -1715,21 +1730,22 @@ const DatasetDetailLayout = () => {
                           value={obj.id}
                           onChange={checkBocChange}
                         />
-                        <span title={obj.name} className="fnt-14">
-                          {obj.name}{" "}
-                          <CustomTooltip
-                            placement="right"
-                            content={
-                              <p
-                                className="pd-10"
-                                style={{ fontSize: "small" }}
-                              >
-                                {obj.description}
-                              </p>
-                            }
-                            icon="fa-fw fa fa-info-circle gds-opacity-lowest"
-                          />
+                        <span
+                          title={obj.name}
+                          className="fnt-14 text-truncate"
+                          style={{ maxWidth: "300px", display: "inline-block" }}
+                        >
+                          {obj.name}
                         </span>
+                        <CustomTooltip
+                          placement="right"
+                          content={
+                            <p className="pd-10" style={{ fontSize: "small" }}>
+                              {obj.description}
+                            </p>
+                          }
+                          icon="fa-fw fa fa-info-circle gds-opacity-lowest"
+                        />
                       </div>
                     );
                   })

@@ -30,6 +30,7 @@ import arrayMutators from "final-form-arrays";
 import moment from "moment-timezone";
 import { isEmpty } from "lodash";
 import { toast } from "react-toastify";
+import { getAllTimeZoneList } from "../../../utils/XAUtils";
 
 const RequestDetailView = () => {
   let { requestId } = useParams();
@@ -39,6 +40,8 @@ const RequestDetailView = () => {
   const [datasetInfo, setDatasetInfo] = useState({});
   const [datashareInfo, setDatashareInfo] = useState({});
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [formData, setFormData] = useState();
+  const [editValidityPeriod, setEditValidityPeriod] = useState(false);
 
   useEffect(() => {
     fetchRequestDetail(requestId);
@@ -50,6 +53,26 @@ const RequestDetailView = () => {
       const resp = await fetchApi({
         url: `gds/datashare/dataset/${requestId}`
       });
+      if (resp.data.validitySchedule !== undefined) {
+        let val = resp.data.validitySchedule;
+        let data = {};
+        data["validitySchedules"] = [];
+        let obj = {};
+        if (val.endTime) {
+          obj["endTime"] = moment(val.endTime, "YYYY/MM/DD HH:mm:ss");
+        }
+        if (val.startTime) {
+          obj["startTime"] = moment(val.startTime, "YYYY/MM/DD HH:mm:ss");
+        }
+        if (val.timeZone) {
+          obj["timeZone"] = getAllTimeZoneList().find((tZoneVal) => {
+            return tZoneVal.id == val.timeZone;
+          });
+        }
+        data["validitySchedules"].push(obj);
+        setFormData(data);
+        setEditValidityPeriod(true);
+      }
       setRequestInfo(resp.data);
       fetchdatasetInfo(resp.data.datasetId);
       fetchDatashaerInfo(resp.data.dataShareId);
@@ -85,7 +108,7 @@ const RequestDetailView = () => {
     navigate(`/gds/request/list`);
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, type) => {
     if (
       datasetInfo.termsOfUse != undefined &&
       requestInfo.status === "GRANTED" &&
@@ -119,7 +142,8 @@ const RequestDetailView = () => {
     }
 
     if (requestInfo.status === "REQUESTED") {
-      requestInfo["status"] = "GRANTED";
+      if (type == "grant") requestInfo["status"] = "GRANTED";
+      else requestInfo["status"] = "DENIED";
     } else if (requestInfo.status === "GRANTED") {
       requestInfo["status"] = "ACTIVE";
     }
@@ -155,6 +179,7 @@ const RequestDetailView = () => {
         mutators={{
           ...arrayMutators
         }}
+        initialValues={formData}
         render={({
           form: {
             mutators: { push: addPolicyItem, pop }
@@ -162,7 +187,7 @@ const RequestDetailView = () => {
           values
         }) => (
           <div>
-            <div className="gds-header-wrapper gap-half">
+            <div className="gds-header-wrapper gap-half py-3">
               <Button
                 variant="light"
                 className="border-0 bg-transparent"
@@ -178,7 +203,7 @@ const RequestDetailView = () => {
                 <div className="gds-header-btn-grp">
                   <Button
                     variant="secondary"
-                    //onClick={() => removeChanges()}
+                    onClick={() => handleSubmit(values, "deny")}
                     size="sm"
                     data-id="deny"
                     data-cy="deny"
@@ -187,7 +212,7 @@ const RequestDetailView = () => {
                   </Button>
                   <Button
                     variant="primary"
-                    onClick={() => handleSubmit(values)}
+                    onClick={() => handleSubmit(values, "grant")}
                     size="sm"
                     data-id="grant"
                     data-cy="grant"
@@ -200,7 +225,7 @@ const RequestDetailView = () => {
                   {requestInfo.status === "GRANTED" ? (
                     <Button
                       variant="primary"
-                      onClick={() => handleSubmit(values)}
+                      onClick={() => handleSubmit(values, "active")}
                       size="sm"
                       data-id="activate"
                       data-cy="activate"
@@ -221,10 +246,9 @@ const RequestDetailView = () => {
                   <div className="gds-inline-field-grp">
                     <div className="wrapper">
                       <div className="gds-left-inline-field" height="30px">
-                        <span>Status</span>
+                        <span className="gds-label-color">Status</span>
                       </div>
                       <span
-                        //className="badge badge-light gds-requested-status"
                         className={
                           requestInfo.status === "REQUESTED"
                             ? "badge badge-light gds-requested-status"
@@ -240,20 +264,20 @@ const RequestDetailView = () => {
                     </div>
                     <div className="wrapper">
                       <div className="gds-left-inline-field" height="30px">
-                        <span>Created by</span>
+                        <span className="gds-label-color">Created by</span>
                       </div>
                       <div line-height="30px">{requestInfo.createdBy}</div>
                     </div>
                     <div className="wrapper">
                       <div className="gds-left-inline-field" height="30px">
-                        <span>Approver</span>
+                        <span className="gds-label-color">Approver</span>
                       </div>
                       <div line-height="30px">{requestInfo.approvedBy}</div>
                     </div>
                   </div>
                   <div className="gds-right-inline-field-grp">
                     <div className="wrapper">
-                      <div>Created</div>
+                      <div className="gds-label-color">Created</div>
                       <div className="gds-right-inline-field">
                         <span>
                           {dateFormat(
@@ -264,7 +288,7 @@ const RequestDetailView = () => {
                       </div>
                     </div>
                     <div className="wrapper">
-                      <div>Last Updated</div>
+                      <div className="gds-label-color">Last Updated</div>
                       <div className="gds-right-inline-field">
                         <span>
                           {dateFormat(
@@ -274,56 +298,51 @@ const RequestDetailView = () => {
                         </span>
                       </div>
                     </div>
-                    {requestInfo.status == "REQUESTED" ? (
-                      <Field name="validityPeriod">
-                        {({ input, meta }) => (
-                          <PolicyValidityPeriodComp
-                            addPolicyItem={addPolicyItem}
-                            isGdsRequest={
-                              requestInfo.validitySchedule == undefined
-                                ? true
-                                : false
-                            }
-                          />
-                        )}
-                      </Field>
-                    ) : (
-                      <div>
-                        {requestInfo.validitySchedule != undefined ? (
-                          <div className="wrapper">
-                            <div>
-                              <span>Validity Period</span>
-                            </div>
-                            <div className="gds-right-inline-field">
-                              <span>
-                                Start Time:{" "}
-                                {dateFormat(
-                                  requestInfo.validitySchedule.startTime,
-                                  "mm/dd/yyyy hh:MM:ss TT"
-                                )}
-                              </span>
-                            </div>
-                            <div className="gds-right-inline-field">
-                              <span>
-                                End Time:{" "}
-                                {dateFormat(
-                                  requestInfo.validitySchedule.endTime,
-                                  "mm/dd/yyyy hh:MM:ss TT"
-                                )}
-                              </span>
-                            </div>
-                            <div className="gds-right-inline-field">
-                              <span>
-                                {requestInfo.validitySchedule.timeZone}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div></div>
-                        )}
-                      </div>
-                    )}
                   </div>
+                </div>
+                <div className="mb-5">
+                  <hr className="m-0" />
+                  <div className="d-flex align-items-center justify-content-between mb-4 pt-4">
+                    <span className="gds-card-heading border-0 p-0">
+                      Validity Period
+                    </span>
+                    <PolicyValidityPeriodComp
+                      addPolicyItem={addPolicyItem}
+                      isGdsRequest={
+                        requestInfo.validitySchedule == undefined ? true : false
+                      }
+                      editValidityPeriod={editValidityPeriod}
+                    />
+                  </div>
+                  {requestInfo.validitySchedule != undefined && (
+                    <div className="gds-inline-field-grp">
+                      <div className="wrapper">
+                        <div className="gds-left-inline-field">
+                          <span className="gds-label-color">Start Date </span>
+                        </div>
+                        <span>
+                          {dateFormat(
+                            requestInfo.validitySchedule.startTime,
+                            "mm/dd/yyyy hh:MM:ss TT"
+                          )}
+                        </span>
+                        <span className="gds-label-color pl-5">
+                          {requestInfo.validitySchedule.timeZone}
+                        </span>
+                      </div>
+                      <div className="wrapper">
+                        <div className="gds-left-inline-field">
+                          <span className="gds-label-color"> End Date </span>
+                        </div>
+                        <span>
+                          {dateFormat(
+                            requestInfo.validitySchedule.endTime,
+                            "mm/dd/yyyy hh:MM:ss TT"
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="mb-5">
                   <Card className="gds-section-card gds-bg-white">
@@ -354,7 +373,7 @@ const RequestDetailView = () => {
                       <div className="w-100 mb-3">
                         <div className="wrapper">
                           <div className="gds-left-inline-field" height="30px">
-                            <span>Name </span>
+                            <span className="gds-label-color">Name </span>
                           </div>
                           <div line-height="30px">{datashareInfo.name}</div>
                         </div>
@@ -362,12 +381,12 @@ const RequestDetailView = () => {
                       <div className="w-100 mb-3 d-flex justify-content-between">
                         <div className="wrapper w-50">
                           <div className="gds-left-inline-field" height="30px">
-                            <span>Service </span>
+                            <span className="gds-label-color">Service </span>
                           </div>
                           <div line-height="30px">{datashareInfo.service}</div>
                         </div>
                         <div className="wrapper w-50">
-                          <div>Security Zone</div>
+                          <div className="gds-label-color">Security Zone</div>
                           <div className="gds-right-inline-field">
                             <span>{datashareInfo.zone}</span>
                           </div>
@@ -376,7 +395,7 @@ const RequestDetailView = () => {
                       <div className="w-100 mb-3">
                         <div className="wrapper">
                           <div className="gds-left-inline-field" height="30px">
-                            <span>Conditions</span>
+                            <span className="gds-label-color">Conditions</span>
                           </div>
                           <div line-height="30px">
                             {datashareInfo.conditionExpr}
@@ -385,7 +404,11 @@ const RequestDetailView = () => {
                       </div>
                       <div className="w-100 mb-3">
                         <div className="wrapper">
-                          <div>Default Access Type</div>
+                          <div className="gds-left-inline-field" height="30px">
+                            <span className="gds-label-color">
+                              Default Access Type
+                            </span>
+                          </div>
                           <div className="gds-left-inline-field">
                             <span>
                               {datashareInfo.defaultAccessTypes != undefined ? (
@@ -416,7 +439,7 @@ const RequestDetailView = () => {
                             className="gds-left-inline-field flex-shrink-0"
                             height="30px"
                           >
-                            <span>Name </span>
+                            <span className="gds-label-color">Name </span>
                           </div>
                           <div line-height="30px">{datasetInfo.name}</div>
                         </div>
@@ -425,7 +448,9 @@ const RequestDetailView = () => {
                             className="gds-left-inline-field flex-shrink-0"
                             height="30px"
                           >
-                            <span>Description </span>
+                            <span className="gds-label-color">
+                              Description{" "}
+                            </span>
                           </div>
                           <div line-height="30px">
                             <span>{datasetInfo.description}</span>

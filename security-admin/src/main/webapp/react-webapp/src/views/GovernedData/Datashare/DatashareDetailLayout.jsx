@@ -41,6 +41,7 @@ import { Form } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
+import CustomBreadcrumb from "../../CustomBreadcrumb";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
@@ -322,12 +323,6 @@ const DatashareDetailLayout = () => {
 
   const handleSubmit = () => {};
 
-  const addResource = () => {
-    //navigate(`/gds/datashare/resource/${datashareId}`);
-    setLoadSharedResource();
-    setShowAddResourceModal(true);
-  };
-
   const back = () => {
     navigate("/gds/mydatasharelisting");
   };
@@ -493,8 +488,15 @@ const DatashareDetailLayout = () => {
                 <i className="fa fa-angle-left fa-lg font-weight-bold" />
               </Button>
               <h3 className="gds-header bold">
-                Datashare : {datashareInfo.name}
+                <span
+                  className="text-truncate"
+                  style={{ maxWidth: "900px", display: "inline-block" }}
+                >
+                  Datashare : {datashareInfo.name}
+                </span>
               </h3>
+              <CustomBreadcrumb />
+              <span className="pipe"></span>
               {saveCancelButtons ? (
                 <div className="gds-header-btn-grp">
                   <Button
@@ -517,17 +519,13 @@ const DatashareDetailLayout = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="gds-header-btn-grp">
-                  <Button
-                    variant="primary"
-                    onClick={addResource}
-                    size="sm"
-                    data-id="save"
-                    data-cy="save"
-                  >
-                    Add a Resource
-                  </Button>
-                </div>
+                <AddSharedResourceComp
+                  datashareId={datashareId}
+                  onSharedResourceDataChange={handleSharedResourceChange}
+                  onToggleAddResourceClose={toggleAddResourceModalClose}
+                  isEdit={false}
+                  loadSharedResource={loadSharedResource}
+                />
               )}
               <div>
                 <DropdownButton
@@ -604,7 +602,9 @@ const DatashareDetailLayout = () => {
                                   className="gds-left-inline-field pl-1 fnt-14"
                                   height="30px"
                                 >
-                                  Date Updated
+                                  <span className="gds-label-color">
+                                    Date Updated
+                                  </span>
                                 </div>
                                 <div className="fnt-14" line-height="30px">
                                   {dateFormat(
@@ -619,7 +619,9 @@ const DatashareDetailLayout = () => {
                                   className="gds-left-inline-field pl-1 fnt-14"
                                   line-height="30px"
                                 >
-                                  Date Created
+                                  <span className="gds-label-color">
+                                    Date Created
+                                  </span>
                                 </div>
                                 <div className="fnt-14" line-height="30px">
                                   {dateFormat(
@@ -630,7 +632,11 @@ const DatashareDetailLayout = () => {
                               </div>
                             </div>
                             <div>
-                              <div className="fnt-14 pl-1">Description</div>
+                              <div className="fnt-14 pl-1">
+                                <span className="gds-label-color">
+                                  Description
+                                </span>
+                              </div>
                             </div>
                             <div>
                               <div>
@@ -702,9 +708,9 @@ const DatashareDetailLayout = () => {
                                                       {resourceAccordionState[
                                                         obj.id
                                                       ] ? (
-                                                        <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                      ) : (
                                                         <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                                      ) : (
+                                                        <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
                                                       )}
                                                       <div className="d-flex justify-content-between">
                                                         <h6 className="m-0">
@@ -713,7 +719,25 @@ const DatashareDetailLayout = () => {
                                                       </div>
                                                     </div>
                                                     <div className="d-flex gap-half align-items-start">
-                                                      <Button
+                                                      <AddSharedResourceComp
+                                                        datashareId={
+                                                          datashareId
+                                                        }
+                                                        onSharedResourceDataChange={
+                                                          handleSharedResourceChange
+                                                        }
+                                                        onToggleAddResourceClose={
+                                                          toggleAddResourceModalClose
+                                                        }
+                                                        isEdit={true}
+                                                        sharedResourceId={
+                                                          obj.id
+                                                        }
+                                                        loadSharedResource={
+                                                          loadSharedResource
+                                                        }
+                                                      />
+                                                      {/* <Button
                                                         variant="outline-dark"
                                                         size="sm"
                                                         title="Edit"
@@ -730,7 +754,7 @@ const DatashareDetailLayout = () => {
                                                         data-id={obj.id}
                                                       >
                                                         <i className="fa-fw fa fa-edit"></i>
-                                                      </Button>
+                                                      </Button> */}
                                                       <Button
                                                         variant="danger"
                                                         size="sm"
@@ -880,9 +904,9 @@ const DatashareDetailLayout = () => {
                                                           {requestAccordionState[
                                                             obj.id
                                                           ] ? (
-                                                            <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                          ) : (
                                                             <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                                          ) : (
+                                                            <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
                                                           )}
                                                           <h6 className="m-0">
                                                             {obj.name} Dataset{" "}
@@ -953,13 +977,58 @@ const DatashareDetailLayout = () => {
                                                                 className="gds-left-inline-field"
                                                                 height="30px"
                                                               >
-                                                                Expiry
+                                                                Validity Period
                                                               </div>
                                                               <div line-height="30px">
                                                                 {obj["service"]}
                                                               </div>
                                                             </div>
-                                                            {obj.validitySchedule !==
+                                                            {obj.validitySchedule !=
+                                                            undefined ? (
+                                                              <div className="gds-inline-field-grp">
+                                                                <div className="wrapper">
+                                                                  <div className="gds-left-inline-field">
+                                                                    <span className="gds-label-color">
+                                                                      Start Date{" "}
+                                                                    </span>
+                                                                  </div>
+                                                                  <span>
+                                                                    {dateFormat(
+                                                                      obj
+                                                                        .validitySchedule
+                                                                        .startTime,
+                                                                      "mm/dd/yyyy hh:MM:ss TT"
+                                                                    )}
+                                                                  </span>
+                                                                  <span className="gds-label-color pl-5">
+                                                                    {
+                                                                      obj
+                                                                        .validitySchedule
+                                                                        .timeZone
+                                                                    }
+                                                                  </span>
+                                                                </div>
+                                                                <div className="wrapper">
+                                                                  <div className="gds-left-inline-field">
+                                                                    <span className="gds-label-color">
+                                                                      {" "}
+                                                                      End Date{" "}
+                                                                    </span>
+                                                                  </div>
+                                                                  <span>
+                                                                    {dateFormat(
+                                                                      obj
+                                                                        .validitySchedule
+                                                                        .endTime,
+                                                                      "mm/dd/yyyy hh:MM:ss TT"
+                                                                    )}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            ) : (
+                                                              <p>--</p>
+                                                            )}
+                                                            {/* {obj.validitySchedule !==
                                                             undefined ? (
                                                               <div className="gds-flex">
                                                                 <div className="gds-right-inline-field">
@@ -996,7 +1065,7 @@ const DatashareDetailLayout = () => {
                                                               </div>
                                                             ) : (
                                                               <div>--</div>
-                                                            )}
+                                                            )} */}
                                                           </div>
                                                           <div className="gds-right-inline-field-grp">
                                                             <div className="wrapper">
@@ -1023,7 +1092,11 @@ const DatashareDetailLayout = () => {
                                                             </div>
                                                             <div className="w-100 text-right">
                                                               <div>
-                                                                View Request
+                                                                <Link
+                                                                  to={`/gds/request/detail/${obj.id}`}
+                                                                >
+                                                                  View Request
+                                                                </Link>
                                                               </div>
                                                             </div>
                                                           </div>
@@ -1098,12 +1171,14 @@ const DatashareDetailLayout = () => {
                   </Tabs>
                 </div>
 
-                <Modal
+                {/* <Modal
                   show={showAddResourceModal}
                   onHide={toggleAddResourceModalClose}
+                  //className="mb-7"
+                  size="xl"
                 >
                   <Modal.Header closeButton>
-                    <span className="text-word-break">Add Resources</span>
+                    <h5 className="mb-0">Add Resources</h5>
                   </Modal.Header>
                   <Modal.Body>
                     <AddSharedResourceComp
@@ -1113,7 +1188,7 @@ const DatashareDetailLayout = () => {
                       loadSharedResource={loadSharedResource}
                     />
                   </Modal.Body>
-                  {/* <Modal.Footer>
+                   <Modal.Footer>
                     <Button variant="secondary" size="sm" onClick={toggleClose}>
                       Cancel
                     </Button>
@@ -1128,8 +1203,8 @@ const DatashareDetailLayout = () => {
                     >
                       Yes
                     </Button>
-                  </Modal.Footer> */}
-                </Modal>
+                  </Modal.Footer>
+                </Modal> */}
 
                 <Modal show={confirmDeleteModal.showPopup} onHide={toggleClose}>
                   <Modal.Header closeButton>

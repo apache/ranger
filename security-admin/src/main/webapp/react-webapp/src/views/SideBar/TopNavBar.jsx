@@ -240,9 +240,15 @@ export const TopNavBar = (props) => {
         )}
       </div>
       <div
-        className="collapse navbar-collapse justify-content-end"
+        className="collapse navbar-collapse justify-content-end gap-half"
         id="navbarText"
       >
+        <span className="navbar-text last-response-time">
+          <strong>Last Response Time</strong>
+          <br />
+          {moment(moment()).format("MM/DD/YYYY hh:mm:ss A")}
+        </span>
+        {(!isUserRole || isAdminRole) && <span className="pipe"></span>}
         {(!isUserRole || isAdminRole) && (
           <DropdownButton
             id="dropdown-item-button"
@@ -302,13 +308,6 @@ export const TopNavBar = (props) => {
             )}
           </DropdownButton>
         )}
-
-        {(!isUserRole || isAdminRole) && <span className="pipe"></span>}
-        <span className="navbar-text last-response-time">
-          <strong>Last Response Time</strong>
-          <br />
-          {moment(moment()).format("MM/DD/YYYY hh:mm:ss A")}
-        </span>
       </div>
       <Modal
         show={showView === serviceData?.id}

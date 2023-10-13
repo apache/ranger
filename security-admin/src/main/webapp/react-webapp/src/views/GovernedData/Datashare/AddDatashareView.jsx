@@ -31,9 +31,10 @@ import AsyncSelect from "react-select/async";
 import { Form, Field } from "react-final-form";
 import { fetchApi } from "Utils/fetchAPI";
 import PrinciplePermissionComp from "../Dataset/PrinciplePermissionComp";
-
+import { FieldArray } from "react-final-form-arrays";
 import AddSharedResourceComp from "./AddSharedResourceComp";
 import { toast } from "react-toastify";
+import arrayMutators from "final-form-arrays";
 
 const initialState = {
   loader: false,
@@ -154,7 +155,6 @@ const AddDatashareView = () => {
           groups: {},
           roles: {}
         },
-        zone: selectedZone != undefined ? selectedZone.label : "",
         service: selectedService.label,
         description: datashareDescription,
         termsOfUse: datashareTermsAndConditions,
@@ -164,25 +164,24 @@ const AddDatashareView = () => {
             ? Object.entries(values.permission).map(([key, obj]) => {
                 return obj.value;
               })
-            : [],
-        defaultMasks: {}
+            : []
       };
 
-      if (values.shareDataMaskInfo != undefined) {
-        let data = {};
-        if (values.shareDataMaskInfo.valueExpr != undefined) {
-          data = {
-            [tagName]: {
-              dataMaskType: values.shareDataMaskInfo.value,
-              valueExpr: values.shareDataMaskInfo.valueExpr
-            }
-          };
-        } else {
-          data = {
-            [tagName]: { dataMaskType: values.shareDataMaskInfo.value }
-          };
+      if (selectedZone != undefined) {
+        dataShareInfo.zone = selectedZone.label;
+      }
+
+      dataShareInfo.defaultTagMasks = [];
+      if (values.tagMaskInfo != undefined) {
+        for (let i = 0; i < values.tagMaskInfo.length; i++) {
+          let data = {};
+          data.tagName = values.tagMaskInfo[i].tagName;
+          data.maskInfo = {};
+          data.maskInfo.dataMaskType = values.tagMaskInfo[i].masking.value;
+          data.maskInfo.conditionExpr =
+            values.tagMaskInfo[i].shareDataMaskInfo?.valueExpr;
+          dataShareInfo.defaultTagMasks.push(data);
         }
-        dataShareInfo.defaultMasks = data;
       }
 
       userList.forEach((user) => {
@@ -383,81 +382,6 @@ const AddDatashareView = () => {
     }
   };
 
-  const showMoreOptionsComp = () => {
-    setShowMoreOptions(true);
-  };
-
-  const handleSubmit = async (values) => {
-    let data = {};
-    let serviceCompRes = serviceDef.resources;
-    const grpResources = groupBy(serviceCompRes || [], "level");
-    let grpResourcesKeys = [];
-    data.dataShareId = dataShareId;
-    //data.name =
-    for (const resourceKey in grpResources) {
-      grpResourcesKeys.push(+resourceKey);
-    }
-    grpResourcesKeys = grpResourcesKeys.sort();
-    data.resources = {};
-    for (const level of grpResourcesKeys) {
-      if (
-        values[`resourceName-${level}`] &&
-        values[`resourceName-${level}`].value !== noneOptions.value
-      ) {
-        let defObj = serviceCompRes.find(function (m) {
-          if (m.name == values[`resourceName-${level}`].name) {
-            return m;
-          }
-        });
-        data.resources[values[`resourceName-${level}`].name] = {
-          values: isArray(values[`value-${level}`])
-            ? values[`value-${level}`]?.map(({ value }) => value)
-            : [values[`value-${level}`].value]
-        };
-      }
-    }
-    try {
-      setBlockUI(true);
-      const resp = await fetchApi({
-        url: "plugins/policies",
-        method: "POST",
-        data
-      });
-      let tblpageData = {};
-      if (state && state != null) {
-        tblpageData = state.tblpageData;
-        if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-        } else {
-          if (tblpageData !== undefined) {
-            tblpageData["totalPage"] = state.tblpageData.totalPage;
-          }
-        }
-      }
-      setBlockUI(false);
-      toast.dismiss(toastId.current);
-      toastId.current = toast.success("Policy save successfully!!");
-      navigate(`/service/${serviceId}/policies/${policyType}`, {
-        state: {
-          showLastPage: true,
-          addPageData: tblpageData
-        }
-      });
-    } catch (error) {
-      setBlockUI(false);
-      let errorMsg = `Failed to save policy form`;
-      if (error?.response?.data?.msgDesc) {
-        errorMsg = `Error! ${error.response.data.msgDesc}`;
-      }
-      toast.error(errorMsg);
-      console.error(`Error while saving policy form! ${error}`);
-    }
-  };
-
-  const addResources = (resourceList) => {
-    setSharedResourceList(resourceList);
-  };
-
   const onAccessTypeChange = (event, input) => {
     setAccessType(event);
     input.onChange(event);
@@ -493,11 +417,119 @@ const AddDatashareView = () => {
     setDatashareConditionExpr(event.target.value);
   };
 
-  const fetchMaskOptions = () => {
-    return serviceDef.dataMaskDef.maskTypes.map(({ label, name: value }) => ({
-      label,
-      value
-    }));
+  const MaskingConfig = (props) => {
+    const { addTagMaskingConfig } = props;
+    return (
+      <div>
+        <FieldArray name="tagMaskInfo">
+          {({ fields }) =>
+            fields.map((name, index) => (
+              <div>
+                <span>Tag Name : </span>
+                <div className="gds-form-input">
+                  <Field
+                    name={`${name}.tagName`}
+                    render={({ input, meta }) => (
+                      <input
+                        {...input}
+                        type="text"
+                        //name={`${name}.tagName`}
+                        className="form-control"
+                        data-cy="tagName"
+                        //onChange={tagNameChange}
+                        //value={tagName}
+                      />
+                    )}
+                  />
+                </div>
+                <span>Masking Type : </span>
+                <Field
+                  className="form-control"
+                  name={`${name}.shareDataMaskInfo`}
+                  render={({ input, meta }) => (
+                    <div>
+                      <Field
+                        name={`maskType`}
+                        render={({ input, meta }) => (
+                          <Field
+                            name={`${name}.masking`}
+                            render={({ input, meta }) => (
+                              <div className="d-flex ">
+                                <div className="w-50">
+                                  <Select
+                                    {...input}
+                                    defaultOptions
+                                    //value={selectedShareMask}
+                                    options={maskTypeOptions}
+                                    onChange={(e) =>
+                                      onShareMaskChange(e, input)
+                                    }
+                                    isClearable={false}
+                                    width="500px"
+                                  />
+                                </div>
+                                {fields?.value[index]?.masking?.label ==
+                                  "Custom" && (
+                                  <div className="pl-2 w-50">
+                                    <Field
+                                      className="form-control"
+                                      name={`${name}.shareDataMaskInfo.valueExpr`}
+                                      //validate={required}
+                                      render={({ input, meta }) => (
+                                        <>
+                                          <FormB.Control
+                                            type="text"
+                                            className="gds-input"
+                                            {...input}
+                                            placeholder="Enter masked value or expression..."
+                                          />
+                                          {meta.error && (
+                                            <span className="invalid-field">
+                                              {meta.error}
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          />
+                        )}
+                      />
+                    </div>
+                  )}
+                />
+                <Button
+                  variant="danger"
+                  size="sm"
+                  title="Remove"
+                  onClick={() => {
+                    fields.remove(index);
+                  }}
+                  data-action="delete"
+                  data-cy="delete"
+                >
+                  <i className="fa-fw fa fa-remove"></i>
+                </Button>
+              </div>
+            ))
+          }
+        </FieldArray>
+
+        <Button
+          className="btn btn-mini mt-2"
+          type="button"
+          onClick={() => addTagMaskingConfig("tagMaskInfo", undefined)}
+          data-action="addTagMaskInfo"
+          data-cy="addTagMaskInfo"
+          title="Add"
+        >
+          Add More
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -506,7 +538,18 @@ const AddDatashareView = () => {
         id="myform2"
         name="myform2"
         onSubmit={onSubmit}
-        render={({ handleSubmit, submitting, required, values }) => (
+        mutators={{
+          ...arrayMutators
+        }}
+        render={({
+          handleSubmit,
+          submitting,
+          required,
+          values,
+          form: {
+            mutators: { push: addTagMaskingConfig, pop }
+          }
+        }) => (
           <div>
             <div className="gds-form-header-wrapper">
               <h3 className="gds-header bold">Create Datashare</h3>
@@ -673,64 +716,117 @@ const AddDatashareView = () => {
                 </div>
                 {maskDef ? (
                   <div className="gds-section-title">
-                    <p className="gds-card-heading">Masking Configuration</p>
-                    <div>
-                      <span>Tag Name : </span>
-                      <div className="gds-form-input">
-                        <input
-                          type="text"
-                          name="tagName"
-                          className="form-control"
-                          data-cy="tagName"
-                          onChange={tagNameChange}
-                          value={tagName}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <span>Masking Type : </span>
-                      <Field
-                        className="form-control"
-                        name={`shareDataMaskInfo`}
-                        render={({ input, meta }) => (
-                          <div>
-                            <Select
-                              {...input}
-                              defaultOptions
-                              value={selectedShareMask}
-                              options={maskTypeOptions}
-                              onChange={(e) => onShareMaskChange(e, input)}
-                              isClearable={false}
-                              width="500px"
-                            />
-                            {selectedShareMask != undefined &&
-                              selectedShareMask.label == "Custom" && (
-                                <>
-                                  <Field
-                                    className="form-control"
-                                    name={`shareDataMaskInfo.valueExpr`}
-                                    validate={required}
-                                    render={({ input, meta }) => (
-                                      <>
-                                        <FormB.Control
-                                          type="text"
-                                          {...input}
-                                          placeholder="Enter masked value or expression..."
+                    <p className="gds-card-heading">
+                      Tag Masking Configuration
+                    </p>
+
+                    <MaskingConfig addTagMaskingConfig={addTagMaskingConfig} />
+                    {/* <div>
+                      <FieldArray name="tagMaskInfo">
+                        {({ fields }) =>
+                          fields.map((name, index) => (
+                            <div>
+                              <span>Tag Name : </span>
+                              <div className="gds-form-input">
+                                <input
+                                  type="text"
+                                  name="tagName"
+                                  className="form-control"
+                                  data-cy="tagName"
+                                  onChange={tagNameChange}
+                                  value={tagName}
+                                />
+                              </div>
+                              <span>Masking Type : </span>
+                              <Field
+                                className="form-control"
+                                name={`shareDataMaskInfo`}
+                                render={({ input, meta }) => (
+                                  <div>
+                                    <Field
+                                      name={`maskType`}
+                                      render={({ input, meta }) => (
+                                        <Field
+                                          name="masking"
+                                          render={({ input, meta }) => (
+                                            <div className="d-flex ">
+                                              <div className="w-50">
+                                                <Select
+                                                  {...input}
+                                                  defaultOptions
+                                                  value={selectedShareMask}
+                                                  options={maskTypeOptions}
+                                                  onChange={(e) =>
+                                                    onShareMaskChange(e, input)
+                                                  }
+                                                  isClearable={false}
+                                                  width="500px"
+                                                />
+                                              </div>
+                                              {selectedShareMask?.label ==
+                                                "Custom" && (
+                                                <div className="pl-2 w-50">
+                                                  <Field
+                                                    className="form-control"
+                                                    name={`shareDataMaskInfo.valueExpr`}
+                                                    validate={required}
+                                                    render={({
+                                                      input,
+                                                      meta
+                                                    }) => (
+                                                      <>
+                                                        <FormB.Control
+                                                          type="text"
+                                                          className="gds-input"
+                                                          {...input}
+                                                          placeholder="Enter masked value or expression..."
+                                                        />
+                                                        {meta.error && (
+                                                          <span className="invalid-field">
+                                                            {meta.error}
+                                                          </span>
+                                                        )}
+                                                      </>
+                                                    )}
+                                                  />
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
                                         />
-                                        {meta.error && (
-                                          <span className="invalid-field">
-                                            {meta.error}
-                                          </span>
-                                        )}
-                                      </>
-                                    )}
-                                  />
-                                </>
-                              )}
-                          </div>
-                        )}
-                      />
-                    </div>
+                                      )}
+                                    />
+                                  </div>
+                                )}
+                              />
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                title="Remove"
+                                onClick={() => {
+                                  fields.remove(index);
+                                }}
+                                data-action="delete"
+                                data-cy="delete"
+                              >
+                                <i className="fa-fw fa fa-remove"></i>
+                              </Button>
+                            </div>
+                          ))
+                        }
+                      </FieldArray>
+
+                      <Button
+                        className="btn btn-mini mt-2"
+                        type="button"
+                        onClick={() => push("tagMaskInfo", undefined)}
+                        data-action="addTagMaskInfo"
+                        data-cy="addTagMaskInfo"
+                        title="Add"
+                      >
+                        Add More
+                      </Button>
+                    </div> */}
                   </div>
                 ) : (
                   <div></div>

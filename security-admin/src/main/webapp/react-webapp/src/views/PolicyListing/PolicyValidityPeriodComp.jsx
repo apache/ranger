@@ -93,7 +93,8 @@ export default function PolicyValidityPeriodComp(props) {
         data-js="policyTimeBtn"
         data-cy="policyTimeBtn"
       >
-        <i className="fa fa-clock-o"></i> Add Validity Period
+        <i className="fa fa-clock-o"></i>{" "}
+        {props.editValidityPeriod ? "Edit" : "Add"} Validity Period
       </Button>
       <Modal show={showModal} size="lg" onHide={toggleModal} backdrop="static">
         <Modal.Header closeButton>
