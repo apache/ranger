@@ -92,6 +92,8 @@ public interface RangerPolicyEvaluator {
 
 	int getEvalOrder();
 
+	int getPolicyConditionsCount();
+
 	int getCustomConditionsCount();
 
 	int getValidityScheduleEvaluatorsCount();
