@@ -1,9 +1,4 @@
 {
-  "testCases": [
-    {
-      "name": "Test multiple tag instances for resource hierarchy",
-
-      "servicePolicies": {
         "serviceName": "hivedev",
         "serviceDef": {
           "name": "hive", "id": 3,
@@ -54,7 +49,7 @@
         },
         "policies": [
         ],
-        "tagPolicies": {
+        "tagPolicyInfo": {
           "serviceName": "tagdev",
           "serviceDef": {
             "name": "tag", "id": 100,
@@ -86,7 +81,7 @@
               { "itemId": 3, "name": "ip-range",       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",                        "evaluatorOptions": { },                                                         "label": "IP Address Range",               "description": "IP Address Range" }
             ]
           },
-          "policies": [
+          "tagPolicies": [
             { "id": 1, "name": "1: access: SENSITIVE", "isEnabled": true, "isAuditEnabled": true, "policyType": 0,
               "resources": { "tag": { "values": [ "SENSITIVE" ], "isRecursive": false } },
               "policyItems": [
@@ -99,13 +94,13 @@
                 {"accesses": [{"type": "hive:create", "isAllowed": true}], "users": [ "dba"] }
               ]
             },
-            { "id": 3, "name": "2: access: CUSTOMER", "isEnabled": true, "isAuditEnabled": true, "policyType": 0,
+            { "id": 3, "name": "3: access: CUSTOMER", "isEnabled": true, "isAuditEnabled": true, "policyType": 0,
               "resources": { "tag": { "values": [ "CUSTOMER" ], "isRecursive": false } },
               "policyItems": [
                 {"accesses": [{"type": "hive:select", "isAllowed": true}], "users": [ "test-user"] }
               ]
             },
-            { "id": 4, "name": "3: access: ADDRESS", "isEnabled": true, "isAuditEnabled": true, "policyType": 0,
+            { "id": 4, "name": "4: access: ADDRESS", "isEnabled": true, "isAuditEnabled": true, "policyType": 0,
               "resources": { "tag": { "values": [ "ADDRESS" ], "isRecursive": false } },
               "policyItems": [
                 {"accesses": [{"type": "hive:select", "isAllowed": true}], "users": [ "test-user"] }
@@ -145,79 +140,100 @@
               ]
             }
           ]
-        }
-      },
+        },
       "tests": [
-        { "name":            "table: db1.tbl1",
-          "resource":        { "elements": { "database": "db1", "table": "tbl1" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
-        },
-        { "name":            "column: db1.tbl1.SSN",
-          "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "SSN" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
-          "dataMasks": [
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
-        },
-        { "name":            "column: db1.tbl1.Age",
-          "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "Age" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
-          "dataMasks": [
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
-        },
-        { "name":            "column: db1.tbl1.Name",
-          "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "Name" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
-          "dataMasks": [
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
-        },
-        { "name":            "database: db2",
-          "resource":        { "elements": { "database": "db2" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
-        },
-        { "name":            "table: db2.tbl1",
-          "resource":        { "elements": { "database": "db2", "table": "tbl1" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
-        },
-        { "name":            "column: db2.tbl1.Name",
-          "resource":        { "elements": { "database": "db2", "table": "tbl1", "column": "Name" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
-          "dataMasks": [
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
-            {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
-        },
-        { "name":            "database: order",
-          "resource":        { "elements": { "database": "order" } },
-          "userPermissions": { "dba": { "create": { "result":  1, "isFinal":  true } } }
-        },
-        { "name":            "table: order.customer",
-          "resource":        { "elements": { "database": "order", "table": "customer" } },
-          "userPermissions": {
-            "test-user": { "select":  { "result": 1, "isFinal": true } },
-            "dba":       { "create":  { "result": 1, "isFinal": true } }
-          }
-        },
-        { "name":            "column: order.customer.address",
-          "resource":        { "elements": { "database": "order", "table": "customer", "column": "address" } },
-          "userPermissions": {
-            "test-user": { "select":  { "result": 1, "isFinal": true } },
-            "dba":       { "create":  { "result": 1, "isFinal": true } }
+        { "name": "table: db1.tbl1, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db1", "table": "tbl1" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select * from db1.tbl1"
           },
-          "dataMasks": [
-            { "users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": false }
-          ]
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "SHUFFLE", "maskCondition": null, "maskValue": null }, "policyId": 101 }
+        },
+        { "name": "column: db1.tbl1.SSN, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db1", "table": "tbl1", "column": "SSN" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select SSN from db1.tbl1"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK", "maskCondition": null, "maskValue": null }, "policyId": 102 }
+        },
+        { "name": "column: db1.tbl1.Age, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db1", "table": "tbl1", "column": "Age" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select Age from db1.tbl1"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 103 }
+        },
+        { "name": "column: db1.tbl1.Name, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db1", "table": "tbl1", "column": "Name" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select Name from db1.tbl1"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 103 }
+        },
+        { "name": "database: db2, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db2" } },
+            "accessType": "_any", "user": "test-user", "userGroups": [], "requestData": "use db2"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 103 }
+        },
+        { "name": "table: db2.tbl1, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db2", "table": "tbl1" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select * from db2.tbl1"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 103 }
+        },
+        { "name": "column: db2.tbl1.Name, user=test-user",
+          "request": {
+            "resource": { "elements": { "database": "db2", "table": "tbl1", "column": "Name" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select Name from db2.tbl1"
+          },
+          "result": { "isAudited": true, "isAllowed": true, "policyId": 1 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 103 }
+        },
+        { "name": "database: order",
+          "request": {
+            "resource": { "elements": { "database": "order" } },
+            "accessType": "create", "user": "dba", "userGroups": [], "requestData": "create table order.t1"
+          },
+          "result": { "isAudited": true, "isAllowed":  true, "policyId": 2 }
+        },
+        { "name": "table: order.customer",
+          "request": {
+            "resource": { "elements": { "database": "order", "table": "customer" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select * from order.customer"
+          },
+          "result": { "isAudited": true, "isAllowed":  true, "policyId": 3 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_NONE", "maskCondition": null, "maskValue": null }, "policyId": 104 }
+        },
+        { "name": "table: order.customer",
+          "request": {
+            "resource": { "elements": { "database": "order", "table": "customer" } },
+            "accessType": "create", "user": "dba", "userGroups": [], "requestData": "create table order.t1"
+          },
+          "result": { "isAudited": true, "isAllowed":  true, "policyId": 2 }
+        },
+        { "name": "column: order.customer.address",
+          "request": {
+            "resource": { "elements": { "database": "order", "table": "customer", "column": "address" } },
+            "accessType": "select", "user": "test-user", "userGroups": [], "requestData": "select address from order.customer"
+          },
+          "result": { "isAudited": true, "isAllowed":  true, "policyId": 4 },
+          "dataMaskResult": { "additionalInfo": { "maskType": "MASK_HASH", "maskCondition": null, "maskValue": null }, "policyId": 105 }
+        },
+        { "name": "column: order.customer.address",
+          "request": {
+            "resource": { "elements": { "database": "order", "table": "customer", "column": "address" } },
+            "accessType": "create", "user": "dba", "userGroups": [], "requestData": "create table order.t1"
+          },
+          "result": { "isAudited": true, "isAllowed":  true, "policyId": 2 }
         }
       ]
     }
-  ]
-}

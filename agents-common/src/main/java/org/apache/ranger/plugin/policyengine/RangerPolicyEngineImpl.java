@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.plugin.policyengine.PolicyEvaluatorForTag.MATCH_TYPE_COMPARATOR;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_CONDITIONAL;
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
@@ -333,7 +334,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 							isMatched = isMatch(matchType, request.getResourceMatchingScope());
 
 							if (isMatched) {
-								isConditionalMatch = false;
+								isConditionalMatch = evaluator.getPolicyConditionsCount() > 0;
 
 								break;
 							} else if (matcher.getNeedsDynamicEval() && !isConditionalMatch) {
@@ -990,6 +991,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<PolicyEvaluatorForTag> tagPolicyEvaluators = policyEngine.getTagPolicyRepository() == null ? null : policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(request, tags, policyType, null);
 
 			if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
+				tagPolicyEvaluators.sort(MATCH_TYPE_COMPARATOR);
 
 				final boolean useTagPoliciesFromDefaultZone = !policyEngine.isResourceZoneAssociatedWithTagService(zoneName);
 
@@ -1017,9 +1019,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					RangerTagForEval tag = tagEvaluator.getTag();
 
-					allEvaluators.add(evaluator);
-
-					updateMatchTypeForTagEvaluator(tagEvaluator, tagMatchTypeMap);
+					// avoid an evaluator making into the list multiple times when the same tag is associated with the resource multiple times
+					// highest precedence matchType will be recorded in tagMatchTypeMap, since tagPolicyEvaluators is sorted by matchType
+					if (tagMatchTypeMap.putIfAbsent(evaluator.getPolicyId(), tag.getMatchType()) == null) {
+						allEvaluators.add(evaluator);
+					}
 
 					if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
 						policyIdForTemporalTags.add(evaluator.getPolicyId());
@@ -1030,38 +1034,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluator> resourcePolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
 			allEvaluators.addAll(resourcePolicyEvaluators);
-		}
-	}
-
-	// Multiple tags can be mapped to a tag-based policy. In such cases, use the match-type of the tag having the highest precedence
-	// Consider following tags:
-	//  table  table1      has tag SENSITIVE(level=normal)
-	//  column table1.col1 has tag SENSITIVE(level=high)
-	//
-	// Following 2 tags will be matched for table1:
-	//  SENSITIVE(level=normal) with MatchType.SELF
-	//  SENSITIVE(level=high)   with MatchType.DESCENDANT
-	//
-	// Following 2 tags will be matched for table1.col1:
-	//  SENSITIVE(level=high)   with MatchType.SELF
-	//  SENSITIVE(level=normal) with MatchType.SELF_AND_ALL_DESCENDANTS
-	//
-	// In these cases, matchType SELF should be used for policy evaluation
-	//
-	private void updateMatchTypeForTagEvaluator(PolicyEvaluatorForTag tag, Map<Long, MatchType> tagMatchTypeMap) {
-		Long      evaluatorId = tag.getEvaluator().getPolicyId();
-		MatchType existing    = tagMatchTypeMap.get(evaluatorId);
-
-		if (existing != MatchType.SELF) {
-			MatchType matchType = tag.getTag().getMatchType();
-
-			if (existing == null || existing == MatchType.NONE || matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS) {
-				tagMatchTypeMap.put(evaluatorId, matchType);
-			} else if (matchType == MatchType.ANCESTOR) {
-				if (existing == MatchType.DESCENDANT) {
-					tagMatchTypeMap.put(evaluatorId, MatchType.SELF_AND_ALL_DESCENDANTS);
-				}
-			}
 		}
 	}
 

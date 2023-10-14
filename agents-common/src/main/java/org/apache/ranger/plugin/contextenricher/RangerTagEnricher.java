@@ -718,7 +718,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
 						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 					} else {
-						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
 					}
 
 					if (isMatched) {
