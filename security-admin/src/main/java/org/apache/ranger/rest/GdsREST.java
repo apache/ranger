@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -53,6 +54,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import java.util.List;
@@ -121,6 +123,50 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.createDataset({}): {}", dataset, ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path("/dataset/{id}/datashare")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ADD_DATASHARE_IN_DATASET + "\")")
+    public List<RangerDataShareInDataset> addDataSharesInDataset(@PathParam("id") Long datasetId, List<RangerDataShareInDataset> dataSharesInDataset) {
+        LOG.debug("==> GdsREST.addDataSharesInDataset({}, {})", datasetId, dataSharesInDataset);
+
+        List<RangerDataShareInDataset> ret;
+        RangerPerfTracer               perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addDataSharesInDataset(" +  datasetId + ")");
+            }
+
+            if (CollectionUtils.isNotEmpty(dataSharesInDataset)) {
+                for (RangerDataShareInDataset dshInDs : dataSharesInDataset) {
+                    if (dshInDs == null || (dshInDs.getDatasetId() == null)) {
+                        throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "missing datasetID", false);
+                    } else if (!dshInDs.getDatasetId().equals(datasetId)) {
+                        throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "incorrect datasetId=" + datasetId, false);
+                    }
+                }
+            } else {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "empty dataShareInDataset list", false);
+            }
+
+            ret = gdsStore.addDataSharesInDataset(dataSharesInDataset);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("addDataShareInDataset({}) failed", datasetId, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addDataSharesInDataset({}, {}): ret={}", datasetId, dataSharesInDataset, ret);
 
         return ret;
     }
@@ -206,7 +252,7 @@ public class GdsREST {
             ret = gdsStore.getDataset(datasetId);
 
             if (ret == null) {
-                throw new Exception("no dataset with id=" + datasetId);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "no dataset with id=" + datasetId, false);
             }
         } catch(WebApplicationException excp) {
             throw excp;
@@ -568,7 +614,7 @@ public class GdsREST {
             ret = gdsStore.getProject(projectId);
 
             if (ret == null) {
-                throw new Exception("no project with id=" + projectId);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "no project with id=" + projectId, false);
             }
         } catch(WebApplicationException excp) {
             throw excp;
@@ -895,7 +941,7 @@ public class GdsREST {
             ret = gdsStore.getDataShare(dataShareId);
 
             if (ret == null) {
-                throw new Exception("no resourceset with id=" + dataShareId);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "no dataShare with id=" + dataShareId, false);
             }
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1082,7 +1128,7 @@ public class GdsREST {
             ret = gdsStore.getSharedResource(resourceId);
 
             if (ret == null) {
-                throw new Exception("no shared-resource with id=" + resourceId);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "no shared-resource with id=" + resourceId, false);
             }
         } catch(WebApplicationException excp) {
             throw excp;

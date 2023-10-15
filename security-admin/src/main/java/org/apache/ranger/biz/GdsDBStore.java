@@ -1008,38 +1008,29 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
+    public List<RangerDataShareInDataset> addDataSharesInDataset(List<RangerDataShareInDataset> dataSharesInDataset) throws Exception {
+        LOG.debug("==> addDataSharesInDataset({})", dataSharesInDataset);
+
+        List<RangerDataShareInDataset> ret = new ArrayList<>();
+
+        validate(dataSharesInDataset);
+
+        for (RangerDataShareInDataset dataShareInDataset : dataSharesInDataset) {
+            ret.add(createDataShareInDataset(dataShareInDataset));
+        }
+
+        LOG.debug("<== addDataSharesInDataset({}): ret={}", dataSharesInDataset, ret);
+
+        return ret;
+    }
 
     @Override
     public RangerDataShareInDataset addDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception {
         LOG.debug("==> addDataShareInDataset({})", dataShareInDataset);
 
-        XXGdsDataShareInDatasetDao datasetDao = daoMgr.getXXGdsDataShareInDataset();
-        XXGdsDataShareInDataset    existing   = datasetDao.findByDataShareIdAndDatasetId(dataShareInDataset.getDataShareId(), dataShareInDataset.getDatasetId());
+        validate(Collections.singletonList(dataShareInDataset));
 
-        if (existing != null) {
-            throw new Exception("data share '" + dataShareInDataset.getDataShareId() + "' already shared with dataset " + dataShareInDataset.getDatasetId() + " - id=" + existing.getId());
-        }
-
-        validator.validateCreate(dataShareInDataset);
-
-        switch (dataShareInDataset.getStatus()) {
-            case GRANTED:
-            case DENIED:
-            case ACTIVE:
-                dataShareInDataset.setApprover(bizUtil.getCurrentUserLoginId());
-                break;
-            default:
-                dataShareInDataset.setApprover(null);
-                break;
-        }
-
-        if (StringUtils.isBlank(dataShareInDataset.getGuid())) {
-            dataShareInDataset.setGuid(guidUtil.genGUID());
-        }
-
-        RangerDataShareInDataset ret = dataShareInDatasetService.create(dataShareInDataset);
-
-        dataShareInDatasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        RangerDataShareInDataset ret = createDataShareInDataset(dataShareInDataset);
 
         LOG.debug("<== addDataShareInDataset({}): ret={}", dataShareInDataset, ret);
 
@@ -1712,5 +1703,44 @@ public class GdsDBStore extends AbstractGdsStore {
 
     private boolean hasResource(List<String> resources, String resourceValue) {
         return resources.stream().filter(Objects::nonNull).anyMatch(resource -> resource.contains(resourceValue));
+    }
+
+    private void validate(List<RangerDataShareInDataset> dataSharesInDataset) throws Exception {
+        XXGdsDataShareInDatasetDao dshInDsDao = daoMgr.getXXGdsDataShareInDataset();
+
+        if(CollectionUtils.isNotEmpty(dataSharesInDataset)) {
+            for(RangerDataShareInDataset dataShareInDataset : dataSharesInDataset) {
+                XXGdsDataShareInDataset existing = dshInDsDao.findByDataShareIdAndDatasetId(dataShareInDataset.getDataShareId(), dataShareInDataset.getDatasetId());
+
+                if (existing != null) {
+                    throw new Exception("data share id='" + dataShareInDataset.getDataShareId() + "' already shared with dataset id='" + dataShareInDataset.getDatasetId() + "': dataShareInDatasetId=" + existing.getId());
+                }
+
+                validator.validateCreate(dataShareInDataset);
+            }
+        }
+    }
+
+    private RangerDataShareInDataset createDataShareInDataset(RangerDataShareInDataset dataShareInDataset) {
+        switch (dataShareInDataset.getStatus()) {
+            case GRANTED:
+            case DENIED:
+            case ACTIVE:
+                dataShareInDataset.setApprover(bizUtil.getCurrentUserLoginId());
+                break;
+            default:
+                dataShareInDataset.setApprover(null);
+                break;
+        }
+
+        if (StringUtils.isBlank(dataShareInDataset.getGuid())) {
+            dataShareInDataset.setGuid(guidUtil.genGUID());
+        }
+
+        RangerDataShareInDataset ret = dataShareInDatasetService.create(dataShareInDataset);
+
+        dataShareInDatasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+
+        return ret;
     }
 }
