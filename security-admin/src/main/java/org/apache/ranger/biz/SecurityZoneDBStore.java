@@ -276,7 +276,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         List<SecurityZoneSummary> summaryList   = new ArrayList<>();
 
         for (RangerSecurityZone securityZone : securityZones) {
-            if (serviceMgr.isZoneAdmin(securityZone.getName()) || serviceMgr.isZoneAuditor(securityZone.getName())) {
+            if (bizUtil.isAdmin() || serviceMgr.isZoneAdmin(securityZone.getName()) || serviceMgr.isZoneAuditor(securityZone.getName())) {
                 summaryList.add(toSecurityZoneSummary(securityZone));
             }
         }
