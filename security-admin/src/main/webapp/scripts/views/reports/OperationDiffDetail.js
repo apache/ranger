@@ -243,9 +243,9 @@ define(function(require){
 			this.collection.each(function(m){
 				if(m.get('attributeName') == 'Group Name'){
 					if(m.get('action') == 'create' || m.get('action') == 'update')
-						that.newGroupList.push(m.get('parentObjectName'));
+						that.newGroupList.push(_.escape(m.get('parentObjectName')));
 					if(m.get('action') == 'delete' || m.get('action') == 'update')
-						that.previousGroupList.push(m.get('parentObjectName'));
+						that.previousGroupList.push(_.escape(m.get('parentObjectName')));
 					modelArr.push(m);
 				} else if(m.get('attributeName') == 'User Role'){
 					var newRole;

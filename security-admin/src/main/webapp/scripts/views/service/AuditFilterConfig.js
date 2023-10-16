@@ -184,7 +184,7 @@ define(function(require) {
                         if(!_.isUndefined(id)){
                             var obj = _.findWhere(that.rangerServiceDefModel.attributes.accessTypes,{'name' : id});
                             permTypeArr.push({permType : obj.value});
-                            return "<span class='badge badge-info'>" + obj.label + "</span>";
+                            return "<span class='badge badge-info'>" + _.escape(obj.label) + "</span>";
                         }
                     });
                     that.model.set('accessTypes', values);
@@ -269,7 +269,7 @@ define(function(require) {
                         if(!_.isUndefined(id)){
                             var obj = _.findWhere(srcData,{'value' : id});
                             permTypeArr.push({permType : obj.value});
-                            return "<span class='badge badge-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+                            return "<span class='badge badge-info'>" + _.escape(id.substr(0,id.indexOf(":"))).toUpperCase() + "</span>";
                         }
                     });
                     // Save form data to model
@@ -391,7 +391,7 @@ define(function(require) {
                         var isRecursive = key.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
                         $toggleBtn += '<span class="badge badge-dark pull-right">'+isRecursive+'</span>'
                     }
-                    $dataResources += '<div class="resourcesFilter"><div><b>' + value + '</b>:' + key.values.join(', ') +'</div>' + $toggleBtn +'</div>'
+                    $dataResources += '<div class="resourcesFilter"><div><b>' + value + '</b>:' + _.escape(key.values.join(', ')) +'</div>' + $toggleBtn +'</div>'
                 })
             $dataResources += '</div>'
             this.$el.find('.js-formInput').html($dataResources);

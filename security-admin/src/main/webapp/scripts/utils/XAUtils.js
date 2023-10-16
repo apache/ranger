@@ -213,7 +213,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-exclamation-circle',
 			title: '<strong>Info!</strong>',
-			message: text
+			message: _.escape(text)
 		});
 	};
 
@@ -231,7 +231,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-exclamation-triangle',
 			title: '<strong>Error!</strong>',
-			message: text
+			message: _.escape(text)
 		},{
 			type: 'danger',
 		});
@@ -251,7 +251,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-check-circle',
 			title: '<strong>Success!</strong>',
-			message: text
+			message: _.escape(text)
 		},{
 			type: 'success'
 		});

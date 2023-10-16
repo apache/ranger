@@ -239,7 +239,7 @@ define(function(require){
                     _.each(that.model.get('conditions'), function(val){
                         console.log(that);
                         var conditionName = that.rangerServiceDefModel.get('policyConditions').find(function(m){return m.name == val.type});
-                        $data.push('<tr><td width="40%">'+_.escape(conditionName.label)+'</td><td width="60%">'+(val.values).toString()+'</td></tr>')
+                        $data.push('<tr><td width="40%">'+_.escape(conditionName.label)+'</td><td width="60%">'+_.escape((val.values).toString())+'</td></tr>')
                     });
                     if($data.length > 0){
                         that.$el.find(that.ui.conditionData).html($data);

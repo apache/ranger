@@ -826,7 +826,7 @@
 	              								 .attr('placeholder','Select component');
 	              var optionList = _.keys(this.servicePerms);
 	              _.each(optionList, function (val, el) {
-	            	  $selectComp.append("<option>" + val + "</option>");
+                      $selectComp.append("<option>" + _.escape(val) + "</option>");
 	              }); 
 	              var $table = $('<table>', {'class':'table table-policy-condition table-perms margin-top-6' });
 	              var $tbody = $('<tbody><tr><th><input type="checkbox" data-id="selectAllComponent" /> Component</th><td><strong>Permissions</strong></td></tr></tbody>');
@@ -939,7 +939,7 @@
 	             }
 	          },
 	          addTr : function(compName){
-        		  var $tr = $('<tr data-id="'+compName+'">'), $th = $('<th>'), $label = '<label><input type="checkbox" data-id="selectall" data-type="'+compName+'"></label>'+compName;
+                  var $tr = $('<tr data-id="'+_.escape(compName)+'">'), $th = $('<th>'), $label = '<label><input type="checkbox" data-id="selectall" data-type="'+_.escape(compName)+'"></label>'+_.escape(compName);
         		  var $tmp = $th.append($label);
         		  var $td = $('<td>');
         		  var permissions = this.servicePerms[compName]
