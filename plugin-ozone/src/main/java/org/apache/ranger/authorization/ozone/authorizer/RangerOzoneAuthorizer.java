@@ -125,6 +125,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		rangerRequest.setAccessTime(eventTime);
 
 		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+		rangerResource.setOwnerUser(context.getOwnerName());
+
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);
