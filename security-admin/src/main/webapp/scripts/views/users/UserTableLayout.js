@@ -631,7 +631,7 @@ define(function(require){
                     sortable : false,
                     formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw : function (rawValue,model) {
-                            return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + model.get('name')
+                            return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + _.escape(model.get('name'))
                                 + '" data-id="' + model.id + '"<font color="black"><i class="fa-fw fa fa-group"> </i></font></button></div>');
                         }
                     }),
