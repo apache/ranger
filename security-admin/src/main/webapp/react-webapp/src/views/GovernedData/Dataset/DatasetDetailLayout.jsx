@@ -17,13 +17,7 @@
  * under the License.
  */
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useReducer
-} from "react";
+import React, { useState, useEffect, useCallback, useReducer } from "react";
 import withRouter from "Hooks/withRouter";
 import { fetchApi } from "../../../utils/fetchAPI";
 import dateFormat from "dateformat";
@@ -44,7 +38,7 @@ import { Form } from "react-final-form";
 import { CustomTooltip, Loader } from "../../../components/CommonComponents";
 import moment from "moment-timezone";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { serverError } from "../../../utils/XAUtils";
+import { serverError, isSystemAdmin } from "../../../utils/XAUtils";
 import Select from "react-select";
 import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
@@ -54,6 +48,7 @@ import { groupBy, isEmpty, isArray } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
+import ErrorPage from "../../../views/ErrorPage";
 
 const initialState = {
   loader: false,
@@ -85,6 +80,8 @@ const datasetFormReducer = (state, action) => {
 
 const DatasetDetailLayout = () => {
   let { datasetId } = useParams();
+  const { state } = useLocation();
+  const userAclPerm = state?.userAclPerm;
   const toastId = React.useRef(null);
   const [loader, setLoader] = useState(true);
   const [datasetInfo, setDatasetInfo] = useState({});
@@ -138,12 +135,17 @@ const DatasetDetailLayout = () => {
   const [showDeleteDatasetModal, setShowDeleteDatasetModal] = useState(false);
   const [requestCurrentPage, setRequestCurrentPage] = useState(0);
   const [requestPageCount, setRequestPageCount] = useState();
+  const [datashareCurrentPage, setDatashareCurrentPage] = useState(0);
+  const [datasharePageCount, setDatasharePageCount] = useState();
   const [requestAccordionState, setRequestAccordionState] = useState({});
   const itemsPerPage = 5;
+  const datashareItemsPerPage = 10;
   const [showActivateRequestModal, setShowActivateRequestModal] =
     useState(false);
   const [datashareInfo, setDatashareInfo] = useState();
   const [datashareRequestInfo, setDatashareRequestInfo] = useState();
+  const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
+    useState([]);
 
   const toggleConfirmModalForDatasetDelete = () => {
     setShowDeleteDatasetModal(true);
@@ -173,14 +175,20 @@ const DatasetDetailLayout = () => {
 
   useEffect(() => {
     fetchDatasetInfo(datasetId);
+    fetchDatashareRequestList(undefined, 0, true);
   }, []);
 
-  const fetchDatashareRequestList = async (datashareName, currentPage) => {
+  const fetchDatashareRequestList = async (
+    datashareName,
+    currentPage,
+    getCompleteList
+  ) => {
     try {
       let params = {};
-      params["pageSize"] = itemsPerPage;
+      let itemPerPageCount = getCompleteList ? 999999999 : itemsPerPage;
+      params["pageSize"] = itemPerPageCount;
       params["page"] = currentPage;
-      params["startIndex"] = currentPage * itemsPerPage;
+      params["startIndex"] = currentPage * itemPerPageCount;
       params["datasetId"] = datasetId;
       const resp = await fetchApi({
         url: `gds/datashare/dataset`,
@@ -193,8 +201,12 @@ const DatasetDetailLayout = () => {
       );
       setRequestAccordionState(accordianState);
       setRequestPageCount(Math.ceil(resp.data.totalCount / itemsPerPage));
-      setDatashareRequestsList(resp.data.list);
-      tabTitle.all = "All (" + resp.data.totalCount + ")";
+      if (!getCompleteList) {
+        setDatashareRequestsList(resp.data.list);
+        tabTitle.all = "All (" + resp.data.totalCount + ")";
+      } else {
+        setCompleteDatashareRequestsList(resp.data.list);
+      }
     } catch (error) {
       console.error(
         `Error occurred while fetching Datashare requests details ! ${error}`
@@ -335,6 +347,9 @@ const DatasetDetailLayout = () => {
       setLoader(false);
     } catch (error) {
       setLoader(false);
+      if (error.response.status == 401 || error.response.status == 400) {
+        <ErrorPage errorCode="401" />;
+      }
       console.error(`Error occurred while fetching dataset details ! ${error}`);
     }
   };
@@ -357,7 +372,7 @@ const DatasetDetailLayout = () => {
 
   const requestDatashare = () => {
     setSelectedDatashareList([]);
-    fetchDatashareList();
+    fetchDatashareList(undefined, 0);
   };
 
   const toggleClose = () => {
@@ -376,104 +391,108 @@ const DatasetDetailLayout = () => {
 
   const updateDatashareSearch = (event) => {
     setDatashareSearch(event.target.value);
-    fetchDatashareList(event.target.value);
+    fetchDatashareList(event.target.value, datashareCurrentPage);
   };
 
   const submitDatashareRequest = async () => {
     console.log("Selected datasharelist");
     console.log(selectedDatashareList);
 
-    let requestObj = {};
+    let payloadObj = [];
 
-    requestObj["status"] = "REQUESTED";
-    if (
-      selectedDatashareList != undefined &&
-      selectedDatashareList.length > 0
-    ) {
-      requestObj["dataShareId"] = selectedDatashareList[0]["id"];
+    for (let i = 0; i < selectedDatashareList.length; i++) {
+      let data = {};
+      data["datasetId"] = datasetId;
+      data["dataShareId"] = selectedDatashareList[i];
+      data["status"] = "REQUESTED";
+      payloadObj.push(data);
     }
-    requestObj["datasetId"] = datasetId;
 
-    try {
-      dispatch({
-        type: "SET_BLOCK_UI",
-        blockUI: true
-      });
-      const createDatasetResp = await fetchApi({
-        url: `gds/datashare/dataset`,
-        method: "post",
-        data: requestObj
-      });
-      dispatch({
-        type: "SET_BLOCK_UI",
-        blockUI: false
-      });
-      toast.success("Request created successfully!!");
-      setDatashareModal(false);
-      fetchDatashareRequestList(undefined, requestCurrentPage);
-    } catch (error) {
-      dispatch({
-        type: "SET_BLOCK_UI",
-        blockUI: false
-      });
-      serverError(error);
-      console.error(
-        `Error occurred while creating Datashare request  ${error}`
-      );
+    if (payloadObj.length > 0) {
+      try {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: true
+        });
+        const createDatasetResp = await fetchApi({
+          url: `gds/dataset/${datasetId}/datashare`,
+          method: "post",
+          data: payloadObj
+        });
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
+        toast.success("Request created successfully!!");
+        setDatashareModal(false);
+        fetchDatashareRequestList(undefined, requestCurrentPage, false);
+      } catch (error) {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
+        serverError(error);
+        console.error(
+          `Error occurred while creating Datashare request  ${error}`
+        );
+      }
+    } else {
+      toast.error("Please select a datashare");
     }
   };
 
-  const fetchDatashareList = useCallback(async (dataShareSearchObj) => {
-    let resp = [];
-    let totalCount = 0;
-    let params = {};
-    let dataShareName = "";
-    if (dataShareSearchObj != undefined) {
-      dataShareName = dataShareSearchObj;
-    } else {
-      dataShareName = datashareSearch;
-    }
-    try {
-      params["dataShareName"] = dataShareName;
-      resp = await fetchApi({
-        url: "gds/datashare",
-        params: params
-      });
-      setDatashareList(resp.data.list);
-      totalCount = resp.data.totalCount;
-      setDatashareModal(true);
-    } catch (error) {
-      serverError(error);
-      console.error(`Error occurred while fetching Datashare list! ${error}`);
-    }
-  }, []);
+  const fetchDatashareList = useCallback(
+    async (dataShareSearchObj, datashareCurrentPage) => {
+      let resp = [];
+      let totalCount = 0;
+      let params = {};
+      let dataShareName = "";
+      params["pageSize"] = datashareItemsPerPage;
+      params["page"] = datashareCurrentPage;
+      params["startIndex"] = datashareCurrentPage * datashareItemsPerPage;
+      //params["dataShareName"] = datasetId;
+      if (dataShareSearchObj != undefined) {
+        dataShareName = dataShareSearchObj;
+      } else {
+        dataShareName = datashareSearch;
+      }
+      try {
+        params["dataShareNamePartial"] = dataShareName;
+        resp = await fetchApi({
+          url: "gds/datashare",
+          params: params
+        });
+        setDatashareList(resp.data.list);
+        setDatasharePageCount(
+          Math.ceil(resp.data.totalCount / datashareItemsPerPage)
+        );
+        //totalCount = resp.data.totalCount;
+        setDatashareModal(true);
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching Datashare list! ${error}`);
+      }
+    },
+    []
+  );
 
   const checkBocChange = (event) => {
-    let dataShare = [
-      {
-        id: event.target.value,
-        name: event.target.name
-      }
-    ];
-    if (event.target.checked == true) {
-      setSelectedDatashareList([...selectedDatashareList, ...dataShare]);
-    } else if (event.target.checked == false) {
-      let newArray = selectedDatashareList.filter(
-        (item) => item["id"] !== event.target.value
+    if (
+      event.target.checked == true &&
+      !selectedDatashareList.includes(event.target.value)
+    ) {
+      setSelectedDatashareList([...selectedDatashareList, event.target.value]);
+    } else if (
+      event.target.checked == false &&
+      selectedDatashareList.includes(event.target.value)
+    ) {
+      setSelectedDatashareList(
+        selectedDatashareList.filter((item) => item !== event.target.value)
       );
-      setSelectedDatashareList(newArray);
     }
   };
 
   const handleSubmit = async (formData) => {};
-
-  const changeDatashareAccordion = (obj) => {
-    let newArray = selectedDatashareList.filter(
-      (item) => item["name"] == obj["name"]
-    );
-    console.log("newArray");
-    console.log(newArray);
-  };
 
   const onUserSharedWithAccordianChange = () => {
     setUserSharedWithAccordion(!userSharedWithAccordion);
@@ -600,14 +619,9 @@ const DatasetDetailLayout = () => {
       if (key == "sharedWith") {
         fetchAccessGrantInfo(datasetInfo.name);
       } else if (key == "dataShares") {
-        fetchDatashareRequestList(undefined, 0);
+        fetchDatashareRequestList(undefined, 0, false);
       }
     }
-  };
-
-  const noneOptions = {
-    label: "None",
-    value: "none"
   };
 
   const updateDatasetDetails = async () => {
@@ -643,8 +657,6 @@ const DatasetDetailLayout = () => {
         blockUI: false
       });
       toast.success("Dataset updated successfully!!");
-      //self.location.hash = `#/gds/dataset/${datasetId}/detail`;
-      //navigate(`/gds/dataset/${datasetId}/detail`);
       showSaveCancelButton(false);
     } catch (error) {
       dispatch({
@@ -783,21 +795,45 @@ const DatasetDetailLayout = () => {
           }
         }
 
+        // if (key?.conditions) {
+        //   obj.conditions = [];
+        //   viewDatashareDetail;
+        //   Object.entries(key.conditions).map(
+        //     ([conditionKey, conditionValue]) => {
+        //       return obj.conditions.push({
+        //         type: conditionKey,
+        //         values: !isArray(conditionValue)
+        //           ? conditionValue?.split(",")
+        //           : conditionValue.map((m) => {
+        //               return m.value;
+        //             })
+        //       });
+        //     }
+        //   );
+        // }
+
         if (key?.conditions) {
-          obj.conditions = [];
-          viewDatashareDetail;
-          Object.entries(key.conditions).map(
-            ([conditionKey, conditionValue]) => {
-              return obj.conditions.push({
-                type: conditionKey,
-                values: !isArray(conditionValue)
-                  ? conditionValue?.split(",")
-                  : conditionValue.map((m) => {
-                      return m.value;
-                    })
-              });
+          let value = key.conditions.split(",");
+
+          obj.conditions = [
+            {
+              type: "_expression",
+              values: value
             }
-          );
+          ];
+          // viewDatashareDetail;
+          // Object.entries(key.conditions).map(
+          //   ([conditionKey, conditionValue]) => {
+          //     return obj.conditions.push({
+          //       type: "expression",
+          //       values: !isArray(conditionValue)
+          //         ? conditionValue?.split(",")
+          //         : conditionValue.map((m) => {
+          //             return m.value;
+          //           })
+          //     });
+          //   }
+          // );
         }
 
         if (
@@ -860,8 +896,7 @@ const DatasetDetailLayout = () => {
       }
       setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
-      fetchDatashareRequestList(undefined, requestCurrentPage);
-      //fetchSharedResourceForDatashare(datashareInfo.name);
+      fetchDatashareRequestList(undefined, requestCurrentPage, false);
       setLoader(false);
     } catch (error) {
       let errorMsg = "";
@@ -881,6 +916,32 @@ const DatasetDetailLayout = () => {
     }
   };
 
+  const downloadJsonFile = () => {
+    let jsonData = datasetInfo;
+    jsonData.datashares = completeDatashareRequestsList;
+    jsonData.sharedWith = { users: {}, groups: {}, roles: {} };
+    if (Object.keys(userSharedWithMap).length > 0) {
+      let newUserMap = {};
+      userSharedWithMap.forEach((value, key) => {
+        jsonData.sharedWith.users({
+          ...jsonData.sharedWith.users,
+          key: key,
+          value: value
+        });
+        newUserMap.set(key, value);
+      });
+    }
+    //jsonData.sharedWith = sharedShareRequestsList;
+    const jsonContent = JSON.stringify(jsonData);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = datasetInfo.name + ".json"; // Set the desired file name
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const termsCheckBocChange = () => {
     setAcceptTerms(true);
   };
@@ -893,7 +954,12 @@ const DatasetDetailLayout = () => {
 
   const handleRequestPageClick = ({ selected }) => {
     setRequestCurrentPage(selected);
-    fetchDatashareRequestList(undefined, selected);
+    fetchDatashareRequestList(undefined, selected, false);
+  };
+
+  const handleDatasharePageClick = ({ selected }) => {
+    setDatashareCurrentPage(selected);
+    fetchDatashareList(undefined, selected);
   };
 
   const onRequestAccordionChange = (id) => {
@@ -953,6 +1019,14 @@ const DatasetDetailLayout = () => {
     setShowActivateRequestModal(false);
   };
 
+  const navidateToFullViewPage = () => {
+    navigate(`/gds/dataset/${datasetId}/fullview`, {
+      state: {
+        userAclPerm: userAclPerm
+      }
+    });
+  };
+
   return (
     <>
       <React.Fragment>
@@ -967,10 +1041,20 @@ const DatasetDetailLayout = () => {
           >
             <i className="fa fa-angle-left fa-lg font-weight-bold" />
           </Button>
-          <h3 className="gds-header bold"> Dataset : {datasetInfo.name}</h3>
+          <h3 className="gds-header bold">
+            <span
+              title={datasetInfo.name}
+              className="text-truncate"
+              style={{ maxWidth: "700px", display: "inline-block" }}
+            >
+              Dataset : {datasetInfo.name}
+            </span>
+          </h3>
           <CustomBreadcrumb />
-          <span className="pipe"></span>
-          {saveCancelButtons ? (
+          {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+            <span className="pipe"></span>
+          )}
+          {(isSystemAdmin() || userAclPerm == "ADMIN") && saveCancelButtons ? (
             <div className="gds-header-btn-grp">
               <Button
                 variant="primary"
@@ -996,16 +1080,20 @@ const DatasetDetailLayout = () => {
               </Button>
             </div>
           ) : (
-            <div className="gds-header-btn-grp">
-              <Button
-                variant="primary"
-                onClick={requestDatashare}
-                size="sm"
-                data-id="addADatashare"
-                data-cy="addADatashare"
-              >
-                Add a Data Share
-              </Button>
+            <div>
+              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                <div className="gds-header-btn-grp">
+                  <Button
+                    variant="primary"
+                    onClick={requestDatashare}
+                    size="sm"
+                    data-id="addADatashare"
+                    data-cy="addADatashare"
+                  >
+                    Add a Data Share
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           <div>
@@ -1017,9 +1105,9 @@ const DatasetDetailLayout = () => {
             >
               <Dropdown.Item
                 as="button"
-                // onClick={() => {
-                //   showViewModal(serviceData?.id);
-                // }}
+                onClick={() => {
+                  navidateToFullViewPage();
+                }}
                 data-name="fullView"
                 data-id="fullView"
                 data-cy="fullView"
@@ -1039,9 +1127,7 @@ const DatasetDetailLayout = () => {
               </Dropdown.Item>
               <Dropdown.Item
                 as="button"
-                // onClick={() => {
-                //   showViewModal(serviceData?.id);
-                // }}
+                onClick={() => downloadJsonFile()}
                 data-name="downloadJson"
                 data-id="downloadJson"
                 data-cy="downloadJson"
@@ -1141,12 +1227,14 @@ const DatasetDetailLayout = () => {
                                 </div>
                               </div>
                             </div>
-                            <PrinciplePermissionComp
-                              userList={userList}
-                              groupList={groupList}
-                              roleList={roleList}
-                              onDataChange={handleDataChange}
-                            />
+                            {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                              <PrinciplePermissionComp
+                                userList={userList}
+                                groupList={groupList}
+                                roleList={roleList}
+                                onDataChange={handleDataChange}
+                              />
+                            )}
                           </div>
                         )}
                       />
@@ -1261,23 +1349,27 @@ const DatasetDetailLayout = () => {
                                                     >
                                                       <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
                                                     </Button>
-                                                    <Button
-                                                      variant="danger"
-                                                      size="sm"
-                                                      title="Delete"
-                                                      onClick={() =>
-                                                        toggleConfirmModalForDelete(
-                                                          obj.id,
-                                                          obj.name,
-                                                          obj.status
-                                                        )
-                                                      }
-                                                      data-name="deleteDatashareRequest"
-                                                      data-id={obj["id"]}
-                                                      data-cy={obj["id"]}
-                                                    >
-                                                      <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                    </Button>
+                                                    {(isSystemAdmin() ||
+                                                      userAclPerm ==
+                                                        "ADMIN") && (
+                                                      <Button
+                                                        variant="danger"
+                                                        size="sm"
+                                                        title="Delete"
+                                                        onClick={() =>
+                                                          toggleConfirmModalForDelete(
+                                                            obj.id,
+                                                            obj.name,
+                                                            obj.status
+                                                          )
+                                                        }
+                                                        data-name="deleteDatashareRequest"
+                                                        data-id={obj["id"]}
+                                                        data-cy={obj["id"]}
+                                                      >
+                                                        <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                                                      </Button>
+                                                    )}
                                                   </div>
                                                 </div>
                                               </Accordion.Toggle>
@@ -1357,23 +1449,25 @@ const DatasetDetailLayout = () => {
                                   ) : (
                                     <div></div>
                                   )}
-                                  <ReactPaginate
-                                    previousLabel={"Previous"}
-                                    nextLabel={"Next"}
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    previousClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextClassName="page-item"
-                                    nextLinkClassName="page-link"
-                                    breakLabel={"..."}
-                                    pageCount={requestPageCount}
-                                    onPageChange={handleRequestPageClick}
-                                    breakClassName="page-item"
-                                    breakLinkClassName="page-link"
-                                    containerClassName="pagination"
-                                    activeClassName="active"
-                                  />
+                                  {requestPageCount > 1 && (
+                                    <ReactPaginate
+                                      previousLabel={"Prev"}
+                                      nextLabel={"Next"}
+                                      pageClassName="page-item"
+                                      pageLinkClassName="page-link"
+                                      previousClassName="page-item"
+                                      previousLinkClassName="page-link"
+                                      nextClassName="page-item"
+                                      nextLinkClassName="page-link"
+                                      breakLabel={"..."}
+                                      pageCount={requestPageCount}
+                                      onPageChange={handleRequestPageClick}
+                                      breakClassName="page-item"
+                                      breakLinkClassName="page-link"
+                                      containerClassName="pagination"
+                                      activeClassName="active"
+                                    />
+                                  )}
                                 </div>
                               </Card>
                             </Tab>
@@ -1388,134 +1482,143 @@ const DatasetDetailLayout = () => {
                     <div></div>
                   )}
                 </Tab>
-                <Tab eventKey="sharedWith" title="SHARED WITH">
-                  {activeKey == "sharedWith" ? (
-                    <div className="gds-tab-content gds-content-border">
-                      <div>
-                        <div className="usr-grp-role-search-width">
-                          <p className="gds-content-header">Shared with</p>
-                        </div>
-                        <div className="gds-flex mg-b-10">
-                          <input
-                            type="search"
-                            className="form-control gds-input"
-                            placeholder="Search..."
-                            onChange={(e) => onChangeSharedWithPrincipleName(e)}
-                            value={sharedWithPrincipleName}
-                          />
+                {(isSystemAdmin() ||
+                  userAclPerm === "ADMIN" ||
+                  userAclPerm === "AUDIT" ||
+                  userAclPerm === "POLICY_ADMIN") && (
+                  <Tab eventKey="sharedWith" title="SHARED WITH">
+                    {activeKey == "sharedWith" ? (
+                      <div className="gds-tab-content gds-content-border">
+                        <div>
+                          <div className="usr-grp-role-search-width">
+                            <p className="gds-content-header">Shared with</p>
+                          </div>
+                          <div className="gds-flex mg-b-10">
+                            <input
+                              type="search"
+                              className="form-control gds-input"
+                              placeholder="Search..."
+                              onChange={(e) =>
+                                onChangeSharedWithPrincipleName(e)
+                              }
+                              value={sharedWithPrincipleName}
+                            />
 
-                          <Select
-                            theme={serviceSelectTheme}
-                            styles={customStyles}
-                            options={serviceDef.accessTypes}
-                            onChange={(e) => onSharedWithAccessFilterChange(e)}
-                            value={sharedWithAccessFilter}
-                            menuPlacement="auto"
-                            placeholder="All Permissions"
-                            isClearable
-                          />
-                        </div>
+                            <Select
+                              theme={serviceSelectTheme}
+                              styles={customStyles}
+                              options={serviceDef.accessTypes}
+                              onChange={(e) =>
+                                onSharedWithAccessFilterChange(e)
+                              }
+                              value={sharedWithAccessFilter}
+                              menuPlacement="auto"
+                              placeholder="All Permissions"
+                              isClearable
+                            />
+                          </div>
 
-                        <Accordion className="mg-b-10" defaultActiveKey="0">
-                          <Card>
-                            <div className="border-bottom">
-                              <Accordion.Toggle
-                                as={Card.Header}
-                                eventKey="1"
-                                onClick={onUserSharedWithAccordianChange}
-                                className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                data-id="panel"
-                                data-cy="panel"
-                              >
-                                <div className="d-flex align-items-center gap-half">
-                                  <img
-                                    src={userColourIcon}
-                                    height="30px"
-                                    width="30px"
-                                  />
-                                  Users (
-                                  {filteredUserSharedWithMap == undefined
-                                    ? 0
-                                    : filteredUserSharedWithMap.size}
-                                  )
-                                </div>
-                                {userSharedWithAccordion ? (
-                                  <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                ) : (
-                                  <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                )}
-                              </Accordion.Toggle>
-                            </div>
-                            <Accordion.Collapse eventKey="1">
-                              <Card.Body>
-                                {filteredUserSharedWithMap != undefined &&
-                                filteredUserSharedWithMap.size > 0 ? (
-                                  Array.from(filteredUserSharedWithMap).map(
-                                    ([key, value]) => (
-                                      <div
-                                        className="gds-principle-listing"
-                                        key={key}
-                                      >
-                                        <span title={key}>{key}</span>
-                                        <div className="gds-chips gap-one-fourth">
-                                          {value.map((accessObj) => (
-                                            <span
-                                              className="badge badge-light badge-sm"
-                                              title={accessObj.type}
-                                              key={accessObj.type}
-                                            >
-                                              {accessObj.type}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </div>
+                          <Accordion className="mg-b-10" defaultActiveKey="0">
+                            <Card>
+                              <div className="border-bottom">
+                                <Accordion.Toggle
+                                  as={Card.Header}
+                                  eventKey="1"
+                                  onClick={onUserSharedWithAccordianChange}
+                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
+                                  data-id="panel"
+                                  data-cy="panel"
+                                >
+                                  <div className="d-flex align-items-center gap-half">
+                                    <img
+                                      src={userColourIcon}
+                                      height="30px"
+                                      width="30px"
+                                    />
+                                    Users (
+                                    {filteredUserSharedWithMap == undefined
+                                      ? 0
+                                      : filteredUserSharedWithMap.size}
                                     )
-                                  )
-                                ) : (
-                                  <p className="mt-1">--</p>
-                                )}
-                              </Card.Body>
-                            </Accordion.Collapse>
-                          </Card>
-                        </Accordion>
-
-                        <Accordion className="mg-b-10" defaultActiveKey="0">
-                          <Card>
-                            <div className="border-bottom">
-                              <Accordion.Toggle
-                                as={Card.Header}
-                                eventKey="1"
-                                onClick={onGroupSharedWithAccordianChange}
-                                className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                data-id="panel"
-                                data-cy="panel"
-                              >
-                                <div className="d-flex align-items-center gap-half">
-                                  <img
-                                    src={groupColourIcon}
-                                    height="30px"
-                                    width="30px"
-                                  />
-                                  Groups (
-                                  {filteredGroupSharedWithMap == undefined
-                                    ? 0
-                                    : filteredGroupSharedWithMap.size}
-                                  )
-                                </div>
-                                {groupSharedWithAccordion ? (
-                                  <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                ) : (
-                                  <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                )}
-                              </Accordion.Toggle>
-                            </div>
-                            <Accordion.Collapse eventKey="1">
-                              <Card.Body>
+                                  </div>
+                                  {userSharedWithAccordion ? (
+                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                  ) : (
+                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
+                                  )}
+                                </Accordion.Toggle>
+                              </div>
+                              <Accordion.Collapse eventKey="1">
                                 <Card.Body>
-                                  {filteredGroupSharedWithMap != undefined &&
-                                  filteredGroupSharedWithMap.size > 0 ? (
-                                    Array.from(filteredGroupSharedWithMap).map(
+                                  {filteredUserSharedWithMap != undefined &&
+                                  filteredUserSharedWithMap.size > 0 ? (
+                                    Array.from(filteredUserSharedWithMap).map(
                                       ([key, value]) => (
+                                        <div
+                                          className="gds-principle-listing"
+                                          key={key}
+                                        >
+                                          <span title={key}>{key}</span>
+                                          <div className="gds-chips gap-one-fourth">
+                                            {value.map((accessObj) => (
+                                              <span
+                                                className="badge badge-light badge-sm"
+                                                title={accessObj.type}
+                                                key={accessObj.type}
+                                              >
+                                                {accessObj.type}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )
+                                    )
+                                  ) : (
+                                    <p className="mt-1">--</p>
+                                  )}
+                                </Card.Body>
+                              </Accordion.Collapse>
+                            </Card>
+                          </Accordion>
+
+                          <Accordion className="mg-b-10" defaultActiveKey="0">
+                            <Card>
+                              <div className="border-bottom">
+                                <Accordion.Toggle
+                                  as={Card.Header}
+                                  eventKey="1"
+                                  onClick={onGroupSharedWithAccordianChange}
+                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
+                                  data-id="panel"
+                                  data-cy="panel"
+                                >
+                                  <div className="d-flex align-items-center gap-half">
+                                    <img
+                                      src={groupColourIcon}
+                                      height="30px"
+                                      width="30px"
+                                    />
+                                    Groups (
+                                    {filteredGroupSharedWithMap == undefined
+                                      ? 0
+                                      : filteredGroupSharedWithMap.size}
+                                    )
+                                  </div>
+                                  {groupSharedWithAccordion ? (
+                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                  ) : (
+                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
+                                  )}
+                                </Accordion.Toggle>
+                              </div>
+                              <Accordion.Collapse eventKey="1">
+                                <Card.Body>
+                                  <Card.Body>
+                                    {filteredGroupSharedWithMap != undefined &&
+                                    filteredGroupSharedWithMap.size > 0 ? (
+                                      Array.from(
+                                        filteredGroupSharedWithMap
+                                      ).map(([key, value]) => (
                                         <div
                                           className="gds-principle-listing"
                                           key={key}
@@ -1530,97 +1633,108 @@ const DatasetDetailLayout = () => {
                                             </span>
                                           ))}
                                         </div>
-                                      )
-                                    )
-                                  ) : (
-                                    <p className="mt-1">--</p>
-                                  )}
+                                      ))
+                                    ) : (
+                                      <p className="mt-1">--</p>
+                                    )}
+                                  </Card.Body>
                                 </Card.Body>
-                              </Card.Body>
-                            </Accordion.Collapse>
-                          </Card>
-                        </Accordion>
+                              </Accordion.Collapse>
+                            </Card>
+                          </Accordion>
 
-                        <Accordion className="mg-b-10" defaultActiveKey="0">
-                          <Card>
-                            <div className="border-bottom">
-                              <Accordion.Toggle
-                                as={Card.Header}
-                                eventKey="1"
-                                onClick={onRoleSharedWithAccordianChange}
-                                className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                data-id="panel"
-                                data-cy="panel"
-                              >
-                                <div className="d-flex align-items-center gap-half">
-                                  <img
-                                    src={roleColourIcon}
-                                    height="30px"
-                                    width="30px"
-                                  />
-                                  Roles (
-                                  {filteredRoleSharedWithMap == undefined
-                                    ? 0
-                                    : filteredRoleSharedWithMap.size}
-                                  )
-                                </div>
-                                {roleSharedWithAccordion ? (
-                                  <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                ) : (
-                                  <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                )}
-                              </Accordion.Toggle>
-                            </div>
-                            <Accordion.Collapse eventKey="1">
-                              <Card.Body>
-                                <Card.Body>
-                                  {filteredRoleSharedWithMap != undefined &&
-                                  filteredRoleSharedWithMap.size > 0 ? (
-                                    Array.from(filteredRoleSharedWithMap).map(
-                                      ([key, value]) => (
-                                        <div
-                                          className="gds-principle-listing"
-                                          key={key}
-                                        >
-                                          <span title={key}>{key}</span>
-                                          {value.map((accessObj) => (
-                                            <span
-                                              title={accessObj.type}
-                                              key={accessObj.type}
-                                            >
-                                              {accessObj.type}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )
+                          <Accordion className="mg-b-10" defaultActiveKey="0">
+                            <Card>
+                              <div className="border-bottom">
+                                <Accordion.Toggle
+                                  as={Card.Header}
+                                  eventKey="1"
+                                  onClick={onRoleSharedWithAccordianChange}
+                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
+                                  data-id="panel"
+                                  data-cy="panel"
+                                >
+                                  <div className="d-flex align-items-center gap-half">
+                                    <img
+                                      src={roleColourIcon}
+                                      height="30px"
+                                      width="30px"
+                                    />
+                                    Roles (
+                                    {filteredRoleSharedWithMap == undefined
+                                      ? 0
+                                      : filteredRoleSharedWithMap.size}
                                     )
+                                  </div>
+                                  {roleSharedWithAccordion ? (
+                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
                                   ) : (
-                                    <p className="mt-1">--</p>
+                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
                                   )}
+                                </Accordion.Toggle>
+                              </div>
+                              <Accordion.Collapse eventKey="1">
+                                <Card.Body>
+                                  <Card.Body>
+                                    {filteredRoleSharedWithMap != undefined &&
+                                    filteredRoleSharedWithMap.size > 0 ? (
+                                      Array.from(filteredRoleSharedWithMap).map(
+                                        ([key, value]) => (
+                                          <div
+                                            className="gds-principle-listing"
+                                            key={key}
+                                          >
+                                            <span title={key}>{key}</span>
+                                            {value.map((accessObj) => (
+                                              <span
+                                                title={accessObj.type}
+                                                key={accessObj.type}
+                                              >
+                                                {accessObj.type}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )
+                                      )
+                                    ) : (
+                                      <p className="mt-1">--</p>
+                                    )}
+                                  </Card.Body>
                                 </Card.Body>
-                              </Card.Body>
-                            </Accordion.Collapse>
-                          </Card>
-                        </Accordion>
+                              </Accordion.Collapse>
+                            </Card>
+                          </Accordion>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div></div>
-                  )}
-                </Tab>
-                <Tab eventKey="accessGrants" title="ACCESS GRANTS">
-                  <div className="wrap-gds">
-                    {activeKey == "accessGrants" ? (
-                      <AccessGrantForm
-                        dataset={datasetInfo}
-                        onDataChange={handleAccessGrantChange}
-                      />
                     ) : (
                       <div></div>
                     )}
-                  </div>
-                </Tab>
-                <Tab eventKey="history" title="HISTORY" />
+                  </Tab>
+                )}
+                {(isSystemAdmin() ||
+                  userAclPerm === "ADMIN" ||
+                  userAclPerm === "AUDIT" ||
+                  userAclPerm === "POLICY_ADMIN") && (
+                  <Tab eventKey="accessGrants" title="ACCESS GRANTS">
+                    <div className="wrap-gds">
+                      {activeKey == "accessGrants" ? (
+                        <AccessGrantForm
+                          dataset={datasetInfo}
+                          onDataChange={handleAccessGrantChange}
+                        />
+                      ) : (
+                        <div></div>
+                      )}
+                    </div>
+                  </Tab>
+                )}
+
+                {(isSystemAdmin() ||
+                  userAclPerm === "ADMIN" ||
+                  userAclPerm === "AUDIT") && (
+                  <Tab eventKey="history" title="HISTORY" />
+                )}
+
                 <Tab
                   eventKey="termsOfUse"
                   title="TERMS OF USE"
@@ -1728,6 +1842,10 @@ const DatasetDetailLayout = () => {
                           type="checkbox"
                           name={obj.name}
                           value={obj.id}
+                          id={obj.id}
+                          checked={selectedDatashareList.includes(
+                            obj.id.toString()
+                          )}
                           onChange={checkBocChange}
                         />
                         <span
@@ -1751,6 +1869,27 @@ const DatasetDetailLayout = () => {
                   })
                 ) : (
                   <div></div>
+                )}
+                {datasharePageCount > 1 && (
+                  <div className="d-flex">
+                    <ReactPaginate
+                      previousLabel={"<"}
+                      nextLabel={">"}
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakLabel={"..."}
+                      pageCount={datasharePageCount}
+                      onPageChange={handleDatasharePageClick}
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      containerClassName="pagination"
+                      activeClassName="active"
+                    />
+                  </div>
                 )}
               </Modal.Body>
               <Modal.Footer>
@@ -1790,7 +1929,7 @@ const DatasetDetailLayout = () => {
 
             <Modal show={showActivateRequestModal} onHide={toggleClose}>
               <Modal.Header closeButton>
-                <span className="text-word-break">Activate Datashare</span>
+                <h3 className="gds-header bold">Activate Datashare</h3>
               </Modal.Header>
               <Modal.Body>
                 <div>

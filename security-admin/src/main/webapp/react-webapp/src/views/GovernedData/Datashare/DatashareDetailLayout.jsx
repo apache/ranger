@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { fetchApi } from "../../../utils/fetchAPI";
 import { Loader } from "../../../components/CommonComponents";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
@@ -42,9 +42,13 @@ import arrayMutators from "final-form-arrays";
 import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
+import { isSystemAdmin } from "../../../utils/XAUtils";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
+  const { state } = useLocation();
+  const userAclPerm = state?.userAclPerm;
+  const datashareName = state?.datashareName;
   const [activeKey, setActiveKey] = useState("overview");
   const [datashareInfo, setDatashareInfo] = useState({});
   const [datashareDescription, setDatashareDescription] = useState();
@@ -87,6 +91,11 @@ const DatashareDetailLayout = () => {
   ] = useState(false);
   const [showDeleteDatashareModal, setShowDeleteDatashareModal] =
     useState(false);
+  const [completeSharedResourceList, setCompleteSharedResourceList] = useState(
+    []
+  );
+  const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
+    useState([]);
 
   const toggleConfirmModalForDatashareDelete = () => {
     setShowDeleteDatashareModal(true);
@@ -98,6 +107,8 @@ const DatashareDetailLayout = () => {
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
+    fetchSharedResourceForDatashare(datashareName, 0, true);
+    fetchDatashareRequestList(undefined, 0, true);
   }, []);
 
   const handleTabSelect = (key) => {
@@ -105,9 +116,9 @@ const DatashareDetailLayout = () => {
       setShowConfirmModal(true);
     } else {
       if (key == "resources") {
-        fetchSharedResourceForDatashare(datashareInfo.name, 0);
+        fetchSharedResourceForDatashare(datashareInfo.name, 0, false);
       } else if (key == "sharedWith") {
-        fetchDatashareRequestList(undefined, 0);
+        fetchDatashareRequestList(undefined, 0, false);
       }
       setActiveKey(key);
     }
@@ -178,15 +189,16 @@ const DatashareDetailLayout = () => {
 
   const fetchSharedResourceForDatashare = async (
     datashareName,
-    currentPage
+    currentPage,
+    getCompleteList
   ) => {
     try {
       let params = {};
-      params["pageSize"] = itemsPerPage;
+      let itemPerPageCount = getCompleteList ? 999999999 : itemsPerPage;
+      params["pageSize"] = itemPerPageCount;
       params["page"] = currentPage;
-      params["startIndex"] = currentPage * itemsPerPage;
-      //params["startIndex"] = 0;
-      params["dataShareName"] = datashareName;
+      params["startIndex"] = currentPage * itemPerPageCount;
+      params["dataShareId"] = datashareId;
       setResourceContentLoader(true);
       const resp = await fetchApi({
         url: `gds/resource`,
@@ -200,14 +212,13 @@ const DatashareDetailLayout = () => {
       );
       setResourceAccordionState(accordianState);
       setSharedResourcePageCount(
-        Math.ceil(resp.data.totalCount / itemsPerPage)
+        Math.ceil(resp.data.totalCount / itemPerPageCount)
       );
-      //setSharedResourcePageCount(resp.data.totalCount);
-      //setSharedResourcePageCount(Math.ceil(data.length / itemsPerPage));
-      //const offset = currentPage * itemsPerPage;
-      //const displayedData = data.slice(offset, offset + itemsPerPage);
-      //setSharedResources(resp.data.list);
-      setSharedResources(resp.data.list);
+      if (!getCompleteList) {
+        setSharedResources(resp.data.list);
+      } else {
+        setCompleteSharedResourceList(resp.data.list);
+      }
     } catch (error) {
       setResourceContentLoader(false);
       console.error(
@@ -218,22 +229,26 @@ const DatashareDetailLayout = () => {
 
   const handleSharedResourcePageClick = ({ selected }) => {
     setCurrentPage(selected);
-    fetchSharedResourceForDatashare(datashareInfo.name, selected);
+    fetchSharedResourceForDatashare(datashareInfo.name, selected, false);
   };
 
   const handleRequestPageClick = ({ selected }) => {
     setRequestCurrentPage(selected);
-    fetchDatashareRequestList(undefined, selected);
+    fetchDatashareRequestList(undefined, selected, false);
   };
 
-  const fetchDatashareRequestList = async (datasetName, currentPage) => {
+  const fetchDatashareRequestList = async (
+    datasetName,
+    currentPage,
+    getCompleteList
+  ) => {
     try {
       let params = {};
-      params["pageSize"] = itemsPerPage;
+      let itemPerPageCount = getCompleteList ? 999999999 : itemsPerPage;
+      params["pageSize"] = itemPerPageCount;
       params["page"] = currentPage;
-      params["startIndex"] = currentPage * itemsPerPage;
+      params["startIndex"] = currentPage * itemPerPageCount;
       params["dataShareId"] = datashareId;
-      //params["datasetName"] = datasetName;
       setRequestContentLoader(true);
       const resp = await fetchApi({
         url: `gds/datashare/dataset`,
@@ -241,14 +256,13 @@ const DatashareDetailLayout = () => {
       });
       setRequestContentLoader(false);
       let accordianState = {};
-      resp.data.list.map(
-        (item) =>
-          (accordianState = { ...accordianState, ...{ [item.id]: false } })
-      );
       setRequestAccordionState(accordianState);
-      setRequestPageCount(Math.ceil(resp.data.totalCount / itemsPerPage));
-
-      setDataShareRequestsList(resp.data.list);
+      setRequestPageCount(Math.ceil(resp.data.totalCount / itemPerPageCount));
+      if (!getCompleteList) {
+        setDataShareRequestsList(resp.data.list);
+      } else {
+        setCompleteDatashareRequestsList(resp.data.list);
+      }
     } catch (error) {
       setRequestContentLoader(false);
       console.error(
@@ -296,7 +310,7 @@ const DatashareDetailLayout = () => {
       });
       setBlockUI(false);
       toast.success(" Success! Shared resource deleted successfully");
-      fetchSharedResourceForDatashare(datashareInfo.name, 0);
+      fetchSharedResourceForDatashare(datashareInfo.name, 0, false);
     } catch (error) {
       setBlockUI(false);
       let errorMsg = "Failed to delete Shared resource  : ";
@@ -342,7 +356,7 @@ const DatashareDetailLayout = () => {
   };
 
   const handleSharedResourceChange = () => {
-    fetchSharedResourceForDatashare(datashareInfo.name, currentPage);
+    fetchSharedResourceForDatashare(datashareInfo.name, currentPage, false);
   };
 
   const updateDatashareDetails = async () => {
@@ -418,7 +432,7 @@ const DatashareDetailLayout = () => {
       }
       setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
-      fetchDatashareRequestList(undefined, requestCurrentPage);
+      fetchDatashareRequestList(undefined, requestCurrentPage, false);
       //fetchSharedResourceForDatashare(datashareInfo.name);
       setLoader(false);
     } catch (error) {
@@ -467,6 +481,27 @@ const DatashareDetailLayout = () => {
     });
   };
 
+  const navigateToFullView = () => {
+    navigate(`/gds/datashare/${datashareId}/fullview`, {
+      userAclPerm: userAclPerm,
+      datashareNamee: datashareName
+    });
+  };
+
+  const downloadJsonFile = () => {
+    let jsonData = datashareInfo;
+    jsonData.resources = completeSharedResourceList;
+    jsonData.datasets = completeDatashareRequestsList;
+    const jsonContent = JSON.stringify(jsonData);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = datashareInfo.name + ".json"; // Set the desired file name
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Form
@@ -489,44 +524,53 @@ const DatashareDetailLayout = () => {
               </Button>
               <h3 className="gds-header bold">
                 <span
+                  title={datashareInfo.name}
                   className="text-truncate"
-                  style={{ maxWidth: "900px", display: "inline-block" }}
+                  style={{ maxWidth: "700px", display: "inline-block" }}
                 >
                   Datashare : {datashareInfo.name}
                 </span>
               </h3>
               <CustomBreadcrumb />
-              <span className="pipe"></span>
-              {saveCancelButtons ? (
-                <div className="gds-header-btn-grp">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => removeChanges()}
-                    data-id="cancel"
-                    data-cy="cancel"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={updateDatashareDetails}
-                    size="sm"
-                    data-id="save"
-                    data-cy="save"
-                  >
-                    Save
-                  </Button>
-                </div>
-              ) : (
-                <AddSharedResourceComp
-                  datashareId={datashareId}
-                  onSharedResourceDataChange={handleSharedResourceChange}
-                  onToggleAddResourceClose={toggleAddResourceModalClose}
-                  isEdit={false}
-                  loadSharedResource={loadSharedResource}
-                />
+
+              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                <span className="pipe"></span>
               )}
+              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                <div>
+                  {saveCancelButtons ? (
+                    <div className="gds-header-btn-grp">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => removeChanges()}
+                        data-id="cancel"
+                        data-cy="cancel"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={updateDatashareDetails}
+                        size="sm"
+                        data-id="save"
+                        data-cy="save"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  ) : (
+                    <AddSharedResourceComp
+                      datashareId={datashareId}
+                      onSharedResourceDataChange={handleSharedResourceChange}
+                      onToggleAddResourceClose={toggleAddResourceModalClose}
+                      isEdit={false}
+                      loadSharedResource={loadSharedResource}
+                    />
+                  )}
+                </div>
+              )}
+
               <div>
                 <DropdownButton
                   id="dropdown-item-button"
@@ -536,9 +580,7 @@ const DatashareDetailLayout = () => {
                 >
                   <Dropdown.Item
                     as="button"
-                    // onClick={() => {
-                    //   showViewModal(serviceData?.id);
-                    // }}
+                    onClick={() => navigateToFullView()}
                     data-name="fullView"
                     data-id="fullView"
                     data-cy="fullView"
@@ -558,9 +600,7 @@ const DatashareDetailLayout = () => {
                   </Dropdown.Item>
                   <Dropdown.Item
                     as="button"
-                    // onClick={() => {
-                    //   showViewModal(serviceData?.id);
-                    // }}
+                    onClick={() => downloadJsonFile()}
                     data-name="downloadJson"
                     data-id="downloadJson"
                     data-cy="downloadJson"
@@ -652,12 +692,16 @@ const DatashareDetailLayout = () => {
                               </div>
                             </div>
                           </div>
-                          <PrinciplePermissionComp
-                            userList={userList}
-                            groupList={groupList}
-                            roleList={roleList}
-                            onDataChange={handleDataChange}
-                          />
+                          {(isSystemAdmin() ||
+                            userAclPerm == "ADMIN" ||
+                            userAclPerm == "AUDIT") && (
+                            <PrinciplePermissionComp
+                              userList={userList}
+                              groupList={groupList}
+                              roleList={roleList}
+                              onDataChange={handleDataChange}
+                            />
+                          )}
                         </div>
                       ) : (
                         <div></div>
@@ -718,60 +762,46 @@ const DatashareDetailLayout = () => {
                                                         </h6>
                                                       </div>
                                                     </div>
-                                                    <div className="d-flex gap-half align-items-start">
-                                                      <AddSharedResourceComp
-                                                        datashareId={
-                                                          datashareId
-                                                        }
-                                                        onSharedResourceDataChange={
-                                                          handleSharedResourceChange
-                                                        }
-                                                        onToggleAddResourceClose={
-                                                          toggleAddResourceModalClose
-                                                        }
-                                                        isEdit={true}
-                                                        sharedResourceId={
-                                                          obj.id
-                                                        }
-                                                        loadSharedResource={
-                                                          loadSharedResource
-                                                        }
-                                                      />
-                                                      {/* <Button
-                                                        variant="outline-dark"
-                                                        size="sm"
-                                                        title="Edit"
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setLoadSharedResource(
-                                                            obj
-                                                          );
-                                                          setShowAddResourceModal(
-                                                            true
-                                                          );
-                                                        }}
-                                                        data-name="editSharedResource"
-                                                        data-id={obj.id}
-                                                      >
-                                                        <i className="fa-fw fa fa-edit"></i>
-                                                      </Button> */}
-                                                      <Button
-                                                        variant="danger"
-                                                        size="sm"
-                                                        title="Delete"
-                                                        onClick={() =>
-                                                          toggleConfirmModalForDelete(
-                                                            obj.id,
-                                                            obj.name
-                                                          )
-                                                        }
-                                                        data-name="deleteDatashareRequest"
-                                                        data-id={obj.id}
-                                                        data-cy={obj.id}
-                                                      >
-                                                        <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                      </Button>
-                                                    </div>
+                                                    {(isSystemAdmin() ||
+                                                      userAclPerm ==
+                                                        "ADMIN") && (
+                                                      <div className="d-flex gap-half align-items-start">
+                                                        <AddSharedResourceComp
+                                                          datashareId={
+                                                            datashareId
+                                                          }
+                                                          onSharedResourceDataChange={
+                                                            handleSharedResourceChange
+                                                          }
+                                                          onToggleAddResourceClose={
+                                                            toggleAddResourceModalClose
+                                                          }
+                                                          isEdit={true}
+                                                          sharedResourceId={
+                                                            obj.id
+                                                          }
+                                                          loadSharedResource={
+                                                            loadSharedResource
+                                                          }
+                                                        />
+                                                        <Button
+                                                          variant="danger"
+                                                          size="sm"
+                                                          title="Delete"
+                                                          onClick={() =>
+                                                            toggleConfirmModalForDelete(
+                                                              obj.id,
+                                                              obj.name
+                                                            )
+                                                          }
+                                                          data-name="deleteDatashareRequest"
+                                                          data-id={obj.id}
+                                                          data-cy={obj.id}
+                                                        >
+                                                          <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                                                        </Button>
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 </Accordion.Toggle>
                                                 <Accordion.Collapse
@@ -831,23 +861,25 @@ const DatashareDetailLayout = () => {
                                   </div>
                                 )}
 
-                                <ReactPaginate
-                                  previousLabel={"Previous"}
-                                  nextLabel={"Next"}
-                                  pageClassName="page-item"
-                                  pageLinkClassName="page-link"
-                                  previousClassName="page-item"
-                                  previousLinkClassName="page-link"
-                                  nextClassName="page-item"
-                                  nextLinkClassName="page-link"
-                                  breakLabel={"..."}
-                                  pageCount={sharedResourcePageCount}
-                                  onPageChange={handleSharedResourcePageClick}
-                                  breakClassName="page-item"
-                                  breakLinkClassName="page-link"
-                                  containerClassName="pagination"
-                                  activeClassName="active"
-                                />
+                                {sharedResourcePageCount > 1 && (
+                                  <ReactPaginate
+                                    previousLabel={"Previous"}
+                                    nextLabel={"Next"}
+                                    pageClassName="page-item"
+                                    pageLinkClassName="page-link"
+                                    previousClassName="page-item"
+                                    previousLinkClassName="page-link"
+                                    nextClassName="page-item"
+                                    nextLinkClassName="page-link"
+                                    breakLabel={"..."}
+                                    pageCount={sharedResourcePageCount}
+                                    onPageChange={handleSharedResourcePageClick}
+                                    breakClassName="page-item"
+                                    breakLinkClassName="page-link"
+                                    containerClassName="pagination"
+                                    activeClassName="active"
+                                  />
+                                )}
                               </div>
                             </Card>
                           </div>
@@ -947,126 +979,104 @@ const DatashareDetailLayout = () => {
                                                           >
                                                             <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
                                                           </Button>
-                                                          <Button
-                                                            variant="danger"
-                                                            size="sm"
-                                                            title="Delete"
-                                                            onClick={() =>
-                                                              toggleRequestDeleteModal(
-                                                                obj.id,
-                                                                obj.datasetId,
-                                                                obj.name,
-                                                                obj.status
-                                                              )
-                                                            }
-                                                            data-name="deleteDatashareRequest"
-                                                            data-id={obj["id"]}
-                                                            data-cy={obj["id"]}
-                                                          >
-                                                            <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                          </Button>
+                                                          {(isSystemAdmin() ||
+                                                            userAclPerm ==
+                                                              "ADMIN") && (
+                                                            <Button
+                                                              variant="danger"
+                                                              size="sm"
+                                                              title="Delete"
+                                                              onClick={() =>
+                                                                toggleRequestDeleteModal(
+                                                                  obj.id,
+                                                                  obj.datasetId,
+                                                                  obj.name,
+                                                                  obj.status
+                                                                )
+                                                              }
+                                                              data-name="deleteDatashareRequest"
+                                                              data-id={
+                                                                obj["id"]
+                                                              }
+                                                              data-cy={
+                                                                obj["id"]
+                                                              }
+                                                            >
+                                                              <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                                                            </Button>
+                                                          )}
                                                         </div>
                                                       </div>
                                                     </Accordion.Toggle>
                                                     <Accordion.Collapse eventKey="1">
                                                       <Card.Body>
                                                         <div className="d-flex justify-content-between">
-                                                          <div className="gds-inline-field-grp">
-                                                            <div className="wrapper">
-                                                              <div
-                                                                className="gds-left-inline-field"
-                                                                height="30px"
-                                                              >
-                                                                Validity Period
+                                                          {false && (
+                                                            <div className="gds-inline-field-grp">
+                                                              <div className="wrapper">
+                                                                <div
+                                                                  className="gds-left-inline-field"
+                                                                  height="30px"
+                                                                >
+                                                                  Validity
+                                                                  Period
+                                                                </div>
+                                                                <div line-height="30px">
+                                                                  {
+                                                                    obj[
+                                                                      "service"
+                                                                    ]
+                                                                  }
+                                                                </div>
                                                               </div>
-                                                              <div line-height="30px">
-                                                                {obj["service"]}
-                                                              </div>
+                                                              {obj.validitySchedule !=
+                                                              undefined ? (
+                                                                <div className="gds-inline-field-grp">
+                                                                  <div className="wrapper">
+                                                                    <div className="gds-left-inline-field">
+                                                                      <span className="gds-label-color">
+                                                                        Start
+                                                                        Date{" "}
+                                                                      </span>
+                                                                    </div>
+                                                                    <span>
+                                                                      {dateFormat(
+                                                                        obj
+                                                                          .validitySchedule
+                                                                          .startTime,
+                                                                        "mm/dd/yyyy hh:MM:ss TT"
+                                                                      )}
+                                                                    </span>
+                                                                    <span className="gds-label-color pl-5">
+                                                                      {
+                                                                        obj
+                                                                          .validitySchedule
+                                                                          .timeZone
+                                                                      }
+                                                                    </span>
+                                                                  </div>
+                                                                  <div className="wrapper">
+                                                                    <div className="gds-left-inline-field">
+                                                                      <span className="gds-label-color">
+                                                                        {" "}
+                                                                        End Date{" "}
+                                                                      </span>
+                                                                    </div>
+                                                                    <span>
+                                                                      {dateFormat(
+                                                                        obj
+                                                                          .validitySchedule
+                                                                          .endTime,
+                                                                        "mm/dd/yyyy hh:MM:ss TT"
+                                                                      )}
+                                                                    </span>
+                                                                  </div>
+                                                                </div>
+                                                              ) : (
+                                                                <p>--</p>
+                                                              )}
                                                             </div>
-                                                            {obj.validitySchedule !=
-                                                            undefined ? (
-                                                              <div className="gds-inline-field-grp">
-                                                                <div className="wrapper">
-                                                                  <div className="gds-left-inline-field">
-                                                                    <span className="gds-label-color">
-                                                                      Start Date{" "}
-                                                                    </span>
-                                                                  </div>
-                                                                  <span>
-                                                                    {dateFormat(
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .startTime,
-                                                                      "mm/dd/yyyy hh:MM:ss TT"
-                                                                    )}
-                                                                  </span>
-                                                                  <span className="gds-label-color pl-5">
-                                                                    {
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .timeZone
-                                                                    }
-                                                                  </span>
-                                                                </div>
-                                                                <div className="wrapper">
-                                                                  <div className="gds-left-inline-field">
-                                                                    <span className="gds-label-color">
-                                                                      {" "}
-                                                                      End Date{" "}
-                                                                    </span>
-                                                                  </div>
-                                                                  <span>
-                                                                    {dateFormat(
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .endTime,
-                                                                      "mm/dd/yyyy hh:MM:ss TT"
-                                                                    )}
-                                                                  </span>
-                                                                </div>
-                                                              </div>
-                                                            ) : (
-                                                              <p>--</p>
-                                                            )}
-                                                            {/* {obj.validitySchedule !==
-                                                            undefined ? (
-                                                              <div className="gds-flex">
-                                                                <div className="gds-right-inline-field">
-                                                                  <span>
-                                                                    Start Time:{" "}
-                                                                    {dateFormat(
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .startTime,
-                                                                      "mm/dd/yyyy hh:MM:ss TT"
-                                                                    )}
-                                                                  </span>
-                                                                </div>
-                                                                <div className="gds-right-inline-field">
-                                                                  <span>
-                                                                    End Time:{" "}
-                                                                    {dateFormat(
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .endTime,
-                                                                      "mm/dd/yyyy hh:MM:ss TT"
-                                                                    )}
-                                                                  </span>
-                                                                </div>
-                                                                <div>
-                                                                  <span>
-                                                                    {
-                                                                      obj
-                                                                        .validitySchedule
-                                                                        .timeZone
-                                                                    }
-                                                                  </span>
-                                                                </div>
-                                                              </div>
-                                                            ) : (
-                                                              <div>--</div>
-                                                            )} */}
-                                                          </div>
+                                                          )}
                                                           <div className="gds-right-inline-field-grp">
                                                             <div className="wrapper">
                                                               <div>Added</div>
@@ -1112,23 +1122,25 @@ const DatashareDetailLayout = () => {
                                       ) : (
                                         <div></div>
                                       )}
-                                      <ReactPaginate
-                                        previousLabel={"Previous"}
-                                        nextLabel={"Next"}
-                                        pageClassName="page-item"
-                                        pageLinkClassName="page-link"
-                                        previousClassName="page-item"
-                                        previousLinkClassName="page-link"
-                                        nextClassName="page-item"
-                                        nextLinkClassName="page-link"
-                                        breakLabel={"..."}
-                                        pageCount={requestPageCount}
-                                        onPageChange={handleRequestPageClick}
-                                        breakClassName="page-item"
-                                        breakLinkClassName="page-link"
-                                        containerClassName="pagination"
-                                        activeClassName="active"
-                                      />
+                                      {requestPageCount > 1 && (
+                                        <ReactPaginate
+                                          previousLabel={"Previous"}
+                                          nextLabel={"Next"}
+                                          pageClassName="page-item"
+                                          pageLinkClassName="page-link"
+                                          previousClassName="page-item"
+                                          previousLinkClassName="page-link"
+                                          nextClassName="page-item"
+                                          nextLinkClassName="page-link"
+                                          breakLabel={"..."}
+                                          pageCount={requestPageCount}
+                                          onPageChange={handleRequestPageClick}
+                                          breakClassName="page-item"
+                                          breakLinkClassName="page-link"
+                                          containerClassName="pagination"
+                                          activeClassName="active"
+                                        />
+                                      )}
                                     </div>
                                   </Card>
                                 </Tab>
@@ -1143,8 +1155,14 @@ const DatashareDetailLayout = () => {
                         <div></div>
                       )}
                     </Tab>
-                    <Tab eventKey="history" title="HISTORY"></Tab>
-                    <Tab eventKey="termsOfUser" title="TERMS OF USE">
+
+                    {(isSystemAdmin() ||
+                      userAclPerm == "ADMIN" ||
+                      userAclPerm == "AUDIT") && (
+                      <Tab eventKey="history" title="HISTORY"></Tab>
+                    )}
+
+                    <Tab eventKey="termsOfUse" title="TERMS OF USE">
                       <div className="gds-tab-content gds-content-border">
                         <div>
                           <div className="usr-grp-role-search-width">
@@ -1264,16 +1282,21 @@ const DatashareDetailLayout = () => {
                               : ""}
                           </div>
                         </div>
-                        <div className="wrapper">
-                          <div className="gds-left-inline-field" height="30px">
-                            Row Filter :
+                        {false && (
+                          <div className="wrapper">
+                            <div
+                              className="gds-left-inline-field"
+                              height="30px"
+                            >
+                              Row Filter :
+                            </div>
+                            <div line-height="30px">
+                              {conditionModalData?.rowFilter != undefined
+                                ? conditionModalData.rowFilter.filterExpr
+                                : ""}
+                            </div>
                           </div>
-                          <div line-height="30px">
-                            {conditionModalData?.rowFilter != undefined
-                              ? conditionModalData.rowFilter.filterExpr
-                              : ""}
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </Modal.Body>

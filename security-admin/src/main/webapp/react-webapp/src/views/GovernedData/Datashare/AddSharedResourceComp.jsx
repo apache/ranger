@@ -501,8 +501,7 @@ const AddSharedResourceComp = ({
                                   <i className="fa fa-angle-down pull-down fa-lg font-weight-bold"></i>
                                 )}
                                 <Link to="">
-                                  Add Default access type, row level filters and
-                                  conditions (Optional)
+                                  Add permission and conditions (Optional)
                                 </Link>
                               </Accordion.Toggle>
                             </div>
@@ -534,7 +533,7 @@ const AddSharedResourceComp = ({
                                     )}
                                   />
                                 </div>
-                                {showRowFilterInput ? (
+                                {false && showRowFilterInput ? (
                                   <div className="mb-3 form-group row">
                                     <Col sm={3}>
                                       <label className="form-label pull-right fnt-14">
@@ -561,7 +560,7 @@ const AddSharedResourceComp = ({
                                   <div></div>
                                 )}
 
-                                {showMaskInput ? (
+                                {false && showMaskInput ? (
                                   <div className="mb-3 form-group row">
                                     <Col sm={3}>
                                       <label className="form-label pull-right fnt-14">

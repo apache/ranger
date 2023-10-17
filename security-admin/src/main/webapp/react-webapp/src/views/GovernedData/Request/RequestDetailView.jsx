@@ -300,50 +300,54 @@ const RequestDetailView = () => {
                     </div>
                   </div>
                 </div>
-                <div className="mb-5">
-                  <hr className="m-0" />
-                  <div className="d-flex align-items-center justify-content-between mb-4 pt-4">
-                    <span className="gds-card-heading border-0 p-0">
-                      Validity Period
-                    </span>
-                    <PolicyValidityPeriodComp
-                      addPolicyItem={addPolicyItem}
-                      isGdsRequest={
-                        requestInfo.validitySchedule == undefined ? true : false
-                      }
-                      editValidityPeriod={editValidityPeriod}
-                    />
-                  </div>
-                  {requestInfo.validitySchedule != undefined && (
-                    <div className="gds-inline-field-grp">
-                      <div className="wrapper">
-                        <div className="gds-left-inline-field">
-                          <span className="gds-label-color">Start Date </span>
-                        </div>
-                        <span>
-                          {dateFormat(
-                            requestInfo.validitySchedule.startTime,
-                            "mm/dd/yyyy hh:MM:ss TT"
-                          )}
-                        </span>
-                        <span className="gds-label-color pl-5">
-                          {requestInfo.validitySchedule.timeZone}
-                        </span>
-                      </div>
-                      <div className="wrapper">
-                        <div className="gds-left-inline-field">
-                          <span className="gds-label-color"> End Date </span>
-                        </div>
-                        <span>
-                          {dateFormat(
-                            requestInfo.validitySchedule.endTime,
-                            "mm/dd/yyyy hh:MM:ss TT"
-                          )}
-                        </span>
-                      </div>
+                {false && (
+                  <div className="mb-5">
+                    <hr className="m-0" />
+                    <div className="d-flex align-items-center justify-content-between mb-4 pt-4">
+                      <span className="gds-card-heading border-0 p-0">
+                        Validity Period
+                      </span>
+                      <PolicyValidityPeriodComp
+                        addPolicyItem={addPolicyItem}
+                        isGdsRequest={
+                          requestInfo.validitySchedule == undefined
+                            ? true
+                            : false
+                        }
+                        editValidityPeriod={editValidityPeriod}
+                      />
                     </div>
-                  )}
-                </div>
+                    {requestInfo.validitySchedule != undefined && (
+                      <div className="gds-inline-field-grp">
+                        <div className="wrapper">
+                          <div className="gds-left-inline-field">
+                            <span className="gds-label-color">Start Date </span>
+                          </div>
+                          <span>
+                            {dateFormat(
+                              requestInfo.validitySchedule.startTime,
+                              "mm/dd/yyyy hh:MM:ss TT"
+                            )}
+                          </span>
+                          <span className="gds-label-color pl-5">
+                            {requestInfo.validitySchedule.timeZone}
+                          </span>
+                        </div>
+                        <div className="wrapper">
+                          <div className="gds-left-inline-field">
+                            <span className="gds-label-color"> End Date </span>
+                          </div>
+                          <span>
+                            {dateFormat(
+                              requestInfo.validitySchedule.endTime,
+                              "mm/dd/yyyy hh:MM:ss TT"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="mb-5">
                   <Card className="gds-section-card gds-bg-white">
                     <div className="gds-section-title">

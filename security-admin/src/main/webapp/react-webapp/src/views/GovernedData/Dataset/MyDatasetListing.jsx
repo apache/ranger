@@ -23,7 +23,6 @@ import { Button, Row, Col } from "react-bootstrap";
 import XATableLayout from "../../../components/XATableLayout";
 import dateFormat from "dateformat";
 import { fetchApi } from "../../../utils/fetchAPI";
-import { Link } from "react-router-dom";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader, BlockUi } from "../../../components/CommonComponents";
 import {
@@ -180,21 +179,49 @@ const MyDatasetListing = () => {
     navigate("/gds/create");
   };
 
+  const navigateToDetailPage = (datasetId, perm) => {
+    navigate(`/gds/dataset/${datasetId}/detail`, {
+      state: {
+        userAclPerm: perm
+      }
+    });
+  };
+
   const myDatasetColumns = React.useMemo(
     () => [
       {
         Header: "Id",
         accessor: "id",
-        width: 25,
+        width: 80,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {},
-        Cell: (rawValue) => {
+        Cell: ({ row }) => {
+          const hiddenValue = row.original.permissionForCaller;
           return (
             <div className="position-relative text-center">
-              <Link title="Edit" to={`/gds/dataset/${rawValue.value}/detail`}>
-                {rawValue.value}
-              </Link>
+              <Button
+                data-id="datasetId"
+                data-cy="datasetId"
+                onClick={() =>
+                  navigateToDetailPage(
+                    row.original.id,
+                    row.original.permissionForCaller
+                  )
+                }
+                style={{
+                  lineHeight: 1,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  color: "#0b7fad",
+                  border: 0,
+                  outline: "none",
+                  fontSize: 13,
+                  cursor: "pointer"
+                }}
+              >
+                {row.original.id}
+              </Button>
             </div>
           );
         }
@@ -322,33 +349,38 @@ const MyDatasetListing = () => {
       {
         Header: "Id",
         accessor: "id",
-        width: 25,
+        width: 80,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {},
         Cell: ({ row }) => {
-          const permissionForCaller = row.original.permissionForCaller;
-          if (
-            permissionForCaller === "ADMIN" ||
-            permissionForCaller === "VIEW"
-          ) {
-            return (
-              <div className="position-relative text-center">
-                <Link
-                  title="Edit"
-                  to={`/gds/dataset/${row.original.id}/detail`}
-                >
-                  {row.original.id}
-                </Link>
-              </div>
-            );
-          } else {
-            return (
-              <div className="position-relative text-center">
-                <span>{row.original.id}</span>
-              </div>
-            );
-          }
+          return (
+            <div className="position-relative text-center">
+              <Button
+                data-id="datasetId"
+                data-cy="datasetId"
+                disabled={row.original.permissionForCaller == "LIST"}
+                onClick={() =>
+                  navigateToDetailPage(
+                    row.original.id,
+                    row.original.permissionForCaller
+                  )
+                }
+                style={{
+                  lineHeight: 1,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  color: "#0b7fad",
+                  border: 0,
+                  outline: "none",
+                  fontSize: 13,
+                  cursor: "pointer"
+                }}
+              >
+                {row.original.id}
+              </Button>
+            </div>
+          );
         }
       },
       {

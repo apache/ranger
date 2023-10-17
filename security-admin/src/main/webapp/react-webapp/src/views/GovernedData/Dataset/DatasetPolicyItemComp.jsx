@@ -24,7 +24,7 @@ import {
   dragEnter,
   drop,
   dragOver,
-  policyConditionUpdatedJSON,
+  policyConditionUpdatedJSON
 } from "../../../utils/XAUtils";
 import AsyncSelect from "react-select/async";
 import { Field } from "react-final-form";
@@ -32,6 +32,7 @@ import { Form as FormB, Button } from "react-bootstrap";
 import { isEmpty, isArray } from "lodash";
 import Select from "react-select";
 import Editable from "Components/Editable";
+import { CustomTooltip, Loader } from "../../../components/CommonComponents";
 
 const DatasetPolicyItemComp = (props) => {
   const {
@@ -39,7 +40,7 @@ const DatasetPolicyItemComp = (props) => {
     attrName,
     serviceCompDetails,
     fetchPrincipleData,
-    onRemovingPolicyItem,
+    onRemovingPolicyItem
   } = props;
   const dragOverItem = useRef();
   const dragItem = useRef();
@@ -48,14 +49,14 @@ const DatasetPolicyItemComp = (props) => {
     let srcOp = serviceCompDetails.accessTypes;
     return srcOp.map(({ label, name: value }) => ({
       label,
-      value,
+      value
     }));
   };
 
   const accessTypes = [
     { value: "_CREATE", label: "_CREATE" },
     { value: "_MANAGE", label: "_MANAGE" },
-    { value: "_DELETE", label: "_DELETE" },
+    { value: "_DELETE", label: "_DELETE" }
   ];
 
   const requiredForPolicyItem = (fieldVals, index) => {
@@ -122,6 +123,14 @@ const DatasetPolicyItemComp = (props) => {
     }
   };
 
+  const textareas = document.querySelectorAll(".autoResizeTextarea");
+  textareas.forEach((textarea) => {
+    textarea.addEventListener("input", function () {
+      this.style.height = "auto";
+      this.style.height = this.scrollHeight + "px";
+    });
+  });
+
   return (
     <>
       <div className="gds-grant-det-cond gds-content-border">
@@ -165,36 +174,6 @@ const DatasetPolicyItemComp = (props) => {
                         </div>
 
                         <div className="d-flex gap-1 mg-b-10">
-                          {serviceCompDetails?.policyConditions?.length > 0 && (
-                            <td
-                              key="Policy Conditions"
-                              className="align-middle"
-                            >
-                              <Field
-                                className="form-control"
-                                name={`${name}.conditions`}
-                                validate={(value, formValues) =>
-                                  requiredForPolicyItem(
-                                    formValues[attrName],
-                                    index
-                                  )
-                                }
-                                render={({ input, meta }) => (
-                                  <div className="table-editable">
-                                    <Editable
-                                      {...input}
-                                      placement="auto"
-                                      type="custom"
-                                      conditionDefVal={policyConditionUpdatedJSON(
-                                        serviceCompDetails.policyConditions
-                                      )}
-                                      selectProps={{ isMulti: true }}
-                                    />
-                                  </div>
-                                )}
-                              />
-                            </td>
-                          )}
                           <Field
                             name={`${name}.accesses`}
                             render={({ input, meta }) => (
@@ -203,13 +182,69 @@ const DatasetPolicyItemComp = (props) => {
                                   {...input}
                                   options={getAccessTypeOptions()}
                                   menuPlacement="auto"
-                                  placeholder="All Permissions"
+                                  placeholder="Permissions"
                                   isClearable
                                   isMulti
                                 />
                               </div>
                             )}
                           />
+                        </div>
+                        <div className="d-flex gap-1 mg-b-10">
+                          {serviceCompDetails?.policyConditions?.length > 0 && (
+                            <td
+                              key="Policy Conditions"
+                              className="align-middle w-100"
+                            >
+                              <Field
+                                className="form-control "
+                                name={`${name}.conditions`}
+                                validate={(value, formValues) =>
+                                  requiredForPolicyItem(
+                                    formValues[attrName],
+                                    index
+                                  )
+                                }
+                                render={({ input, meta }) => (
+                                  // <div className="table-editable">
+                                  //   <Editable
+                                  //     {...input}
+                                  //     placement="auto"
+                                  //     type="custom"
+                                  //     conditionDefVal={policyConditionUpdatedJSON(
+                                  //       serviceCompDetails.policyConditions
+                                  //     )}
+                                  //     selectProps={{ isMulti: true }}
+                                  //   />
+                                  // </div>
+                                  <div style={{ position: "relative" }}>
+                                    <textarea
+                                      {...input}
+                                      placeholder="Enter Boolean Expression"
+                                      className="form-control autoResizeTextarea"
+                                      id="boolExp"
+                                      data-cy="boolExp"
+                                      //onChange={() => onRemovingPolicyItem()}
+                                      //value={input.value.expression}
+                                      rows={1}
+                                    />
+                                    <CustomTooltip
+                                      placement="left"
+                                      content={
+                                        <p
+                                          className="pd-10"
+                                          style={{ fontSize: "small" }}
+                                        >
+                                          JavaScript example awd awdawd
+                                        </p>
+                                      }
+                                      icon="fa-fw fa fa-info-circle gds-opacity-lowest gds-info-tarea"
+                                    />
+                                  </div>
+                                )}
+                              />
+                            </td>
+                          )}
                         </div>
                       </div>
                       <div>

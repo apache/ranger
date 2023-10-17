@@ -101,6 +101,9 @@ const CreateDatasetComp = lazy(() =>
 const DatasetDetailLayoutComp = lazy(() =>
   import("Views/GovernedData/Dataset/DatasetDetailLayout")
 );
+const DatasetDetailFullViewComp = lazy(() =>
+  import("Views/GovernedData/Dataset/DatasetDetailFullView")
+);
 const AccessGrantFormComp = lazy(() =>
   import("Views/GovernedData/Dataset/AccessGrantForm")
 );
@@ -112,6 +115,9 @@ const CreateDatashareComp = lazy(() =>
 );
 const DatashareDetailLayoutComp = lazy(() =>
   import("Views/GovernedData/Datashare/DatashareDetailLayout")
+);
+const DatashareDetailFullView = lazy(() =>
+  import("Views/GovernedData/Datashare/DatashareDetailFullView")
 );
 const DatashareAddSharedResourceComp = lazy(() =>
   import("Views/GovernedData/Datashare/AddSharedResourceComp")
@@ -392,12 +398,20 @@ export default class App extends Component {
                       element={<MyDatashareListingComp />}
                     />
                     <Route
+                      path="dataset/:datasetId/fullview"
+                      element={<DatasetDetailFullViewComp />}
+                    />
+                    <Route
                       path="datashare/create"
                       element={<CreateDatashareComp />}
                     />
                     <Route
                       path="datashare/:datashareId/detail"
                       element={<DatashareDetailLayoutComp />}
+                    />
+                    <Route
+                      path="datashare/:datashareId/fullview"
+                      element={<DatashareDetailFullView />}
                     />
                     <Route
                       path="datashare/resource/:datashareId"

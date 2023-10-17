@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useEffect, useReducer } from "react";
-import { Form as FormB, Button } from "react-bootstrap";
+import { Form as FormB, Button, Card } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import moment from "moment-timezone";
@@ -35,6 +35,7 @@ import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
 import { isEqual, isEmpty, isObject } from "lodash";
 import { policyConditionUpdatedJSON } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
+import dateFormat from "dateformat";
 
 const initialState = {
   loader: true,
@@ -64,6 +65,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
   const [policyState, dispatch] = useReducer(reducer, initialState);
   const { loader, serviceCompDetails, policyData, formData } = policyState;
   const [showModal, policyConditionState] = useState(false);
+  const [validityPeriod, setValidityPeriod] = useState([]);
 
   useEffect(() => {
     fetchInitalData();
@@ -74,24 +76,32 @@ function AccessGrantForm({ dataset, onDataChange }) {
     if (dataset.name) {
       policyData = await fetchPolicyData();
     }
-    let serviceData = await fetchServiceDetails(policyData.service);
-    let serviceCompData = await getServiceDefData(policyData.serviceType);
-    dispatch({
-      type: "SET_DATA",
-      serviceDetails: serviceData,
-      serviceCompDetails: serviceCompData,
-      policyData: policyData || null,
-      formData: generateFormData(policyData, serviceCompData)
-    });
+    if (policyData != null) {
+      setValidityPeriod(policyData.validitySchedules);
+      let serviceData = await fetchServiceDetails(policyData.service);
+      let serviceCompData = await getServiceDefData(policyData.serviceType);
+      dispatch({
+        type: "SET_DATA",
+        serviceDetails: serviceData,
+        serviceCompDetails: serviceCompData,
+        policyData: policyData || null,
+        formData: generateFormData(policyData, serviceCompData)
+      });
+    }
   };
 
   const fetchPolicyData = async () => {
     let data = null;
     try {
+      policyState.loader = true;
       const resp = await fetchApi({
         url: `/gds/dataset/${dataset.id}/policy`
       });
-      data = resp.data[0];
+      if (resp.data.length > 0) {
+        data = resp.data[0];
+        data = resp.data[0];
+        policyState.loader = false;
+      }
     } catch (error) {
       console.error(
         `Error occurred while fetching dataset policy details ! ${error}`
@@ -269,10 +279,16 @@ function AccessGrantForm({ dataset, onDataChange }) {
       }
       obj.principle = principle;
       /* Policy Condition*/
+      // if (val?.conditions?.length > 0) {
+      //   obj.conditions = {};
+      //   for (let data of val.conditions) {
+      //     obj.conditions[data.type] = data.values.join(", ");
+      //   }
+      // }
       if (val?.conditions?.length > 0) {
-        obj.conditions = {};
+        obj.conditions = "";
         for (let data of val.conditions) {
-          obj.conditions[data.type] = data.values.join(", ");
+          obj.conditions = obj.conditions + data.values.join(", ");
         }
       }
       return obj;
@@ -316,8 +332,14 @@ function AccessGrantForm({ dataset, onDataChange }) {
 
   const FormChange = (props) => {
     const { isDirtyField, formValues } = props;
-    if (isDirtyField) onDataChange(formValues, policyData);
+    if (isDirtyField) {
+      onDataChange(formValues, policyData);
+    }
     return null;
+  };
+
+  const onConditionChange = () => {
+    onDataChange(formValues, policyData);
   };
 
   const onRemovingPolicyItem = (index) => {
@@ -386,115 +408,57 @@ function AccessGrantForm({ dataset, onDataChange }) {
                   }
                   formValues={values}
                 />
+                <div className="datasetPolicyItem">
+                  <DatasetPolicyItemComp
+                    formValues={values}
+                    addPolicyItem={addPolicyItem}
+                    attrName="policyItems"
+                    serviceCompDetails={serviceCompDetails}
+                    fetchPrincipleData={fetchPrincipleData}
+                    onRemovingPolicyItem={onRemovingPolicyItem}
+                  />
+                </div>
+
                 <div className="d-flex gap-1">
-                  <div className="gds-grant-det-cond gds-content-border">
-                    <div className="form-group">
-                      <p className="formHeader">Basic Details</p>{" "}
-                    </div>
-                    <div>
-                      <Field name="policyName">
-                        {({ input, meta }) => (
-                          <div className="form-group">
-                            <FormB.Control
-                              {...input}
-                              placeholder="Policy Name"
-                              id={
-                                meta.error && meta.touched ? "isError" : "name"
-                              }
-                              className={
-                                meta.error && meta.touched
-                                  ? "form-control border-danger"
-                                  : "form-control"
-                              }
-                              data-cy="policyName"
-                            />
-                            {meta.touched && meta.error && (
-                              <span className="invalid-field">
-                                {meta.error.text}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </Field>
-
-                      <Field
-                        name="policyLabel"
-                        render={({ input, meta }) => (
-                          <FormB.Group>
-                            <div className="form-group">
-                              <div>
-                                <FormB.Label>
-                                  <span className="pull-right fnt-14">
-                                    Policy Label
-                                  </span>
-                                </FormB.Label>
-                                <AsyncCreatableSelect
-                                  {...input}
-                                  isMulti
-                                  data-cy="policyDescription"
-                                />
-                              </div>
-                            </div>
-                          </FormB.Group>
-                        )}
-                      />
-
-                      <Field name="description">
-                        {({ input, meta }) => (
-                          <div className="form-group">
-                            <div>
-                              <FormB.Control
-                                {...input}
-                                as="textarea"
-                                rows={3}
-                                placeholder="Policy Description"
-                                data-cy="policyDescription"
+                  {/* <div>
+                      <div className="form-group">
+                        <p className="formHeader">Conditions</p>{" "}
+                      </div>
+                      <div className="mb-4">
+                        <Button
+                          className="pull-right btn btn-mini"
+                          onClick={() => {
+                            policyConditionState(true);
+                          }}
+                          data-js="customPolicyConditions"
+                          data-cy="customPolicyConditions"
+                        >
+                          <i className="fa-fw fa fa-plus"></i>
+                        </Button>
+                        {showModal && (
+                          <Field
+                            className="form-control"
+                            name="conditions"
+                            render={({ input }) => (
+                              <PolicyConditionsComp
+                                policyConditionDetails={policyConditionUpdatedJSON(
+                                  serviceCompDetails.policyConditions
+                                )}
+                                inputVal={input}
+                                showModal={showModal}
+                                handleCloseModal={policyConditionState}
                               />
-                            </div>
-                          </div>
+                            )}
+                          />
                         )}
-                      </Field>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className=" gds-grant-det-cond  gds-content-border">
-                    <div className="mb-4">
-                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
-                    </div>
-                    <br />
                     {serviceCompDetails?.policyConditions?.length > 0 && (
                       <div className="table-responsive">
                         <table className="table table-bordered condition-group-table">
                           <thead>
                             <tr>
                               <th colSpan="2">
-                                Policy Conditions :
-                                {showModal && (
-                                  <Field
-                                    className="form-control"
-                                    name="conditions"
-                                    render={({ input }) => (
-                                      <PolicyConditionsComp
-                                        policyConditionDetails={policyConditionUpdatedJSON(
-                                          serviceCompDetails.policyConditions
-                                        )}
-                                        inputVal={input}
-                                        showModal={showModal}
-                                        handleCloseModal={policyConditionState}
-                                      />
-                                    )}
-                                  />
-                                )}
-                                <Button
-                                  className="pull-right btn btn-mini"
-                                  onClick={() => {
-                                    policyConditionState(true);
-                                  }}
-                                  data-js="customPolicyConditions"
-                                  data-cy="customPolicyConditions"
-                                >
-                                  <i className="fa-fw fa fa-plus"></i>
-                                </Button>
                               </th>
                             </tr>
                           </thead>
@@ -561,19 +525,206 @@ function AccessGrantForm({ dataset, onDataChange }) {
                           </tbody>
                         </table>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    )} */}
+                  <Card className="gds-action-card gds-grant-det-cond gds-bg-white">
+                    <div className="gds-section-title">
+                      <p className="gds-card-heading">Conditions</p>
+                      <Button
+                        className="btn btn-sm"
+                        onClick={() => {
+                          policyConditionState(true);
+                        }}
+                        data-js="customPolicyConditions"
+                        data-cy="customPolicyConditions"
+                      >
+                        Add Conditions
+                      </Button>
+                      {/* <div> */}
+                      {showModal && (
+                        <Field
+                          className="form-control"
+                          name="conditions"
+                          render={({ input }) => (
+                            <PolicyConditionsComp
+                              policyConditionDetails={policyConditionUpdatedJSON(
+                                serviceCompDetails.policyConditions
+                              )}
+                              inputVal={input}
+                              showModal={showModal}
+                              handleCloseModal={policyConditionState}
+                            />
+                          )}
+                        />
+                      )}
+                    </div>
+                    <Card.Body className="px-0">
+                      <>
+                        {values?.conditions && !isEmpty(values.conditions) ? (
+                          Object.keys(values.conditions).map((keyName) => {
+                            if (
+                              values.conditions[keyName] != "" &&
+                              values.conditions[keyName] != null
+                            ) {
+                              let conditionObj = find(
+                                serviceCompDetails?.policyConditions,
+                                function (m) {
+                                  if (m.name == keyName) {
+                                    return m;
+                                  }
+                                }
+                              );
+                              return (
+                                <div>
+                                  {isObject(values.conditions[keyName]) ? (
+                                    <div>
+                                      <span>
+                                        {values.conditions[keyName].length > 1
+                                          ? values.conditions[keyName].map(
+                                              (m) => {
+                                                return ` ${m.label} `;
+                                              }
+                                            )
+                                          : values.conditions[keyName].label}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <span>{values.conditions[keyName]}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          })
+                        ) : (
+                          <tr>
+                            <td>
+                              <center> No Conditions </center>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    </Card.Body>
+                  </Card>
 
-                <div className="datasetPolicyItem">
-                  <DatasetPolicyItemComp
-                    formValues={values}
-                    addPolicyItem={addPolicyItem}
-                    attrName="policyItems"
-                    serviceCompDetails={serviceCompDetails}
-                    fetchPrincipleData={fetchPrincipleData}
-                    onRemovingPolicyItem={onRemovingPolicyItem}
-                  />
+                  <Card className="gds-action-card gds-grant-det-cond gds-bg-white">
+                    <div className="gds-section-title">
+                      <p className="gds-card-heading">Validity Period</p>
+                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
+                    </div>
+                    <Card.Body className="px-0">
+                      <>
+                        {validityPeriod != undefined &&
+                        validityPeriod.length > 0 ? (
+                          validityPeriod.map((obj, index) => {
+                            return (
+                              <div className="gds-inline-field-grp gds-inline-listing w-100">
+                                <div className="wrapper">
+                                  <div className="gds-left-inline-field">
+                                    <span className="gds-label-color">
+                                      Start Date{" "}
+                                    </span>
+                                  </div>
+                                  {obj?.startTime != undefined ? (
+                                    <span>
+                                      {dateFormat(
+                                        obj.startTime,
+                                        "mm/dd/yyyy hh:MM:ss TT"
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <p className="mb-0">--</p>
+                                  )}
+                                  <span className="gds-label-color pl-5">
+                                    {obj?.timeZone}
+                                  </span>
+                                </div>
+                                <div className="wrapper ">
+                                  <div className="gds-left-inline-field">
+                                    <span className="gds-label-color">
+                                      {" "}
+                                      End Date{" "}
+                                    </span>
+                                  </div>
+                                  {obj?.endTime != undefined ? (
+                                    <span>
+                                      {dateFormat(
+                                        obj.endTime,
+                                        "mm/dd/yyyy hh:MM:ss TT"
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <p className="mb-0">--</p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="mt-1">--</p>
+                        )}
+                      </>
+                    </Card.Body>
+                  </Card>
+
+                  {/* <div className=" gds-grant-det-cond  gds-content-border">
+                    <div className="form-group">
+                      <p className="formHeader">Validity Period</p>{" "}
+                    </div>
+                    <div className="mb-4">
+                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
+                    </div>
+                    <br />
+                    {validityPeriod != undefined &&
+                    validityPeriod.length > 0 ? (
+                      validityPeriod.map((obj, index) => {
+                        return (
+                          <div className="gds-inline-field-grp">
+                            <div className="wrapper">
+                              <div className="gds-left-inline-field">
+                                <span className="gds-label-color">
+                                  Start Date{" "}
+                                </span>
+                              </div>
+                              {obj?.startTime != undefined ? (
+                                <span>
+                                  {dateFormat(
+                                    obj.startTime,
+                                    "mm/dd/yyyy hh:MM:ss TT"
+                                  )}
+                                </span>
+                              ) : (
+                                <p>--</p>
+                              )}
+                              <span className="gds-label-color pl-5">
+                                {obj?.timeZone}
+                              </span>
+                            </div>
+                            <div className="wrapper">
+                              <div className="gds-left-inline-field">
+                                <span className="gds-label-color">
+                                  {" "}
+                                  End Date{" "}
+                                </span>
+                              </div>
+                              {obj?.endTime != undefined ? (
+                                <span>
+                                  {dateFormat(
+                                    obj.endTime,
+                                    "mm/dd/yyyy hh:MM:ss TT"
+                                  )}
+                                </span>
+                              ) : (
+                                <p>--</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="mt-1">--</p>
+                    )}
+                  </div> */}
                 </div>
               </div>
             )}

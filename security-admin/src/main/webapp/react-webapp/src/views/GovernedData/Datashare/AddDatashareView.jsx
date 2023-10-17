@@ -232,7 +232,6 @@ const AddDatashareView = () => {
         return;
       } else {
         fetchServiceDef(selectedService.def);
-        fetchServiceByName(selectedService.label);
         setStep(step + 1);
       }
       setStep(step + 1);
@@ -279,20 +278,6 @@ const AddDatashareView = () => {
       )
     );
     setServiceDef(modifiedServiceDef);
-  };
-
-  const fetchServiceByName = async (serviceName) => {
-    let serviceResp = [];
-    try {
-      serviceResp = await fetchApi({
-        url: "plugins/services/name/hase_service_1"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service or CSRF headers! ${error}`
-      );
-    }
-    setService(serviceResp.data);
   };
 
   const datashareNameChange = (event) => {
@@ -714,7 +699,7 @@ const AddDatashareView = () => {
                     </div>
                   </div>
                 </div>
-                {maskDef ? (
+                {false && maskDef ? (
                   <div className="gds-section-title">
                     <p className="gds-card-heading">
                       Tag Masking Configuration

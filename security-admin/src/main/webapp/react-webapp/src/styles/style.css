@@ -2685,6 +2685,12 @@ li.list-group-item:hover {
   margin-bottom: 2rem;
 }
 
+.gds-inline-listing {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
 .gds-right-inline-field-grp {
   display: inline-flex;
   flex-direction: column;
@@ -2726,6 +2732,10 @@ li.list-group-item:hover {
   border-bottom: 1px solid #dddddd;
 }
 
+.gds-card-heading-border {
+  border-bottom: 1px solid #dddddd;
+}
+
 .gds-acc-card-header {
   padding: 0.5rem 0.75rem;
 }
@@ -2745,6 +2755,26 @@ li.list-group-item:hover {
 
 .gds-section-card {
   padding: 1.5rem 1rem;
+}
+
+.gds-action-card {
+  padding: 1.5rem 1rem;
+  border-radius: 16px;
+}
+
+.gds-action-card .gds-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #dddddd;
+  padding-bottom: 0.75rem;
+}
+
+.gds-action-card .gds-card-heading {
+  border: 0;
+  font-size: 1.125rem;
+  margin: 0;
+  padding: 0;
 }
 
 .gds-principle-listing {
@@ -2903,4 +2933,20 @@ textarea.gds-placeholder::placeholder,
 
 .gds-label-color {
   color: #777777;
+}
+
+.autoResizeTextarea {
+  width: 100%;
+  padding: 4px 36px 4px 10px;
+  resize: none;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+
+.gds-info-tarea {
+  position: absolute;
+  font-size: 15px;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
 }

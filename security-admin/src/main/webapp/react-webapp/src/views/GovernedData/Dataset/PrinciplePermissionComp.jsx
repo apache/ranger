@@ -51,6 +51,7 @@ const PrinciplePermissionComp = ({
   userList,
   groupList,
   roleList,
+  isEditable,
   onDataChange
 }) => {
   const [userOgList, setUserList] = useState(userList);
@@ -64,6 +65,7 @@ const PrinciplePermissionComp = ({
   const [userAccordion, setUserAccordion] = useState(false);
   const [groupAccordion, setGroupAccordion] = useState(false);
   const [roleAccordion, setRoleAccordion] = useState(false);
+  const isPrincipleEditable = isEditable == undefined ? true : isEditable;
   const [principleDetails, dispatch] = useReducer(
     principleFormReducer,
     initialState
@@ -78,15 +80,25 @@ const PrinciplePermissionComp = ({
   const accessOptions = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
-    { value: "ADMIN", label: "ADMIN" }
+    { value: "ADMIN", label: "ADMIN" },
+    { value: "AUDIT", label: "AUDIT" },
+    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" }
   ];
 
   const accessOptionsWithRemove = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
     { value: "ADMIN", label: "ADMIN" },
-    { value: "Remove Access", label: "Remove Access" }
+    { value: "AUDIT", label: "AUDIT" },
+    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" }
   ];
+
+  if (isEditable) {
+    accessOptionsWithRemove.push({
+      value: "Remove Access",
+      label: "Remove Access"
+    });
+  }
 
   const selectedPrincipal = (e, input) => {
     dispatch({
@@ -94,8 +106,6 @@ const PrinciplePermissionComp = ({
       selectedPrinciple: e
     });
     input.onChange(e);
-    console.log("Adding to selectedPrinciple");
-    console.log(selectedPrinciple);
   };
 
   const filterPrincipleOp = ({ data }) => {
@@ -191,11 +201,6 @@ const PrinciplePermissionComp = ({
       setFilteredRoleList(tempRoleList);
     }
 
-    console.log("groupOgList");
-    console.log(groupOgList);
-    console.log("roleOgList");
-    console.log(roleOgList);
-
     onDataChange(tempUserList, tempGroupList, tempRoleList);
     setSelectedAccess({ value: "LIST", label: "LIST" });
 
@@ -203,8 +208,6 @@ const PrinciplePermissionComp = ({
       type: "SET_SELECTED_PRINCIPLE",
       selectedPrinciple: []
     });
-    console.log("After clearing selectedPrinciple");
-    console.log(selectedPrinciple);
   };
 
   const changeUserAccordion = () => {
@@ -367,78 +370,83 @@ const PrinciplePermissionComp = ({
   };
 
   return (
-    <div className="gds-tab-content gds-content-border">
-      <div className="gds-form-input">
-        <Field
-          className="form-control"
-          name="selectedPrinciple"
-          render={({ input, meta }) => (
-            <div className="gds-add-principle">
-              {" "}
-              <AsyncSelect
-                {...input}
-                className="flex-1 gds-text-input"
-                onChange={(e) => selectedPrincipal(e, input)}
-                value={selectedPrinciple}
-                filterOption={filterPrincipleOp}
-                loadOptions={fetchPrincipleOp}
-                components={{
-                  DropdownIndicator: () => null,
-                  IndicatorSeparator: () => null
-                }}
-                defaultOptions
-                isMulti
-                placeholder="Select Principals"
-                data-name="usersSelect"
-                data-cy="usersSelect"
-              />
-              <Field
-                name="accessPermList"
-                className="form-control"
-                render={({ input }) => (
-                  <Select
-                    theme={serviceSelectTheme}
-                    styles={customStyles}
-                    options={accessOptions}
-                    onChange={(e) => setACL(e, input)}
-                    value={selectedAccess}
-                    menuPlacement="auto"
-                    isClearable
-                  />
-                )}
-              ></Field>
-              <Button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  userOgList;
-                  if (
-                    !selectedPrinciple ||
-                    selectedPrinciple[0].value == undefined ||
-                    selectedPrinciple.length === 0
-                  ) {
-                    toast.dismiss(toastId.current);
-                    toastId.current = toast.error("Please select principal!!");
-                    return false;
-                  }
-                  addInSelectedPrincipal(selectedPrinciple, input);
-                  filterPrincipleList(
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined
-                  );
-                }}
-                size="md"
-                data-name="usersAddBtn"
-                data-cy="usersAddBtn"
-              >
-                Add Principals
-              </Button>
-            </div>
-          )}
-        />
-      </div>
+    <div className="gds-tab-content">
+      {isPrincipleEditable && (
+        <div className="gds-form-input">
+          <Field
+            className="form-control"
+            name="selectedPrinciple"
+            render={({ input, meta }) => (
+              <div className="gds-add-principle">
+                {" "}
+                <AsyncSelect
+                  {...input}
+                  className="flex-1 gds-text-input"
+                  onChange={(e) => selectedPrincipal(e, input)}
+                  value={selectedPrinciple}
+                  filterOption={filterPrincipleOp}
+                  loadOptions={fetchPrincipleOp}
+                  components={{
+                    DropdownIndicator: () => null,
+                    IndicatorSeparator: () => null
+                  }}
+                  defaultOptions
+                  isMulti
+                  placeholder="Select Principals"
+                  data-name="usersSelect"
+                  data-cy="usersSelect"
+                />
+                <Field
+                  name="accessPermList"
+                  className="form-control"
+                  render={({ input }) => (
+                    <Select
+                      theme={serviceSelectTheme}
+                      styles={customStyles}
+                      options={accessOptions}
+                      onChange={(e) => setACL(e, input)}
+                      value={selectedAccess}
+                      menuPlacement="auto"
+                      isClearable
+                    />
+                  )}
+                ></Field>
+                <Button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    userOgList;
+                    if (
+                      !selectedPrinciple ||
+                      selectedPrinciple[0].value == undefined ||
+                      selectedPrinciple.length === 0
+                    ) {
+                      toast.dismiss(toastId.current);
+                      toastId.current = toast.error(
+                        "Please select principal!!"
+                      );
+                      return false;
+                    }
+                    addInSelectedPrincipal(selectedPrinciple, input);
+                    filterPrincipleList(
+                      undefined,
+                      undefined,
+                      undefined,
+                      undefined
+                    );
+                  }}
+                  size="md"
+                  data-name="usersAddBtn"
+                  data-cy="usersAddBtn"
+                >
+                  Add Principals
+                </Button>
+              </div>
+            )}
+          />
+        </div>
+      )}
+
       <div>
         <Card className="gds-section-card gds-bg-white">
           <div className="gds-section-title">

@@ -144,21 +144,52 @@ const MyDatashareListing = () => {
     []
   );
 
+  const navigateToDetailPage = (datashareId, perm, name) => {
+    if (perm != "LIST") {
+      navigate(`/gds/datashare/${datashareId}/detail`, {
+        state: {
+          userAclPerm: perm,
+          datashareName: name
+        }
+      });
+    }
+  };
+
   const myDatashareColumns = React.useMemo(
     () => [
       {
         Header: "Id",
         accessor: "id",
-        width: 25,
+        width: 80,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {},
-        Cell: (rawValue) => {
+        Cell: ({ row }) => {
           return (
             <div className="position-relative text-center">
-              <Link title="Edit" to={`/gds/datashare/${rawValue.value}/detail`}>
-                {rawValue.value}
-              </Link>
+              <Button
+                data-id="datashareId"
+                data-cy="datashareId"
+                onClick={() =>
+                  navigateToDetailPage(
+                    row.original.id,
+                    row.original.permissionForCaller,
+                    row.original.name
+                  )
+                }
+                style={{
+                  lineHeight: 1,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  color: "#0b7fad",
+                  border: 0,
+                  outline: "none",
+                  fontSize: 13,
+                  cursor: "pointer"
+                }}
+              >
+                {row.original.id}
+              </Button>
             </div>
           );
         }
@@ -276,28 +307,33 @@ const MyDatashareListing = () => {
         disableSortBy: true,
         getResizerProps: () => {},
         Cell: ({ row }) => {
-          const permissionForCaller = row.original.permissionForCaller;
-          if (
-            permissionForCaller === "ADMIN" ||
-            permissionForCaller === "VIEW"
-          ) {
-            return (
-              <div className="position-relative text-center">
-                <Link
-                  title="Edit"
-                  to={`/gds/datashare/${row.original.id}/detail`}
-                >
-                  {row.original.id}
-                </Link>
-              </div>
-            );
-          } else {
-            return (
-              <div className="position-relative text-center">
-                <span>{row.original.id}</span>
-              </div>
-            );
-          }
+          return (
+            <div className="position-relative text-center">
+              <Button
+                data-id="datashareId"
+                data-cy="datashareId"
+                disabled={row.original.permissionForCaller == "LIST"}
+                onClick={() =>
+                  navigateToDetailPage(
+                    row.original.id,
+                    row.original.permissionForCaller
+                  )
+                }
+                style={{
+                  lineHeight: 1,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  color: "#0b7fad",
+                  border: 0,
+                  outline: "none",
+                  fontSize: 13,
+                  cursor: "pointer"
+                }}
+              >
+                {row.original.id}
+              </Button>
+            </div>
+          );
         }
       },
       {

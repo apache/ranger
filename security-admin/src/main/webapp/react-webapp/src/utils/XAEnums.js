@@ -671,6 +671,7 @@ export const PathAssociateWithModule = {
     "/gds/datasetlisting",
     "/gds/create",
     "/gds/dataset/:datasetId/detail",
+    "/gds/dataset/:datasetId/fullview",
     "/gds/dataset/:datasetId/accessGrant",
     "/gds/mydatasharelisting",
     "/gds/datasharelisting",
@@ -678,6 +679,7 @@ export const PathAssociateWithModule = {
     "/gds/request/list",
     "/gds/request/detail/:requestId",
     "/gds/datashare/:datashareId/detail",
+    "/gds/datashare/:datashareId/fullview",
     "/gds/datashare/resource/:datashareId"
   ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
