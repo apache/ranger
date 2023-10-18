@@ -408,13 +408,13 @@ public class PolicyEngine {
     }
 
     public String getUniquelyMatchedZoneName(Map<String, ?> resourceAsMap) {
-        String ret = null;
         Set<String> matchedZones = getMatchedZonesForResourceAndChildren(resourceAsMap, convertToAccessResource(resourceAsMap));
-        if (CollectionUtils.isNotEmpty(matchedZones) && matchedZones.size() == 1) {
-            String[] matchedZonesArray = new String[1];
-            matchedZones.toArray(matchedZonesArray);
-            ret = matchedZonesArray[0];
+        String      ret          = (matchedZones != null && matchedZones.size() == 1) ? matchedZones.iterator().next() : null;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("getUniquelyMatchedZoneName(" + resourceAsMap + "): matchedZones=" + matchedZones + ", ret=" + ret);
         }
+
         return ret;
     }
 
