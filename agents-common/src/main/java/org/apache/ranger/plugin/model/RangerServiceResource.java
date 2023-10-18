@@ -37,6 +37,7 @@ public class RangerServiceResource extends RangerBaseModelObject {
 	private String                                         ownerUser;
 	private String                                         resourceSignature;
 	private Map<String, String>							   additionalInfo;
+	private Long                                           serviceId;
 
 	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser, Map<String, String> additionalInfo) {
 		super();
@@ -100,6 +101,14 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public void setAdditionalInfo(Map<String, String> additionalInfo) {
 		this.additionalInfo = additionalInfo;
+	}
+
+	public Long getServiceId() {
+		return serviceId;
+	}
+
+	public void setServiceId(Long serviceId) {
+		this.serviceId = serviceId;
 	}
 
 	public void dedupStrings(Map<String, String> strTbl) {
