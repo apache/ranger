@@ -50,6 +50,12 @@ public class SearchCriteria {
 
 	List<SearchGroup> searchGroups = new ArrayList<SearchGroup>();
 
+	public SearchCriteria() { }
+
+	public SearchCriteria(String paramName, Object paramValue) {
+		addParam(paramName, paramValue);
+	}
+
 	/**
 	 * @return the startIndex
 	 */
