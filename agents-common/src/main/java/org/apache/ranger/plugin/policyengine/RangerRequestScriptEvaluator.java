@@ -360,6 +360,18 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
+	public String getResourceZone() {
+		String ret = RangerAccessRequestUtil.getResourceZoneNameFromContext(getRequestContext());
+
+		return ret != null ? ret : StringUtils.EMPTY;
+	}
+
+	public Set<String> getResourceZones() {
+		Set<String> ret = RangerAccessRequestUtil.getResourceZoneNamesFromContext(getRequestContext());
+
+		return ret != null ? Collections.emptySet() : ret;
+	}
+
 	public String getRequestContextAttribute(String attributeName) {
 		String ret = null;
 

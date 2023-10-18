@@ -273,7 +273,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			requestProcessor.preProcess(request);
 
-			String zoneName = policyEngine.getUniquelyMatchedZoneName(request.getResource().getAsMap());
+			String zoneName = RangerAccessRequestUtil.getResourceZoneNameFromContext(request.getContext());
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("zoneName:[" + zoneName + "]");
@@ -556,7 +556,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		requestProcessor.preProcess(request);
 
 		RangerResourceAccessInfo ret       = new RangerResourceAccessInfo(request);
-		Set<String>              zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource());
+		Set<String>              zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
@@ -633,7 +633,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult     ret                 = null;
 		RangerPolicyRepository policyRepository    = policyEngine.getPolicyRepository();
 		RangerPolicyRepository tagPolicyRepository = policyEngine.getTagPolicyRepository();
-		Set<String>            zoneNames            = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource()); // Evaluate zone-name from request
+		Set<String>            zoneNames            = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
