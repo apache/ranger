@@ -19,10 +19,12 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
+import org.graalvm.polyglot.PolyglotException;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,8 +45,9 @@ public class TestRecordFilterJavaScript {
                     "            bufferedWriter.write(\"Writing line one to file\"); bufferedWriter.close;", TestJsonManipulator.bigTester);
 
         } catch (MaskingException e) {
-            Assert.assertTrue(e.getCause() instanceof RuntimeException);
-            Assert.assertTrue(e.getCause().getCause() instanceof ClassNotFoundException);
+            Assert.assertEquals(e.getCause().getClass(), ScriptException.class);
+            Assert.assertEquals(e.getCause().getCause().getClass(), PolyglotException.class);
+            Assert.assertTrue(e.getCause().getCause().getMessage().contains("Access to host class java.io.FileWriter is not allowed"));
         }
         Assert.assertFalse(Files.exists(Paths.get("omg.txt")));
     }
@@ -56,11 +59,11 @@ public class TestRecordFilterJavaScript {
 
     @Test
     public void testBasicFilters(){
-        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.partner.equals('dance')", TestJsonManipulator.testString1), true);
-        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.address.zipCode.equals('19019')", TestJsonManipulator.testString1), true);
+        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.partner === 'dance'", TestJsonManipulator.testString1), true);
+        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.address.zipCode === '19019'", TestJsonManipulator.testString1), true);
         Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.aMap.mapNumber > 5", TestJsonManipulator.bigTester), true);
 
-        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.partner.equals('cox')", TestJsonManipulator.testString1), false);
+        Assert.assertEquals(RecordFilterJavaScript.filterRow("user", "jsonAttr.partner === 'cox'", TestJsonManipulator.testString1), false);
     }
 }
 

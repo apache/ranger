@@ -22,6 +22,7 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class RangerMasterKey implements RangerKMSMKI {
 
@@ -243,7 +243,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.decryptMasterKey()");
         }
-        return Base64.encode(masterKeyFromDB.getEncoded());
+        return Base64.getEncoder().encodeToString(masterKeyFromDB.getEncoded());
     }
 
     public static void getPasswordParam(String paddedEncryptedPwd) {
@@ -322,10 +322,10 @@ public class RangerMasterKey implements RangerKMSMKI {
                     String masterKeyStr = rangerMasterKey.getMasterKey();
                     if (masterKeyStr.contains(",")) {
                         getPasswordParam(masterKeyStr);
-                        ret.add(Base64.decode(password));
+                        ret.add(Base64.getDecoder().decode(password));
                         ret.add(masterKeyStr);
                     } else {
-                        ret.add(Base64.decode(masterKeyStr));
+                        ret.add(Base64.getDecoder().decode(masterKeyStr));
                     }
                     if (logger.isDebugEnabled()) {
                         logger.debug("<== RangerMasterKey.getEncryptedMK()");
@@ -379,7 +379,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.encryptMasterKey()");
         }
-        return Base64.encode(masterKeyToDB);
+        return Base64.getEncoder().encodeToString(masterKeyToDB);
     }
 
     private String encryptMasterKey(String password, byte[] secretKey) throws Throwable {
@@ -391,7 +391,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.encryptMasterKey()");
         }
-        return Base64.encode(masterKeyToDB);
+        return Base64.getEncoder().encodeToString(masterKeyToDB);
     }
 
     private Key generateMasterKey() throws NoSuchAlgorithmException {

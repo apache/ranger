@@ -80,7 +80,7 @@
         <apacheds.version>2.0.0-M22</apacheds.version>
         <asm.all.version>3.2</asm.all.version>
         <aspectj.version>1.8.2</aspectj.version>
-        <assembly.plugin.version>2.6</assembly.plugin.version>
+        <assembly.plugin.version>3.1.0</assembly.plugin.version>
         <atlas.version>2.2.0</atlas.version>
         <atlas.jackson.version>2.11.3</atlas.jackson.version>
         <atlas.jackson.databind.version>2.11.3</atlas.jackson.databind.version>
@@ -115,12 +115,12 @@
         <dnsjava.version>2.1.7</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
-        <enunciate.version>2.13.2</enunciate.version>
+        <enunciate.version>2.14.0</enunciate.version>
         <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
-        <graalvm.version>22.3.0</graalvm.version>
-        <gson.version>2.9.0</gson.version>
+        <graalvm.version>21.2.0</graalvm.version>
+        <gson.version>2.10</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.3.0</hadoop.version>
         <ozone.version>1.3.0</ozone.version>
@@ -175,7 +175,7 @@
         <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>3.0.0</mockito.version>
+        <mockito.version>3.12.4</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <netty-all.version>4.1.94.Final</netty-all.version>
@@ -400,6 +400,79 @@
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
                 <module>ranger-metrics</module>
+                <!--
+                   'distro' should be the last module. If a module gets inserted after
+                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                -->
+                <module>distro</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>ranger-jdk17</id>
+            <activation>
+                <jdk>17</jdk>
+            </activation>
+            <modules>
+                <module>jisql</module>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>intg</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>embeddedwebserver</module>
+                <module>kms</module>
+                <module>hbase-agent</module>
+                <module>hdfs-agent</module>
+                <module>hive-agent</module>
+                <!-- Knox does not support Java 17 -->
+                <!--<module>knox-agent</module>-->
+                <module>storm-agent</module>
+                <module>plugin-yarn</module>
+                <module>plugin-ozone</module>
+                <module>security-admin</module>
+                <module>plugin-kafka</module>
+                <module>plugin-solr</module>
+                <module>plugin-nestedstructure</module>
+                <module>plugin-nifi</module>
+                <module>plugin-nifi-registry</module>
+                <module>plugin-presto</module>
+                <module>plugin-trino</module>
+                <module>plugin-kudu</module>
+                <module>ugsync-util</module>
+                <module>ugsync</module>
+                <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
+                <module>unixauthclient</module>
+                <module>unixauthservice</module>
+                <module>ranger-util</module>
+                <module>plugin-kms</module>
+                <module>tagsync</module>
+                <module>ranger-hdfs-plugin-shim</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-hive-plugin-shim</module>
+                <module>ranger-hbase-plugin-shim</module>
+                <!--<module>ranger-knox-plugin-shim</module>-->
+                <module>ranger-yarn-plugin-shim</module>
+                <module>ranger-ozone-plugin-shim</module>
+                <module>ranger-storm-plugin-shim</module>
+                <module>ranger-kafka-plugin-shim</module>
+                <module>ranger-solr-plugin-shim</module>
+                <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-kms-plugin-shim</module>
+                <module>ranger-presto-plugin-shim</module>
+                <module>ranger-trino-plugin-shim</module>
+                <module>ranger-examples</module>
+                <module>ranger-tools</module>
+                <module>plugin-atlas</module>
+                <module>plugin-schema-registry</module>
+                <module>plugin-sqoop</module>
+                <module>ranger-sqoop-plugin-shim</module>
+                <module>plugin-kylin</module>
+                <module>ranger-kylin-plugin-shim</module>
+                <module>plugin-elasticsearch</module>
+                <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -831,7 +904,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>1.4.1</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>enforce-maven</id>
@@ -998,7 +1071,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
                     <configuration>
-                        <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                        <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}" -Dorg.apache.logging.log4j.level=DEBUG</argLine>
                         <skipTests>${skipTests}</skipTests>
                         <encoding>UTF-8</encoding>
                         <systemProperties>
@@ -1084,7 +1157,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>enforce-versions</id>
@@ -1158,6 +1231,7 @@
                         <exclude>.gitignore/**</exclude>
                         <exclude>.svn/**</exclude>
                         <exclude>.idea/**</exclude>
+                        <exclude>.mvn/**</exclude>
                         <exclude>dev-support/**</exclude>
                         <exclude>**/.gitignore/**</exclude>
                         <exclude>**/.project/**</exclude>

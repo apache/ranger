@@ -32,8 +32,6 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.DigestInputStream;
@@ -735,28 +733,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
                     validateKeyName(keyName);
 
-                    SealedObject sealedKey;
-
-                    try {
-                        Class<?>       c           = Class.forName("com.sun.crypto.provider.KeyProtector");
-                        Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
-
-                        constructor.setAccessible(true);
-
-                        Object o = constructor.newInstance(masterKey);
-
-                        // seal and store the key
-                        Method m = c.getDeclaredMethod("seal", Key.class);
-
-                        m.setAccessible(true);
-
-                        sealedKey = (SealedObject) m.invoke(o, k);
-                    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
-                             InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                        logger.error(e.getMessage());
-
-                        throw new IOException(e.getMessage());
-                    }
+                    SealedObject sealedKey = sealKey(k, masterKey);
 
                     String attributes  = "{\"key.acl.name\":\"" + keyName + "\"}";
                     String description = k.getFormat() + " - " + ks.getType();
