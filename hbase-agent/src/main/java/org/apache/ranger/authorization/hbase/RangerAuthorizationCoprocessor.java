@@ -1496,8 +1496,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			break;
 
 			case Namespace:
-				NamespacePermission namepsacePermission = (NamespacePermission)userPerm.getPermission();
-				nameSpace = namepsacePermission.getNamespace();
+				NamespacePermission namespacePermission = (NamespacePermission)userPerm.getPermission();
+				nameSpace = namespacePermission.getNamespace();
 			break;
 		}
 		
