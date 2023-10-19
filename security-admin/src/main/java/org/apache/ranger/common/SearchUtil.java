@@ -466,13 +466,8 @@ public class SearchUtil {
 								if (count > 0) {
 									whereClause.append(" or ");
 								}
-								whereClause
-										.append(searchField.getFieldName())
-										.append(" = :")
-										.append(searchField
-												.getClientFieldName()
-												+ "_"
-												+ count);
+								whereClause.append(searchField.getFieldName())
+								           .append("= :").append(searchField.getClientFieldName() + "_" + count);
 							}
 
 							if (intValueList.size() > 1) {
@@ -481,10 +476,9 @@ public class SearchUtil {
 
 						} else {
 							whereClause.append(" and ")
-									.append(searchField.getFieldName())
-									.append(" in ( :")
-									.append(searchField.getClientFieldName())
-									.append(")");
+							           .append(searchField.getFieldName())
+							           .append(" in ")
+							           .append(" (:").append(searchField.getClientFieldName()).append(")");
 						}
 					} else {
 						whereClause.append(" and ").append(
@@ -507,9 +501,9 @@ public class SearchUtil {
 				if (intFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(
 								searchField.getCustomCondition());
@@ -520,15 +514,9 @@ public class SearchUtil {
 						.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append("LOWER(")
-								.append(searchField.getFieldName()).append(")");
-						if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
-							whereClause.append("= :").append(
-									searchField.getClientFieldName());
-						} else {
-							whereClause.append("like :").append(
-									searchField.getClientFieldName());
-						}
+						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")")
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(
 								searchField.getCustomCondition());
@@ -541,8 +529,8 @@ public class SearchUtil {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
 								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+								.append(getSqlOperator(searchField.getSearchType()))
+								.append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(
 								searchField.getCustomCondition());
@@ -553,18 +541,9 @@ public class SearchUtil {
 						.getClientFieldName());
 				if (fieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append(
-								searchField.getFieldName());
-						if (SearchField.SEARCH_TYPE.LESS_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("< :");
-						} else if (SearchField.SEARCH_TYPE.LESS_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("<= :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("> :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append(">= :");
-						}
-						whereClause.append(searchField.getClientFieldName());
+						whereClause.append(" and ").append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(
 								searchField.getCustomCondition());
@@ -768,5 +747,41 @@ public class SearchUtil {
 		}
 		return value;
 	}
-	
+
+	public String getSqlOperator(SearchField.SEARCH_TYPE searchType) {
+		final String ret;
+
+		switch (searchType) {
+			case PARTIAL:
+				ret = " like ";
+				break;
+
+			case LESS_THAN:
+				ret = " < ";
+				break;
+
+			case LESS_EQUAL_THAN:
+				ret = " <= ";
+				break;
+
+			case GREATER_THAN:
+				ret = " > ";
+				break;
+
+			case GREATER_EQUAL_THAN:
+				ret = " >= ";
+				break;
+
+			case NOT_EQUALS:
+				ret = " != ";
+				break;
+
+			case FULL:
+			default:
+				ret = " = ";
+				break;
+		}
+
+		return ret;
+	}
 }

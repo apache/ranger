@@ -294,9 +294,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (intFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -305,12 +305,9 @@ public class RangerSearchUtil extends SearchUtil {
 				String strFieldValue = searchCriteria.getParam(searchField.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")");
-						if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
-							whereClause.append("= :").append(searchField.getClientFieldName());
-						} else {
-							whereClause.append("like :").append(searchField.getClientFieldName());
-						}
+						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")")
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -323,9 +320,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (boolFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -336,17 +333,9 @@ public class RangerSearchUtil extends SearchUtil {
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append(searchField.getFieldName());
-						if (SearchField.SEARCH_TYPE.LESS_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("< :");
-						} else if (SearchField.SEARCH_TYPE.LESS_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("<= :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("> :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append(">= :");
-						}
-						whereClause.append(searchField.getClientFieldName());
+						whereClause.append(" and ").append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -465,5 +454,4 @@ public class RangerSearchUtil extends SearchUtil {
 		}
 		return null;
 	}
-	
 }
