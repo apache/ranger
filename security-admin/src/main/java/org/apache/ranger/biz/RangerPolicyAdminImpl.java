@@ -646,7 +646,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         requestProcessor.preProcess(request);
 
-        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(resource);
+        Set<String> zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
         if (CollectionUtils.isEmpty(zoneNames)) {
             getMatchingPoliciesForZone(request, null, ret);

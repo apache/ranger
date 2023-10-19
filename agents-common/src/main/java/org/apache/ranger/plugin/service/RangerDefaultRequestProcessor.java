@@ -130,6 +130,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
             RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
         }
 
+        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource());
+
+        RangerAccessRequestUtil.setResourceZoneNamesInContext(request, zoneNames);
+
         enrich(request);
 
         RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
