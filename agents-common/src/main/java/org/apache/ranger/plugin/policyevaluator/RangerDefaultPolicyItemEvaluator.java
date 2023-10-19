@@ -30,7 +30,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -61,9 +60,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			LOG.debug("==> RangerDefaultPolicyItemEvaluator(policyId=" + policyId + ", policyItem=" + policyItem + ", serviceType=" + getServiceType() + ", conditionsDisabled=" + getConditionsDisabledOption() + ")");
 		}
 
-		RangerCustomConditionEvaluator rangerCustomConditionEvaluator = new RangerCustomConditionEvaluator();
-
-		conditionEvaluators = rangerCustomConditionEvaluator.getPolicyItemConditionEvaluator(policy, policyItem, serviceDef, options, policyItemIndex);
+		conditionEvaluators = RangerCustomConditionEvaluator.getInstance().getPolicyItemConditionEvaluators(policy, policyItem, serviceDef, options, policyItemIndex);
 
 		List<String> users = policyItem.getUsers();
 		this.hasCurrentUser = CollectionUtils.isNotEmpty(users) && users.contains(RangerPolicyEngine.USER_CURRENT);
@@ -290,52 +287,5 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	@Override
 	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
 		policyEvaluator.updateAccessResult(result, matchType, getPolicyItemType() != RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY, getComments());
-	}
-
-	RangerPolicyConditionDef getConditionDef(String conditionName) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyItemEvaluator.getConditionDef(" + conditionName + ")");
-		}
-
-		RangerPolicyConditionDef ret = null;
-
-		if (serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getPolicyConditions())) {
-			for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
-				if (StringUtils.equals(conditionName, conditionDef.getName())) {
-					ret = conditionDef;
-
-					break;
-				}
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyItemEvaluator.getConditionDef(" + conditionName + "): " + ret);
-		}
-
-		return ret;
-	}
-
-	RangerConditionEvaluator newConditionEvaluator(String className) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyItemEvaluator.newConditionEvaluator(" + className + ")");
-		}
-
-		RangerConditionEvaluator evaluator = null;
-
-		try {
-			@SuppressWarnings("unchecked")
-			Class<RangerConditionEvaluator> matcherClass = (Class<RangerConditionEvaluator>)Class.forName(className);
-
-			evaluator = matcherClass.newInstance();
-		} catch(Throwable t) {
-			LOG.error("RangerDefaultPolicyItemEvaluator.newConditionEvaluator(" + className + "): error instantiating evaluator", t);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyItemEvaluator.newConditionEvaluator(" + className + "): " + evaluator);
-		}
-
-		return evaluator;
 	}
 }
