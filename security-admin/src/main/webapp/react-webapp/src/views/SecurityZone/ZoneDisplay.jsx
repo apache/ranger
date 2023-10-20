@@ -229,6 +229,29 @@ class ZoneDisplay extends Component {
                       </Form.Group>
                       <Form.Group as={Row} className="mb-3">
                         <Form.Label className="text-right" column sm="3">
+                          Admin Roles
+                        </Form.Label>
+                        <Col sm="9" className="pt-2">
+                          {this.props?.zone?.adminRoles?.length > 0 ? (
+                            this.props?.zone.adminRoles?.map((obj) => {
+                              return (
+                                <Badge
+                                  variant="primary"
+                                  className="mr-1 more-less-width text-truncate"
+                                  key={obj}
+                                  title={obj}
+                                >
+                                  {obj}
+                                </Badge>
+                              );
+                            })
+                          ) : (
+                            <p className="mt-1">--</p>
+                          )}
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row} className="mb-3">
+                        <Form.Label className="text-right" column sm="3">
                           Auditor Users
                         </Form.Label>
                         <Col sm="9" className="pt-2">
@@ -260,6 +283,29 @@ class ZoneDisplay extends Component {
                               return (
                                 <Badge
                                   variant="secondary"
+                                  className="mr-1 more-less-width text-truncate"
+                                  key={obj}
+                                  title={obj}
+                                >
+                                  {obj}
+                                </Badge>
+                              );
+                            })
+                          ) : (
+                            <span className="mt-1">--</span>
+                          )}
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row} className="mb-3">
+                        <Form.Label className="text-right" column sm="3">
+                          Auditor Roles
+                        </Form.Label>
+                        <Col sm="9" className="pt-2">
+                          {this.props?.zone?.auditRoles?.length > 0 ? (
+                            this.props?.zone?.auditRoles?.map((obj) => {
+                              return (
+                                <Badge
+                                  variant="primary"
                                   className="mr-1 more-less-width text-truncate"
                                   key={obj}
                                   title={obj}
