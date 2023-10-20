@@ -132,7 +132,7 @@ public class RangerSecurityZoneHelper {
         }
 
         if (changeData.getTagServicesToAdd() != null) {
-            zone.getTagServices().addAll(changeData.getTagServicesToAdd());
+            changeData.getTagServicesToAdd().forEach(tagService -> addIfAbsent(tagService, zone.getTagServices()));
         }
 
         if (changeData.getTagServicesToRemove() != null) {
@@ -161,11 +161,11 @@ public class RangerSecurityZoneHelper {
     private void addPrincipals(List<RangerPrincipal> principals, List<String> users, List<String> groups, List<String> roles) {
         for (RangerPrincipal principal : principals) {
             if (principal.getType() == RangerPrincipal.PrincipalType.USER) {
-                users.add(principal.getName());
+                addIfAbsent(principal.getName(), users);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.GROUP) {
-                groups.add(principal.getName());
+                addIfAbsent(principal.getName(), groups);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
-                roles.add(principal.getName());
+                addIfAbsent(principal.getName(), roles);
             }
         }
     }
@@ -179,6 +179,12 @@ public class RangerSecurityZoneHelper {
             } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
                 roles.remove(principal.getName());
             }
+        }
+    }
+
+    private void addIfAbsent(String item, List<String> lst) {
+        if (!lst.contains(item)) {
+            lst.add(item);
         }
     }
 
