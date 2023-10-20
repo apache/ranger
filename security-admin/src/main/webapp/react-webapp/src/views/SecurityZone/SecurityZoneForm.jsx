@@ -79,6 +79,14 @@ const SecurityZoneForm = () => {
   });
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [tagServiceLoading, setTagServiceLoading] = useState(false);
+  const [defaultUserOptions, setDefaultUserOptions] = useState([]);
+  const [defaultGroupOptions, setDefaultGroupOptions] = useState([]);
+  const [defaultRoleOptions, setDefaultRoleOptions] = useState([]);
+  const [defaultTagServiceOptions, setDefaultTagServiceOptions] = useState([]);
 
   useEffect(() => {
     fetchInitalData();
@@ -103,10 +111,18 @@ const SecurityZoneForm = () => {
       }
     }
 
-    if (isEmpty(values.adminUsers) && isEmpty(values.adminUserGroups)) {
+    if (
+      isEmpty(values?.adminUsers) &&
+      isEmpty(values?.adminUserGroups) &&
+      isEmpty(values?.adminRoles)
+    ) {
+      errors.adminRoles = {
+        required: true,
+        text: "Please provide atleast one admin user or group or role !"
+      };
       errors.adminUserGroups = {
         required: true,
-        text: "Please provide atleast one admin user or group!"
+        text: ""
       };
       errors.adminUsers = {
         required: true,
@@ -114,10 +130,18 @@ const SecurityZoneForm = () => {
       };
     }
 
-    if (isEmpty(values.auditUsers) && isEmpty(values.auditUserGroups)) {
+    if (
+      isEmpty(values?.auditUsers) &&
+      isEmpty(values?.auditUserGroups) &&
+      isEmpty(values?.auditRoles)
+    ) {
+      errors.auditRoles = {
+        required: true,
+        text: "Please provide atleast one audit user or group or role !"
+      };
       errors.auditUserGroups = {
         required: true,
-        text: "Please provide atleast one audit user or group!"
+        text: ""
       };
       errors.auditUsers = {
         required: true,
@@ -308,6 +332,20 @@ const SecurityZoneForm = () => {
       }
     }
 
+    if (values.adminRoles) {
+      zoneData.adminRoles = [];
+      for (let key of Object.keys(values.adminRoles)) {
+        zoneData.adminRoles.push(values.adminRoles[key].label || "");
+      }
+    }
+
+    if (values.auditRoles) {
+      zoneData.auditRoles = [];
+      for (let key of Object.keys(values.auditRoles)) {
+        zoneData.auditRoles.push(values.auditRoles[key].label || "");
+      }
+    }
+
     zoneData.tagServices = [];
 
     if (values.tagServices) {
@@ -404,6 +442,20 @@ const SecurityZoneForm = () => {
       );
     }
 
+    zoneData.adminRoles = [];
+    if (zone.adminRoles) {
+      zone.adminRoles.map((name) =>
+        zoneData.adminRoles.push({ label: name, value: name })
+      );
+    }
+
+    zoneData.auditRoles = [];
+    if (zone.auditRoles) {
+      zone.auditRoles.map((name) =>
+        zoneData.auditRoles.push({ label: name, value: name })
+      );
+    }
+
     zoneData.tagServices = [];
     if (zone.tagServices) {
       zone.tagServices.map((name) =>
@@ -474,7 +526,7 @@ const SecurityZoneForm = () => {
     return zoneData;
   };
 
-  const fetchUsers = async (inputValue) => {
+  const fetchUsersData = async (inputValue) => {
     let params = { isVisible: 1 };
     let usersOp = [];
 
@@ -489,7 +541,7 @@ const SecurityZoneForm = () => {
       });
       usersOp = userResp.data?.vXStrings;
     } catch (error) {
-      console.error(`Error occurred while fetching Users ! ${error}`);
+      console.error(`Error occurred while fetching Users! ${error}`);
       serverError(error);
     }
 
@@ -498,7 +550,7 @@ const SecurityZoneForm = () => {
     });
   };
 
-  const fetchGroups = async (inputValue) => {
+  const fetchGroupsData = async (inputValue) => {
     let params = { isVisible: 1 };
     let groupsOp = [];
 
@@ -513,13 +565,33 @@ const SecurityZoneForm = () => {
       });
       groupsOp = groupResp.data?.vXStrings;
     } catch (error) {
-      console.error(`Error occurred while fetching Groups ! ${error}`);
+      console.error(`Error occurred while fetching Groups! ${error}`);
       serverError(error);
     }
 
     return map(groupsOp, function (group) {
       return { label: group.value, value: group.value };
     });
+  };
+
+  const fetchRolesData = async (inputValue) => {
+    let params = { roleNamePartial: inputValue || "" };
+    let op = [];
+
+    try {
+      const roleResp = await fetchApi({
+        url: "roles/roles",
+        params: params
+      });
+      op = roleResp.data.roles;
+    } catch (error) {
+      console.error(`Error occurred while fetching Roles! ${error}`);
+      serverError(error);
+    }
+    return op.map((obj) => ({
+      label: obj.name,
+      value: obj.name
+    }));
   };
 
   const fetchTagServices = async (inputValue) => {
@@ -631,7 +703,35 @@ const SecurityZoneForm = () => {
       </p>
     ));
   };
+  const onFocusUserSelect = () => {
+    setUserLoading(true);
+    fetchUsersData().then((opts) => {
+      setDefaultUserOptions(opts);
+      setUserLoading(false);
+    });
+  };
 
+  const onFocusGroupSelect = () => {
+    setGroupLoading(true);
+    fetchGroupsData().then((opts) => {
+      setDefaultGroupOptions(opts);
+      setGroupLoading(false);
+    });
+  };
+  const onFocusRoleSelect = () => {
+    setRoleLoading(true);
+    fetchRolesData().then((opts) => {
+      setDefaultRoleOptions(opts);
+      setRoleLoading(false);
+    });
+  };
+  const onFocusTagServiceSelect = () => {
+    setTagServiceLoading(true);
+    fetchTagServices().then((opts) => {
+      setDefaultTagServiceOptions(opts);
+      setTagServiceLoading(false);
+    });
+  };
   return (
     <React.Fragment>
       <div className="clearfix">
@@ -757,14 +857,20 @@ const SecurityZoneForm = () => {
                                   : "auditUsers"
                               }
                               cacheOptions
-                              defaultOptions
-                              loadOptions={fetchUsers}
+                              loadOptions={fetchUsersData}
+                              onFocus={() => {
+                                onFocusUserSelect();
+                              }}
+                              defaultOptions={defaultUserOptions}
+                              noOptionsMessage={() =>
+                                userLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select User"
                             />
                           </Col>
@@ -794,16 +900,66 @@ const SecurityZoneForm = () => {
                                   : "adminUserGroups"
                               }
                               {...input}
-                              defaultOptions
-                              loadOptions={fetchGroups}
+                              cacheOptions
+                              loadOptions={fetchGroupsData}
+                              onFocus={() => {
+                                onFocusGroupSelect();
+                              }}
+                              defaultOptions={defaultGroupOptions}
+                              noOptionsMessage={() =>
+                                groupLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Group"
-                              required
+                            />
+                          </Col>
+                        </Row>
+                      )}
+                    />
+
+                    <Field
+                      name="adminRoles"
+                      render={({ input, meta }) => (
+                        <Row className="form-group">
+                          <Col xs={3}>
+                            <label className="form-label pull-right">
+                              Admin Roles
+                            </label>
+                          </Col>
+                          <Col xs={4}>
+                            <AsyncSelect
+                              {...input}
+                              styles={
+                                meta.error && meta.touched
+                                  ? selectCustomStyles
+                                  : ""
+                              }
+                              id={
+                                meta.error && meta.touched
+                                  ? "isError"
+                                  : "adminRoles"
+                              }
+                              cacheOptions
+                              loadOptions={fetchRolesData}
+                              onFocus={() => {
+                                onFocusRoleSelect();
+                              }}
+                              defaultOptions={defaultRoleOptions}
+                              noOptionsMessage={() =>
+                                roleLoading ? "Loading..." : "No options"
+                              }
+                              isMulti
+                              components={{
+                                DropdownIndicator: () => null,
+                                IndicatorSeparator: () => null
+                              }}
+                              isClearable={true}
+                              placeholder="Select Role"
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -837,14 +993,21 @@ const SecurityZoneForm = () => {
                                   ? "isError"
                                   : "auditUsers"
                               }
-                              defaultOptions
-                              loadOptions={fetchUsers}
+                              cacheOptions
+                              loadOptions={fetchUsersData}
+                              onFocus={() => {
+                                onFocusUserSelect();
+                              }}
+                              defaultOptions={defaultUserOptions}
+                              noOptionsMessage={() =>
+                                userLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select User"
                             />
                           </Col>
@@ -873,15 +1036,66 @@ const SecurityZoneForm = () => {
                                   ? "isError"
                                   : "auditUserGroups"
                               }
-                              defaultOptions
-                              loadOptions={fetchGroups}
+                              cacheOptions
+                              loadOptions={fetchGroupsData}
+                              onFocus={() => {
+                                onFocusGroupSelect();
+                              }}
+                              defaultOptions={defaultGroupOptions}
+                              noOptionsMessage={() =>
+                                groupLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Group"
+                            />
+                          </Col>
+                        </Row>
+                      )}
+                    />
+
+                    <Field
+                      name="auditRoles"
+                      render={({ input, meta }) => (
+                        <Row className="form-group">
+                          <Col xs={3}>
+                            <label className="form-label pull-right">
+                              Auditor Roles
+                            </label>
+                          </Col>
+                          <Col xs={4}>
+                            <AsyncSelect
+                              {...input}
+                              styles={
+                                meta.error && meta.touched
+                                  ? selectCustomStyles
+                                  : ""
+                              }
+                              id={
+                                meta.error && meta.touched
+                                  ? "isError"
+                                  : "auditRoles"
+                              }
+                              cacheOptions
+                              loadOptions={fetchRolesData}
+                              onFocus={() => {
+                                onFocusRoleSelect();
+                              }}
+                              defaultOptions={defaultRoleOptions}
+                              noOptionsMessage={() =>
+                                roleLoading ? "Loading..." : "No options"
+                              }
+                              isMulti
+                              components={{
+                                DropdownIndicator: () => null,
+                                IndicatorSeparator: () => null
+                              }}
+                              isClearable={true}
+                              placeholder="Select Role"
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
@@ -892,6 +1106,7 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <p className="form-header">Services:</p>
                     <Field
                       name="tagServices"
@@ -905,14 +1120,21 @@ const SecurityZoneForm = () => {
                           <Col xs={6}>
                             <AsyncSelect
                               {...input}
-                              defaultOptions
+                              cacheOptions
                               loadOptions={fetchTagServices}
+                              onFocus={() => {
+                                onFocusTagServiceSelect();
+                              }}
+                              defaultOptions={defaultTagServiceOptions}
+                              noOptionsMessage={() =>
+                                tagServiceLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Tag Services"
                             />
                           </Col>
