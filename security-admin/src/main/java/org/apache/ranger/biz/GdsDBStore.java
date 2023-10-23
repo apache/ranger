@@ -120,6 +120,8 @@ public class GdsDBStore extends AbstractGdsStore {
     public RangerDataset createDataset(RangerDataset dataset) {
         LOG.debug("==> createDataset({})", dataset);
 
+        dataset.setName(StringUtils.trim(dataset.getName()));
+
         validator.validateCreate(dataset);
 
         if (StringUtils.isBlank(dataset.getGuid())) {
@@ -154,6 +156,8 @@ public class GdsDBStore extends AbstractGdsStore {
         } catch (Exception excp) {
             // ignore
         }
+
+        dataset.setName(StringUtils.trim(dataset.getName()));
 
         validator.validateUpdate(dataset, existing);
 
@@ -408,6 +412,8 @@ public class GdsDBStore extends AbstractGdsStore {
     public RangerProject createProject(RangerProject project) {
         LOG.debug("==> createProject({})", project);
 
+        project.setName(StringUtils.trim(project.getName()));
+
         validator.validateCreate(project);
 
         if (StringUtils.isBlank(project.getGuid())) {
@@ -442,6 +448,8 @@ public class GdsDBStore extends AbstractGdsStore {
         } catch (Exception excp) {
             // ignore
         }
+
+        project.setName(StringUtils.trim(project.getName()));
 
         validator.validateUpdate(project, existing);
 
@@ -706,6 +714,8 @@ public class GdsDBStore extends AbstractGdsStore {
     public RangerDataShare createDataShare(RangerDataShare dataShare) {
         LOG.debug("==> createDataShare({})", dataShare);
 
+        dataShare.setName(StringUtils.trim(dataShare.getName()));
+
         validator.validateCreate(dataShare);
 
         if (StringUtils.isBlank(dataShare.getGuid())) {
@@ -740,6 +750,8 @@ public class GdsDBStore extends AbstractGdsStore {
         } catch (Exception excp) {
             // ignore
         }
+
+        dataShare.setName(StringUtils.trim(dataShare.getName()));
 
         validator.validateUpdate(dataShare, existing);
 
@@ -820,6 +832,8 @@ public class GdsDBStore extends AbstractGdsStore {
     public RangerSharedResource addSharedResource(RangerSharedResource resource) {
         LOG.debug("==> addSharedResource({})", resource);
 
+        resource.setName(StringUtils.trim(resource.getName()));
+
         validator.validateCreate(resource);
 
         if (StringUtils.isBlank(resource.getGuid())) {
@@ -848,6 +862,8 @@ public class GdsDBStore extends AbstractGdsStore {
         } catch (Exception excp) {
             // ignore
         }
+
+        resource.setName(StringUtils.trim(resource.getName()));
 
         validator.validateUpdate(resource, existing);
 
