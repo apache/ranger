@@ -58,7 +58,7 @@ public abstract class AbstractGdsStore implements GdsStore {
     public RangerProject updateProject(RangerProject dataset) throws Exception { return null; }
 
     @Override
-    public void deleteProject(Long datasetId) throws Exception { }
+    public void deleteProject(Long datasetId, boolean forceDelete) throws Exception { }
 
     @Override
     public RangerProject getProject(Long projectId) throws Exception { return null; }

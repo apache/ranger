@@ -694,13 +694,6 @@
 		<query>select obj.id from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
-	<named-query name="XXService.findIdsExcludingServiceTypes">
-		<query>SELECT obj.id
-		         FROM XXService obj
-		         JOIN XXServiceDef sd ON sd.id = obj.type
-		        WHERE sd.name NOT IN :excludedServiceTypes</query>
-	</named-query>
-
 	<named-query name="XXService.findAssociatedTagService">
 		<query>select obj from XXService obj
 			where obj.name = :serviceName
@@ -2167,6 +2160,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGdsDataset.findServiceIds">
+		<query>SELECT DISTINCT(dsh.serviceId) FROM XXGdsDataShare dsh, XXGdsDataShareInDataset dshid
+		        WHERE dshid.datasetId   = :datasetId
+		          AND dshid.dataShareId = dsh.id
+		</query>
+	</named-query>
+
 	<named-query name="XXGdsProject.findByGuid">
 		<query>select obj from XXGdsProject obj where obj.guid = :guid</query>
 	</named-query>
@@ -2179,6 +2179,14 @@
 		<query>select obj from XXGdsProject obj, XXGdsDatasetInProject dip
 		        where dip.datasetId = :datasetId
 		          and dip.projectId = obj.id</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findServiceIds">
+		<query>SELECT DISTINCT(dsh.serviceId) FROM XXGdsDataShare dsh, XXGdsDataShareInDataset dshid, XXGdsDatasetInProject dip
+		        WHERE dip.projectId     = :projectId
+		          AND dip.datasetId     = dshid.datasetId
+		          AND dshid.dataShareId = dsh.id
+		</query>
 	</named-query>
 
 	<named-query name="XXGdsDataShare.findByGuid">

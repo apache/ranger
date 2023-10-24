@@ -22,7 +22,9 @@ package org.apache.ranger.plugin.util;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,4 +70,12 @@ public class JsonUtilsV2 {
         return getMapper().readValue(json, tClass);
     }
 
+
+    static public void writeValue(Writer writer, Object obj) throws Exception {
+        getMapper().writeValue(writer, obj);
+    }
+
+    static public <T> T readValue(Reader reader, Class<T> tClass) throws Exception {
+        return getMapper().readValue(reader, tClass);
+    }
 }

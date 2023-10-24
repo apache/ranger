@@ -27,7 +27,6 @@ import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -220,6 +219,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
@@ -2924,22 +2925,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (!serviceDbObj.getIsenabled()) {
 				ret = ServicePolicies.copyHeader(ret);
 				ret.setTagPolicies(null);
-				ret.setGdsPolicies(null);
 			} else {
 				String  tagServiceName     = ret.getTagPolicies() != null ? ret.getTagPolicies().getServiceName() : null;
-				String  gdsServiceName     = ret.getGdsPolicies() != null ? ret.getGdsPolicies().getServiceName() : null;
 				boolean isTagServiceActive = isServiceActive(tagServiceName);
-				boolean isGdsServiceActive = isServiceActive(gdsServiceName);
 
-				if (!isTagServiceActive || !isGdsServiceActive) {
+				if (!isTagServiceActive) {
 					ServicePolicies copy = ServicePolicies.copyHeader(ret);
 
 					if (!isTagServiceActive) {
 						copy.setTagPolicies(null);
-					}
-
-					if (!isGdsServiceActive) {
-						copy.setGdsPolicies(null);
 					}
 
 					List<RangerPolicy>      copyPolicies     = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
@@ -3048,15 +3042,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXService            tagServiceDbObj = null;
 		RangerServiceDef     tagServiceDef = null;
 		XXServiceVersionInfo tagServiceVersionInfoDbObj= null;
-		XXService            gdsServiceDbObj = null;
-		RangerServiceDef     gdsServiceDef = null;
-		XXServiceVersionInfo gdsServiceVersionInfoDbObj= null;
 
 		if (serviceDbObj.getTagService() != null) {
 			tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
 		}
-
-		gdsServiceDbObj = daoMgr.getXXService().findByName(GDS_SERVICE_NAME);
 
 		if (tagServiceDbObj != null) {
 			tagServiceDef = getServiceDef(tagServiceDbObj.getType());
@@ -3074,24 +3063,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if (gdsServiceDbObj != null) {
-			gdsServiceDef = getServiceDef(gdsServiceDbObj.getType());
-
-			if (gdsServiceDef == null) {
-				throw new Exception("service-def does not exist. id=" + gdsServiceDbObj.getType());
-			}
-
-			ServiceDefUtil.normalizeAccessTypeDefs(gdsServiceDef, serviceType);
-
-			gdsServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(GDS_SERVICE_NAME);
-
-			if (gdsServiceVersionInfoDbObj == null) {
-				LOG.warn("serviceVersionInfo does not exist. name=" + gdsServiceDbObj.getName());
-			}
-		}
-
 		if (isDeltaEnabled) {
-			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, gdsServiceDef, gdsServiceDbObj, lastKnownVersion, maxNeededVersion);
+			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion, maxNeededVersion);
 		}
 
 		if (ret != null) {
@@ -3101,13 +3074,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 				ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 				ret.getTagPolicies().setAuditMode(auditMode);
 			}
-			if (ret.getGdsPolicies() != null) {
-				ret.getGdsPolicies().setPolicyUpdateTime(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyUpdateTime());
-				ret.getGdsPolicies().setAuditMode(auditMode);
-			}
 		} else if (!getOnlyDeltas) {
 			ServicePolicies.TagPolicies tagPolicies = null;
-			ServicePolicies.GdsPolicies gdsPolicies = null;
 
 			if (tagServiceDbObj != null) {
 				tagPolicies = new ServicePolicies.TagPolicies();
@@ -3119,18 +3087,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
 				tagPolicies.setServiceDef(tagServiceDef);
 				tagPolicies.setAuditMode(auditMode);
-			}
-
-			if (gdsServiceDbObj != null) {
-				gdsPolicies = new ServicePolicies.GdsPolicies();
-
-				gdsPolicies.setServiceId(gdsServiceDbObj.getId());
-				gdsPolicies.setServiceName(gdsServiceDbObj.getName());
-				gdsPolicies.setPolicyVersion(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyVersion());
-				gdsPolicies.setPolicyUpdateTime(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyUpdateTime());
-				gdsPolicies.setPolicies(getServicePoliciesFromDb(gdsServiceDbObj));
-				gdsPolicies.setServiceDef(gdsServiceDef);
-				gdsPolicies.setAuditMode(auditMode);
 			}
 
 			List<RangerPolicy> policies = getServicePoliciesFromDb(serviceDbObj);
@@ -3145,7 +3101,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setServiceDef(serviceDef);
 			ret.setAuditMode(auditMode);
 			ret.setTagPolicies(tagPolicies);
-			ret.setGdsPolicies(gdsPolicies);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -3318,7 +3273,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	}
 
-	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, RangerServiceDef gdsServiceDef, XXService gdsService, Long lastKnownVersion, Long maxNeededVersion) {
+	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion, Long maxNeededVersion) {
 		ServicePolicies ret = null;
 
 		// if lastKnownVersion != -1L : try and get deltas. Get delta for serviceName first. Find id of the delta
@@ -3367,23 +3322,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 
-				if (isValid && gdsService != null) {
-					Long id = resourcePolicyDeltas.get(0).getId();
-					gdsPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, maxNeededVersion, gdsService.getId());
-
-					if (CollectionUtils.isNotEmpty(gdsPolicyDeltas)) {
-						String gdsServiceType = gdsServiceDef.getName();
-
-						isValid = RangerPolicyDeltaUtil.isValidDeltas(gdsPolicyDeltas, gdsServiceType);
-
-						if (isValid) {
-							retrievedGdsPolicyVersion = gdsPolicyDeltas.get(gdsPolicyDeltas.size() - 1).getPoliciesVersion();
-						} else {
-							LOG.warn("Gds policy-Deltas :[" + gdsPolicyDeltas + "] for service-version :[" + lastKnownVersion + "] and delta-id :[" + id + "] are not valid");
-						}
-					}
-				}
-
 				if (isValid) {
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
 						// To ensure that resource-policy-deltas with service-type of 'tag' are ignored after validation
@@ -3411,16 +3349,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 							tagPolicies.setPolicies(null);
 							tagPolicies.setPolicyVersion(retrievedTagPolicyVersion);
 							ret.setTagPolicies(tagPolicies);
-						}
-
-						if (gdsServiceDef != null && gdsService != null) {
-							ServicePolicies.GdsPolicies gdsPolicies = new ServicePolicies.GdsPolicies();
-							gdsPolicies.setServiceDef(gdsServiceDef);
-							gdsPolicies.setServiceId(gdsService.getId());
-							gdsPolicies.setServiceName(gdsService.getName());
-							gdsPolicies.setPolicies(null);
-							gdsPolicies.setPolicyVersion(retrievedGdsPolicyVersion);
-							ret.setGdsPolicies(gdsPolicies);
 						}
 					} else {
 						LOG.warn("Deltas :[" + resourcePolicyDeltas + "] from version :[" + lastKnownVersion + "] after compressing are null!");
@@ -3712,7 +3640,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updatePolicyVersion(service, policyDeltaType, policy, updateServiceInfoRoleVersion);
 	}
 
-	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, ROLE_VERSION }
+	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, ROLE_VERSION, GDS_VERSION }
 
 	private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
 		if(service == null || service.getId() == null) {
@@ -3734,10 +3662,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		// if this is a tag/gds service, update all services that refer to this service
 		// so that next policy-download from plugins will get updated tag/gds policies
 		boolean isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
-		boolean isGdsService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getGdsServiceDefId();
 
-		if (isTagService || isGdsService) {
-			List<Long> referringServiceIds = isTagService ? serviceDao.findIdsByTagServiceId(serviceId) : serviceDao.findIdsExcludingServiceTypes(Arrays.asList(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME));
+		if (isTagService) {
+			List<Long> referringServiceIds = serviceDao.findIdsByTagServiceId(serviceId);
 
 			for (Long referringServiceId : referringServiceIds) {
 				Runnable policyVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.POLICY_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
@@ -3799,13 +3726,22 @@ public class ServiceDBStore extends AbstractServiceStore {
 					LOG.error("No Global state DAO. Cannot execute this object:[" + serviceVersionUpdater + "]");
 					return;
 				}
+			} else if (versionType == VERSION_TYPE.GDS_VERSION) {
+				nextVersion = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_GDS);
+
+				if (nextVersion == null) {
+					nextVersion = 1L;
+				}
+
+				serviceVersionInfoDbObj.setGdsVersion(nextVersion);
+				serviceVersionInfoDbObj.setGdsUpdateTime(now);
 			} else {
 				LOG.error("Unknown VERSION_TYPE:" + versionType + ". Cannot execute this object:[" + serviceVersionUpdater + "]");
 				return;
 			}
+
 			serviceVersionUpdater.version = nextVersion;
 			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
-
 		} else {
 			if (service != null) {
 				serviceVersionInfoDbObj = new XXServiceVersionInfo();
@@ -3816,6 +3752,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
 				serviceVersionInfoDbObj.setRoleVersion(nextVersion);
 				serviceVersionInfoDbObj.setRoleUpdateTime(now);
+				serviceVersionInfoDbObj.setGdsVersion(nextVersion);
+				serviceVersionInfoDbObj.setGdsUpdateTime(now);
 
 				serviceVersionUpdater.version = nextVersion;
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);
@@ -6197,7 +6135,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 			ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
 			ret.setTagPolicies(servicePolicies.getTagPolicies());
-			ret.setGdsPolicies(servicePolicies.getGdsPolicies());
 
 			Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 
@@ -6308,8 +6245,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private ServicePolicies filterServicePolicies(ServicePolicies servicePolicies) {
 		ServicePolicies ret = null;
 		boolean containsDisabledResourcePolicies = false;
-		boolean containsDisabledTagPolicies = false;
-		boolean containsDisabledGdsPolicies = false;
+		boolean containsDisabledTagPolicies      = false;
 
 		if (servicePolicies != null) {
 			List<RangerPolicy> policies = null;
@@ -6336,19 +6272,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 
-			if (servicePolicies.getGdsPolicies() != null) {
-				policies = servicePolicies.getGdsPolicies().getPolicies();
-				if (CollectionUtils.isNotEmpty(policies)) {
-					for (RangerPolicy policy : policies) {
-						if (!policy.getIsEnabled()) {
-							containsDisabledGdsPolicies = true;
-							break;
-						}
-					}
-				}
-			}
-
-			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies && !containsDisabledGdsPolicies) {
+			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies) {
 				ret = servicePolicies;
 			} else {
 				ret = new ServicePolicies();
@@ -6360,7 +6284,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
 				ret.setPolicies(servicePolicies.getPolicies());
 				ret.setTagPolicies(servicePolicies.getTagPolicies());
-				ret.setGdsPolicies(servicePolicies.getGdsPolicies());
 				ret.setSecurityZones(servicePolicies.getSecurityZones());
 
 				if (containsDisabledResourcePolicies) {
@@ -6391,26 +6314,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					tagPolicies.setPolicies(filteredPolicies);
 
 					ret.setTagPolicies(tagPolicies);
-				}
-
-				if (containsDisabledGdsPolicies) {
-					ServicePolicies.GdsPolicies gdsPolicies = new ServicePolicies.GdsPolicies();
-
-					gdsPolicies.setServiceDef(servicePolicies.getGdsPolicies().getServiceDef());
-					gdsPolicies.setServiceId(servicePolicies.getGdsPolicies().getServiceId());
-					gdsPolicies.setServiceName(servicePolicies.getGdsPolicies().getServiceName());
-					gdsPolicies.setPolicyVersion(servicePolicies.getGdsPolicies().getPolicyVersion());
-					gdsPolicies.setPolicyUpdateTime(servicePolicies.getGdsPolicies().getPolicyUpdateTime());
-
-					List<RangerPolicy> filteredPolicies = new ArrayList<>();
-					for (RangerPolicy policy : servicePolicies.getGdsPolicies().getPolicies()) {
-						if (policy.getIsEnabled()) {
-							filteredPolicies.add(policy);
-						}
-					}
-					gdsPolicies.setPolicies(filteredPolicies);
-
-					ret.setGdsPolicies(gdsPolicies);
 				}
 			}
 		}

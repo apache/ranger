@@ -114,4 +114,19 @@ public class XXGdsDataShareDao extends BaseDao<XXGdsDataShare> {
 
 		return ret != null ? ret : Collections.emptyList();
 	}
+
+	public List<Long> findServiceIdsForDataShareId(Long dataShareId) {
+		List<Long> ret = null;
+
+		if (dataShareId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXGdsDataShare.findServiceIds", Long.class)
+				                        .setParameter("dataShareId", dataShareId).getResultList();
+			} catch (NoResultException e) {
+				LOG.debug("findServiceIdsForDataShareId({}): ", dataShareId, e);
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
+	}
 }

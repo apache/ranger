@@ -19,12 +19,14 @@ package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsBaseModelObject;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.VXMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,13 @@ public abstract class RangerGdsBaseModelService<T extends XXDBBase, V extends Ra
 
     protected RangerGdsBaseModelService(int classType) {
         this.classType = classType;
+
+        searchFields.add(new SearchField(SearchFilter.GUID,              "obj.guid",       SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.IS_ENABLED,        "obj.isEnabled",  SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_START, "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_END,   "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_START, "obj.updateTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_END,   "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
 
         trxLogAttrs.put("description",    new VTrxLogAttr("description", "Description", false));
         trxLogAttrs.put("options",        new VTrxLogAttr("options", "Options", false));

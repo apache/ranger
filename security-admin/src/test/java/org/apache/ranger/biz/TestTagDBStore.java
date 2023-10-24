@@ -1123,6 +1123,7 @@ public class TestTagDBStore {
         serviceVersionInfoDbObj.setRoleVersion(lastKnownVersion);
         serviceVersionInfoDbObj.setPolicyVersion(lastKnownVersion);
         serviceVersionInfoDbObj.setTagVersion(lastKnownVersion);
+        serviceVersionInfoDbObj.setGdsVersion(lastKnownVersion);
 
         return serviceVersionInfoDbObj;
     }

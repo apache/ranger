@@ -22,68 +22,35 @@ package org.apache.ranger.biz;
 import org.apache.http.HttpStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.common.GUIDUtil;
-import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
-import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXGdsDataShareInDatasetDao;
-import org.apache.ranger.db.XXGdsDatasetDao;
-import org.apache.ranger.db.XXGdsDatasetInProjectDao;
-import org.apache.ranger.db.XXGdsProjectDao;
-import org.apache.ranger.entity.XXGdsDataShareInDataset;
-import org.apache.ranger.entity.XXGdsDataset;
-import org.apache.ranger.entity.XXGdsDatasetInProject;
-import org.apache.ranger.entity.XXGdsDatasetPolicyMap;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXSecurityZone;
-import org.apache.ranger.entity.XXGdsProject;
-import org.apache.ranger.entity.XXGdsProjectPolicyMap;
-import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
-import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
-import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
+import org.apache.ranger.db.*;
+import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerGds.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
-import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
-import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
-import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
-import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
-import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
-import org.apache.ranger.plugin.model.RangerGds.RangerProject;
-import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
 import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.service.RangerGdsDataShareService;
-import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
-import org.apache.ranger.service.RangerGdsDatasetService;
-import org.apache.ranger.service.RangerGdsDatasetInProjectService;
-import org.apache.ranger.service.RangerGdsProjectService;
-import org.apache.ranger.service.RangerGdsSharedResourceService;
-import org.apache.ranger.service.RangerServiceService;
+import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.plugin.util.ServiceGdsInfo.*;
+import org.apache.ranger.service.*;
 import org.apache.ranger.validation.RangerGdsValidator;
-import org.apache.ranger.view.RangerGdsVList.RangerDataShareList;
-import org.apache.ranger.view.RangerGdsVList.RangerDataShareInDatasetList;
-import org.apache.ranger.view.RangerGdsVList.RangerDatasetList;
-import org.apache.ranger.view.RangerGdsVList.RangerDatasetInProjectList;
-import org.apache.ranger.view.RangerGdsVList.RangerProjectList;
-import org.apache.ranger.view.RangerGdsVList.RangerSharedResourceList;
+import org.apache.ranger.view.RangerGdsVList.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import java.util.*;
 
-import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_DATASET;
-import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_DATA_SHARE;
-import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_PROJECT;
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
 
 
@@ -149,34 +116,6 @@ public class GdsDBStore extends AbstractGdsStore {
         }
     }
 
-    public PList<DatasetSummary> getDatasetSummary(SearchFilter filter) throws Exception {
-        LOG.debug("==> getDatasetSummary({})", filter);
-
-        PList<RangerDataset>  datasets       = getUnscrubbedDatasets(filter);
-        List<DatasetSummary>  datasetSummary = toDatasetSummary(datasets.getList(), getGdsPermissionFromFilter(filter));
-        PList<DatasetSummary> ret            = new PList<>(datasetSummary, datasets.getStartIndex(), datasets.getPageSize(), datasets.getTotalCount(), datasets.getResultSize(), datasets.getSortType(), datasets.getSortBy());
-
-        ret.setQueryTimeMS(datasets.getQueryTimeMS());
-
-        LOG.debug("<== getDatasetSummary({}): ret={}", filter, ret);
-
-        return ret;
-    }
-
-    public PList<DataShareSummary> getDataShareSummary(SearchFilter filter) {
-        LOG.debug("==> getDataShareSummary({})", filter);
-
-        PList<RangerDataShare>  dataShares       = getUnscrubbedDataShares(filter);
-        List<DataShareSummary>  dataShareSummary = toDataShareSummary(dataShares.getList(), getGdsPermissionFromFilter(filter));
-        PList<DataShareSummary> ret              = new PList<>(dataShareSummary, dataShares.getStartIndex(), dataShares.getPageSize(), dataShares.getTotalCount(), dataShares.getResultSize(), dataShares.getSortType(), dataShares.getSortBy());
-
-        ret.setQueryTimeMS(dataShares.getQueryTimeMS());
-
-        LOG.debug("<== getDataShareSummary({}): ret={}", filter, ret);
-
-        return ret;
-    }
-
     @Override
     public RangerDataset createDataset(RangerDataset dataset) {
         LOG.debug("==> createDataset({})", dataset);
@@ -197,7 +136,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         datasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
+        updateGdsVersion();
 
         LOG.debug("<== createDataset({}): ret={}", dataset, ret);
 
@@ -222,7 +161,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         datasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
+        updateGdsVersionForDataset(ret.getId());
 
         LOG.debug("<== updateDataset({}): ret={}", dataset, ret);
 
@@ -244,6 +183,8 @@ public class GdsDBStore extends AbstractGdsStore {
         validator.validateDelete(datasetId, existing);
 
         if (existing != null) {
+            updateGdsVersionForDataset(existing.getId());
+
             if (forceDelete) {
                 removeDSHIDForDataset(datasetId);
                 removeDIPForDataset(datasetId);
@@ -253,8 +194,6 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetService.delete(existing);
 
             datasetService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
-
-            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATASET);
         }
 
         LOG.debug("<== deleteDataset({}, {})", datasetId, forceDelete);
@@ -352,6 +291,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         daoMgr.getXXGdsDatasetPolicyMap().create(new XXGdsDatasetPolicyMap(datasetId, ret.getId()));
 
+        updateGdsVersionForDataset(datasetId);
+
         LOG.debug("<== addDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
 
         return ret;
@@ -376,6 +317,8 @@ public class GdsDBStore extends AbstractGdsStore {
         prepareDatasetPolicy(dataset, policy);
 
         RangerPolicy ret = svcStore.updatePolicy(policy);
+
+        updateGdsVersionForDataset(datasetId);
 
         LOG.debug("<== updateDatasetPolicy({}, {}): ret={}", datasetId, policy, ret);
 
@@ -403,6 +346,8 @@ public class GdsDBStore extends AbstractGdsStore {
         daoMgr.getXXGdsDatasetPolicyMap().remove(existing);
         svcStore.deletePolicy(policy);
 
+        updateGdsVersionForDataset(datasetId);
+
         LOG.debug("<== deleteDatasetPolicy({}, {})", datasetId, policyId);
     }
 
@@ -413,6 +358,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDataset dataset = datasetService.read(datasetId);
 
         deleteDatasetPolicies(dataset);
+
+        updateGdsVersionForDataset(datasetId);
 
         LOG.debug("<== deleteDatasetPolicy({})", datasetId);
     }
@@ -450,18 +397,7 @@ public class GdsDBStore extends AbstractGdsStore {
             throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES);
         }
 
-        List<RangerPolicy> ret;
-        List<Long>         policyIds = daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(datasetId);
-
-        if (policyIds != null) {
-            ret = new ArrayList<>(policyIds.size());
-
-            for (Long policyId : policyIds) {
-                ret.add(svcStore.getPolicy(policyId));
-            }
-        } else {
-            ret = Collections.emptyList();
-        }
+        List<RangerPolicy> ret = getPolicies(daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(datasetId));
 
         LOG.debug("<== getDatasetPolicies({}): ret={}", datasetId, ret);
 
@@ -488,7 +424,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         projectService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
+        updateGdsVersion();
 
         LOG.debug("<== createProject({}): ret={}", project, ret);
 
@@ -513,7 +449,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         projectService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
+        updateGdsVersionForProject(ret.getId());
 
         LOG.debug("<== updateProject({}): ret={}", project, ret);
 
@@ -521,8 +457,8 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteProject(Long projectId) throws Exception {
-        LOG.debug("==> deleteProject({})", projectId);
+    public void deleteProject(Long projectId, boolean forceDelete) throws Exception {
+        LOG.debug("==> deleteProject({}, {})", projectId, forceDelete);
 
         RangerProject existing = null;
 
@@ -535,12 +471,16 @@ public class GdsDBStore extends AbstractGdsStore {
         validator.validateDelete(projectId, existing);
 
         if (existing != null) {
+            updateGdsVersionForProject(existing.getId());
+
+            if (forceDelete) {
+                removeDIPForProject(existing.getId());
+            }
+
             deleteProjectPolicies(existing);
             projectService.delete(existing);
 
             projectService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
-
-            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_PROJECT);
         }
 
         LOG.debug("<== deleteProject({})", projectId);
@@ -648,6 +588,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         daoMgr.getXXGdsProjectPolicyMap().create(new XXGdsProjectPolicyMap(projectId, ret.getId()));
 
+        updateGdsVersionForProject(project.getId());
+
         LOG.debug("<== addProjectPolicy({}, {}): ret={}", projectId, policy, ret);
 
         return ret;
@@ -672,6 +614,8 @@ public class GdsDBStore extends AbstractGdsStore {
         prepareProjectPolicy(project, policy);
 
         RangerPolicy ret = svcStore.updatePolicy(policy);
+
+        updateGdsVersionForProject(project.getId());
 
         LOG.debug("<== updateProjectPolicy({}, {}): ret={}", projectId, policy, ret);
 
@@ -699,6 +643,8 @@ public class GdsDBStore extends AbstractGdsStore {
         daoMgr.getXXGdsProjectPolicyMap().remove(existing);
         svcStore.deletePolicy(policy);
 
+        updateGdsVersionForProject(project.getId());
+
         LOG.debug("<== deleteProjectPolicy({}, {})", projectId, policyId);
     }
 
@@ -709,6 +655,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerProject project = projectService.read(projectId);
 
         deleteProjectPolicies(project);
+
+        updateGdsVersionForProject(project.getId());
 
         LOG.debug("<== deleteProjectPolicy({})", projectId);
     }
@@ -740,23 +688,13 @@ public class GdsDBStore extends AbstractGdsStore {
     public List<RangerPolicy> getProjectPolicies(Long projectId) throws Exception {
         LOG.debug("==> getProjectPolicies({})", projectId);
 
-        List<RangerPolicy> ret = null;
-
         RangerProject project = projectService.read(projectId);
 
         if (!validator.hasPermission(project.getAcl(), GdsPermission.AUDIT)) {
             throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES);
         }
 
-        List<Long> policyIds = daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(projectId);
-
-        if (policyIds != null) {
-            ret = new ArrayList<>(policyIds.size());
-
-            for (Long policyId : policyIds) {
-                ret.add(svcStore.getPolicy(policyId));
-            }
-        }
+        List<RangerPolicy> ret = getPolicies(daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(projectId));
 
         LOG.debug("<== getProjectPolicies({}): ret={}", projectId, ret);
 
@@ -784,7 +722,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         dataShareService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
+        updateGdsVersion();
 
         LOG.debug("<== createDataShare({}): ret={}", dataShare, ret);
 
@@ -809,7 +747,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         dataShareService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
-        updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
+        updateGdsVersionForService(dataShare.getService());
 
         LOG.debug("<== updateDataShare({}): ret={}", dataShare, ret);
 
@@ -830,17 +768,17 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateDelete(dataShareId, existing);
 
-        if(forceDelete) {
-            removeDshInDsForDataShare(dataShareId);
-            removeSharedResourcesForDataShare(dataShareId);
-        }
-
         if (existing != null) {
+            if (forceDelete) {
+                removeDshInDsForDataShare(dataShareId);
+                removeSharedResourcesForDataShare(dataShareId);
+            }
+
             dataShareService.delete(existing);
 
             dataShareService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
 
-            updateGlobalVersion(RANGER_GLOBAL_STATE_NAME_DATA_SHARE);
+            updateGdsVersionForService(existing.getService());
         }
 
         LOG.debug("<== deleteDataShare(dataShareId: {}, forceDelete: {})", dataShareId, forceDelete);
@@ -892,6 +830,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         sharedResourceService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
+        updateGdsVersionForDataShare(ret.getDataShareId());
+
         LOG.debug("<== addSharedResource({}): ret={}", resource, ret);
 
         return ret;
@@ -914,6 +854,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerSharedResource ret = sharedResourceService.update(resource);
 
         sharedResourceService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+
+        updateGdsVersionForDataShare(ret.getDataShareId());
 
         LOG.debug("<== updateSharedResource({}): ret={}", resource, ret);
 
@@ -939,6 +881,8 @@ public class GdsDBStore extends AbstractGdsStore {
             sharedResourceService.delete(existing);
 
             sharedResourceService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
+            updateGdsVersionForDataShare(existing.getDataShareId());
         }
 
         LOG.debug("<== removeSharedResource({})", sharedResourceId);
@@ -1051,6 +995,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         dataShareInDatasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
+        updateGdsVersionForDataset(dataShareInDataset.getDatasetId());
+
         LOG.debug("<== updateDataShareInDataset({}): ret={}", dataShareInDataset, ret);
 
         return ret;
@@ -1067,6 +1013,8 @@ public class GdsDBStore extends AbstractGdsStore {
         dataShareInDatasetService.delete(existing);
 
         dataShareInDatasetService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
+        updateGdsVersionForDataset(existing.getDatasetId());
 
         LOG.debug("<== removeDataShareInDataset({})", dataShareInDatasetId);
     }
@@ -1128,6 +1076,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         datasetInProjectService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
+        updateGdsVersionForDataset(datasetInProject.getDatasetId());
+
         LOG.debug("<== addDatasetInProject({}): ret={}", datasetInProject, ret);
 
         return ret;
@@ -1147,6 +1097,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         datasetInProjectService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
+        updateGdsVersionForDataset(datasetInProject.getDatasetId());
+
         LOG.debug("<== updateDatasetInProject({}): ret={}", datasetInProject, ret);
 
         return ret;
@@ -1163,6 +1115,8 @@ public class GdsDBStore extends AbstractGdsStore {
         datasetInProjectService.delete(existing);
 
         datasetInProjectService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
+        updateGdsVersionForDataset(existing.getDatasetId());
 
         LOG.debug("<== removeDatasetInProject({})", datasetInProjectId);
     }
@@ -1205,8 +1159,67 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    private void updateGlobalVersion(String stateName) {
-        transactionSynchronizationAdapter.executeOnTransactionCommit(new GlobalVersionUpdater(daoMgr, stateName));
+    public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
+        LOG.debug("==> GdsDBStore.getGdsInfoIfUpdated({}, {})", serviceName , lastKnownVersion);
+
+        Long serviceId = daoMgr.getXXService().findIdByName(serviceName);
+
+        if (serviceId == null) {
+            LOG.error("Requested Service not found. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName), false);
+        }
+
+        ServiceGdsInfo       ret                = null;
+        XXServiceVersionInfo serviceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceId);
+        Long                 currentGdsVersion  = serviceVersionInfo != null ? serviceVersionInfo.getGdsVersion() : null;
+
+        if (currentGdsVersion == null || !currentGdsVersion.equals(lastKnownVersion)) {
+            ret = retrieveServiceGdsInfo(serviceId, serviceName);
+
+            Date lastUpdateTime = serviceVersionInfo != null ? serviceVersionInfo.getGdsUpdateTime() : null;
+
+            ret.setGdsLastUpdateTime(lastUpdateTime != null ? lastUpdateTime.getTime() : null);
+            ret.setGdsVersion(currentGdsVersion);
+        } else {
+            LOG.debug("No change in gdsVersionInfo: serviceName={}, lastKnownVersion={}", serviceName, lastKnownVersion);
+        }
+
+        LOG.debug("<== GdsDBStore.getGdsInfoIfUpdated({}, {}): ret={}", serviceName, lastKnownVersion, ret);
+
+        return ret;
+    }
+
+    public PList<DatasetSummary> getDatasetSummary(SearchFilter filter) throws Exception {
+        LOG.debug("==> getDatasetSummary({})", filter);
+
+        PList<RangerDataset>  datasets       = getUnscrubbedDatasets(filter);
+        List<DatasetSummary>  datasetSummary = toDatasetSummary(datasets.getList(), getGdsPermissionFromFilter(filter));
+        PList<DatasetSummary> ret            = new PList<>(datasetSummary, datasets.getStartIndex(), datasets.getPageSize(), datasets.getTotalCount(), datasets.getResultSize(), datasets.getSortType(), datasets.getSortBy());
+
+        ret.setQueryTimeMS(datasets.getQueryTimeMS());
+
+        LOG.debug("<== getDatasetSummary({}): ret={}", filter, ret);
+
+        return ret;
+    }
+
+    public PList<DataShareSummary> getDataShareSummary(SearchFilter filter) {
+        LOG.debug("==> getDataShareSummary({})", filter);
+
+        PList<RangerDataShare>  dataShares       = getUnscrubbedDataShares(filter);
+        List<DataShareSummary>  dataShareSummary = toDataShareSummary(dataShares.getList(), getGdsPermissionFromFilter(filter));
+        PList<DataShareSummary> ret              = new PList<>(dataShareSummary, dataShares.getStartIndex(), dataShares.getPageSize(), dataShares.getTotalCount(), dataShares.getResultSize(), dataShares.getSortType(), dataShares.getSortBy());
+
+        ret.setQueryTimeMS(dataShares.getQueryTimeMS());
+
+        LOG.debug("<== getDataShareSummary({}): ret={}", filter, ret);
+
+        return ret;
+    }
+
+    private void updateGdsVersion() {
+        transactionSynchronizationAdapter.executeOnTransactionCommit(new GlobalVersionUpdater(daoMgr, RANGER_GLOBAL_STATE_NAME_GDS));
     }
 
     private static class GlobalVersionUpdater implements Runnable {
@@ -1279,6 +1292,7 @@ public class GdsDBStore extends AbstractGdsStore {
     private List<DataShareSummary> toDataShareSummary(List<RangerDataShare> dataShares, GdsPermission gdsPermission) {
         List<DataShareSummary> ret         = new ArrayList<>();
         String                 currentUser = bizUtil.getCurrentUserLoginId();
+        Map<String, Long>      zoneIds     = new HashMap<>();
 
         for (RangerDataShare dataShare : dataShares) {
             GdsPermission permissionForCaller = validator.getGdsPermissionForUser(dataShare.getAcl(), currentUser);
@@ -1302,7 +1316,7 @@ public class GdsDBStore extends AbstractGdsStore {
             dataShareSummary.setPermissionForCaller(permissionForCaller);
 
             dataShareSummary.setZoneName(dataShare.getZone());
-            dataShareSummary.setZoneId(getZoneId(dataShare.getZone()));
+            dataShareSummary.setZoneId(getZoneId(dataShare.getZone(), zoneIds));
 
             dataShareSummary.setServiceName(dataShare.getService());
             dataShareSummary.setServiceId(getServiceId(dataShare.getService()));
@@ -1561,6 +1575,21 @@ public class GdsDBStore extends AbstractGdsStore {
         }
     }
 
+    private void removeDIPForProject(Long projectId) {
+        XXGdsDatasetInProjectDao    dipDao    = daoMgr.getXXGdsDatasetInProject();
+        List<XXGdsDatasetInProject> dshidList = dipDao.findByProjectId(projectId);
+
+        for (XXGdsDatasetInProject dip : dshidList) {
+            boolean dipDeleted = dipDao.remove(dip.getId());
+
+            if (!dipDeleted) {
+                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted",
+                                                        MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null,
+                                                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
     private void addCreatorAsAclAdmin(RangerGdsObjectACL acl) {
         String currentUser = bizUtil.getCurrentUserLoginId();
         Map<String, GdsPermission> userAcl = acl.getUsers();
@@ -1630,7 +1659,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         summary.setServiceId(getServiceId(dataShare.getService()));
         summary.setServiceName(dataShare.getService());
-        summary.setZoneId(getZoneId(dataShare.getZone()));
+        summary.setZoneId(getZoneId(dataShare.getZone(), null));
         summary.setZoneName(dataShare.getZone());
         summary.setShareStatus(dshInDs.get().getStatus());
         summary.setApprover(dshInDs.get().getApprover());
@@ -1685,22 +1714,6 @@ public class GdsDBStore extends AbstractGdsStore {
         return serviceTpe;
     }
 
-    private Long getZoneId(String zoneName) {
-        Long ret = null;
-
-        if (StringUtils.isNotBlank(zoneName)) {
-            XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
-
-            if (xxSecurityZone == null) {
-                throw restErrorUtil.createRESTException("Security Zone not found", MessageEnums.DATA_NOT_FOUND, null, "ZoneName", null, HttpStatus.SC_NOT_FOUND);
-            }
-
-            ret = xxSecurityZone.getId();
-        }
-
-        return ret;
-    }
-
     private boolean hasResource(List<String> resources, String resourceValue) {
         return resources.stream().filter(Objects::nonNull).anyMatch(resource -> resource.contains(resourceValue));
     }
@@ -1740,7 +1753,206 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDataShareInDataset ret = dataShareInDatasetService.create(dataShareInDataset);
 
         dataShareInDatasetService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+        updateGdsVersionForDataset(dataShareInDataset.getDatasetId());
 
         return ret;
+    }
+
+    private Long getZoneId(String zoneName, Map<String, Long> zoneIds) {
+        Long ret = null;
+
+        if (StringUtils.isNotBlank(zoneName)) {
+            ret = zoneIds != null ? zoneIds.get(zoneName) : null;
+
+            if (ret == null) {
+                XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+
+                if (xxSecurityZone == null) {
+                    throw restErrorUtil.createRESTException("Security Zone not found", MessageEnums.DATA_NOT_FOUND, null, "ZoneName", null, HttpStatus.SC_NOT_FOUND);
+                }
+
+                ret = xxSecurityZone.getId();
+
+                if (zoneIds != null) {
+                    zoneIds.put(zoneName, ret);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private List<RangerPolicy> getPolicies(List<Long> policyIds) {
+        List<RangerPolicy> ret = new ArrayList<>();
+
+        if (CollectionUtils.isNotEmpty(policyIds)) {
+            for (Long policyId : policyIds) {
+                try {
+                    RangerPolicy policy = svcStore.getPolicy(policyId);
+
+                    if (policy != null) {
+                        ret.add(policy);
+                    }
+                } catch (Exception excp) {
+                    LOG.error("getPolicies(): failed to get policy with id=" + policyId, excp);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private void updateGdsVersionForService(Long serviceId) {
+        updateGdsVersion();
+
+        Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+
+        daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+    }
+
+    private void updateGdsVersionForService(String serviceName) {
+        Long serviceId = daoMgr.getXXService().findIdByName(serviceName);
+
+        if (serviceId != null) {
+            updateGdsVersionForService(serviceId);
+        }
+    }
+
+    private void updateGdsVersionForProject(Long projectId) {
+        updateGdsVersion();
+
+        List<Long> serviceIds = daoMgr.getXXGdsProject().findServiceIdsForProject(projectId);
+
+        for (Long serviceId : serviceIds) {
+            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+
+            daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+        }
+    }
+
+    private void updateGdsVersionForDataset(Long datasetId) {
+        updateGdsVersion();
+
+        List<Long> serviceIds = daoMgr.getXXGdsDataset().findServiceIdsForDataset(datasetId);
+
+        for (Long serviceId : serviceIds) {
+            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+
+            daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+        }
+    }
+
+    private void updateGdsVersionForDataShare(Long dataShareId) {
+        XXGdsDataShare dataShare = daoMgr.getXXGdsDataShare().getById(dataShareId);
+
+        if (dataShare != null) {
+            updateGdsVersionForService(dataShare.getServiceId());
+        }
+    }
+
+    private ServiceGdsInfo retrieveServiceGdsInfo(Long serviceId, String serviceName) throws Exception {
+        ServiceGdsInfo ret = new ServiceGdsInfo();
+
+        ret.setServiceName(serviceName);
+        ret.setGdsServiceDef(svcStore.getServiceDefByName(EMBEDDED_SERVICEDEF_GDS_NAME));
+
+        SearchFilter filter = new SearchFilter(SearchFilter.SERVICE_ID, serviceId.toString());
+
+        populateDatasets(ret, filter);
+        populateProjects(ret, filter);
+        populateDataShares(ret, filter);
+        populateSharedResources(ret, filter);
+        populateDataSharesInDataset(ret, filter);
+        populateDatasetsInProject(ret, filter);
+
+        return ret;
+    }
+
+    private void populateDatasets(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        for (RangerDataset dataset : datasetService.searchDatasets(filter).getList()) {
+            DatasetInfo dsInfo = new DatasetInfo();
+
+            dsInfo.setId(dataset.getId());
+            dsInfo.setName(dataset.getName());
+            dsInfo.setPolicies(getPolicies(daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(dataset.getId())));
+
+            gdsInfo.addDataset(dsInfo);
+        }
+    }
+
+    private void populateProjects(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        for (RangerProject project : projectService.searchProjects(filter).getList()) {
+            ProjectInfo projInfo = new ProjectInfo();
+
+            projInfo.setId(project.getId());
+            projInfo.setName(project.getName());
+            projInfo.setPolicies(getPolicies(daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(project.getId())));
+
+            gdsInfo.addProject(projInfo);
+        }
+    }
+
+    private void populateDataShares(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        RangerDataShareList dataShares  = dataShareService.searchDataShares(filter);
+
+        for (RangerDataShare dataShare : dataShares.getList()) {
+            DataShareInfo dshInfo = new DataShareInfo();
+
+            dshInfo.setId(dataShare.getId());
+            dshInfo.setName(dataShare.getName());
+            dshInfo.setZoneName(dataShare.getZone());
+            dshInfo.setConditionExpr(dataShare.getConditionExpr());
+            dshInfo.setDefaultAccessTypes(dataShare.getDefaultAccessTypes());
+            dshInfo.setDefaultTagMasks(dataShare.getDefaultTagMasks());
+
+            gdsInfo.addDataShare(dshInfo);
+        }
+    }
+
+    private void populateSharedResources(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        for (RangerSharedResource resource : sharedResourceService.searchSharedResources(filter).getList()) {
+            SharedResourceInfo resourceInfo = new SharedResourceInfo();
+
+            resourceInfo.setId(resource.getId());
+            resourceInfo.setDataShareId(resource.getDataShareId());
+            resourceInfo.setResource(resource.getResource());
+            resourceInfo.setSubResource(resource.getSubResource());
+            resourceInfo.setSubResourceType(resource.getSubResourceType());
+            resourceInfo.setConditionExpr(resource.getConditionExpr());
+            resourceInfo.setAccessTypes(resource.getAccessTypes());
+            resourceInfo.setRowFilter(resource.getRowFilter());
+            resourceInfo.setSubResourceMasks(resource.getSubResourceMasks());
+            resourceInfo.setProfiles(resource.getProfiles());
+
+            gdsInfo.addResource(resourceInfo);
+        }
+    }
+
+    private void populateDataSharesInDataset(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        for (RangerDataShareInDataset dshInDs : dataShareInDatasetService.searchDataShareInDatasets(filter).getList()) {
+            DataShareInDatasetInfo dshInDsInfo = new DataShareInDatasetInfo();
+
+            dshInDsInfo.setDatasetId(dshInDs.getDatasetId());
+            dshInDsInfo.setDataShareId(dshInDs.getDataShareId());
+            dshInDsInfo.setStatus(dshInDs.getStatus());
+            dshInDsInfo.setValiditySchedule(dshInDs.getValiditySchedule());
+            dshInDsInfo.setProfiles(dshInDs.getProfiles());
+
+            gdsInfo.addDataShareInDataset(dshInDsInfo);
+        }
+    }
+
+    private void populateDatasetsInProject(ServiceGdsInfo gdsInfo, SearchFilter filter) {
+        for (RangerDatasetInProject dip : datasetInProjectService.searchDatasetInProjects(filter).getList()) {
+            DatasetInProjectInfo dipInfo = new DatasetInProjectInfo();
+
+            dipInfo.setDatasetId(dip.getDatasetId());
+            dipInfo.setProjectId(dip.getProjectId());
+            dipInfo.setStatus(dip.getStatus());
+            dipInfo.setValiditySchedule(dip.getValiditySchedule());
+            dipInfo.setProfiles(dip.getProfiles());
+
+            gdsInfo.addDatasetInProjectInfo(dipInfo);
+        }
     }
 }

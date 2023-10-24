@@ -829,6 +829,82 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return ret;
 	}
 
+	@Override
+	public ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+		LOG.debug("==> RangerAdminRESTClient.getGdsInfoIfUpdated({}, {})", lastKnownVersion, lastActivationTimeInMillis);
+
+		final ServiceGdsInfo       ret;
+		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
+		final boolean              isSecureMode = isKerberosEnabled(user);
+		final Map<String, String>  queryParams  = new HashMap<>();
+		final ClientResponse       response;
+
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_GDS_VERSION, Long.toString(lastKnownVersion));
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
+		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
+
+		LOG.debug("Checking for updated GdsInfo: secureMode={}, user={}, serviceName={}" , isSecureMode, user, serviceName);
+
+		if (isSecureMode) {
+			PrivilegedAction<ClientResponse> action = () -> {
+				ClientResponse clientRes   = null;
+				String         relativeURL = RangerRESTUtils.REST_URL_SERVICE_SECURE_GET_GDSINFO + serviceNameUrlParam;
+				try {
+					clientRes = restClient.get(relativeURL, queryParams);
+				} catch (Exception e) {
+					LOG.error("Failed to get response", e);
+				}
+
+				return clientRes;
+			};
+
+			response = user.doAs(action);
+		} else {
+			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_GDSINFO + serviceNameUrlParam;
+
+			response = restClient.get(relativeURL, queryParams);
+		}
+
+		if (response == null) {
+			ret = null;
+
+			LOG.error("Error getting GdsInfo - received NULL response: secureMode={}, user={}, serviceName={}", isSecureMode, user, serviceName);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+			ret = null;
+
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+
+			LOG.debug("No change in GdsInfo: secureMode={}, user={}, response={}, serviceName={}, lastKnownGdsVersion={}, lastActivationTimeInMillis={}",
+					  isSecureMode, user, resp, serviceName, lastKnownVersion, lastActivationTimeInMillis);
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+			ret = response.getEntity(ServiceGdsInfo.class);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			ret = null;
+
+			LOG.error("Error getting GdsInfo - service not found: secureMode={}, user={}, response={}, serviceName={}, lastKnownGdsVersion={},lastActivationTimeInMillis={}",
+					  isSecureMode, user, response.getStatus(), serviceName, lastKnownVersion, lastActivationTimeInMillis);
+
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[{}], Ignoring", exceptionMsg);
+		} else {
+			ret = null;
+
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+
+			LOG.warn("Error getting GdsInfo: unexpected status code {}: secureMode={}, user={}, response={}, serviceName={}",
+					 response.getStatus(), isSecureMode, user, resp, serviceName);
+		}
+
+		LOG.debug("<== RangerAdminRESTClient.getGdsInfoIfUpdated({}, {}): ret={}", lastKnownVersion, lastActivationTimeInMillis, ret);
+
+		return ret;
+	}
+
 	/* Policies Download ranger admin rest call methods */
 	private ServicePolicies getServicePoliciesIfUpdatedWithCred(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
 		if (LOG.isDebugEnabled()) {

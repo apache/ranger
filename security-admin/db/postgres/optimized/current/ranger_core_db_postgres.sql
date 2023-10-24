@@ -1197,6 +1197,8 @@ tag_version bigint NOT NULL DEFAULT '0',
 tag_update_time TIMESTAMP DEFAULT NULL,
 role_version bigint NOT NULL DEFAULT '0',
 role_update_time TIMESTAMP DEFAULT NULL,
+gds_version bigint NOT NULL DEFAULT '0',
+gds_update_time TIMESTAMP DEFAULT NULL,
 version bigint NOT NULL DEFAULT '1',
 primary key (id),
 CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)

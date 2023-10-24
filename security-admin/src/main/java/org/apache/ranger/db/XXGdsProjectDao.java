@@ -83,4 +83,19 @@ public class XXGdsProjectDao extends BaseDao<XXGdsProject> {
 
 		return ret != null ? ret : Collections.emptyList();
 	}
+
+	public List<Long> findServiceIdsForProject(Long projectId) {
+		List<Long> ret = null;
+
+		if (projectId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXGdsProject.findServiceIds", Long.class)
+				                        .setParameter("projectId", projectId).getResultList();
+			} catch (NoResultException e) {
+				LOG.debug("findServiceIdsForProject({}): ", projectId, e);
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
+	}
 }

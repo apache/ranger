@@ -31,11 +31,13 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.contextenricher.RangerAdminGdsInfoRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
-import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
-import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -292,6 +294,13 @@ public class RangerBasePlugin {
 			} else {
 				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricherIfNeeded(policies, retrieverClassName, retrieverPollIntMs);
 			}
+		}
+
+		if (pluginConfig.isEnableImplicitGdsInfoEnricher() && policies != null && !ServiceDefUtil.isGdsInfoEnricherPresent(policies)) {
+			String retrieverClassName = pluginConfig.get(RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION, RangerAdminGdsInfoRetriever.class.getCanonicalName());
+			String retrieverPollIntMs = pluginConfig.get(RangerGdsEnricher.REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
+
+			ServiceDefUtil.addGdsInfoEnricher(policies, retrieverClassName, retrieverPollIntMs);
 		}
 
 		// guard against catastrophic failure during policy engine Initialization or

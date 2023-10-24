@@ -66,7 +66,7 @@ public interface GdsStore {
 
     RangerProject updateProject(RangerProject dataset) throws Exception;
 
-    void deleteProject(Long datasetId) throws Exception;
+    void deleteProject(Long datasetId, boolean forceDelete) throws Exception;
 
     RangerProject getProject(Long projectId) throws Exception;
 

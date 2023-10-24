@@ -98,4 +98,19 @@ public class XXGdsDatasetDao extends BaseDao<XXGdsDataset> {
 
 		return ret != null ? ret : Collections.emptyList();
 	}
+
+	public List<Long> findServiceIdsForDataset(Long datasetId) {
+		List<Long> ret = null;
+
+		if (datasetId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXGdsDataset.findServiceIds", Long.class)
+				                        .setParameter("datasetId", datasetId).getResultList();
+			} catch (NoResultException e) {
+				LOG.debug("findServiceIdsForDataset({}): ", datasetId, e);
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
+	}
 }

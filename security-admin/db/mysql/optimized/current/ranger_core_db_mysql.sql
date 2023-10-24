@@ -1250,6 +1250,8 @@ CREATE TABLE `x_service_version_info` (
 `tag_update_time` datetime NULL DEFAULT NULL,
 `role_version` bigint(20) NOT NULL DEFAULT 0,
 `role_update_time` datetime NULL DEFAULT NULL,
+`gds_version` bigint(20) NOT NULL DEFAULT 0,
+`gds_update_time` datetime NULL DEFAULT NULL,
 `version` bigint(20) NOT NULL DEFAULT '1',
 primary key (`id`),
 CONSTRAINT `x_service_version_info_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)

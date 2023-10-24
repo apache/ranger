@@ -76,6 +76,10 @@ public class RangerRESTUtils {
 	public static final String REST_URL_SERVICE_GET_USERSTORE          = "/service/xusers/download/";
 	public static final String REST_URL_SERVICE_SERCURE_GET_USERSTORE  = "/service/xusers/secure/download/";
 
+	public static final String REST_PARAM_LAST_KNOWN_GDS_VERSION    = "lastKnownGdsVersion";
+	public static final String REST_URL_SERVICE_GET_GDSINFO         = "/service/gds/download/";
+	public static final String REST_URL_SERVICE_SECURE_GET_GDSINFO  = "/service/gds/secure/download/";
+
 	private static final int MAX_PLUGIN_ID_LEN = 255;
 	
 	public static final String REST_PARAM_CLUSTER_NAME   = "clusterName";

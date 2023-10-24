@@ -339,10 +339,12 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		serviceVersionInfo.setPolicyVersion(1L);
 		serviceVersionInfo.setTagVersion(1L);
 		serviceVersionInfo.setRoleVersion(1L);
+		serviceVersionInfo.setGdsVersion(1L);
 		Date now = new Date();
 		serviceVersionInfo.setPolicyUpdateTime(now);
 		serviceVersionInfo.setTagUpdateTime(now);
 		serviceVersionInfo.setRoleUpdateTime(now);
+		serviceVersionInfo.setGdsUpdateTime(now);
 
 		XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 

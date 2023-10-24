@@ -239,14 +239,21 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
 
         if (lastKnownVersion == null || !lastKnownVersion.equals(currentVersion)) {
             synchronized (this) {
-                try {
-                    RangerRoles roles = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(SERVICE_NAME_FOR_ROLES, rolesStore, lastKnownVersion, currentVersion);
+                ret              = this.rolesUtil;
+                lastKnownVersion = ret != null ? ret.getRoleVersion() : null;
 
-                    if (roles != null) {
-                        this.rolesUtil = ret = new RangerRolesUtil(roles);
+                if (lastKnownVersion == null || !lastKnownVersion.equals(currentVersion)) {
+                    try {
+                        RangerRoles roles = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(SERVICE_NAME_FOR_ROLES, rolesStore, lastKnownVersion, currentVersion);
+
+                        if (roles != null) {
+                            this.rolesUtil = ret = new RangerRolesUtil(roles);
+                        }
+                    } catch (Exception excp) {
+                        LOG.warn("failed to get roles from store", excp);
                     }
-                } catch (Exception excp) {
-                    LOG.warn("failed to get roles from store", excp);
+                } else {
+                    LOG.debug("roles already initialized to latest version {}", currentVersion);
                 }
             }
         }

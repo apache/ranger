@@ -22,8 +22,10 @@ package org.apache.ranger.rest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.GdsDBStore;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
@@ -36,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.RangerGdsDatasetInProjectService;
 import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
@@ -93,6 +96,12 @@ public class GdsREST {
 
     @Autowired
     RESTErrorUtil restErrorUtil;
+
+    @Autowired
+    RangerBizUtil bizUtil;
+
+    @Autowired
+    ServiceUtil serviceUtil;
 
 
     @POST
@@ -311,14 +320,10 @@ public class GdsREST {
         LOG.debug("==> GdsREST.listDatasetNames()");
 
         PList<String>    ret;
-        RangerPerfTracer perf   = null;
+        RangerPerfTracer perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.listDatasetNames()");
         SearchFilter     filter = null;
 
         try {
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.listDatasetNames()");
-            }
-
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
             ret = gdsStore.getDatasetNames(filter);
@@ -345,7 +350,7 @@ public class GdsREST {
         LOG.debug("==> GdsREST.getDatasetSummary()");
 
         PList<DatasetSummary> ret;
-        RangerPerfTracer      perf   = null;
+        RangerPerfTracer      perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDatasetSummary()");
         SearchFilter          filter = null;
 
         try {
@@ -572,7 +577,7 @@ public class GdsREST {
     @DELETE
     @Path("/project/{id}")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_PROJECT + "\")")
-    public void deleteProject(@PathParam("id") Long projectId) {
+    public void deleteProject(@PathParam("id") Long projectId, @Context HttpServletRequest request) {
         LOG.debug("==> deleteProject({})", projectId);
 
         RangerPerfTracer perf = null;
@@ -582,7 +587,9 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.deleteProject(projectId=" + projectId + ")");
             }
 
-            gdsStore.deleteProject(projectId);
+            boolean forceDelete = Boolean.parseBoolean(request.getParameter("forceDelete"));
+
+            gdsStore.deleteProject(projectId, forceDelete);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -639,7 +646,7 @@ public class GdsREST {
         LOG.debug("==> GdsREST.searchProjects()");
 
         PList<RangerProject> ret;
-        RangerPerfTracer     perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");;
+        RangerPerfTracer     perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.searchProjects()");
         SearchFilter         filter = null;
 
         try {
@@ -1482,6 +1489,107 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.searchDatasetInProjects({}): {}", filter, ret);
+
+        return ret;
+    }
+
+
+    @GET
+    @Path("/download/{serviceName}")
+    @Produces({ "application/json" })
+    public ServiceGdsInfo getServiceGdsInfoIfUpdated(@PathParam("serviceName") String serviceName,
+                                                     @QueryParam("lastKnownGdsVersion") @DefaultValue("-1") Long lastKnownVersion,
+                                                     @QueryParam("lastActivationTime") @DefaultValue("0") Long lastActivationTime,
+                                                     @QueryParam("pluginId") String pluginId,
+                                                     @QueryParam("clusterName") @DefaultValue("") String clusterName,
+                                                     @QueryParam("pluginCapabilities") @DefaultValue("") String pluginCapabilities,
+                                                     @Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities);
+
+        ServiceGdsInfo ret      = null;
+        int            httpCode = HttpServletResponse.SC_OK;
+        String         logMsg   = null;
+
+        try {
+            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
+
+            boolean isValid = serviceUtil.isValidateHttpsAuthentication(serviceName, request);
+
+            if (isValid) {
+                ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
+
+                if (ret == null) {
+                    httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+                    logMsg   = "No change since last update";
+                }
+            }
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg   = webException.getResponse().getEntity().toString();
+        } catch (Exception e) {
+            httpCode = HttpServletResponse.SC_BAD_REQUEST;
+            logMsg   = e.getMessage();
+
+            LOG.error("GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, e);
+        }
+
+        if (httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
+
+        LOG.debug("<== GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{}): ret={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/secure/download/{serviceName}")
+    @Produces({ "application/json" })
+    public ServiceGdsInfo getSecureServiceGdsInfoIfUpdated(@PathParam("serviceName") String serviceName,
+                                                           @QueryParam("lastKnownGdsVersion") @DefaultValue("-1") Long lastKnownVersion,
+                                                           @QueryParam("lastActivationTime") @DefaultValue("0") Long lastActivationTime,
+                                                           @QueryParam("pluginId") String pluginId,
+                                                           @QueryParam("clusterName") @DefaultValue("") String clusterName,
+                                                           @QueryParam("pluginCapabilities") @DefaultValue("") String pluginCapabilities,
+                                                           @Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities);
+
+        ServiceGdsInfo ret      = null;
+        int            httpCode = HttpServletResponse.SC_OK;
+        String         logMsg   = null;
+
+        try {
+            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
+
+            boolean isValid = serviceUtil.isValidateHttpsAuthentication(serviceName, request);
+
+            if (isValid) {
+                ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
+
+                if (ret == null) {
+                    httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+                    logMsg   = "No change since last update";
+                }
+            }
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg   = webException.getResponse().getEntity().toString();
+        } catch (Exception e) {
+            httpCode = HttpServletResponse.SC_BAD_REQUEST;
+            logMsg   = e.getMessage();
+
+            LOG.error("GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, e);
+        }
+
+        if (httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
+
+        LOG.debug("<== GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{}): ret={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, ret);
 
         return ret;
     }

@@ -154,16 +154,6 @@ public class XXServiceDao extends BaseDao<XXService> {
 		updateSequence("X_SERVICE_SEQ", maxId + 1);
 	}
 
-	public List<Long> findIdsExcludingServiceTypes(List<String> excludedServiceTypes) {
-		try {
-			return getEntityManager().createNamedQuery("XXService.findIdsExcludingServiceTypes", Long.class)
-					.setParameter("excludedServiceTypes", excludedServiceTypes)
-					.getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<>();
-		}
-	}
-
 	public List<Long> getAllServiceIds() {
 		try {
 			return getEntityManager().createNamedQuery("XXService.getAllServiceIds", Long.class)

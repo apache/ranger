@@ -38,9 +38,7 @@ import java.util.Map;
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     private static final Logger logger = LoggerFactory.getLogger(XXGlobalStateDao.class);
 
-    public final static String RANGER_GLOBAL_STATE_NAME_DATASET    = "RangerDataset";
-    public final static String RANGER_GLOBAL_STATE_NAME_DATA_SHARE = "RangerDataShare";
-    public final static String RANGER_GLOBAL_STATE_NAME_PROJECT    = "RangerProject";
+    public final static String RANGER_GLOBAL_STATE_NAME_GDS        = "RangerGDS";
     public final static String RANGER_GLOBAL_STATE_NAME_ROLE       = "RangerRole";
     public final static String RANGER_GLOBAL_STATE_NAME_USER_GROUP = "RangerUserStore";
     public final static String APP_DATA_ENTRY_VERSION              = "Version";

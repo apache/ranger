@@ -24,6 +24,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -65,8 +66,10 @@ public class ServiceDefUtil {
     public static final String IMPLICIT_CONDITION_EXPRESSION_NAME      = "_expression";
     public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL     = "Enter boolean expression";
     public static final String IMPLICIT_CONDITION_EXPRESSION_DESC      = "Boolean expression";
+    public static final String IMPLICIT_GDS_ENRICHER_NAME              = "gdsInfoEnricher";
 
     private static final String USER_STORE_ENRICHER = RangerUserStoreEnricher.class.getCanonicalName();
+    private static final String GDSINFO_ENRICHER    = RangerGdsEnricher.class.getCanonicalName();
 
 
     public static final String ACCESS_TYPE_MARKER_CREATE = "_CREATE";
@@ -529,6 +532,64 @@ public class ServiceDefUtil {
                 }
             }
         }
+        return ret;
+    }
+
+    public static boolean isGdsInfoEnricherPresent(ServicePolicies policies) {
+        boolean                        ret          = false;
+        RangerServiceDef               serviceDef   = policies != null ? policies.getServiceDef() : null;
+        List<RangerContextEnricherDef> enricherDefs = serviceDef != null ? serviceDef.getContextEnrichers() : null;
+
+        if (enricherDefs != null) {
+            for (RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (StringUtils.equals(enricherDef.getEnricher(), GDSINFO_ENRICHER)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        LOG.debug("isGdsInfoEnricherPresent(service={}): ret={}", policies.getServiceName(), ret);
+
+        return ret;
+    }
+
+    public static boolean addGdsInfoEnricher(ServicePolicies policies, String retrieverClassName, String retrieverPollIntMs) {
+        boolean          ret         = false;
+        RangerServiceDef serviceDef = policies != null ? policies.getServiceDef() : null;
+
+        if (serviceDef != null && !isGdsInfoEnricherPresent(policies)) {
+            List<RangerContextEnricherDef> enricherDefs = serviceDef.getContextEnrichers();
+
+            if (enricherDefs == null) {
+                enricherDefs = new ArrayList<>();
+            }
+
+            long enricherItemId = enricherDefs.size() + 1;
+
+            for (RangerServiceDef.RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (enricherDef.getItemId() >= enricherItemId) {
+                    enricherItemId = enricherDef.getItemId() + 1;
+                }
+            }
+
+            Map<String, String> enricherOptions = new HashMap<>();
+
+            enricherOptions.put(RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION, retrieverClassName);
+            enricherOptions.put(RangerGdsEnricher.REFRESHER_POLLINGINTERVAL_OPTION, retrieverPollIntMs);
+
+            RangerServiceDef.RangerContextEnricherDef gdsInfoEnricher = new RangerServiceDef.RangerContextEnricherDef(enricherItemId, IMPLICIT_GDS_ENRICHER_NAME, GDSINFO_ENRICHER, enricherOptions);
+
+            enricherDefs.add(gdsInfoEnricher);
+
+            serviceDef.setContextEnrichers(enricherDefs);
+
+            ret = true;
+
+            LOG.info("addGdsInfoEnricher(serviceName={}): added gdsInfoEnricher {}", policies.getServiceName(), gdsInfoEnricher);
+        }
+
         return ret;
     }
 

@@ -121,6 +121,12 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
         return null;
     }
 
+    @Override
+    public ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
+
+
     public boolean isKerberosEnabled(UserGroupInformation user) {
         final boolean ret;
 
