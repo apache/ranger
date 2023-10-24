@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import org.apache.ranger.service.RangerTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,39 +49,29 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
 
+    @Autowired
+    RangerTransactionService transactionService;
+
     private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionSynchronizationAdapter.class);
 
-    private static final ThreadLocal<List<Runnable>> RUNNABLES = new ThreadLocal<List<Runnable>>();
-    private static final ThreadLocal<List<Runnable>> RUNNABLES_AFTER_COMMIT = new ThreadLocal<List<Runnable>>();
+    private static final ThreadLocal<List<Runnable>> RUNNABLES              = new ThreadLocal<>();
+    private static final ThreadLocal<List<Runnable>> RUNNABLES_ASYNC        = new ThreadLocal<>();
+    private static final ThreadLocal<List<Runnable>> RUNNABLES_AFTER_COMMIT = new ThreadLocal<>();
 
     public void executeOnTransactionCompletion(Runnable runnable) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Submitting new runnable {" + runnable + "} to run after completion");
         }
 
-        /*
-        From TransactionSynchronizationManager documentation:
-        TransactionSynchronizationManager is a central helper that manages resources and transaction synchronizations per thread.
-        Resource management code should only register synchronizations when this manager is active,
-        which can be checked via isSynchronizationActive(); it should perform immediate resource cleanup else.
-        If transaction synchronization isn't active, there is either no current transaction,
-        or the transaction manager doesn't support transaction synchronization.
+        addRunnable(runnable, RUNNABLES);
+    }
 
-        Note: Synchronization is an Interface for transaction synchronization callbacks which is implemented by
-        TransactionSynchronizationAdapter
-        */
+    public void executeAsyncOnTransactionComplete(Runnable runnable) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Submitting new runnable {" + runnable + "} to run async after completion");
+        }
 
-        if (!registerSynchronization()) {
-            LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
-            runnable.run();
-            return;
-        }
-        List<Runnable> threadRunnables = RUNNABLES.get();
-        if (threadRunnables == null) {
-            threadRunnables = new ArrayList<Runnable>();
-            RUNNABLES.set(threadRunnables);
-        }
-        threadRunnables.add(runnable);
+        addRunnable(runnable, RUNNABLES_ASYNC);
     }
 
     public void executeOnTransactionCommit(Runnable runnable) {
@@ -88,29 +79,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
             LOG.debug("Submitting new runnable {" + runnable + "} to run after transaction is committed");
         }
 
-        /*
-        From TransactionSynchronizationManager documentation:
-        TransactionSynchronizationManager is a central helper that manages resources and transaction synchronizations per thread.
-        Resource management code should only register synchronizations when this manager is active,
-        which can be checked via isSynchronizationActive(); it should perform immediate resource cleanup else.
-        If transaction synchronization isn't active, there is either no current transaction,
-        or the transaction manager doesn't support transaction synchronization.
-
-        Note: Synchronization is an Interface for transaction synchronization callbacks which is implemented by
-        TransactionSynchronizationAdapter
-        */
-
-        if (!registerSynchronization()) {
-            LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
-            runnable.run();
-            return;
-        }
-        List<Runnable> threadRunnables = RUNNABLES_AFTER_COMMIT.get();
-        if (threadRunnables == null) {
-            threadRunnables = new ArrayList<Runnable>();
-            RUNNABLES_AFTER_COMMIT.set(threadRunnables);
-        }
-        threadRunnables.add(runnable);
+        addRunnable(runnable, RUNNABLES_AFTER_COMMIT);
     }
 
     @Override
@@ -127,6 +96,15 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         List<Runnable> runnables = RUNNABLES.get();
         RUNNABLES.remove();
 
+        List<Runnable> asyncRunnables = RUNNABLES_ASYNC.get();
+        RUNNABLES_ASYNC.remove();
+
+        if (asyncRunnables != null) {
+            for (Runnable asyncRunnable : asyncRunnables) {
+                transactionService.scheduleToExecuteInOwnTransaction(asyncRunnable, 0L);
+            }
+        }
+
         if (isParentTransactionCommitted) {
             // Run tasks scheduled to run after transaction is successfully committed
             runRunnables(runnablesAfterCommit, true);
@@ -140,12 +118,45 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         }
     }
 
+    private void addRunnable(Runnable runnable, ThreadLocal<List<Runnable>> threadRunnables) {
+        /*
+        From TransactionSynchronizationManager documentation:
+        TransactionSynchronizationManager is a central helper that manages resources and transaction synchronizations per thread.
+        Resource management code should only register synchronizations when this manager is active,
+        which can be checked via isSynchronizationActive(); it should perform immediate resource cleanup else.
+        If transaction synchronization isn't active, there is either no current transaction,
+        or the transaction manager doesn't support transaction synchronization.
+
+        Note: Synchronization is an Interface for transaction synchronization callbacks which is implemented by
+        TransactionSynchronizationAdapter
+        */
+        if (!registerSynchronization()) {
+            LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
+
+            runnable.run();
+
+            return;
+        }
+
+        List<Runnable> runnables = threadRunnables.get();
+
+        if (runnables == null) {
+            runnables = new ArrayList<>();
+            threadRunnables.set(runnables);
+        }
+
+        runnables.add(runnable);
+    }
+
     private boolean registerSynchronization() {
         final boolean ret = TransactionSynchronizationManager.isSynchronizationActive();
+
         if (ret) {
             List<Runnable> threadRunnablesOnCompletion = RUNNABLES.get();
-            List<Runnable> threadRunnablesOnCommit = RUNNABLES_AFTER_COMMIT.get();
-            if (threadRunnablesOnCompletion == null && threadRunnablesOnCommit == null) {
+            List<Runnable> threadRunnablesOnCommit     = RUNNABLES_AFTER_COMMIT.get();
+            List<Runnable> threadRunnablesAsync        = RUNNABLES_ASYNC.get();
+
+            if (threadRunnablesOnCompletion == null && threadRunnablesOnCommit == null && threadRunnablesAsync == null) {
                 TransactionSynchronizationManager.registerSynchronization(this);
             }
         }
@@ -186,13 +197,22 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                                         LOG.debug("Failed to execute runnable " + runnable + "because of OpmimisticLockException");
                                     }
                                 } catch (Throwable e) {
-                                    LOG.error("Failed to execute runnable " + runnable, e);
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("Failed to execute runnable " + runnable, e);
+                                    }
                                 }
                                 return result;
                             }
                         });
 
                         isThisTransactionCommitted = result == runnable;
+                        if (isParentTransactionCommitted) {
+                            if (!isThisTransactionCommitted) {
+                                LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
+                            } else {
+                                LOG.info("Committed runnable:[" + runnable + "].");
+                            }
+                        }
 
                     } catch (OptimisticLockException optimisticLockException) {
                         if (LOG.isDebugEnabled()) {
@@ -203,7 +223,9 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                             LOG.debug("Failed to commit TransactionService transaction, exception:[" + tse + "]");
                         }
                     } catch (Throwable e){
-                        LOG.warn("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        }
                     }
                 } while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }

@@ -21,7 +21,7 @@ import React from "react";
 import { Table, Badge } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { ClassTypes, UserRoles } from "../../../utils/XAEnums";
-import { isEmpty, unionBy, difference, isEqual } from "lodash";
+import { isEmpty, unionBy, difference, isEqual, without } from "lodash";
 
 export const UserLogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;
@@ -48,11 +48,11 @@ export const UserLogs = ({ data, reportdata }) => {
     return obj.attributeName == "Group Name";
   });
 
-  const updateGrpOld = _.without(
+  const updateGrpOld = without(
     updateUserGrp.map((obj) => obj.previousValue),
     ""
   );
-  const updateGrpNew = _.without(
+  const updateGrpNew = without(
     updateUserGrp.map((obj) => obj.newValue),
     ""
   );
@@ -243,14 +243,14 @@ export const UserLogs = ({ data, reportdata }) => {
       if (val == "ROLE_USER") {
         val = UserRoles.ROLE_USER.label;
       }
-      if (val == "ROLE_USER") {
-        val = UserRoles.ROLE_USER.label;
-      }
       if (val == "ROLE_SYS_ADMIN") {
         val = UserRoles.ROLE_SYS_ADMIN.label;
       }
       if (val == "ROLE_KEY_ADMIN") {
         val = UserRoles.ROLE_KEY_ADMIN.label;
+      }
+      if (val == "ROLE_ADMIN_AUDITOR") {
+        val = UserRoles.ROLE_ADMIN_AUDITOR.label;
       }
       if (val == "ROLE_KEY_ADMIN_AUDITOR") {
         val = UserRoles.ROLE_KEY_ADMIN_AUDITOR.label;

@@ -33,7 +33,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
@@ -41,7 +40,6 @@ import org.apache.ranger.common.DateUtil;
 @EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_tag_change_log")
 public class XXTagChangeLog implements java.io.Serializable {
     private static final long serialVersionUID = 1L;

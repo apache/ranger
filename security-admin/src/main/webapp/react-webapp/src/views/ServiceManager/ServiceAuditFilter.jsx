@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Badge, Button, Table } from "react-bootstrap";
 import { Field } from "react-final-form";
 import { FieldArray } from "react-final-form-arrays";
@@ -26,8 +26,9 @@ import AsyncSelect from "react-select/async";
 import Editable from "Components/Editable";
 import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "../Resources/ModalResourceComp";
-import { uniq, map, join, isEmpty, find, toUpper } from "lodash";
+import { uniq, map, join, isEmpty, find, toUpper, isArray } from "lodash";
 import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
+import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
 export default function ServiceAuditFilter(props) {
   const {
@@ -39,19 +40,27 @@ export default function ServiceAuditFilter(props) {
     addAuditFilter,
     formValues
   } = props;
-
+  const dragItem = useRef();
+  const dragOverItem = useRef();
+  const [defaultUserOptions, setDefaultUserOptions] = useState([]);
+  const [defaultGroupOptions, setDefaultGroupOptions] = useState([]);
+  const [defaultRoleOptions, setDefaultRoleOptions] = useState([]);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
   const [modelState, setModalstate] = useState({
     showModalResource: false,
     resourceInput: null,
     data: {}
   });
 
-  const handleClose = () =>
+  const handleClose = () => {
     setModalstate({
       showModalResource: false,
       resourceInput: null,
       data: {}
     });
+  };
 
   const renderResourcesModal = (input) => {
     setModalstate({
@@ -82,21 +91,17 @@ export default function ServiceAuditFilter(props) {
   const getResourceData = (resourceData) => {
     let dataStructure = [];
 
-    let levels = uniq(map(serviceDefDetails.resources, "level"));
+    let levels = uniq(map(serviceDefDetails?.resources, "level"));
 
     dataStructure = levels.map((level, index) => {
       if (
         resourceData[`resourceName-${level}`] !== undefined &&
         resourceData[`value-${level}`] !== undefined
       ) {
-        let excludesSupported = find(serviceDefDetails.resources, {
-          level: level,
-          excludesSupported: true
-        });
-        let recursiveSupported = find(serviceDefDetails.resources, {
-          level: level,
-          recursiveSupported: true
-        });
+        let excludesSupported =
+          resourceData[`resourceName-${level}`].excludesSupported;
+        let recursiveSupported =
+          resourceData[`resourceName-${level}`].recursiveSupported;
         return (
           <div className="resource-filter" key={index}>
             <div>
@@ -105,40 +110,30 @@ export default function ServiceAuditFilter(props) {
               </span>
               :
               <span className="ml-1">
-                {join(map(resourceData[`value-${level}`], "value"), ", ")}
+                {isArray(resourceData[`value-${level}`])
+                  ? join(map(resourceData[`value-${level}`], "value"), ", ")
+                  : [resourceData[`value-${level}`].value]}
               </span>
             </div>
             <div>
-              {resourceData[`isRecursiveSupport-${level}`] !== undefined && (
+              {excludesSupported && (
                 <h6 className="text-center">
-                  {resourceData[`isRecursiveSupport-${level}`] ? (
-                    <span className="badge badge-dark">Recursive</span>
-                  ) : (
-                    <span className="badge badge-dark">Non Recursive</span>
-                  )}
-                </h6>
-              )}
-              {resourceData[`isExcludesSupport-${level}`] !== undefined && (
-                <h6 className="text-center">
-                  {resourceData[`isExcludesSupport-${level}`] ? (
-                    <span className="badge badge-dark">Include</span>
-                  ) : (
+                  {resourceData[`isExcludesSupport-${level}`] == false ? (
                     <span className="badge badge-dark">Exclude</span>
+                  ) : (
+                    <span className="badge badge-dark">Include</span>
                   )}
                 </h6>
               )}
-              {recursiveSupported !== undefined &&
-                resourceData[`isRecursiveSupport-${level}`] === undefined && (
-                  <h6 className="text-center">
+              {recursiveSupported && (
+                <h6 className="text-center">
+                  {resourceData[`isRecursiveSupport-${level}`] == false ? (
+                    <span className="badge badge-dark">Non Recursive</span>
+                  ) : (
                     <span className="badge badge-dark">Recursive</span>
-                  </h6>
-                )}
-              {excludesSupported !== undefined &&
-                resourceData[`isExcludesSupport-${level}`] === undefined && (
-                  <h6 className="text-center">
-                    <span className="badge badge-dark">Include</span>
-                  </h6>
-                )}
+                  )}
+                </h6>
+              )}
             </div>
           </div>
         );
@@ -158,8 +153,8 @@ export default function ServiceAuditFilter(props) {
 
   const getAccessTypeOptions = () => {
     let srcOp = [];
-    srcOp = serviceDefDetails.accessTypes;
-    return srcOp.map(({ label, name: value }) => ({
+    srcOp = serviceDefDetails?.accessTypes;
+    return srcOp?.map(({ label, name: value }) => ({
       label,
       value
     }));
@@ -197,6 +192,30 @@ export default function ServiceAuditFilter(props) {
     input.onChange(value);
   };
 
+  const onFocusRoleSelect = () => {
+    setRoleLoading(true);
+    fetchRolesData().then((opts) => {
+      setDefaultRoleOptions(opts);
+      setRoleLoading(false);
+    });
+  };
+
+  const onFocusGroupSelect = () => {
+    setGroupLoading(true);
+    fetchGroupsData().then((opts) => {
+      setDefaultGroupOptions(opts);
+      setGroupLoading(false);
+    });
+  };
+
+  const onFocusUserSelect = () => {
+    setUserLoading(true);
+    fetchUsersData().then((opts) => {
+      setDefaultUserOptions(opts);
+      setUserLoading(false);
+    });
+  };
+
   return (
     <div className="table-responsive">
       <Table
@@ -207,7 +226,7 @@ export default function ServiceAuditFilter(props) {
         <thead>
           <tr>{tableHeader()}</tr>
         </thead>
-        <tbody>
+        <tbody className="drag-drop-wrap">
           {formValues.auditFilters !== undefined &&
             formValues.auditFilters.length === 0 && (
               <tr className="text-center">
@@ -221,26 +240,36 @@ export default function ServiceAuditFilter(props) {
           <FieldArray name="auditFilters">
             {({ fields }) =>
               fields.map((name, index) => (
-                <tr key={name}>
+                <tr
+                  key={name}
+                  onDragStart={(e) => dragStart(e, index, dragItem)}
+                  onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
+                  onDragEnd={(e) => drop(e, fields, dragItem, dragOverItem)}
+                  onDragOver={(e) => dragOver(e)}
+                  draggable
+                  id={index}
+                >
                   {permList.map((colName) => {
                     if (colName == "Is Audited") {
                       return (
-                        <td key={`${name}.isAudited`}>
-                          <Field
-                            className="form-control audit-filter-select"
-                            name={`${name}.isAudited`}
-                            component="select"
-                            style={{ minWidth: "75px" }}
-                          >
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                          </Field>
+                        <td key={`${name}.isAudited`} className="align-middle">
+                          <div className="d-flex">
+                            <Field
+                              className="form-control audit-filter-select"
+                              name={`${name}.isAudited`}
+                              component="select"
+                              style={{ minWidth: "75px" }}
+                            >
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </Field>
+                          </div>
                         </td>
                       );
                     }
                     if (colName == "Access Result") {
                       return (
-                        <td key={colName}>
+                        <td key={colName} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.accessResult`}
@@ -250,7 +279,8 @@ export default function ServiceAuditFilter(props) {
                                 <Select
                                   {...input}
                                   menuPortalTarget={document.body}
-                                  isClearable={false}
+                                  isClearable={true}
+                                  isSearchable={false}
                                   options={[
                                     { value: "DENIED", label: "DENIED" },
                                     { value: "ALLOWED", label: "ALLOWED" },
@@ -270,7 +300,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Resources") {
                       return (
-                        <td key={`${name}.resources`}>
+                        <td key={`${name}.resources`} className="align-middle">
                           <Field
                             name={`${name}.resources`}
                             render={({ input }) => (
@@ -310,7 +340,7 @@ export default function ServiceAuditFilter(props) {
                     if (colName == "Operations") {
                       return (
                         <td
-                          className="mx-w-210"
+                          className="mx-w-210 align-middle"
                           key={`${name}.actions`}
                           width="210px"
                         >
@@ -331,38 +361,30 @@ export default function ServiceAuditFilter(props) {
                       );
                     }
                     if (colName == "Permissions") {
-                      if (serviceDefDetails.name == "tag") {
+                      if (serviceDefDetails?.name == "tag") {
                         return (
-                          <td key={`${name}.accessTypes`}>
+                          <td
+                            key={`${name}.accessTypes`}
+                            className="align-middle"
+                          >
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
                               render={({ input }) => (
-                                <div style={{ minWidth: "100px" }}>
-                                  <span className="d-inline mr-1 ">
-                                    <h6 className="editable-edit-text">
-                                      {input.value.tableList !== undefined &&
-                                      input.value.tableList.length > 0 ? (
-                                        getTagAccessType(input.value.tableList)
-                                      ) : (
-                                        <></>
-                                      )}
-                                    </h6>
-                                    <div>
-                                      <TagBasePermissionItem
-                                        options={getAccessTypeOptions()}
-                                        inputVal={input}
-                                      />
-                                    </div>
-                                  </span>
-                                </div>
+                                <TagBasePermissionItem
+                                  options={getAccessTypeOptions()}
+                                  inputVal={input}
+                                />
                               )}
                             />
                           </td>
                         );
                       } else {
                         return (
-                          <td key={`${name}.accessTypes`}>
+                          <td
+                            key={`${name}.accessTypes`}
+                            className="align-middle"
+                          >
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
@@ -385,7 +407,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Roles") {
                       return (
-                        <td key={`${name}.roles`}>
+                        <td key={`${name}.roles`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.roles`}
@@ -403,9 +425,15 @@ export default function ServiceAuditFilter(props) {
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchRolesData}
+                                  onFocus={() => {
+                                    onFocusRoleSelect();
+                                  }}
+                                  defaultOptions={defaultRoleOptions}
                                   isClearable={false}
+                                  noOptionsMessage={() =>
+                                    roleLoading ? "Loading..." : "No options"
+                                  }
                                   menuPlacement="auto"
-                                  defaultOptions
                                   cacheOptions
                                   isMulti
                                 />
@@ -417,7 +445,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Groups") {
                       return (
-                        <td key={`${name}.groups`}>
+                        <td key={`${name}.groups`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.groups`}
@@ -435,9 +463,15 @@ export default function ServiceAuditFilter(props) {
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchGroupsData}
+                                  onFocus={() => {
+                                    onFocusGroupSelect();
+                                  }}
+                                  defaultOptions={defaultGroupOptions}
                                   isClearable={false}
                                   menuPlacement="auto"
-                                  defaultOptions
+                                  noOptionsMessage={() =>
+                                    groupLoading ? "Loading..." : "No options"
+                                  }
                                   cacheOptions
                                   isMulti
                                 />
@@ -449,7 +483,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Users") {
                       return (
-                        <td key={`${name}.users`}>
+                        <td key={`${name}.users`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.users`}
@@ -462,15 +496,22 @@ export default function ServiceAuditFilter(props) {
                               >
                                 <AsyncSelect
                                   {...input}
+                                  key={input.name}
                                   menuPortalTarget={document.body}
                                   components={{
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchUsersData}
+                                  onFocus={() => {
+                                    onFocusUserSelect();
+                                  }}
+                                  defaultOptions={defaultUserOptions}
                                   isClearable={false}
                                   menuPlacement="auto"
-                                  defaultOptions
                                   cacheOptions
+                                  noOptionsMessage={() =>
+                                    userLoading ? "Loading..." : "No options"
+                                  }
                                   isMulti
                                 />
                               </div>
@@ -480,7 +521,7 @@ export default function ServiceAuditFilter(props) {
                       );
                     }
                   })}
-                  <td key={`${index}.remove`}>
+                  <td key={`${index}.remove`} className="align-middle">
                     <Button
                       variant="danger"
                       size="sm"

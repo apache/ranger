@@ -36,6 +36,7 @@ function AccessLogDetail(props) {
     fetchServiceDefs();
     fetchAcessLogs();
   }, []);
+
   const fetchServiceDefs = async () => {
     let serviceDefsResp = [];
     try {
@@ -51,9 +52,10 @@ function AccessLogDetail(props) {
     setServiceDefs(serviceDefsResp.data.serviceDefs);
     setLoader(false);
   };
+
   const fetchAcessLogs = async () => {
-    let accessResp;
-    let accessData;
+    let accessResp = {};
+    let accessData = {};
 
     try {
       accessResp = await fetchApi({
@@ -66,7 +68,7 @@ function AccessLogDetail(props) {
       console.error(
         `Error occurred while fetching Access or CSRF headers! ${error}`
       );
-      toast.error(error.response.data.msgDesc);
+      toast.error(error?.response?.data?.msgDesc);
     }
     if (!isEmpty(accessResp)) {
       accessResp.data.vXAccessAudits.map((obj) => {
@@ -83,21 +85,23 @@ function AccessLogDetail(props) {
         <Loader />
       ) : (
         <>
-          <h4>
+          <h5 className="heading-without-wrap">
             {params.eventId !== undefined
               ? "Ranger – audit log"
               : "Audit Access Log Detail"}
-          </h4>
+          </h5>
           <div className="wrap">
             <AccessLogsTable data={access}></AccessLogsTable>
           </div>
-          {access.policyId != -1 && (
+          {access?.policyId !== undefined && access?.policyId > 0 && (
             <>
-              <h4>Policy Details</h4>
+              <h5 className="heading-without-wrap">Policy Details</h5>
               <div className="wrap">
                 <PolicyViewDetails
                   paramsData={access}
-                  serviceDefs={serviceDefs}
+                  serviceDef={serviceDefs?.find((servicedef) => {
+                    return servicedef.name == access.serviceType;
+                  })}
                   policyView={false}
                 />
               </div>

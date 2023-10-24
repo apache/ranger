@@ -23,11 +23,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import XATableLayout from "Components/XATableLayout";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 import { MoreLess } from "Components/CommonComponents";
-import { isEmpty, reject, find, isUndefined, map, sortBy } from "lodash";
+import { isEmpty, reject, find, isUndefined, sortBy } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
-import { commonBreadcrumb } from "../../utils/XAUtils";
+import { commonBreadcrumb, parseSearchFilter } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader } from "../../components/CommonComponents";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 function Permissions() {
   const [permissionslistData, setPermissions] = useState([]);
@@ -50,10 +51,8 @@ function Permissions() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -85,15 +84,6 @@ function Permissions() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
   }, [searchParams]);
 
   const fetchPermissions = useCallback(
@@ -170,7 +160,6 @@ function Permissions() {
           const Users = raw.userPermList.map((user) => {
             return user.userName;
           });
-          console.log(Users);
           return !isEmpty(Users) ? (
             <MoreLess data={Users} />
           ) : (
@@ -200,7 +189,7 @@ function Permissions() {
     []
   );
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "groupName",
       label: "Group Name",
@@ -222,37 +211,21 @@ function Permissions() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
-    let searchFilterParam = {};
-    let searchParam = {};
-
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-
-      let urlLabelParam = searchFilterObj.urlLabel;
-
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
   };
 
   return (
     <>
-      {commonBreadcrumb(["ModulePermissions"])}
-      <h3 className="wrap-header bold">Permissions</h3>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Permissions</h3>
+        <CustomBreadcrumb />
+      </div>
       <div className="wrap">
         {pageLoader ? (
           <Loader />
@@ -263,9 +236,8 @@ function Permissions() {
                 <StructuredFilter
                   key="permission-listing-search-filter"
                   placeholder="Search for permissions..."
-                  options={sortBy(searchFilterOption, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
+                  options={sortBy(searchFilterOptions, ["label"])}
+                  onChange={updateSearchFilter}
                   defaultSelected={defaultSearchFilterParams}
                 />
               </Col>

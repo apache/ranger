@@ -49,7 +49,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/tags/download/*" security="none"/>
 	<security:http pattern="/service/roles/download/*" security="none"/>
 	<security:http pattern="/service/xusers/download/*" security="none"/>
-	<security:http pattern="/service/metrics/status" security="none" />
+	<security:http pattern="/service/metrics/**" security="none" />
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<csrf disabled="true"/>
 		<security:headers>
@@ -61,8 +61,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 			<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'"/>
 		</security:headers>
 		<security:session-management session-fixation-protection="newSession" />
-		<intercept-url pattern="/**" access="isAuthenticated()"/>       
-		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" /> 
+		<intercept-url pattern="/**" access="isAuthenticated()"/>
+		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
+		<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>

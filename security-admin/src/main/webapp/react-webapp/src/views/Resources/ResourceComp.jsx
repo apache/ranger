@@ -17,16 +17,16 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Form as FormB, Row, Col } from "react-bootstrap";
 import { Field } from "react-final-form";
 import Select from "react-select";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
-import AsyncCreatableSelect from "react-select/async-creatable";
-import { debounce, filter, groupBy, some, sortBy } from "lodash";
-
-import { fetchApi } from "Utils/fetchAPI";
+import { filter, groupBy, some, sortBy } from "lodash";
+import { toast } from "react-toastify";
+import { udfResourceWarning } from "../../utils/XAMessages";
 import { RangerPolicyType } from "Utils/XAEnums";
+import ResourceSelectComp from "./ResourceSelectComp";
 
 const noneOptions = {
   label: "None",
@@ -43,6 +43,8 @@ export default function ResourceComp(props) {
     policyId
   } = props;
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
+  const toastId = useRef(null);
+
   let resources = sortBy(serviceCompDetails.resources, "itemId");
   if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
     resources = sortBy(serviceCompDetails.dataMaskDef.resources, "itemId");
@@ -67,44 +69,6 @@ export default function ResourceComp(props) {
     grpResourcesKeys.push(+resourceKey);
   }
   grpResourcesKeys = grpResourcesKeys.sort();
-
-  const fetchResourceLookup = async (
-    inputValue,
-    resourceObj,
-    selectedValues,
-    callback
-  ) => {
-    let resourceName = resourceObj.name;
-    let data = {
-      resourceName,
-      resources: {
-        [resourceName]: selectedValues?.map?.(({ value }) => value) || []
-      }
-    };
-    if (inputValue) {
-      data["userInput"] = inputValue || "";
-    }
-
-    let op = [];
-    try {
-      if (resourceObj.lookupSupported) {
-        const resourceResp = await fetchApi({
-          url: `plugins/services/lookupResource/${serviceDetails.name}`,
-          method: "POST",
-          data
-        });
-        op =
-          resourceResp.data?.map?.((name) => ({
-            label: name,
-            value: name
-          })) || [];
-      }
-    } catch (error) {}
-
-    callback(op);
-  };
-
-  const _fetchResourceLookup = debounce(fetchResourceLookup, 1000);
 
   const getResourceLabelOp = (levelKey, index) => {
     let op = grpResources[levelKey];
@@ -137,10 +101,7 @@ export default function ResourceComp(props) {
     if (index !== 0) {
       levelOp = getResourceLabelOp(levelKey, index);
     }
-    if (
-      levelOp.length === 1 &&
-      !formValues[resourceKey].hasOwnProperty("parent")
-    ) {
+    if (levelOp.length === 1 && !formValues[resourceKey]?.parent?.length > 0) {
       renderLabel = true;
     } else {
       if (index !== 0) {
@@ -170,7 +131,7 @@ export default function ResourceComp(props) {
   };
 
   const handleResourceChange = (selectedVal, input, index) => {
-    for (let i = index + 1; i < grpResourcesKeys.length; i++) {
+    for (let i = index; i < grpResourcesKeys.length; i++) {
       let levelKey = grpResourcesKeys[i];
 
       delete formValues[`resourceName-${levelKey}`];
@@ -181,11 +142,30 @@ export default function ResourceComp(props) {
     if (policyItem) {
       removedSeletedAccess();
     }
+    delete formValues[`value-${grpResourcesKeys[index]}`];
     setLoader({
       loader: true,
       resourceKey: grpResourcesKeys[index]
     });
-    delete formValues[`value-${grpResourcesKeys[index]}`];
+    let CurrentSelectedResourcs = selectedVal.name;
+    for (let j = index + 1; j < grpResourcesKeys.length; j++) {
+      let level = grpResourcesKeys[j];
+      let nextResource = resources.find((m) => {
+        if (m?.parent) {
+          return m.parent === CurrentSelectedResourcs;
+        }
+      });
+      if (nextResource) {
+        formValues[`resourceName-${level}`] = nextResource;
+        CurrentSelectedResourcs = nextResource.name;
+      }
+    }
+
+    if (selectedVal?.name === "udf" && selectedVal?.parent === "database") {
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning(udfResourceWarning());
+    }
+
     input.onChange(selectedVal);
   };
 
@@ -201,12 +181,6 @@ export default function ResourceComp(props) {
           policyObj.accesses = [];
         }
       }
-    }
-  };
-
-  const required = (value) => {
-    if (!value || value.length == 0) {
-      return "Required";
     }
   };
 
@@ -239,7 +213,7 @@ export default function ResourceComp(props) {
       >
         <Col sm={3}>
           <Field
-            defaultValue={getResourceLabelOp(levelKey, index)[0]}
+            defaultValue={!policyId && getResourceLabelOp(levelKey, index)[0]}
             className="form-control"
             name={`resourceName-${levelKey}`}
             render={({ input, meta }) =>
@@ -262,6 +236,7 @@ export default function ResourceComp(props) {
                         handleResourceChange(value, input, index)
                       }
                       styles={customStyles}
+                      isSearchable={false}
                     />
                     <RenderValidateField name={`resourceName-${levelKey}`} />
                   </>
@@ -270,56 +245,18 @@ export default function ResourceComp(props) {
             }
           />
         </Col>
+
         {formValues[`resourceName-${levelKey}`] && (
-          <Col sm={5}>
-            <Field
-              key={formValues[`resourceName-${levelKey}`].name}
-              className="form-control"
-              name={`value-${levelKey}`}
-              validate={
-                formValues &&
-                formValues[`resourceName-${levelKey}`]?.mandatory &&
-                required
-              }
-              render={({ input, meta }) => (
-                <>
-                  <AsyncCreatableSelect
-                    {...input}
-                    id={
-                      formValues &&
-                      formValues[`resourceName-${levelKey}`]?.mandatory &&
-                      meta.error &&
-                      meta.touched
-                        ? "isError"
-                        : `value-${levelKey}`
-                    }
-                    defaultOptions
-                    isMulti
-                    isDisabled={
-                      formValues[`resourceName-${levelKey}`].value ===
-                      noneOptions.value
-                    }
-                    loadOptions={(inputValue) =>
-                      new Promise((resolve, reject) => {
-                        _fetchResourceLookup(
-                          inputValue,
-                          formValues[`resourceName-${levelKey}`],
-                          input.value,
-                          resolve
-                        );
-                      })
-                    }
-                  />
-                  {formValues &&
-                    formValues[`resourceName-${levelKey}`]?.mandatory &&
-                    meta.touched &&
-                    meta.error && (
-                      <span className="invalid-field">{meta.error}</span>
-                    )}
-                </>
-              )}
-            />
-          </Col>
+          <>
+            <Col sm={5}>
+              <ResourceSelectComp
+                levelKey={levelKey}
+                formValues={formValues}
+                grpResourcesKeys={grpResourcesKeys}
+                serviceDetails={serviceDetails}
+              />
+            </Col>
+          </>
         )}
         {formValues[`resourceName-${levelKey}`] && (
           <Col sm={4}>

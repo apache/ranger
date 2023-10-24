@@ -18,19 +18,20 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
 import dateFormat from "dateformat";
-import { find, map, sortBy, filter } from "lodash";
+import { sortBy, filter } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError,
   isKeyAdmin,
   isKMSAuditor
@@ -38,13 +39,15 @@ import {
 import { Loader } from "../../components/CommonComponents";
 
 function Plugins() {
+  const context = useOutletContext();
+  const services = context.services;
   const [pluginsListingData, setPluginsLogs] = useState([]);
   const [loader, setLoader] = useState(true);
   const [pageCount, setPageCount] = React.useState(0);
   const [entries, setEntries] = useState([]);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const fetchIdRef = useRef(0);
-  const [services, setServices] = useState([]);
+  //const [services, setServices] = useState([]);
   const [contentLoader, setContentLoader] = useState(true);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,8 +58,6 @@ function Plugins() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
 
   useEffect(() => {
-    fetchServices();
-
     let { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("agent", searchParams, searchFilterOptions);
 
@@ -72,7 +73,7 @@ function Plugins() {
     setContentLoader(false);
   }, [searchParams]);
 
-  const fetchServices = async () => {
+  /* const fetchServices = async () => {
     let servicesResp = [];
     try {
       servicesResp = await fetchApi({
@@ -86,7 +87,7 @@ function Plugins() {
 
     setServices(servicesResp.data.services);
     setLoader(false);
-  };
+  }; */
 
   const fetchPluginsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
@@ -241,34 +242,18 @@ function Plugins() {
   );
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
-    let searchFilterParam = {};
-    let searchParam = {};
-
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-
-      let urlLabelParam = searchFilterObj.urlLabel;
-
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("agent", JSON.stringify(searchParam));
-    resetPage.page(0);
+
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
   };
 
   const getServices = () => {
@@ -280,7 +265,7 @@ function Plugins() {
     });
 
     return sortBy(servicesName, "name")?.map((service) => ({
-      label: service.displayName,
+      label: service.name,
       value: service.name
     }));
   };
@@ -343,8 +328,7 @@ function Plugins() {
                 key="plugin-log-search-filter"
                 placeholder="Search for your plugins..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>

@@ -283,6 +283,9 @@ define(function(require) {
                 displayName                     : 'Display Name',
                 auditAccessDetail               : 'Audit Access Log Detail',
                 hiveQuery                       : 'Hive Query',
+                hbaseAudit                      : 'HBase Audit Data',
+                solrQuery                       : 'Solr Query',
+                hdfsOperation                   : 'HDFS Operation Name',
                 clientIP                        : 'Client IP',
                 eventCount                      : 'Event Count',
                 tags                            : 'Tags',
@@ -501,7 +504,8 @@ define(function(require) {
                                         You can still open this instance of Ranger from the same web browser without re-authentication. \
                                         To prevent additional access to Ranger, <b>close all browser windows and exit the browser</b>.',
                 pageNotFound            : 'Sorry, this page isn\'t here or has moved.',
-                resourcesLookup         : 'Resouce lookup fail for current resource'
+                resourcesLookup         : 'Resouce lookup fail for current resource',
+                dataNotFound            : 'Data not found for given page.'
 
 
 			},

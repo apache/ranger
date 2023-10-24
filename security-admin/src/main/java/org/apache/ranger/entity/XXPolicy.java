@@ -19,11 +19,9 @@
 package org.apache.ranger.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_policy")
 public class XXPolicy extends XXPolicyBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;

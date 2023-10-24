@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -88,6 +89,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestServiceDBStore {
 	private static Long Id = 8L;
+
+	private static final String CFG_SERVICE_ADMIN_USERS  = "service.admin.users";
+	private static final String CFG_SERVICE_ADMIN_GROUPS = "service.admin.groups";
 
 	@InjectMocks
 	ServiceDBStore serviceDBStore = new ServiceDBStore();
@@ -241,6 +245,7 @@ public class TestServiceDBStore {
 		configs.put("hadoop.rpc.protection", "Privacy");
 		configs.put("commonNameForCertificate", "");
 		configs.put("service.admin.users", "testServiceAdminUser1,testServiceAdminUser2");
+		configs.put("service.admin.groups", "testServiceAdminGroup1,testServiceAdminGroup2");
 
 		RangerService rangerService = new RangerService();
 		rangerService.setId(Id);
@@ -2384,29 +2389,61 @@ public void test47getMetricByTypeDenyconditions() throws Exception {
     serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
 }
 
-    @Test
-    public void test48IsServiceAdminUserTrue() throws Exception{
-    	String configName = "service.admin.users";
-    	boolean result=false;
-    	RangerService rService= rangerService();
-    	XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
-    	XXServiceConfigMap xxServiceConfigMap = new XXServiceConfigMap();
-    	xxServiceConfigMap.setConfigkey(configName);
-    	xxServiceConfigMap.setConfigvalue(rService.getConfigs().get(configName));
+	@Test
+	public void test48IsServiceAdminUserTrue() {
+		RangerService         rService              = rangerService();
+		XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+		XXServiceConfigMap    svcAdminUserCfg       = new XXServiceConfigMap() {{ setConfigkey(CFG_SERVICE_ADMIN_USERS); setConfigvalue(rService.getConfigs().get(CFG_SERVICE_ADMIN_USERS)); }};
+		XXServiceConfigMap    svcAdminGroupCfg      = new XXServiceConfigMap() {{ setConfigkey(CFG_SERVICE_ADMIN_GROUPS); setConfigvalue(rService.getConfigs().get(CFG_SERVICE_ADMIN_GROUPS)); }};
 
-    	Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
-    	Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), configName)).thenReturn(xxServiceConfigMap);
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+		Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS)).thenReturn(svcAdminUserCfg);
+		Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS)).thenReturn(svcAdminGroupCfg);
 
-    	result = serviceDBStore.isServiceAdminUser(rService.getName(),"testServiceAdminUser2");
+		boolean result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser1");
 
-    	Assert.assertTrue(result);
-    	Mockito.verify(daoManager).getXXServiceConfigMap();
-    	Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), configName);
-    }
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser2");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser1")).thenReturn(new HashSet<String>() {{ add("testServiceAdminGroup1"); }});
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser1");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser2")).thenReturn(new HashSet<String>() {{ add("testServiceAdminGroup2"); }});
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser2");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+	}
 
     @Test
     public void test49IsServiceAdminUserFalse() throws Exception{
-    	String configName = "service.admin.users";
+    	String configName = CFG_SERVICE_ADMIN_USERS;
     	boolean result=false;
     	RangerService rService= rangerService();
     	XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);

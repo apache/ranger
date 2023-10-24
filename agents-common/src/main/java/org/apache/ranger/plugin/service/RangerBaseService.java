@@ -64,6 +64,8 @@ public abstract class RangerBaseService {
 	private static final String PROP_DEFAULT_POLICY_PREFIX      = "default-policy.";
 	private static final String PROP_DEFAULT_POLICY_NAME_SUFFIX = "name";
 
+	private static final String PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES  = ".is-excludes";
+	private static final String PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE = ".is-recursive";
 
 	protected RangerServiceDef serviceDef;
 	protected RangerService    service;
@@ -200,13 +202,19 @@ public abstract class RangerBaseService {
 				String configName  = entry.getKey();
 				String configValue = entry.getValue();
 
-				if(configName.startsWith(resourcePropertyPrefix) && StringUtils.isNotBlank(configValue)){
+				if (configName.endsWith(PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES) || configName.endsWith(PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE)) {
+					continue;
+				}
+
+				if (configName.startsWith(resourcePropertyPrefix) && StringUtils.isNotBlank(configValue)) {
 					RangerPolicyResource rPolRes      = new RangerPolicyResource();
 					String               resourceKey  = configName.substring(resourcePropertyPrefix.length());
 					List<String>         resourceList = new ArrayList<String>(Arrays.asList(configValue.split(",")));
+					boolean              isExcludes   = Boolean.parseBoolean(configs.getOrDefault(configName + PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES, "false"));
+					boolean              isRecursive  = Boolean.parseBoolean(configs.getOrDefault(configName + PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE, "false"));
 
-					rPolRes.setIsExcludes(false);
-					rPolRes.setIsRecursive(false);
+					rPolRes.setIsExcludes(isExcludes);
+					rPolRes.setIsRecursive(isRecursive);
 					rPolRes.setValues(resourceList);
 					policyResourceMap.put(resourceKey, rPolRes);
 				}

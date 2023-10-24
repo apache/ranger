@@ -27,6 +27,7 @@ import java.util.Map;
 public class XUserInfo {
 	private String id;
 	private String name;
+	private String firstName;
 	private String 	description;
 	private String otherAttributes;
 	private String syncSource;
@@ -52,6 +53,10 @@ public class XUserInfo {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public String getFirstName() { return firstName; }
+
+	public void setFirstName(String firstName) { this.firstName = firstName; }
 
 	public String getDescription() {
 		return description;
@@ -135,7 +140,7 @@ public class XUserInfo {
 
 	@Override
     public String toString() {
-        return "XUserInfo [id=" + id + ", name=" + name + ", description="
+        return "XUserInfo [id=" + id + ", name=" + name + ", firstName=" + firstName + ", description="
                 + description + ", groupNameList=" + groupNameList
                 + ", userRoleList=" + userRoleList + "]";
     }

@@ -66,4 +66,5 @@ public interface RangerPolicyItemEvaluator {
 		}
 	}
 	void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType);
+	RangerPolicyItem getWithImpliedGrants();
 }

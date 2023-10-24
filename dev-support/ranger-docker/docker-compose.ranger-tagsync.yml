@@ -17,7 +17,9 @@ services:
       ranger:
         condition: service_started
     environment:
+      - RANGER_VERSION
       - TAGSYNC_VERSION
+      - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
 
 networks:
   ranger:

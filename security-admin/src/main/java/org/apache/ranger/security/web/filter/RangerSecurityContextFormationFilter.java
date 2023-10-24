@@ -132,6 +132,9 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 				context.setUserSession(userSession);
 			}
+
+			setupAdminOpContext(request);
+
 			HttpServletResponse res = (HttpServletResponse)response;
 			res.setHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
 			res.setHeader("X-Frame-Options", "DENY" );
@@ -145,6 +148,14 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 			// [4]remove context from thread-local
 			RangerContextHolder.resetSecurityContext();
 			RangerContextHolder.resetOpContext();
+		}
+	}
+
+	private void setupAdminOpContext(ServletRequest request) {
+		Object attrCreatePrincipalsIfAbsent = request.getParameter("createPrincipalsIfAbsent");
+
+		if (attrCreatePrincipalsIfAbsent != null) {
+			RangerContextHolder.getOrCreateOpContext().setCreatePrincipalsIfAbsent(Boolean.parseBoolean(attrCreatePrincipalsIfAbsent.toString()));
 		}
 	}
 

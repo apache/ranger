@@ -19,11 +19,9 @@
 package org.apache.ranger.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_policy_resource")
 public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;

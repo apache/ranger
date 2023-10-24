@@ -18,8 +18,11 @@
  */
 
 var React = require("react");
+var popoverRef = React.createRef();
+
 import Tether from "tether";
 import ReactDOM from "react-dom";
+import ReactDOMClient from "react-dom/client";
 import createReactClass from "create-react-class";
 
 var Popover = createReactClass({
@@ -38,12 +41,7 @@ var Popover = createReactClass({
     this._renderPopover();
   },
 
-  componentDidUpdate: function () {
-    this._renderPopover();
-  },
-
   _popoverComponent: function () {
-    let current = ReactDOM.findDOMNode(this);
     var className = this.props.className;
     return <div className={className}>{this.props.children}</div>;
   },
@@ -70,7 +68,8 @@ var Popover = createReactClass({
   },
 
   _renderPopover: function () {
-    ReactDOM.render(this._popoverComponent(), this._popoverElement);
+    popoverRef.current = ReactDOMClient.createRoot(this._popoverElement);
+    popoverRef.current.render(this._popoverComponent());
 
     if (this._tether != null) {
       this._tether.setOptions(this._tetherOptions());
@@ -80,8 +79,11 @@ var Popover = createReactClass({
   },
 
   componentWillUnmount: function () {
-    this._tether.destroy();
-    ReactDOM.unmountComponentAtNode(this._popoverElement);
+    this._tether?.destroy();
+    setTimeout(() => {
+      popoverRef.current?.unmount();
+    });
+
     if (this._popoverElement.parentNode) {
       this._popoverElement.parentNode.removeChild(this._popoverElement);
     }

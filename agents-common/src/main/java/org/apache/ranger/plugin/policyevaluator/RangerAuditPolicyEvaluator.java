@@ -103,7 +103,7 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
         super.preprocessPolicy(policy, serviceDef);
 
-        Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
+        Map<String, Collection<String>> impliedAccessGrants = PolicyEngine.getImpliedAccessGrants(serviceDef);
 
         if (impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
             return;
@@ -129,7 +129,7 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
                     RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
 
                     if (resourceMatcher != null) {
-                        matchType = resourceMatcher.getMatchType(request.getResource(), request.getContext());
+                        matchType = resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
                     } else {
                         matchType = RangerPolicyResourceMatcher.MatchType.NONE;
                     }

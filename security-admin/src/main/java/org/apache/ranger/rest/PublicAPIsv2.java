@@ -32,8 +32,14 @@ import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerServiceTags;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneChangeRequest;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneResource;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +66,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Path("public/v2")
@@ -175,6 +182,22 @@ public class PublicAPIsv2 {
         return ret;
     }
 
+	/**
+	 * Get {@link List} of security zone header info.
+	 * This API is authorized to every authenticated user.
+	 * @param serviceId
+	 * @param isTagService
+	 * @return {@link List} of {@link RangerSecurityZoneHeaderInfo} if present.
+	 */
+	@GET
+	@Path("/api/zones/zone-headers/for-service/{serviceId}")
+	@Produces({ "application/json" })
+	public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId( @PathParam("serviceId") Long serviceId
+			, @DefaultValue("false") @QueryParam("isTagService") Boolean isTagService
+	) {
+		return securityZoneRest.getSecurityZoneHeaderInfoListByServiceId(serviceId,isTagService);
+	}
+
     /**
      * Get service header info {@link List} for given zone.
      * This API is authorized to every authenticated user.
@@ -204,6 +227,73 @@ public class PublicAPIsv2 {
         }
         return ret;
     }
+
+	@GET
+	@Path("/api/zone-names/{serviceName}/resource")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
+	public Collection<String> getSecurityZoneNamesForResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getZoneNamesForResource(serviceName, request);
+	}
+
+	@POST
+	@Path("/api/zones-v2")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 createSecurityZone(RangerSecurityZoneV2 securityZone) {
+		return securityZoneRest.createSecurityZone(securityZone);
+	}
+
+	@PUT
+	@Path("/api/zones-v2/{id}")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZoneV2 securityZone) {
+		return securityZoneRest.updateSecurityZone(zoneId, securityZone);
+	}
+
+	@PUT
+	@Path("/api/zones-v2/{id}/partial")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public Boolean updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZoneChangeRequest changeRequest) {
+		return securityZoneRest.updateSecurityZone(zoneId, changeRequest);
+	}
+
+	@GET
+	@Path("/api/zones-v2/name/{name}")
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 getSecurityZoneV2(@PathParam("name") String zoneName) {
+		return securityZoneRest.getSecurityZoneV2(zoneName);
+	}
+
+	@GET
+	@Path("/api/zones-v2/{id}")
+	@Produces({ "application/json" })
+	public RangerSecurityZoneV2 getSecurityZoneV2(@PathParam("id") Long zoneId) {
+		return securityZoneRest.getSecurityZoneV2(zoneId);
+	}
+
+	@GET
+	@Path("/api/zones-v2/{id}/resources/{serviceName}")
+	@Produces({ "application/json" })
+	public PList<RangerSecurityZoneResource> getResources(@PathParam("id") Long zoneId, @PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getResources(zoneId, serviceName, request);
+	}
+
+	@GET
+	@Path("/api/zones-v2/name/{name}/resources/{serviceName}")
+	@Produces({ "application/json" })
+	public PList<RangerSecurityZoneResource> getResources(@PathParam("name") String zoneName, @PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getResources(zoneName, serviceName, request);
+	}
+
+	@GET
+	@Path("/api/zones-v2")
+	@Produces({ "application/json"})
+	public PList<RangerSecurityZoneV2> getAllZonesV2(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZonesV2(request);
+	}
 
 	/*
 	* ServiceDef Manipulation APIs
@@ -278,7 +368,7 @@ public class PublicAPIsv2 {
 			serviceDef.setGuid(existingServiceDef.getGuid());
 		}
 
-		return serviceREST.updateServiceDef(serviceDef, null);
+		return serviceREST.updateServiceDef(serviceDef, serviceDef.getId());
 	}
 
 	/*
@@ -639,6 +729,13 @@ public class PublicAPIsv2 {
 			logger.debug("==> PublicAPIsv2.importServiceTags()");
 		}
 
+		// overwrite serviceName with the one given in url
+		if (svcTags.getServiceResources() != null) {
+			for (RangerServiceResource svcResource : svcTags.getServiceResources()) {
+				svcResource.setServiceName(serviceName);
+			}
+		}
+
 		ServiceTags serviceTags = RangerServiceTags.toServiceTags(svcTags);
 
 		// overwrite serviceName with the one given in url
@@ -878,5 +975,22 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json" })
 	public RESTResponse revokeRoleUsersAndRoles(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
 		return roleREST.revokeRole(serviceName, revokeRoleRequest, request);
+	}
+
+	@DELETE
+	@Path("/api/server/purge/records")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public List<RangerPurgeResult> purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + ")");
+		}
+
+		List<RangerPurgeResult> ret = serviceREST.purgeRecords(recordType, olderThan, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + "): ret=" + ret);
+		}
+
+		return ret;
 	}
 }

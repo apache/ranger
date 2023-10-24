@@ -317,7 +317,7 @@ public class TestPublicAPIsv2 {
 		RangerServiceDef rangerServiceDef = rangerServiceDef();
 		String name = rangerServiceDef.getName();
 		Mockito.when(serviceREST.getServiceDefByName(name)).thenReturn(rangerServiceDef);
-		Mockito.when(serviceREST.updateServiceDef(rangerServiceDef, null)).thenReturn(rangerServiceDef);
+		Mockito.when(serviceREST.updateServiceDef(rangerServiceDef, rangerServiceDef.getId())).thenReturn(rangerServiceDef);
 		RangerServiceDef dbRangerServiceDef = publicAPIsv2.updateServiceDefByName(rangerServiceDef, name);
 		Assert.assertNotNull(dbRangerServiceDef);
 		Assert.assertEquals(dbRangerServiceDef, rangerServiceDef);
@@ -325,7 +325,7 @@ public class TestPublicAPIsv2 {
 				rangerServiceDef.getId());
 		Assert.assertEquals(dbRangerServiceDef.getName(),
 				rangerServiceDef.getName());
-		Mockito.verify(serviceREST).updateServiceDef(rangerServiceDef, null);
+		Mockito.verify(serviceREST).updateServiceDef(rangerServiceDef, dbRangerServiceDef.getId());
 		Mockito.verify(serviceREST).getServiceDefByName(name);
 	}
 	

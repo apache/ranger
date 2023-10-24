@@ -497,7 +497,7 @@ define(function(require) {
 		} else
 			return '--';
 	};
-        XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showType, rangerServiceDefModel) {
+        XAUtils.showGroupsOrUsersForPolicy = function(model, showType, rangerServiceDefModel) {
 		var showMoreLess = false, groupArr = [], items = [];
 		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems','rowFilterPolicyItems']
 		if(!_.isUndefined(rangerServiceDefModel)){
@@ -627,6 +627,12 @@ define(function(require) {
 				}, 4000);
 			} else {
 				window.location = 'login.jsp?sessionTimeout=true';
+			}
+		}else if(error.status == 400 && error.responseJSON && error.responseJSON.messageList && error.responseJSON.messageList[0].name) {
+			if(error.responseJSON.messageList[0].name == "DATA_NOT_FOUND" || error.responseJSON.messageList[0].name == "INVALID_INPUT_DATA"){
+				App.rContent.show(new vError({
+					status : error.status
+				}));
 			}
 		}
 	};

@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -90,6 +91,8 @@ public interface RangerPolicyEvaluator {
 	boolean isApplicable(Date accessTime);
 
 	int getEvalOrder();
+
+	int getPolicyConditionsCount();
 
 	int getCustomConditionsCount();
 
@@ -308,7 +311,7 @@ public interface RangerPolicyEvaluator {
 
 		public List<DataMaskResult> getDataMasks() { return dataMasks; }
 
-		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional) {
+		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional, Map<String, Collection<String>> impliedAccessGrants) {
 			final Integer result;
 			final boolean hasContextSensitiveSpecification = CollectionUtils.isNotEmpty(policyItem.getConditions());
 
@@ -335,15 +338,43 @@ public interface RangerPolicyEvaluator {
 			}
 
 			if (result != null) {
-				final List<RangerPolicyItemAccess> accesses;
+				List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+				accesses.addAll(policyItem.getAccesses());
 
 				if (policyItem.getDelegateAdmin()) {
-					accesses = new ArrayList<>();
-
 					accesses.add(new RangerPolicyItemAccess(RangerPolicyEngine.ADMIN_ACCESS, policyItem.getDelegateAdmin()));
-					accesses.addAll(policyItem.getAccesses());
-				} else {
-					accesses = policyItem.getAccesses();
+				}
+
+				if(impliedAccessGrants != null && !impliedAccessGrants.isEmpty()) {
+					if (CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
+
+						// Only one round of 'expansion' is done; multi-level impliedGrants (like shown below) are not handled for now
+						// multi-level impliedGrants: given admin=>write; write=>read: must imply admin=>read,write
+						for (Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
+							String implyingAccessType = e.getKey();
+							Collection<String> impliedGrants = e.getValue();
+
+							RangerPolicyItemAccess access = RangerDefaultPolicyEvaluator.getAccess(policyItem, implyingAccessType);
+
+							if (access == null) {
+								continue;
+							}
+
+							for (String impliedGrant : impliedGrants) {
+								RangerPolicyItemAccess impliedAccess = RangerDefaultPolicyEvaluator.getAccess(policyItem, impliedGrant);
+
+								if (impliedAccess == null) {
+									impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
+
+									accesses.add(impliedAccess);
+								} else {
+									if (!impliedAccess.getIsAllowed()) {
+										impliedAccess.setIsAllowed(access.getIsAllowed());
+									}
+								}
+							}
+						}
+					}
 				}
 
 				final List<String> groups         = policyItem.getGroups();

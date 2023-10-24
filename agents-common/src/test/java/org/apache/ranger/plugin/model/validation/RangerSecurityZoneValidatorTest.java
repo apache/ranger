@@ -19,11 +19,17 @@
 package org.apache.ranger.plugin.model.validation;
 
 import static org.mockito.Mockito.mock;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -34,6 +40,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -108,7 +115,7 @@ public class RangerSecurityZoneValidatorTest {
 		try{
 			rangerSecurityZoneValidator.validate(suppliedSecurityZone, RangerValidator.Action.DELETE);
 		}catch(IllegalArgumentException ex){
-			Assert.assertEquals(ex.getMessage(), "isValid(RangerPolicy, ...) is only supported for create/update");
+			Assert.assertEquals(ex.getMessage(), "isValid(RangerSecurityZone, ...) is only supported for create/update");
 		}
 	}
 	
@@ -161,9 +168,11 @@ public class RangerSecurityZoneValidatorTest {
 			rangerSecurityZoneValidator.validate(suppliedSecurityZone,
 					RangerValidator.Action.CREATE);
 		} catch (Exception ex) {
-			Assert.assertEquals(
-					ex.getMessage(),
-					"(0) Validation failure: error code[3044], reason[No services specified for security-zone:[MyZone]], field[services], subfield[null], type[missing] (1) Validation failure: error code[3038], reason[both users and user-groups collections for the security zone were null/empty], field[security zone admin users/user-groups], subfield[null], type[missing] (2) Validation failure: error code[3038], reason[both users and user-groups collections for the security zone were null/empty], field[security zone audit users/user-groups], subfield[null], type[missing] ");
+			String              failureMessage   = ex.getMessage();
+			ValidationErrorCode expectedError    = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES;
+			boolean             hasExpectedError = StringUtils.contains(failureMessage, expectedError.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + expectedError.getErrorCode() + ". Failure message: " + failureMessage, hasExpectedError);
 		}
 	}
 
@@ -357,8 +366,154 @@ public class RangerSecurityZoneValidatorTest {
 		Assert.assertFalse(isValid);
 	}
 
-	
-	
+	@Test
+	public void testValidatePathResourceInMultipleSecurityZones() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+		List<HashMap<String, List<String>>> zone2Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("hdfs", Arrays.asList("/zone1")); }});
+		zone2Resources.add(new HashMap<String, List<String>>() {{ put("hdfs", Arrays.asList("/zone1/a")); }});
+
+		RangerServiceDef          svcDef       = rangerServiceDef();
+		RangerService             svc          = getRangerService();
+		RangerSecurityZoneService zone1HdfsSvc = new RangerSecurityZoneService(zone1Resources);
+		RangerSecurityZoneService zone2HdfsSvc = new RangerSecurityZoneService(zone2Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HdfsSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+		RangerSecurityZone zone2 = new RangerSecurityZone("zone2", Collections.singletonMap(svc.getName(), zone2HdfsSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+		zone2.setId(2L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(2L)).thenReturn(zone2);
+		Mockito.when(_securityZoneStore.getSecurityZones(Mockito.any())).thenReturn(zones);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone2, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String              failureMessage   = excp.getMessage();
+			ValidationErrorCode expectedError    = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT;
+			boolean             hasExpectedError = StringUtils.contains(failureMessage, expectedError.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + expectedError.getErrorCode() + ". Failure message: " + failureMessage, hasExpectedError);
+		}
+	}
+
+	@Test
+	public void testValidateHiveResourceInMultipleSecurityZones() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+		List<HashMap<String, List<String>>> zone2Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); }});
+		zone2Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+
+		RangerServiceDef          svcDef       = getHiveServiceDef();
+		RangerService             svc          = getHiveService();
+		RangerSecurityZoneService zone1HiveSvc = new RangerSecurityZoneService(zone1Resources);
+		RangerSecurityZoneService zone2HiveSvc = new RangerSecurityZoneService(zone2Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+		RangerSecurityZone zone2 = new RangerSecurityZone("zone2", Collections.singletonMap(svc.getName(), zone2HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+		zone2.setId(2L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(2L)).thenReturn(zone2);
+		Mockito.when(_securityZoneStore.getSecurityZones(Mockito.any())).thenReturn(zones);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone2, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String  failureMessage           = excp.getMessage();
+			boolean hasResourceConflictError = StringUtils.contains(failureMessage, ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + ". Failure message: " + excp.getMessage(), hasResourceConflictError);
+		}
+	}
+
+	@Test
+	public void test2ValidateHiveResourceInMultipleSecurityZones() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+		List<HashMap<String, List<String>>> zone2Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("*")); }});
+		zone2Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+
+		RangerServiceDef          svcDef       = getHiveServiceDef();
+		RangerService             svc          = getHiveService();
+		RangerSecurityZoneService zone1HiveSvc = new RangerSecurityZoneService(zone1Resources);
+		RangerSecurityZoneService zone2HiveSvc = new RangerSecurityZoneService(zone2Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+		RangerSecurityZone zone2 = new RangerSecurityZone("zone2", Collections.singletonMap(svc.getName(), zone2HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+		zone2.setId(2L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(2L)).thenReturn(zone2);
+		Mockito.when(_securityZoneStore.getSecurityZones(Mockito.any())).thenReturn(zones);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone2, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String  failureMessage           = excp.getMessage();
+			boolean hasResourceConflictError = StringUtils.contains(failureMessage, ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + ". Failure message: " + excp.getMessage(), hasResourceConflictError);
+		}
+	}
+
+	@Test
+	public void testValidateDuplicateResourceEntries() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+
+		RangerServiceDef          svcDef       = getHiveServiceDef();
+		RangerService             svc          = getHiveService();
+		RangerSecurityZoneService zone1HiveSvc = new RangerSecurityZoneService(zone1Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(zone1.getId())).thenReturn(zone1);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone1, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String  failureMessage           = excp.getMessage();
+			boolean hasResourceConflictError = StringUtils.contains(failureMessage, ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY.getErrorCode() + ". Failure message: " + excp.getMessage(), hasResourceConflictError);
+		}
+	}
+
 	private RangerService getRangerService() {
 		Map<String, String> configs = new HashMap<String, String>();
 		configs.put("username", "servicemgr");
@@ -393,6 +548,8 @@ public class RangerSecurityZoneValidatorTest {
 		
 		RangerResourceDef rangerResourceDef = new RangerResourceDef();
 		rangerResourceDef.setName("hdfs");
+		rangerResourceDef.setRecursiveSupported(true);
+		rangerResourceDef.setMatcher("org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher");
 		
 		List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
 		List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
@@ -419,6 +576,18 @@ public class RangerSecurityZoneValidatorTest {
 		rangerServiceDef.setEnums(enums);
 
 		return rangerServiceDef;
+	}
+
+	private RangerService getHiveService() {
+		RangerService ret = new RangerService(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME, "hiveSvc", "Test Hive Service", null, new HashMap<>());
+
+		ret.setId(1L);
+
+		return ret;
+	}
+
+	private RangerServiceDef getHiveServiceDef() throws Exception {
+		return EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME);
 	}
 
         private RangerSecurityZone getRangerSecurityZone(){
@@ -466,7 +635,7 @@ public class RangerSecurityZoneValidatorTest {
                  SearchFilter filter = new SearchFilter();
 
          filter.setParam(SearchFilter.SERVICE_NAME, "hdfsSvc");
-         filter.setParam(SearchFilter.ZONE_NAME, "MyZone");
+         filter.setParam(SearchFilter.NOT_ZONE_NAME, "MyZone");
 
          return filter;
         }

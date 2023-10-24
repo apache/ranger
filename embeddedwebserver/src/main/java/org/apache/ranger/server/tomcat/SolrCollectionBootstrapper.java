@@ -199,6 +199,14 @@ public class SolrCollectionBootstrapper extends Thread {
 					logErrorMessageAndWait("Error while configuring solr. ", ex);
 				}
 
+				try {
+					if (solrCloudClient != null) {
+						solrCloudClient.close();
+					}
+				} catch (Exception ex) {
+					logger.log(Level.WARNING, "Error while closing the solr client. ", ex);
+				}
+
 			}
 
 		} else {

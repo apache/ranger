@@ -16,10 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 import axios from "axios";
-import history from "./history";
-import ErrorPage from "../views/ErrorPage";
 import {
   RANGER_REST_CSRF_ENABLED,
   RANGER_REST_CSRF_CUSTOM_HEADER,
@@ -27,13 +24,20 @@ import {
   CSRFToken
 } from "./appConstants";
 import { toast } from "react-toastify";
+import { navigateTo } from "./XAUtils";
 
 let csrfEnabled = false;
 let restCsrfCustomHeader = null;
 let restCsrfIgnoreMethods = [];
 let csrfToken = " ";
+let isSessionActive = true;
 
 async function fetchApi(axiosConfig = {}, otherConf = {}) {
+  axiosConfig.headers = {
+    ...axiosConfig.headers,
+    ...{ "X-Requested-With": "XMLHttpRequest" }
+  };
+
   if (
     csrfEnabled &&
     restCsrfIgnoreMethods.indexOf(
@@ -50,6 +54,7 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
   const config = {
     ...axiosConfig
   };
+
   if (otherConf && otherConf.cancelRequest) {
     /*
       Below code add "source" attribute in second argument which is use to cancel request.
@@ -77,8 +82,28 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
     const resp = await axios(config);
     return resp;
   } catch (error) {
-    if (error && error.response && error.response.status === 419) {
-      window.location.replace("login.jsp");
+    if (error?.response?.status === 419) {
+      if (isSessionActive) {
+        toast.warning("Session Time Out !!");
+        isSessionActive = false;
+        window.location.replace("login.jsp?sessionTimeout=true");
+      }
+    }
+    if (config?.skipNavigate) {
+      throw error;
+    }
+    if (
+      error?.response?.status === 400 &&
+      (error?.response?.data?.messageList?.[0]?.name == "DATA_NOT_FOUND" ||
+        error?.response?.data?.messageList?.[0]?.name == "INVALID_INPUT_DATA")
+    ) {
+      navigateTo.navigate("/dataNotFound", { replace: true });
+    }
+    if (error?.response?.status === 404) {
+      navigateTo.navigate("/pageNotFound", { replace: true });
+    }
+    if (error?.response?.status === 403) {
+      navigateTo.navigate("/forbidden", { replace: true });
     }
     throw error;
   }
@@ -112,15 +137,6 @@ const fetchCSRFConf = async () => {
     respData && handleCSRFHeaders(respData);
   } catch (error) {
     throw Error(error);
-    if (error?.response?.status) {
-      if (error.response.status == "419") {
-        toast.warning("Session Time Out !!");
-        history.push("/login.jsp");
-      }
-      if (error.response.status == "204") {
-        return <ErrorPage errorCode="204" history={history}></ErrorPage>;
-      }
-    }
   }
   return respData;
 };

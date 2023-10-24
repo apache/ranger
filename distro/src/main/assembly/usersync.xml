@@ -57,6 +57,12 @@
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 							<include>commons-codec:commons-codec</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
+							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
+							<include>org.apache.curator:curator-framework:jar:${curator.version}</include>
+							<include>org.apache.curator:curator-recipes:jar:${curator.version}</include>
+							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
+							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
 							<include>org.apache.ranger:ugsync-util</include>
 							<include>org.apache.htrace:htrace-core4</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>

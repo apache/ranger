@@ -43,12 +43,13 @@ import CustomBreadcrumb from "../views/CustomBreadcrumb";
 import { CustomTooltip } from "../components/CommonComponents";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
-import { RangerPolicyType } from "./XAEnums";
+import { RangerPolicyType, ServiceType } from "./XAEnums";
 import { policyInfoMessage } from "./XAMessages";
+import { fetchApi } from "Utils/fetchAPI";
 
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
-  const currentUserRoles = userProfile.userRoleList[0];
+  const currentUserRoles = userProfile?.userRoleList[0];
   if (!currentUserRoles && currentUserRoles == "") {
     return false;
   }
@@ -132,8 +133,8 @@ export const isObject = (value) => {
 
 export const hasAccessToTab = (tabName) => {
   const userProfile = getUserProfile();
-  let userModules = map(userProfile.userPermList, "moduleName");
-  let groupModules = map(userProfile.groupPermissions, "moduleName");
+  let userModules = map(userProfile?.userPermList, "moduleName");
+  let groupModules = map(userProfile?.groupPermissions, "moduleName");
   let moduleNames = union(userModules, groupModules);
   let returnFlag = includes(moduleNames, tabName);
   return returnFlag;
@@ -145,11 +146,16 @@ export const hasAccessToPath = (pathName) => {
   if (pathName == "/") {
     pathName = "/policymanager/resource";
   }
-  let userModules = map(userProfile.userPermList, "moduleName");
-  let groupModules = map(userProfile.groupPermissions, "moduleName");
+  let userModules = map(userProfile?.userPermList, "moduleName");
+  let groupModules = map(userProfile?.groupPermissions, "moduleName");
   let moduleNames = union(userModules, groupModules);
   moduleNames.push("Profile");
   moduleNames.push("KnoxSignOut");
+  moduleNames.push("DataNotFound");
+  moduleNames.push("PageNotFound");
+  moduleNames.push("Forbidden");
+
+  moduleNames.push("localLogin");
   if (isSystemAdmin() || isAuditor()) {
     moduleNames.push("Permission");
   }
@@ -1019,7 +1025,7 @@ var links = {
 
 export const commonBreadcrumb = (type, options) => {
   let data = [];
-  type.map((obj) => {
+  type?.map((obj) => {
     if (typeof links[obj] == "function") {
       let filterdata = {};
       filterdata[obj] = links[obj](options);
@@ -1130,8 +1136,6 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from current search params
   const currentParams = Object.fromEntries([...searchParams]);
-  console.log("PRINT current search params : ", currentParams);
-
   for (const param in currentParams) {
     let searchFilterObj = find(searchFilterOptions, {
       urlLabel: param
@@ -1158,10 +1162,11 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from localStorage
   if (isEmpty(searchFilterParam)) {
-    const localStorageParams = JSON.parse(localStorage.getItem(auditTabName));
-    console.log("PRINT available localStorage : ", localStorageParams);
+    if (!isNull(localStorage.getItem(auditTabName))) {
+      const localStorageParams =
+        !isEmpty(localStorage.getItem(auditTabName)) &&
+        JSON.parse(localStorage.getItem(auditTabName));
 
-    if (!isNull(localStorageParams) && !isEmpty(localStorageParams)) {
       for (const localParam in localStorageParams) {
         let searchFilterObj = find(searchFilterOptions, {
           urlLabel: localParam
@@ -1183,27 +1188,49 @@ export const fetchSearchFilterParams = (
             category: category,
             value: value
           });
-          searchParam[localParam] = value;
+          searchParam[localParam] = localStorageParams[localParam];
         }
       }
     }
   }
-
-  console.log("PRINT Final searchFilterParam to server : ", searchFilterParam);
-  console.log(
-    "PRINT Final defaultSearchFilterParam to tokenzier : ",
-    defaultSearchFilterParam
-  );
-  console.log(
-    "PRINT Final available localStorage is : ",
-    localStorage.getItem(auditTabName)
-  );
-
   finalSearchFilterData["searchFilterParam"] = searchFilterParam;
   finalSearchFilterData["defaultSearchFilterParam"] = defaultSearchFilterParam;
   finalSearchFilterData["searchParam"] = { ...currentParams, ...searchParam };
 
   return finalSearchFilterData;
+};
+
+export const parseSearchFilter = (filter, searchFilterOptions) => {
+  let finalSearchFilter = {};
+  let searchFilterParam = {};
+  let searchParam = {};
+
+  map(filter, function (obj) {
+    let searchFilterObj = find(searchFilterOptions, {
+      category: obj.category
+    });
+
+    if (searchFilterObj !== undefined) {
+      searchFilterParam[obj.category] = obj.value;
+
+      let urlLabelParam = searchFilterObj.urlLabel;
+
+      if (searchFilterObj.type == "textoptions") {
+        let textOptionObj = find(searchFilterObj.options(), {
+          value: obj.value
+        });
+        searchParam[urlLabelParam] =
+          textOptionObj !== undefined ? textOptionObj.label : obj.value;
+      } else {
+        searchParam[urlLabelParam] = obj.value;
+      }
+    }
+  });
+
+  finalSearchFilter["searchParam"] = searchParam;
+  finalSearchFilter["searchFilterParam"] = searchFilterParam;
+
+  return finalSearchFilter;
 };
 
 export const serverError = (error) => {
@@ -1214,7 +1241,7 @@ export const serverError = (error) => {
   }
 };
 
-/* policyInfo for masking and row filter */
+/* PolicyInfo for masking and row filter */
 
 export const policyInfo = (policyType, serviceType) => {
   if (
@@ -1273,4 +1300,139 @@ export const getBaseUrl = () => {
       0
     )
   );
+};
+
+/* Drag and Drop Feature */
+
+export const dragStart = (e, position, dragItem) => {
+  e.target.style.opacity = 0.4;
+  e.target.style.backgroundColor = "#fdf1a6";
+  e.stopPropagation();
+  dragItem.current = position;
+};
+
+export const dragEnter = (e, position, dragOverItem) => {
+  dragOverItem.current = position;
+};
+
+export const dragOver = (e) => {
+  e.preventDefault();
+};
+
+export const drop = (e, fields, dragItem, dragOverItem) => {
+  e.target.style.opacity = 1;
+  e.target.style.backgroundColor = "white";
+  if (dragItem.current == dragOverItem.current) {
+    return;
+  }
+
+  fields.move(dragItem.current, dragOverItem.current);
+
+  dragItem.current = null;
+  dragOverItem.current = null;
+};
+
+// TODO : Remove below code once different router path is used to distinguish between tag and resource service/policy
+export const updateTagActive = (isTagView) => {
+  if (isTagView) {
+    document
+      .getElementById("resourcesButton")
+      ?.classList?.remove("navbar-active");
+    document.getElementById("tagButton")?.classList?.add("navbar-active");
+  } else if (!isTagView) {
+    document.getElementById("tagButton")?.classList?.remove("navbar-active");
+    document.getElementById("resourcesButton")?.classList?.add("navbar-active");
+  }
+};
+
+export const handleLogout = async (checkKnoxSSOVal, navigate) => {
+  let logoutResp = {};
+  try {
+    logoutResp = await fetchApi({
+      url: "logout",
+      baseURL: "",
+      headers: {
+        "cache-control": "no-cache"
+      }
+    });
+    if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
+      if (checkKnoxSSOVal?.toString() == "false") {
+        window.location.replace("/locallogin");
+        window.localStorage.clear();
+      } else {
+        navigate("/knoxSSOWarning");
+      }
+    } else {
+      window.location.replace("login.jsp");
+    }
+  } catch (error) {
+    toast.error(`Error occurred while logout! ${error}`);
+  }
+};
+
+export const checkKnoxSSO = async (navigate) => {
+  const userProfile = getUserProfile();
+  let checkKnoxSSOresp = {};
+  try {
+    checkKnoxSSOresp = await fetchApi({
+      url: "plugins/checksso",
+      type: "GET",
+      headers: {
+        "cache-control": "no-cache"
+      }
+    });
+    if (
+      checkKnoxSSOresp?.data?.toString() == "true" &&
+      userProfile?.configProperties?.inactivityTimeout > 0
+    ) {
+      window.location.replace("index.html?action=timeout");
+    } else {
+      handleLogout(checkKnoxSSOresp?.data, navigate);
+    }
+  } catch (error) {
+    if (checkKnoxSSOresp?.status == "419") {
+      window.location.replace("login.jsp");
+    }
+    console.error(`Error occurred while logout! ${error}`);
+  }
+};
+
+export const navigateTo = {
+  navigate: null
+};
+
+export const requestDataTitle = (serviceType) => {
+  let title = "";
+  if (serviceType == ServiceType.Service_HIVE.label) {
+    title = `Hive Query`;
+  }
+  if (serviceType == ServiceType.Service_HBASE.label) {
+    title = `HBase Audit Data`;
+  }
+  if (serviceType == ServiceType.Service_HDFS.label) {
+    title = `HDFS Operation Name`;
+  }
+  if (serviceType == ServiceType.Service_SOLR.label) {
+    title = "Solr Query";
+  }
+  return title;
+};
+
+//Policy condition evaluation
+
+export const policyConditionUpdatedJSON = (policyCond) => {
+  let newPolicyConditionJSON = [...policyCond];
+  newPolicyConditionJSON.filter(function (key, val) {
+    if (!key?.uiHint || key?.uiHint == "") {
+      if (
+        key.evaluatorOptions &&
+        key.evaluatorOptions?.["ui.isMultiline"] == "true"
+      ) {
+        key["uiHint"] = '{ "isMultiline":true }';
+      } else {
+        key["uiHint"] = '{ "isMultiValue":true }';
+      }
+    }
+  });
+  return newPolicyConditionJSON;
 };

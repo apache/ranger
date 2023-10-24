@@ -522,6 +522,31 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
+    public Collection<String> getZoneNamesForResource(Map<String, ?> resource) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyAdminImpl.getSecurityZonesForResource(" + resource + ")");
+        }
+
+        Collection<String> ret = null;
+
+        try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - " + readLock);
+                }
+            }
+
+            ret = policyEngine.getMatchedZonesForResourceAndChildren(resource);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyAdminImpl.getSecurityZonesForResource(" + resource + ") : " + ret);
+        }
+
+        return ret;
+    }
+
+    @Override
     public String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyAdminImpl.getUniquelyMatchedZoneName(" + grantRevokeRequest + ")");
@@ -621,7 +646,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         requestProcessor.preProcess(request);
 
-        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(resource);
+        Set<String> zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
         if (CollectionUtils.isEmpty(zoneNames)) {
             getMatchingPoliciesForZone(request, null, ret);

@@ -81,7 +81,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
 
 		searchFields.add(new SearchField("syncSource", "obj.syncSource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
@@ -280,5 +280,9 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 
 	public Map<Long, String> getXXGroupIdNameMap() {
 		return daoManager.getXXGroup().getAllGroupIdNames();
+	}
+
+	public Long getAllGroupCount() {
+		return daoManager.getXXGroup().getAllCount();
 	}
 }

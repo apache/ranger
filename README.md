@@ -23,8 +23,8 @@ under the License.
 
 
 #### NOTE
-Ranger is currently NOT setup to use pull requests (PRs) on GitHub to take in the changes for commit.
-Please use the [apache review board](https://reviews.apache.org) to submit your code changes for review and commit.
+Apache Ranger allows contributions via pull requests (PRs) on GitHub.  
+Alternatively, use [this](https://reviews.apache.org) to submit changes for review using the Review Board.
 Also create a [ranger jira](https://issues.apache.org/jira/browse/RANGER) to go along with the review and mention it in the review board review.
 
 

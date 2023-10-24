@@ -620,7 +620,12 @@ export const PathAssociateWithModule = {
   ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
-  KnoxSignOut: ["/knoxSSOWarning"]
+  KnoxSignOut: ["/knoxSSOWarning"],
+  DataNotFound: ["/dataNotFound"],
+  PageNotFound: ["/pageNotFound"],
+  localLogin: ["/locallogin"],
+  slashPath: ["/"],
+  Forbidden: ["/forbidden"]
 };
 
 /* Access */
@@ -740,3 +745,79 @@ export const ServiceType = {
     tt: "lbl.ServiceType_SERVICE_YARN"
   }
 };
+export const ServerAttrName = [
+  {
+    text: "Group Name",
+    info: "Name of Group."
+  },
+  {
+    text: "Policy Name",
+    info: "Enter name of policy."
+  },
+  {
+    text: "Status",
+    info: "Status of Policy Enable/Disable."
+  },
+  {
+    text: "User Name",
+    info: "Name of User."
+  },
+  {
+    text: "Role Name",
+    info: "Name of Role."
+  },
+  {
+    text: "Policy Label",
+    info: "Label of policy"
+  }
+];
+
+export const ResourcesOverrideInfoMsg = {
+  collection: "Solr collection.",
+  column: "Column Name",
+  "column-family": "Hbase column-family",
+  database: "Database",
+  entity: "Atlas all-entity.",
+  keyname: "Key Name",
+  path: "Name of policy resource path.",
+  queue: "Yarn queue.",
+  service: "Name of service.",
+  table: "Table Name",
+  tag: "Tag Name.",
+  topic: "Kafka topic.",
+  topology: "Topology Name",
+  type: "Policy for all type.",
+  udf: "Hive udf.",
+  url: "Hive url.",
+  "type-category": "Atlas type category.",
+  "entity-type": "Atlas entity type.",
+  "entity-classification": "Atlas entity classification.",
+  "atlas-service": "Atlas services.",
+  connector: "Connectivity By Sqoop.",
+  link: "Linker Name.",
+  job: "Sqoop Job Name.",
+  project: "Kylin Project Level.",
+  "nifi-resource": "NiFi Resource Identifier."
+};
+
+export const ServiceRequestDataRangerAcl = [
+  ServiceType.Service_HIVE.label,
+  ServiceType.Service_HBASE.label,
+  ServiceType.Service_HDFS.label,
+  ServiceType.Service_SOLR.label
+];
+
+export const ServiceRequestDataHadoopAcl = [ServiceType.Service_HDFS.label];
+
+export const UsersyncDetailsKeyDisplayMap = {
+    'unixBackend': 'Unix',
+    'fileName': 'File Name',
+    'syncTime': 'Sync time',
+    'lastModified': 'Last modified time',
+    'minUserId': 'Minimum user id',
+    'minGroupId': 'Minimum group id',
+    'totalUsersSynced': 'Total number of users synced',
+    'totalGroupsSynced': 'Total number of groups synced',
+    'totalUsersDeleted': 'Total number of users marked for delete',
+    'totalGroupsDeleted': 'Total number of groups marked for delete'
+}

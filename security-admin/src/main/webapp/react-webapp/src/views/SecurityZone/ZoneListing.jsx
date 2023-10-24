@@ -24,17 +24,17 @@ import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 import ZoneDisplay from "./ZoneDisplay";
-import moment from "moment-timezone";
-import { Row, Col, Collapse, Breadcrumb } from "react-bootstrap";
+import { Row, Col, Collapse } from "react-bootstrap";
 import { sortBy } from "lodash";
-import { commonBreadcrumb } from "../../utils/XAUtils";
 import withRouter from "Hooks/withRouter";
 import { BlockUi, Loader } from "../../components/CommonComponents";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 class ZoneListing extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      services: [],
       zones: [],
       selectedZone: null,
       isCollapse: true,
@@ -47,10 +47,11 @@ class ZoneListing extends Component {
   }
 
   componentDidMount() {
-    this.fetchZones();
+    this.fetchData();
   }
 
-  fetchZones = async () => {
+  fetchData = async () => {
+    let servicesResp;
     let zoneList = [],
       selectedZone = null,
       zoneId = this.props.params.zoneId;
@@ -63,9 +64,25 @@ class ZoneListing extends Component {
       console.error(`Error occurred while fetching Zones! ${error}`);
     }
 
+    try {
+      servicesResp = await fetchApi({
+        url: "plugins/services",
+        params: {
+          page: 0,
+          pageSize: 200,
+          total_pages: 0,
+          startIndex: 0
+        }
+      });
+    } catch (error) {
+      console.error(`Error occurred while fetching Services! ${error}`);
+    }
+
     zoneList = sortBy(zoneList, ["name"]);
     if (zoneId !== undefined) {
-      selectedZone = zoneList.find((obj) => obj.id === +zoneId) || null;
+      selectedZone =
+        zoneList.find((obj) => obj.id === +zoneId) ||
+        this.props.navigate("/dataNotFound");
     } else {
       if (zoneList.length > 0) {
         selectedZone = zoneList[0];
@@ -77,7 +94,8 @@ class ZoneListing extends Component {
       loader: false,
       selectedZone: selectedZone,
       zones: zoneList,
-      filterZone: zoneList
+      filterZone: zoneList,
+      services: servicesResp.data.services
     });
   };
 
@@ -153,22 +171,20 @@ class ZoneListing extends Component {
   render() {
     return (
       <React.Fragment>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">Security Zone</h3>
+          <CustomBreadcrumb />
+        </div>
         {this.state.loader ? (
           <Loader />
         ) : (
           <React.Fragment>
-            {commonBreadcrumb(["SecurityZone"])}
-            <div className="wrap mt-1">
+            <div className="wrap">
               <Row>
                 <BlockUi isUiBlock={this.state.blockUI} />
                 <Collapse in={this.state.isCollapse} data-id="panel">
                   <Col sm={3} className="border-right border-grey">
                     <Row>
-                      <Col>
-                        <h5 className="text-muted wrap-header bold pull-left">
-                          Security Zones
-                        </h5>
-                      </Col>
                       {this.state.isAdminRole && (
                         <Col>
                           <Link
@@ -178,18 +194,19 @@ class ZoneListing extends Component {
                                 detail: this.state.filterZone[0]
                               }
                             }}
-                            className="btn btn-outline-secondary btn-sm pull-right"
+                            className="btn btn-outline-secondary btn-sm"
                             title="Create zone"
                           >
-                            <i className="fa-fw fa fa-plus"></i>
+                            <i className="fa-fw fa fa-plus"></i>Create Zone
                           </Link>
+                          <hr />
                         </Col>
                       )}
                     </Row>
                     <Row>
                       <Col>
                         <input
-                          className="form-control mt-2"
+                          className="form-control"
                           type="text"
                           onChange={this.onChangeSearch}
                           placeholder="Search"
@@ -198,10 +215,10 @@ class ZoneListing extends Component {
                         ></input>
                       </Col>
                     </Row>
-                    <Row className="mt-2">
+                    <Row>
                       <Col>
                         {this.state.filterZone.length !== 0 ? (
-                          <ul className="zone-listing">
+                          <ul className="zone-listing mt-2">
                             {this.state.filterZone.map((zone) => (
                               <li
                                 className="trim-containt"
@@ -241,7 +258,7 @@ class ZoneListing extends Component {
                       <Col md="auto">
                         <div className="pt-5 pr-5">
                           <img
-                            alt="Avatar"
+                            alt="No Zones"
                             className="w-50 p-3 d-block mx-auto"
                             src={noZoneImage}
                           />
@@ -266,6 +283,7 @@ class ZoneListing extends Component {
                     <ZoneDisplay
                       history={this.props.navigate}
                       zone={this.state.selectedZone}
+                      services={this.state.services}
                       deleteZone={this.deleteZone}
                       expandBtn={this.expandBtn}
                       isCollapse={this.state.isCollapse}

@@ -28,7 +28,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import moment from "moment-timezone";
-import { find, isEmpty } from "lodash";
+import { find, isEmpty, map } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
 import {
@@ -36,9 +36,10 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "Utils/XAUtils";
-import { isUndefined, map } from "lodash";
+import { isUndefined } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader } from "../../../components/CommonComponents";
 import { BlockUi } from "../../../components/CommonComponents";
@@ -84,10 +85,8 @@ function Roles() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -119,16 +118,14 @@ function Roles() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(roleListingData);
+    }
+  }, [totalCount]);
 
   const fetchRoleInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
@@ -177,11 +174,7 @@ function Roles() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (localStorage.getItem("newDataAdded") == "true") {
-          scrollToNewData(roleData, roleResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -190,7 +183,7 @@ function Roles() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.info("Please select atleast one role!!");
+      toast.warning("Please select atleast one role!!");
     }
   };
 
@@ -223,7 +216,7 @@ function Roles() {
             errorMsg +=
               `Error occurred during deleting Role: ${original.name}` + "\n";
           }
-          console.log(errorMsg);
+          console.error(errorMsg);
         }
       }
       if (errorMsg) {
@@ -233,9 +226,11 @@ function Roles() {
         if (
           (roleListingData.length == 1 ||
             roleListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
-          resetPage.page(0);
+          if (typeof resetPage?.page === "function") {
+            resetPage.page(0);
+          }
         } else {
           setUpdateTable(moment.now());
         }
@@ -252,27 +247,27 @@ function Roles() {
           if (rawValue.value) {
             return (
               <Link
-                style={{ maxWidth: "150px", display: "inline-block" }}
+                style={{ maxWidth: "100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
                     : "text-info"
                 }`}
                 to={"/roles/" + rawValue.row.original.id}
+                title={rawValue.value}
               >
                 {rawValue.value}
               </Link>
             );
           }
           return "--";
-        },
-        width: 150
+        }
       },
       {
         Header: "Users",
         accessor: "users",
         accessor: (raw) => {
-          let usersList = _.map(raw.users, "name");
+          let usersList = map(raw.users, "name");
           return !isEmpty(usersList) ? (
             <MoreLess data={usersList} key={raw.id} />
           ) : (
@@ -284,7 +279,7 @@ function Roles() {
         Header: "Groups",
         accessor: "groups",
         accessor: (raw) => {
-          let groupsList = _.map(raw.groups, "name");
+          let groupsList = map(raw.groups, "name");
           return !isEmpty(groupsList) ? (
             <MoreLess data={groupsList} key={raw.id} />
           ) : (
@@ -296,7 +291,7 @@ function Roles() {
         Header: "Roles",
         accessor: "roles",
         accessor: (raw) => {
-          let rolesList = _.map(raw.roles, "name");
+          let rolesList = map(raw.roles, "name");
 
           return !isEmpty(rolesList) ? (
             <MoreLess data={rolesList} key={raw.id} />
@@ -313,7 +308,7 @@ function Roles() {
     navigate("/roles/create", { state: { tblpageData: tblpageData } });
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "groupNamePartial",
       label: "Group Name",
@@ -335,37 +330,20 @@ function Roles() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
-    let searchFilterParam = {};
-    let searchParam = {};
-
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-
-      let urlLabelParam = searchFilterObj.urlLabel;
-
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
   };
 
   return (
     <div className="wrap">
-      <h4 className="wrap-header font-weight-bold">Role List</h4>
       {pageLoader ? (
         <Loader />
       ) : (
@@ -376,9 +354,8 @@ function Roles() {
               <StructuredFilter
                 key="role-listing-search-filter"
                 placeholder="Search for your roles..."
-                options={searchFilterOption}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                options={searchFilterOptions}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>
@@ -427,18 +404,20 @@ function Roles() {
           />
 
           <Modal show={showModal} onHide={toggleConfirmModal}>
-            <Modal.Body>
-              Are you sure you want to delete&nbsp;
-              {selectedRows.current.length === 1 ? (
-                <span>
-                  <b>"{selectedRows.current[0].original.name}"</b> role ?
-                </span>
-              ) : (
-                <span>
-                  <b>"{selectedRows.current.length}"</b> roles ?
-                </span>
-              )}
-            </Modal.Body>
+            <Modal.Header closeButton>
+              <span className="text-word-break">
+                Are you sure you want to delete the&nbsp;
+                {selectedRows.current.length === 1 ? (
+                  <>
+                    <b>"{selectedRows.current[0].original.name}"</b> role ?
+                  </>
+                ) : (
+                  <>
+                    selected<b> {selectedRows.current.length}</b> roles?
+                  </>
+                )}
+              </span>
+            </Modal.Header>
             <Modal.Footer>
               <Button
                 variant="secondary"

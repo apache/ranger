@@ -1,0 +1,211 @@
+{
+  "serviceName": "dev_aws-s3",
+
+  "serviceDef": {
+    "name": "aws-s3", "id": 1,
+    "resources": [
+      { "name": "bucketname", "parent":"",           "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": false }, "label": "Bucket Name", "description": "Bucket Name" },
+      { "name": "objectpath", "parent":"bucketname", "level": 2, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",    "matcherOptions": { "wildCard": true, "ignoreCase": false }, "label": "Object Path", "description": "Object Path" }
+    ],
+    "accessTypes": [
+      { "name": "read",   "label": "Read" },
+      { "name": "write",  "label": "Write" },
+      { "name": "delete", "label": "Delete" }
+    ]
+  },
+
+  "policies": [
+    {
+      "id": 10, "name": "s3://mycompany/public", "isEnabled": true, "isAuditEnabled": true,
+      "resources": {
+        "bucketname": { "values": [ "mycompany" ] },
+        "objectpath": { "values": [ "/public" ], "isRecursive": true } },
+      "policyItems": [
+        { "accesses": [ { "type": "read", "isAllowed": true } ], "groups": [ "public" ] }
+      ]
+    },
+    {
+      "id": 20, "name": "s3://mycompany/home/{USER}", "isEnabled": true, "isAuditEnabled": true,
+      "resources": {
+        "bucketname": { "values": [ "mycompany" ] },
+        "objectpath": { "values": [ "/home/{USER}" ], "isRecursive": true } },
+      "policyItems": [
+        { "accesses": [ { "type": "read", "isAllowed": true },  { "type": "write", "isAllowed": true },  { "type": "delete", "isAllowed": true } ], "users": [ "{USER}" ] }
+      ]
+    },
+    {
+      "id": 30, "name": "s3://mycompany/dept/hr", "isEnabled": true, "isAuditEnabled": true,
+      "resources": {
+        "bucketname": { "values": [ "mycompany" ] },
+        "objectpath": { "values": [ "/dept/hr" ], "isRecursive": true } },
+      "policyItems": [
+        { "accesses": [ { "type": "read", "isAllowed": true },  { "type": "write", "isAllowed": true },  { "type": "delete", "isAllowed": true } ], "groups": [ "hr-admins" ] },
+        { "accesses": [ { "type": "read", "isAllowed": true } ], "groups": [ "hr-users" ] }
+      ]
+    }
+  ],
+  "tagPolicyInfo": {
+    "serviceName":"tagdev",
+    "serviceDef": {
+      "name":      "tag", "id": 100,
+      "resources": [
+        { "name": "tag", "type": "string", "level": 1, "parent": "", "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": false }, "label": "TAG", "description": "TAG"
+        }
+      ],
+      "accessTypes": [
+        { "name": "aws-s3:read",   "label": "aws-s3:read" },
+        { "name": "aws-s3:write",  "label": "aws-s3:write" },
+        { "name": "aws-s3:delete", "label": "aws-s3:delete" }
+      ],
+      "contextEnrichers": [
+        {
+          "name" :     "TagEnricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+          "enricherOptions" : {
+             "tagRetrieverClassName":       "org.apache.ranger.plugin.contextenricher.RangerFileBasedTagRetriever",
+             "tagRefresherPollingInterval": 60000,
+             "serviceTagsFileName":         "/policyengine/aws_s3_tags.json"}
+        }
+      ]
+    },
+    "tagPolicies": [
+      {
+        "id": 1001, "name": "PII", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "PII" ] } },
+        "policyItems": [
+          { "accesses": [ { "type": "aws-s3:read", "isAllowed": true } ], "users": [ "user3" ] }
+        ]
+      },
+      {
+        "id": 1002, "name": "PII-VENDOR", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "PII-VENDOR" ] } },
+        "policyItems": [
+          { "accesses": [ { "type": "aws-s3:read", "isAllowed": true } ], "users": [ "user4" ] }
+        ]
+      }
+    ]
+  },
+  "tests": [
+    {
+      "name":    "Verify user1 has read access to some object under s3://mycompany",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 10 }
+    },
+    {
+      "name":    "Verify user1 has read access to some object under s3://mycompany/public",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/public/" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 10 }
+    },
+    {
+      "name":    "Verify user1 has no write access to any object under s3://mycompany/public",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/public/" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    },
+    {
+      "name":    "Verify user1 has write access to some object under s3://mycompany/home",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/home" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 20 }
+    },
+    {
+      "name":    "Verify user1 has no write access to any object under s3://mycompany/dept",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/dept" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    },
+    {
+      "name":    "Verify user3 has read access to some objects under s3://mycompany/",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user3"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 1001 }
+    },
+    {
+      "name":    "Verify user3 has write access to some objects under s3://mycompany/",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user3"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 20 }
+    },
+    {
+      "name":    "Verify user3 has read access to some objects under s3://mycompany/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user3"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 1001 }
+    },
+    {
+      "name":    "Verify user3 has no write access to any object under s3://mycompany/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user3"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    },
+    {
+      "name":    "Verify user3 has no read access to any object under s3://mycompany/vendor/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/vendor/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user3"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    },
+    {
+      "name":    "Verify user4 has read access to some objects under s3://mycompany/vendor",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/vendor" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user4"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 1002 }
+    },
+    {
+      "name":    "Verify user4 has read access to some objects under s3://mycompany/vendor/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/vendor/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user4"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 1002 }
+    },
+    {
+      "name":    "Verify user4 has read access to some objects under s3://mycompany/vendor/pii/test",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/vendor/pii/test" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user4"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 1002 }
+    },
+    {
+      "name":    "Verify user4 has no read access to any object under s3://mycompany/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "read", "user": "user4"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    },
+    {
+      "name":    "Verify user4 has no write access to any object under s3://mycompany/pii",
+      "request": {
+        "resource":   { "elements": { "bucketname": "mycompany", "objectpath": "/pii" } }, "resourceElementMatchingScopes": { "objectpath": "SELF_OR_PREFIX" },
+        "accessType": "write", "user": "user4"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    }
+  ]
+}
+

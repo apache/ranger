@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM mariadb:10.7.3
+ARG MARIADB_VERSION
+FROM mariadb:${MARIADB_VERSION}
 
 # Copy DB init script
 USER 0

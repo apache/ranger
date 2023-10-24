@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
 public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
 	private static final Logger logger = LoggerFactory.getLogger(XXAccessAuditDao.class);
     public XXAccessAuditDao( RangerDaoManagerBase daoManager ) {
-		super(daoManager, "loggingPU");
+		super(daoManager);
     }
     public Long getMaxIdOfXXAccessAudit(){
 		Long maxXXAccessAuditID=Long.valueOf(0L);

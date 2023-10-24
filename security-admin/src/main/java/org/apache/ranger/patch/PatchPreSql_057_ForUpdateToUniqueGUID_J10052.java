@@ -133,7 +133,7 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 										isFirstElement = false;
 										continue;
 									}
-									RangerPolicy policy = svcStore.getPolicy(xxPolicy.getId());
+									RangerPolicy policy = getPolicy(xxPolicy);
 									if (policy != null) {
 										guid = guidUtil.genGUID();
 										xxPolicy.setGuid(guid);
@@ -156,5 +156,33 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 		} else {
 			logger.info("No zone or service found");
 		}
+	}
+
+	private RangerPolicy getPolicy(final XXPolicy xPolicy) {
+		final RangerPolicy ret;
+
+		if (xPolicy != null) {
+			String policyText = xPolicy.getPolicyText();
+			if (logger.isDebugEnabled()) {
+				logger.debug("Ranger Policy text:[" + policyText + "]");
+			}
+			ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
+
+			if (ret != null) {
+				ret.setId(xPolicy.getId());
+				ret.setGuid(xPolicy.getGuid());
+				ret.setCreateTime(xPolicy.getCreateTime());
+				ret.setUpdateTime(xPolicy.getUpdateTime());
+				ret.setVersion(xPolicy.getVersion());
+				ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
+				XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+				if (xSecurityZone != null) {
+					ret.setZoneName(xSecurityZone.getName());
+				}
+			}
+		} else {
+			ret = null;
+		}
+		return ret;
 	}
 }

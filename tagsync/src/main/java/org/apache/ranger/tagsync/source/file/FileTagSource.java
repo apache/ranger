@@ -216,7 +216,12 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 		while (true) {
 			try {
-				synchUp();
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> FileTagSource is running as server is active");
+					}
+					synchUp();
+				}
 			} catch (Exception e) {
 				LOG.error("Caught exception..", e);
 			} finally {

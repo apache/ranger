@@ -1,0 +1,42 @@
+{
+    "op":          "add_or_update",
+    "tagModel":    "resource_private",
+    "serviceName": "cl1_hive",
+    "tagDefinitions": {
+      "1": { "id": 1, "guid": "tag-def-1", "name": "SENSITIVE", "attributeDefs": [ { "name": "level", "type": "string" } ] },
+      "2": { "id": 2, "guid": "tag-def-2", "name": "ORDER" },
+      "3": { "id": 3, "guid": "tag-def-3", "name": "CUSTOMER" },
+      "4": { "id": 4, "guid": "tag-def-4", "name": "ADDRESS" }
+    },
+    "tags": {
+      "1": { "id": 1, "guid": "tag-1", "type": "SENSITIVE", "attributes": { "level": "normal" } },
+      "2": { "id": 2, "guid": "tag-2", "type": "SENSITIVE", "attributes": { "level": "high" } },
+      "3": { "id": 3, "guid": "tag-3", "type": "SENSITIVE", "attributes": { "level": "top" } },
+      "4": { "id": 4, "guid": "tag-4", "type": "SENSITIVE", "attributes": { "level": "top" } },
+      "5": { "id": 5, "guid": "tag-5", "type": "SENSITIVE", "attributes": { "level": "top" } },
+      "6": { "id": 6, "guid": "tag-6", "type": "ORDER" },
+      "7": { "id": 7, "guid": "tag-7", "type": "CUSTOMER" },
+      "8": { "id": 8, "guid": "tag-8", "type": "ADDRESS" }
+    },
+    "serviceResources": [
+      { "id": 1, "guid": "resource-1", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "db1" ] }, "table": { "values": [ "tbl1" ] } } },
+      { "id": 2, "guid": "resource-2", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "db1" ] }, "table": { "values": [ "tbl1" ] }, "column": { "values": [ "SSN" ] } } },
+      { "id": 3, "guid": "resource-3", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "db1" ] }, "table": { "values": [ "tbl1" ] }, "column": { "values": [ "Age" ] } } },
+      { "id": 4, "guid": "resource-4", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "db1" ] }, "table": { "values": [ "tbl1" ] }, "column": { "values": [ "Name" ] } } },
+      { "id": 5, "guid": "resource-5", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "db2" ] }, "table": { "values": [ "*" ] },    "column": { "values": [ "*" ] } } },
+      { "id": 6, "guid": "resource-6", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "order" ] }, "table": { "values":  [ "*" ] }, "column": { "values":  [ "*" ] } } },
+      { "id": 7, "guid": "resource-7", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "order" ] }, "table": { "values": [ "customer" ] } } },
+      { "id": 8, "guid": "resource-8", "serviceName": "cl1_hive", "resourceElements": { "database": { "values": [ "order" ] }, "table": { "values": [ "customer" ] }, "column": { "values": [ "address" ] } } }
+    ],
+    "resourceToTagIds": {
+      "1": [ 1 ],
+      "2": [ 2 ],
+      "3": [ 3 ],
+      "4": [ 4 ],
+      "5": [ 5 ],
+      "6": [ 6 ],
+      "7": [ 7 ],
+      "8": [ 8 ]
+    }
+}
+

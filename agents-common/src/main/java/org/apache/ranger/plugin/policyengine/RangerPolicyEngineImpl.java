@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.plugin.policyengine.PolicyEvaluatorForTag.MATCH_TYPE_COMPARATOR;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_CONDITIONAL;
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
@@ -272,7 +273,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			requestProcessor.preProcess(request);
 
-			String zoneName = policyEngine.getUniquelyMatchedZoneName(request.getResource().getAsMap());
+			String zoneName = RangerAccessRequestUtil.getResourceZoneNameFromContext(request.getContext());
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("zoneName:[" + zoneName + "]");
@@ -282,6 +283,17 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 
 			for (int policyType : policyTypes) {
+				// if resource isn't applicable for the policyType, skip evaluating policies and gathering ACLs
+				// for example, following resources are not applicable for listed policy-types
+				//   - database: masking/row-filter policies
+				//   - table:    masking policies
+				//   - column:   row-filter policies
+				boolean requireExactMatch = (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) || (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER);
+
+				if (!policyEngine.getServiceDefHelper().isValidHierarchy(policyType, request.getResource().getKeys(), requireExactMatch)) {
+					continue;
+				}
+
 				List<RangerPolicyEvaluator> allEvaluators           = new ArrayList<>();
 				Map<Long, MatchType>        tagMatchTypeMap         = new HashMap<>();
 				Set<Long>                   policyIdForTemporalTags = new HashSet<>();
@@ -312,21 +324,21 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					MatchType matchType = tagMatchTypeMap.get(evaluator.getPolicyId());
 
 					boolean isMatched = false;
-					boolean isConditionalMatch = false;
+					boolean isConditionalMatch = evaluator.getPolicyConditionsCount() > 0;
 
 					if (matchType == null) {
 						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
 							RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
 
-							matchType = matcher.getMatchType(request.getResource(), request.getContext());
+							matchType = matcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 							isMatched = isMatch(matchType, request.getResourceMatchingScope());
 
 							if (isMatched) {
-								isConditionalMatch = false;
+								isConditionalMatch = evaluator.getPolicyConditionsCount() > 0;
 
 								break;
 							} else if (matcher.getNeedsDynamicEval() && !isConditionalMatch) {
-								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getContext());
+								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 
 								isConditionalMatch = isMatch(dynWildCardMatch, request.getResourceMatchingScope());
 							}
@@ -544,7 +556,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		requestProcessor.preProcess(request);
 
 		RangerResourceAccessInfo ret       = new RangerResourceAccessInfo(request);
-		Set<String>              zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource());
+		Set<String>              zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
@@ -621,7 +633,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult     ret                 = null;
 		RangerPolicyRepository policyRepository    = policyEngine.getPolicyRepository();
 		RangerPolicyRepository tagPolicyRepository = policyEngine.getTagPolicyRepository();
-		Set<String>            zoneNames            = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource()); // Evaluate zone-name from request
+		Set<String>            zoneNames            = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
@@ -703,8 +715,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				String requestedAccess = accessTypeDef.getName();
 				allRequestedAccesses.add(requestedAccess);
 			}
-			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
-			request.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ACCESSTYPES, allRequestedAccesses);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses, Boolean.TRUE);
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
@@ -980,6 +991,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<PolicyEvaluatorForTag> tagPolicyEvaluators = policyEngine.getTagPolicyRepository() == null ? null : policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(request, tags, policyType, null);
 
 			if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
+				tagPolicyEvaluators.sort(MATCH_TYPE_COMPARATOR);
 
 				final boolean useTagPoliciesFromDefaultZone = !policyEngine.isResourceZoneAssociatedWithTagService(zoneName);
 
@@ -1007,8 +1019,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					RangerTagForEval tag = tagEvaluator.getTag();
 
-					allEvaluators.add(evaluator);
-					tagMatchTypeMap.put(evaluator.getPolicyId(), tag.getMatchType());
+					// avoid an evaluator making into the list multiple times when the same tag is associated with the resource multiple times
+					// highest precedence matchType will be recorded in tagMatchTypeMap, since tagPolicyEvaluators is sorted by matchType
+					if (tagMatchTypeMap.putIfAbsent(evaluator.getPolicyId(), tag.getMatchType()) == null) {
+						allEvaluators.add(evaluator);
+					}
 
 					if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
 						policyIdForTemporalTags.add(evaluator.getPolicyId());

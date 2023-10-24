@@ -41,6 +41,7 @@ import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
@@ -93,7 +94,6 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
-import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.*;
 import org.junit.Assert;
@@ -221,9 +221,6 @@ public class TestServiceREST {
 	
 	@Mock
     RangerPolicyAdmin policyAdmin;
-
-	@Mock
-	RangerTransactionService rangerTransactionService;
 
 	@Mock
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
@@ -1640,7 +1637,7 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
 		serviceREST.getPoliciesInJson(request, response, false);
 
-		Mockito.verify(svcStore).getPoliciesInJson(rangerPolicyList, response);
+		Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, response, JSON_FILE_NAME_TYPE.POLICY);
 	}
 
 	@Test

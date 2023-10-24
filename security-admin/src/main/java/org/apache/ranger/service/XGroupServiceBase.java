@@ -25,20 +25,18 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import com.google.gson.Gson;
 
-import com.google.gson.GsonBuilder;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
 
+import javax.persistence.Query;
+
 public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		extends AbstractBaseResourceService<T, V> {
 	public static final String NAME = "XGroup";
-	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XGroupServiceBase() {
 
@@ -89,19 +87,23 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		return returnList;
 	}
 
-	public List<GroupInfo> getGroups() {
-		List<GroupInfo> returnList = new ArrayList<>();
+	/**
+	 * Searches the XGroup table and gets the group ids matching the search criteria.
+	 */
+	public List<Long> searchXGroupsForIds(SearchCriteria searchCriteria){
+		// construct the sort clause
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
 
-		@SuppressWarnings("unchecked")
-		List<XXGroup> resultList = daoManager.getXXGroup().getAll();
+		// get only the column id from the table
+		String q = "SELECT obj.id FROM " + className + " obj ";
 
-		// Iterate over the result list and create the return list
-		for (XXGroup gjXGroup : resultList) {
-			GroupInfo groupInfo = new GroupInfo(gjXGroup.getName(), gjXGroup.getDescription(), gsonBuilder.fromJson(gjXGroup.getOtherAttributes(), Map.class));
-			returnList.add(groupInfo);
-		}
+		// construct the query object for retrieving the data
+		Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
 
-		return returnList;
+		return getDao().getIds(query);
 	}
 
+	public List<GroupInfo> getGroups() {
+		return daoManager.getXXGroup().getAllGroupsInfo();
+	}
 }

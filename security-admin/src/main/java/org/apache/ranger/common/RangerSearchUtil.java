@@ -182,6 +182,13 @@ public class RangerSearchUtil extends SearchUtil {
 				MessageEnums.INVALID_INPUT_DATA, null, SearchFilter.PAGE_SIZE);
 		ret.setMaxRows(validatePageSize(pageSize));
 
+		if (request.getParameter(SearchFilter.POLICY_TYPE) != null) {
+			int policyType = restErrorUtil.parseInt(request.getParameter(SearchFilter.POLICY_TYPE), 0,
+					"Invalid value for parameter policyType", MessageEnums.INVALID_INPUT_DATA, null,
+					SearchFilter.POLICY_TYPE);
+			ret.setParam(SearchFilter.POLICY_TYPE, Integer.toString(policyType));
+		}
+
 		ret.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 		String sortBy = restErrorUtil.validateString(request.getParameter(SearchFilter.SORT_BY),
 				StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortBy", MessageEnums.INVALID_INPUT_DATA,
@@ -263,9 +270,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (intFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -274,12 +281,9 @@ public class RangerSearchUtil extends SearchUtil {
 				String strFieldValue = searchCriteria.getParam(searchField.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")");
-						if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
-							whereClause.append("= :").append(searchField.getClientFieldName());
-						} else {
-							whereClause.append("like :").append(searchField.getClientFieldName());
-						}
+						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")")
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -292,9 +296,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (boolFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -305,17 +309,9 @@ public class RangerSearchUtil extends SearchUtil {
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append(searchField.getFieldName());
-						if (SearchField.SEARCH_TYPE.LESS_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("< :");
-						} else if (SearchField.SEARCH_TYPE.LESS_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("<= :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("> :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append(">= :");
-						}
-						whereClause.append(searchField.getClientFieldName());
+						whereClause.append(" and ").append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -434,5 +430,4 @@ public class RangerSearchUtil extends SearchUtil {
 		}
 		return null;
 	}
-	
 }

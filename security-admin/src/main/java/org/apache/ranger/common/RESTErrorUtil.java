@@ -413,4 +413,35 @@ public class RESTErrorUtil {
 				restException);
 		return restException;
 	}
+
+	public WebApplicationException create404RESTException(String errorMessage,
+			MessageEnums messageEnum, Long objectId, String fieldName,
+			String logMessage) {
+		List<VXMessage> messageList = new ArrayList<VXMessage>();
+		messageList.add(messageEnum.getMessage(objectId, fieldName));
+
+		VXResponse gjResponse = new VXResponse();
+		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
+		gjResponse.setMsgDesc(errorMessage);
+		gjResponse.setMessageList(messageList);
+
+		Response errorResponse = Response
+				.status(javax.servlet.http.HttpServletResponse.SC_NOT_FOUND)
+				.entity(gjResponse).build();
+
+		WebApplicationException restException = new WebApplicationException(
+				errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+		}
+
+		logger.info("Request failed. loginId="
+				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
+				restException);
+
+		return restException;
+	}
 }

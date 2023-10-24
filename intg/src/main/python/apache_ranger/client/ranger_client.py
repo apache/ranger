@@ -20,11 +20,11 @@
 import json
 import logging
 from apache_ranger.exceptions                 import RangerServiceException
-from apache_ranger.model.ranger_base          import RangerBase
+from apache_ranger.model.ranger_base          import RangerBase, PList
 from apache_ranger.model.ranger_policy        import RangerPolicy
 from apache_ranger.model.ranger_role          import RangerRole
-from apache_ranger.model.ranger_security_zone import RangerSecurityZone
-from apache_ranger.model.ranger_service       import RangerService
+from apache_ranger.model.ranger_security_zone import RangerSecurityZone, RangerSecurityZoneV2, RangerSecurityZoneHeaderInfo, RangerSecurityZoneResource
+from apache_ranger.model.ranger_service       import RangerService, RangerServiceHeaderInfo
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
 from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
@@ -40,8 +40,8 @@ QUERY_PARAM_USER_DOT_NAME = 'user.name'.encode("utf-8")
 
 
 class RangerClient:
-    def __init__(self, url, auth):
-        self.client_http = RangerClientHttp(url, auth)
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.client_http = RangerClientHttp(url, auth, query_params, headers)
         self.session     = self.client_http.session
         logging.getLogger("requests").setLevel(logging.WARNING)
 
@@ -194,11 +194,6 @@ class RangerClient:
 
         return type_coerce(resp, RangerSecurityZone)
 
-    def update_security_zone(self, zoneName, securityZone):
-        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_BY_NAME.format_path({ 'name': zoneName }), request_data=securityZone)
-
-        return type_coerce(resp, RangerSecurityZone)
-
     def delete_security_zone_by_id(self, zoneId):
         self.client_http.call_api(RangerClient.DELETE_ZONE_BY_ID.format_path({ 'id': zoneId }))
 
@@ -215,10 +210,76 @@ class RangerClient:
 
         return type_coerce(resp, RangerSecurityZone)
 
+    def get_security_zone_headers(self):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_HEADERS)
+
+      return type_coerce_list(resp, RangerSecurityZoneHeaderInfo)
+
+    def get_security_zone_service_headers(self, zoneId):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_SERVICE_HEADERS.format_path({ 'id': zoneId }))
+
+      return type_coerce_list(resp, RangerServiceHeaderInfo)
+
+    def get_zone_names_for_resource(self, serviceName, resource):
+      return self.client_http.call_api(RangerClient.GET_ZONE_NAMES_FOR_RESOURCE.format_path({ 'serviceName': serviceName }), query_params=resource_to_query_params(resource))
+
     def find_security_zones(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_ZONES, filter)
 
         return type_coerce_list(resp, RangerSecurityZone)
+
+
+    def create_security_zone_v2(self, securityZone):
+        resp = self.client_http.call_api(RangerClient.CREATE_ZONE_V2, request_data=securityZone)
+
+        return type_coerce(resp, RangerSecurityZoneV2)
+
+    def update_security_zone_v2(self, zoneId, securityZone):
+        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_V2_BY_ID.format_path({ 'id': zoneId }), request_data=securityZone)
+
+        return type_coerce(resp, RangerSecurityZoneV2)
+
+    def partial_update_security_zone_v2(self, zoneId, changeData):
+        resp = self.client_http.call_api(RangerClient.PARTIAL_UPDATE_ZONE_V2_BY_ID.format_path({ 'id': zoneId }), request_data=changeData)
+
+        return type_coerce(resp, RangerSecurityZoneV2)
+
+    def get_security_zone_v2(self, zoneName):
+        resp = self.client_http.call_api(RangerClient.GET_ZONE_V2_BY_NAME.format_path({ 'name': zoneName }))
+
+        return type_coerce(resp, RangerSecurityZoneV2)
+
+    def get_security_zone_v2_by_id(self, zoneId):
+        resp = self.client_http.call_api(RangerClient.GET_ZONE_V2_BY_ID.format_path({ 'id': zoneId }))
+
+        return type_coerce(resp, RangerSecurityZoneV2)
+
+    def zone_v2_get_resources(self, zoneName, serviceName, filter=None):
+        resp = self.client_http.call_api(RangerClient.ZONE_V2_GET_RESOURCES.format_path({'name': zoneName, 'serviceName': serviceName}), filter)
+        ret  = type_coerce(resp, PList)
+
+        if ret is not None:
+          ret.type_coerce_list(RangerSecurityZoneResource)
+
+        return ret
+
+    def zone_v2_by_id_get_resources(self, zoneId, serviceName, filter=None):
+        resp = self.client_http.call_api(RangerClient.ZONE_V2_BY_ID_GET_RESOURCES.format_path({'id': zoneId, 'serviceName': serviceName}), filter)
+        ret  = type_coerce(resp, PList)
+
+        if ret is not None:
+          ret.type_coerce_list(RangerSecurityZoneResource)
+
+        return ret
+
+    def find_security_zones_v2(self, filter=None):
+        resp = self.client_http.call_api(RangerClient.FIND_ZONES_V2, filter)
+        ret  = type_coerce(resp, PList)
+
+        if ret is not None:
+          ret.type_coerce_list(RangerSecurityZoneV2)
+
+        return ret
 
 
     # Role APIs
@@ -291,6 +352,9 @@ class RangerClient:
     def delete_policy_deltas(self, days, reloadServicePoliciesCache):
         self.client_http.call_api(RangerClient.DELETE_POLICY_DELTAS, { 'days': days, 'reloadServicePoliciesCache': reloadServicePoliciesCache})
 
+    def purge_records(self, record_type, retention_days):
+        return self.client_http.call_api(RangerClient.PURGE_RECORDS, { 'type': record_type, 'retentionDays': retention_days})
+
 
 
 
@@ -320,13 +384,23 @@ class RangerClient:
     URI_GRANT_ROLE          = URI_ROLE + "/grant/{name}"
     URI_REVOKE_ROLE         = URI_ROLE + "/revoke/{name}"
 
-    URI_ZONE                = URI_BASE + "/zones"
-    URI_ZONE_BY_ID          = URI_ZONE + "/{id}"
-    URI_ZONE_BY_NAME        = URI_ZONE + "/name/{name}"
+    URI_ZONE                    = URI_BASE + "/zones"
+    URI_ZONE_BY_ID              = URI_ZONE + "/{id}"
+    URI_ZONE_BY_NAME            = URI_ZONE + "/name/{name}"
+    URI_ZONE_HEADERS            = URI_BASE + "/zone-headers"
+    URI_ZONE_SERVICE_HEADERS    = URI_ZONE + "/{id}/service-headers"
+    URI_ZONE_NAMES_FOR_RESOURCE = URI_BASE + "/zone-names/{serviceName}/resource"
+    URI_ZONE_V2                   = URI_BASE + "/zones-v2"
+    URI_ZONE_V2_BY_ID             = URI_ZONE_V2 + "/{id}"
+    URI_ZONE_V2_BY_NAME           = URI_ZONE_V2 + "/name/{name}"
+    URL_ZONE_V2_BY_ID_RESOURCES   = URI_ZONE_V2_BY_ID + "/resources/{serviceName}"
+    URL_ZONE_V2_BY_NAME_RESOURCES = URI_ZONE_V2_BY_NAME+ "/resources/{serviceName}"
+    URI_ZONE_V2_PARTIAL_BY_ID     = URI_ZONE_V2_BY_ID + "/partial"
 
     URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
     URI_POLICY_DELTAS       = URI_BASE + "/server/policydeltas"
+    URI_PURGE_RECORDS       = URI_BASE + "/server/purge/records"
 
     # APIs
     CREATE_SERVICEDEF         = API(URI_SERVICEDEF, HttpMethod.POST, HTTPStatus.OK)
@@ -358,14 +432,24 @@ class RangerClient:
     GET_POLICIES_IN_SERVICE   = API(URI_POLICIES_IN_SERVICE, HttpMethod.GET, HTTPStatus.OK)
     FIND_POLICIES             = API(URI_POLICY, HttpMethod.GET, HTTPStatus.OK)
 
-    CREATE_ZONE               = API(URI_ZONE, HttpMethod.POST, HTTPStatus.OK)
-    UPDATE_ZONE_BY_ID         = API(URI_ZONE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
-    UPDATE_ZONE_BY_NAME       = API(URI_ZONE_BY_NAME, HttpMethod.PUT, HTTPStatus.OK)
-    DELETE_ZONE_BY_ID         = API(URI_ZONE_BY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
-    DELETE_ZONE_BY_NAME       = API(URI_ZONE_BY_NAME, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
-    GET_ZONE_BY_ID            = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
-    GET_ZONE_BY_NAME          = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
-    FIND_ZONES                = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
+    CREATE_ZONE                 = API(URI_ZONE, HttpMethod.POST, HTTPStatus.OK)
+    UPDATE_ZONE_BY_ID           = API(URI_ZONE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    DELETE_ZONE_BY_ID           = API(URI_ZONE_BY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    DELETE_ZONE_BY_NAME         = API(URI_ZONE_BY_NAME, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    GET_ZONE_BY_ID              = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_BY_NAME            = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
+    FIND_ZONES                  = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_HEADERS            = API(URI_ZONE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_SERVICE_HEADERS    = API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_NAMES_FOR_RESOURCE = API(URI_ZONE_NAMES_FOR_RESOURCE, HttpMethod.GET, HTTPStatus.OK)
+    CREATE_ZONE_V2                        = API(URI_ZONE_V2, HttpMethod.POST, HTTPStatus.OK)
+    UPDATE_ZONE_V2_BY_ID                  = API(URI_ZONE_V2_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    PARTIAL_UPDATE_ZONE_V2_BY_ID          = API(URI_ZONE_V2_PARTIAL_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    GET_ZONE_V2_BY_NAME                   = API(URI_ZONE_V2_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_V2_BY_ID                     = API(URI_ZONE_V2_BY_ID, HttpMethod.GET, HTTPStatus.OK)
+    ZONE_V2_GET_RESOURCES                 = API(URL_ZONE_V2_BY_NAME_RESOURCES, HttpMethod.GET, HTTPStatus.OK)
+    ZONE_V2_BY_ID_GET_RESOURCES           = API(URL_ZONE_V2_BY_ID_RESOURCES, HttpMethod.GET, HTTPStatus.OK)
+    FIND_ZONES_V2                         = API(URI_ZONE_V2, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_ROLE               = API(URI_ROLE, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_ROLE_BY_ID         = API(URI_ROLE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
@@ -383,6 +467,7 @@ class RangerClient:
     GET_SERVICE_TAGS          = API(URI_SERVICE_TAGS, HttpMethod.GET, HTTPStatus.OK)
     GET_PLUGIN_INFO           = API(URI_PLUGIN_INFO, HttpMethod.GET, HTTPStatus.OK)
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    PURGE_RECORDS             = API(URI_PURGE_RECORDS, HttpMethod.DELETE, HTTPStatus.OK)
 
 
 
@@ -433,8 +518,10 @@ class RESTResponse(RangerBase):
 
 
 class RangerClientHttp:
-    def __init__(self, url, auth):
-        self.url          = url.rstrip('/')
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.url          = url.rstrip('/') + '/' # ensure that self.url ends with a /
+        self.query_params = query_params
+        self.headers      = headers
         self.session      = Session()
         self.session.auth = auth
 
@@ -442,6 +529,20 @@ class RangerClientHttp:
     def call_api(self, api, query_params=None, request_data=None):
         ret    = None
         params = { 'headers': { 'Accept': api.consumes, 'Content-type': api.produces } }
+
+        if self.headers:
+          params['headers'].update(self.headers)
+
+        if self.query_params:
+          if query_params:
+              merged_query_params = {}
+
+              merged_query_params.update(self.query_params)
+              merged_query_params.update(query_params)
+
+              query_params = merged_query_params
+          else:
+              query_params = self.query_params
 
         if query_params:
             params['params'] = query_params
@@ -502,6 +603,8 @@ class RangerClientHttp:
             LOG.error("Not found. HTTP Status: %s", HTTPStatus.NOT_FOUND)
 
             ret = None
+        elif response.status_code == HTTPStatus.NOT_MODIFIED:
+            ret = None
         else:
             raise RangerServiceException(api, response)
 
@@ -517,13 +620,40 @@ class RangerClientPrivate:
     # URLs
     URI_DELETE_USER  = "service/xusers/secure/users/{name}"
     URI_DELETE_GROUP = "service/xusers/secure/groups/{name}"
+    URI_FORCE_DELETE_EXTERNAL_USERS = "service/xusers/delete/external/users"
+    URI_FORCE_DELETE_EXTERNAL_GROUPS = "service/xusers/delete/external/groups"
 
     # APIs
     DELETE_USER  = API(URI_DELETE_USER, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
     DELETE_GROUP = API(URI_DELETE_GROUP, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    FORCE_DELETE_EXTERNAL_USERS = API(URI_FORCE_DELETE_EXTERNAL_USERS, HttpMethod.DELETE, HTTPStatus.OK)
+    FORCE_DELETE_EXTERNAL_GROUPS = API(URI_FORCE_DELETE_EXTERNAL_GROUPS, HttpMethod.DELETE, HTTPStatus.OK)
 
     def delete_user(self, userName, execUser, isForceDelete='true'):
         self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
 
     def delete_group(self, groupName, execUser, isForceDelete='true'):
         self.client_http.call_api(RangerClientPrivate.DELETE_GROUP.format_path({ 'name': groupName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
+
+    def force_delete_external_users(self, filter=None):
+        """
+        Proceed with <tt>caution</tt>.
+        Force deletes external users from ranger db.
+        Optionally, Query Params may be specified using the param 'filter'
+        to delete specific external users.
+        :param filter:
+        :return:
+        """
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_USERS, filter).decode('utf-8')
+
+    def force_delete_external_groups(self, filter=None):
+        """
+        Proceed with <tt>caution</tt>.
+        Force deletes external groups from ranger db.
+        Optionally, Query Params may be specified using the param 'filter'
+        to delete specific external groups.
+        :param filter:
+        :return:
+        """
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_GROUPS, filter).decode('utf-8')
+

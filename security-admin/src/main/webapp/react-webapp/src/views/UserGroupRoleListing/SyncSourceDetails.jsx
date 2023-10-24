@@ -19,6 +19,8 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import { Table } from "react-bootstrap";
+import { UsersyncDetailsKeyDisplayMap } from "../../utils/XAEnums"
+
 export function SyncSourceDetails(props) {
   const { syncDetails } = props;
   return Object.keys(props.syncDetails).length == 0 ? (
@@ -51,7 +53,7 @@ export function SyncSourceDetails(props) {
         <tbody>
           {Object.entries(props.syncDetails).map(([key, value]) => (
             <tr key={key}>
-              <td>{key}</td>
+              <td>{UsersyncDetailsKeyDisplayMap[key]? UsersyncDetailsKeyDisplayMap[key]: key}</td>
               <td>{value}</td>
             </tr>
           ))}

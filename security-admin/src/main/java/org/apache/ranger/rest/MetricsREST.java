@@ -27,7 +27,9 @@ import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
+import org.apache.ranger.metrics.RangerAdminMetricsWrapper;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.util.RangerMetricsUtil;
 import org.slf4j.Logger;
@@ -53,6 +55,9 @@ public class MetricsREST {
     @Autowired
     RangerMetricsUtil jvmMetricUtil;
 
+    @Autowired
+    private RangerAdminMetricsWrapper rangerAdminMetricsWrapper;
+
     @GET
     @Path("/status")
     @Produces({ "application/json" })
@@ -72,9 +77,50 @@ public class MetricsREST {
         jvm.put("jvm",vmDetails);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getStatus() " + jvm);
+            LOG.debug("<== MetricsREST.getStatus(): jvm=" + jvm);
         }
 
         return new RangerMetrics(jvm);
+    }
+
+    @GET
+    @Path("/prometheus")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getMetricsPrometheus() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> MetricsREST.getMetricsPrometheus()");
+        }
+        String ret = "";
+        try {
+            ret = rangerAdminMetricsWrapper.getRangerMetricsInPrometheusFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsPrometheus(): Exception occurred while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== MetricsREST.getMetricsPrometheus(): ret=" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Map<String, Object>> getMetricsJson() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> MetricsREST.getMetricsJson()");
+        }
+
+        Map<String, Map<String, Object>> ret = null;
+        try {
+            ret = rangerAdminMetricsWrapper.getRangerMetrics();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsJson(): Exception occurred while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== MetricsREST.getMetricsJson(): ret=" + ret);
+        }
+        return ret;
     }
 }

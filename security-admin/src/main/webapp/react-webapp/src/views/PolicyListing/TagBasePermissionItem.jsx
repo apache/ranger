@@ -18,23 +18,41 @@
  */
 
 import React, { useState } from "react";
-import { Col, Form as FormB, Row, Modal, Button, Table } from "react-bootstrap";
+import { Form as FormB, Modal, Button, Table, Badge } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import arrayMutators from "final-form-arrays";
 import { FieldArray } from "react-final-form-arrays";
-import { groupBy, keys, indexOf, findIndex, isEmpty } from "lodash";
+import {
+  groupBy,
+  keys,
+  indexOf,
+  findIndex,
+  isEmpty,
+  includes,
+  difference,
+  map
+} from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
+import { getServiceDef } from "../../utils/appState";
 
 export default function TagBasePermissionItem(props) {
-  const { options, inputVal, formValues, serviceCompDetails, dataMaskIndex } =
-    props;
+  const serviceDefs = getServiceDef();
+  const {
+    options,
+    inputVal,
+    formValues,
+    serviceCompDetails,
+    dataMaskIndex,
+    attrName
+  } = props;
   const [showTagPermissionItem, tagPermissionItem] = useState(false);
 
   const msgStyles = {
     background: "white",
     color: "black"
   };
+
   const noOptionMsg = (inputValue) => {
     if (
       formValues?.policyType ==
@@ -93,7 +111,7 @@ export default function TagBasePermissionItem(props) {
     } else {
       let removeItemIndex = findIndex(input.value, [
         "value",
-        e.removedValue.value
+        e?.removedValue?.value
       ]);
       remove("tableList", removeItemIndex);
       if (
@@ -122,10 +140,47 @@ export default function TagBasePermissionItem(props) {
         }));
       }
     } else {
-      return keys(tagServicePerms).map((m) => ({
-        value: m,
-        label: m.toUpperCase()
-      }));
+      if (attrName === "policyItems") {
+        return map(keys(tagServicePerms), (m) => ({
+          value: m,
+          label: m.toUpperCase()
+        }));
+      } else {
+        let enableDenyAndExceptions = [];
+        let filterAccessOptions = [];
+        enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
+          (access) => {
+            if (
+              includes(
+                serviceDefs?.allServiceDefs
+                  ?.map((servicedef) => {
+                    if (
+                      servicedef?.options?.enableDenyAndExceptionsInPolicies ==
+                      "false"
+                    ) {
+                      return servicedef.name;
+                    }
+                  })
+                  .filter(Boolean),
+                access.name.substr(0, access.name.indexOf(":"))
+              )
+            ) {
+              return access;
+            }
+          }
+        );
+        filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
+          let val = obj.name;
+          return val.substr(0, val.indexOf(":"));
+        });
+        return difference(
+          keys(tagServicePerms),
+          keys(filterAccessOptions)
+        )?.map((m) => ({
+          value: m,
+          label: m.toUpperCase()
+        }));
+      }
     }
   };
 
@@ -143,14 +198,14 @@ export default function TagBasePermissionItem(props) {
   };
 
   const handleChange = (e, value, input) => {
-    let val = input.value || [];
+    let val = [...input.value] || [];
     if (e.target.checked) {
       val.push(value);
     } else {
       let index = indexOf(val, value);
       val.splice(index, 1);
     }
-    input.onChange([...val]);
+    input.onChange(val);
   };
 
   const handleSelectAllChange = (e, index, fields) => {
@@ -181,47 +236,58 @@ export default function TagBasePermissionItem(props) {
   const tagAccessTypeDisplayVal = (val) => {
     return val.map((m, index) => {
       return (
-        <>
-          <h6 className="d-inline mr-1" key={index}>
-            <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
-          </h6>
-        </>
+        <h6 className="d-inline mr-1 mb-1" key={index}>
+          <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
+        </h6>
       );
     });
   };
 
   return (
     <>
-      {inputVal?.value?.tableList?.length > 0 ? (
-        <Button
-          className="mg-10"
-          size="sm"
-          variant="outline-dark"
-          onClick={(e) => {
-            e.stopPropagation();
-            tagPermissionItem(true);
-          }}
-        >
-          <i className="fa-fw fa fa-pencil"></i>
-        </Button>
-      ) : (
-        <div className="text-center">
-          <span className="editable-add-text">Add Permissions</span>
-          <div>
+      <div
+        className="editable"
+        onClick={() => {
+          tagPermissionItem(true);
+        }}
+      >
+        {inputVal?.value?.tableList?.length > 0 ? (
+          <div className="text-center">
+            <div className="editable-edit-text">
+              {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
+            </div>
+
             <Button
+              className="mg-10 mx-auto d-block btn-mini"
               size="sm"
-              className="mg-10"
               variant="outline-dark"
               onClick={(e) => {
                 e.stopPropagation();
                 tagPermissionItem(true);
               }}
             >
-              <i className="fa-fw fa fa-plus"></i>
+              <i className="fa-fw fa fa-pencil"></i>
             </Button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center">
+            <span className="editable-add-text">Add Permissions</span>
+            <div>
+              <Button
+                size="sm"
+                className="mg-10 mx-auto d-block btn-mini"
+                variant="outline-dark"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tagPermissionItem(true);
+                }}
+              >
+                <i className="fa-fw fa fa-plus"></i>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <Modal
         show={showTagPermissionItem}
@@ -365,15 +431,11 @@ export default function TagBasePermissionItem(props) {
                 </Table>
               </Modal.Body>
               <Modal.Footer>
-                <Button
-                  variant="secondary"
-                  className="btn-mini"
-                  onClick={handleClose}
-                >
+                <Button variant="secondary" size="sm" onClick={handleClose}>
                   Close
                 </Button>
 
-                <Button title="Save" className="btn-mini" type="submit">
+                <Button title="Save" size="sm" type="submit">
                   Save
                 </Button>
               </Modal.Footer>

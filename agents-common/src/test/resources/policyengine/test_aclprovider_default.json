@@ -626,6 +626,7 @@
         {
           "name": "conditional-tag-only-test-descendant",
           "resource": {"elements":{"database":"finance", "table":"sales"}},
+          "resourceMatchingScope": "SELF_OR_DESCENDANTS",
           "userPermissions": {"hive":{"select":{"result":-1, "isFinal":true},"create":{"result":1, "isFinal":true}, "drop":{"result":-1, "isFinal":true}}, "admin":{"select":{"result":-1, "isFinal":true}} },
           "groupPermissions": {"public": {"index":{"result":2, "isFinal":true}}}
         },
@@ -638,14 +639,14 @@
         {
           "name": "public-allow-test",
           "resource": {"elements":{"database":"finance", "table":"accounts", "column": "status" }},
-          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "mary":{"update":{"result":-1, "isFinal":true}}},
-          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "interns":{"update":{"result":-1, "isFinal":true}}, "housekeeping":{"select":{"result":-1, "isFinal":true}}}
+          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}},
+          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "housekeeping":{"select":{"result":-1, "isFinal":true}}}
         },
         {
           "name": "public-allow-test-next",
           "resource": {"elements":{"database":"finance", "table":"accounts", "column": "amount" }},
-          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "mary":{"update":{"result":-1, "isFinal":true}}},
-          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "interns":{"update":{"result":-1, "isFinal":true}}, "housekeeping":{"drop":{"result":-1, "isFinal":true}}}
+          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}},
+          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "housekeeping":{"drop":{"result":-1, "isFinal":true}}}
         },
         {
           "name": "conditions-in-exceptions-test",

@@ -33,16 +33,15 @@ import {
 import { toast } from "react-toastify";
 import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
 import { getUserProfile } from "Utils/appState";
-import _, { isEmpty, isUndefined } from "lodash";
+import { has, isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import { BlockUi } from "../../../components/CommonComponents";
 import { InfoIcon } from "../../../utils/XAUtils";
 import { RegexMessage, roleChngWarning } from "../../../utils/XAMessages";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 
 const initialState = {
-  loader: true,
   blockUI: false
 };
 
@@ -54,11 +53,6 @@ const PromtDialog = (props) => {
 
 function reducer(state, action) {
   switch (action.type) {
-    case "SET_LOADER":
-      return {
-        ...state,
-        loader: action.loader
-      };
     case "SET_BLOCK_UI":
       return {
         ...state,
@@ -70,32 +64,17 @@ function reducer(state, action) {
 }
 
 function UserFormComp(props) {
-  const params = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
   const [userFormState, dispatch] = useReducer(reducer, initialState);
-  const { loader, blockUI } = userFormState;
+  const { blockUI } = userFormState;
   const { isEditView, userInfo } = props;
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const toastId = React.useRef(null);
 
-  const handleSubmit = async (formData, invalid) => {
+  const handleSubmit = async (formData) => {
     let userFormData = { ...formData };
-    let tblpageData = {};
-    if (
-      state &&
-      state !== null &&
-      (!invalid?.getState()?.invalid || !invalid)
-    ) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (state !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     let userRoleListVal = [];
     if (userFormData.groupIdList) {
       userFormData.groupIdList = userFormData.groupIdList.map(
@@ -127,12 +106,12 @@ function UserFormComp(props) {
           method: "put",
           data: userFormData
         });
-        toast.success("User updated successfully!!");
-        navigate("/users/usertab");
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
         });
+        toast.success("User updated successfully!!");
+        navigate("/users/usertab");
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
@@ -152,16 +131,27 @@ function UserFormComp(props) {
           method: "post",
           data: userFormData
         });
+        let tblpageData = {};
+        if (state && state !== null) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (state !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         toast.success("User created successfully!!");
         navigate("/users/usertab", {
           state: {
             showLastPage: true,
             addPageData: tblpageData
           }
-        });
-        dispatch({
-          type: "SET_BLOCK_UI",
-          blockUI: false
         });
       } catch (error) {
         dispatch({
@@ -181,8 +171,8 @@ function UserFormComp(props) {
     navigate("/users/usertab");
   };
 
-  const groupNameList = ({ input, ...rest }) => {
-    const loadOptions = async (inputValue, callback) => {
+  const groupNameList = ({ input }) => {
+    const loadOptions = async (inputValue) => {
       let params = {},
         op = [];
       if (inputValue) {
@@ -357,7 +347,7 @@ function UserFormComp(props) {
 
     if (
       values &&
-      _.has(values, "password") &&
+      has(values, "password") &&
       !RegexValidation.PASSWORD.regexExpression.test(values.password)
     ) {
       errors.password = RegexValidation.PASSWORD.message;
@@ -365,8 +355,8 @@ function UserFormComp(props) {
 
     if (
       values &&
-      _.has(values, "password") &&
-      _.has(values, "passwordConfirm") &&
+      has(values, "password") &&
+      has(values, "passwordConfirm") &&
       values.password !== values.passwordConfirm
     ) {
       errors.passwordConfirm = "Password must be match with new password";
@@ -384,8 +374,6 @@ function UserFormComp(props) {
 
   return (
     <>
-      <h4 className="wrap-header bold">User Detail</h4>
-
       <Form
         onSubmit={handleSubmit}
         keepDirtyOnReinitialize={true}
@@ -398,7 +386,6 @@ function UserFormComp(props) {
           values,
           invalid,
           errors,
-          pristine,
           dirty
         }) => (
           <div className="wrap user-role-grp-form">
@@ -474,7 +461,10 @@ function UserFormComp(props) {
                           css="info-user-role-grp-icon"
                           position="right"
                           message={
-                            <p className="pd-10" style={{ fontSize: "small" }}>
+                            <p
+                              className="pd-10 mb-0"
+                              style={{ fontSize: "small" }}
+                            >
                               {
                                 RegexMessage.MESSAGE
                                   .passwordvalidationinfomessage
@@ -523,7 +513,10 @@ function UserFormComp(props) {
                           css="info-user-role-grp-icon"
                           position="right"
                           message={
-                            <p className="pd-10" style={{ fontSize: "small" }}>
+                            <p
+                              className="pd-10 mb-0"
+                              style={{ fontSize: "small" }}
+                            >
                               {
                                 RegexMessage.MESSAGE
                                   .passwordvalidationinfomessage
@@ -732,11 +725,13 @@ function UserFormComp(props) {
                           document.querySelector(
                             `input[id=${Object.keys(errors)[0]}]`
                           ) ||
-                          document.querySelector(`span[class="invalid-field"]`);
+                          document.querySelector(
+                            `span[className="invalid-field"]`
+                          );
 
                         scrollToError(selector);
                       }
-                      handleSubmit(values, invalid);
+                      handleSubmit(values);
                     }}
                     size="sm"
                     disabled={submitting}

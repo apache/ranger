@@ -17,13 +17,7 @@
  * under the License.
  */
 
-import React, {
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-  useContext
-} from "react";
+import React, { useEffect, useReducer, useState, useContext } from "react";
 import {
   Form as FormB,
   Row,
@@ -38,7 +32,7 @@ import { Form, Field } from "react-final-form";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
 import arrayMutators from "final-form-arrays";
-import _, {
+import {
   groupBy,
   find,
   isEmpty,
@@ -47,7 +41,8 @@ import _, {
   isArray,
   isEqual,
   forIn,
-  has
+  has,
+  maxBy
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -58,11 +53,11 @@ import PolicyPermissionItem from "../PolicyListing/PolicyPermissionItem";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
-import { getAllTimeZoneList } from "Utils/XAUtils";
+import { getAllTimeZoneList, policyConditionUpdatedJSON } from "Utils/XAUtils";
 import moment from "moment";
 import {
-  commonBreadcrumb,
   InfoIcon,
+  commonBreadcrumb,
   isPolicyExpired
 } from "../../utils/XAUtils";
 import { useAccordionToggle } from "react-bootstrap/AccordionToggle";
@@ -71,6 +66,7 @@ import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "../../utils/XAMessages";
 import { policyInfo } from "Utils/XAUtils";
 import { BlockUi } from "../../components/CommonComponents";
+import { getServiceDef } from "../../utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -99,7 +95,7 @@ function reducer(state, action) {
         loader: false,
         serviceDetails: action.serviceDetails,
         serviceCompDetails: action.serviceCompDetails,
-        policyData: action.policyData,
+        policyData: action?.policyData,
         formData: action.formData
       };
     default:
@@ -117,12 +113,13 @@ export default function AddUpdatePolicyForm(props) {
   let { serviceId, policyType, policyId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
+  const serviceDefs = getServiceDef();
   const [policyState, dispatch] = useReducer(reducer, initialState);
   const { loader, serviceDetails, serviceCompDetails, policyData, formData } =
     policyState;
-  const usersDataRef = useRef(null);
-  const grpDataRef = useRef(null);
-  const rolesDataRef = useRef(null);
+  const [defaultPolicyLabelOptions, setDefaultPolicyLabelOptions] = useState(
+    []
+  );
   const [showModal, policyConditionState] = useState(false);
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [show, setShow] = useState(true);
@@ -130,7 +127,6 @@ export default function AddUpdatePolicyForm(props) {
   const [showDelete, setShowDelete] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
   const toastId = React.useRef(null);
-  // usePrompt("Leave screen?", true);
 
   useEffect(() => {
     fetchInitalData();
@@ -139,6 +135,7 @@ export default function AddUpdatePolicyForm(props) {
   const showDeleteModal = () => {
     setShowDelete(true);
   };
+
   const hideDeleteModal = () => {
     setShowDelete(false);
   };
@@ -172,60 +169,43 @@ export default function AddUpdatePolicyForm(props) {
   const fetchUsersData = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (usersDataRef.current === null || inputValue) {
-      const userResp = await fetchApi({
-        url: "xusers/lookup/users",
-        params: params
-      });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        usersDataRef.current = op;
-      }
-    } else {
-      op = usersDataRef.current;
-    }
+    const userResp = await fetchApi({
+      url: "xusers/lookup/users",
+      params: params
+    });
+    op = userResp.data.vXStrings;
 
     return op.map((obj) => ({
       label: obj.value,
       value: obj.value
     }));
   };
+
   const fetchGroupsData = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (grpDataRef.current === null || inputValue) {
-      const userResp = await fetchApi({
-        url: "xusers/lookup/groups",
-        params: params
-      });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        grpDataRef.current = op;
-      }
-    } else {
-      op = grpDataRef.current;
-    }
+
+    const userResp = await fetchApi({
+      url: "xusers/lookup/groups",
+      params: params
+    });
+    op = userResp.data.vXStrings;
 
     return op.map((obj) => ({
       label: obj.value,
       value: obj.value
     }));
   };
+
   const fetchRolesData = async (inputValue) => {
-    let params = { roleNamePartial: inputValue || "", isVisible: 1 };
+    let params = { roleNamePartial: inputValue || "" };
     let op = [];
-    if (rolesDataRef.current === null || inputValue) {
-      const roleResp = await fetchApi({
-        url: "roles/roles",
-        params: params
-      });
-      op = roleResp.data.roles;
-      if (!inputValue) {
-        rolesDataRef.current = op;
-      }
-    } else {
-      op = rolesDataRef.current;
-    }
+
+    const roleResp = await fetchApi({
+      url: "roles/roles",
+      params: params
+    });
+    op = roleResp.data.roles;
 
     return op.map((obj) => ({
       label: obj.name,
@@ -235,14 +215,30 @@ export default function AddUpdatePolicyForm(props) {
 
   const fetchInitalData = async () => {
     let serviceData = await fetchServiceDetails();
-    let serviceCompData = await fetchRangerServiceDefComp(serviceData);
-    await fetchUsersData();
-    await fetchGroupsData();
-    await fetchRolesData();
+
+    let serviceCompData = serviceDefs?.allServiceDefs?.find((servicedef) => {
+      return servicedef.name == serviceData.type;
+    });
+    if (serviceCompData) {
+      let serviceDefPolicyType = 0;
+      if (
+        serviceCompData?.dataMaskDef &&
+        Object.keys(serviceCompData.dataMaskDef).length != 0
+      )
+        serviceDefPolicyType++;
+      if (
+        serviceCompData?.rowFilterDef &&
+        Object.keys(serviceCompData.rowFilterDef).length != 0
+      )
+        serviceDefPolicyType++;
+      if (+policyType > serviceDefPolicyType)
+        navigate("/pageNotFound", { replace: true });
+    }
     let policyData = null;
     if (policyId) {
       policyData = await fetchPolicyData();
     }
+
     dispatch({
       type: "SET_DATA",
       serviceDetails: serviceData,
@@ -260,24 +256,7 @@ export default function AddUpdatePolicyForm(props) {
       });
       data = resp.data || null;
     } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
-    }
-    return data;
-  };
-
-  const fetchRangerServiceDefComp = async (serviceData) => {
-    let data = null;
-    if (serviceData) {
-      try {
-        const resp = await fetchApi({
-          url: `plugins/definitions/name/${serviceData.type}`
-        });
-        data = resp.data || null;
-      } catch (error) {
-        console.error(
-          `Error occurred while fetching service defination data ! ${error}`
-        );
-      }
+      console.error(`Error occurred while fetching policy details ! ${error}`);
     }
     return data;
   };
@@ -311,69 +290,81 @@ export default function AddUpdatePolicyForm(props) {
     }));
   };
 
+  const onFocusPolicyLabel = () => {
+    fetchPolicyLabel().then((opts) => {
+      setDefaultPolicyLabelOptions(opts);
+    });
+  };
+
   const generateFormData = (policyData, serviceCompData) => {
     let data = {};
     data.policyType = policyId ? policyData?.policyType : policyType;
     data.policyItems =
       policyId && policyData?.policyItems?.length > 0
         ? setPolicyItemVal(
-            policyData.policyItems,
-            serviceCompData.accessTypes,
+            policyData?.policyItems,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.allowExceptions =
       policyId && policyData?.allowExceptions?.length > 0
         ? setPolicyItemVal(
-            policyData.allowExceptions,
-            serviceCompData.accessTypes,
+            policyData?.allowExceptions,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyPolicyItems =
       policyId && policyData?.denyPolicyItems?.length > 0
         ? setPolicyItemVal(
-            policyData.denyPolicyItems,
-            serviceCompData.accessTypes,
+            policyData?.denyPolicyItems,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.denyExceptions =
       policyId && policyData?.denyExceptions?.length > 0
         ? setPolicyItemVal(
             policyData.denyExceptions,
-            serviceCompData.accessTypes,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.dataMaskPolicyItems =
       policyId && policyData?.dataMaskPolicyItems?.length > 0
         ? setPolicyItemVal(
             policyData.dataMaskPolicyItems,
-            serviceCompData.dataMaskDef.accessTypes,
-            serviceCompData.dataMaskDef.maskTypes,
-            serviceCompData.name
+            serviceCompData?.dataMaskDef?.accessTypes,
+            serviceCompData?.dataMaskDef?.maskTypes,
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     data.rowFilterPolicyItems =
       policyId && policyData?.rowFilterPolicyItems?.length > 0
         ? setPolicyItemVal(
             policyData.rowFilterPolicyItems,
-            serviceCompData.rowFilterDef.accessTypes,
+            serviceCompData?.rowFilterDef?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name,
+            serviceCompData
           )
         : [{}];
     if (policyId) {
-      data.policyName = policyData.name;
-      data.isEnabled = policyData.isEnabled;
-      data.policyPriority = policyData.policyPriority == 0 ? false : true;
-      data.description = policyData.description;
-      data.isAuditEnabled = policyData.isAuditEnabled;
+      data.policyName = policyData?.name;
+      data.isEnabled = policyData?.isEnabled;
+      data.policyPriority = policyData?.policyPriority == 0 ? false : true;
+      data.description = policyData?.description;
+      data.isAuditEnabled = policyData?.isAuditEnabled;
       data.policyLabel =
         policyData &&
         policyData?.policyLabels?.map((val) => {
@@ -382,37 +373,53 @@ export default function AddUpdatePolicyForm(props) {
       let serviceCompResourcesDetails;
       if (
         RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ==
-        policyData.policyType
+        policyData?.policyType
       ) {
-        serviceCompResourcesDetails = serviceCompData.dataMaskDef.resources;
+        serviceCompResourcesDetails = serviceCompData?.dataMaskDef?.resources;
       } else if (
         RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
-        policyData.policyType
+        policyData?.policyType
       ) {
-        serviceCompResourcesDetails = serviceCompData.rowFilterDef.resources;
+        serviceCompResourcesDetails = serviceCompData?.rowFilterDef?.resources;
       } else {
-        serviceCompResourcesDetails = serviceCompData.resources;
+        serviceCompResourcesDetails = serviceCompData?.resources;
       }
-      if (policyData.resources) {
-        Object.entries(policyData.resources).map(([key, value]) => {
+      if (policyData?.resources) {
+        let lastResourceLevel = [];
+        Object.entries(policyData?.resources).map(([key, value]) => {
           let setResources = find(serviceCompResourcesDetails, ["name", key]);
-          data[`resourceName-${setResources.level}`] = setResources;
-          data[`value-${setResources.level}`] = value.values.map((m) => {
+          data[`resourceName-${setResources?.level}`] = setResources;
+          data[`value-${setResources?.level}`] = value.values.map((m) => {
             return { label: m, value: m };
           });
-          if (setResources.excludesSupported) {
-            data[`isExcludesSupport-${setResources.level}`] =
+          if (setResources?.excludesSupported) {
+            data[`isExcludesSupport-${setResources?.level}`] =
               value.isExcludes == false;
           }
-          if (setResources.recursiveSupported) {
-            data[`isRecursiveSupport-${setResources.level}`] =
-              value.isRecursive;
+          if (setResources?.recursiveSupported) {
+            data[`isRecursiveSupport-${setResources?.level}`] =
+              value?.isRecursive;
           }
+          lastResourceLevel.push({
+            level: setResources.level,
+            name: setResources.name
+          });
         });
+        lastResourceLevel = maxBy(lastResourceLevel, "level");
+        let setLastResources = find(serviceCompResourcesDetails, [
+          "parent",
+          lastResourceLevel.name
+        ]);
+        if (setLastResources && setLastResources?.isValidLeaf) {
+          data[`resourceName-${setLastResources.level}`] = {
+            label: "None",
+            value: "none"
+          };
+        }
       }
-      if (policyData.validitySchedules) {
+      if (policyData?.validitySchedules) {
         data["validitySchedules"] = [];
-        policyData.validitySchedules.filter((val) => {
+        policyData?.validitySchedules.filter((val) => {
           let obj = {};
           if (val.endTime) {
             obj["endTime"] = moment(val.endTime, "YYYY/MM/DD HH:mm:ss");
@@ -429,11 +436,26 @@ export default function AddUpdatePolicyForm(props) {
         });
       }
 
-      /*policy condition*/
+      /* Policy condition */
       if (policyData?.conditions?.length > 0) {
         data.conditions = {};
+
         for (let val of policyData.conditions) {
-          data.conditions[val?.type] = val?.values?.join(",");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+            function (m) {
+              if (m.name == val.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? val?.values
+              : val?.values.toString();
+          }
         }
       }
     }
@@ -446,7 +468,6 @@ export default function AddUpdatePolicyForm(props) {
     for (let key of formData[name]) {
       if (!isEmpty(key) && Object.entries(key).length > 0) {
         let obj = {};
-        console.log(key);
         if (key.delegateAdmin != "undefined" && key.delegateAdmin != null) {
           obj.delegateAdmin = key.delegateAdmin;
         }
@@ -492,39 +513,22 @@ export default function AddUpdatePolicyForm(props) {
             obj.dataMaskInfo.valueExpr = key.dataMaskInfo.valueExpr;
           }
         }
-
-        if (
-          key?.conditions &&
-          isObject(key.conditions) &&
-          serviceCompDetails.name == "tag"
-        ) {
-          Object.entries(key.conditions).map(([key, value]) => {
-            if (!isEmpty(value)) {
-              obj.conditions = [];
+        if (key?.conditions) {
+          obj.conditions = [];
+          Object.entries(key.conditions).map(
+            ([conditionKey, conditionValue]) => {
               return obj.conditions.push({
-                type: key,
-                values: value?.split(", ")
+                type: conditionKey,
+                values: isArray(conditionValue)
+                  ? conditionValue.map((m) => {
+                      return m.value;
+                    })
+                  : [conditionValue]
               });
             }
-          });
-        } else if (
-          !isEmpty(key?.conditions) &&
-          isObject(key.conditions) &&
-          serviceCompDetails.name == "knox"
-        ) {
-          obj.conditions = [
-            {
-              type: "ip-range",
-              values:
-                !isEmpty(Object.keys(key.conditions)) &&
-                !isArray(key.conditions)
-                  ? key.conditions["ip-range"]?.split(", ")
-                  : key.conditions.map((value) => {
-                      return value.value;
-                    })
-            }
-          ];
+          );
         }
+
         if (
           !isEmpty(obj) &&
           !isEmpty(obj?.delegateAdmin) &&
@@ -544,7 +548,13 @@ export default function AddUpdatePolicyForm(props) {
     return policyResourceItem;
   };
 
-  const setPolicyItemVal = (formData, accessTypes, maskTypes, serviceType) => {
+  const setPolicyItemVal = (
+    formData,
+    accessTypes,
+    maskTypes,
+    serviceType,
+    serviceData
+  ) => {
     return formData.map((val) => {
       let obj = {},
         accessTypesObj = [];
@@ -620,30 +630,39 @@ export default function AddUpdatePolicyForm(props) {
           obj.dataMaskInfo.valueExpr = val.dataMaskInfo.valueExpr;
         }
       }
-      /* Policy Condition*/
+
+      /* Policy Condition */
       if (val?.conditions?.length > 0) {
         obj.conditions = {};
+
         for (let data of val.conditions) {
-          obj.conditions[data.type] = data.values.join(", ");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceData?.policyConditions),
+            function (m) {
+              if (m.name == data.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? data?.values.map((m) => {
+                  return { value: m, label: m };
+                })
+              : data?.values.toString();
+          }
         }
       }
+
       return obj;
     });
   };
 
-  const handleSubmit = async (values, invalid) => {
+  const handleSubmit = async (values) => {
     let data = {};
-    let tblpageData = {};
-    if (state && state != null && (!invalid?.getState()?.invalid || !invalid)) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (tblpageData !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
 
     data.policyItems = getPolicyItemsVal(values, "policyItems");
@@ -706,7 +725,9 @@ export default function AddUpdatePolicyForm(props) {
           isRecursive:
             defObj.recursiveSupported &&
             !(values[`isRecursiveSupport-${level}`] === false),
-          values: values[`value-${level}`]?.map(({ value }) => value)
+          values: isArray(values[`value-${level}`])
+            ? values[`value-${level}`]?.map(({ value }) => value)
+            : [values[`value-${level}`].value]
         };
       }
     }
@@ -738,11 +759,11 @@ export default function AddUpdatePolicyForm(props) {
 
     /*Policy Condition*/
     if (values?.conditions) {
+      data.conditions = [];
       Object.entries(values.conditions).map(([key, value]) => {
-        data.conditions = [];
         return data.conditions.push({
           type: key,
-          values: value?.split(",")
+          values: isArray(value) ? value : [value]
         });
       });
     } else {
@@ -787,7 +808,17 @@ export default function AddUpdatePolicyForm(props) {
           method: "POST",
           data
         });
-
+        let tblpageData = {};
+        if (state && state != null) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (tblpageData !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
         setBlockUI(false);
         toast.dismiss(toastId.current);
         toastId.current = toast.success("Policy save successfully!!");
@@ -818,6 +849,7 @@ export default function AddUpdatePolicyForm(props) {
         url: `plugins/policies/${policyID}`,
         method: "DELETE"
       });
+      setPreventUnblock(true);
       setBlockUI(false);
       toast.dismiss(toastId.current);
       toastId.current = toast.success(" Success! Policy deleted successfully");
@@ -829,7 +861,7 @@ export default function AddUpdatePolicyForm(props) {
         errorMsg = `Error! ${error.response.data.msgDesc}`;
       }
       toast.error(errorMsg);
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -837,6 +869,71 @@ export default function AddUpdatePolicyForm(props) {
     let polType = policyId ? policyData.policyType : policyType;
     navigate(`/service/${serviceId}/policies/${polType}`);
   };
+
+  const CustomToggle = ({ children, eventKey, callback }) => {
+    const currentEventKey = useContext(AccordionContext);
+
+    const decoratedOnClick = useAccordionToggle(
+      eventKey,
+      () => callback && callback(eventKey)
+    );
+    const isCurrentEventKey = currentEventKey === eventKey;
+
+    return (
+      <a className="pull-right" role="button" onClick={decoratedOnClick}>
+        {!isCurrentEventKey ? (
+          <span className="wrap-expand">
+            show <i className="fa-fw fa fa-caret-down"></i>
+          </span>
+        ) : (
+          <span className="wrap-collapse">
+            hide <i className="fa-fw fa fa-caret-up"></i>
+          </span>
+        )}
+      </a>
+    );
+  };
+
+  const getValidatePolicyItems = (errors) => {
+    let errorField;
+    errors?.find((value) => {
+      if (value !== undefined) {
+        return (errorField = value);
+      }
+    });
+
+    return errorField !== undefined && errorField?.accesses
+      ? toast.error(errorField?.accesses, { toastId: "error1" })
+      : toast.error(errorField?.delegateAdmin, { toastId: "error1" });
+  };
+
+  const resourceErrorCheck = (errors, values) => {
+    let serviceCompResourcesDetails;
+    if (
+      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == values.policyType
+    ) {
+      serviceCompResourcesDetails = serviceCompDetails.dataMaskDef.resources;
+    } else if (
+      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == values.policyType
+    ) {
+      serviceCompResourcesDetails = serviceCompDetails.rowFilterDef.resources;
+    } else {
+      serviceCompResourcesDetails = serviceCompDetails.resources;
+    }
+
+    const grpResources = groupBy(serviceCompResourcesDetails || [], "level");
+    let grpResourcesKeys = [];
+    for (const resourceKey in grpResources) {
+      grpResourcesKeys.push(+resourceKey);
+    }
+    grpResourcesKeys = grpResourcesKeys.sort();
+    for (const key of grpResourcesKeys) {
+      if (errors[`value-${key}`] !== undefined) {
+        return true;
+      }
+    }
+  };
+
   const policyBreadcrumb = () => {
     let policyDetails = {};
     policyDetails["serviceId"] = serviceId;
@@ -890,76 +987,19 @@ export default function AddUpdatePolicyForm(props) {
     }
   };
 
-  const CustomToggle = ({ children, eventKey, callback }) => {
-    const currentEventKey = useContext(AccordionContext);
-
-    const decoratedOnClick = useAccordionToggle(
-      eventKey,
-      () => callback && callback(eventKey)
-    );
-    const isCurrentEventKey = currentEventKey === eventKey;
-
-    return (
-      <a className="pull-right" role="button" onClick={decoratedOnClick}>
-        {!isCurrentEventKey ? (
-          <span className="wrap-expand">
-            show <i className="fa-fw fa fa-caret-down"></i>
-          </span>
-        ) : (
-          <span className="wrap-collapse">
-            hide <i className="fa-fw fa fa-caret-up"></i>
-          </span>
-        )}
-      </a>
-    );
-  };
-
-  const getValidatePolicyItems = (errors) => {
-    let errorField;
-    errors?.find((value) => {
-      if (value !== undefined) {
-        return (errorField = value);
-      }
-    });
-
-    return errorField !== undefined && errorField?.accesses
-      ? toast.error(errorField?.accesses, { toastId: "error1" })
-      : toast.error(errorField?.delegateAdmin, { toastId: "error1" });
-  };
-  const resourceErrorCheck = (errors, values) => {
-    let serviceCompResourcesDetails;
-    if (
-      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == values.policyType
-    ) {
-      serviceCompResourcesDetails = serviceCompDetails.dataMaskDef.resources;
-    } else if (
-      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == values.policyType
-    ) {
-      serviceCompResourcesDetails = serviceCompDetails.rowFilterDef.resources;
-    } else {
-      serviceCompResourcesDetails = serviceCompDetails.resources;
-    }
-
-    const grpResources = groupBy(serviceCompResourcesDetails || [], "level");
-    let grpResourcesKeys = [];
-    for (const resourceKey in grpResources) {
-      grpResourcesKeys.push(+resourceKey);
-    }
-    grpResourcesKeys = grpResourcesKeys.sort();
-    for (const key of grpResourcesKeys) {
-      if (errors[`value-${key}`] !== undefined) {
-        return true;
-      }
-    }
-  };
   return (
     <>
       {loader ? (
         <Loader />
       ) : (
         <div>
-          {policyBreadcrumb()}
-          <h5>{`${policyId ? "Edit" : "Create"} Policy`}</h5>
+          <div className="header-wraper">
+            <h3 className="wrap-header bold">{`${
+              policyId ? "Edit" : "Create"
+            } Policy`}</h3>
+            {policyBreadcrumb()}
+          </div>
+
           <div className="wrap">
             <Form
               onSubmit={handleSubmit}
@@ -1021,7 +1061,7 @@ export default function AddUpdatePolicyForm(props) {
                               document.querySelector(`input[name=${key}]`) ||
                               document.querySelector(`input[id=${key}]`) ||
                               document.querySelector(
-                                `span[class="invalid-field"]`
+                                `span[className="invalid-field"]`
                               );
                             scrollToError(selector);
                           } else {
@@ -1061,7 +1101,7 @@ export default function AddUpdatePolicyForm(props) {
                           dismissible
                         >
                           <i className="fa fa-clock-o fa-fw  fa-lg time-clock"></i>
-                          <p class="pd-l-6 d-inline"> Policy Expired</p>
+                          <p className="pd-l-6 d-inline"> Policy Expired</p>
                         </Alert>
                       )}
                     <fieldset>
@@ -1069,11 +1109,7 @@ export default function AddUpdatePolicyForm(props) {
                     </fieldset>
                     <Row className="user-role-grp-form">
                       <Col md={8}>
-                        <FormB.Group
-                          as={Row}
-                          className="mb-3"
-                          controlId="policyType"
-                        >
+                        <FormB.Group as={Row} className="mb-3">
                           <Field
                             className="form-control"
                             name="policyType"
@@ -1094,7 +1130,7 @@ export default function AddUpdatePolicyForm(props) {
                                         getEnumElementByValue(
                                           RangerPolicyType,
                                           +input.value
-                                        ).label
+                                        )?.label
                                       }
                                     </Badge>
                                   </h6>
@@ -1104,11 +1140,7 @@ export default function AddUpdatePolicyForm(props) {
                           />
                         </FormB.Group>
                         {policyId && (
-                          <FormB.Group
-                            as={Row}
-                            className="mb-3"
-                            controlId="policyId"
-                          >
+                          <FormB.Group as={Row} className="mb-3">
                             <FormB.Label column sm={3}>
                               <span className="pull-right fnt-14">
                                 Policy ID*
@@ -1125,15 +1157,10 @@ export default function AddUpdatePolicyForm(props) {
                             </Col>
                           </FormB.Group>
                         )}
-                        <FormB.Group
-                          as={Row}
-                          className="mb-3"
-                          controlId="policyNames"
-                        >
+                        <FormB.Group as={Row} className="mb-3">
                           <Field
                             className="form-control"
                             name="policyName"
-                            // validate={required}
                             render={({ input, meta }) => (
                               <>
                                 <FormB.Label column sm={3}>
@@ -1231,11 +1258,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="policyLabel"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="policyLabel"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Policy Label
@@ -1244,9 +1267,12 @@ export default function AddUpdatePolicyForm(props) {
                               <Col sm={5}>
                                 <AsyncCreatableSelect
                                   {...input}
-                                  defaultOptions
                                   isMulti
                                   loadOptions={fetchPolicyLabel}
+                                  onFocus={() => {
+                                    onFocusPolicyLabel();
+                                  }}
+                                  defaultOptions={defaultPolicyLabelOptions}
                                 />
                               </Col>
                             </FormB.Group>
@@ -1266,11 +1292,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="description"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="description"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Description
@@ -1291,11 +1313,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="isAuditEnabled"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="isAuditEnabled"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Audit Logging*
@@ -1340,9 +1358,9 @@ export default function AddUpdatePolicyForm(props) {
                                         name="conditions"
                                         render={({ input }) => (
                                           <PolicyConditionsComp
-                                            policyConditionDetails={
+                                            policyConditionDetails={policyConditionUpdatedJSON(
                                               serviceCompDetails.policyConditions
-                                            }
+                                            )}
                                             inputVal={input}
                                             showModal={showModal}
                                             handleCloseModal={
@@ -1371,27 +1389,33 @@ export default function AddUpdatePolicyForm(props) {
                                   !isEmpty(values.conditions) ? (
                                     Object.keys(values.conditions).map(
                                       (keyName, keyIndex) => {
-                                        return (
-                                          <tr>
-                                            <>
+                                        if (
+                                          values.conditions[keyName] != "" &&
+                                          values.conditions[keyName] != null
+                                        ) {
+                                          let conditionObj = find(
+                                            serviceCompDetails?.policyConditions,
+                                            function (m) {
+                                              if (m.name == keyName) {
+                                                return m;
+                                              }
+                                            }
+                                          );
+                                          return (
+                                            <tr key={keyName}>
                                               <td>
-                                                <center> {keyName} </center>
+                                                <center>
+                                                  {conditionObj.label}
+                                                </center>
                                               </td>
                                               <td>
-                                                {isObject(
-                                                  values.conditions[keyName]
+                                                {isArray(
+                                                  values?.conditions[keyName]
                                                 ) ? (
                                                   <center>
-                                                    {values.conditions[keyName]
-                                                      .length > 1
-                                                      ? values.conditions[
-                                                          keyName
-                                                        ].map((m) => {
-                                                          return ` ${m.label} `;
-                                                        })
-                                                      : values.conditions[
-                                                          keyName
-                                                        ].label}
+                                                    {values.conditions[
+                                                      keyName
+                                                    ].join(", ")}
                                                   </center>
                                                 ) : (
                                                   <center>
@@ -1399,9 +1423,9 @@ export default function AddUpdatePolicyForm(props) {
                                                   </center>
                                                 )}
                                               </td>
-                                            </>
-                                          </tr>
-                                        );
+                                            </tr>
+                                          );
+                                        }
                                       }
                                     )
                                   ) : (
@@ -1443,106 +1467,123 @@ export default function AddUpdatePolicyForm(props) {
                                         fetchRolesData={fetchRolesData}
                                       />
                                     </div>
-                                    <fieldset>
-                                      <p className="wrap-header search-header">
-                                        <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                        Exclude from Allow Conditions:
-                                      </p>
-                                    </fieldset>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="allowExceptions"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
+                                    {serviceCompDetails?.options
+                                      ?.enableDenyAndExceptionsInPolicies ==
+                                      "true" && (
+                                      <>
+                                        <fieldset>
+                                          <p className="wrap-header search-header">
+                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                            Exclude from Allow Conditions:
+                                          </p>
+                                        </fieldset>
+                                        <div className="wrap">
+                                          <PolicyPermissionItem
+                                            serviceDetails={serviceDetails}
+                                            serviceCompDetails={
+                                              serviceCompDetails
+                                            }
+                                            formValues={values}
+                                            addPolicyItem={addPolicyItem}
+                                            attrName="allowExceptions"
+                                            fetchUsersData={fetchUsersData}
+                                            fetchGroupsData={fetchGroupsData}
+                                            fetchRolesData={fetchRolesData}
+                                          />
+                                        </div>
+                                      </>
+                                    )}
                                   </>
                                 </Accordion.Collapse>
                               </>
                             </>
                           </Accordion>
                         </div>
-                        <Field
-                          className="form-control"
-                          name="isDenyAllElse"
-                          render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="isDenyAllElse"
-                            >
-                              <FormB.Label column sm={2}>
-                                Deny All Other Accesses: *
-                              </FormB.Label>
-                              <Col sm={1}>
-                                <span style={{ verticalAlign: "sub" }}>
-                                  <BootstrapSwitchButton
-                                    {...input}
-                                    checked={input.value}
-                                    onlabel="True"
-                                    onstyle="primary"
-                                    offlabel="False"
-                                    offstyle="outline-secondary"
-                                    size="xs"
-                                    style="w-100"
-                                    key="isDenyAllElse"
-                                  />
-                                </span>
-                              </Col>
-                            </FormB.Group>
-                          )}
-                        />
-                        <Condition when="isDenyAllElse" is={false}>
-                          <div>
-                            <Accordion defaultActiveKey="0">
-                              <>
-                                <p className="formHeader">
-                                  Deny Conditions:
-                                  <CustomToggle eventKey="0"></CustomToggle>
-                                </p>
-                                <Accordion.Collapse eventKey="0">
+                        {serviceCompDetails?.options
+                          ?.enableDenyAndExceptionsInPolicies == "true" && (
+                          <>
+                            <Field
+                              className="form-control"
+                              name="isDenyAllElse"
+                              render={({ input }) => (
+                                <FormB.Group
+                                  as={Row}
+                                  className="mb-3"
+                                  controlId="isDenyAllElse"
+                                >
+                                  <FormB.Label column sm={2}>
+                                    Deny All Other Accesses: *
+                                  </FormB.Label>
+                                  <Col sm={1}>
+                                    <span style={{ verticalAlign: "sub" }}>
+                                      <BootstrapSwitchButton
+                                        {...input}
+                                        checked={input.value}
+                                        onlabel="True"
+                                        onstyle="primary"
+                                        offlabel="False"
+                                        offstyle="outline-secondary"
+                                        size="xs"
+                                        style="w-100"
+                                        key="isDenyAllElse"
+                                      />
+                                    </span>
+                                  </Col>
+                                </FormB.Group>
+                              )}
+                            />
+                            <Condition when="isDenyAllElse" is={false}>
+                              <div>
+                                <Accordion defaultActiveKey="0">
                                   <>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="denyPolicyItems"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
-                                    <fieldset>
-                                      <p className="wrap-header search-header">
-                                        <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                        Exclude from Deny Conditions:
-                                      </p>
-                                    </fieldset>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="denyExceptions"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
+                                    <p className="formHeader">
+                                      Deny Conditions:
+                                      <CustomToggle eventKey="0"></CustomToggle>
+                                    </p>
+                                    <Accordion.Collapse eventKey="0">
+                                      <>
+                                        <div className="wrap">
+                                          <PolicyPermissionItem
+                                            serviceDetails={serviceDetails}
+                                            serviceCompDetails={
+                                              serviceCompDetails
+                                            }
+                                            formValues={values}
+                                            addPolicyItem={addPolicyItem}
+                                            attrName="denyPolicyItems"
+                                            fetchUsersData={fetchUsersData}
+                                            fetchGroupsData={fetchGroupsData}
+                                            fetchRolesData={fetchRolesData}
+                                          />
+                                        </div>
+                                        <fieldset>
+                                          <p className="wrap-header search-header">
+                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                            Exclude from Deny Conditions:
+                                          </p>
+                                        </fieldset>
+                                        <div className="wrap">
+                                          <PolicyPermissionItem
+                                            serviceDetails={serviceDetails}
+                                            serviceCompDetails={
+                                              serviceCompDetails
+                                            }
+                                            formValues={values}
+                                            addPolicyItem={addPolicyItem}
+                                            attrName="denyExceptions"
+                                            fetchUsersData={fetchUsersData}
+                                            fetchGroupsData={fetchGroupsData}
+                                            fetchRolesData={fetchRolesData}
+                                          />
+                                        </div>
+                                      </>
+                                    </Accordion.Collapse>
                                   </>
-                                </Accordion.Collapse>
-                              </>
-                            </Accordion>
-                          </div>
-                        </Condition>
+                                </Accordion>
+                              </div>
+                            </Condition>
+                          </>
+                        )}
                       </div>
                     ) : values.policyType == 1 ? (
                       <div>
@@ -1621,7 +1662,7 @@ export default function AddUpdatePolicyForm(props) {
                                       `input[id=${key}]`
                                     ) ||
                                     document.querySelector(
-                                      `span[class="invalid-field"]`
+                                      `span[className="invalid-field"]`
                                     );
                                   scrollToError(selector);
                                 } else {
@@ -1668,7 +1709,10 @@ export default function AddUpdatePolicyForm(props) {
                       {policyId !== undefined && (
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
-                            {`Are you sure want to delete ?`}
+                            <span className="text-word-break">
+                              Are you sure want to delete policy&nbsp;"
+                              <b>{`${values?.policyName}`}</b>" ?
+                            </span>
                           </Modal.Header>
 
                           <Modal.Footer>

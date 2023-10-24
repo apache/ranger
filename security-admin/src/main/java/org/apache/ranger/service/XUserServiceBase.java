@@ -25,20 +25,18 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import com.google.gson.Gson;
 
-import com.google.gson.GsonBuilder;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 
+import javax.persistence.Query;
+
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		extends AbstractBaseResourceService<T, V> {
 	public static final String NAME = "XUser";
-	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XUserServiceBase() {
 
@@ -90,19 +88,23 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		return returnList;
 	}
 
-	public List<UserInfo> getUsers() {
-		List<UserInfo> returnList = new ArrayList<>();
+	/**
+	 * Searches the XUser table and gets the user ids matching the search criteria.
+	 */
+	public List<Long> searchXUsersForIds(SearchCriteria searchCriteria){
+		// construct the sort clause
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
 
-		@SuppressWarnings("unchecked")
-		List<XXUser> resultList = daoManager.getXXUser().getAll();
+		// get only the column id from the table
+		String q = "SELECT obj.id FROM " + className + " obj ";
 
-		// Iterate over the result list and create the return list
-		for (XXUser gjXUser : resultList) {
-			UserInfo userInfo = new UserInfo(gjXUser.getName(), gjXUser.getDescription(), gsonBuilder.fromJson(gjXUser.getOtherAttributes(), Map.class));
-			returnList.add(userInfo);
-		}
+		// construct the query object for retrieving the data
+		Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
 
-		return returnList;
+		return getDao().getIds(query);
 	}
 
+	public List<UserInfo> getUsers() {
+		return daoManager.getXXUser().getAllUsersInfo();
+	}
 }

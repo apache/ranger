@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.GenericType;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
@@ -49,6 +50,8 @@ public class RangerClient {
     private static final String PARAM_POLICY_NAME                   = "policyname";
     private static final String PARAM_SERVICE_NAME                  = "serviceName";
     private static final String PARAM_ZONE_NAME                     = "zoneName";
+    private static final String PARAM_PURGE_RECORD_TYPE             = "type";
+    private static final String PARAM_PURGE_RETENTION_DAYS          = "retentionDays";
 
     private static final String PARAM_RELOAD_SERVICE_POLICIES_CACHE = "reloadServicePoliciesCache";
 
@@ -80,10 +83,14 @@ public class RangerClient {
     private static final String URI_ZONE                  = URI_BASE + "/zones";
     private static final String URI_ZONE_BY_ID            = URI_ZONE + "/%d";
     private static final String URI_ZONE_BY_NAME          = URI_ZONE + "/name/%s";
+    private static final String URI_ZONE_HEADERS          = URI_BASE + "/zone-headers";
+    private static final String URI_ZONE_SERVICE_HEADERS  = URI_ZONE + "/%d/service-headers";
+    private static final String URI_ZONE_NAMES_FOR_RES    = URI_BASE + "/zone-names/%s/resource";
 
     private static final String URI_SERVICE_TAGS          = URI_SERVICE + "/%s/tags";
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
+    private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
 
 
     // APIs
@@ -116,14 +123,16 @@ public class RangerClient {
     public static final API GET_POLICIES_IN_SERVICE  = new API(URI_POLICIES_IN_SERVICE, HttpMethod.GET, Response.Status.OK);
     public static final API FIND_POLICIES            = new API(URI_POLICY, HttpMethod.GET, Response.Status.OK);
 
-    public static final API CREATE_ZONE         = new API(URI_ZONE, HttpMethod.POST, Response.Status.OK);
-    public static final API UPDATE_ZONE_BY_ID   = new API(URI_ZONE_BY_ID, HttpMethod.PUT, Response.Status.OK);
-    public static final API UPDATE_ZONE_BY_NAME = new API(URI_ZONE_BY_NAME, HttpMethod.PUT, Response.Status.OK);
-    public static final API DELETE_ZONE_BY_ID   = new API(URI_ZONE_BY_ID, HttpMethod.DELETE, Response.Status.NO_CONTENT);
-    public static final API DELETE_ZONE_BY_NAME = new API(URI_ZONE_BY_NAME, HttpMethod.DELETE, Response.Status.NO_CONTENT);
-    public static final API GET_ZONE_BY_ID      = new API(URI_ZONE_BY_ID, HttpMethod.GET, Response.Status.OK);
-    public static final API GET_ZONE_BY_NAME    = new API(URI_ZONE_BY_NAME, HttpMethod.GET, Response.Status.OK);
-    public static final API FIND_ZONES          = new API(URI_ZONE, HttpMethod.GET, Response.Status.OK);
+    public static final API CREATE_ZONE              = new API(URI_ZONE, HttpMethod.POST, Response.Status.OK);
+    public static final API UPDATE_ZONE_BY_ID        = new API(URI_ZONE_BY_ID, HttpMethod.PUT, Response.Status.OK);
+    public static final API DELETE_ZONE_BY_ID        = new API(URI_ZONE_BY_ID, HttpMethod.DELETE, Response.Status.NO_CONTENT);
+    public static final API DELETE_ZONE_BY_NAME      = new API(URI_ZONE_BY_NAME, HttpMethod.DELETE, Response.Status.NO_CONTENT);
+    public static final API GET_ZONE_BY_ID           = new API(URI_ZONE_BY_ID, HttpMethod.GET, Response.Status.OK);
+    public static final API GET_ZONE_BY_NAME         = new API(URI_ZONE_BY_NAME, HttpMethod.GET, Response.Status.OK);
+    public static final API GET_ZONE_HEADERS         = new API(URI_ZONE_HEADERS, HttpMethod.GET, Response.Status.OK);
+    public static final API GET_ZONE_SERVICE_HEADERS = new API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, Response.Status.OK);
+    public static final API GET_ZONE_NAMES_FOR_RES   = new API(URI_ZONE_NAMES_FOR_RES, HttpMethod.GET, Response.Status.OK);
+    public static final API FIND_ZONES               = new API(URI_ZONE, HttpMethod.GET, Response.Status.OK);
 
     public static final API CREATE_ROLE         = new API(URI_ROLE, HttpMethod.POST, Response.Status.OK);
     public static final API UPDATE_ROLE_BY_ID   = new API(URI_ROLE_BY_ID, HttpMethod.PUT, Response.Status.OK);
@@ -141,6 +150,7 @@ public class RangerClient {
     public static final API GET_SERVICE_TAGS     = new API(URI_SERVICE_TAGS, HttpMethod.GET, Response.Status.OK);
     public static final API GET_PLUGIN_INFO      = new API(URI_PLUGIN_INFO, HttpMethod.GET, Response.Status.OK);
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
+    public static final API PURGE_RECORDS        = new API(URI_PURGE_RECORDS, HttpMethod.DELETE, Response.Status.OK);
 
 
     private final RangerRESTClient restClient;
@@ -332,10 +342,6 @@ public class RangerClient {
         return callAPI(UPDATE_ZONE_BY_ID.applyUrlFormat(zoneId), null, securityZone, RangerSecurityZone.class);
     }
 
-    public RangerSecurityZone updateSecurityZone(String zoneName, RangerSecurityZone securityZone) throws RangerServiceException {
-        return callAPI(UPDATE_ZONE_BY_NAME.applyUrlFormat(zoneName), null, securityZone, RangerSecurityZone.class);
-    }
-
     public void deleteSecurityZone(long zoneId) throws RangerServiceException {
         callAPI(DELETE_ZONE_BY_ID.applyUrlFormat(zoneId), null);
     }
@@ -350,6 +356,18 @@ public class RangerClient {
 
     public RangerSecurityZone getSecurityZone(String zoneName) throws RangerServiceException {
         return callAPI(GET_ZONE_BY_NAME.applyUrlFormat(zoneName), null, null, RangerSecurityZone.class);
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaders(Map<String, String> filter) throws RangerServiceException {
+        return callAPI(GET_ZONE_HEADERS, filter, null, new GenericType<List<RangerSecurityZoneHeaderInfo>>(){});
+    }
+
+    public List<RangerServiceHeaderInfo> getSecurityZoneServiceHeaders(Map<String, String> filter) throws RangerServiceException {
+        return callAPI(GET_ZONE_SERVICE_HEADERS, filter, null, new GenericType<List<RangerServiceHeaderInfo>>(){});
+    }
+
+    public Set<String> getSecurityZoneNamesForResource(String serviceName, Map<String, String> resource) throws RangerServiceException {
+        return callAPI(GET_ZONE_NAMES_FOR_RES.applyUrlFormat(serviceName), resource, null, new GenericType<Set<String>>(){});
     }
 
     public List<RangerSecurityZone> findSecurityZones(Map<String, String> filter) throws RangerServiceException {
@@ -441,6 +459,15 @@ public class RangerClient {
         queryParams.put(PARAM_RELOAD_SERVICE_POLICIES_CACHE, String.valueOf(reloadServicePoliciesCache));
 
         callAPI(DELETE_POLICY_DELTAS, queryParams);
+    }
+
+    public List<RangerPurgeResult> purgeRecords(String recordType, int retentionDays) throws RangerServiceException {
+        Map<String, String> queryParams = new HashMap<>();
+
+        queryParams.put(PARAM_PURGE_RECORD_TYPE, recordType);
+        queryParams.put(PARAM_PURGE_RETENTION_DAYS, String.valueOf(retentionDays));
+
+        return callAPI(PURGE_RECORDS, queryParams, null, new GenericType<List<RangerPurgeResult>>(){});
     }
 
     private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {

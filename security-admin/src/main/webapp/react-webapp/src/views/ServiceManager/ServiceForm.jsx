@@ -29,7 +29,12 @@ import { RegexValidation } from "Utils/XAEnums";
 import { fetchApi } from "Utils/fetchAPI";
 import ServiceAuditFilter from "./ServiceAuditFilter";
 import TestConnection from "./TestConnection";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import {
+  commonBreadcrumb,
+  navigateTo,
+  serverError,
+  updateTagActive
+} from "../../utils/XAUtils";
 import {
   BlockUi,
   Condition,
@@ -50,13 +55,18 @@ import {
   isUndefined,
   has,
   split,
-  without
+  without,
+  maxBy,
+  isArray
 } from "lodash";
 import withRouter from "Hooks/withRouter";
+import { RangerPolicyType } from "../../utils/XAEnums";
+import { getServiceDef } from "../../utils/appState";
 
 class ServiceForm extends Component {
   constructor(props) {
     super(props);
+    this.serviceDefData = getServiceDef();
     this.configsJson = {};
     this.initialValuesObj = {
       isEnabled: "true",
@@ -69,12 +79,11 @@ class ServiceForm extends Component {
       service: {},
       tagService: [],
       editInitialValues: {},
-      usersDataRef: null,
-      groupsDataRef: null,
-      rolesDataRef: null,
       showDelete: false,
       loader: true,
-      blockUI: false
+      blockUI: false,
+      defaultTagOptions: [],
+      loadingOptions: false
     };
   }
 
@@ -87,11 +96,16 @@ class ServiceForm extends Component {
   };
 
   componentDidMount() {
+    let servicedefs;
+
+    servicedefs = this.serviceDefData.allServiceDefs.find((id) => {
+      return id.id == this.props.params.serviceDefId;
+    });
+
+    if (servicedefs == undefined) {
+      return navigateTo.navigate("/pageNotFound", { replace: true });
+    }
     this.fetchServiceDef();
-    this.fetchTagService();
-    this.fetchUsers();
-    this.fetchGroups();
-    this.fetchRoles();
   }
 
   onSubmit = async (values) => {
@@ -123,15 +137,29 @@ class ServiceForm extends Component {
       });
       this.setState({ blockUI: false });
       toast.success(`Successfully ${apiSuccess} the service`);
-      this.props.navigate(
-        this.state.serviceDef.name === "tag"
-          ? "/policymanager/tag"
-          : "/policymanager/resource"
-      );
+      if (this.props?.location?.state != "services") {
+        if (this?.props?.params?.serviceId !== undefined) {
+          this.props.navigate(
+            `/service/${this.props.params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
+          );
+        } else {
+          return this.props.navigate(
+            this.state?.serviceDef?.name === "tag"
+              ? "/policymanager/tag"
+              : "/policymanager/resource"
+          );
+        }
+      } else {
+        this.props.navigate(
+          this.state?.serviceDef?.name === "tag"
+            ? "/policymanager/tag"
+            : "/policymanager/resource"
+        );
+      }
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
-      console.log(apiError);
+      console.error(apiError);
     }
   };
 
@@ -142,31 +170,32 @@ class ServiceForm extends Component {
       serviceJson["id"] = this.props.params.serviceId;
     }
 
-    serviceJson["name"] = values.name;
-    serviceJson["displayName"] = values.displayName;
-    serviceJson["description"] = values.description;
-    serviceJson["type"] = this.state.serviceDef.name;
+    serviceJson["name"] = values?.name;
+    serviceJson["displayName"] = values?.displayName;
+    serviceJson["description"] = values?.description;
+    serviceJson["type"] = this.state?.serviceDef?.name;
     serviceJson["tagService"] =
-      values.tagService == null ? "" : values.tagService.value;
-    serviceJson["isEnabled"] = values.isEnabled === "true";
+      values?.tagService == null ? "" : values.tagService.value;
+    serviceJson["isEnabled"] = values?.isEnabled === "true";
 
     serviceJson["configs"] = {};
-    for (const config in values.configs) {
+    for (const config in values?.configs) {
       for (const jsonConfig in this.configsJson) {
         if (config === this.configsJson[jsonConfig]) {
-          serviceJson["configs"][jsonConfig] = values.configs[config];
+          serviceJson["configs"][jsonConfig] = values?.configs[config];
         }
       }
     }
 
-    if (values.customConfigs !== undefined) {
-      values.customConfigs.map((config) => {
-        config !== undefined &&
+    if (values?.customConfigs !== undefined) {
+      values.customConfigs?.map((config) => {
+        config?.name !== undefined &&
+          config?.value !== undefined &&
           (serviceJson["configs"][config.name] = config.value);
       });
     }
 
-    if (values.isAuditFilter) {
+    if (values?.isAuditFilter) {
       serviceJson["configs"]["ranger.plugin.audit.filters"] =
         this.getAuditFiltersToSave(values.auditFilters);
     } else {
@@ -189,8 +218,8 @@ class ServiceForm extends Component {
             obj.isAudited = value === "true";
           }
 
-          if (key === "accessResult") {
-            obj.accessResult = value.value;
+          if (key === "accessResult" && !isEmpty(value)) {
+            obj.accessResult = value?.value;
           }
 
           if (key === "resources" && !isEmpty(value)) {
@@ -199,30 +228,47 @@ class ServiceForm extends Component {
             let levels = uniq(map(serviceDef.resources, "level"));
 
             levels.map((level) => {
-              let resourceObj = find(serviceDef.resources, { level: level });
+              let resourceObj = find(serviceDef.resources, {
+                level: level,
+                name: value[`resourceName-${level}`]?.name
+              });
               if (
                 value[`resourceName-${level}`] !== undefined &&
                 value[`value-${level}`] !== undefined
               ) {
                 obj.resources[value[`resourceName-${level}`].name] = {
-                  values: map(value[`value-${level}`], "value")
+                  values: isArray(value[`value-${level}`])
+                    ? map(value[`value-${level}`], "value")
+                    : [value[`value-${level}`].value]
                 };
 
-                if (value[`isRecursiveSupport-${level}`] !== undefined) {
+                if (
+                  value[`isRecursiveSupport-${level}`] !== undefined &&
+                  resourceObj.recursiveSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isRecursive = value[`isRecursiveSupport-${level}`];
-                } else if (resourceObj.recursiveSupported) {
+                } else if (
+                  value[`isRecursiveSupport-${level}`] === undefined &&
+                  resourceObj.recursiveSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isRecursive = resourceObj.recursiveSupported;
                 }
 
-                if (value[`isExcludesSupport-${level}`] !== undefined) {
+                if (
+                  value[`isExcludesSupport-${level}`] !== undefined &&
+                  resourceObj.excludesSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isExcludes = value[`isExcludesSupport-${level}`];
-                } else if (resourceObj.excludesSupported) {
+                } else if (
+                  value[`isExcludesSupport-${level}`] === undefined &&
+                  resourceObj.excludesSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isExcludes = resourceObj.excludesSupported;
@@ -264,29 +310,24 @@ class ServiceForm extends Component {
       }
     });
 
-    console.log("PRINT save auditFiltersArray : ", auditFiltersArray);
     return JSON.stringify(auditFiltersArray).replace(/"/g, "'");
   };
 
-  fetchServiceDef = async () => {
+  fetchServiceDef = () => {
     const serviceJson = this.initialValuesObj;
-    let serviceDefResp;
     let serviceDef;
     let serviceDefId = this.props.params.serviceDefId;
+    let isTagView = false;
+    serviceDef = this.serviceDefData.allServiceDefs.find((servicedef) => {
+      return servicedef.id == serviceDefId;
+    });
+    isTagView =
+      serviceDef?.name !== undefined && serviceDef?.name === "tag"
+        ? true
+        : false;
+    updateTagActive(isTagView);
 
-    try {
-      serviceDefResp = await fetchApi({
-        url: `plugins/definitions/${serviceDefId}`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-      );
-    }
-
-    serviceDef = serviceDefResp.data;
-
-    if (serviceDef.resources !== undefined) {
+    if (serviceDef?.resources !== undefined) {
       for (const obj of serviceDef.resources) {
         if (
           this.props.params.serviceId === undefined &&
@@ -298,37 +339,26 @@ class ServiceForm extends Component {
       }
     }
 
-    let auditFilters = find(serviceDef.configs, {
+    let auditFilters = find(serviceDef?.configs, {
       name: "ranger.plugin.audit.filters"
     });
 
     serviceJson["auditFilters"] = [];
-
-    console.log(
-      "PRINT getAuditFilters from response during create : ",
-      auditFilters
-    );
 
     if (
       auditFilters &&
       auditFilters !== undefined &&
       this.props.params.serviceId === undefined
     ) {
-      auditFilters = JSON.parse(auditFilters.defaultValue.replace(/'/g, '"'));
-      console.log(
-        "PRINT getAuditFilters after parsing during create : ",
-        auditFilters
-      );
+      auditFilters = isEmpty(auditFilters?.defaultValue)
+        ? []
+        : JSON.parse(auditFilters.defaultValue.replace(/'/g, '"'));
       serviceJson["isAuditFilter"] = auditFilters.length > 0 ? true : false;
-
-      console.log("PRINT serviceDef during create : ", serviceDef);
 
       serviceJson["auditFilters"] = this.getAuditFilters(
         auditFilters,
         serviceDef
       );
-
-      console.log("PRINT final serviceJson during create : ", serviceJson);
     }
 
     this.setState({
@@ -356,24 +386,24 @@ class ServiceForm extends Component {
     }
 
     const serviceJson = {};
-    serviceJson["name"] = serviceResp.data.name;
-    serviceJson["displayName"] = serviceResp.data.displayName;
-    serviceJson["description"] = serviceResp.data.description;
-    serviceJson["isEnabled"] = JSON.stringify(serviceResp.data.isEnabled);
+    serviceJson["name"] = serviceResp?.data?.name;
+    serviceJson["displayName"] = serviceResp?.data?.displayName;
+    serviceJson["description"] = serviceResp?.data?.description;
+    serviceJson["isEnabled"] = JSON.stringify(serviceResp?.data?.isEnabled);
 
     serviceJson["tagService"] =
-      serviceResp.data.tagService !== undefined
+      serviceResp?.data?.tagService !== undefined
         ? {
-            value: serviceResp.data.tagService,
-            label: serviceResp.data.tagService
+            value: serviceResp?.data?.tagService,
+            label: serviceResp?.data?.tagService
           }
         : null;
 
     serviceJson["configs"] = {};
 
-    let serviceDefConfigs = map(this.state.serviceDef.configs, "name");
+    let serviceDefConfigs = map(this.state?.serviceDef?.configs, "name");
     let serviceCustomConfigs = without(
-      difference(keys(serviceResp.data.configs), serviceDefConfigs),
+      difference(keys(serviceResp?.data?.configs), serviceDefConfigs),
       "ranger.plugin.audit.filters"
     );
 
@@ -383,7 +413,7 @@ class ServiceForm extends Component {
     });
 
     let editCustomConfigs = serviceCustomConfigs.map((config) => {
-      return { name: config, value: serviceResp.data.configs[config] };
+      return { name: config, value: serviceResp?.data?.configs[config] };
     });
 
     serviceJson["customConfigs"] =
@@ -399,51 +429,48 @@ class ServiceForm extends Component {
       editAuditFilters !== undefined &&
       this.props.params.serviceId !== undefined
     ) {
-      editAuditFilters = JSON.parse(editAuditFilters.replace(/'/g, '"'));
-      console.log(
-        "PRINT getEditAuditFilters after parsing during edit : ",
-        editAuditFilters
-      );
+      editAuditFilters = isEmpty(editAuditFilters)
+        ? []
+        : JSON.parse(editAuditFilters.replace(/'/g, '"'));
       serviceJson["isAuditFilter"] = editAuditFilters.length > 0 ? true : false;
-
-      console.log(
-        "PRINT serviceDef from state during edit : ",
-        this.state.serviceDef
-      );
-
       serviceJson["auditFilters"] = this.getAuditFilters(
         editAuditFilters,
         this.state.serviceDef
       );
-
-      console.log("PRINT final serviceJson during edit : ", serviceJson);
     }
 
     this.setState({
-      service: serviceResp.data,
+      service: serviceResp?.data,
       editInitialValues: serviceJson,
       loader: false
     });
   };
 
-  fetchTagService = async () => {
-    let tagServiceResp;
-    try {
-      tagServiceResp = await fetchApi({
-        url: `plugins/services?serviceNamePartial=&serviceType=tag`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service of type tag or CSRF headers! ${error}`
-      );
-    }
+  fetchTagService = async (inputValue) => {
+    let params = { serviceNamePartial: inputValue || "" };
+    let op = [];
 
-    this.setState({
-      tagService: tagServiceResp.data.services
+    const tagServiceResp = await fetchApi({
+      url: `plugins/services?serviceType=tag`,
+      params: params
     });
+    op = tagServiceResp?.data?.services;
+
+    return op?.map((obj) => ({
+      label: obj.displayName,
+      value: obj.displayName
+    }));
   };
 
+  onFocusTagService = () => {
+    this.setState({ loadingOptions: true });
+    this.fetchTagService().then((opts) => {
+      this.setState({ defaultTagOptions: opts, loadingOptions: false });
+    });
+  };
   deleteService = async (serviceId) => {
+    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
+    let zonesResp = [];
     this.hideDeleteModal();
     try {
       this.setState({ blockUI: true });
@@ -451,9 +478,27 @@ class ServiceForm extends Component {
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
+      if (
+        localStorageZoneDetails !== undefined &&
+        localStorageZoneDetails !== null
+      ) {
+        zonesResp = await fetchApi({
+          url: `public/v2/api/zones/${
+            JSON.parse(localStorageZoneDetails)?.value
+          }/service-headers`
+        });
+
+        if (isEmpty(zonesResp?.data)) {
+          localStorage.removeItem("zoneDetails");
+        }
+      }
       this.setState({ blockUI: false });
       toast.success("Successfully deleted the service");
-      this.props.navigate("/policymanager/resource");
+      this.props.navigate(
+        this.state?.serviceDef?.name === "tag"
+          ? "/policymanager/tag"
+          : "/policymanager/resource"
+      );
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
@@ -479,45 +524,42 @@ class ServiceForm extends Component {
 
         if (key === "resources") {
           obj.resources = {};
+          let lastResourceLevel = [];
 
-          let resourceKeys = keys(item.resources);
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            return (obj.resources[`resourceName-${resourceLevel}`] =
-              resourceObj);
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceValues = item.resources[resourceKey].values;
-            return (obj.resources[`value-${resourceLevel}`] =
-              resourceValues.map((resourceValue) => {
-                return { value: resourceValue, label: resourceValue };
-              }));
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceIsRecursive = item.resources[resourceKey].isRecursive;
-            let resourceIsExcludes = item.resources[resourceKey].isExcludes;
-            if (resourceIsRecursive !== undefined) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceIsRecursive);
-            } else if (resourceObj.recursiveSupported) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceObj.recursiveSupported);
+          Object.entries(item.resources)?.map(([key, value]) => {
+            let setResources = find(serviceDef?.resources, ["name", key]);
+            obj.resources[`resourceName-${setResources?.level}`] = setResources;
+            obj.resources[`value-${setResources?.level}`] = value.values?.map(
+              (m) => {
+                return { label: m, value: m };
+              }
+            );
+            if (setResources?.excludesSupported) {
+              obj.resources[`isExcludesSupport-${setResources.level}`] =
+                value?.isExcludes != false;
             }
-            if (resourceIsExcludes !== undefined) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceIsExcludes);
-            } else if (resourceObj.excludesSupported) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceObj.excludesSupported);
+            if (setResources?.recursiveSupported) {
+              obj.resources[`isRecursiveSupport-${setResources.level}`] =
+                value.isRecursive != false;
             }
+            lastResourceLevel.push({
+              level: setResources?.level,
+              name: setResources?.name
+            });
           });
+
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(serviceDef?.resources, [
+            "parent",
+            lastResourceLevel?.name
+          ]);
+
+          if (setLastResources) {
+            obj.resources[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
+          }
         }
 
         if (key === "actions") {
@@ -585,7 +627,7 @@ class ServiceForm extends Component {
   };
 
   getServiceConfigs = (serviceDef) => {
-    if (serviceDef.configs !== undefined) {
+    if (serviceDef?.configs !== undefined) {
       let formField = [];
       const filterServiceConfigs = reject(serviceDef.configs, {
         name: "ranger.plugin.audit.filters"
@@ -657,7 +699,7 @@ class ServiceForm extends Component {
               </Field>
             );
             break;
-          case "enum":
+          case "enum": {
             const paramEnum = serviceDef.enums.find(
               (e) => e.name == configParam.subType
             );
@@ -715,6 +757,7 @@ class ServiceForm extends Component {
               </Field>
             );
             break;
+          }
           case "bool":
             formField.push(
               <Field
@@ -880,80 +923,70 @@ class ServiceForm extends Component {
   );
 
   AsyncSelectField = ({ input, ...rest }) => (
-    <AsyncSelect {...input} {...rest} cacheOptions isMulti />
+    <AsyncSelect {...input} {...rest} cacheOptions />
   );
 
   fetchUsers = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (this.state.usersDataRef === null || inputValue) {
+
+    try {
       const userResp = await fetchApi({
         url: "xusers/lookup/users",
         params: params
       });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        this.state.usersDataRef = op;
-      }
-    } else {
-      op = this.state.usersDataRef;
+      op = userResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
     }
 
-    return op.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    return map(op, function (obj) {
+      return { value: obj.value, label: obj.value };
+    });
   };
 
   fetchGroups = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (this.state.groupsDataRef === null || inputValue) {
-      const userResp = await fetchApi({
+
+    try {
+      const groupResp = await fetchApi({
         url: "xusers/lookup/groups",
         params: params
       });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        this.state.groupsDataRef = op;
-      }
-    } else {
-      op = this.state.groupsDataRef;
+      op = groupResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
     }
 
-    return op.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    return map(op, function (obj) {
+      return { label: obj.value, value: obj.value };
+    });
   };
 
   fetchRoles = async (inputValue) => {
-    let params = { roleNamePartial: inputValue || "", isVisible: 1 };
+    let params = { roleNamePartial: inputValue || "" };
     let op = [];
-    if (this.state.rolesDataRef === null || inputValue) {
+
+    try {
       const roleResp = await fetchApi({
         url: "roles/roles",
         params: params
       });
-      op = roleResp.data.roles;
-      if (!inputValue) {
-        this.state.rolesDataRef = op;
-      }
-    } else {
-      op = this.state.rolesDataRef;
+      op = roleResp.data?.roles;
+    } catch (error) {
+      console.error(`Error occurred while fetching Roles ! ${error}`);
     }
 
-    return op.map((obj) => ({
-      label: obj.name,
-      value: obj.name
-    }));
+    return map(op, function (obj) {
+      return { label: obj.name, value: obj.name };
+    });
   };
-
   ServiceDefnBreadcrumb = () => {
     let serviceDetails = {};
-    serviceDetails["serviceDefId"] = this.state.serviceDef.id;
+    serviceDetails["serviceDefId"] = this.state.serviceDef?.id;
     serviceDetails["serviceId"] = this.props.params.serviceId;
-    if (this.state.serviceDef.name === "tag") {
+    if (this.state.serviceDef?.name === "tag") {
       return commonBreadcrumb(
         [
           "TagBasedServiceManager",
@@ -975,16 +1008,17 @@ class ServiceForm extends Component {
       );
     }
   };
-
   render() {
     return (
       <React.Fragment>
-        {this.ServiceDefnBreadcrumb()}
         <div className="clearfix">
-          <h4 className="wrap-header bold">
-            {this.props.params.serviceId !== undefined ? `Edit` : `Create`}{" "}
-            Service
-          </h4>
+          <div className="header-wraper">
+            <h3 className="wrap-header bold">
+              {this.props.params.serviceId !== undefined ? `Edit` : `Create`}{" "}
+              Service
+            </h3>
+            {this.ServiceDefnBreadcrumb()}
+          </div>
         </div>
         {this.state.loader ? (
           <Loader />
@@ -1004,13 +1038,12 @@ class ServiceForm extends Component {
                   }
                   render={({
                     handleSubmit,
-                    form,
                     submitting,
                     values,
                     invalid,
                     errors,
                     form: {
-                      mutators: { push: addItem, pop: removeItem }
+                      mutators: { push: addItem }
                     }
                   }) => (
                     <form
@@ -1178,7 +1211,7 @@ class ServiceForm extends Component {
                               </span>
                             </Col>
                           </Row>
-                          {this.state.serviceDef.name !== "tag" && (
+                          {this.state?.serviceDef?.name !== "tag" && (
                             <Row className="form-group">
                               <Col xs={3}>
                                 <label className="form-label pull-right">
@@ -1188,15 +1221,16 @@ class ServiceForm extends Component {
                               <Col xs={4}>
                                 <Field
                                   name="tagService"
-                                  component={this.SelectField}
-                                  options={this.state.tagService.map((s) => {
-                                    return {
-                                      value: s.name,
-                                      label: s.name
-                                    };
-                                  })}
+                                  component={this.AsyncSelectField}
+                                  loadOptions={this.fetchTagService}
+                                  onFocus={() => {
+                                    this.onFocusTagService();
+                                  }}
+                                  defaultOptions={this.state.defaultTagOptions}
                                   placeholder="Select Tag Service"
+                                  isLoading={this.state.loadingOptions}
                                   isClearable={true}
+                                  cacheOptions
                                 />
                               </Col>
                             </Row>
@@ -1350,13 +1384,29 @@ class ServiceForm extends Component {
                             type="button"
                             className="btn-sm"
                             size="sm"
-                            onClick={() =>
-                              this.props.navigate(
-                                this.state.serviceDef.name === "tag"
-                                  ? "/policymanager/tag"
-                                  : "/policymanager/resource"
-                              )
-                            }
+                            onClick={() => {
+                              if (this.props?.location?.state != "services") {
+                                if (
+                                  this?.props?.params?.serviceId !== undefined
+                                ) {
+                                  return this.props.navigate(
+                                    `/service/${this.props.params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
+                                  );
+                                } else {
+                                  return this.props.navigate(
+                                    this.state?.serviceDef?.name === "tag"
+                                      ? "/policymanager/tag"
+                                      : "/policymanager/resource"
+                                  );
+                                }
+                              } else {
+                                return this.props.navigate(
+                                  this.state?.serviceDef?.name === "tag"
+                                    ? "/policymanager/tag"
+                                    : "/policymanager/resource"
+                                );
+                              }
+                            }}
                             data-id="cancel"
                             data-cy="cancel"
                           >
@@ -1382,7 +1432,11 @@ class ServiceForm extends Component {
                             onHide={this.hideDeleteModal}
                           >
                             <Modal.Header closeButton>
-                              {`Are you sure want to delete ?`}
+                              <span className="text-word-break">
+                                Are you sure want to delete service&nbsp;"
+                                <b>{`${this?.state?.service?.displayName}`}</b>"
+                                ?
+                              </span>
                             </Modal.Header>
                             <Modal.Footer>
                               <Button

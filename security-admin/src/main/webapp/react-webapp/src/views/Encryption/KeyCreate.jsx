@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useReducer, useEffect, useState, useRef } from "react";
 import { Button, Table, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
@@ -30,7 +30,7 @@ import {
   scrollToError
 } from "../../components/CommonComponents";
 import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
-import { isUndefined, values } from "lodash";
+import { isEmpty, values } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
@@ -40,6 +40,7 @@ const initialState = {
   definition: {},
   loader: true
 };
+
 const keyCreateReducer = (state, action) => {
   switch (action.type) {
     case "SET_LOADER":
@@ -72,6 +73,7 @@ function KeyCreate(props) {
   const navigate = useNavigate();
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
+  const toastId = useRef(null);
 
   useEffect(() => {
     fetchInitialData();
@@ -83,6 +85,27 @@ function KeyCreate(props) {
 
   const handleSubmit = async (values) => {
     const serviceJson = {};
+    if (values?.attributes.length > 0) {
+      for (let key of Object.keys(values.attributes))
+        if (
+          !isEmpty(values?.attributes[key]?.name) ||
+          !isEmpty(values?.attributes[key]?.value)
+        ) {
+          toast.dismiss(toastId.current);
+          if (isEmpty(values?.attributes[key]?.name)) {
+            toast.error(
+              `Please enter Name for ${values?.attributes[key]?.value}`
+            );
+            return;
+          }
+          if (isEmpty(values?.attributes[key]?.value)) {
+            toast.error(
+              `Please enter Value for ${values?.attributes[key]?.name}`
+            );
+            return;
+          }
+        }
+    }
 
     let apiError = "Error occurred while creating Key";
     serviceJson.name = values.name;
@@ -91,11 +114,15 @@ function KeyCreate(props) {
     serviceJson.description = values.description;
     serviceJson.attributes = {};
 
-    for (let key of Object.keys(values.attributes))
-      if (!isUndefined(values.attributes[key])) {
+    for (let key of Object.keys(values.attributes)) {
+      if (
+        !isEmpty(values?.attributes[key]?.name) &&
+        !isEmpty(values?.attributes[key]?.value)
+      ) {
         serviceJson.attributes[values.attributes[key].name] =
           values.attributes[key].value;
       }
+    }
     setPreventUnblock(true);
     try {
       setBlockUI(true);
@@ -108,7 +135,7 @@ function KeyCreate(props) {
         data: serviceJson
       });
       setBlockUI(false);
-      toast.success(`Success! Key created succesfully`);
+      toast.success(`Success! Key created successfully`);
       navigate(`/kms/keys/edit/manage/${state.detail}`, {
         state: {
           detail: state.detail
@@ -175,13 +202,14 @@ function KeyCreate(props) {
       serviceDetails
     );
   };
-
   return loader ? (
     <Loader />
   ) : (
     <div>
-      {keyCreateBreadcrumb()}
-      <h4 className="wrap-header bold">Key Detail</h4>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Key Detail</h3>
+        {keyCreateBreadcrumb()}
+      </div>
       <Form
         onSubmit={handleSubmit}
         keepDirtyOnReinitialize={true}

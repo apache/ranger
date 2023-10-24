@@ -28,10 +28,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -45,8 +41,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceTags implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -228,6 +222,9 @@ public class ServiceTags implements java.io.Serializable {
 				.append("tagUpdateTime={").append(tagUpdateTime).append("}")
 				.append("isDelta={").append(isDelta).append("}")
 				.append("tagsChangeExtent={").append(tagsChangeExtent).append("}")
+				.append(", serviceResources={").append(serviceResources).append("}")
+				.append(", tags={").append(tags).append("}")
+				.append(", resourceToTagIds={").append(resourceToTagIds).append("}")
 				.append("}");
 
 		return sb;

@@ -19,7 +19,11 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.ClientResponse;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.junit.Assert;
 import org.junit.Test;
@@ -146,5 +150,70 @@ public class TestRangerClient {
         } catch(RangerServiceException exp){
             Assert.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
+    }
+
+    @Test
+    public void testGetSecurityZoneHeaders() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.getSecurityZoneHeaders(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerSecurityZoneHeaderInfo> zoneHeaders = client.getSecurityZoneHeaders(filter);
+
+        Assert.assertEquals(Collections.emptyList(), zoneHeaders);
+    }
+
+    @Test
+    public void testGetSecurityZoneServiceHeaders() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.getSecurityZoneServiceHeaders(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerServiceHeaderInfo> serviceHeaders = client.getSecurityZoneServiceHeaders(filter);
+
+        Assert.assertEquals(Collections.emptyList(), serviceHeaders);
+    }
+
+    @Test
+    public void testGetSecurityZoneNamesForResource() throws RangerServiceException {
+        RangerClient        client      = Mockito.mock(RangerClient.class);
+        String              serviceName = "dev_hive";
+        Map<String, String> resource    = new HashMap<String, String>() {{
+                                                put("database", "testdb");
+                                                put("table", "testtbl1");
+                                            }};
+
+        when(client.getSecurityZoneNamesForResource(serviceName, resource)).thenReturn(Collections.emptySet());
+
+        Set<String> zoneNames = client.getSecurityZoneNamesForResource(serviceName, resource);
+
+        Assert.assertEquals(Collections.emptySet(), zoneNames);
+    }
+
+    @Test
+    public void testFindSecurityZones() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.findSecurityZones(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerSecurityZone> securityZones = client.findSecurityZones(filter);
+
+        Assert.assertEquals(Collections.emptyList(), securityZones);
+    }
+
+    @Test
+    public void testPurgeRecords() throws RangerServiceException {
+        RangerClient client        = Mockito.mock(RangerClient.class);
+        String       recordType    = "login_records";
+        int          retentionDays = 180;
+
+        when(client.purgeRecords(recordType, retentionDays)).thenReturn(Collections.emptyList());
+
+        List<RangerPurgeResult> purgeResults = client.purgeRecords(recordType, retentionDays);
+
+        Assert.assertEquals(Collections.emptyList(), purgeResults);
     }
 }

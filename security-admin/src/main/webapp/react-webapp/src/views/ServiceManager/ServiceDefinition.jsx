@@ -19,7 +19,7 @@
 
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Col, Modal, Row, Table } from "react-bootstrap";
+import { Alert, Badge, Button, Col, Modal, Row, Table } from "react-bootstrap";
 import { difference, isEmpty, keys, map, omit, pick } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import ExportPolicy from "./ExportPolicy";
@@ -70,8 +70,8 @@ class ServiceDefinition extends Component {
     this.setState({ showView: null });
   };
 
-  showBlockUI = (blockUI) => {
-    this.props.showBlockUI(blockUI);
+  showBlockUI = (blockUI, respData) => {
+    this.props.showBlockUI(blockUI, respData);
   };
 
   deleteService = (id) => {
@@ -189,9 +189,26 @@ class ServiceDefinition extends Component {
       return tableRow;
     }
 
-    auditFilters = JSON.parse(
-      auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
-    );
+    if (isEmpty(auditFilters["ranger.plugin.audit.filters"])) {
+      return tableRow;
+    }
+
+    try {
+      auditFilters = JSON.parse(
+        auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
+      );
+    } catch (error) {
+      tableRow.push(
+        <tr key="error-service-audit-filter">
+          <td className="text-center" colSpan="8">
+            <Alert variant="danger">
+              Error occured while parsing service audit filter!
+            </Alert>
+          </td>
+        </tr>
+      );
+      return tableRow;
+    }
 
     auditFilters.map((a, index) =>
       tableRow.push(
@@ -326,6 +343,7 @@ class ServiceDefinition extends Component {
                             <i className="fa-fw fa fa-plus"></i>
                           </a>
                         )}
+
                         <a
                           className="text-decoration cursor-pointer"
                           onClick={this.showImportModal}
@@ -354,6 +372,7 @@ class ServiceDefinition extends Component {
                             show={showImportModal}
                             onHide={this.hideImportModal}
                             showBlockUI={this.showBlockUI}
+                            allServices={this.props.allServices}
                           />
                         )}
                         {[serviceDef].length > 0 && showExportModal && (
@@ -373,9 +392,9 @@ class ServiceDefinition extends Component {
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="table-service-scroll">
               {this.props.servicesData.map((s) => (
-                <tr key={s.id}>
+                <tr key={s.id} className="d-table w-100">
                   <td>
                     <div className="clearfix">
                       <span className="float-left">
@@ -399,7 +418,7 @@ class ServiceDefinition extends Component {
                         {!this.props.isUserRole && (
                           <Button
                             variant="outline-dark"
-                            className="m-r-5   btn btn-mini"
+                            className="m-r-5 btn btn-mini"
                             title="View"
                             onClick={() => {
                               this.showViewModal(s.id);
@@ -424,7 +443,7 @@ class ServiceDefinition extends Component {
                               <Col sm={12}>
                                 <p className="form-header">Service Details :</p>
                                 <Table bordered size="sm">
-                                  <tbody>
+                                  <tbody className="service-details">
                                     <tr>
                                       <td>Service Name</td>
                                       <td>{s.name}</td>
@@ -470,14 +489,17 @@ class ServiceDefinition extends Component {
                                 <p className="form-header">
                                   Config Properties :
                                 </p>
-                                <Table bordered size="sm">
-                                  <tbody>
-                                    {this.getServiceConfigs(
-                                      this.state.serviceDef,
-                                      s.configs
-                                    )}
-                                  </tbody>
-                                </Table>
+                                <div className="table-responsive">
+                                  <Table bordered size="sm">
+                                    <tbody className="service-config">
+                                      {s?.configs &&
+                                        this.getServiceConfigs(
+                                          this.state.serviceDef,
+                                          s.configs
+                                        )}
+                                    </tbody>
+                                  </Table>
+                                </div>
                                 <p className="form-header">Audit Filter :</p>
                                 <div className="table-responsive">
                                   <Table
@@ -497,7 +519,7 @@ class ServiceDefinition extends Component {
                                         <th>Roles</th>
                                       </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="service-audit">
                                       {this.getAuditFilters(s.configs)}
                                     </tbody>
                                   </Table>
@@ -521,6 +543,7 @@ class ServiceDefinition extends Component {
                               className="btn btn-mini m-r-5"
                               title="Edit"
                               to={`/service/${this.state.serviceDef.id}/edit/${s.id}`}
+                              state={"services"}
                               data-id={s.id}
                               data-cy={s.id}
                             >
@@ -542,7 +565,10 @@ class ServiceDefinition extends Component {
                               onHide={this.hideDeleteModal}
                             >
                               <Modal.Header closeButton>
-                                {`Are you sure want to delete ?`}
+                                <span className="text-word-break">
+                                  Are you sure want to delete service&nbsp;"
+                                  <b>{`${s?.displayName}`}</b>" ?
+                                </span>
                               </Modal.Header>
                               <Modal.Footer>
                                 <Button

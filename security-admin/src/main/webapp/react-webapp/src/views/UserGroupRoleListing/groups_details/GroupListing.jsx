@@ -47,9 +47,10 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "Utils/XAUtils";
-import { find, isUndefined, map } from "lodash";
+import { find, isUndefined, isEmpty } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import {
   BlockUi,
@@ -65,6 +66,7 @@ function Groups() {
   const [totalCount, setTotalCount] = useState(0);
   const fetchIdRef = useRef(0);
   const selectedRows = useRef([]);
+  const toastId = useRef(null);
   const [showModal, setConfirmModal] = useState(false);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const [showGroupSyncDetails, setGroupSyncdetails] = useState({
@@ -102,10 +104,8 @@ function Groups() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -137,18 +137,13 @@ function Groups() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(groupListingData);
+    }
+  }, [totalCount]);
   const fetchGroupInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -196,14 +191,7 @@ function Groups() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(groupData, groupResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -212,7 +200,8 @@ function Groups() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.warning("Please select atleast one group!!");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning("Please select atleast one group!!");
     }
   };
 
@@ -248,19 +237,23 @@ function Groups() {
             errorMsg +=
               `Error occurred during deleting Groups: ${original.name}` + "\n";
           }
-          console.log(errorMsg);
+          console.error(errorMsg);
         }
       }
       if (errorMsg) {
-        toast.error(errorMsg);
+        toast.dismiss(toastId.current);
+        toastId.current = toast.error(errorMsg);
       } else {
-        toast.success("Group deleted successfully!");
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("Group deleted successfully!");
         if (
           (groupListingData.length == 1 ||
             groupListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
-          resetPage.page(0);
+          if (typeof resetPage?.page === "function") {
+            resetPage.page(0);
+          }
         } else {
           setUpdateTable(moment.now());
         }
@@ -271,32 +264,45 @@ function Groups() {
   const handleSetVisibility = async (e) => {
     if (selectedRows.current.length > 0) {
       let selectedRowData = selectedRows.current;
+      let obj = {};
       for (const { original } of selectedRowData) {
-        if (original.isVisible == e) {
-          toast.warning(
-            e == VisibilityStatus.STATUS_VISIBLE.value
-              ? "Selected group is already visible"
-              : "Selected group is already hidden"
-          );
-        } else {
-          let obj = {};
+        if (original.isVisible != e) {
           obj[original.id] = e;
-          try {
-            await fetchApi({
-              url: "xusers/secure/groups/visibility",
-              method: "PUT",
-              data: obj
-            });
-            toast.success("Sucessfully updated Group visibility!!");
-            setUpdateTable(moment.now());
-          } catch (error) {
-            serverError(error);
-            console.log(`Error occurred during set Group visibility! ${error}`);
-          }
         }
       }
+      if (isEmpty(obj)) {
+        toast.dismiss(toastId.current);
+        toastId.current = toast.warning(
+          e == VisibilityStatus.STATUS_VISIBLE.value
+            ? `Selected ${
+                selectedRows.current.length === 1 ? "Group is" : "Groups are"
+              } already visible`
+            : `Selected ${
+                selectedRows.current.length === 1 ? "Group is " : "Groups are"
+              } already hidden`
+        );
+        return;
+      }
+      try {
+        await fetchApi({
+          url: "xusers/secure/groups/visibility",
+          method: "PUT",
+          data: obj
+        });
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success(
+          `Sucessfully updated ${
+            selectedRows.current.length === 1 ? "Group" : "Groups"
+          } visibility!!`
+        );
+        setUpdateTable(moment.now());
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred during set Group visibility! ${error}`);
+      }
     } else {
-      toast.warning("Please select atleast one group!!");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning("Please select atleast one group!!");
     }
   };
 
@@ -309,13 +315,14 @@ function Groups() {
           if (rawValue.value) {
             return (
               <Link
-                style={{ maxWidth: "100px", display: "inline-block" }}
+                style={{ maxWidth: "100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
                     : "text-info"
                 }`}
                 to={"/group/" + rawValue.row.original.id}
+                title={rawValue.value}
               >
                 {rawValue.value}
               </Link>
@@ -326,7 +333,7 @@ function Groups() {
       },
       {
         Header: "Group Source",
-        accessor: "groupSource", // accessor is the "key" in the data
+        accessor: "groupSource",
         Cell: (rawValue) => {
           if (rawValue.value !== null && rawValue.value !== undefined) {
             if (rawValue.value == GroupSource.XA_PORTAL_GROUP.value)
@@ -350,7 +357,8 @@ function Groups() {
                 </div>
               );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width: 100
       },
       {
         Header: "Sync Source",
@@ -365,7 +373,8 @@ function Groups() {
               </div>
             );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width: 100
       },
       {
         Header: "Visibility",
@@ -393,7 +402,8 @@ function Groups() {
                 </div>
               );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width: 100
       },
       {
         Header: "Users",
@@ -414,7 +424,8 @@ function Groups() {
               </button>
             </div>
           );
-        }
+        },
+        width: 80
       },
       {
         Header: "Sync Details",
@@ -476,7 +487,7 @@ function Groups() {
     });
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "name",
       label: "Group Name",
@@ -523,37 +534,21 @@ function Groups() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
-    let searchFilterParam = {};
-    let searchParam = {};
-
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-
-      let urlLabelParam = searchFilterObj.urlLabel;
-
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
   };
 
   return (
     <div className="wrap">
-      <h4 className="wrap-header font-weight-bold">Group List</h4>
       {pageLoader ? (
         <Loader />
       ) : (
@@ -563,10 +558,9 @@ function Groups() {
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter
                 key="user-listing-search-filter"
-                placeholder="Search for your users..."
-                options={searchFilterOption}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                placeholder="Search for your groups..."
+                options={searchFilterOptions}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>
@@ -584,8 +578,7 @@ function Groups() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  style={{ display: "inline-block" }}
-                  className="ml-2"
+                  className="ml-2 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
@@ -630,18 +623,20 @@ function Groups() {
           />
 
           <Modal show={showModal} onHide={toggleConfirmModal}>
-            <Modal.Body>
-              Are you sure you want to delete&nbsp;
-              {selectedRows.current.length === 1 ? (
-                <span>
-                  <b>"{selectedRows.current[0].original.name}"</b> group ?
-                </span>
-              ) : (
-                <span>
-                  <b>"{selectedRows.current.length}"</b> groups ?
-                </span>
-              )}
-            </Modal.Body>
+            <Modal.Header closeButton>
+              <span className="text-word-break">
+                Are you sure you want to delete the&nbsp;
+                {selectedRows.current.length === 1 ? (
+                  <>
+                    <b>"{selectedRows.current[0].original.name}"</b> group ?
+                  </>
+                ) : (
+                  <>
+                    selected<b> {selectedRows.current.length}</b> groups?
+                  </>
+                )}
+              </span>
+            </Modal.Header>
             <Modal.Footer>
               <Button
                 variant="secondary"
@@ -692,7 +687,7 @@ function Groups() {
                   User's List :
                   <div
                     className="pl-2 more-less-width text-truncate"
-                    title={showAssociateUserModal.groupName}
+                    title={showAssociateUserModal?.groupName}
                   >
                     {showAssociateUserModal.groupName}
                   </div>

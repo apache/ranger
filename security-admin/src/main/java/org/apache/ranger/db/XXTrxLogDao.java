@@ -20,7 +20,9 @@
  package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.NoResultException;
 
@@ -101,6 +103,16 @@ public class XXTrxLogDao extends BaseDao<XXTrxLog> {
 		}
 		return rowAffected;
 	}
+
+    public long deleteOlderThan(int olderThanInDays) {
+        Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
+        logger.info("Deleting x_trx_log records that are older than " + olderThanInDays + " days, that is, older than " + since);
+
+        long ret = getEntityManager().createNamedQuery("XXTrxLog.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
+
+        logger.info("Deleted " + ret + " x_trx_log records");
+        return ret;
+    }
 
 }
 
