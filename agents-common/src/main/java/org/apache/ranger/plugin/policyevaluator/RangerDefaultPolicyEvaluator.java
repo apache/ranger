@@ -162,7 +162,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 			dataMaskEvaluators  = createDataMaskPolicyItemEvaluators(policy, serviceDef, options, policy.getDataMaskPolicyItems());
 			rowFilterEvaluators = createRowFilterPolicyItemEvaluators(policy, serviceDef, options, policy.getRowFilterPolicyItems());
-			conditionEvaluators = createRangerPolicyConditionEvaluator(policy, serviceDef, options);
+			conditionEvaluators = createPolicyConditionEvaluators(policy, serviceDef, options);
 		} else {
 			validityScheduleEvaluators = Collections.<RangerValidityScheduleEvaluator>emptyList();
 			allowEvaluators            = Collections.<RangerPolicyItemEvaluator>emptyList();
@@ -1542,20 +1542,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	private List<RangerConditionEvaluator> createRangerPolicyConditionEvaluator(RangerPolicy policy,
-																				RangerServiceDef serviceDef,
-																				RangerPolicyEngineOptions options) {
-		List<RangerConditionEvaluator> rangerConditionEvaluators = null;
+	private List<RangerConditionEvaluator> createPolicyConditionEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
+		List<RangerConditionEvaluator> ret = RangerCustomConditionEvaluator.getInstance().getPolicyConditionEvaluators(policy, serviceDef, options);
 
-		RangerCustomConditionEvaluator rangerConditionEvaluator = new RangerCustomConditionEvaluator();
+		customConditionsCount += ret.size();
 
-		rangerConditionEvaluators = rangerConditionEvaluator.getRangerPolicyConditionEvaluator(policy,serviceDef,options);
-
-		if (rangerConditionEvaluators != null) {
-			customConditionsCount += rangerConditionEvaluators.size();
-		}
-
-		return rangerConditionEvaluators;
+		return ret;
 	}
 
 }

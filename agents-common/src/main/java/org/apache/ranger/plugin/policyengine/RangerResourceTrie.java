@@ -553,7 +553,6 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
 
             builderThreads.get(index).add(resource, isRecursive, evaluator);
         } else {
-            currentRoot.undoSetup();
             currentRoot.addWildcardEvaluator(evaluator);
         }
 
@@ -570,7 +569,6 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
 
         if(isWildcard || isRecursive) {
-            curr.undoSetup();
             curr.addWildcardEvaluator(evaluator);
         } else {
             curr.addEvaluator(evaluator);
@@ -1301,7 +1299,6 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
 
         private void removeEvaluatorFromSubtree(U evaluator) {
             if (CollectionUtils.isNotEmpty(wildcardEvaluators) && wildcardEvaluators.contains(evaluator)) {
-                undoSetup();
                 removeWildcardEvaluator(evaluator);
             } else {
                 removeEvaluator(evaluator);

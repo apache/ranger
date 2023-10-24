@@ -37,7 +37,6 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.*;
-import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -56,6 +55,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR;
+
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
 		extends RangerBaseModelService<T, V> {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
@@ -63,10 +64,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
 	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
 	public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
-	public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR   = RangerScriptConditionEvaluator.class.getCanonicalName();
-	public static final String IMPLICIT_CONDITION_EXPRESSION_NAME        = "_expression";
-	public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL       = "Enter boolean expression";
-	public static final String IMPLICIT_CONDITION_EXPRESSION_DESC        = "Boolean expression";
 
 	@Autowired
 	RangerAuditFields<?> rangerAuditFields;
@@ -728,7 +725,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 		if (implicitConditionEnabled) {
 			boolean                        exists        = false;
-			Long                           maxItemId     = 0L;
 			List<RangerPolicyConditionDef> conditionDefs = serviceDef.getPolicyConditions();
 
 			if (conditionDefs == null) {
@@ -741,26 +737,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 					break;
 				}
-
-				if (conditionDef.getItemId() != null && maxItemId < conditionDef.getItemId()) {
-					maxItemId = conditionDef.getItemId();
-				}
 			}
 
 			if (!exists) {
-				RangerPolicyConditionDef conditionDef = new RangerPolicyConditionDef();
-				Map<String, String>      options      = new HashMap<>();
+				long maxItemId = ServiceDefUtil.getConditionsMaxItemId(conditionDefs);
 
-				options.put("ui.isMultiline", "true");
-
-				conditionDef.setItemId(maxItemId + 1);
-				conditionDef.setName(IMPLICIT_CONDITION_EXPRESSION_NAME);
-				conditionDef.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
-				conditionDef.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
-				conditionDef.setEvaluator(IMPLICIT_CONDITION_EXPRESSION_EVALUATOR);
-				conditionDef.setEvaluatorOptions(options);
-				conditionDef.setUiHint("{ \"isMultiline\":true }");
-				conditionDefs.add(conditionDef);
+				conditionDefs.add(ServiceDefUtil.createImplicitExpressionConditionDef(maxItemId + 1));
 
 				serviceDef.setPolicyConditions(conditionDefs);
 
