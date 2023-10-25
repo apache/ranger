@@ -21,15 +21,14 @@ import React, { Suspense, lazy, Component } from "react";
 import { Route, Routes, HashRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
-
+import { hasAccessToTab, isUser } from "./utils/XAUtils";
 import ErrorBoundary from "Views/ErrorBoundary";
 import ErrorPage from "./views/ErrorPage";
 import { CommonScrollButton, Loader } from "../src/components/CommonComponents";
 import history from "Utils/history";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { setUserProfile, setServiceDef } from "Utils/appState";
 import LayoutComp from "Views/Layout";
-import { getServiceDef, setServiceDef } from "./utils/appState";
-import { filter, sortBy } from "lodash";
+import { filter, sortBy, has } from "lodash";
 
 const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
@@ -110,14 +109,7 @@ export default class App extends Component {
         window.location.hostname +
         (window.location.port ? ":" + window.location.port : "");
     }
-    // Proxy URL for Ranger UI doesn't work without trailing slash so add slash
-    // let pathName = /\/[\w-]+.(jsp|html)/;
-    // if (
-    //   !pathName.test(window.location.pathname) &&
-    //   window.location.pathname.slice(-1) !== "/"
-    // ) {
-    //   window.location.pathname += "/";
-    // }
+
     let baseUrl =
       window.location.origin +
       window.location.pathname.substr(
@@ -139,6 +131,8 @@ export default class App extends Component {
     let getServiceDefData = [];
     let resourceServiceDef = [];
     let tagServiceDef = [];
+    let serviceDefUrl = "plugins/definitions";
+
     try {
       const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
       fetchCSRFConf();
@@ -153,30 +147,33 @@ export default class App extends Component {
         `Error occurred while fetching profile or CSRF headers! ${error}`
       );
     }
+
+    if (hasAccessToTab("Resource Based Policies")) {
+      serviceDefUrl = "plugins/definitions";
+    } else if (hasAccessToTab("Tag Based Policies") && isUser()) {
+      serviceDefUrl = "plugins/definitions/name/tag";
+    }
+
     try {
       const { fetchApi } = await import("Utils/fetchAPI");
       getServiceDefData = await fetchApi({
-        url: `plugins/definitions`
+        url: serviceDefUrl
       });
 
-      tagServiceDef = sortBy(
-        filter(getServiceDefData.data.serviceDefs, ["name", "tag"]),
-        "id"
-      );
+      if (has(getServiceDefData.data, "serviceDefs")) {
+        getServiceDefData = getServiceDefData.data.serviceDefs;
+      } else {
+        getServiceDefData = [getServiceDefData.data];
+      }
+
+      tagServiceDef = sortBy(filter(getServiceDefData, ["name", "tag"]), "id");
 
       resourceServiceDef = sortBy(
-        filter(
-          getServiceDefData.data.serviceDefs,
-          (serviceDef) => serviceDef.name !== "tag"
-        ),
+        filter(getServiceDefData, (serviceDef) => serviceDef.name !== "tag"),
         "id"
       );
 
-      setServiceDef(
-        resourceServiceDef,
-        tagServiceDef,
-        getServiceDefData.data.serviceDefs
-      );
+      setServiceDef(resourceServiceDef, tagServiceDef, getServiceDefData);
     } catch (error) {
       console.error(
         `Error occurred while fetching serviceDef details ! ${error}`

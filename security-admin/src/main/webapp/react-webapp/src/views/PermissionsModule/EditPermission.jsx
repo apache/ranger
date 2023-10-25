@@ -266,7 +266,7 @@ const EditPermission = () => {
   const fetchUsers = async (inputValue) => {
     let params = { isVisible: 1 };
     let usersOp = [];
-
+    let notAllowedRoles = ["ROLE_KEY_ADMIN", "ROLE_KEY_ADMIN_AUDITOR"];
     if (inputValue) {
       params["name"] = inputValue || "";
     }
@@ -276,7 +276,12 @@ const EditPermission = () => {
         url: "xusers/users",
         params: params
       });
-      usersOp = userResp.data?.vXUsers;
+      usersOp =
+        permissionData.module == "Tag Based Policies"
+          ? userResp.data?.vXUsers.filter(
+              (users) => !notAllowedRoles.includes(users.userRoleList[0])
+            )
+          : userResp.data?.vXUsers;
     } catch (error) {
       console.error(`Error occurred while fetching Users ! ${error}`);
       serverError(error);
