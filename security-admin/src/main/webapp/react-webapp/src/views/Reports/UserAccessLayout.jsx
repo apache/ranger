@@ -121,7 +121,7 @@ function UserAccessLayout() {
     }
 
     let resourceServiceDefs = filter(
-      serviceDefsResp.data.serviceDefs,
+      serviceDefsResp?.data?.serviceDefs,
       (serviceDef) =>
         isKMSRole ? serviceDef.name == "kms" : serviceDef.name != "kms"
     );
@@ -139,7 +139,7 @@ function UserAccessLayout() {
     }
 
     let serviceDefsList = map(
-      serviceDefsResp.data.serviceDefs,
+      serviceDefsResp?.data?.serviceDefs,
       function (serviceDef) {
         return { value: serviceDef.name, label: serviceDef.name };
       }
