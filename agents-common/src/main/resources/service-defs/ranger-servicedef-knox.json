@@ -52,7 +52,8 @@
 		{
 			"itemId": 1,
 			"name": "allow",
-			"label": "Allow"
+			"label": "Allow",
+			"category": "READ"
 		}
 	],
 
