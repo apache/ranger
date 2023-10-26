@@ -37,12 +37,14 @@ import {
   find,
   isEmpty,
   pick,
-  isObject,
   isArray,
   isEqual,
   forIn,
   has,
-  maxBy
+  maxBy,
+  map,
+  isUndefined,
+  forEach
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -58,7 +60,8 @@ import moment from "moment";
 import {
   InfoIcon,
   commonBreadcrumb,
-  isPolicyExpired
+  isPolicyExpired,
+  getResourcesDefVal
 } from "../../utils/XAUtils";
 import { useAccordionToggle } from "react-bootstrap/AccordionToggle";
 import AccordionContext from "react-bootstrap/AccordionContext";
@@ -67,11 +70,14 @@ import { RegexMessage } from "../../utils/XAMessages";
 import { policyInfo } from "Utils/XAUtils";
 import { BlockUi } from "../../components/CommonComponents";
 import { getServiceDef } from "../../utils/appState";
+import { FieldArray } from "react-final-form-arrays";
 
 const noneOptions = {
   label: "None",
   value: "none"
 };
+
+const isMultiResources = true;
 
 const initialState = {
   loader: true,
@@ -81,7 +87,7 @@ const initialState = {
   formData: {}
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -109,7 +115,7 @@ const Condition = ({ when, is, children }) => (
   </Field>
 );
 
-export default function AddUpdatePolicyForm(props) {
+export default function AddUpdatePolicyForm() {
   let { serviceId, policyType, policyId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -127,9 +133,11 @@ export default function AddUpdatePolicyForm(props) {
   const [showDelete, setShowDelete] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
   const toastId = React.useRef(null);
+  const [changePolicyItemPermissions, setChangePolicyItemPermissions] =
+    useState(false);
 
   useEffect(() => {
-    fetchInitalData();
+    fetchInitialData();
   }, []);
 
   const showDeleteModal = () => {
@@ -213,11 +221,11 @@ export default function AddUpdatePolicyForm(props) {
     }));
   };
 
-  const fetchInitalData = async () => {
+  const fetchInitialData = async () => {
     let serviceData = await fetchServiceDetails();
 
-    let serviceCompData = serviceDefs?.allServiceDefs?.find((servicedef) => {
-      return servicedef.name == serviceData.type;
+    let serviceCompData = serviceDefs?.allServiceDefs?.find((serviceDef) => {
+      return serviceDef.name == serviceData.type;
     });
     if (serviceCompData) {
       let serviceDefPolicyType = 0;
@@ -359,6 +367,20 @@ export default function AddUpdatePolicyForm(props) {
             serviceCompData
           )
         : [{}];
+    let serviceCompResourcesDetails = getResourcesDefVal(
+      serviceCompData,
+      data.policyType
+    );
+    if (serviceCompResourcesDetails) {
+      forEach(serviceCompResourcesDetails, (val) => {
+        if (
+          val.accessTypeRestrictions &&
+          val.accessTypeRestrictions.length > 0
+        ) {
+          setChangePolicyItemPermissions(true);
+        }
+      });
+    }
     if (policyId) {
       data.policyName = policyData?.name;
       data.isEnabled = policyData?.isEnabled;
@@ -370,51 +392,91 @@ export default function AddUpdatePolicyForm(props) {
         policyData?.policyLabels?.map((val) => {
           return { label: val, value: val };
         });
-      let serviceCompResourcesDetails;
-      if (
-        RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ==
-        policyData?.policyType
-      ) {
-        serviceCompResourcesDetails = serviceCompData?.dataMaskDef?.resources;
-      } else if (
-        RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
-        policyData?.policyType
-      ) {
-        serviceCompResourcesDetails = serviceCompData?.rowFilterDef?.resources;
-      } else {
-        serviceCompResourcesDetails = serviceCompData?.resources;
-      }
       if (policyData?.resources) {
-        let lastResourceLevel = [];
-        Object.entries(policyData?.resources).map(([key, value]) => {
-          let setResources = find(serviceCompResourcesDetails, ["name", key]);
-          data[`resourceName-${setResources?.level}`] = setResources;
-          data[`value-${setResources?.level}`] = value.values.map((m) => {
-            return { label: m, value: m };
+        if (!isMultiResources) {
+          let lastResourceLevel = [];
+          Object.entries(policyData?.resources).map(([key, value]) => {
+            let setResources = find(serviceCompResourcesDetails, ["name", key]);
+            data[`resourceName-${setResources?.level}`] = setResources;
+            data[`value-${setResources?.level}`] = value.values.map((m) => {
+              return { label: m, value: m };
+            });
+            if (setResources?.excludesSupported) {
+              data[`isExcludesSupport-${setResources?.level}`] =
+                value.isExcludes == false;
+            }
+            if (setResources?.recursiveSupported) {
+              data[`isRecursiveSupport-${setResources?.level}`] =
+                value?.isRecursive;
+            }
+            lastResourceLevel.push({
+              level: setResources.level,
+              name: setResources.name
+            });
           });
-          if (setResources?.excludesSupported) {
-            data[`isExcludesSupport-${setResources?.level}`] =
-              value.isExcludes == false;
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(serviceCompResourcesDetails, [
+            "parent",
+            lastResourceLevel.name
+          ]);
+          if (setLastResources && setLastResources?.isValidLeaf) {
+            data[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
           }
-          if (setResources?.recursiveSupported) {
-            data[`isRecursiveSupport-${setResources?.level}`] =
-              value?.isRecursive;
+        } else {
+          if (policyData.additionalResources || policyData.resources) {
+            policyData.additionalResources = [
+              policyData.resources,
+              ...(policyData.additionalResources || [])
+            ];
+            data.additionalResources = [];
+            map(policyData.additionalResources, function (resourceObj) {
+              let lastResourceLevel = [],
+                additionalResourcesObj = {};
+              Object.entries(resourceObj).map(([key, value]) => {
+                let setResources = find(serviceCompResourcesDetails, [
+                  "name",
+                  key
+                ]);
+                additionalResourcesObj[`resourceName-${setResources?.level}`] =
+                  setResources;
+                additionalResourcesObj[`value-${setResources?.level}`] =
+                  value.values.map((m) => {
+                    return { label: m, value: m };
+                  });
+                if (setResources?.excludesSupported) {
+                  additionalResourcesObj[
+                    `isExcludesSupport-${setResources?.level}`
+                  ] = value.isExcludes == false;
+                }
+                if (setResources?.recursiveSupported) {
+                  additionalResourcesObj[
+                    `isRecursiveSupport-${setResources?.level}`
+                  ] = value?.isRecursive;
+                }
+                lastResourceLevel.push({
+                  level: setResources.level,
+                  name: setResources.name
+                });
+              });
+              lastResourceLevel = maxBy(lastResourceLevel, "level");
+              let setLastResources = find(serviceCompResourcesDetails, [
+                "parent",
+                lastResourceLevel.name
+              ]);
+              if (setLastResources && setLastResources?.isValidLeaf) {
+                additionalResourcesObj[
+                  `resourceName-${setLastResources.level}`
+                ] = {
+                  label: "None",
+                  value: "none"
+                };
+              }
+              data.additionalResources.push(additionalResourcesObj);
+            });
           }
-          lastResourceLevel.push({
-            level: setResources.level,
-            name: setResources.name
-          });
-        });
-        lastResourceLevel = maxBy(lastResourceLevel, "level");
-        let setLastResources = find(serviceCompResourcesDetails, [
-          "parent",
-          lastResourceLevel.name
-        ]);
-        if (setLastResources && setLastResources?.isValidLeaf) {
-          data[`resourceName-${setLastResources.level}`] = {
-            label: "None",
-            value: "none"
-          };
         }
       }
       if (policyData?.validitySchedules) {
@@ -439,7 +501,6 @@ export default function AddUpdatePolicyForm(props) {
       /* Policy condition */
       if (policyData?.conditions?.length > 0) {
         data.conditions = {};
-
         for (let val of policyData.conditions) {
           let conditionObj = find(
             policyConditionUpdatedJSON(serviceCompData?.policyConditions),
@@ -458,6 +519,9 @@ export default function AddUpdatePolicyForm(props) {
           }
         }
       }
+    }
+    if (isMultiResources && isUndefined(data.additionalResources)) {
+      data.additionalResources = [{}];
     }
     data.isDenyAllElse = policyData?.isDenyAllElse || false;
     return data;
@@ -573,8 +637,8 @@ export default function AddUpdatePolicyForm(props) {
         }
         let tableList = [];
         let tagAccessType = groupBy(accessTypesObj, function (m) {
-          let tagval = m;
-          return tagval.substr(0, tagval.indexOf(":"));
+          let tagVal = m;
+          return tagVal.substr(0, tagVal.indexOf(":"));
         });
         for (let tagObjData in tagAccessType) {
           tableList.push({
@@ -689,17 +753,10 @@ export default function AddUpdatePolicyForm(props) {
     data.service = serviceDetails.name;
     let serviceCompRes;
     if (values.policyType != null) {
-      if (
-        values.policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value
-      )
-        serviceCompRes = serviceCompDetails.dataMaskDef.resources;
-      if (
-        values.policyType ==
-        RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value
-      )
-        serviceCompRes = serviceCompDetails.rowFilterDef.resources;
-      if (values.policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value)
-        serviceCompRes = serviceCompDetails.resources;
+      serviceCompRes = getResourcesDefVal(
+        serviceCompDetails,
+        values.policyType
+      );
     }
     const grpResources = groupBy(serviceCompRes || [], "level");
     let grpResourcesKeys = [];
@@ -708,28 +765,80 @@ export default function AddUpdatePolicyForm(props) {
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     data.resources = {};
-    for (const level of grpResourcesKeys) {
-      if (
-        values[`resourceName-${level}`] &&
-        values[`resourceName-${level}`].value !== noneOptions.value
-      ) {
-        let defObj = serviceCompRes.find(function (m) {
-          if (m.name == values[`resourceName-${level}`].name) {
-            return m;
+    if (!isMultiResources) {
+      for (const level of grpResourcesKeys) {
+        if (
+          values[`resourceName-${level}`] &&
+          values[`resourceName-${level}`].value !== noneOptions.value
+        ) {
+          let defObj = serviceCompRes.find(function (m) {
+            if (m.name == values[`resourceName-${level}`].name) {
+              return m;
+            }
+          });
+          data.resources[values[`resourceName-${level}`].name] = {
+            values: isArray(values[`value-${level}`])
+              ? values[`value-${level}`]?.map(({ value }) => value)
+              : [values[`value-${level}`].value]
+          };
+          if (defObj?.excludesSupported) {
+            data.resources[values[`resourceName-${level}`].name]["isExcludes"] =
+              defObj.excludesSupported &&
+              values[`isExcludesSupport-${level}`] == false;
           }
-        });
-        data.resources[values[`resourceName-${level}`].name] = {
-          isExcludes:
-            defObj.excludesSupported &&
-            values[`isExcludesSupport-${level}`] == false,
-          isRecursive:
-            defObj.recursiveSupported &&
-            !(values[`isRecursiveSupport-${level}`] === false),
-          values: isArray(values[`value-${level}`])
-            ? values[`value-${level}`]?.map(({ value }) => value)
-            : [values[`value-${level}`].value]
-        };
+          if (defObj?.recursiveSupported) {
+            data.resources[values[`resourceName-${level}`].name][
+              "isRecursive"
+            ] =
+              defObj.recursiveSupported &&
+              !(values[`isRecursiveSupport-${level}`] === false);
+          }
+        }
       }
+    } else {
+      data["additionalResources"] = [];
+      map(values.additionalResources, (resourceValue) => {
+        let additionalResourcesObj = {};
+        for (const level of grpResourcesKeys) {
+          if (
+            resourceValue[`resourceName-${level}`] &&
+            resourceValue[`resourceName-${level}`].value !== noneOptions.value
+          ) {
+            let defObj = serviceCompRes.find(function (m) {
+              if (m.name == resourceValue[`resourceName-${level}`].name) {
+                return m;
+              }
+            });
+
+            additionalResourcesObj[
+              resourceValue[`resourceName-${level}`].name
+            ] = {
+              values: isArray(resourceValue[`value-${level}`])
+                ? resourceValue[`value-${level}`]?.map(({ value }) => value)
+                : [resourceValue[`value-${level}`].value]
+            };
+            if (defObj?.excludesSupported) {
+              additionalResourcesObj[
+                resourceValue[`resourceName-${level}`].name
+              ]["isExcludes"] =
+                defObj.excludesSupported &&
+                resourceValue[`isExcludesSupport-${level}`] == false;
+            }
+            if (defObj?.recursiveSupported) {
+              additionalResourcesObj[
+                resourceValue[`resourceName-${level}`].name
+              ]["isRecursive"] =
+                defObj.recursiveSupported &&
+                !(resourceValue[`isRecursiveSupport-${level}`] === false);
+            }
+          }
+        }
+        data["additionalResources"].push(additionalResourcesObj);
+      });
+    }
+    if (data?.additionalResources?.length > 0) {
+      data.resources = data.additionalResources[0];
+      data.additionalResources.shift();
     }
     if (values?.validitySchedules) {
       data["validitySchedules"] = [];
@@ -908,19 +1017,10 @@ export default function AddUpdatePolicyForm(props) {
   };
 
   const resourceErrorCheck = (errors, values) => {
-    let serviceCompResourcesDetails;
-    if (
-      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == values.policyType
-    ) {
-      serviceCompResourcesDetails = serviceCompDetails.dataMaskDef.resources;
-    } else if (
-      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == values.policyType
-    ) {
-      serviceCompResourcesDetails = serviceCompDetails.rowFilterDef.resources;
-    } else {
-      serviceCompResourcesDetails = serviceCompDetails.resources;
-    }
-
+    let serviceCompResourcesDetails = getResourcesDefVal(
+      serviceCompDetails,
+      values.policyType
+    );
     const grpResources = groupBy(serviceCompResourcesDetails || [], "level");
     let grpResourcesKeys = [];
     for (const resourceKey in grpResources) {
@@ -928,8 +1028,14 @@ export default function AddUpdatePolicyForm(props) {
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     for (const key of grpResourcesKeys) {
-      if (errors[`value-${key}`] !== undefined) {
-        return true;
+      if (isMultiResources) {
+        if (errors?.additionalResources?.length > 0) {
+          return true;
+        }
+      } else {
+        if (errors[`value-${key}`] !== undefined) {
+          return true;
+        }
       }
     }
   };
@@ -1020,21 +1126,19 @@ export default function AddUpdatePolicyForm(props) {
               }}
               render={({
                 handleSubmit,
-                submitting,
                 values,
                 invalid,
                 errors,
                 dirty,
                 form: {
-                  mutators: { push: addPolicyItem, pop: removePolicyItem, move }
+                  mutators: { push: addPolicyItem, pop: removePolicyItem }
                 },
-                form,
                 dirtyFields,
                 modified,
                 initialValues
               }) => (
                 <>
-                  <PromtDialog
+                  <PromptDialog
                     isDirtyField={
                       dirty == true || !isEqual(initialValues, values)
                         ? isDirtyFieldCheck(
@@ -1105,7 +1209,7 @@ export default function AddUpdatePolicyForm(props) {
                         </Alert>
                       )}
                     <fieldset>
-                      <p className="formHeader">Policy Details</p>
+                      <p className="formHeader">Policy Details : </p>
                     </fieldset>
                     <Row className="user-role-grp-form">
                       <Col md={8}>
@@ -1195,7 +1299,7 @@ export default function AddUpdatePolicyForm(props) {
                                         >
                                           {
                                             RegexMessage.MESSAGE
-                                              .policynameinfoiconmessage
+                                              .policyNameInfoIconMessage
                                           }
                                         </p>
                                       }
@@ -1278,16 +1382,17 @@ export default function AddUpdatePolicyForm(props) {
                             </FormB.Group>
                           )}
                         />
-                        <ResourceComp
-                          serviceDetails={serviceDetails}
-                          serviceCompDetails={serviceCompDetails}
-                          formValues={values}
-                          policyType={
-                            policyId ? policyData.policyType : policyType
-                          }
-                          policyItem={true}
-                          policyId={policyId}
-                        />
+                        {!isMultiResources && (
+                          <ResourceComp
+                            serviceDetails={serviceDetails}
+                            serviceCompDetails={serviceCompDetails}
+                            formValues={values}
+                            policyType={
+                              policyId ? policyData.policyType : policyType
+                            }
+                            policyId={policyId}
+                          />
+                        )}
                         <Field
                           className="form-control"
                           name="description"
@@ -1388,7 +1493,7 @@ export default function AddUpdatePolicyForm(props) {
                                   {values?.conditions &&
                                   !isEmpty(values.conditions) ? (
                                     Object.keys(values.conditions).map(
-                                      (keyName, keyIndex) => {
+                                      (keyName) => {
                                         if (
                                           values.conditions[keyName] != "" &&
                                           values.conditions[keyName] != null
@@ -1442,7 +1547,64 @@ export default function AddUpdatePolicyForm(props) {
                         )}
                       </Col>
                     </Row>
-                    {/* ------------------------------------------------- */}
+                    {/* --------------------- Multiple Resources ---------------------------- */}
+                    {isMultiResources && (
+                      <>
+                        <fieldset>
+                          <p className="formHeader">Resources :</p>
+                        </fieldset>
+                        <>
+                          <FieldArray name="additionalResources">
+                            {({ fields }) =>
+                              fields.map((name, index) => (
+                                <Row className="resource-block">
+                                  <Col md={8}>
+                                    <ResourceComp
+                                      serviceDetails={serviceDetails}
+                                      serviceCompDetails={serviceCompDetails}
+                                      formValues={
+                                        values.additionalResources[index]
+                                      }
+                                      policyType={policyType}
+                                      name={name}
+                                      isMultiResources={isMultiResources}
+                                    />
+                                  </Col>
+                                  {values.additionalResources.length > 1 && (
+                                    <Col md={4}>
+                                      <Button
+                                        variant="danger"
+                                        size="sm"
+                                        title="Remove"
+                                        onClick={() => fields.remove(index)}
+                                        data-action="delete"
+                                        data-cy="delete"
+                                      >
+                                        <i className="fa-fw fa fa-remove"></i>
+                                      </Button>
+                                    </Col>
+                                  )}
+                                </Row>
+                              ))
+                            }
+                          </FieldArray>
+                          <div className="wrap">
+                            <Button
+                              type="button"
+                              className="btn-mini"
+                              onClick={() =>
+                                addPolicyItem("additionalResources", {})
+                              }
+                              data-action="addTime"
+                              data-cy="addTime"
+                            >
+                              <i className="fa-fw fa fa-plus"></i> Add Resource
+                            </Button>
+                          </div>
+                        </>
+                      </>
+                    )}
+                    {/*----------------------- Policy Item --------------------------- */}
                     {values.policyType == 0 ? (
                       <div>
                         <div>
@@ -1465,6 +1627,10 @@ export default function AddUpdatePolicyForm(props) {
                                         fetchUsersData={fetchUsersData}
                                         fetchGroupsData={fetchGroupsData}
                                         fetchRolesData={fetchRolesData}
+                                        changePolicyItemPermissions={
+                                          changePolicyItemPermissions
+                                        }
+                                        isMultiResources={isMultiResources}
                                       />
                                     </div>
                                     {serviceCompDetails?.options
@@ -1489,6 +1655,10 @@ export default function AddUpdatePolicyForm(props) {
                                             fetchUsersData={fetchUsersData}
                                             fetchGroupsData={fetchGroupsData}
                                             fetchRolesData={fetchRolesData}
+                                            changePolicyItemPermissions={
+                                              changePolicyItemPermissions
+                                            }
+                                            isMultiResources={isMultiResources}
                                           />
                                         </div>
                                       </>
@@ -1554,6 +1724,10 @@ export default function AddUpdatePolicyForm(props) {
                                             fetchUsersData={fetchUsersData}
                                             fetchGroupsData={fetchGroupsData}
                                             fetchRolesData={fetchRolesData}
+                                            changePolicyItemPermissions={
+                                              changePolicyItemPermissions
+                                            }
+                                            isMultiResources={isMultiResources}
                                           />
                                         </div>
                                         <fieldset>
@@ -1574,6 +1748,10 @@ export default function AddUpdatePolicyForm(props) {
                                             fetchUsersData={fetchUsersData}
                                             fetchGroupsData={fetchGroupsData}
                                             fetchRolesData={fetchRolesData}
+                                            changePolicyItemPermissions={
+                                              changePolicyItemPermissions
+                                            }
+                                            isMultiResources={isMultiResources}
                                           />
                                         </div>
                                       </>
@@ -1605,6 +1783,10 @@ export default function AddUpdatePolicyForm(props) {
                                     fetchUsersData={fetchUsersData}
                                     fetchGroupsData={fetchGroupsData}
                                     fetchRolesData={fetchRolesData}
+                                    changePolicyItemPermissions={
+                                      changePolicyItemPermissions
+                                    }
+                                    isMultiResources={isMultiResources}
                                   />
                                 </div>
                               </>
@@ -1633,6 +1815,10 @@ export default function AddUpdatePolicyForm(props) {
                                       fetchUsersData={fetchUsersData}
                                       fetchGroupsData={fetchGroupsData}
                                       fetchRolesData={fetchRolesData}
+                                      changePolicyItemPermissions={
+                                        changePolicyItemPermissions
+                                      }
+                                      isMultiResources={isMultiResources}
                                     />
                                   </div>
                                 </>
@@ -1653,15 +1839,15 @@ export default function AddUpdatePolicyForm(props) {
                                   resourceErrorCheck(errors, values)
                                 ) {
                                   let selector =
-                                    document.getElementById("isError") ||
-                                    document.getElementById(key) ||
-                                    document.querySelector(
+                                    document?.getElementById("isError") ||
+                                    document?.getElementById(key) ||
+                                    document?.querySelector(
                                       `input[name=${key}]`
                                     ) ||
-                                    document.querySelector(
+                                    document?.querySelector(
                                       `input[id=${key}]`
                                     ) ||
-                                    document.querySelector(
+                                    document?.querySelector(
                                       `span[className="invalid-field"]`
                                     );
                                   scrollToError(selector);

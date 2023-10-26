@@ -2554,3 +2554,8 @@ li.list-group-item:hover {
 .text-word-break {
   word-break: break-all;
 }
+.resource-block {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #dddddd;
+  margin:1rem 2rem;
+}

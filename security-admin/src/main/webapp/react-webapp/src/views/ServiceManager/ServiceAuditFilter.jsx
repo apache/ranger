@@ -561,7 +561,6 @@ export default function ServiceAuditFilter(props) {
         handleSave={handleSave}
         modelState={modelState}
         handleClose={handleClose}
-        policyItem={false}
       />
     </div>
   );

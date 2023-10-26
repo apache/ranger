@@ -68,6 +68,7 @@ export default function ModalResourceComp(props) {
                         serviceCompDetails={serviceCompDetails}
                         formValues={values}
                         policyType={0}
+                        isMultiResources={false}
                       />
                     </div>
                   )}
