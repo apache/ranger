@@ -223,6 +223,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				tagAccessType.setName(prefix + svcAccessType.getName());
 				tagAccessType.setLabel(svcAccessType.getLabel());
 				tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
+				tagAccessType.setCategory(svcAccessType.getCategory());
 
 				tagAccessType.setImpliedGrants(new HashSet<String>());
 				if (CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {

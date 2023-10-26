@@ -786,6 +786,7 @@ CREATE TABLE `x_access_type_def` (
 `name` varchar(1024) DEFAULT NULL,
 `label` varchar(1024) DEFAULT NULL,
 `rb_key_label` varchar(1024) DEFAULT NULL,
+`category` smallint DEFAULT NULL,
 `sort_order` int DEFAULT 0,
 `datamask_options` varchar(1024) NULL DEFAULT NULL,
 `rowfilter_options` varchar(1024) NULL DEFAULT NULL,
