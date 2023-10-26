@@ -1365,7 +1365,6 @@ const SecurityZoneForm = () => {
                     modelState={modelState}
                     handleSave={handleSave}
                     handleClose={handleClose}
-                    policyItem={true}
                   />
                 </Col>
               </Row>

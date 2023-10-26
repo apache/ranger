@@ -2559,6 +2559,7 @@ li.list-group-item:hover {
 .text-word-break {
   word-break: break-all;
 }
+
 .gds-table {
   margin-left: auto;
   margin-right: auto;
@@ -2949,4 +2950,10 @@ textarea.gds-placeholder::placeholder,
   top: 8px;
   right: 8px;
   cursor: pointer;
+}
+
+.resource-block {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #dddddd;
+  margin:1rem 2rem;
 }

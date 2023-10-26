@@ -169,7 +169,7 @@ export default function PolicyConditionsComp(props) {
                                       <p className="pd-10">
                                         {
                                           RegexMessage.MESSAGE
-                                            .policyconditioninfoicon
+                                            .policyConditionInfoIcon
                                         }
                                       </p>
                                     }
