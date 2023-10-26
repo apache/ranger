@@ -39,6 +39,7 @@ import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -410,6 +411,11 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		xObj.setLabel(vObj.getLabel());
 		xObj.setRbkeylabel(vObj.getRbKeyLabel());
 		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
+		if (vObj.getCategory() != null) {
+			xObj.setCategory((short) vObj.getCategory().ordinal());
+		}
+
 		return xObj;
 	}
 	
@@ -431,6 +437,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		vObj.setLabel(xObj.getLabel());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
 		vObj.setImpliedGrants(impliedGrants);
+
+		if (xObj.getCategory() != null) {
+			vObj.setCategory(toAccessTypeCategory(xObj.getCategory()));
+		}
 
 		return vObj;
 	}
@@ -752,6 +762,20 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("addImplicitConditionExpressionIfNeeded(serviceType={}): implicitConditionDefault={}, implicitConditionEnabled={}, conditionDefs={}, ret={}", serviceDef.getName(), implicitConditionDefault, implicitConditionEnabled, serviceDef.getPolicyConditions(), ret);
+		}
+
+		return ret;
+	}
+
+	private AccessTypeCategory toAccessTypeCategory(short val) {
+		AccessTypeCategory ret = null;
+
+		for (AccessTypeCategory category : AccessTypeCategory.values()) {
+			if (category.ordinal() == val) {
+				ret = category;
+
+				break;
+			}
 		}
 
 		return ret;
