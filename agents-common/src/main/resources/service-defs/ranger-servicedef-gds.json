@@ -47,7 +47,8 @@
     { "itemId": 2, "name": "_READ",    "label": "_READ" },
     { "itemId": 3, "name": "_UPDATE",  "label": "_UPDATE" },
     { "itemId": 4, "name": "_DELETE",  "label": "_DELETE" },
-    { "itemId": 5, "name": "_MANAGE",  "label": "_MANAGE" }
+    { "itemId": 5, "name": "_MANAGE",  "label": "_MANAGE" },
+    { "itemId": 6, "name": "_ALL",     "label": "_ALL" }
   ],
 
   "configs": [

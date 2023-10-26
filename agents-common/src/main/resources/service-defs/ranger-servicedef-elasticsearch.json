@@ -57,13 +57,15 @@
 		{
 			"itemId": 2,
 			"name": "monitor",
-			"label": "monitor"
+			"label": "monitor",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "manage",
 			"label": "manage",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"monitor"
@@ -74,6 +76,7 @@
 			"itemId": 4,
 			"name": "view_index_metadata",
 			"label": "view_index_metadata",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"indices_search_shards"
@@ -83,13 +86,15 @@
 		{
 			"itemId": 5,
 			"name": "read",
-			"label": "read"
+			"label": "read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 6,
 			"name": "read_cross_cluster",
 			"label": "read_cross_cluster",
+			"category": "READ",
 			"impliedGrants":
 			[
 				"indices_search_shards"
@@ -100,6 +105,7 @@
 			"itemId": 7,
 			"name": "index",
 			"label": "index",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"indices_put",
@@ -112,6 +118,7 @@
 			"itemId": 8,
 			"name": "create",
 			"label": "create",
+			"category": "CREATE",
 			"impliedGrants":
 			[
 				"indices_put",
@@ -124,6 +131,7 @@
 			"itemId": 9,
 			"name": "delete",
 			"label": "delete",
+			"category": "DELETE",
 			"impliedGrants":
 			[
 				"indices_bulk"
@@ -134,6 +142,7 @@
 			"itemId": 10,
 			"name": "write",
 			"label": "write",
+			"category": "UPDATE",
 			"impliedGrants":
 			[
 				"indices_put"
@@ -143,13 +152,15 @@
 		{
 			"itemId": 11,
 			"name": "delete_index",
-			"label": "delete_index"
+			"label": "delete_index",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 12,
 			"name": "create_index",
-			"label": "create_index"
+			"label": "create_index",
+			"category": "MANAGE"
 		}
 	],
 

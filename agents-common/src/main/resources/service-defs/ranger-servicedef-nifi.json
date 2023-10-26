@@ -33,12 +33,14 @@
     {
       "itemId":100,
       "name":"READ",
-      "label":"Read"
+      "label":"Read",
+      "category": "READ"
     },
     {
       "itemId":200,
       "name":"WRITE",
-      "label":"Write"
+      "label":"Write",
+      "category": "UPDATE"
     }
   ],
   "configs":[

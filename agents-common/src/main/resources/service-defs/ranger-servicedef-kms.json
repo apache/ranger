@@ -37,56 +37,65 @@
 		{
 			"itemId": 1,
 			"name": "create",
-			"label": "Create"
+			"label": "Create",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 2,
 			"name": "delete",
-			"label": "Delete"
+			"label": "Delete",
+			"category": "DELETE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "rollover",
-			"label": "Rollover"
+			"label": "Rollover",
+			"category": "UPDATE"
 		},
 		
 		{
 			"itemId": 4,
 			"name": "setkeymaterial",
-			"label": "Set Key Material"
-		},	
+			"label": "Set Key Material",
+			"category": "UPDATE"
+		},
 		
 		{
 			"itemId": 5,
 			"name": "get",
-			"label": "Get"
+			"label": "Get",
+			"category": "READ"
 		},
 		
 		{
 			"itemId": 6,
 			"name": "getkeys",
-			"label": "Get Keys"
+			"label": "Get Keys",
+			"category": "READ"
 		},
 		
 		{
 			"itemId": 7,
 			"name": "getmetadata",
-			"label": "Get Metadata"
+			"label": "Get Metadata",
+			"category": "READ"
 		},
 		
 		{
 			"itemId": 8,
 			"name": "generateeek",
-			"label": "Generate EEK"
+			"label": "Generate EEK",
+			"category": "UPDATE"
 		},
 		
 		{
 			"itemId": 9,
 			"name": "decrypteek",
-			"label": "Decrypt EEK"
-		}	
+			"label": "Decrypt EEK",
+			"category": "UPDATE"
+		}
 	],
 
 	"configs": 
