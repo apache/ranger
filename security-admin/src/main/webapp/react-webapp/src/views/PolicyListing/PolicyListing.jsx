@@ -57,11 +57,11 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isUser,
-  parseSearchFilter
+  parseSearchFilter,
+  getResourcesDefVal
 } from "../../utils/XAUtils";
 import {
   alertMessage,
-  RangerPolicyType,
   ResourcesOverrideInfoMsg,
   ServerAttrName
 } from "../../utils/XAEnums";
@@ -668,15 +668,8 @@ function PolicyListing(props) {
     let resourceSearchOpt = [];
     let serverRsrcAttrName = [];
     let policySearchInfoMsg = [];
-    if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
-      resources = serviceDef.dataMaskDef?.resources || [];
-    } else if (
-      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
-    ) {
-      resources = serviceDef.rowFilterDef?.resources || [];
-    } else {
-      resources = serviceDef?.resources || [];
-    }
+
+    resources = getResourcesDefVal(serviceDef, policyType);
 
     resourceSearchOpt = map(resources, function (resource) {
       return {

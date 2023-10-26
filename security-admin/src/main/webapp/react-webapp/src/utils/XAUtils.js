@@ -19,7 +19,13 @@
 
 import React, { useState } from "react";
 import { getUserProfile } from "Utils/appState";
-import { UserRoles, PathAssociateWithModule, QueryParams } from "Utils/XAEnums";
+import {
+  UserRoles,
+  PathAssociateWithModule,
+  QueryParams,
+  RangerPolicyType,
+  ServiceType
+} from "Utils/XAEnums";
 import {
   filter,
   find,
@@ -34,7 +40,8 @@ import {
   isUndefined,
   isNull,
   some,
-  has
+  has,
+  sortBy
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -43,7 +50,6 @@ import CustomBreadcrumb from "../views/CustomBreadcrumb";
 import { CustomTooltip } from "../components/CommonComponents";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
-import { RangerPolicyType, ServiceType } from "./XAEnums";
 import { policyInfoMessage } from "./XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 
@@ -1435,4 +1441,20 @@ export const policyConditionUpdatedJSON = (policyCond) => {
     }
   });
   return newPolicyConditionJSON;
+};
+
+// Get resources with help of policy type
+
+export const getResourcesDefVal = (serviceDef, policyType) => {
+  let resources = [];
+  if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
+    resources = sortBy(serviceDef.dataMaskDef.resources, "itemId");
+  } else if (
+    RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
+  ) {
+    resources = sortBy(serviceDef.rowFilterDef.resources, "itemId");
+  } else {
+    resources = sortBy(serviceDef.resources, "itemId");
+  }
+  return resources;
 };
