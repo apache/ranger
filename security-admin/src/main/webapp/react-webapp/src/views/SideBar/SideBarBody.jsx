@@ -687,9 +687,17 @@ export const SideBarBody = (props) => {
                   Profile
                 </NavLink>
               </li>
-              {/* <li className="list-group-item">
-                <a href={backboneUrl}>Backbone Classic UI</a>
-              </li> */}
+              <li className="list-group-item">
+                <a
+                  href={backboneUrl}
+                  onClick={() => {
+                    props.closeCollapse();
+                    localStorage.clear();
+                  }}
+                >
+                  Backbone Classic UI
+                </a>
+              </li>
               <li className="list-group-item">
                 <a
                   href={apiUrl}

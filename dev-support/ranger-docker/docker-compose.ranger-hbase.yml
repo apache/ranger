@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile.ranger-hbase
       args:
         - HBASE_VERSION=${HBASE_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - HBASE_PLUGIN_VERSION=${HBASE_PLUGIN_VERSION}
     image: ranger-hbase
     container_name: ranger-hbase
     hostname: ranger-hbase.example.com
@@ -26,7 +26,7 @@ services:
         condition: service_started
     environment:
       - HBASE_VERSION
-      - RANGER_VERSION
+      - HBASE_PLUGIN_VERSION
 
 networks:
   ranger:
