@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.util.MacroProcessor;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerTimeRangeChecker;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.slf4j.Logger;
@@ -850,6 +851,32 @@ public final class RangerRequestScriptEvaluator {
 		return !userRoles.isEmpty();
 	}
 
+	public boolean isAccessTimeAfter(String strTime) {
+		return isAccessTimeBetween(strTime, null, null);
+	}
+
+	public boolean isAccessTimeAfter(String strTime, String timeZone) {
+		return isAccessTimeBetween(strTime, null, timeZone);
+	}
+
+	public boolean isAccessTimeBefore(String strTime) {
+		return isAccessTimeBetween(null, strTime, null);
+	}
+
+	public boolean isAccessTimeBefore(String strTime, String timeZone) {
+		return isAccessTimeBetween(null, strTime, timeZone);
+	}
+
+	public boolean isAccessTimeBetween(String fromTime, String toTime) {
+		return isAccessTimeBetween(fromTime, toTime, null);
+	}
+
+	public boolean isAccessTimeBetween(String fromTime, String toTime, String timeZone) {
+		RangerTimeRangeChecker evaluator = new RangerTimeRangeChecker(fromTime, toTime, timeZone);
+
+		return evaluator.isInRange(getAccessTime().getTime());
+	}
+
 	// for backward compatibility
 	public String ugNamesCsv() {
 		return ugNames(null, STR_COMMA);
@@ -1290,6 +1317,9 @@ public final class RangerRequestScriptEvaluator {
 		ret.put(SCRIPT_MACRO_IS_IN_ANY_ROLE,        "ctx.isInAnyRole()");
 		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP,   "!ctx.isInAnyGroup()");
 		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE,    "!ctx.isInAnyRole()");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_AFTER,   "ctx.isAccessTimeAfter");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BEFORE,  "ctx.isAccessTimeBefore");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BETWEEN, "ctx.isAccessTimeBetween");
 
 		return ret;
 	}
@@ -1374,4 +1404,5 @@ public final class RangerRequestScriptEvaluator {
 			return ret;
 		}
 	}
+
 }
