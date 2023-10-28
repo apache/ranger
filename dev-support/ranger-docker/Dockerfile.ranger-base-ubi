@@ -15,7 +15,7 @@
 # limitations under the License.
 
 ARG UBI_VERSION
-FROM registry.access.redhat.com/ubi9-minimal:${UBI_VERSION}
+FROM registry.access.redhat.com/ubi9/ubi-minimal:${UBI_VERSION}
 
 USER root
 ARG RANGER_BASE_JAVA_VERSION
@@ -33,7 +33,20 @@ ENV JAVA_HOME="/usr/lib/jvm/java-${RANGER_BASE_JAVA_VERSION}" \
 
 # Install tzdata, Python, python-requests
 RUN microdnf install -y python3 python3-pip bc iputils hostname
-RUN microdnf install -y tar procps vim perl
+RUN microdnf install -y tar
+RUN microdnf install -y gzip
+RUN microdnf install -y procps
+RUN microdnf install -y vim
+# RUN microdnf install -y perl
+# for command useradd, groupadd
+RUN microdnf install -y shadow-utils
+# for command su
+RUN microdnf install -y util-linux-user
+RUN microdnf install -y sudo
+# for command service
+RUN microdnf install -y initscripts
+RUN microdnf install -y openssh-clients
+RUN microdnf install -y openssh-server
 RUN pip3 install apache-ranger
 
 # Set environment variables
@@ -42,6 +55,7 @@ ENV RANGER_DIST    /home/ranger/dist
 ENV RANGER_SCRIPTS /home/ranger/scripts
 ENV PATH           /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+RUN sudo sed -i 's/^HOME_MODE.*/HOME_MODE 0755/' /etc/login.defs
 
 # setup groups, users, directories
 RUN groupadd ranger \
