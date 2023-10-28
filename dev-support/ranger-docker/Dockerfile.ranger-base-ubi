@@ -18,17 +18,17 @@ ARG UBI_VERSION
 FROM registry.access.redhat.com/ubi9/ubi-minimal:${UBI_VERSION}
 
 USER root
-ARG RANGER_BASE_JAVA_VERSION
+ARG RANGER_BASE_UBI_JAVA_VERSION
 ENV OS_NAME RHEL
 
 RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-    install -y java-${RANGER_BASE_JAVA_VERSION}-openjdk-devel \
+    install -y java-${RANGER_BASE_UBI_JAVA_VERSION}-openjdk-devel \
     && microdnf clean all \
-    && rpm -q java-${RANGER_BASE_JAVA_VERSION}-openjdk-devel
+    && rpm -q java-${RANGER_BASE_UBI_JAVA_VERSION}-openjdk-devel
 
-ENV JAVA_HOME="/usr/lib/jvm/java-${RANGER_BASE_JAVA_VERSION}" \
+ENV JAVA_HOME="/usr/lib/jvm/java-${RANGER_BASE_UBI_JAVA_VERSION}" \
     JAVA_VENDOR="openjdk" \
-    JAVA_VERSION="${RANGER_BASE_JAVA_VERSION}" \
+    JAVA_VERSION="${RANGER_BASE_UBI_JAVA_VERSION}" \
     JBOSS_CONTAINER_OPENJDK_JDK_MODULE="/opt/jboss/container/openjdk/jdk"
 
 # Install tzdata, Python, python-requests
@@ -59,12 +59,14 @@ RUN sudo sed -i 's/^HOME_MODE.*/HOME_MODE 0755/' /etc/login.defs
 
 # setup groups, users, directories
 RUN groupadd ranger \
+    && groupadd knox \
+    && groupadd hadoop \
     && useradd -g ranger -ms /bin/bash ranger \
     && useradd -g ranger -ms /bin/bash rangeradmin \
     && useradd -g ranger -ms /bin/bash rangerusersync \
     && useradd -g ranger -ms /bin/bash rangertagsync \
     && useradd -g ranger -ms /bin/bash rangerkms \
-    && groupadd hadoop \
+    && useradd -g knox -ms /bin/bash knox \
     && useradd -g hadoop -ms /bin/bash hdfs \
     && useradd -g hadoop -ms /bin/bash yarn \
     && useradd -g hadoop -ms /bin/bash hive \

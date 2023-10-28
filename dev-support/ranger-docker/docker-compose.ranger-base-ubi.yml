@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile.ranger-base-ubi
       args:
         - UBI_VERSION=${UBI_VERSION}
-        - RANGER_BASE_JAVA_VERSION=${RANGER_BASE_UBI_JAVA_VERSION}
+        - RANGER_BASE_UBI_JAVA_VERSION=${RANGER_BASE_UBI_JAVA_VERSION}
     image: ranger-base
     container_name: ranger-base
     networks:

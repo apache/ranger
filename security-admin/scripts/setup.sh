@@ -199,9 +199,11 @@ get_distro(){
 	log "[I] Checking distribution name.."
 	ver=$(cat /etc/*{issues,release,version} 2> /dev/null)
 	if [[ $(echo $ver | grep DISTRIB_ID) ]]; then
-                DIST_NAME=$(lsb_release -si)
+	  DIST_NAME=$(lsb_release -si)
+	elif [[ $(echo $ver | grep -E '^NAME=' | cut -d'"' -f2) ]]; then
+	  DIST_NAME=$(echo $ver | grep -E '^NAME=' | cut -d'"' -f2)
 	else
-                DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
+	  DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
 	fi
 	export $DIST_NAME
 	log "[I] Found distribution : $DIST_NAME"

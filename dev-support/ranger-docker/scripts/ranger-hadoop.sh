@@ -36,6 +36,7 @@ then
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
   su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
 
+  # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
 
