@@ -476,12 +476,22 @@ public class SecurityZoneREST {
     public Boolean updateSecurityZone(Long zoneId, RangerSecurityZoneChangeRequest changeData) {
         LOG.debug("==> updateSecurityZone({}, {})", zoneId, changeData);
 
-        RangerSecurityZone       zone        = getSecurityZone(zoneId);
-        RangerSecurityZoneHelper zoneHelper  = new RangerSecurityZoneHelper(zone, bizUtil.getCurrentUserLoginId());
-        RangerSecurityZone       updatedZone = zoneHelper.updateZone(changeData);
+        Boolean ret;
 
-        RangerSecurityZone retV1 = updateSecurityZone(zoneId, updatedZone);
-        Boolean            ret   = retV1 != null;
+        try {
+            RangerSecurityZone       zone        = getSecurityZone(zoneId);
+            RangerSecurityZoneHelper zoneHelper  = new RangerSecurityZoneHelper(zone, bizUtil.getCurrentUserLoginId());
+            RangerSecurityZone       updatedZone = zoneHelper.updateZone(changeData);
+
+            RangerSecurityZone retV1 = updateSecurityZone(zoneId, updatedZone);
+            ret = retV1 != null;
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateSecurityZone({}, {})", zoneId, changeData, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
 
         LOG.debug("<== updateSecurityZone({}, {}): ret={}", zoneId, changeData, ret);
 
