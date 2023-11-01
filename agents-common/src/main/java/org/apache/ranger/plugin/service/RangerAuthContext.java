@@ -24,6 +24,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerSecurityZoneMatcher;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
@@ -36,15 +37,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RangerAuthContext {
     private final Map<RangerContextEnricher, Object> requestContextEnrichers;
+    private final RangerSecurityZoneMatcher          zoneMatcher;
     private       RangerRolesUtil                    rolesUtil;
     private       RangerUserStoreUtil                userStoreUtil;
 
-    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles) {
-        this(requestContextEnrichers, roles, null);
-    }
-
-    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles, RangerUserStore userStore) {
+    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerSecurityZoneMatcher zoneMatcher, RangerRoles roles, RangerUserStore userStore) {
         this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
+        this.zoneMatcher             = zoneMatcher;;
 
         setRoles(roles);
         setUserStore(userStore);
@@ -52,6 +51,10 @@ public class RangerAuthContext {
 
     public Map<RangerContextEnricher, Object> getRequestContextEnrichers() {
         return requestContextEnrichers;
+    }
+
+    public RangerSecurityZoneMatcher getZoneMatcher() {
+        return zoneMatcher;
     }
 
     public void addOrReplaceRequestContextEnricher(RangerContextEnricher enricher, Object database) {
