@@ -433,6 +433,35 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript(scriptEngine, "java.lang.Runtime.getRuntime().exec(\"bash\");"));
     }
 
+    @Test
+    public void testIsTimeMacros() {
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
+
+        // Date
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01', '2100/01/01')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01', '2100/01/01')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01', '2100/01/01', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01', '2100/01/01', 'GMT')"));
+
+        // Date hh:mm
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01 15:00')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01 15:00')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01 15:00', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01 15:00', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01 15:00')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01 15:00')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01 15:00', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01 15:00', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00', '2100/01/01 15:00')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00', '2100/01/01 15:00')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00', '2100/01/01 15:00', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00', '2100/01/01 15:00', 'GMT')"));
+
+        // Date hh:mm:ss
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01 15:00:42')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01 15:00:42')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_AFTER('2020/01/01 15:00:42', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_AFTER('2020/01/01 15:00:42', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01 15:00:42')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01 15:00:42')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BEFORE('2100/01/01 15:00:42', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BEFORE('2100/01/01 15:00:42', 'GMT')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42')"));
+        Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42', 'GMT')", (Boolean) evaluator.evaluateScript(scriptEngine, "IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42', 'GMT')"));
+    }
 
     RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, List<RangerTag> resourceTags) {
         RangerAccessResource resource = mock(RangerAccessResource.class);
