@@ -29,7 +29,6 @@ import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
@@ -118,7 +117,7 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 				ret = policyItem;
 			} else {
 				// Compute implied-accesses
-				Map<String, Collection<String>> impliedAccessGrants = PolicyEngine.getImpliedAccessGrants(serviceDef);
+				Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
 
 				if (impliedAccessGrants != null && !impliedAccessGrants.isEmpty()) {
 					ret = new RangerPolicyItem(policyItem);
