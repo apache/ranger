@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -66,14 +65,7 @@ public class PolicyEngine {
     private       boolean                             useForwardedIPAddress;
     private       String[]                            trustedProxyAddresses;
     private final Map<String, StringTokenReplacer>    tokenReplacers = new HashMap<>();
-
     private final RangerReadWriteLock                 lock;
-
-    static private Map<String, Map<String, Collection<String>>> impliedAccessGrants = null;
-
-    static public Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
-        return impliedAccessGrants == null ? null : impliedAccessGrants.get(serviceDef.getName());
-    }
 
 
     public RangerReadWriteLock.RangerLock getReadLock() {
@@ -204,7 +196,7 @@ public class PolicyEngine {
             PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
         }
 
-        buildImpliedAccessGrants(servicePolicies);
+        normalizeServiceDefs(servicePolicies);
 
         this.pluginContext = pluginContext;
         this.lock          = new RangerReadWriteLock(isUseReadWriteLock);
@@ -482,29 +474,17 @@ public class PolicyEngine {
         }
     }
 
-    synchronized static private void buildImpliedAccessGrants(ServicePolicies servicePolicies) {
+    private void normalizeServiceDefs(ServicePolicies servicePolicies) {
         RangerServiceDef serviceDef = servicePolicies.getServiceDef();
 
         if (serviceDef != null) {
-            buildImpliedAccessGrants(ServiceDefUtil.normalize(serviceDef));
+            ServiceDefUtil.normalize(serviceDef);
 
             RangerServiceDef tagServiceDef = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceDef() : null;
 
             if (tagServiceDef != null) {
-                buildImpliedAccessGrants(ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagServiceDef), serviceDef.getName()));
+                ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagServiceDef), serviceDef.getName());
             }
-        }
-    }
-
-    static private void buildImpliedAccessGrants(RangerServiceDef serviceDef) {
-        if (serviceDef != null) {
-            RangerServiceDefHelper helper = new RangerServiceDefHelper(serviceDef, false);
-
-            if (impliedAccessGrants == null) {
-                impliedAccessGrants = Collections.synchronizedMap(new HashMap<>());
-            }
-
-            impliedAccessGrants.put(serviceDef.getName(), helper.getImpliedAccessGrants());
         }
     }
 

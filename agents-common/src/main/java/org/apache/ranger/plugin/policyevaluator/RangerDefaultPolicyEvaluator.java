@@ -42,7 +42,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
-import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestWrapper;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -136,7 +135,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			this.disableRoleResolution = options.disableRoleResolution;
 
 			if (!options.disableAccessEvaluationWithPolicyACLSummary) {
-				aclSummary = createPolicyACLSummary();
+				aclSummary = createPolicyACLSummary(options.getServiceDefHelper().getImpliedAccessGrants());
 			}
 
 			useAclSummaryForEvaluation = aclSummary != null;
@@ -549,7 +548,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	public PolicyACLSummary getPolicyACLSummary() {
 		if (aclSummary == null) {
 			boolean forceCreation = true;
-			aclSummary = createPolicyACLSummary(forceCreation);
+			aclSummary = createPolicyACLSummary(ServiceDefUtil.getExpandedImpliedGrants(getServiceDef()), forceCreation);
 		}
 
 		return aclSummary;
@@ -590,12 +589,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		is set to false). It may return null object if all accesses for all user/groups cannot be determined statically.
 	*/
 
-	private PolicyACLSummary createPolicyACLSummary() {
+	private PolicyACLSummary createPolicyACLSummary(Map<String, Collection<String>> impliedAccessGrants) {
 		boolean forceCreation = false;
-		return createPolicyACLSummary(forceCreation);
+		return createPolicyACLSummary(impliedAccessGrants, forceCreation);
 	}
 
-	private PolicyACLSummary createPolicyACLSummary(boolean isCreationForced) {
+	private PolicyACLSummary createPolicyACLSummary(Map<String, Collection<String>> impliedAccessGrants, boolean isCreationForced) {
 		PolicyACLSummary ret  = null;
 		RangerPerfTracer perf = null;
 
@@ -625,8 +624,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if (isUsableForEvaluation || isCreationForced) {
 			ret = new PolicyACLSummary();
-			Map<String, Collection<String>> impliedAccessGrants = PolicyEngine.getImpliedAccessGrants(getServiceDef());
-
 
 			for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
 				ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY, hasNonPublicGroupOrConditionsInDenyExceptions || hasPublicGroupInDenyAndUsersInDenyExceptions, impliedAccessGrants);
