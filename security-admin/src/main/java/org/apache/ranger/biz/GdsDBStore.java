@@ -1427,7 +1427,7 @@ public class GdsDBStore extends AbstractGdsStore {
     private <T> PList<T> getPList(List<T> list, int startIndex, int maxEntries, String sortBy, String sortType) {
         List<T> subList = startIndex < list.size() ? list.subList(startIndex, Math.min(startIndex + maxEntries, list.size())) : Collections.emptyList();
 
-        return new PList<>(subList, startIndex, maxEntries, list.size(), subList.size(), sortBy, sortType);
+        return new PList<>(subList, startIndex, maxEntries, list.size(), subList.size(), sortType, sortBy);
     }
 
     private GdsPermission getGdsPermissionFromFilter(SearchFilter filter) {
