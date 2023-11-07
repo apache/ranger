@@ -558,9 +558,6 @@ public class GdsDBStore extends AbstractGdsStore {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
-
         GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
         RangerProjectList   result        = projectService.searchProjects(filter);
         List<RangerProject> projects      = new ArrayList<>();
@@ -923,12 +920,13 @@ public class GdsDBStore extends AbstractGdsStore {
 
         int maxRows = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
 
         final String resourceContains = filter.getParam(SearchFilter.RESOURCE_CONTAINS);
 
         filter.removeParam(SearchFilter.RESOURCE_CONTAINS);
+		if (StringUtils.isNotEmpty(resourceContains)) {
+			filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
+		}
 
         RangerSharedResourceList   result          = sharedResourceService.searchSharedResources(filter);
         List<RangerSharedResource> sharedResources = new ArrayList<>();
@@ -1052,8 +1050,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
         int maxRows = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
 
         List<RangerDataShareInDataset> dataShareInDatasets = new ArrayList<>();
         RangerDataShareInDatasetList   result              = dataShareInDatasetService.searchDataShareInDatasets(filter);
@@ -1156,8 +1152,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
         int maxRows = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
 
         List<RangerDatasetInProject> datasetInProjects = new ArrayList<>();
         RangerDatasetInProjectList   result            = datasetInProjectService.searchDatasetInProjects(filter);
@@ -1388,12 +1382,11 @@ public class GdsDBStore extends AbstractGdsStore {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
-
+        filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
         GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
         RangerDatasetList   result        = datasetService.searchDatasets(filter);
         List<RangerDataset> datasets      = new ArrayList<>();
+
 
         for (RangerDataset dataset : result.getList()) {
             if (dataset != null && validator.hasPermission(dataset.getAcl(), gdsPermission)) {
@@ -1408,12 +1401,11 @@ public class GdsDBStore extends AbstractGdsStore {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
-        filter.setStartIndex(0);
-        filter.setMaxRows(0);
-
+        filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
         GdsPermission         gdsPermission = getGdsPermissionFromFilter(filter);
         RangerDataShareList   result        = dataShareService.searchDataShares(filter);
         List<RangerDataShare> dataShares    = new ArrayList<>();
+
 
         for (RangerDataShare dataShare : result.getList()) {
             if (dataShare != null && validator.hasPermission(dataShare.getAcl(), gdsPermission)) {

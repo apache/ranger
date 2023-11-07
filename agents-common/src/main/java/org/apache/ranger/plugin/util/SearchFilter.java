@@ -123,6 +123,7 @@ public class SearchFilter {
 	public static final String UPDATE_TIME_START        = "updatedTimeStart";     // search
 	public static final String UPDATE_TIME_END          = "updatedTimeEnd";       // search
 	public static final String IS_DISTINCT              = "isDistinct";           // search, sort
+	public static final String RETRIEVE_ALL_PAGES      = "retrieveAllPages";    // search
 
 	private Map<String, String> params;
 	private int                 startIndex;

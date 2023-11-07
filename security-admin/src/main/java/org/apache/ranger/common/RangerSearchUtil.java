@@ -258,7 +258,9 @@ public class RangerSearchUtil extends SearchUtil {
 		Query query = em.createQuery(queryStr + queryClause);
 		resolveQueryParams(query, searchCriteria, searchFields);
 
-		if (!isCountQuery) {
+		final boolean skipPagination = isCountQuery || Boolean.parseBoolean(searchCriteria.getParam(SearchFilter.RETRIEVE_ALL_PAGES));
+
+		if (!skipPagination) {
 			query.setFirstResult(searchCriteria.getStartIndex());
 			updateQueryPageSize(query, searchCriteria);
 		}
@@ -289,7 +291,7 @@ public class RangerSearchUtil extends SearchUtil {
 				Integer paramVal = restErrorUtil.parseInt(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
 						MessageEnums.INVALID_INPUT_DATA, null, searchField.getClientFieldName());
-				
+
 				Number intFieldValue = paramVal != null ? (Number) paramVal : null;
 				if (intFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
