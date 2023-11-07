@@ -49,6 +49,7 @@ import PrinciplePermissionComp from "./PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import ErrorPage from "../../../views/ErrorPage";
+import DatashareInDatasetListComp from "./DatashareInDatasetListComp";
 
 const initialState = {
   loader: false,
@@ -81,10 +82,11 @@ const datasetFormReducer = (state, action) => {
 const DatasetDetailLayout = () => {
   let { datasetId } = useParams();
   const { state } = useLocation();
-  const userAclPerm = state?.userAclPerm;
+  const [userAclPerm, setUserAclPerm] = useState(state?.userAclPerm);
   const toastId = React.useRef(null);
   const [loader, setLoader] = useState(true);
   const [datasetInfo, setDatasetInfo] = useState({});
+  const [datasetName, setDatasetName] = useState();
   const [datasetDescription, setDatasetDescription] = useState();
   const [datasetTerms, setDatasetTerms] = useState();
   const [datashareSearch, setDatashareSearch] = useState();
@@ -106,6 +108,7 @@ const DatasetDetailLayout = () => {
   const [groupList, setGroupList] = useState([]);
   const [roleList, setRoleList] = useState([]);
   const [activeKey, setActiveKey] = useState("overview");
+  const [requestActiveKey, setRequestActiveKey] = useState("All");
   const [userSharedWithMap, setUserSharedWithMap] = useState(new Map());
   const [groupSharedWithMap, setGroupSharedWithMap] = useState(new Map());
   const [roleSharedWithMap, setRoleSharedWithMap] = useState(new Map());
@@ -146,10 +149,18 @@ const DatasetDetailLayout = () => {
   const [datashareRequestInfo, setDatashareRequestInfo] = useState();
   const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
     useState([]);
-
+  const [datashareTotalCount, setDatashareTotalCount] = useState(0);
+  const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
+    useState(0);
   const toggleConfirmModalForDatasetDelete = () => {
     setShowDeleteDatasetModal(true);
   };
+  const [loadRequestListDataCounter, setLoadRequestListDataCounter] = useState(
+    Math.random()
+  );
+  const [updateTable, setUpdateTable] = useState(moment.now());
+  const gdsServiceDefName = "gds";
+  const [datasetNameEditable, isDatasetNameEditable] = useState(false);
 
   const handleDatasetDeleteClick = async () => {
     toggleClose();
@@ -173,10 +184,52 @@ const DatasetDetailLayout = () => {
     }
   };
 
+  const getServiceDefData = async () => {
+    let data = null;
+    let resp = {};
+    try {
+      resp = await fetchApi({
+        url: `plugins/definitions/name/${gdsServiceDefName}`
+      });
+      setServiceDef(resp.data);
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
+      );
+    }
+    return data;
+  };
+
   useEffect(() => {
     fetchDatasetInfo(datasetId);
-    fetchDatashareRequestList(undefined, 0, true);
+    getServiceDefData();
+    if (userAclPerm == undefined) fetchDatasetSummary(datasetId);
+    if (activeKey == "sharedWith") {
+      fetchAccessGrantInfo();
+    }
   }, []);
+
+  const fetchDatasetSummary = async (datasetId) => {
+    try {
+      let params = {};
+      params["datasetId"] = datasetId;
+      setLoader(true);
+      const resp = await fetchApi({
+        url: `gds/dataset/summary`,
+        params: params
+      });
+      setLoader(false);
+      setUserAclPerm(resp.data.list[0].permissionForCaller);
+    } catch (error) {
+      setLoader(false);
+      if (error.response.status == 401 || error.response.status == 400) {
+        <ErrorPage errorCode="401" />;
+      }
+      console.error(
+        `Error occurred while fetching dataset summary details ! ${error}`
+      );
+    }
+  };
 
   const fetchDatashareRequestList = async (
     datashareName,
@@ -207,30 +260,13 @@ const DatasetDetailLayout = () => {
       } else {
         setCompleteDatashareRequestsList(resp.data.list);
       }
+      setDatashareRequestTotalCount(resp.data.totalCount);
+      return resp.data.list;
     } catch (error) {
       console.error(
         `Error occurred while fetching Datashare requests details ! ${error}`
       );
     }
-  };
-
-  const fetchServiceDef = async (serviceDefName) => {
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-      );
-    }
-    let modifiedServiceDef = serviceDefsResp.data;
-    for (const obj of modifiedServiceDef.resources) {
-      obj.recursiveSupported = false;
-      obj.excludesSupported = false;
-    }
-    setServiceDef(modifiedServiceDef);
   };
 
   const setPrincipleAccordianData = (principle) => {
@@ -264,14 +300,11 @@ const DatasetDetailLayout = () => {
     setRoleList([...roleList, ...tempRoleList]);
   };
 
-  const fetchAccessGrantInfo = async (datasetName) => {
-    let params = {};
+  const fetchAccessGrantInfo = async () => {
     let policyData = {};
-    params["resource:dataset"] = datasetName;
     try {
       const resp = await fetchApi({
-        url: `gds/dataset/${datasetId}/policy`,
-        params: params
+        url: `gds/dataset/${datasetId}/policy`
       });
       policyData = resp.data[0];
     } catch (error) {
@@ -279,48 +312,52 @@ const DatasetDetailLayout = () => {
         `Error occurred while fetching dataset access grant details ! ${error}`
       );
     }
-    fetchServiceDef(policyData.serviceType);
-    let grantItems = policyData.policyItems;
-    const userMap = new Map();
-    const groupMap = new Map();
-    const roleMap = new Map();
-    grantItems.forEach((item) => {
-      if (item.users !== undefined) {
-        item.users.forEach((user) => {
-          let accessList = [];
-          if (userMap.get(user) !== undefined) {
-            accessList = userMap.get(user);
-          }
-          userMap.set(user, [...accessList, ...item.accesses]);
-        });
-      }
+    let grantItems = undefined;
+    if (policyData != undefined) {
+      grantItems = policyData.policyItems;
+      const userMap = new Map();
+      const groupMap = new Map();
+      const roleMap = new Map();
+      grantItems.forEach((item) => {
+        if (item.users !== undefined) {
+          item.users.forEach((user) => {
+            let accessList = [];
+            if (userMap.get(user) !== undefined) {
+              accessList = userMap.get(user);
+            }
+            userMap.set(user, [...accessList, ...item.accesses]);
+          });
+        }
 
-      if (item.groups !== undefined) {
-        item.groups.forEach((group) => {
-          let accessList = [];
-          if (groupMap[group] !== undefined) {
-            accessList = groupMap[group];
-          }
-          groupMap.set(group, [...accessList, ...item.accesses]);
-        });
-      }
+        if (item.groups !== undefined) {
+          item.groups.forEach((group) => {
+            let accessList = [];
+            if (groupMap[group] !== undefined) {
+              accessList = groupMap[group];
+            }
+            groupMap.set(group, [...accessList, ...item.accesses]);
+          });
+        }
 
-      if (item.roles !== undefined) {
-        item.roles.forEach((role) => {
-          let accessList = [];
-          if (roleMap[role] !== undefined) {
-            accessList = roleMap[role];
-          }
-          roleMap.set(role, [...accessList, ...item.accesses]);
-        });
-      }
-      setUserSharedWithMap(userMap);
-      setGroupSharedWithMap(groupMap);
-      setRoleSharedWithMap(roleMap);
-      setFilteredUserSharedWithMap(userMap);
-      setFilteredGroupSharedWithMap(groupMap);
-      setFilteredRoleSharedWithMap(roleMap);
-    });
+        if (item.roles !== undefined) {
+          item.roles.forEach((role) => {
+            let accessList = [];
+            if (roleMap[role] !== undefined) {
+              accessList = roleMap[role];
+            }
+            roleMap.set(role, [...accessList, ...item.accesses]);
+          });
+        }
+        setUserSharedWithMap(userMap);
+        setGroupSharedWithMap(groupMap);
+        setRoleSharedWithMap(roleMap);
+        setFilteredUserSharedWithMap(userMap);
+        setFilteredGroupSharedWithMap(groupMap);
+        setFilteredRoleSharedWithMap(roleMap);
+      });
+    }
+
+    return grantItems;
   };
 
   const onSharedWithAccessFilterChange = (e) => {
@@ -341,6 +378,7 @@ const DatasetDetailLayout = () => {
       });
       setLoader(false);
       setDatasetInfo(resp.data);
+      setDatasetName(resp.data.name);
       setDatasetDescription(resp.data.description);
       setDatasetTerms(resp.data.termsOfUse);
       if (resp.data.acl != undefined) setPrincipleAccordianData(resp.data.acl);
@@ -425,7 +463,7 @@ const DatasetDetailLayout = () => {
         });
         toast.success("Request created successfully!!");
         setDatashareModal(false);
-        fetchDatashareRequestList(undefined, requestCurrentPage, false);
+        setUpdateTable(moment.now());
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
@@ -467,6 +505,7 @@ const DatasetDetailLayout = () => {
           Math.ceil(resp.data.totalCount / datashareItemsPerPage)
         );
         //totalCount = resp.data.totalCount;
+        setDatashareTotalCount(resp.data.totalCount);
         setDatashareModal(true);
       } catch (error) {
         serverError(error);
@@ -617,14 +656,17 @@ const DatasetDetailLayout = () => {
     } else {
       setActiveKey(key);
       if (key == "sharedWith") {
-        fetchAccessGrantInfo(datasetInfo.name);
-      } else if (key == "dataShares") {
-        fetchDatashareRequestList(undefined, 0, false);
+        fetchAccessGrantInfo();
       }
     }
   };
 
+  const handleRequestTabSelect = (key) => {
+    setRequestActiveKey(key);
+  };
+
   const updateDatasetDetails = async () => {
+    datasetInfo.name = datasetName;
     datasetInfo.description = datasetDescription;
     datasetInfo.termsOfUse = datasetTerms;
 
@@ -657,6 +699,7 @@ const DatasetDetailLayout = () => {
         blockUI: false
       });
       toast.success("Dataset updated successfully!!");
+      isDatasetNameEditable(false);
       showSaveCancelButton(false);
     } catch (error) {
       dispatch({
@@ -669,9 +712,11 @@ const DatasetDetailLayout = () => {
   };
 
   const handleAccessGrantChange = (accessGrantData, policyData) => {
-    if (accessGrantData != undefined && policyData != undefined) {
-      setPolicyData(policyData);
+    if (accessGrantData != undefined) {
       setAccessGrantFormValues(accessGrantData);
+    }
+    if (policyData != undefined) {
+      setPolicyData(policyData);
     }
     showSaveCancelButton(true);
   };
@@ -679,7 +724,8 @@ const DatasetDetailLayout = () => {
   const updateDatasetAccessGrant = async () => {
     let data = {};
     let values = accessGrantFormValues;
-    data.policyItems = getPolicyItemsVal(values, "policyItems");
+    let errorList = [];
+    data.policyItems = getPolicyItemsVal(values, "policyItems", errorList);
     data.description = values.description;
     data.isAuditEnabled = values.isAuditEnabled;
     data.isDenyAllElse = values.isDenyAllElse;
@@ -688,7 +734,7 @@ const DatasetDetailLayout = () => {
     data.policyLabels = (values.policyLabel || [])?.map(({ value }) => value);
     data.policyPriority = values.policyPriority ? "1" : "0";
     data.policyType = values.policyType;
-    data.service = policyData.service;
+    //data.service = policyData?.service;
     let serviceCompRes;
     if (values.policyType != null) {
       serviceCompRes = serviceDef.resources;
@@ -740,128 +786,154 @@ const DatasetDetailLayout = () => {
     } else {
       data["conditions"] = [];
     }
-    let dataVal = {
-      ...policyData,
-      ...data
-    };
-    try {
-      setLoader(true);
-      const resp = await fetchApi({
-        url: `gds/dataset/${datasetId}/policy/${policyData.id}`,
-        method: "PUT",
-        data: dataVal
-      });
-      setLoader(false);
-      toast.dismiss(toastId.current);
-      toastId.current = toast.success("Access Grant updated successfully!!");
-      showSaveCancelButton(false);
-    } catch (error) {
-      setLoader(false);
-      let errorMsg = `Failed to save policy form`;
-      if (error?.response?.data?.msgDesc) {
-        errorMsg = `Error! ${error.response.data.msgDesc}`;
+
+    if (errorList.length == 0) {
+      if (policyData != undefined) {
+        let dataVal = {
+          ...policyData,
+          ...data
+        };
+        try {
+          setLoader(true);
+          const resp = await fetchApi({
+            url: `gds/dataset/${datasetId}/policy/${policyData.id}`,
+            method: "PUT",
+            data: dataVal
+          });
+          setLoader(false);
+          toast.dismiss(toastId.current);
+          toastId.current = toast.success(
+            "Access Grant updated successfully!!"
+          );
+          showSaveCancelButton(false);
+        } catch (error) {
+          setLoader(false);
+          let errorMsg = `Failed to update Access Grant`;
+          if (error?.response?.data?.msgDesc) {
+            errorMsg = `Error! ${error.response.data.msgDesc}`;
+          }
+          toast.error(errorMsg);
+          console.error(`Error while updating Access Grant! ${error}`);
+        }
+      } else {
+        try {
+          setLoader(true);
+          const resp = await fetchApi({
+            url: `gds/dataset/${datasetId}/policy`,
+            method: "POST",
+            data: data
+          });
+          setLoader(false);
+          toast.dismiss(toastId.current);
+          toastId.current = toast.success(
+            "Access Grant created successfully!!"
+          );
+          showSaveCancelButton(false);
+        } catch (error) {
+          setLoader(false);
+          let errorMsg = `Failed to create Access Grant`;
+          if (error?.response?.data?.msgDesc) {
+            errorMsg = `Error! ${error.response.data.msgDesc}`;
+          }
+          toast.error(errorMsg);
+          console.error(`Error while creating Access Grant! ${error}`);
+        }
       }
-      toast.error(errorMsg);
-      console.error(`Error while saving policy form! ${error}`);
     }
   };
 
-  const getPolicyItemsVal = (formData, name) => {
+  const getPolicyItemsVal = (formData, name, errorList) => {
     var policyResourceItem = [];
-    for (let key of formData[name]) {
-      if (!isEmpty(key) && Object.entries(key).length > 0) {
-        let obj = {};
-        if (key.delegateAdmin != "undefined" && key.delegateAdmin != null) {
-          obj.delegateAdmin = key.delegateAdmin;
-        }
+    let errorMsg = "";
+    if (formData == undefined || formData == null) {
+      errorMsg = "Please add access grant details";
+      errorList.push(errorMsg);
+      toast.error(errorMsg);
+      return null;
+    }
+    if (formData[name] != undefined) {
+      for (let key of formData[name]) {
+        if (!isEmpty(key) && Object.entries(key).length > 0) {
+          let obj = {};
+          if (key.delegateAdmin != "undefined" && key.delegateAdmin != null) {
+            obj.delegateAdmin = key.delegateAdmin;
+          }
+          if (key.accesses != undefined && key.accesses.length > 0) {
+            obj.accesses = key.accesses.map(({ value }) => ({
+              type: value,
+              isAllowed: true
+            }));
+          } else {
+            errorMsg = "Please select Permission";
+            errorList.push(errorMsg);
+            toast.error(errorMsg);
+            return null;
+          }
 
-        obj.accesses = key.accesses.map(({ value }) => ({
-          type: value,
-          isAllowed: true
-        }));
-        obj.users = [];
-        obj.groups = [];
-        obj.roles = [];
-        if (key.principle && key.principle.length > 0) {
-          for (let i = 0; i < key.principle.length; i++) {
-            let principleObj = key.principle[i];
-            if (principleObj.type == "USER") {
-              obj.users.push(principleObj.value);
-            } else if (principleObj.type == "GROUP") {
-              obj.groups.push(principleObj.value);
-            } else if (principleObj.type == "ROLE") {
-              obj.roles.push(principleObj.value);
+          if (key.principle != undefined && key.principle.length > 0) {
+            obj.users = [];
+            obj.groups = [];
+            obj.roles = [];
+            if (key.principle && key.principle.length > 0) {
+              for (let i = 0; i < key.principle.length; i++) {
+                let principleObj = key.principle[i];
+                if (principleObj.type == "USER") {
+                  obj.users.push(principleObj.value);
+                } else if (principleObj.type == "GROUP") {
+                  obj.groups.push(principleObj.value);
+                } else if (principleObj.type == "ROLE") {
+                  obj.roles.push(principleObj.value);
+                }
+              }
             }
+          } else {
+            errorMsg = "Please select Principal";
+            errorList.push(errorMsg);
+            toast.error(errorMsg);
+            return null;
+          }
+
+          if (key?.conditions) {
+            obj.conditions = [];
+            Object.entries(key.conditions).map(
+              ([conditionKey, conditionValue]) => {
+                return obj.conditions.push({
+                  type: conditionKey,
+                  values: isArray(conditionValue)
+                    ? conditionValue.map((m) => {
+                        return m.value;
+                      })
+                    : [conditionValue]
+                });
+              }
+            );
+          }
+
+          if (
+            !isEmpty(obj) &&
+            !isEmpty(obj?.delegateAdmin) &&
+            Object.keys(obj)?.length > 1
+          ) {
+            policyResourceItem.push(obj);
+          }
+          if (
+            !isEmpty(obj) &&
+            isEmpty(obj?.delegateAdmin) &&
+            Object.keys(obj)?.length > 1
+          ) {
+            policyResourceItem.push(obj);
           }
         }
-
-        // if (key?.conditions) {
-        //   obj.conditions = [];
-        //   viewDatashareDetail;
-        //   Object.entries(key.conditions).map(
-        //     ([conditionKey, conditionValue]) => {
-        //       return obj.conditions.push({
-        //         type: conditionKey,
-        //         values: !isArray(conditionValue)
-        //           ? conditionValue?.split(",")
-        //           : conditionValue.map((m) => {
-        //               return m.value;
-        //             })
-        //       });
-        //     }
-        //   );
-        // }
-
-        if (key?.conditions) {
-          let value = key.conditions.split(",");
-
-          obj.conditions = [
-            {
-              type: "_expression",
-              values: value
-            }
-          ];
-          // viewDatashareDetail;
-          // Object.entries(key.conditions).map(
-          //   ([conditionKey, conditionValue]) => {
-          //     return obj.conditions.push({
-          //       type: "expression",
-          //       values: !isArray(conditionValue)
-          //         ? conditionValue?.split(",")
-          //         : conditionValue.map((m) => {
-          //             return m.value;
-          //           })
-          //     });
-          //   }
-          // );
-        }
-
-        if (
-          !isEmpty(obj) &&
-          !isEmpty(obj?.delegateAdmin) &&
-          Object.keys(obj)?.length > 1
-        ) {
-          policyResourceItem.push(obj);
-        }
-        if (
-          !isEmpty(obj) &&
-          isEmpty(obj?.delegateAdmin) &&
-          Object.keys(obj)?.length > 1
-        ) {
-          policyResourceItem.push(obj);
-        }
       }
     }
-    return policyResourceItem;
-  };
 
-  const back = () => {
-    navigate("/gds/mydatasetlisting");
+    return policyResourceItem;
   };
 
   const removeChanges = () => {
     fetchDatasetInfo(datasetId);
     showSaveCancelButton(false);
+    isDatasetNameEditable(false);
     toggleConfirmModalClose();
   };
 
@@ -896,7 +968,6 @@ const DatasetDetailLayout = () => {
       }
       setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
-      fetchDatashareRequestList(undefined, requestCurrentPage, false);
       setLoader(false);
     } catch (error) {
       let errorMsg = "";
@@ -916,28 +987,62 @@ const DatasetDetailLayout = () => {
     }
   };
 
-  const downloadJsonFile = () => {
+  const downloadJsonFile = async () => {
     let jsonData = datasetInfo;
-    jsonData.datashares = completeDatashareRequestsList;
-    jsonData.sharedWith = { users: {}, groups: {}, roles: {} };
-    if (Object.keys(userSharedWithMap).length > 0) {
-      let newUserMap = {};
-      userSharedWithMap.forEach((value, key) => {
-        jsonData.sharedWith.users({
-          ...jsonData.sharedWith.users,
-          key: key,
-          value: value
+    jsonData.datashares = await fetchDatashareRequestList(undefined, 0, true);
+    if (
+      userAclPerm == "ADMIN" ||
+      userAclPerm == "AUDIT" ||
+      userAclPerm == "POLICY_ADMIN"
+    ) {
+      jsonData.sharedWith = { users: {}, groups: {}, roles: {} };
+      let policyItems = await fetchAccessGrantInfo();
+      for (const item of policyItems) {
+        let accessList = [];
+        item.accesses.forEach((item) => {
+          accessList.push(item.type);
         });
-        newUserMap.set(key, value);
-      });
+        item.users?.forEach((user) => {
+          if (jsonData.sharedWith.users[user] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.users[user],
+              ...accessList
+            ];
+            jsonData.sharedWith.users[user] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.users[user] = accessList;
+          }
+        });
+        item.groups?.forEach((group) => {
+          if (jsonData.sharedWith.groups[group] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.groups[group],
+              ...accessList
+            ];
+            jsonData.sharedWith.groups[group] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.groups[group] = accessList;
+          }
+        });
+        item.roles?.forEach((role) => {
+          if (jsonData.sharedWith.roles[role] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.roles[role],
+              ...accessList
+            ];
+            jsonData.sharedWith.roles[role] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.roles[role] = accessList;
+          }
+        });
+      }
     }
-    //jsonData.sharedWith = sharedShareRequestsList;
     const jsonContent = JSON.stringify(jsonData);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = datasetInfo.name + ".json"; // Set the desired file name
+    a.download = datasetInfo.name + ".json";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -954,7 +1059,7 @@ const DatasetDetailLayout = () => {
 
   const handleRequestPageClick = ({ selected }) => {
     setRequestCurrentPage(selected);
-    fetchDatashareRequestList(undefined, selected, false);
+    //fetchDatashareRequestList(undefined, selected, false);
   };
 
   const handleDatasharePageClick = ({ selected }) => {
@@ -1027,6 +1132,17 @@ const DatasetDetailLayout = () => {
     });
   };
 
+  const onDatasetNameChange = (event) => {
+    setDatasetName(event.target.value);
+    showSaveCancelButton(true);
+  };
+
+  const handleEditClick = () => {
+    if (isSystemAdmin() || userAclPerm == "ADMIN") {
+      isDatasetNameEditable(true);
+    }
+  };
+
   return (
     <>
       <React.Fragment>
@@ -1034,7 +1150,7 @@ const DatasetDetailLayout = () => {
           <Button
             variant="light"
             className="border-0 bg-transparent"
-            onClick={back}
+            onClick={() => window.history.back()}
             size="sm"
             data-id="back"
             data-cy="back"
@@ -1042,22 +1158,47 @@ const DatasetDetailLayout = () => {
             <i className="fa fa-angle-left fa-lg font-weight-bold" />
           </Button>
           <h3 className="gds-header bold">
-            <span
-              title={datasetInfo.name}
-              className="text-truncate"
-              style={{ maxWidth: "700px", display: "inline-block" }}
-            >
-              Dataset : {datasetInfo.name}
-            </span>
+            <span>Dataset :</span>
+            {!datasetNameEditable ? (
+              <span
+                title={datasetName}
+                className="text-truncate"
+                style={{ maxWidth: "700px", display: "inline-block" }}
+                onClick={() => handleEditClick()}
+              >
+                {datasetName}
+              </span>
+            ) : (
+              <input
+                type="text"
+                name="shareName"
+                className="form-control"
+                data-cy="shareName"
+                value={datasetName}
+                onChange={onDatasetNameChange}
+              />
+            )}
+
+            {/* <input
+              type="text"
+              name="shareName"
+              className="form-control"
+              data-cy="shareName"
+              value={datasetName}
+              onChange={onDatasetNameChange}
+            /> */}
           </h3>
           <CustomBreadcrumb />
           {(isSystemAdmin() || userAclPerm == "ADMIN") && (
             <span className="pipe"></span>
           )}
-          {(isSystemAdmin() || userAclPerm == "ADMIN") && saveCancelButtons ? (
+          {(isSystemAdmin() ||
+            userAclPerm == "ADMIN" ||
+            userAclPerm == "POLICY_ADMIN") &&
+          saveCancelButtons ? (
             <div className="gds-header-btn-grp">
               <Button
-                variant="primary"
+                variant="secondary"
                 onClick={() => removeChanges()}
                 size="sm"
                 data-id="cancel"
@@ -1080,21 +1221,7 @@ const DatasetDetailLayout = () => {
               </Button>
             </div>
           ) : (
-            <div>
-              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
-                <div className="gds-header-btn-grp">
-                  <Button
-                    variant="primary"
-                    onClick={requestDatashare}
-                    size="sm"
-                    data-id="addADatashare"
-                    data-cy="addADatashare"
-                  >
-                    Add a Data Share
-                  </Button>
-                </div>
-              )}
-            </div>
+            <div></div>
           )}
           <div>
             <DropdownButton
@@ -1176,6 +1303,15 @@ const DatasetDetailLayout = () => {
                                     className="gds-left-inline-field"
                                     height="30px"
                                   >
+                                    <span className="gds-label-color">ID</span>
+                                  </div>
+                                  <div line-height="30px">{datasetInfo.id}</div>
+                                </div>
+                                <div className="wrapper">
+                                  <div
+                                    className="gds-left-inline-field"
+                                    height="30px"
+                                  >
                                     <span className="gds-label-color">
                                       Date Updated
                                     </span>
@@ -1217,9 +1353,12 @@ const DatasetDetailLayout = () => {
                                 <div>
                                   <textarea
                                     placeholder="Dataset Description"
-                                    className="form-control gds-description"
+                                    className="form-control gds-description pl-1"
                                     id="description"
                                     data-cy="description"
+                                    readOnly={
+                                      !isSystemAdmin() && userAclPerm != "ADMIN"
+                                    }
                                     onChange={datasetDescriptionChange}
                                     value={datasetDescription}
                                     rows={5}
@@ -1227,11 +1366,21 @@ const DatasetDetailLayout = () => {
                                 </div>
                               </div>
                             </div>
-                            {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                            {(isSystemAdmin() ||
+                              userAclPerm == "ADMIN" ||
+                              userAclPerm == "POLICY_ADMIN" ||
+                              userAclPerm == "AUDIT") && (
                               <PrinciplePermissionComp
                                 userList={userList}
                                 groupList={groupList}
                                 roleList={roleList}
+                                type="dataset"
+                                isAdmin={
+                                  isSystemAdmin() || userAclPerm == "ADMIN"
+                                    ? true
+                                    : false
+                                }
+                                isDetailView={true}
                                 onDataChange={handleDataChange}
                               />
                             )}
@@ -1243,237 +1392,50 @@ const DatasetDetailLayout = () => {
                     <div></div>
                   )}
                 </Tab>
-                <Tab eventKey="dataShares" title="DATASHARES">
-                  {activeKey == "dataShares" ? (
-                    <div className="gds-tab-content">
-                      <div>
-                        <div className="usr-grp-role-search-width mb-4">
+                <Tab eventKey="datashares" title="DATASHARES">
+                  {activeKey == "datashares" ? (
+                    <div className="gds-request-content">
+                      <div className="mb-3">
+                        <div className="usr-grp-role-search-width mb-3">
                           <StructuredFilter
                             key="user-listing-search-filter"
                             placeholder="Search datashares..."
                           />
                         </div>
+                        {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                          <div className="gds-header-btn-grp">
+                            <Button
+                              variant="primary"
+                              onClick={requestDatashare}
+                              size="sm"
+                              data-id="addADatashare"
+                              data-cy="addADatashare"
+                            >
+                              Add a Data Share
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="usr-grp-role-search-width">
-                          <Tabs id="DatashareTabs" className="mg-b-10">
-                            <Tab eventKey="All" title={tabTitle.all}>
-                              <Card className="border-0">
-                                <div>
-                                  {dataShareRequestsList.length > 0 ? (
-                                    dataShareRequestsList.map((obj, index) => {
-                                      return (
-                                        <div>
-                                          <Accordion
-                                            className="mg-b-10"
-                                            defaultActiveKey="0"
-                                          >
-                                            <div className="border-bottom">
-                                              <Accordion.Toggle
-                                                as={Card.Header}
-                                                eventKey="1"
-                                                onClick={() =>
-                                                  onRequestAccordionChange(
-                                                    obj.id
-                                                  )
-                                                }
-                                                className="border-bottom-0"
-                                                data-id="panel"
-                                                data-cy="panel"
-                                              >
-                                                {obj["status"] == "GRANTED" ? (
-                                                  <div>
-                                                    <span>
-                                                      Data access granted.
-                                                    </span>
-                                                    <Link
-                                                      className="mb-3"
-                                                      to=""
-                                                      onClick={() =>
-                                                        showActiveateRequestModal(
-                                                          obj
-                                                        )
-                                                      }
-                                                    >
-                                                      Activate Datashare
-                                                    </Link>
-                                                  </div>
-                                                ) : (
-                                                  <div></div>
-                                                )}
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                  <div className="d-flex align-items-center gap-1">
-                                                    {requestAccordionState[
-                                                      obj.id
-                                                    ] ? (
-                                                      <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                                    ) : (
-                                                      <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                    )}
-                                                    <h5 className="gds-heading-5 m-0">
-                                                      {/* {obj.name} */}{" "}
-                                                      Datashare{" "}
-                                                      {obj.dataShareId}
-                                                    </h5>
-                                                  </div>
-                                                  <div className="d-flex align-items-center gap-1">
-                                                    <span
-                                                      //className="badge badge-light gds-requested-status"
-                                                      className={
-                                                        obj["status"] ===
-                                                        "REQUESTED"
-                                                          ? "badge badge-light gds-requested-status"
-                                                          : obj["status"] ===
-                                                            "GRANTED"
-                                                          ? "badge badge-light gds-granted-status"
-                                                          : obj["status"] ===
-                                                            "ACTIVE"
-                                                          ? "badge badge-light gds-active-status"
-                                                          : "badge badge-light gds-denied-status"
-                                                      }
-                                                    >
-                                                      {obj["status"]}
-                                                    </span>
-                                                    <Button
-                                                      variant="outline-dark"
-                                                      size="sm"
-                                                      className="mr-2"
-                                                      title="View"
-                                                      data-name="viewDatashare"
-                                                      onClick={() =>
-                                                        viewDatashareDetail(
-                                                          obj.dataShareId
-                                                        )
-                                                      }
-                                                      data-id={obj.id}
-                                                    >
-                                                      <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
-                                                    </Button>
-                                                    {(isSystemAdmin() ||
-                                                      userAclPerm ==
-                                                        "ADMIN") && (
-                                                      <Button
-                                                        variant="danger"
-                                                        size="sm"
-                                                        title="Delete"
-                                                        onClick={() =>
-                                                          toggleConfirmModalForDelete(
-                                                            obj.id,
-                                                            obj.name,
-                                                            obj.status
-                                                          )
-                                                        }
-                                                        data-name="deleteDatashareRequest"
-                                                        data-id={obj["id"]}
-                                                        data-cy={obj["id"]}
-                                                      >
-                                                        <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                      </Button>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </Accordion.Toggle>
-                                              <Accordion.Collapse eventKey="1">
-                                                <Card.Body>
-                                                  <div className="d-flex justify-content-between">
-                                                    <div className="gds-inline-field-grp">
-                                                      <div className="wrapper">
-                                                        <div
-                                                          className="gds-left-inline-field"
-                                                          height="30px"
-                                                        >
-                                                          Service
-                                                        </div>
-                                                        <div line-height="30px">
-                                                          {obj["service"]}
-                                                        </div>
-                                                      </div>
-                                                      <div className="wrapper">
-                                                        <div
-                                                          className="gds-left-inline-field"
-                                                          height="30px"
-                                                        >
-                                                          Zone
-                                                        </div>
-                                                        <div line-height="30px">
-                                                          {obj["zone"]}
-                                                        </div>
-                                                      </div>
-                                                      <div className="wrapper">
-                                                        <div
-                                                          className="gds-left-inline-field"
-                                                          height="30px"
-                                                        >
-                                                          Resource Count
-                                                        </div>
-                                                        <div line-height="30px">
-                                                          {obj["resourceCount"]}
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                    <div className="gds-right-inline-field-grp">
-                                                      <div className="wrapper">
-                                                        <div>Added</div>
-                                                        <div className="gds-right-inline-field">
-                                                          {dateFormat(
-                                                            obj["createTime"],
-                                                            "mm/dd/yyyy hh:MM:ss TT"
-                                                          )}
-                                                        </div>
-                                                      </div>
-                                                      <div className="wrapper">
-                                                        <div>Updated</div>
-                                                        <div className="gds-right-inline-field">
-                                                          {dateFormat(
-                                                            obj["updateTime"],
-                                                            "mm/dd/yyyy hh:MM:ss TT"
-                                                          )}
-                                                        </div>
-                                                      </div>
-                                                      <div className="w-100 text-right">
-                                                        <Link
-                                                          to={`/gds/request/detail/${obj.id}`}
-                                                        >
-                                                          View Request
-                                                        </Link>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </Card.Body>
-                                              </Accordion.Collapse>
-                                            </div>
-                                          </Accordion>
-                                        </div>
-                                      );
-                                    })
-                                  ) : (
-                                    <div></div>
-                                  )}
-                                  {requestPageCount > 1 && (
-                                    <ReactPaginate
-                                      previousLabel={"Prev"}
-                                      nextLabel={"Next"}
-                                      pageClassName="page-item"
-                                      pageLinkClassName="page-link"
-                                      previousClassName="page-item"
-                                      previousLinkClassName="page-link"
-                                      nextClassName="page-item"
-                                      nextLinkClassName="page-link"
-                                      breakLabel={"..."}
-                                      pageCount={requestPageCount}
-                                      onPageChange={handleRequestPageClick}
-                                      breakClassName="page-item"
-                                      breakLinkClassName="page-link"
-                                      containerClassName="pagination"
-                                      activeClassName="active"
-                                    />
-                                  )}
-                                </div>
-                              </Card>
+                          <Tabs
+                            id="DatashareTabs"
+                            className="mg-b-10"
+                            activeKey={requestActiveKey}
+                            onSelect={handleRequestTabSelect}
+                          >
+                            <Tab eventKey="All" title="All">
+                              <DatashareInDatasetListComp
+                                datasetId={Number(datasetId)}
+                                setUpdateTable={setUpdateTable}
+                                updateTable={updateTable}
+                                userAclPerm={userAclPerm}
+                              />
                             </Tab>
-                            <Tab eventKey="Active" title="Active" />
-                            <Tab eventKey="Requested" title="Requested" />
-                            <Tab eventKey="Granted" title="Granted" />
+                            <Tab eventKey="Active" title="Active"></Tab>
+                            <Tab eventKey="Requested" title="Requested"></Tab>
+                            <Tab eventKey="Granted" title="Granted"></Tab>
+                            <Tab eventKey="Denied" title="Denied"></Tab>
                           </Tabs>
                         </div>
                       </div>
@@ -1613,31 +1575,32 @@ const DatasetDetailLayout = () => {
                               </div>
                               <Accordion.Collapse eventKey="1">
                                 <Card.Body>
-                                  <Card.Body>
-                                    {filteredGroupSharedWithMap != undefined &&
-                                    filteredGroupSharedWithMap.size > 0 ? (
-                                      Array.from(
-                                        filteredGroupSharedWithMap
-                                      ).map(([key, value]) => (
+                                  {filteredGroupSharedWithMap != undefined &&
+                                  filteredGroupSharedWithMap.size > 0 ? (
+                                    Array.from(filteredGroupSharedWithMap).map(
+                                      ([key, value]) => (
                                         <div
                                           className="gds-principle-listing"
                                           key={key}
                                         >
                                           <span title={key}>{key}</span>
-                                          {value.map((accessObj) => (
-                                            <span
-                                              title={accessObj.type}
-                                              key={accessObj.type}
-                                            >
-                                              {accessObj.type}
-                                            </span>
-                                          ))}
+                                          <div className="gds-chips gap-one-fourth">
+                                            {value.map((accessObj) => (
+                                              <span
+                                                className="badge badge-light badge-sm"
+                                                title={accessObj.type}
+                                                key={accessObj.type}
+                                              >
+                                                {accessObj.type}
+                                              </span>
+                                            ))}
+                                          </div>
                                         </div>
-                                      ))
-                                    ) : (
-                                      <p className="mt-1">--</p>
-                                    )}
-                                  </Card.Body>
+                                      )
+                                    )
+                                  ) : (
+                                    <p className="mt-1">--</p>
+                                  )}
                                 </Card.Body>
                               </Accordion.Collapse>
                             </Card>
@@ -1675,18 +1638,19 @@ const DatasetDetailLayout = () => {
                               </div>
                               <Accordion.Collapse eventKey="1">
                                 <Card.Body>
-                                  <Card.Body>
-                                    {filteredRoleSharedWithMap != undefined &&
-                                    filteredRoleSharedWithMap.size > 0 ? (
-                                      Array.from(filteredRoleSharedWithMap).map(
-                                        ([key, value]) => (
-                                          <div
-                                            className="gds-principle-listing"
-                                            key={key}
-                                          >
-                                            <span title={key}>{key}</span>
+                                  {filteredRoleSharedWithMap != undefined &&
+                                  filteredRoleSharedWithMap.size > 0 ? (
+                                    Array.from(filteredRoleSharedWithMap).map(
+                                      ([key, value]) => (
+                                        <div
+                                          className="gds-principle-listing"
+                                          key={key}
+                                        >
+                                          <span title={key}>{key}</span>
+                                          <div className="gds-chips gap-one-fourth">
                                             {value.map((accessObj) => (
                                               <span
+                                                className="badge badge-light badge-sm"
                                                 title={accessObj.type}
                                                 key={accessObj.type}
                                               >
@@ -1694,12 +1658,12 @@ const DatasetDetailLayout = () => {
                                               </span>
                                             ))}
                                           </div>
-                                        )
+                                        </div>
                                       )
-                                    ) : (
-                                      <p className="mt-1">--</p>
-                                    )}
-                                  </Card.Body>
+                                    )
+                                  ) : (
+                                    <p className="mt-1">--</p>
+                                  )}
                                 </Card.Body>
                               </Accordion.Collapse>
                             </Card>
@@ -1721,6 +1685,7 @@ const DatasetDetailLayout = () => {
                         <AccessGrantForm
                           dataset={datasetInfo}
                           onDataChange={handleAccessGrantChange}
+                          serviceCompDetails={serviceDef}
                         />
                       ) : (
                         <div></div>
@@ -1729,11 +1694,12 @@ const DatasetDetailLayout = () => {
                   </Tab>
                 )}
 
-                {(isSystemAdmin() ||
-                  userAclPerm === "ADMIN" ||
-                  userAclPerm === "AUDIT") && (
-                  <Tab eventKey="history" title="HISTORY" />
-                )}
+                {false &&
+                  (isSystemAdmin() ||
+                    userAclPerm === "ADMIN" ||
+                    userAclPerm === "AUDIT") && (
+                    <Tab eventKey="history" title="HISTORY" />
+                  )}
 
                 <Tab
                   eventKey="termsOfUse"
@@ -1758,6 +1724,9 @@ const DatasetDetailLayout = () => {
                             data-cy="termsAndConditions"
                             onChange={datasetTermsAndConditionsChange}
                             value={datasetTerms}
+                            readOnly={
+                              !isSystemAdmin() && userAclPerm != "ADMIN"
+                            }
                             rows={16}
                           />
                         </div>
@@ -1870,7 +1839,7 @@ const DatasetDetailLayout = () => {
                 ) : (
                   <div></div>
                 )}
-                {datasharePageCount > 1 && (
+                {datashareTotalCount > itemsPerPage && (
                   <div className="d-flex">
                     <ReactPaginate
                       previousLabel={"<"}

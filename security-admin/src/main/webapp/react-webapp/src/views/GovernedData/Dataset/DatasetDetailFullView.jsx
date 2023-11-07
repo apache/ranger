@@ -36,7 +36,7 @@ import Select from "react-select";
 const DatasetDetailFullView = () => {
   let { datasetId } = useParams();
   const { state } = useLocation();
-  const userAclPerm = state?.userAclPerm;
+  const [userAclPerm, setUserAclPerm] = useState(state?.userAclPerm);
   const [loader, setLoader] = useState(true);
   const [datasetInfo, setDatasetInfo] = useState({});
   const [userList, setUserList] = useState([]);
@@ -63,19 +63,37 @@ const DatasetDetailFullView = () => {
   const [roleSharedWithAccordion, setRoleSharedWithAccordion] = useState(false);
   const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
     useState([]);
+  const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
+    useState(0);
 
   useEffect(() => {
+    if (userAclPerm == undefined) fetchDatasetSummary(datasetId);
     fetchDatasetInfo(datasetId);
     fetchDatashareRequestList(undefined, 0, false);
-    if (
-      isSystemAdmin() ||
-      userAclPerm == "POLICY_ADMIN" ||
-      userAclPerm == "ADMIN" ||
-      userAclPerm == "AUDIT"
-    )
-      fetchAccessGrantInfo();
-    fetchDatashareRequestList(undefined, 0, true);
+    fetchAccessGrantInfo();
   }, []);
+
+  const fetchDatasetSummary = async (datasetId) => {
+    try {
+      let params = {};
+      params["datasetId"] = datasetId;
+      setLoader(true);
+      const resp = await fetchApi({
+        url: `gds/dataset/summary`,
+        params: params
+      });
+      setLoader(false);
+      setUserAclPerm(resp.data.list[0].permissionForCaller);
+    } catch (error) {
+      setLoader(false);
+      if (error.response.status == 401 || error.response.status == 400) {
+        <ErrorPage errorCode="401" />;
+      }
+      console.error(
+        `Error occurred while fetching dataset summary details ! ${error}`
+      );
+    }
+  };
 
   const fetchDatasetInfo = async (datasetId) => {
     try {
@@ -125,6 +143,7 @@ const DatasetDetailFullView = () => {
       } else {
         setCompleteDatashareRequestsList(resp.data.list);
       }
+      setDatashareRequestTotalCount(resp.data.totalCount);
     } catch (error) {
       console.error(
         `Error occurred while fetching Datashare requests details ! ${error}`
@@ -181,6 +200,7 @@ const DatasetDetailFullView = () => {
         setFilteredGroupSharedWithMap(groupMap);
         setFilteredRoleSharedWithMap(roleMap);
       });
+      return grantItems;
     } catch (error) {
       if (error.response.status == 404) {
       }
@@ -373,23 +393,66 @@ const DatasetDetailFullView = () => {
     );
   };
 
-  const downloadJsonFile = () => {
+  const downloadJsonFile = async () => {
     let jsonData = datasetInfo;
-    jsonData.datashares = completeDatashareRequestsList;
-    //jsonData.sharedWith = sharedShareRequestsList;
+    jsonData.datashares = await fetchDatashareRequestList(undefined, 0, true);
+    if (
+      userAclPerm == "ADMIN" ||
+      userAclPerm == "AUDIT" ||
+      userAclPerm == "POLICY_ADMIN"
+    ) {
+      jsonData.sharedWith = { users: {}, groups: {}, roles: {} };
+      let policyItems = await fetchAccessGrantInfo();
+      for (const item of policyItems) {
+        let accessList = [];
+        item.accesses.forEach((item) => {
+          accessList.push(item.type);
+        });
+        item.users?.forEach((user) => {
+          if (jsonData.sharedWith.users[user] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.users[user],
+              ...accessList
+            ];
+            jsonData.sharedWith.users[user] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.users[user] = accessList;
+          }
+        });
+        item.groups?.forEach((group) => {
+          if (jsonData.sharedWith.groups[group] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.groups[group],
+              ...accessList
+            ];
+            jsonData.sharedWith.groups[group] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.groups[group] = accessList;
+          }
+        });
+        item.roles?.forEach((role) => {
+          if (jsonData.sharedWith.roles[role] != undefined) {
+            let newAccessTypeList = [
+              ...jsonData.sharedWith.roles[role],
+              ...accessList
+            ];
+            jsonData.sharedWith.roles[role] = [...new Set(newAccessTypeList)];
+          } else {
+            jsonData.sharedWith.roles[role] = accessList;
+          }
+        });
+      }
+    }
     const jsonContent = JSON.stringify(jsonData);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = datasetInfo.name + ".json"; // Set the desired file name
+    a.download = datasetInfo.name + ".json";
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const back = () => {
-    navigate(`/gds/dataset/${datasetId}/detail`);
-  };
   return (
     <>
       {loader ? (
@@ -400,7 +463,7 @@ const DatasetDetailFullView = () => {
             <Button
               variant="light"
               className="border-0 bg-transparent"
-              onClick={back}
+              onClick={() => window.history.back()}
               size="sm"
               data-id="back"
               data-cy="back"
@@ -480,12 +543,16 @@ const DatasetDetailFullView = () => {
                     </div>
                   </div>
                 </div>
-                {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                {(isSystemAdmin() ||
+                  userAclPerm == "ADMIN" ||
+                  userAclPerm == "AUDIT" ||
+                  userAclPerm == "POLICY_ADMIN") && (
                   <PrinciplePermissionComp
                     userList={userList}
                     groupList={groupList}
                     roleList={roleList}
                     isEditable={false}
+                    type="dataset"
                     //onDataChange={handleDataChange}
                   />
                 )}
@@ -666,7 +733,7 @@ const DatasetDetailFullView = () => {
                     ) : (
                       <div></div>
                     )}
-                    {requestPageCount > 1 && (
+                    {datashareRequestTotalCount > itemsPerPage && (
                       <ReactPaginate
                         previousLabel={"Prev"}
                         nextLabel={"Next"}
@@ -691,7 +758,7 @@ const DatasetDetailFullView = () => {
                 <div className="gds-tab-content gds-content-border">
                   <div>
                     <div className="usr-grp-role-search-width">
-                      <p className="gds-content-header">Shared with</p>
+                      <p className="gds-content-header">Shared With</p>
                     </div>
                     <div className="gds-flex mg-b-10">
                       <input
@@ -809,18 +876,19 @@ const DatasetDetailFullView = () => {
                         </div>
                         <Accordion.Collapse eventKey="1">
                           <Card.Body>
-                            <Card.Body>
-                              {filteredGroupSharedWithMap != undefined &&
-                              filteredGroupSharedWithMap.size > 0 ? (
-                                Array.from(filteredGroupSharedWithMap).map(
-                                  ([key, value]) => (
-                                    <div
-                                      className="gds-principle-listing"
-                                      key={key}
-                                    >
-                                      <span title={key}>{key}</span>
+                            {filteredGroupSharedWithMap != undefined &&
+                            filteredGroupSharedWithMap.size > 0 ? (
+                              Array.from(filteredGroupSharedWithMap).map(
+                                ([key, value]) => (
+                                  <div
+                                    className="gds-principle-listing"
+                                    key={key}
+                                  >
+                                    <span title={key}>{key}</span>
+                                    <div className="gds-chips gap-one-fourth">
                                       {value.map((accessObj) => (
                                         <span
+                                          className="badge badge-light badge-sm"
                                           title={accessObj.type}
                                           key={accessObj.type}
                                         >
@@ -828,12 +896,12 @@ const DatasetDetailFullView = () => {
                                         </span>
                                       ))}
                                     </div>
-                                  )
+                                  </div>
                                 )
-                              ) : (
-                                <p className="mt-1">--</p>
-                              )}
-                            </Card.Body>
+                              )
+                            ) : (
+                              <p className="mt-1">--</p>
+                            )}
                           </Card.Body>
                         </Accordion.Collapse>
                       </Card>
@@ -871,18 +939,19 @@ const DatasetDetailFullView = () => {
                         </div>
                         <Accordion.Collapse eventKey="1">
                           <Card.Body>
-                            <Card.Body>
-                              {filteredRoleSharedWithMap != undefined &&
-                              filteredRoleSharedWithMap.size > 0 ? (
-                                Array.from(filteredRoleSharedWithMap).map(
-                                  ([key, value]) => (
-                                    <div
-                                      className="gds-principle-listing"
-                                      key={key}
-                                    >
-                                      <span title={key}>{key}</span>
+                            {filteredRoleSharedWithMap != undefined &&
+                            filteredRoleSharedWithMap.size > 0 ? (
+                              Array.from(filteredRoleSharedWithMap).map(
+                                ([key, value]) => (
+                                  <div
+                                    className="gds-principle-listing"
+                                    key={key}
+                                  >
+                                    <span title={key}>{key}</span>
+                                    <div className="gds-chips gap-one-fourth">
                                       {value.map((accessObj) => (
                                         <span
+                                          className="badge badge-light badge-sm"
                                           title={accessObj.type}
                                           key={accessObj.type}
                                         >
@@ -890,12 +959,12 @@ const DatasetDetailFullView = () => {
                                         </span>
                                       ))}
                                     </div>
-                                  )
+                                  </div>
                                 )
-                              ) : (
-                                <p className="mt-1">--</p>
-                              )}
-                            </Card.Body>
+                              )
+                            ) : (
+                              <p className="mt-1">--</p>
+                            )}
                           </Card.Body>
                         </Accordion.Collapse>
                       </Card>

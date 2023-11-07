@@ -35,34 +35,88 @@ import arrayMutators from "final-form-arrays";
 import Select from "react-select";
 import { groupBy, isArray, maxBy, find } from "lodash";
 import { toast } from "react-toastify";
+import moment from "moment-timezone";
+import { getServiceDef } from "../../../utils/appState";
 
 const AddSharedResourceComp = ({
   datashareId,
-  onSharedResourceDataChange,
   onToggleAddResourceClose,
-  isEdit,
-  sharedResourceId
+  sharedResource,
+  showModal,
+  setShowModal,
+  resourceModalUpdateTable,
+  datashareInfo,
+  setResourceUpdateTable,
+  resourceUpdateTable,
+  serviceDetails,
+  isEdit
 }) => {
   const [accessType, setAccessType] = useState();
-  const [datashareInfo, setDatashareInfo] = useState({});
   const [showMaskInput, setShowMaskInput] = useState(false);
   const [showRowFilterInput, setShowRowFilterInput] = useState(false);
-  const [serviceDef, setServiceDef] = useState({});
-  const [serviceDetails, setService] = useState({});
   const [loader, setLoader] = useState(false);
-  const [showAddResourceModal, setShowAddResourceModal] = useState(false);
+  const [showAddResourceModal, setShowAddResourceModal] = useState(
+    showModal ? true : false
+  );
   const [openConfigAccordion, setOpenConfigAccordion] = useState(false);
   const [formData, setFormData] = useState();
   const [selectedResShareMask, setSelectedResShareMask] = useState({});
-  const [loadSharedResource, setLoadSharedResource] = useState();
+  //const [loadSharedResource, setLoadSharedResource] = useState();
+  //const [serviceDef, setServiceDef] = useState();
+  //const [serviceDetails, setService] = useState({});
+  //const serviceDef = getServiceDef();
+  const { allServiceDefs } = getServiceDef();
+  const serviceDef = allServiceDefs?.find((servicedef) => {
+    return servicedef.name == serviceDetails?.type;
+  });
+
+  const fetchSharedResource = async () => {
+    try {
+      let params = {};
+      const resp = await fetchApi({
+        url: `gds/resource/${sharedResourceId}`
+      });
+      setLoadSharedResource(resp.data);
+      setFormData(generateFormData(resp.data, serviceDef));
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching shared resource details ! ${error}`
+      );
+    }
+  };
 
   useEffect(() => {
-    fetchDatashareInfo(datashareId);
-  }, []);
+    // if (isEdit) {
+    //   //fetchSharedResource(sharedResourceId);
+    //   setLoadSharedResource(sharedResource);
+    // }
+    //
+    // //setShowAddResourceModal(true);
+    // fetchDatashareInfo(datashareId);
+    //fetchDatashareInfo(datashareId);
+    loadData();
+  }, [resourceModalUpdateTable]);
+
+  const loadData = () => {
+    if (serviceDef != null && serviceDef != undefined) {
+      if (Object.keys(serviceDef).length != 0) {
+        if (Object.keys(serviceDef.rowFilterDef).length !== 0) {
+          setShowMaskInput(true);
+        }
+        if (Object.keys(serviceDef.dataMaskDef).length !== 0) {
+          setShowRowFilterInput(true);
+        }
+      }
+    }
+
+    if (sharedResource !== undefined) {
+      setFormData(generateFormData(sharedResource, serviceDef));
+    }
+  };
 
   const generateFormData = (obj, serviceDef) => {
     let data = {};
-    data.shareName = obj.name;
+    data.shareName = obj?.name;
     let serviceCompResourcesDetails = serviceDef?.resources;
     if (obj?.resource) {
       let lastResourceLevel = [];
@@ -89,94 +143,21 @@ const AddSharedResourceComp = ({
         };
       }
     }
-    if (obj.accessTypes != undefined) {
+    if (obj?.accessTypes != undefined) {
       data.permission = obj.accessTypes.map((item) => ({
         label: item,
         value: item
       }));
     }
-    if (obj.rowFilter != undefined) {
+    if (obj?.rowFilter != undefined) {
       data.rowFilter = obj.rowFilter["filterExpr"];
     }
-    data.booleanExpression = obj.conditionExpr;
+    data.booleanExpression = obj?.conditionExpr;
     return data;
   };
 
   const onAccessConfigAccordianChange = () => {
     setOpenConfigAccordion(!openConfigAccordion);
-  };
-
-  const fetchDatashareInfo = async (datashareId) => {
-    try {
-      const resp = await fetchApi({
-        url: `gds/datashare/${datashareId}`
-      });
-      setDatashareInfo(resp.data);
-      fetchServiceByName(resp.data.service);
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching datashare details ! ${error}`
-      );
-    }
-  };
-
-  const fetchServiceByName = async (serviceName) => {
-    let serviceResp = [];
-    try {
-      serviceResp = await fetchApi({
-        url: `plugins/services/name/${serviceName}`
-      });
-      setService(serviceResp.data);
-      fetchServiceDef(serviceResp.data.type);
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service or CSRF headers! ${error}`
-      );
-    }
-  };
-
-  const fetchServiceDef = async (serviceDefName) => {
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-      );
-    }
-    let modifiedServiceDef = serviceDefsResp.data;
-    for (const obj of modifiedServiceDef.resources) {
-      obj.recursiveSupported = false;
-      obj.excludesSupported = false;
-    }
-    if (Object.keys(modifiedServiceDef.rowFilterDef).length !== 0) {
-      setShowMaskInput(true);
-    }
-    if (Object.keys(modifiedServiceDef.dataMaskDef).length !== 0) {
-      setShowRowFilterInput(true);
-    }
-
-    setServiceDef(modifiedServiceDef);
-    if (loadSharedResource != undefined) {
-      setFormData(generateFormData(loadSharedResource, modifiedServiceDef));
-    }
-  };
-
-  const fetchSharedResource = async (sharedResourceId) => {
-    try {
-      let params = {};
-      const resp = await fetchApi({
-        url: `gds/resource/${sharedResourceId}`
-      });
-      setLoadSharedResource(resp.data);
-      setFormData(generateFormData(resp.data, serviceDef));
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching shared resource details ! ${error}`
-      );
-    }
   };
 
   const noneOptions = {
@@ -186,39 +167,41 @@ const AddSharedResourceComp = ({
 
   const getAccessTypeOptions = (formValues) => {
     let srcOp = [];
-    const { resources = [] } = serviceDef;
-    const grpResources = groupBy(resources, "level");
-    let grpResourcesKeys = [];
-    for (const resourceKey in grpResources) {
-      grpResourcesKeys.push(+resourceKey);
-    }
-    grpResourcesKeys = grpResourcesKeys.sort();
-    for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
-      let selectedResource = `resourceName-${grpResourcesKeys[i]}`;
-      if (
-        formValues[selectedResource] &&
-        formValues[selectedResource].value !== noneOptions.value
-      ) {
-        srcOp = serviceDef.accessTypes;
-        if (formValues[selectedResource].accessTypeRestrictions?.length > 0) {
-          let op = [];
-          for (const name of formValues[selectedResource]
-            .accessTypeRestrictions) {
-            let typeOp = find(srcOp, { name });
-            if (typeOp) {
-              op.push(typeOp);
-            }
-          }
-          srcOp = op;
-        }
-        break;
+    if (serviceDef != undefined) {
+      const { resources = [] } = serviceDef;
+      const grpResources = groupBy(resources, "level");
+      let grpResourcesKeys = [];
+      for (const resourceKey in grpResources) {
+        grpResourcesKeys.push(+resourceKey);
       }
-    }
+      grpResourcesKeys = grpResourcesKeys.sort();
+      for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+        let selectedResource = `resourceName-${grpResourcesKeys[i]}`;
+        if (
+          formValues[selectedResource] &&
+          formValues[selectedResource].value !== noneOptions.value
+        ) {
+          srcOp = serviceDef.accessTypes;
+          if (formValues[selectedResource].accessTypeRestrictions?.length > 0) {
+            let op = [];
+            for (const name of formValues[selectedResource]
+              .accessTypeRestrictions) {
+              let typeOp = find(srcOp, { name });
+              if (typeOp) {
+                op.push(typeOp);
+              }
+            }
+            srcOp = op;
+          }
+          break;
+        }
+      }
 
-    return srcOp.map(({ label, name: value }) => ({
-      label,
-      value
-    }));
+      return srcOp.map(({ label, name: value }) => ({
+        label,
+        value
+      }));
+    }
   };
 
   const onAccessTypeChange = (event, input) => {
@@ -265,9 +248,9 @@ const AddSharedResourceComp = ({
     try {
       setLoader(true);
       if (isEdit) {
-        data.guid = loadSharedResource.guid;
+        data.guid = sharedResource.guid;
         await fetchApi({
-          url: `gds/resource/${loadSharedResource.id}`,
+          url: `gds/resource/${sharedResource.id}`,
           method: "put",
           data: data
         });
@@ -281,9 +264,8 @@ const AddSharedResourceComp = ({
         toast.success("Shared resource created successfully!!");
       }
     } catch (error) {
-      setLoader(false);
       serverError(error);
-      if (loadSharedResource != undefined) {
+      if (sharedResource != undefined) {
         toast.success("Error occurred while updating Shared resource");
       } else {
         toast.success("Error occurred while creating Shared resource");
@@ -292,16 +274,16 @@ const AddSharedResourceComp = ({
         `Error occurred while creating/updating Shared resource  ${error}`
       );
     }
-    onSharedResourceDataChange();
+    setResourceUpdateTable(moment.now());
     setLoader(false);
     if (closeModal) {
-      setShowAddResourceModal(false);
+      setShowModal(false);
     }
     console.log(data);
   };
 
   const toggleAddResourceClose = () => {
-    setShowAddResourceModal(false);
+    setShowModal(false);
   };
 
   const onResShareMaskChange = (event, input) => {
@@ -310,12 +292,11 @@ const AddSharedResourceComp = ({
   };
 
   const addResource = () => {
-    //setLoadSharedResource();
     setShowAddResourceModal(true);
   };
 
   const toggleAddResourceModalClose = () => {
-    setShowAddResourceModal(false);
+    setShowModal(false);
   };
 
   return (
@@ -337,11 +318,12 @@ const AddSharedResourceComp = ({
         <Loader />
       ) : (
         <>
-          <div className="gds-header-btn-grp">
+          {/* <div className="gds-header-btn-grp">
             {!isEdit ? (
               <Button
                 variant="primary"
                 onClick={addResource}
+                style={{ whiteSpace: "nowrap" }}
                 size="sm"
                 data-id="save"
                 data-cy="save"
@@ -354,8 +336,6 @@ const AddSharedResourceComp = ({
                 size="sm"
                 title="Edit"
                 onClick={(e) => {
-                  // e.stopPropagation();
-                  // setLoadSharedResource(obj);
                   fetchSharedResource(sharedResourceId);
                   setShowAddResourceModal(true);
                 }}
@@ -365,9 +345,10 @@ const AddSharedResourceComp = ({
                 <i className="fa-fw fa fa-edit"></i>
               </Button>
             )}
-          </div>
+          </div> */}
           <Modal
-            show={showAddResourceModal}
+            //show={showAddResourceModal}
+            show={showModal}
             onHide={toggleAddResourceModalClose}
             //className="mb-7"
             size="xl"
@@ -380,20 +361,20 @@ const AddSharedResourceComp = ({
             <div>
               <div className="mb-2 gds-chips flex-wrap">
                 <span
-                  title={datashareInfo.name}
+                  title={datashareInfo?.name}
                   className="badge badge-light text-truncate"
                   style={{ maxWidth: "250px", display: "inline-block" }}
                 >
-                  Datashare: {datashareInfo.name}
+                  Datashare: {datashareInfo?.name}
                 </span>
                 <span
-                  title={datashareInfo.service}
+                  title={datashareInfo?.service}
                   className="badge badge-light text-truncate"
                   style={{ maxWidth: "250px", display: "inline-block" }}
                 >
-                  Service: {datashareInfo.service}
+                  Service: {datashareInfo?.service}
                 </span>
-                {datashareInfo.zone != undefined ? (
+                {datashareInfo?.zone != undefined ? (
                   <span
                     title={datashareInfo.zone}
                     className="badge badge-light text-truncate"
@@ -407,7 +388,7 @@ const AddSharedResourceComp = ({
               </div>
               <Form
                 onSubmit={handleSubmit}
-                initialValues={formData}
+                initialValues={isEdit ? formData : {}}
                 mutators={{
                   ...arrayMutators
                 }}
@@ -510,7 +491,7 @@ const AddSharedResourceComp = ({
                                 <div className="mb-3 form-group row">
                                   <Col sm={3}>
                                     <label className="form-label pull-right fnt-14">
-                                      Add Permissions
+                                      Permission
                                     </label>
                                   </Col>
                                   <Field
@@ -635,7 +616,7 @@ const AddSharedResourceComp = ({
                                 <div className="mb-0 form-group row">
                                   <Col sm={3}>
                                     <label className="form-label pull-right fnt-14">
-                                      Add Condition
+                                      Condition
                                     </label>
                                   </Col>
                                   <Field

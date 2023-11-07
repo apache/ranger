@@ -17,30 +17,37 @@
  * under the License.
  */
 
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useRef } from "react";
 import { Form as FormB, Button, Card } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import moment from "moment-timezone";
-import { getAllTimeZoneList } from "../../../utils/XAUtils";
-import DatasetPolicyItemComp from "./DatasetPolicyItemComp";
+import {
+  dragStart,
+  dragEnter,
+  drop,
+  dragOver,
+  getAllTimeZoneList,
+  policyConditionUpdatedJSON
+} from "../../../utils/XAUtils";
 import { fetchApi } from "Utils/fetchAPI";
-import { maxBy, find } from "lodash";
+import { maxBy, find, isEmpty, isArray, isEqual, isObject } from "lodash";
 import userGreyIcon from "../../../images/user-grey.svg";
 import groupGreyIcon from "../../../images/group-grey.svg";
 import roleGreyIcon from "../../../images/role-grey.svg";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import PolicyValidityPeriodComp from "../../PolicyListing/PolicyValidityPeriodComp";
 import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
-import { isEqual, isEmpty, isObject } from "lodash";
-import { policyConditionUpdatedJSON } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import dateFormat from "dateformat";
+import Select from "react-select";
+import AsyncSelect from "react-select/async";
+import { FieldArray } from "react-final-form-arrays";
+import { CustomTooltip } from "../../../components/CommonComponents";
+import Editable from "Components/Editable";
 
 const initialState = {
-  loader: true,
-  serviceDetails: null,
-  serviceCompDetails: null,
+  loader: false,
   policyData: null,
   formData: {}
 };
@@ -51,8 +58,6 @@ function reducer(state, action) {
       return {
         ...state,
         loader: false,
-        serviceDetails: action.serviceDetails,
-        serviceCompDetails: action.serviceCompDetails,
         policyData: action?.policyData,
         formData: action.formData
       };
@@ -61,11 +66,13 @@ function reducer(state, action) {
   }
 }
 
-function AccessGrantForm({ dataset, onDataChange }) {
+function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
   const [policyState, dispatch] = useReducer(reducer, initialState);
-  const { loader, serviceCompDetails, policyData, formData } = policyState;
+  const { loader, policyData, formData } = policyState;
   const [showModal, policyConditionState] = useState(false);
   const [validityPeriod, setValidityPeriod] = useState([]);
+  const dragOverItem = useRef();
+  const dragItem = useRef();
 
   useEffect(() => {
     fetchInitalData();
@@ -74,51 +81,33 @@ function AccessGrantForm({ dataset, onDataChange }) {
   const fetchInitalData = async () => {
     let policyData = null;
     if (dataset.name) {
-      policyData = await fetchPolicyData();
+      policyData = await fetchAccessGrantData();
     }
     if (policyData != null) {
       setValidityPeriod(policyData.validitySchedules);
-      let serviceData = await fetchServiceDetails(policyData.service);
-      let serviceCompData = await getServiceDefData(policyData.serviceType);
       dispatch({
         type: "SET_DATA",
-        serviceDetails: serviceData,
-        serviceCompDetails: serviceCompData,
         policyData: policyData || null,
-        formData: generateFormData(policyData, serviceCompData)
+        formData: generateFormData(policyData, serviceCompDetails)
       });
     }
   };
 
-  const fetchPolicyData = async () => {
+  const fetchAccessGrantData = async () => {
     let data = null;
     try {
       policyState.loader = true;
       const resp = await fetchApi({
         url: `/gds/dataset/${dataset.id}/policy`
       });
+      policyState.loader = false;
       if (resp.data.length > 0) {
         data = resp.data[0];
-        data = resp.data[0];
-        policyState.loader = false;
       }
     } catch (error) {
       console.error(
         `Error occurred while fetching dataset policy details ! ${error}`
       );
-    }
-    return data;
-  };
-
-  const fetchServiceDetails = async (serviceName) => {
-    let data = null;
-    try {
-      const resp = await fetchApi({
-        url: `plugins/services/name/${serviceName}`
-      });
-      data = resp.data || null;
-    } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
     }
     return data;
   };
@@ -201,22 +190,6 @@ function AccessGrantForm({ dataset, onDataChange }) {
     return data;
   };
 
-  const getServiceDefData = async (serviceDefName) => {
-    let data = null;
-    let resp = {};
-    try {
-      resp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`
-      });
-      data = resp.data;
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-      );
-    }
-    return data;
-  };
-
   const setPolicyItemVal = (formData, accessTypes) => {
     return formData.map((val) => {
       let obj = {},
@@ -278,17 +251,27 @@ function AccessGrantForm({ dataset, onDataChange }) {
         });
       }
       obj.principle = principle;
-      /* Policy Condition*/
-      // if (val?.conditions?.length > 0) {
-      //   obj.conditions = {};
-      //   for (let data of val.conditions) {
-      //     obj.conditions[data.type] = data.values.join(", ");
-      //   }
-      // }
       if (val?.conditions?.length > 0) {
-        obj.conditions = "";
+        obj.conditions = {};
+
         for (let data of val.conditions) {
-          obj.conditions = obj.conditions + data.values.join(", ");
+          let conditionObj = find(
+            policyConditionUpdatedJSON(serviceCompDetails?.policyConditions),
+            function (m) {
+              if (m.name == data.type) {
+                return m;
+              }
+            }
+          );
+
+          if (!isEmpty(conditionObj.uiHint)) {
+            obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? data?.values.map((m) => {
+                  return { value: m, label: m };
+                })
+              : data?.values.toString();
+          }
         }
       }
       return obj;
@@ -372,9 +355,78 @@ function AccessGrantForm({ dataset, onDataChange }) {
     return modifiedVal;
   };
 
+  const requiredForPolicyItem = (fieldVals, index) => {
+    if (fieldVals && !isEmpty(fieldVals[index])) {
+      let error, accTypes;
+      let users = (fieldVals[index]?.users || []).length > 0;
+      let grps = (fieldVals[index]?.groups || []).length > 0;
+      let roles = (fieldVals[index]?.roles || []).length > 0;
+      let delegateAdmin = fieldVals[index]?.delegateAdmin;
+      let policyConditionVal = fieldVals[index]?.conditions;
+      if (fieldVals[index]?.accesses && !isArray(fieldVals[index]?.accesses)) {
+        accTypes =
+          JSON.stringify(fieldVals[index]?.accesses || {}) !==
+          JSON.stringify({});
+      } else {
+        accTypes = (fieldVals[index]?.accesses || []).length > 0;
+      }
+      if ((users || grps || roles) && !accTypes) {
+        if (delegateAdmin !== undefined && delegateAdmin === false) {
+          error =
+            "Please select permision item for selected users/groups/roles";
+        } else if (delegateAdmin == undefined) {
+          error =
+            "Please select permision item for selected users/groups/roles";
+        }
+      }
+      if (accTypes && !users && !grps && !roles) {
+        if (delegateAdmin !== undefined && delegateAdmin === false) {
+          error =
+            "Please select users/groups/roles for selected permission item";
+        } else if (delegateAdmin == undefined) {
+          error =
+            "Please select users/groups/roles for selected permission item";
+        }
+      }
+      if (delegateAdmin && !users && !grps && !roles) {
+        error = "Please select user/group/role for the selected delegate Admin";
+      }
+      if (policyConditionVal) {
+        for (const key in policyConditionVal) {
+          if (
+            policyConditionVal[key] == null ||
+            policyConditionVal[key] == ""
+          ) {
+            delete policyConditionVal[key];
+          }
+        }
+        if (
+          Object.keys(policyConditionVal).length != 0 &&
+          !users &&
+          !grps &&
+          !roles
+        ) {
+          error =
+            "Please select user/group/role for the entered policy condition";
+        }
+      }
+      return error;
+    }
+  };
+
+  const getAccessTypeOptions = () => {
+    if (serviceCompDetails != undefined) {
+      let srcOp = serviceCompDetails.accessTypes;
+      return srcOp.map(({ label, name: value }) => ({
+        label,
+        value
+      }));
+    }
+  };
+
   return (
     <>
-      {loader ? (
+      {policyState.loader ? (
         <Loader />
       ) : (
         <div className="wrap-gds">
@@ -394,7 +446,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
               modified,
               initialValues
             }) => (
-              <div className="gds-access-grant-form">
+              <div className="gds-access-content">
                 <FormChange
                   isDirtyField={
                     dirty == true || !isEqual(initialValues, values)
@@ -409,124 +461,149 @@ function AccessGrantForm({ dataset, onDataChange }) {
                   formValues={values}
                 />
                 <div className="datasetPolicyItem">
-                  <DatasetPolicyItemComp
-                    formValues={values}
-                    addPolicyItem={addPolicyItem}
-                    attrName="policyItems"
-                    serviceCompDetails={serviceCompDetails}
-                    fetchPrincipleData={fetchPrincipleData}
-                    onRemovingPolicyItem={onRemovingPolicyItem}
-                  />
+                  <div className="mb-5 gds-content-border">
+                    <div>
+                      <p className="formHeader">Grants</p>
+                    </div>
+                    <div className="drag-drop-wrap">
+                      <FieldArray name="policyItems">
+                        {({ fields }) =>
+                          fields.map((name, index) => (
+                            <table className="w-100">
+                              <tr
+                                key={name}
+                                onDragStart={(e) =>
+                                  dragStart(e, index, dragItem)
+                                }
+                                onDragEnter={(e) =>
+                                  dragEnter(e, index, dragOverItem)
+                                }
+                                onDragEnd={(e) =>
+                                  drop(e, fields, dragItem, dragOverItem)
+                                }
+                                onDragOver={(e) => dragOver(e)}
+                                draggable
+                                id={index}
+                                className="drag-drop-wrap"
+                              >
+                                <div className="gds-grant-row">
+                                  <i className="fa-fw fa fa-bars mt-2"></i>
+                                  <div className="d-flex gap-half">
+                                    <div className="flex-1 mg-b-10 gds-grant-principle">
+                                      <Field
+                                        name={`${name}.principle`}
+                                        render={({ input, meta }) => (
+                                          <div>
+                                            <AsyncSelect
+                                              {...input}
+                                              placeholder="Select users, groups, roles"
+                                              isMulti
+                                              loadOptions={fetchPrincipleData}
+                                              data-name="usersSeusersPrinciplelect"
+                                              data-cy="usersPrinciple"
+                                            />
+                                          </div>
+                                        )}
+                                      />
+                                    </div>
+
+                                    <div className="d-flex gap-1 mg-b-10 gds-grant-permission">
+                                      <Field
+                                        name={`${name}.accesses`}
+                                        render={({ input, meta }) => (
+                                          <div className="flex-1">
+                                            <Select
+                                              {...input}
+                                              options={getAccessTypeOptions()}
+                                              menuPlacement="auto"
+                                              placeholder="Permissions"
+                                              isClearable
+                                              isMulti
+                                            />
+                                          </div>
+                                        )}
+                                      />
+                                    </div>
+                                    <div className="d-flex gap-1 mg-b-10 gds-grant-condition">
+                                      {serviceCompDetails?.policyConditions
+                                        ?.length > 0 && (
+                                        <td
+                                          key="Policy Conditions"
+                                          className="align-middle w-100"
+                                        >
+                                          <Field
+                                            className="form-control "
+                                            name={`${name}.conditions`}
+                                            validate={(value, formValues) =>
+                                              requiredForPolicyItem(
+                                                formValues["policyItems"],
+                                                index
+                                              )
+                                            }
+                                            render={({ input }) => (
+                                              <div className="table-editable">
+                                                <Editable
+                                                  {...input}
+                                                  placement="auto"
+                                                  type="custom"
+                                                  conditionDefVal={policyConditionUpdatedJSON(
+                                                    serviceCompDetails.policyConditions
+                                                  )}
+                                                  selectProps={{
+                                                    isMulti: true
+                                                  }}
+                                                  isGDS={true}
+                                                />
+                                              </div>
+                                            )}
+                                          />
+                                        </td>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Button
+                                      variant="danger"
+                                      size="sm"
+                                      title="Remove"
+                                      onClick={() => {
+                                        fields.remove(index);
+                                        onRemovingPolicyItem();
+                                      }}
+                                      data-action="delete"
+                                      data-cy="delete"
+                                    >
+                                      <i className="fa-fw fa fa-remove"></i>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </tr>
+                            </table>
+                          ))
+                        }
+                      </FieldArray>
+                    </div>
+                    <Button
+                      className="btn btn-mini mt-2"
+                      type="button"
+                      onClick={() => addPolicyItem("policyItems", undefined)}
+                      data-action="addGroup"
+                      data-cy="addGroup"
+                      title="Add"
+                    >
+                      Add More
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="d-flex gap-1">
-                  {/* <div>
-                      <div className="form-group">
-                        <p className="formHeader">Conditions</p>{" "}
-                      </div>
-                      <div className="mb-4">
-                        <Button
-                          className="pull-right btn btn-mini"
-                          onClick={() => {
-                            policyConditionState(true);
-                          }}
-                          data-js="customPolicyConditions"
-                          data-cy="customPolicyConditions"
-                        >
-                          <i className="fa-fw fa fa-plus"></i>
-                        </Button>
-                        {showModal && (
-                          <Field
-                            className="form-control"
-                            name="conditions"
-                            render={({ input }) => (
-                              <PolicyConditionsComp
-                                policyConditionDetails={policyConditionUpdatedJSON(
-                                  serviceCompDetails.policyConditions
-                                )}
-                                inputVal={input}
-                                showModal={showModal}
-                                handleCloseModal={policyConditionState}
-                              />
-                            )}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    {serviceCompDetails?.policyConditions?.length > 0 && (
-                      <div className="table-responsive">
-                        <table className="table table-bordered condition-group-table">
-                          <thead>
-                            <tr>
-                              <th colSpan="2">
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody data-id="conditionData">
-                            <>
-                              {values?.conditions &&
-                              !isEmpty(values.conditions) ? (
-                                Object.keys(values.conditions).map(
-                                  (keyName) => {
-                                    if (
-                                      values.conditions[keyName] != "" &&
-                                      values.conditions[keyName] != null
-                                    ) {
-                                      let conditionObj = find(
-                                        serviceCompDetails?.policyConditions,
-                                        function (m) {
-                                          if (m.name == keyName) {
-                                            return m;
-                                          }
-                                        }
-                                      );
-                                      return (
-                                        <tr key={keyName}>
-                                          <td>
-                                            <center>
-                                              {" "}
-                                              {conditionObj.label}{" "}
-                                            </center>
-                                          </td>
-                                          <td>
-                                            {isObject(
-                                              values.conditions[keyName]
-                                            ) ? (
-                                              <center>
-                                                {values.conditions[keyName]
-                                                  .length > 1
-                                                  ? values.conditions[
-                                                      keyName
-                                                    ].map((m) => {
-                                                      return ` ${m.label} `;
-                                                    })
-                                                  : values.conditions[keyName]
-                                                      .label}
-                                              </center>
-                                            ) : (
-                                              <center>
-                                                {values.conditions[keyName]}
-                                              </center>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      );
-                                    }
-                                  }
-                                )
-                              ) : (
-                                <tr>
-                                  <td>
-                                    <center> No Conditions </center>
-                                  </td>
-                                </tr>
-                              )}
-                            </>
-                          </tbody>
-                        </table>
-                      </div>
-                    )} */}
-                  <Card className="gds-action-card gds-grant-det-cond gds-bg-white">
+                  <Card
+                    className={
+                      isEmpty(values.conditions)
+                        ? "gds-no-data gds-action-card gds-grant-det-cond gds-bg-white"
+                        : "gds-action-card gds-grant-det-cond gds-bg-white"
+                    }
+                  >
                     <div className="gds-section-title">
                       <p className="gds-card-heading">Conditions</p>
                       <Button
@@ -557,7 +634,7 @@ function AccessGrantForm({ dataset, onDataChange }) {
                         />
                       )}
                     </div>
-                    <Card.Body className="px-0">
+                    <Card.Body className="px-0 pb-0">
                       <>
                         {values?.conditions && !isEmpty(values.conditions) ? (
                           Object.keys(values.conditions).map((keyName) => {
@@ -597,22 +674,25 @@ function AccessGrantForm({ dataset, onDataChange }) {
                             }
                           })
                         ) : (
-                          <tr>
-                            <td>
-                              <center> No Conditions </center>
-                            </td>
-                          </tr>
+                          <div></div>
                         )}
                       </>
                     </Card.Body>
                   </Card>
-
-                  <Card className="gds-action-card gds-grant-det-cond gds-bg-white">
+                </div>
+                <div className="d-flex gap-1">
+                  <Card
+                    className={
+                      validityPeriod == undefined || validityPeriod.length == 0
+                        ? "gds-no-data gds-action-card gds-grant-det-cond gds-bg-white"
+                        : "gds-action-card gds-grant-det-cond gds-bg-white"
+                    }
+                  >
                     <div className="gds-section-title">
                       <p className="gds-card-heading">Validity Period</p>
                       <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
                     </div>
-                    <Card.Body className="px-0">
+                    <Card.Body className="px-0 pb-0">
                       <>
                         {validityPeriod != undefined &&
                         validityPeriod.length > 0 ? (
@@ -661,70 +741,11 @@ function AccessGrantForm({ dataset, onDataChange }) {
                             );
                           })
                         ) : (
-                          <p className="mt-1">--</p>
+                          <div></div>
                         )}
                       </>
                     </Card.Body>
                   </Card>
-
-                  {/* <div className=" gds-grant-det-cond  gds-content-border">
-                    <div className="form-group">
-                      <p className="formHeader">Validity Period</p>{" "}
-                    </div>
-                    <div className="mb-4">
-                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
-                    </div>
-                    <br />
-                    {validityPeriod != undefined &&
-                    validityPeriod.length > 0 ? (
-                      validityPeriod.map((obj, index) => {
-                        return (
-                          <div className="gds-inline-field-grp">
-                            <div className="wrapper">
-                              <div className="gds-left-inline-field">
-                                <span className="gds-label-color">
-                                  Start Date{" "}
-                                </span>
-                              </div>
-                              {obj?.startTime != undefined ? (
-                                <span>
-                                  {dateFormat(
-                                    obj.startTime,
-                                    "mm/dd/yyyy hh:MM:ss TT"
-                                  )}
-                                </span>
-                              ) : (
-                                <p>--</p>
-                              )}
-                              <span className="gds-label-color pl-5">
-                                {obj?.timeZone}
-                              </span>
-                            </div>
-                            <div className="wrapper">
-                              <div className="gds-left-inline-field">
-                                <span className="gds-label-color">
-                                  {" "}
-                                  End Date{" "}
-                                </span>
-                              </div>
-                              {obj?.endTime != undefined ? (
-                                <span>
-                                  {dateFormat(
-                                    obj.endTime,
-                                    "mm/dd/yyyy hh:MM:ss TT"
-                                  )}
-                                </span>
-                              ) : (
-                                <p>--</p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="mt-1">--</p>
-                    )}
-                  </div> */}
                 </div>
               </div>
             )}

@@ -39,7 +39,6 @@ const RequestDetailView = () => {
   const [loader, setLoader] = useState(true);
   const [datasetInfo, setDatasetInfo] = useState({});
   const [datashareInfo, setDatashareInfo] = useState({});
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [formData, setFormData] = useState();
   const [editValidityPeriod, setEditValidityPeriod] = useState(false);
 
@@ -104,42 +103,30 @@ const RequestDetailView = () => {
     }
   };
 
-  const back = () => {
-    navigate(`/gds/request/list`);
-  };
-
   const handleSubmit = async (values, type) => {
-    if (
-      datasetInfo.termsOfUse != undefined &&
-      requestInfo.status === "GRANTED" &&
-      !acceptTerms
-    ) {
-      toast.error("Please accept terms and conditions");
-      return;
-    }
-    if (values.validitySchedules != undefined) {
-      values.validitySchedules.filter((val) => {
-        if (val) {
-          let timeObj = {};
-          if (val.startTime) {
-            timeObj["startTime"] = moment(val.startTime).format(
-              "YYYY/MM/DD HH:mm:ss"
-            );
-          }
-          if (val.endTime) {
-            timeObj["endTime"] = moment(val.endTime).format(
-              "YYYY/MM/DD HH:mm:ss"
-            );
-          }
-          if (val.timeZone) {
-            timeObj["timeZone"] = val.timeZone.id;
-          }
-          if (!isEmpty(timeObj)) {
-            requestInfo["validitySchedule"] = timeObj;
-          }
-        }
-      });
-    }
+    // if (values.validitySchedules != undefined) {
+    //   values.validitySchedules.filter((val) => {
+    //     if (val) {
+    //       let timeObj = {};
+    //       if (val.startTime) {
+    //         timeObj["startTime"] = moment(val.startTime).format(
+    //           "YYYY/MM/DD HH:mm:ss"
+    //         );
+    //       }
+    //       if (val.endTime) {
+    //         timeObj["endTime"] = moment(val.endTime).format(
+    //           "YYYY/MM/DD HH:mm:ss"
+    //         );
+    //       }
+    //       if (val.timeZone) {
+    //         timeObj["timeZone"] = val.timeZone.id;
+    //       }
+    //       if (!isEmpty(timeObj)) {
+    //         requestInfo["validitySchedule"] = timeObj;
+    //       }
+    //     }
+    //   });
+    // }
 
     if (requestInfo.status === "REQUESTED") {
       if (type == "grant") requestInfo["status"] = "GRANTED";
@@ -168,10 +155,6 @@ const RequestDetailView = () => {
     }
   };
 
-  const checkBocChange = () => {
-    setAcceptTerms(true);
-  };
-
   return (
     <>
       <Form
@@ -191,7 +174,7 @@ const RequestDetailView = () => {
               <Button
                 variant="light"
                 className="border-0 bg-transparent"
-                onClick={back}
+                onClick={() => window.history.back()}
                 size="sm"
                 data-id="back"
                 data-cy="back"
@@ -222,7 +205,7 @@ const RequestDetailView = () => {
                 </div>
               ) : (
                 <div>
-                  {requestInfo.status === "GRANTED" ? (
+                  {requestInfo.status === "GRANTED" && (
                     <Button
                       variant="primary"
                       onClick={() => handleSubmit(values, "active")}
@@ -230,10 +213,8 @@ const RequestDetailView = () => {
                       data-id="activate"
                       data-cy="activate"
                     >
-                      Activate
+                      Accept & Activate
                     </Button>
-                  ) : (
-                    <div></div>
                   )}
                 </div>
               )}
@@ -348,26 +329,18 @@ const RequestDetailView = () => {
                     )}
                   </div>
                 )}
-                <div className="mb-5">
-                  <Card className="gds-section-card gds-bg-white">
-                    <div className="gds-section-title">
-                      <p className="gds-card-heading">Terms & Conditions</p>
-                      <span>{datashareInfo.termsOfUse}</span>
+                {datashareInfo.termsOfUse != undefined &&
+                  datashareInfo.termsOfUse.length > 0 && (
+                    <div className="mb-5">
+                      <Card className="gds-section-card gds-bg-white">
+                        <div className="gds-section-title">
+                          <p className="gds-card-heading">Terms & Conditions</p>
+                          <span>{datashareInfo.termsOfUse}</span>
+                        </div>
+                      </Card>
                     </div>
-                  </Card>
-                  <div className="d-flex align-items-center gap-half my-2">
-                    <input
-                      type="checkbox"
-                      name="acceptTerms"
-                      //value={obj.id}
-                      onChange={checkBocChange}
-                    />
-                    <span className="fnt-14">
-                      {" "}
-                      I accept the terms and conditions
-                    </span>
-                  </div>
-                </div>
+                  )}
+
                 <div className="mb-5">
                   <Card className="gds-section-card gds-bg-white">
                     <div className="gds-section-title">

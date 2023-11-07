@@ -137,7 +137,7 @@ const MyDatashareListing = () => {
   const getDefaultSort = React.useMemo(
     () => [
       {
-        id: "eventTime",
+        id: "updateTime",
         desc: true
       }
     ],
@@ -158,7 +158,7 @@ const MyDatashareListing = () => {
   const myDatashareColumns = React.useMemo(
     () => [
       {
-        Header: "Id",
+        Header: "ID",
         accessor: "id",
         width: 80,
         disableResizing: true,
@@ -300,7 +300,7 @@ const MyDatashareListing = () => {
   const datashareColumns = React.useMemo(
     () => [
       {
-        Header: "Id",
+        Header: "ID",
         accessor: "id",
         width: 25,
         disableResizing: true,
@@ -448,7 +448,9 @@ const MyDatashareListing = () => {
             ? (state.addPageData.totalPage - 1) * pageSize
             : pageIndex * pageSize;
         if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
+          if (getTableSortBy(sortBy) == "name")
+            params["sortBy"] = "datashareName";
+          else params["sortBy"] = getTableSortBy(sortBy);
           params["sortType"] = getTableSortType(sortBy);
         }
         try {

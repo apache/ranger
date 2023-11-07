@@ -17,8 +17,20 @@
  * under the License.
  */
 
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useReducer
+} from "react";
+import {
+  useParams,
+  useNavigate,
+  Link,
+  useLocation,
+  useSearchParams
+} from "react-router-dom";
 import { fetchApi } from "../../../utils/fetchAPI";
 import { Loader } from "../../../components/CommonComponents";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
@@ -42,11 +54,34 @@ import arrayMutators from "final-form-arrays";
 import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
-import { isSystemAdmin } from "../../../utils/XAUtils";
+import { isSystemAdmin, parseSearchFilter } from "../../../utils/XAUtils";
+import XATableLayout from "../../../components/XATableLayout";
+import moment from "moment-timezone";
+import { getServiceDef } from "../../../utils/appState";
+
+// const initialState = {
+//   serviceDef: {},
+//   serviceDetails: {}
+// };
+
+// function reducer(state, action) {
+//   switch (action.type) {
+//     case "SET_SERVICE_DATA":
+//       return {
+//         ...state,
+//         serviceDef: action?.serviceDef,
+//         serviceDetails: action.serviceDetails
+//       };
+//     default:
+//       throw new Error();
+//   }
+// }
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
   const { state } = useLocation();
+  // const [serviceState, dispatch] = useReducer(reducer, initialState);
+  // const { serviceDef, serviceDetails } = serviceState;
   const userAclPerm = state?.userAclPerm;
   const datashareName = state?.datashareName;
   const [activeKey, setActiveKey] = useState("overview");
@@ -54,7 +89,7 @@ const DatashareDetailLayout = () => {
   const [datashareDescription, setDatashareDescription] = useState();
   const [datashareTerms, setDatashareTerms] = useState();
   const [loader, setLoader] = useState(true);
-  const [resourceContentLoader, setResourceContentLoader] = useState(true);
+  const [resourceContentLoader, setResourceContentLoader] = useState(false);
   const [requestContentLoader, setRequestContentLoader] = useState(true);
   const [sharedResources, setSharedResources] = useState([]);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState({
@@ -62,8 +97,6 @@ const DatashareDetailLayout = () => {
   });
   const [blockUI, setBlockUI] = useState(false);
   const [dataShareRequestsList, setDataShareRequestsList] = useState([]);
-  const [dataShareRequestAccordion, setDatashareRequestAccordion] =
-    useState(false);
   const [userList, setUserList] = useState([]);
   const [groupList, setGroupList] = useState([]);
   const [roleList, setRoleList] = useState([]);
@@ -74,7 +107,6 @@ const DatashareDetailLayout = () => {
   const [saveCancelButtons, showSaveCancelButton] = useState(false);
   const [conditionModalData, setConditionModalData] = useState();
   const [showConditionModal, setShowConditionModal] = useState(false);
-  const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [resourceAccordionState, setResourceAccordionState] = useState({});
   const [requestAccordionState, setRequestAccordionState] = useState({});
   const itemsPerPage = 5;
@@ -91,32 +123,84 @@ const DatashareDetailLayout = () => {
   ] = useState(false);
   const [showDeleteDatashareModal, setShowDeleteDatashareModal] =
     useState(false);
-  const [completeSharedResourceList, setCompleteSharedResourceList] = useState(
+  const [serviceDef, setServiceDef] = useState();
+  const [serviceDetails, setService] = useState({});
+  const [sharedResourceTotalCount, setSharedResourceTotalCount] = useState(0);
+  const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
+    useState(0);
+  const [resourceSearchFilterParams, setResourceSearchFilterParams] = useState(
     []
   );
-  const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
-    useState([]);
-
+  const [requestSearchFilterParams, setRequestSearchFilterParams] = useState(
+    []
+  );
+  const fetchIdRef = useRef(0);
+  const [searchFilterParams, setSearchFilterParams] = useState([]);
+  const [sharedResourceListData, setSharedResourceListData] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [resourceUpdateTable, setResourceUpdateTable] = useState(moment.now());
+  const serviceDef2 = useRef({});
   const toggleConfirmModalForDatashareDelete = () => {
     setShowDeleteDatashareModal(true);
   };
-
+  const [showEditSharedResourceModal, setShowEditSharedResourceModal] =
+    useState(false);
+  const [sharedResource, setSharedResource] = useState();
   const toggleConfirmModalClose = () => {
     setShowConfirmModal(false);
   };
+  const [showAddResourceModal, setShowAddResourceModal] = useState(false);
+  const [isEditSharedResourceModal, setIsEditSharedResourceModal] =
+    useState(false);
+  const [resourceModalUpdateTable, setResourceModalUpdateTable] = useState(
+    moment.now()
+  );
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
-    fetchSharedResourceForDatashare(datashareName, 0, true);
-    fetchDatashareRequestList(undefined, 0, true);
   }, []);
+
+  // const fetchServiceByName = async (serviceName) => {
+  //   let serviceResp = [];
+  //   try {
+  //     serviceResp = await fetchApi({
+  //       url: `plugins/services/name/${serviceName}`
+  //     });
+  //   } catch (error) {
+  //     console.error(
+  //       `Error occurred while fetching Service or CSRF headers! ${error}`
+  //     );
+  //   }
+  //   setService(serviceResp.data);
+  //   fetchServiceDef(serviceResp.data.type);
+  // };
+
+  // const fetchServiceDef = async (serviceDefName) => {
+  //   let serviceDefsResp = [];
+  //   try {
+  //     serviceDefsResp = await fetchApi({
+  //       url: `plugins/definitions/name/${serviceDefName}`
+  //     });
+  //   } catch (error) {
+  //     console.error(
+  //       `Error occurred while fetching Service Definition or CSRF headers! ${error}`
+  //     );
+  //   }
+  //   let modifiedServiceDef = serviceDefsResp.data;
+  //   for (const obj of modifiedServiceDef.resources) {
+  //     obj.recursiveSupported = false;
+  //     obj.excludesSupported = false;
+  //   }
+  //   setServiceDef(modifiedServiceDef);
+  // };
 
   const handleTabSelect = (key) => {
     if (saveCancelButtons == true) {
       setShowConfirmModal(true);
     } else {
       if (key == "resources") {
-        fetchSharedResourceForDatashare(datashareInfo.name, 0, false);
+        //fetchServiceByName(datashareInfo.service);
+        //fetchSharedResourceForDatashare(resourceSearchFilterParams, 0, false);
       } else if (key == "sharedWith") {
         fetchDatashareRequestList(undefined, 0, false);
       }
@@ -125,23 +209,46 @@ const DatashareDetailLayout = () => {
   };
 
   const fetchDatashareInfo = async (datashareId) => {
+    let datashareResp = {};
+    let serviceResp = [];
+    let serviceDefsResp = [];
     try {
       setLoader(true);
-      const resp = await fetchApi({
+      datashareResp = await fetchApi({
         url: `gds/datashare/${datashareId}`
       });
-      setLoader(false);
-      setDatashareInfo(resp.data);
-      setDatashareDescription(resp.data.description);
-      setDatashareTerms(resp.data.termsOfUse);
-      if (resp.data.acl != undefined) setPrincipleAccordianData(resp.data.acl);
-      setLoader(false);
+      serviceResp = await fetchApi({
+        url: `plugins/services/name/${datashareResp.data.service}`
+      });
+      // serviceDefsResp = await fetchApi({
+      //   url: `plugins/definitions/name/${serviceResp.data.type}`
+      // });
+      const serviceDefs = getServiceDef();
+      let serviceDef = serviceDefs?.allServiceDefs?.find((servicedef) => {
+        return servicedef.name == serviceResp.type;
+      });
+      setServiceDef(serviceDef);
     } catch (error) {
       setLoader(false);
       console.error(
         `Error occurred while fetching datashare details ! ${error}`
       );
     }
+    // let modifiedServiceDef = serviceDefsResp.data;
+    // for (const obj of modifiedServiceDef.resources) {
+    //   obj.recursiveSupported = false;
+    //   obj.excludesSupported = false;
+    // }
+    //serviceState.serviceDef = modifiedServiceDef;
+    //serviceDef2.current = modifiedServiceDef;
+    setService(serviceResp.data);
+    setDatashareInfo(datashareResp.data);
+    setDatashareDescription(datashareResp.data.description);
+    setDatashareTerms(datashareResp.data.termsOfUse);
+    if (datashareResp.data.acl != undefined)
+      setPrincipleAccordianData(datashareResp.data.acl);
+    //fetchServiceByName(datashareResp.data.service);
+    setLoader(false);
   };
 
   const showConfitionModal = (data) => {
@@ -188,12 +295,12 @@ const DatashareDetailLayout = () => {
   };
 
   const fetchSharedResourceForDatashare = async (
-    datashareName,
+    searchFilter,
     currentPage,
     getCompleteList
   ) => {
     try {
-      let params = {};
+      let params = { ...searchFilter };
       let itemPerPageCount = getCompleteList ? 999999999 : itemsPerPage;
       params["pageSize"] = itemPerPageCount;
       params["page"] = currentPage;
@@ -216,9 +323,9 @@ const DatashareDetailLayout = () => {
       );
       if (!getCompleteList) {
         setSharedResources(resp.data.list);
-      } else {
-        setCompleteSharedResourceList(resp.data.list);
       }
+      setSharedResourceTotalCount(resp.data.totalCount);
+      return resp.data.list;
     } catch (error) {
       setResourceContentLoader(false);
       console.error(
@@ -229,7 +336,11 @@ const DatashareDetailLayout = () => {
 
   const handleSharedResourcePageClick = ({ selected }) => {
     setCurrentPage(selected);
-    fetchSharedResourceForDatashare(datashareInfo.name, selected, false);
+    fetchSharedResourceForDatashare(
+      resourceSearchFilterParams,
+      selected,
+      false
+    );
   };
 
   const handleRequestPageClick = ({ selected }) => {
@@ -238,12 +349,12 @@ const DatashareDetailLayout = () => {
   };
 
   const fetchDatashareRequestList = async (
-    datasetName,
+    searchFilter,
     currentPage,
     getCompleteList
   ) => {
     try {
-      let params = {};
+      let params = { ...searchFilter };
       let itemPerPageCount = getCompleteList ? 999999999 : itemsPerPage;
       params["pageSize"] = itemPerPageCount;
       params["page"] = currentPage;
@@ -260,9 +371,9 @@ const DatashareDetailLayout = () => {
       setRequestPageCount(Math.ceil(resp.data.totalCount / itemPerPageCount));
       if (!getCompleteList) {
         setDataShareRequestsList(resp.data.list);
-      } else {
-        setCompleteDatashareRequestsList(resp.data.list);
       }
+      setDatashareRequestTotalCount(resp.data.totalCount);
+      return resp.data.list;
     } catch (error) {
       setRequestContentLoader(false);
       console.error(
@@ -310,7 +421,8 @@ const DatashareDetailLayout = () => {
       });
       setBlockUI(false);
       toast.success(" Success! Shared resource deleted successfully");
-      fetchSharedResourceForDatashare(datashareInfo.name, 0, false);
+      setResourceUpdateTable(moment.now());
+      //fetchSharedResourceForDatashare(undefined, 0, false);
     } catch (error) {
       setBlockUI(false);
       let errorMsg = "Failed to delete Shared resource  : ";
@@ -320,6 +432,21 @@ const DatashareDetailLayout = () => {
       toast.error(errorMsg);
       console.error(
         "Error occurred during deleting Shared resource  : " + error
+      );
+    }
+  };
+
+  const fetchSharedResource = async (sharedResourceId) => {
+    try {
+      let params = {};
+      const resp = await fetchApi({
+        url: `gds/resource/${sharedResourceId}`
+      });
+      setLoadSharedResource(resp.data);
+      //setFormData(generateFormData(resp.data, serviceDef));
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching shared resource details ! ${error}`
       );
     }
   };
@@ -337,10 +464,6 @@ const DatashareDetailLayout = () => {
 
   const handleSubmit = () => {};
 
-  const back = () => {
-    navigate("/gds/mydatasharelisting");
-  };
-
   const onSharedResourceAccordionChange = (id) => {
     setResourceAccordionState({
       ...resourceAccordionState,
@@ -353,10 +476,6 @@ const DatashareDetailLayout = () => {
       ...requestAccordionState,
       ...{ [id]: !requestAccordionState[id] }
     });
-  };
-
-  const handleSharedResourceChange = () => {
-    fetchSharedResourceForDatashare(datashareInfo.name, currentPage, false);
   };
 
   const updateDatashareDetails = async () => {
@@ -404,7 +523,7 @@ const DatashareDetailLayout = () => {
   const toggleRequestDeleteModal = (id, datashareId, name, status) => {
     let deleteMsg = "";
     if (status == "ACTIVE") {
-      deleteMsg = `Do you want to remove Dataset ${datashareId} from ${datashareInfo.name}`;
+      deleteMsg = `Do you want to remove Dataset ${datashareId} from ${datashareInfo?.name}`;
     } else {
       deleteMsg = `Do you want to delete request of Dataset ${datashareId}`;
     }
@@ -433,8 +552,6 @@ const DatashareDetailLayout = () => {
       setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
       fetchDatashareRequestList(undefined, requestCurrentPage, false);
-      //fetchSharedResourceForDatashare(datashareInfo.name);
-      setLoader(false);
     } catch (error) {
       let errorMsg = "";
       if (deleteDatashareReqInfo.status == "ACTIVE") {
@@ -442,7 +559,6 @@ const DatashareDetailLayout = () => {
       } else {
         errorMsg = "Failed to delete datashare request ";
       }
-      setLoader(false);
       if (error?.response?.data?.msgDesc) {
         errorMsg += error.response.data.msgDesc;
       }
@@ -451,6 +567,7 @@ const DatashareDetailLayout = () => {
         "Error occurred during deleting Datashare request  : " + error
       );
     }
+    setLoader(false);
   };
 
   const handleDatashareDeleteClick = async () => {
@@ -488,10 +605,14 @@ const DatashareDetailLayout = () => {
     });
   };
 
-  const downloadJsonFile = () => {
+  const downloadJsonFile = async () => {
     let jsonData = datashareInfo;
-    jsonData.resources = completeSharedResourceList;
-    jsonData.datasets = completeDatashareRequestsList;
+    jsonData.resources = await fetchSharedResourceForDatashare(
+      undefined,
+      0,
+      true
+    );
+    jsonData.datasets = await fetchDatashareRequestList(undefined, 0, true);
     const jsonContent = JSON.stringify(jsonData);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -501,6 +622,221 @@ const DatashareDetailLayout = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const resourceSearchFilterOptions = [
+    {
+      category: "resourceContains",
+      label: "Resource",
+      urlLabel: "resourceContains",
+      type: "text"
+    }
+  ];
+
+  const updateResourceSearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      resourceSearchFilterOptions
+    );
+    setResourceSearchFilterParams(searchFilterParam);
+    setSearchFilterParams(searchFilterParam);
+    //fetchSharedResourceForDatashare(searchFilterParam, 0, false);
+  };
+
+  const requestSearchFilterOptions = [];
+
+  const updateRequestSearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      requestSearchFilterOptions
+    );
+    setRequestSearchFilterParams(searchFilterParam);
+    fetchDatashareRequestList(searchFilterParam, 0, false);
+  };
+
+  const fetchSharedResourcetList = useCallback(
+    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
+      //setLoader(true);
+      let resp = [];
+      let totalCount = 0;
+      let page =
+        state && state.showLastPage
+          ? state.addPageData.totalPage - 1
+          : pageIndex;
+      let totalPageCount = 0;
+      const fetchId = ++fetchIdRef.current;
+      let params = { ...searchFilterParams };
+      if (fetchId === fetchIdRef.current) {
+        params["pageSize"] = pageSize;
+        params["startIndex"] =
+          state && state.showLastPage
+            ? (state.addPageData.totalPage - 1) * pageSize
+            : pageIndex * pageSize;
+        // if (sortBy.length > 0) {
+        //   params["sortBy"] = getTableSortBy(sortBy);
+        //   params["sortType"] = getTableSortType(sortBy);
+        // }
+        params["dataShareId"] = datashareId;
+        try {
+          resp = await fetchApi({
+            url: "gds/resource",
+            params: params
+          });
+        } catch (error) {
+          console.error(
+            `Error occurred while fetching Datashare list! ${error}`
+          );
+        }
+        //await fetchServiceByName(datashareInfo.service);
+        console.log(serviceDef, "table call");
+        setSharedResourceListData(resp.data?.list);
+        setEntries(resp.data);
+        setSharedResourcePageCount(Math.ceil(resp.data.totalCount / pageSize));
+        //setResetpage({ page: gotoPage });
+      }
+      //setLoader(false);
+    },
+    [resourceUpdateTable, searchFilterParams]
+  );
+
+  const editSharedResourceModal = (sharedResource) => {
+    //fetchSharedResource(sharedResourceId);
+    setSharedResource(sharedResource);
+    //setShowEditSharedResourceModal(true);
+    setResourceModalUpdateTable(moment.now());
+    setIsEditSharedResourceModal(true);
+    setShowAddResourceModal(true);
+  };
+
+  const openAddResourceModal = () => {
+    setSharedResource();
+    setResourceModalUpdateTable(moment.now());
+    setIsEditSharedResourceModal(false);
+    setShowAddResourceModal(true);
+  };
+
+  const getDefaultSort = React.useMemo(
+    () => [
+      {
+        id: "updateTime",
+        desc: true
+      }
+    ],
+    []
+  );
+
+  const sharedResourceCols = React.useMemo(
+    () => [
+      {
+        Header: "Resource",
+        accessor: "resource",
+        //width: 500,
+        disableSortBy: true,
+        Cell: ({ row: { original } }) => {
+          return (
+            <div className="gds-shared-resource">
+              {Object.entries(original.resource).map(([key, value]) => {
+                console.log(key);
+                console.log(value);
+                return (
+                  <div className="mb-1 form-group row">
+                    <Col sm={3}>
+                      <span
+                        className="form-label fnt-14 text-muted"
+                        style={{ textTransform: "capitalize" }}
+                      >
+                        {key}
+                      </span>
+                    </Col>
+                    <Col sm={9}>
+                      <span>{value.values.toString()}</span>
+                    </Col>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+      },
+      {
+        Header: "Access Type",
+        accessor: "access_conditions",
+        disableSortBy: true,
+        Cell: ({ row: { original } }) => {
+          return (
+            <div>
+              <div className="gds-chips gap-one-fourth">
+                {original.accessTypes?.map((accessObj) => (
+                  <span
+                    className="badge badge-light badge-sm"
+                    title={accessObj}
+                    key={accessObj}
+                  >
+                    {accessObj}
+                  </span>
+                ))}
+              </div>
+              {/* {original.accessTypes?.accessTypes?.toString()}
+              <Link
+                className="mb-3"
+                to=""
+                onClick={() => showConfitionModal(original)}
+              >
+                View Access Details
+              </Link> */}
+            </div>
+          );
+        }
+      },
+      {
+        Header: "",
+        accessor: "actions",
+        width: 120,
+        Cell: ({ row: { original } }) => {
+          return (
+            <div>
+              {console.log(serviceDef, "table")}
+              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                <div className="d-flex gap-half align-items-start">
+                  {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                    <div className="d-flex gap-half align-items-start">
+                      <Button
+                        variant="outline-dark"
+                        size="sm"
+                        title="Edit"
+                        onClick={() => editSharedResourceModal(original)}
+                        data-name="editSharedResource"
+                        data-id="editSharedResource"
+                      >
+                        <i className="fa-fw fa fa-edit"></i>
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        title="Delete"
+                        onClick={() =>
+                          toggleConfirmModalForDelete(
+                            original.id,
+                            original.name
+                          )
+                        }
+                        data-name="deletSharedResources"
+                        data-id={original.id}
+                        data-cy={original.id}
+                      >
+                        <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        },
+        disableSortBy: true
+      }
+    ],
+    []
+  );
 
   return (
     <>
@@ -515,7 +851,7 @@ const DatashareDetailLayout = () => {
               <Button
                 variant="light"
                 className="border-0 bg-transparent"
-                onClick={back}
+                onClick={() => window.history.back()}
                 size="sm"
                 data-id="back"
                 data-cy="back"
@@ -524,11 +860,29 @@ const DatashareDetailLayout = () => {
               </Button>
               <h3 className="gds-header bold">
                 <span
-                  title={datashareInfo.name}
+                  title={datashareInfo?.name}
                   className="text-truncate"
-                  style={{ maxWidth: "700px", display: "inline-block" }}
+                  style={{ maxWidth: "300px", display: "inline-block" }}
                 >
-                  Datashare : {datashareInfo.name}
+                  Datashare: {datashareInfo?.name}
+                </span>
+              </h3>
+              <h3 className="gds-header bold">
+                <span
+                  title={datashareInfo?.service}
+                  className="text-truncate"
+                  style={{ maxWidth: "300px", display: "inline-block" }}
+                >
+                  Service: {datashareInfo?.service}
+                </span>
+              </h3>
+              <h3 className="gds-header bold">
+                <span
+                  title={datashareInfo?.zone}
+                  className="text-truncate"
+                  style={{ maxWidth: "300px", display: "inline-block" }}
+                >
+                  Zone: {datashareInfo?.zone}
                 </span>
               </h3>
               <CustomBreadcrumb />
@@ -560,13 +914,7 @@ const DatashareDetailLayout = () => {
                       </Button>
                     </div>
                   ) : (
-                    <AddSharedResourceComp
-                      datashareId={datashareId}
-                      onSharedResourceDataChange={handleSharedResourceChange}
-                      onToggleAddResourceClose={toggleAddResourceModalClose}
-                      isEdit={false}
-                      loadSharedResource={loadSharedResource}
-                    />
+                    <p></p>
                   )}
                 </div>
               )}
@@ -648,7 +996,7 @@ const DatashareDetailLayout = () => {
                                 </div>
                                 <div className="fnt-14" line-height="30px">
                                   {dateFormat(
-                                    datashareInfo.updateTime,
+                                    datashareInfo?.updateTime,
                                     "mm/dd/yyyy hh:MM:ss TT"
                                   )}
                                 </div>
@@ -665,7 +1013,7 @@ const DatashareDetailLayout = () => {
                                 </div>
                                 <div className="fnt-14" line-height="30px">
                                   {dateFormat(
-                                    datashareInfo.createTime,
+                                    datashareInfo?.createTime,
                                     "mm/dd/yyyy hh:MM:ss TT"
                                   )}
                                 </div>
@@ -687,6 +1035,9 @@ const DatashareDetailLayout = () => {
                                   data-cy="description"
                                   onChange={datashareDescriptionChange}
                                   value={datashareDescription}
+                                  readOnly={
+                                    !isSystemAdmin() && userAclPerm != "ADMIN"
+                                  }
                                   rows={5}
                                 />
                               </div>
@@ -699,7 +1050,14 @@ const DatashareDetailLayout = () => {
                               userList={userList}
                               groupList={groupList}
                               roleList={roleList}
+                              isAdmin={
+                                isSystemAdmin() || userAclPerm == "ADMIN"
+                                  ? true
+                                  : false
+                              }
+                              isDetailView={true}
                               onDataChange={handleDataChange}
+                              type="datashare"
                             />
                           )}
                         </div>
@@ -710,15 +1068,56 @@ const DatashareDetailLayout = () => {
                     <Tab eventKey="resources" title="RESOURCES">
                       {activeKey == "resources" ? (
                         <div className="gds-tab-content">
-                          <div>
-                            <div className="usr-grp-role-search-width mb-4">
+                          <div className="mb-3">
+                            <div className="w-100 d-flex gap-1 mb-3">
                               <StructuredFilter
-                                key="user-listing-search-filter"
+                                key="shared-reource-search-filter"
                                 placeholder="Search resources..."
+                                options={resourceSearchFilterOptions}
+                                onChange={updateResourceSearchFilter}
+                                //defaultSelected={defaultSearchFilterParams}
                               />
+                              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                                <>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => openAddResourceModal()}
+                                  >
+                                    Add Resource
+                                  </Button>
+                                </>
+                              )}
                             </div>
+                            <XATableLayout
+                              data={sharedResourceListData}
+                              columns={sharedResourceCols}
+                              fetchData={fetchSharedResourcetList}
+                              totalCount={entries && entries.totalCount}
+                              loading={resourceContentLoader}
+                              pageCount={sharedResourcePageCount}
+                              getRowProps={(row) => ({
+                                onClick: (e) => {
+                                  e.stopPropagation();
+                                  //rowModal(row);
+                                }
+                              })}
+                              columnHide={false}
+                              columnResizable={false}
+                              columnSort={true}
+                              defaultSort={getDefaultSort}
+                            />
+                            {/* <input
+                              type="search"
+                              className="form-control gds-input"
+                              placeholder="Search..."
+                              onChange={(e) => onResourceNameChange(e)}
+                              onKeyPress={handleSearchResourceNameKeyPress}
+                              value={searchResourceName}
+                            /> */}
                           </div>
-                          <div>
+
+                          {/* <div>
                             <Card className="border-0">
                               <div>
                                 {resourceContentLoader ? (
@@ -782,6 +1181,18 @@ const DatashareDetailLayout = () => {
                                                           }
                                                           loadSharedResource={
                                                             loadSharedResource
+                                                          }
+                                                          datashareInfo={
+                                                            datashareInfo
+                                                          }
+                                                          serviceDef={
+                                                            serviceDef
+                                                          }
+                                                          serviceDetails={
+                                                            serviceDetails
+                                                          }
+                                                          setResourceUpdateTable={
+                                                            setResourceUpdateTable
                                                           }
                                                         />
                                                         <Button
@@ -861,7 +1272,7 @@ const DatashareDetailLayout = () => {
                                   </div>
                                 )}
 
-                                {sharedResourcePageCount > 1 && (
+                                {sharedResourceTotalCount > itemsPerPage && (
                                   <ReactPaginate
                                     previousLabel={"Previous"}
                                     nextLabel={"Next"}
@@ -882,7 +1293,7 @@ const DatashareDetailLayout = () => {
                                 )}
                               </div>
                             </Card>
-                          </div>
+                          </div> */}
                         </div>
                       ) : (
                         <div></div>
@@ -894,8 +1305,10 @@ const DatashareDetailLayout = () => {
                           <div>
                             <div className="usr-grp-role-search-width mb-4">
                               <StructuredFilter
-                                key="user-listing-search-filter"
+                                key="request-listing-search-filter"
                                 placeholder="Search dataset..."
+                                options={requestSearchFilterOptions}
+                                onChange={updateRequestSearchFilter}
                               />
                             </div>
                           </div>
@@ -1011,6 +1424,7 @@ const DatashareDetailLayout = () => {
                                                     <Accordion.Collapse eventKey="1">
                                                       <Card.Body>
                                                         <div className="d-flex justify-content-between">
+                                                          <div></div>
                                                           {false && (
                                                             <div className="gds-inline-field-grp">
                                                               <div className="wrapper">
@@ -1122,7 +1536,8 @@ const DatashareDetailLayout = () => {
                                       ) : (
                                         <div></div>
                                       )}
-                                      {requestPageCount > 1 && (
+                                      {datashareRequestTotalCount >
+                                        itemsPerPage && (
                                         <ReactPaginate
                                           previousLabel={"Previous"}
                                           nextLabel={"Next"}
@@ -1156,11 +1571,12 @@ const DatashareDetailLayout = () => {
                       )}
                     </Tab>
 
-                    {(isSystemAdmin() ||
-                      userAclPerm == "ADMIN" ||
-                      userAclPerm == "AUDIT") && (
-                      <Tab eventKey="history" title="HISTORY"></Tab>
-                    )}
+                    {false &&
+                      (isSystemAdmin() ||
+                        userAclPerm == "ADMIN" ||
+                        userAclPerm == "AUDIT") && (
+                        <Tab eventKey="history" title="HISTORY"></Tab>
+                      )}
 
                     <Tab eventKey="termsOfUse" title="TERMS OF USE">
                       <div className="gds-tab-content gds-content-border">
@@ -1180,6 +1596,9 @@ const DatashareDetailLayout = () => {
                               data-cy="termsAndConditions"
                               onChange={datashareTermsAndConditionsChange}
                               value={datashareTerms}
+                              readOnly={
+                                !isSystemAdmin() && userAclPerm != "ADMIN"
+                              }
                               rows={16}
                             />
                           </div>
@@ -1188,41 +1607,6 @@ const DatashareDetailLayout = () => {
                     </Tab>
                   </Tabs>
                 </div>
-
-                {/* <Modal
-                  show={showAddResourceModal}
-                  onHide={toggleAddResourceModalClose}
-                  //className="mb-7"
-                  size="xl"
-                >
-                  <Modal.Header closeButton>
-                    <h5 className="mb-0">Add Resources</h5>
-                  </Modal.Header>
-                  <Modal.Body>
-                    <AddSharedResourceComp
-                      datashareId={datashareId}
-                      onSharedResourceDataChange={handleSharedResourceChange}
-                      onToggleAddResourceClose={toggleAddResourceModalClose}
-                      loadSharedResource={loadSharedResource}
-                    />
-                  </Modal.Body>
-                   <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={toggleClose}>
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() =>
-                        handleSharedResourceDeleteClick(
-                          confirmDeleteModal.sharedResourceDetails.shareId
-                        )
-                      }
-                    >
-                      Yes
-                    </Button>
-                  </Modal.Footer>
-                </Modal> */}
 
                 <Modal show={confirmDeleteModal.showPopup} onHide={toggleClose}>
                   <Modal.Header closeButton>
@@ -1366,7 +1750,7 @@ const DatashareDetailLayout = () => {
                   <Modal.Header closeButton>
                     <span className="text-word-break">
                       Are you sure you want to delete datashare&nbsp;"
-                      <b>{datashareInfo.name}</b>" ?
+                      <b>{datashareInfo?.name}</b>" ?
                     </span>
                   </Modal.Header>
                   <Modal.Footer>
@@ -1382,6 +1766,21 @@ const DatashareDetailLayout = () => {
                     </Button>
                   </Modal.Footer>
                 </Modal>
+
+                <AddSharedResourceComp
+                  datashareId={datashareId}
+                  onToggleAddResourceClose={toggleAddResourceModalClose}
+                  sharedResource={sharedResource}
+                  loadSharedResource={loadSharedResource}
+                  datashareInfo={datashareInfo}
+                  serviceDef={serviceDef}
+                  showModal={showAddResourceModal}
+                  setShowModal={setShowAddResourceModal}
+                  isEdit={isEditSharedResourceModal}
+                  serviceDetails={serviceDetails}
+                  setResourceUpdateTable={setResourceUpdateTable}
+                  resourceModalUpdateTable={resourceModalUpdateTable}
+                />
               </React.Fragment>
             )}
             <BlockUi isUiBlock={blockUI} />

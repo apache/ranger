@@ -19,7 +19,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
-import { Button, Accordion, Card, Col } from "react-bootstrap";
+import { Button, Accordion, Card, Col, Modal } from "react-bootstrap";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import { Loader } from "../../../components/CommonComponents";
 import { Form } from "react-final-form";
@@ -50,16 +50,14 @@ const DatashareDetailFullView = () => {
   const [dataShareRequestsList, setDataShareRequestsList] = useState([]);
   const [requestAccordionState, setRequestAccordionState] = useState({});
   const [requestPageCount, setRequestPageCount] = useState();
-  const [completeSharedResourceList, setCompleteSharedResourceList] = useState(
-    []
-  );
-  const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
-    useState([]);
+  const [sharedResourceTotalCount, setSharedResourceTotalCount] = useState(0);
+  const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
+    useState(0);
+  const [conditionModalData, setConditionModalData] = useState();
+  const [showConditionModal, setShowConditionModal] = useState(false);
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
-    fetchSharedResourceForDatashare(datashareName, 0, true);
-    fetchDatashareRequestList(undefined, 0, true);
     fetchDatashareRequestList(undefined, 0, false);
   }, []);
 
@@ -107,11 +105,11 @@ const DatashareDetailFullView = () => {
       setSharedResourcePageCount(
         Math.ceil(resp.data.totalCount / itemPerPageCount)
       );
-      if (getCompleteList) {
-        setCompleteSharedResourceList(resp.data.list);
-      } else {
+      if (!getCompleteList) {
         setSharedResources(resp.data.list);
       }
+      setSharedResourceTotalCount(resp.data.totalCount);
+      return resp.data.list;
     } catch (error) {
       console.error(
         `Error occurred while fetching shared resource details ! ${error}`
@@ -142,11 +140,11 @@ const DatashareDetailFullView = () => {
       );
       setRequestAccordionState(accordianState);
       setRequestPageCount(Math.ceil(resp.data.totalCount / itemsPerPageCount));
-      if (getCompleteList) {
-        setCompleteDatashareRequestsList(resp.data.list);
-      } else {
+      if (!getCompleteList) {
         setDataShareRequestsList(resp.data.list);
       }
+      setDatashareRequestTotalCount(resp.data.totalCount);
+      return resp.data.list;
     } catch (error) {
       console.error(
         `Error occurred while fetching Datashare requests details ! ${error}`
@@ -188,10 +186,6 @@ const DatashareDetailFullView = () => {
     setFilteredRoleList([...filteredRoleList, ...tempRoleList]);
   };
 
-  const back = () => {
-    navigate(`/gds/datashare/${datashareId}/detail`);
-  };
-
   const onSharedResourceAccordionChange = (id) => {
     setResourceAccordionState({
       ...resourceAccordionState,
@@ -218,10 +212,14 @@ const DatashareDetailFullView = () => {
     });
   };
 
-  const downloadJsonFile = () => {
+  const downloadJsonFile = async () => {
     let jsonData = datashareInfo;
-    jsonData.resources = completeSharedResourceList;
-    jsonData.datasets = completeDatashareRequestsList;
+    jsonData.resources = await fetchSharedResourceForDatashare(
+      datashareName,
+      0,
+      true
+    );
+    jsonData.datasets = await fetchDatashareRequestList(undefined, 0, true);
     const jsonContent = JSON.stringify(jsonData);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -230,6 +228,15 @@ const DatashareDetailFullView = () => {
     a.download = datashareInfo.name + ".json"; // Set the desired file name
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const showConfitionModal = (data) => {
+    setConditionModalData(data);
+    setShowConditionModal(true);
+  };
+
+  const toggleConditionModalClose = () => {
+    setShowConditionModal(false);
   };
 
   const handleSubmit = () => {};
@@ -247,7 +254,7 @@ const DatashareDetailFullView = () => {
                   <Button
                     variant="light"
                     className="border-0 bg-transparent"
-                    onClick={back}
+                    onClick={() => window.history.back()}
                     size="sm"
                     data-id="back"
                     data-cy="back"
@@ -336,6 +343,7 @@ const DatashareDetailFullView = () => {
                       groupList={groupList}
                       roleList={roleList}
                       isEditable={false}
+                      type="datashare"
                     />
                   )}
                 </div>
@@ -423,7 +431,7 @@ const DatashareDetailFullView = () => {
                   ) : (
                     <div>--</div>
                   )}
-                  {sharedResourcePageCount > 1 && (
+                  {sharedResourceTotalCount > itemsPerPage && (
                     <ReactPaginate
                       previousLabel={"Previous"}
                       nextLabel={"Next"}
@@ -607,7 +615,7 @@ const DatashareDetailFullView = () => {
                     ) : (
                       <div></div>
                     )}
-                    {requestPageCount > 1 && (
+                    {datashareRequestTotalCount > itemsPerPage && (
                       <ReactPaginate
                         previousLabel={"Previous"}
                         nextLabel={"Next"}
@@ -647,6 +655,65 @@ const DatashareDetailFullView = () => {
                     </div>
                   </div>
                 </div>
+
+                <Modal
+                  show={showConditionModal}
+                  onHide={toggleConditionModalClose}
+                >
+                  <Modal.Header closeButton>
+                    <h3 className="gds-header bold">Conditions</h3>
+                  </Modal.Header>
+                  <Modal.Body>
+                    <div className="p-1">
+                      <div className="gds-inline-field-grp">
+                        <div className="wrapper">
+                          <div className="gds-left-inline-field" height="30px">
+                            Boolean Expression :
+                          </div>
+                          <div line-height="30px">
+                            {conditionModalData?.conditionExpr != undefined
+                              ? conditionModalData.conditionExpr
+                              : ""}
+                          </div>
+                        </div>
+                        <div className="wrapper">
+                          <div className="gds-left-inline-field" height="30px">
+                            Access Type :
+                          </div>
+                          <div line-height="30px">
+                            {conditionModalData?.accessTypes != undefined
+                              ? conditionModalData.accessTypes.toString()
+                              : ""}
+                          </div>
+                        </div>
+                        {false && (
+                          <div className="wrapper">
+                            <div
+                              className="gds-left-inline-field"
+                              height="30px"
+                            >
+                              Row Filter :
+                            </div>
+                            <div line-height="30px">
+                              {conditionModalData?.rowFilter != undefined
+                                ? conditionModalData.rowFilter.filterExpr
+                                : ""}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={toggleConditionModalClose}
+                    >
+                      Close
+                    </Button>
+                  </Modal.Footer>
+                </Modal>
               </>
             )}
           </React.Fragment>

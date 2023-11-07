@@ -17,19 +17,20 @@
  * under the License.
  */
 
-import React, { useState, useReducer } from "react";
+import React, { useState, useReducer, useRef } from "react";
 import userGreyIcon from "../../../images/user-grey.svg";
 import groupGreyIcon from "../../../images/group-grey.svg";
 import roleGreyIcon from "../../../images/role-grey.svg";
 import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
 import roleColourIcon from "../../../images/role-colour.svg";
-import { Accordion, Card, Button } from "react-bootstrap";
+import { Accordion, Card, Button, Modal } from "react-bootstrap";
 import { Field } from "react-final-form";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import { fetchApi } from "../../../utils/fetchAPI";
-import { findIndex } from "lodash";
+import { findIndex, remove } from "lodash";
+import { isSystemAdmin } from "../../../utils/XAUtils";
 
 const initialState = {
   selectedPrinciple: []
@@ -51,8 +52,10 @@ const PrinciplePermissionComp = ({
   userList,
   groupList,
   roleList,
-  isEditable,
-  onDataChange
+  isAdmin,
+  type,
+  onDataChange,
+  isDetailView
 }) => {
   const [userOgList, setUserList] = useState(userList);
   const [groupOgList, setGroupList] = useState(groupList);
@@ -65,17 +68,14 @@ const PrinciplePermissionComp = ({
   const [userAccordion, setUserAccordion] = useState(false);
   const [groupAccordion, setGroupAccordion] = useState(false);
   const [roleAccordion, setRoleAccordion] = useState(false);
-  const isPrincipleEditable = isEditable == undefined ? true : isEditable;
   const [principleDetails, dispatch] = useReducer(
     principleFormReducer,
     initialState
   );
   const { selectedPrinciple } = principleDetails;
-
-  const [selectedAccess, setSelectedAccess] = useState({
-    value: "LIST",
-    label: "LIST"
-  });
+  const selectVisibilityLevelRef = useRef(null);
+  const [selectedAccess, setSelectedAccess] = useState({});
+  const [showAddPrincipalModal, setShowAddPrincipalModal] = useState(false);
 
   const accessOptions = [
     { value: "LIST", label: "LIST" },
@@ -93,7 +93,7 @@ const PrinciplePermissionComp = ({
     { value: "POLICY_ADMIN", label: "POLICY_ADMIN" }
   ];
 
-  if (isEditable) {
+  if (isAdmin) {
     accessOptionsWithRemove.push({
       value: "Remove Access",
       label: "Remove Access"
@@ -118,13 +118,7 @@ const PrinciplePermissionComp = ({
     } else if (data["type"] == "ROLE") {
       list = roleOgList;
     }
-
-    return (
-      findIndex(
-        list.map((obj) => obj.name),
-        data.value
-      ) === -1
-    );
+    return findIndex(list, { name: data.value }) === -1;
   };
 
   const fetchPrincipleOp = async (inputValue) => {
@@ -202,12 +196,15 @@ const PrinciplePermissionComp = ({
     }
 
     onDataChange(tempUserList, tempGroupList, tempRoleList);
-    setSelectedAccess({ value: "LIST", label: "LIST" });
+    //setSelectedAccess({ value: "LIST", label: "LIST" });
 
     dispatch({
       type: "SET_SELECTED_PRINCIPLE",
       selectedPrinciple: []
     });
+    if (selectVisibilityLevelRef.current) {
+      selectVisibilityLevelRef.current.clearValue();
+    }
   };
 
   const changeUserAccordion = () => {
@@ -318,29 +315,34 @@ const PrinciplePermissionComp = ({
     );
   };
 
-  const handleTableSelectedValue = (e, input, index, type) => {
+  const handleTableSelectedValue = (e, input, index, name, type) => {
     let tempUserList = userOgList;
     let tempGroupList = groupOgList;
     let tempRoleList = roleOgList;
-    if (e.label == "Remove Access") {
+    if (e?.label == "Remove Access") {
       if (type == "USER") {
         let list = userOgList;
-        list.splice(index, 1);
-        setUserList(list);
-        setFilteredUserList(list);
-        tempUserList = [...tempUserList, ...list];
+        //list.splice(index, 1);
+        remove(userOgList, function (n) {
+          return n.name == name;
+        });
+        setUserList(userOgList);
+        setFilteredUserList(userOgList);
+        tempUserList = [...tempUserList, ...userOgList];
       } else if (type == "GROUP") {
-        let list = groupOgList;
-        list.splice(index, 1);
-        setGroupList(list);
-        setFilteredGroupList(list);
-        tempGroupList = [...tempGroupList, ...list];
+        remove(groupOgList, function (n) {
+          return n.name == name;
+        });
+        setGroupList(groupOgList);
+        setFilteredGroupList(groupOgList);
+        tempGroupList = [...tempGroupList, ...groupOgList];
       } else if (type == "ROLE") {
-        let list = roleOgList;
-        list.splice(index, 1);
-        setRoleList(list);
-        setFilteredRoleList(list);
-        tempRoleList = [...tempRoleList, ...list];
+        remove(roleOgList, function (n) {
+          return n.name == name;
+        });
+        setRoleList(roleOgList);
+        setFilteredRoleList(roleOgList);
+        tempRoleList = [...tempRoleList, ...roleOgList];
       }
     } else {
       if (type == "USER") {
@@ -364,14 +366,27 @@ const PrinciplePermissionComp = ({
         setFilteredRoleList(list);
         tempRoleList = [...tempRoleList, ...list];
       }
+      input.onChange(e);
     }
     onDataChange(tempUserList, tempGroupList, tempRoleList);
-    input.onChange(e);
+  };
+
+  const openAddPrincipalModal = () => {
+    setShowAddPrincipalModal(true);
+  };
+
+  const toggleAddPrincipalModal = () => {
+    setShowAddPrincipalModal(false);
+  };
+
+  const containerStyle = {
+    display: "flex",
+    justifyContent: "space-between"
   };
 
   return (
     <div className="gds-tab-content">
-      {isPrincipleEditable && (
+      {!isDetailView && isAdmin && (
         <div className="gds-form-input">
           <Field
             className="form-control"
@@ -392,7 +407,7 @@ const PrinciplePermissionComp = ({
                   }}
                   defaultOptions
                   isMulti
-                  placeholder="Select Principals"
+                  placeholder="Type to select Principals"
                   data-name="usersSelect"
                   data-cy="usersSelect"
                 />
@@ -401,13 +416,16 @@ const PrinciplePermissionComp = ({
                   className="form-control"
                   render={({ input }) => (
                     <Select
+                      {...input}
                       theme={serviceSelectTheme}
                       styles={customStyles}
                       options={accessOptions}
                       onChange={(e) => setACL(e, input)}
-                      value={selectedAccess}
+                      ref={selectVisibilityLevelRef}
+                      //value={selectedAccess}
                       menuPlacement="auto"
                       isClearable
+                      placeholder="Visibility Level"
                     />
                   )}
                 ></Field>
@@ -450,7 +468,26 @@ const PrinciplePermissionComp = ({
       <div>
         <Card className="gds-section-card gds-bg-white">
           <div className="gds-section-title">
-            <p className="gds-card-heading">Principles & Permissions</p>
+            <p className="gds-card-heading" style={containerStyle}>
+              {type == "dataset"
+                ? "Dataset"
+                : type == "datashare"
+                ? "Datashare"
+                : ""}{" "}
+              Visibility
+              {isDetailView && isAdmin && (
+                <Button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => openAddPrincipalModal()}
+                  size="md"
+                  data-name="opnAddPrincipalModal"
+                  data-cy="opnAddPrincipalModal"
+                >
+                  Add Principals
+                </Button>
+              )}
+            </p>
           </div>
           <div className="gds-flex mg-b-10">
             <input
@@ -466,13 +503,14 @@ const PrinciplePermissionComp = ({
               className="form-control"
               render={({ input }) => (
                 <Select
+                  {...input}
                   theme={serviceSelectTheme}
                   styles={customStyles}
                   options={accessOptions}
                   onChange={(e) => onACLFilterChange(e, input)}
-                  value={selectedACLFilter}
+                  //value={selectedACLFilter}
                   menuPlacement="auto"
-                  placeholder="All Access Types"
+                  placeholder="Visibility Level"
                   isClearable
                 />
               )}
@@ -512,13 +550,14 @@ const PrinciplePermissionComp = ({
                   filteredUserList.length > 0 ? (
                     filteredUserList.map((obj, index) => {
                       return (
-                        <div className="gds-principle-listing">
+                        <div className="gds-principle-listing" key={obj.name}>
                           <span title={obj.name}>{obj.name}</span>
 
                           <Field
                             name="aclPerms"
                             render={({ input, meta }) => (
                               <Select
+                                // {...input.value}
                                 theme={serviceSelectTheme}
                                 options={accessOptionsWithRemove}
                                 menuPortalTarget={document.body}
@@ -527,11 +566,15 @@ const PrinciplePermissionComp = ({
                                     e,
                                     input,
                                     index,
+                                    obj.name,
                                     "USER"
                                   )
                                 }
                                 menuPlacement="auto"
-                                placeholder={obj.perm}
+                                defaultValue={[
+                                  { label: obj.perm, value: obj.perm }
+                                ]}
+                                isDisabled={!isAdmin}
                                 isClearable
                               />
                             )}
@@ -579,7 +622,7 @@ const PrinciplePermissionComp = ({
                   filteredGroupList.length > 0 ? (
                     filteredGroupList.map((obj, index) => {
                       return (
-                        <div className="gds-principle-listing">
+                        <div className="gds-principle-listing" key={obj.name}>
                           <span title={obj.name}>{obj.name}</span>
                           <Field
                             name="aclPerms"
@@ -593,11 +636,15 @@ const PrinciplePermissionComp = ({
                                     e,
                                     input,
                                     index,
+                                    obj.name,
                                     "GROUP"
                                   )
                                 }
                                 menuPlacement="auto"
-                                placeholder={obj.perm}
+                                defaultValue={[
+                                  { label: obj.perm, value: obj.perm }
+                                ]}
+                                isDisabled={!isAdmin}
                                 isClearable
                               />
                             )}
@@ -641,11 +688,10 @@ const PrinciplePermissionComp = ({
               </div>
               <Accordion.Collapse eventKey="1">
                 <Card.Body>
-                  {filteredRoleList != undefined &&
-                  filteredRoleList.length > 0 ? (
+                  {filteredRoleList?.length > 0 ? (
                     filteredRoleList.map((obj, index) => {
                       return (
-                        <div className="gds-principle-listing">
+                        <div className="gds-principle-listing" key={obj.name}>
                           <span title={obj.name}>{obj.name}</span>
                           <Field
                             name="aclPerms"
@@ -659,11 +705,15 @@ const PrinciplePermissionComp = ({
                                     e,
                                     input,
                                     index,
+                                    obj.name,
                                     "ROLE"
                                   )
                                 }
+                                isDisabled={!isAdmin}
                                 menuPlacement="auto"
-                                placeholder={obj.perm}
+                                defaultValue={[
+                                  { label: obj.perm, value: obj.perm }
+                                ]}
                                 isClearable
                               />
                             )}
@@ -680,6 +730,94 @@ const PrinciplePermissionComp = ({
           </Accordion>
         </Card>
       </div>
+      <Modal show={showAddPrincipalModal} onHide={toggleAddPrincipalModal}>
+        <Modal.Header closeButton>
+          <h3 className="gds-header bold">Add Principals</h3>
+        </Modal.Header>
+        <div className="gds-form-input">
+          <Field
+            className="form-control"
+            name="selectedPrinciple"
+            render={({ input, meta }) => (
+              <div>
+                <Modal.Body>
+                  <AsyncSelect
+                    {...input}
+                    className="flex-1 gds-text-input"
+                    onChange={(e) => selectedPrincipal(e, input)}
+                    value={selectedPrinciple}
+                    filterOption={filterPrincipleOp}
+                    loadOptions={fetchPrincipleOp}
+                    components={{
+                      DropdownIndicator: () => null,
+                      IndicatorSeparator: () => null
+                    }}
+                    defaultOptions
+                    isMulti
+                    placeholder="Type to select Principals"
+                    data-name="usersSelect"
+                    data-cy="usersSelect"
+                  />
+                  <Field
+                    name="accessPermList"
+                    className="form-control"
+                    render={({ input }) => (
+                      <Select
+                        {...input}
+                        theme={serviceSelectTheme}
+                        styles={customStyles}
+                        options={accessOptions}
+                        onChange={(e) => setACL(e, input)}
+                        ref={selectVisibilityLevelRef}
+                        //value={selectedAccess}
+                        menuPlacement="auto"
+                        isClearable
+                        placeholder="Visibility Level"
+                      />
+                    )}
+                  />
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => toggleAddPrincipalModal()}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      userOgList;
+                      if (
+                        !selectedPrinciple ||
+                        selectedPrinciple[0].value == undefined ||
+                        selectedPrinciple.length === 0
+                      ) {
+                        toast.dismiss(toastId.current);
+                        toastId.current = toast.error(
+                          "Please select principal!!"
+                        );
+                        return false;
+                      }
+                      addInSelectedPrincipal(selectedPrinciple, input);
+                      filterPrincipleList(
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined
+                      );
+                    }}
+                  >
+                    Add
+                  </Button>
+                </Modal.Footer>
+              </div>
+            )}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

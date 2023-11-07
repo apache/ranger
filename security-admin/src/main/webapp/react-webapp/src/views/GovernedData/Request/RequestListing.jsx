@@ -18,13 +18,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  useSearchParams,
-  useNavigate,
-  useLocation,
-  Link
-} from "react-router-dom";
-import { Row, Col } from "react-bootstrap";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Row, Col, Button } from "react-bootstrap";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import XATableLayout from "../../../components/XATableLayout";
 import { fetchApi } from "../../../utils/fetchAPI";
@@ -37,15 +32,9 @@ import {
 import moment from "moment-timezone";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import {
-  isKeyAdmin,
-  isKMSAuditor,
   getTableSortBy,
   getTableSortType,
-  serverError,
-  isSystemAdmin,
-  requestDataTitle,
-  fetchSearchFilterParams,
-  parseSearchFilter
+  serverError
 } from "../../../utils/XAUtils";
 
 const RequestListing = () => {
@@ -56,11 +45,8 @@ const RequestListing = () => {
   const fetchIdRef = useRef(0);
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
+  const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
-  const [updateTable, setUpdateTable] = useState(moment.now());
   const [pageCount, setPageCount] = useState(
     state && state.showLastPage ? state.addPageData.totalPage : 0
   );
@@ -107,24 +93,43 @@ const RequestListing = () => {
         setLoader(false);
       }
     },
-    [updateTable, searchFilterParams]
+    [searchFilterParams]
   );
+
+  const navigateToRequestDetail = (requestId) => {
+    navigate(`/gds/request/detail/${requestId}`);
+  };
 
   const columns = React.useMemo(
     () => [
       {
         Header: "Id",
         accessor: "id",
-        width: 25,
+        width: 80,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {},
-        Cell: (rawValue) => {
+        Cell: ({ row }) => {
+          const hiddenValue = row.original.permissionForCaller;
           return (
             <div className="position-relative text-center">
-              <Link title="Edit" to={`/gds/request/detail/${rawValue.value}`}>
-                {rawValue.value}
-              </Link>
+              <Button
+                data-id="datasetId"
+                data-cy="datasetId"
+                onClick={() => navigateToRequestDetail(row.original.id)}
+                style={{
+                  lineHeight: 1,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  color: "#0b7fad",
+                  border: 0,
+                  outline: "none",
+                  fontSize: 13,
+                  cursor: "pointer"
+                }}
+              >
+                {row.original.id}
+              </Button>
             </div>
           );
         }
@@ -148,7 +153,7 @@ const RequestListing = () => {
       {
         Header: "Status",
         accessor: "status",
-        width: 250,
+        width: 108,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
@@ -176,7 +181,7 @@ const RequestListing = () => {
       {
         Header: "Created By",
         accessor: "createdBy",
-        width: 250,
+        width: 100,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
@@ -188,6 +193,16 @@ const RequestListing = () => {
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
+      }
+    ],
+    []
+  );
+
+  const getDefaultSort = React.useMemo(
+    () => [
+      {
+        id: "updateTime",
+        desc: true
       }
     ],
     []
@@ -231,7 +246,7 @@ const RequestListing = () => {
             columnHide={false}
             columnResizable={false}
             columnSort={true}
-            //defaultSort={getDefaultSort}
+            defaultSort={getDefaultSort}
           />
         </React.Fragment>
       </div>

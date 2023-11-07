@@ -122,7 +122,10 @@ const MyDatasetListing = () => {
             ? (state.addPageData.totalPage - 1) * pageSize
             : pageIndex * pageSize;
         if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
+          if (getTableSortBy(sortBy) == "name")
+            params["sortBy"] = "datasetName";
+          else params["sortBy"] = getTableSortBy(sortBy);
+
           params["sortType"] = getTableSortType(sortBy);
         }
         if (isMyDatasetPage) {
@@ -190,7 +193,7 @@ const MyDatasetListing = () => {
   const myDatasetColumns = React.useMemo(
     () => [
       {
-        Header: "Id",
+        Header: "ID",
         accessor: "id",
         width: 80,
         disableResizing: true,
@@ -294,7 +297,7 @@ const MyDatasetListing = () => {
             Header: "Users",
             accessor: "principalsCount",
             accessor: (raw) => {
-              let userCount = raw.USER;
+              let userCount = raw.principalsCount?.USER;
 
               return userCount != undefined ? (
                 <span>{userCount}</span>
@@ -310,7 +313,7 @@ const MyDatasetListing = () => {
             Header: "Groups",
             accessor: "principalsCount",
             accessor: (raw) => {
-              let groupCount = raw.GROUP;
+              let groupCount = raw.principalsCount?.GROUP;
 
               return groupCount != undefined ? (
                 <span>{groupCount}</span>
@@ -326,7 +329,7 @@ const MyDatasetListing = () => {
             Header: "Roles",
             accessor: "principalsCount",
             accessor: (raw) => {
-              let roleCount = raw.ROLE;
+              let roleCount = raw.principalsCount?.ROLE;
 
               return roleCount != undefined ? (
                 <span>{roleCount}</span>
@@ -347,7 +350,7 @@ const MyDatasetListing = () => {
   const datasetColumns = React.useMemo(
     () => [
       {
-        Header: "Id",
+        Header: "ID",
         accessor: "id",
         width: 80,
         disableResizing: true,
@@ -441,7 +444,7 @@ const MyDatasetListing = () => {
   const getDefaultSort = React.useMemo(
     () => [
       {
-        id: "eventTime",
+        id: "updateTime",
         desc: true
       }
     ],

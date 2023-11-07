@@ -2678,6 +2678,16 @@ li.list-group-item:hover {
   margin: 0 auto;
 }
 
+.gds-access-content {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.gds-content-margin {
+  margin-left: 120px;
+  margin-top: 40px;
+}
+
 .gds-inline-field-grp {
   display: inline-flex;
   flex-direction: column;
@@ -2759,7 +2769,7 @@ li.list-group-item:hover {
 }
 
 .gds-action-card {
-  padding: 1.5rem 1rem;
+  padding: 1rem;
   border-radius: 16px;
 }
 
@@ -2769,6 +2779,15 @@ li.list-group-item:hover {
   justify-content: space-between;
   border-bottom: 1px solid #dddddd;
   padding-bottom: 0.75rem;
+}
+
+.gds-no-data .card-body {
+  display: none !important;
+}
+
+.gds-no-data .gds-section-title {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .gds-action-card .gds-card-heading {
@@ -2817,14 +2836,14 @@ li.list-group-item:hover {
 }
 
 .gds-grant-det-cond {
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   flex: 1;
 }
 
 .gds-grant-row {
   display: grid;
   grid-gap: 0.5rem;
-  grid-template-columns: 80px 1fr 80px;
+  grid-template-columns: 32px 1fr 32px;
 }
 
 .gds-flex {
@@ -2955,5 +2974,42 @@ textarea.gds-placeholder::placeholder,
 .resource-block {
   padding: 0.5rem 0;
   border-bottom: 1px solid #dddddd;
-  margin:1rem 2rem;
+  margin: 1rem 2rem;
+}
+
+.gds-shared-resource div.row:last-child {
+  margin-bottom: 0 !important;
+}
+
+.gds-grant-principle {
+  width: 50%;
+}
+.gds-grant-permission {
+  width: 30%;
+}
+.gds-grant-condition {
+  width: 20%;
+}
+
+.gds-grant-condition .editable {
+  word-break: break-all;
+}
+
+.gds-grant-condition .editable-label {
+  margin-top: 0;
+  margin-bottom: 0;
+  max-height: 126px;
+  overflow-y: scroll;
+}
+
+.gds-grant-principle [class$="-indicatorsContainer"],
+.gds-grant-principle [class$="-control"] {
+  max-height: 126px;
+  overflow-y: scroll;
+}
+
+.gds-grant-permission [class$="-indicatorsContainer"],
+.gds-grant-permission [class$="-control"] {
+  max-height: 126px;
+  overflow-y: scroll;
 }

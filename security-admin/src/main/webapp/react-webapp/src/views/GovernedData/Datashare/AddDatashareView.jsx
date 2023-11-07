@@ -119,6 +119,8 @@ const AddDatashareView = () => {
     useState();
   const [datashareConditionExpr, setDatashareConditionExpr] = useState();
   const navigate = useNavigate();
+  const [defaultZoneOptions, setDefaultZoneOptions] = useState([]);
+  const [defaultServiceOptions, setDefaultServiceOptions] = useState([]);
 
   const cancelDatashareDetails = () => {
     if (step == 1) {
@@ -218,6 +220,7 @@ const AddDatashareView = () => {
           blockUI: false
         });
         serverError(error);
+        toast.error(error);
         console.error(`Error occurred while creating datashare  ${error}`);
       }
     } else if (step == 4) {
@@ -231,7 +234,12 @@ const AddDatashareView = () => {
         toast.error("Please add Service Name");
         return;
       } else {
-        fetchServiceDef(selectedService.def);
+        if (selectedService.def != undefined) {
+          fetchServiceDef(selectedService.def);
+        } else {
+          let serviceType = await fetchServiceTypeByName(selectedService.label);
+          fetchServiceDef(serviceType);
+        }
         setStep(step + 1);
       }
       setStep(step + 1);
@@ -258,10 +266,18 @@ const AddDatashareView = () => {
       obj.excludesSupported = false;
     }
     if (Object.keys(modifiedServiceDef.rowFilterDef).length !== 0) {
-      setMaskDef(true);
+      setRowFilterDef(true);
     }
     if (Object.keys(modifiedServiceDef.dataMaskDef).length !== 0) {
-      setRowFilterDef(true);
+      setMaskDef(true);
+      setMaskTypeOptions(
+        modifiedServiceDef.dataMaskDef.maskTypes.map(
+          ({ label, name: value }) => ({
+            label,
+            value
+          })
+        )
+      );
     }
     setAccessTypeOptions(
       modifiedServiceDef.accessTypes.map(({ label, name: value }) => ({
@@ -269,14 +285,7 @@ const AddDatashareView = () => {
         value
       }))
     );
-    setMaskTypeOptions(
-      modifiedServiceDef.dataMaskDef.maskTypes.map(
-        ({ label, name: value }) => ({
-          label,
-          value
-        })
-      )
-    );
+
     setServiceDef(modifiedServiceDef);
   };
 
@@ -298,36 +307,85 @@ const AddDatashareView = () => {
     console.log("Submitting");
   };
 
-  const fetchService = async (inputValue) => {
+  const fetchServiceTypeByName = async (name) => {
     let params = {};
-    if (inputValue) {
-      params["serviceName"] = inputValue || "";
+    params["serviceName"] = name;
+    try {
+      let serviceResp = await fetchApi({
+        url: "plugins/services",
+        params: params
+      });
+      return serviceResp.data.services[0].type;
+    } catch (error) {
+      console.error(`Error occurred while fetching service details ! ${error}`);
     }
-    //params["serviceName"] = "hdfs1";
-    const serviceResp = await fetchApi({
-      url: "plugins/services",
-      params: params
-    });
-    return serviceResp.data.services.map(({ name, id, type }) => ({
-      label: name,
-      value: id,
-      def: type
-    }));
   };
 
-  const fetchSecurityZone = async (inputValue) => {
-    let params = {};
-    if (inputValue) {
-      params["zoneName"] = inputValue || "";
+  const fetchService = async (zoneId) => {
+    try {
+      if (zoneId == undefined) {
+        let serviceResp = await fetchApi({
+          url: "plugins/services"
+        });
+        return serviceResp.data.services.map(({ name, id, type }) => ({
+          label: name,
+          id: id,
+          def: type
+        }));
+      } else {
+        let serviceResp = await fetchApi({
+          url: `public/v2/api/zones/${zoneId}/service-headers`
+        });
+        return serviceResp.data.map(({ name, id }) => ({
+          label: name,
+          id: id
+        }));
+      }
+    } catch (error) {
+      console.error(`Error occurred while fetching service details ! ${error}`);
     }
-    //params["zoneName"] = "zone1";
-    const zoneResp = await fetchApi({
-      url: "zones/zones",
-      params: params
+  };
+
+  const onFocusServiceSelect = () => {
+    fetchService(selectedZone?.id).then((opts) => {
+      setDefaultServiceOptions(opts);
     });
-    return zoneResp.data.securityZones.map(({ name, id }) => ({
+  };
+
+  const onFocusZoneSelect = () => {
+    fetchSecurityZone(selectedService?.id).then((opts) => {
+      setDefaultZoneOptions(opts);
+    });
+  };
+
+  const fetchSecurityZone = async (serviceId) => {
+    let zoneResp = [];
+    try {
+      if (serviceId == undefined) {
+        zoneResp = await fetchApi({
+          url: "public/v2/api/zone-headers"
+        });
+        console.log("test");
+      } else {
+        zoneResp = await fetchApi({
+          url: `public/v2/api/zones/zone-headers/for-service/${serviceId}`
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    console.log(zoneResp);
+    // const zoneResp = await fetchApi({
+    //   url: "zones/zones",
+    //   params: params
+    // });
+    // return zoneResp.data.securityZones.map(({ name, id }) => ({
+    //   label: name,
+    //   value: id
+    // }));
+    return zoneResp.data.map(({ name, id }) => ({
       label: name,
-      value: id
+      id: id
     }));
   };
 
@@ -337,8 +395,6 @@ const AddDatashareView = () => {
       selectedService: e
     });
     input.onChange(e);
-    console.log("Adding to selectedService");
-    console.log(selectedService);
   };
 
   const setZone = (e, input) => {
@@ -347,8 +403,6 @@ const AddDatashareView = () => {
       selectedZone: e
     });
     input.onChange(e);
-    console.log("Adding to selectedZone");
-    console.log(selectedZone);
   };
 
   const resourceErrorCheck = (errors, values) => {
@@ -588,11 +642,14 @@ const AddDatashareView = () => {
                         <div className="gds-form-input">
                           <AsyncSelect
                             {...input}
-                            defaultOptions
+                            defaultOptions={defaultServiceOptions}
+                            onFocus={() => {
+                              onFocusServiceSelect();
+                            }}
                             value={selectedService}
                             loadOptions={fetchService}
                             onChange={(e) => onServiceChange(e, input)}
-                            isClearable={false}
+                            isClearable={true}
                             placeholder="Select Service"
                             width="500px"
                           />
@@ -607,11 +664,14 @@ const AddDatashareView = () => {
                           <div className="gds-form-input">
                             <AsyncSelect
                               {...input}
-                              defaultOptions
                               value={selectedZone}
                               loadOptions={fetchSecurityZone}
+                              onFocus={() => {
+                                onFocusZoneSelect();
+                              }}
+                              defaultOptions={defaultZoneOptions}
                               onChange={(e) => setZone(e, input)}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Security Zone (Optional)"
                               width="500px"
                             />
@@ -666,7 +726,7 @@ const AddDatashareView = () => {
                 <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 3</h6>
                   <h2 className="gds-form-step-name">
-                    Select default access type and masks
+                    Select default access types
                   </h2>
                 </div>
                 <div>
@@ -823,12 +883,13 @@ const AddDatashareView = () => {
               <div className="gds-form-wrap">
                 <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 4</h6>
-                  <h2 className="gds-form-step-name">Specify Permissions</h2>
+                  <h2 className="gds-form-step-name">Datashare Visibility</h2>
                 </div>
                 <PrinciplePermissionComp
                   userList={userList}
                   groupList={groupList}
                   roleList={roleList}
+                  type="datashare"
                   onDataChange={handleDataChange}
                 />
               </div>

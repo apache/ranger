@@ -241,12 +241,13 @@ const AddDatasetView = () => {
               <div className="gds-form-wrap">
                 <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 2</h6>
-                  <h2 className="gds-form-step-name">Specify Permissions</h2>
+                  <h2 className="gds-form-step-name">Dataset Visibility</h2>
                 </div>
                 <PrinciplePermissionComp
                   userList={userList}
                   groupList={groupList}
                   roleList={roleList}
+                  type="dataset"
                   onDataChange={handleDataChange}
                 />
               </div>
