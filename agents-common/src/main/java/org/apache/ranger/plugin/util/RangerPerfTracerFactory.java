@@ -21,16 +21,52 @@ package org.apache.ranger.plugin.util;
 
 import org.slf4j.Logger;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+
 public class RangerPerfTracerFactory {
+
+	static volatile ThreadMXBean threadMgmtBean = null;
+	private static boolean isThreadCPUTimeSupported = false;
+	private static boolean isThreadCPUTimeEnabled = false;
 
 	static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
 
 		RangerPerfTracer ret = null;
 
+		if (logger.isDebugEnabled()) {
+			if (threadMgmtBean == null) {
+				synchronized (RangerPerfTracerFactory.class) {
+					if (threadMgmtBean == null) {
+						threadMgmtBean = ManagementFactory.getThreadMXBean();
+						isThreadCPUTimeSupported = threadMgmtBean.isThreadCpuTimeSupported();
+						logger.info("ThreadCPUTimeSupported (by JVM)  = " + isThreadCPUTimeSupported);
+
+						isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
+						logger.info("ThreadCPUTimeEnabled  = " + isThreadCPUTimeEnabled);
+
+						if (isThreadCPUTimeSupported) {
+							if (!isThreadCPUTimeEnabled) {
+								threadMgmtBean.setThreadCpuTimeEnabled(true);
+								isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
+							}
+							logger.info("ThreadCPUTimeEnabled  = " + isThreadCPUTimeEnabled);
+						}
+					}
+				}
+			}
+		}
+
+		ThreadInfo threadInfo = null;
+		if (isThreadCPUTimeSupported && isThreadCPUTimeEnabled) {
+			threadInfo = threadMgmtBean.getThreadInfo(Thread.currentThread().getId());
+		}
+
 		if (PerfDataRecorder.collectStatistics()) {
-			ret = new RangerPerfCollectorTracer(logger, tag, data);
-		} else if (logger.isDebugEnabled()) {
-			ret = new RangerPerfTracer(logger, tag, data);
+			ret = new RangerPerfCollectorTracer(logger, tag, data, threadInfo);
+		} else {
+			ret = new RangerPerfTracer(logger, tag, data, threadInfo);
 		}
 		return ret;
 	}

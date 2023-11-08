@@ -182,6 +182,8 @@ public class RangerConstants extends RangerCommonEnums {
 			RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_ADMIN_AUDITOR,
 			RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
 
+	public static final String DEFAULT_SORT_ORDER       = "asc";
+
 	public static enum RBAC_PERM {
 		ALLOW_NONE,
 		ALLOW_READ,
