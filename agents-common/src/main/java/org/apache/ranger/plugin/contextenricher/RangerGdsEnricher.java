@@ -22,17 +22,14 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInProjectInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInDatasetInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.ProjectInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.SharedResourceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +47,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
     private RangerGdsInfoRetriever gdsInfoRetriever;
     private RangerGdsInfoRefresher gdsInfoRefresher;
     private RangerServiceDefHelper serviceDefHelper;
-    private EnhancedGdsInfo        gdsInfo = null;
+    private GdsPolicyEngine        gdsPolicyEngine = null;
 
     @Override
     public void init() {
@@ -145,24 +142,26 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
     public void enrich(RangerAccessRequest request, Object dataStore) {
         LOG.debug("==> RangerGdsEnricher.enrich({}, {})", request, dataStore);
 
-        EnhancedGdsInfo gdsInfo = (dataStore instanceof EnhancedGdsInfo) ? (EnhancedGdsInfo) dataStore : this.gdsInfo;
+        GdsPolicyEngine policyEngine = (dataStore instanceof GdsPolicyEngine) ? (GdsPolicyEngine) dataStore : this.gdsPolicyEngine;
 
-        LOG.debug("RangerGdsEnricher.enrich(): using gdsInfo={}", gdsInfo);
+        LOG.debug("RangerGdsEnricher.enrich(): using policyEngine={}", policyEngine);
 
-        // TODO:
+        GdsAccessResult result = policyEngine != null ? policyEngine.evaluate(request) : null;
+
+        RangerAccessRequestUtil.setGdsResultInContext(request, result);
 
         LOG.debug("<== RangerGdsEnricher.enrich({}, {})", request, dataStore);
     }
 
     public void setGdsInfo(ServiceGdsInfo gdsInfo) {
-        this.gdsInfo = new EnhancedGdsInfo(gdsInfo);
+        this.gdsPolicyEngine = new GdsPolicyEngine(gdsInfo, serviceDefHelper, getPluginContext());
 
         setGdsInfoInPlugin();
     }
 
     public RangerServiceDefHelper getServiceDefHelper() { return serviceDefHelper; }
 
-    public EnhancedGdsInfo getGdsInfo() { return gdsInfo; }
+    public GdsPolicyEngine getGdsPolicyEngine() { return gdsPolicyEngine; }
 
     private void setGdsInfoInPlugin() {
         LOG.debug("==> setGdsInfoInPlugin()");
@@ -170,7 +169,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         RangerAuthContext authContext = getAuthContext();
 
         if (authContext != null) {
-            authContext.addOrReplaceRequestContextEnricher(this, gdsInfo);
+            authContext.addOrReplaceRequestContextEnricher(this, gdsPolicyEngine);
 
             notifyAuthContextChanged();
         }
@@ -344,106 +343,5 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
 
             LOG.debug("<== RangerGdsInfoRefresher(serviceName={}).saveToCache()", getServiceName());
         }
-    }
-
-    public static class EnhancedGdsInfo {
-        private final RangerServiceDefHelper                  gdsServiceDefHelper;
-        private final Map<String, List<DataShareInfo>>        zoneShares;
-        private final Map<Long, List<SharedResourceInfo>>     shareResources;
-        private final Map<Long, DatasetInfo>                  datasets;
-        private final Map<Long, ProjectInfo>                  projects;
-        private final Map<Long, List<DataShareInDatasetInfo>> shareDatasets;
-        private final Map<Long, List<DatasetInProjectInfo>>   datasetProjects;
-
-        EnhancedGdsInfo(ServiceGdsInfo gdsInfo) {
-            if (gdsInfo != null) {
-                this.gdsServiceDefHelper = gdsInfo.getGdsServiceDef() != null ? new RangerServiceDefHelper(gdsInfo.getGdsServiceDef(), false) : null;
-                this.zoneShares          = new HashMap<>();
-                this.shareResources      = new HashMap<>();
-                this.datasets            = new HashMap<>();
-                this.projects            = new HashMap<>();
-                this.shareDatasets       = new HashMap<>();
-                this.datasetProjects     = new HashMap<>();
-
-                if (gdsInfo.getDataShares() != null) {
-                    for (DataShareInfo dataShareInfo : gdsInfo.getDataShares()) {
-                        if (dataShareInfo != null) {
-                            String              zoneName = dataShareInfo.getZoneName() == null ? StringUtils.EMPTY : dataShareInfo.getZoneName();
-                            List<DataShareInfo> shares   = zoneShares.computeIfAbsent(zoneName, k -> new ArrayList<>());
-
-                            shares.add(dataShareInfo);
-                        }
-                    }
-                }
-
-                if (gdsInfo.getResources() != null) {
-                    for (SharedResourceInfo resource : gdsInfo.getResources()) {
-                        if (resource != null) {
-                            List<SharedResourceInfo> resources = shareResources.computeIfAbsent(resource.getDataShareId(), k -> new ArrayList<>());
-
-                            resources.add(resource);
-                        }
-                    }
-                }
-
-                if (gdsInfo.getDatasets() != null) {
-                    for (DatasetInfo datasetInfo : gdsInfo.getDatasets()) {
-                        if (datasetInfo != null) {
-                            datasets.put(datasetInfo.getId(), datasetInfo);
-                        }
-                    }
-                }
-
-                if (gdsInfo.getProjects() != null) {
-                    for (ProjectInfo projectInfo : gdsInfo.getProjects()) {
-                        if (projectInfo != null) {
-                            projects.put(projectInfo.getId(), projectInfo);
-                        }
-                    }
-                }
-
-                if (gdsInfo.getDshids() != null) {
-                    for (DataShareInDatasetInfo dshid : gdsInfo.getDshids()) {
-                        if (dshid != null) {
-                            List<DataShareInDatasetInfo> dshids = shareDatasets.computeIfAbsent(dshid.getDatasetId(), k -> new ArrayList<>());
-
-                            dshids.add(dshid);
-                        }
-                    }
-                }
-
-                if (gdsInfo.getDips() != null) {
-                    for (DatasetInProjectInfo dip : gdsInfo.getDips()) {
-                        if (dip != null) {
-                            List<DatasetInProjectInfo> dips = datasetProjects.computeIfAbsent(dip.getDatasetId(), k -> new ArrayList<>());
-
-                            dips.add(dip);
-                        }
-                    }
-                }
-            } else {
-                this.gdsServiceDefHelper = null;
-                this.zoneShares          = Collections.emptyMap();
-                this.shareResources      = Collections.emptyMap();
-                this.datasets            = Collections.emptyMap();
-                this.projects            = Collections.emptyMap();
-                this.shareDatasets   = Collections.emptyMap();
-                this.datasetProjects = Collections.emptyMap();
-            }
-        }
-
-        public RangerServiceDefHelper getGdsServiceDefHelper() { return gdsServiceDefHelper; }
-
-        public List<DataShareInfo> getDataSharesForZone(String zoneName) { return zoneShares.get(zoneName); }
-
-        public List<SharedResourceInfo> getResourcesForDataShare(Long dataShareId) { return shareResources.get(dataShareId); }
-
-        public DatasetInfo getDatasetInfo(Long datasetId) { return datasets.get(datasetId); }
-
-        public ProjectInfo getProjectInfo(Long projectId) { return projects.get(projectId); }
-
-        public List<DataShareInDatasetInfo> getDatasetsForDataShare(Long dataShareId) { return shareDatasets.get(dataShareId); }
-
-        public List<DatasetInProjectInfo> getProjectsForDataset(Long datasetId) { return datasetProjects.get(datasetId); }
     }
 }

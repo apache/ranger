@@ -1922,6 +1922,7 @@ public class GdsDBStore extends AbstractGdsStore {
             SharedResourceInfo resourceInfo = new SharedResourceInfo();
 
             resourceInfo.setId(resource.getId());
+            resourceInfo.setName(resource.getName());
             resourceInfo.setDataShareId(resource.getDataShareId());
             resourceInfo.setResource(resource.getResource());
             resourceInfo.setSubResource(resource.getSubResource());
@@ -1938,6 +1939,10 @@ public class GdsDBStore extends AbstractGdsStore {
 
     private void populateDataSharesInDataset(ServiceGdsInfo gdsInfo, SearchFilter filter) {
         for (RangerDataShareInDataset dshInDs : dataShareInDatasetService.searchDataShareInDatasets(filter).getList()) {
+            if (dshInDs.getStatus() != GdsShareStatus.ACTIVE) {
+                continue;
+            }
+
             DataShareInDatasetInfo dshInDsInfo = new DataShareInDatasetInfo();
 
             dshInDsInfo.setDatasetId(dshInDs.getDatasetId());
@@ -1952,6 +1957,10 @@ public class GdsDBStore extends AbstractGdsStore {
 
     private void populateDatasetsInProject(ServiceGdsInfo gdsInfo, SearchFilter filter) {
         for (RangerDatasetInProject dip : datasetInProjectService.searchDatasetInProjects(filter).getList()) {
+            if (dip.getStatus() != GdsShareStatus.ACTIVE) {
+                continue;
+            }
+
             DatasetInProjectInfo dipInfo = new DatasetInProjectInfo();
 
             dipInfo.setDatasetId(dip.getDatasetId());

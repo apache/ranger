@@ -69,6 +69,12 @@ public class RangerPolicyEngineOptions {
 		this.optimizeTagTrieForSpace = other.optimizeTagTrieForSpace;
 	}
 
+	public RangerPolicyEngineOptions(final RangerPolicyEngineOptions other, RangerServiceDefHelper serviceDefHelper) {
+		this(other);
+
+		this.serviceDefHelper = serviceDefHelper;
+	}
+
 	public void configureForPlugin(Configuration conf, String propertyPrefix) {
 		disableContextEnrichers = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.context.enrichers", false);
 		disableCustomConditions = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.custom.conditions", false);

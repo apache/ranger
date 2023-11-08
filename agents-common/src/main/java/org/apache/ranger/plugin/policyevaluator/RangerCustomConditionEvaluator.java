@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 //
 // this class should have been named RangerConditionEvaluatorFactory
 //
@@ -44,6 +46,8 @@ public class RangerCustomConditionEvaluator {
     private static final Logger PERF_POLICY_INIT_LOG          = RangerPerfTracer.getPerfLogger("policy.init");
     private static final Logger PERF_POLICYITEM_INIT_LOG      = RangerPerfTracer.getPerfLogger("policyitem.init");
     private static final Logger PERF_POLICYCONDITION_INIT_LOG = RangerPerfTracer.getPerfLogger("policycondition.init");
+
+    private static final RangerPolicyConditionDef EXPRESSION_CONDITION_DEF = ServiceDefUtil.createImplicitExpressionConditionDef(-1L);
 
 
     public static RangerCustomConditionEvaluator getInstance() {
@@ -133,6 +137,30 @@ public class RangerCustomConditionEvaluator {
                 RangerPerfTracer.log(perf);
             } else {
                 LOG.error("RangerCustomConditionEvaluator.getConditionEvaluator(" + parentId + "): failed to init ConditionEvaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
+            }
+        } else {
+            ret = null;
+        }
+
+        return ret;
+    }
+
+    public RangerConditionEvaluator getExpressionEvaluator(String expression, RangerServiceDef serviceDef) {
+        final RangerConditionEvaluator ret;
+
+        if (StringUtils.isNotBlank(expression)) {
+            ret = newConditionEvaluator(EXPRESSION_CONDITION_DEF.getEvaluator());
+
+            if (ret != null) {
+                ret.setServiceDef(serviceDef);
+                ret.setConditionDef(EXPRESSION_CONDITION_DEF);
+                ret.setPolicyItemCondition(new RangerPolicyItemCondition(EXPRESSION_CONDITION_DEF.getName(), Collections.singletonList(expression)));
+
+                RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_INIT_LOG, "RangerConditionEvaluator.init(_expression)");
+
+                ret.init();
+
+                RangerPerfTracer.log(perf);
             }
         } else {
             ret = null;

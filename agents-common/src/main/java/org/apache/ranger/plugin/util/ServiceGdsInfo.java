@@ -279,13 +279,12 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class DataShareInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long                         id;
-        private String                       name;
-        private String                       zoneName;
-        private String                       conditionExpr;
-        private Set<String>                  defaultAccessTypes;
-        private List<RangerTagDataMaskInfo>  defaultTagMasks;
-        private List<DataShareInDatasetInfo> datasets;
+        private Long                        id;
+        private String                      name;
+        private String                      zoneName;
+        private String                      conditionExpr;
+        private Set<String>                 defaultAccessTypes;
+        private List<RangerTagDataMaskInfo> defaultTagMasks;
 
         public DataShareInfo() {
         }
@@ -338,22 +337,6 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.defaultTagMasks = defaultTagMasks;
         }
 
-        public List<DataShareInDatasetInfo> getDatasets() {
-            return datasets;
-        }
-
-        public void setDatasets(List<DataShareInDatasetInfo> datasets) {
-            this.datasets = datasets;
-        }
-
-        public void addDataset(DataShareInDatasetInfo dshInDsInfo) {
-            if (datasets == null) {
-                datasets = new ArrayList<>();
-            }
-
-            datasets.add(dshInDsInfo);
-        }
-
         @Override
         public String toString( ) {
             return toString(new StringBuilder()).toString();
@@ -383,14 +366,6 @@ public class ServiceGdsInfo implements java.io.Serializable {
             }
             sb.append("]");
 
-            sb.append(", datasets=[");
-            if (datasets != null) {
-                for (DataShareInDatasetInfo dataset : datasets) {
-                    dataset.toString(sb).append(", ");
-                }
-            }
-            sb.append("]");
-
             sb.append("}");
 
             return sb;
@@ -404,6 +379,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private Long                                      id;
+        private String                                    name;
         private Long                                      dataShareId;
         private Map<String, RangerPolicyResource>         resource;
         private RangerPolicyResource                      subResource;
@@ -420,6 +396,14 @@ public class ServiceGdsInfo implements java.io.Serializable {
 
         public void setId(Long id) {
             this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
 
         public Long getDataShareId() {
@@ -502,6 +486,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
         public StringBuilder toString(StringBuilder sb) {
             sb.append("SharedResourceInfo={")
               .append("id=").append(id)
+              .append(", name=").append(name)
               .append(", dataShareId=").append(dataShareId)
               .append(", resource=").append(resource)
               .append(", subResource=").append(subResource)
@@ -552,10 +537,9 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class DatasetInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long                       id;
-        private String                     name;
-        private List<RangerPolicy>         policies;
-        private List<DatasetInProjectInfo> projects;
+        private Long               id;
+        private String             name;
+        private List<RangerPolicy> policies;
 
         public DatasetInfo() {
         }
@@ -584,22 +568,6 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.policies = policies;
         }
 
-        public List<DatasetInProjectInfo> getProjects() {
-            return projects;
-        }
-
-        public void setProjects(List<DatasetInProjectInfo> projects) {
-            this.projects = projects;
-        }
-
-        public void addProject(DatasetInProjectInfo project) {
-            if (projects == null) {
-                projects = new ArrayList<>();
-            }
-
-            projects.add(project);
-        }
-
         @Override
         public String toString( ) {
             return toString(new StringBuilder()).toString();
@@ -614,14 +582,6 @@ public class ServiceGdsInfo implements java.io.Serializable {
             if (policies != null) {
                 for (RangerPolicy policy : policies) {
                     policy.toString(sb).append(", ");
-                }
-            }
-            sb.append("]");
-
-            sb.append(", projects=[");
-            if (projects != null) {
-                for (DatasetInProjectInfo project : projects) {
-                    project.toString(sb).append(", ");
                 }
             }
             sb.append("]");

@@ -1,0 +1,381 @@
+{
+  "serviceDef":{
+    "name": "hive",
+    "id":   3,
+    "resources": [
+      { "name": "database",    "level":1, "parent": "",         "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Database", "description": "Hive Database" },
+      { "name": "url",         "level":1, "parent": "",         "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher",     "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "URL",           "description": "URL", "recursiveSupported": true },
+      { "name": "hiveservice", "level":1, "parent": "",         "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "HiveService",   "description": "HiveService" },
+      { "name": "table",       "level":2, "parent": "database", "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Table",    "description": "Hive Table" },
+      { "name": "udf",         "level":2, "parent": "database", "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive UDF",      "description": "Hive UDF" },
+      { "name": "column",      "level":3, "parent": "table",    "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Column",   "description": "Hive Column" }
+    ],
+    "accessTypes":[
+      { "name": "select",       "label": "Select",       "category": "READ"   },
+      { "name": "update",       "label": "Update",       "category": "UPDATE" },
+      { "name": "create",       "label": "Create",       "category": "CREATE" },
+      { "name": "drop",         "label": "Drop",         "category": "DELETE" },
+      { "name": "alter",        "label": "Alter",        "category": "CREATE" },
+      { "name": "index",        "label": "Index",        "category": "MANAGE" },
+      { "name": "lock",         "label": "Lock",         "category": "MANAGE" },
+      { "name": "read",         "label": "Read",         "category": "READ"   },
+      { "name": "write",        "label": "Write",        "category": "UPDATE" },
+      { "name": "repladmin",    "label": "ReplAdmin",    "category": "MANAGE" },
+      { "name": "serviceadmin", "label": "ServiceAdmin", "category": "MANAGE" },
+      { "name": "all",          "label": "All",
+        "impliedGrants": [ "select", "update", "create", "drop", "alter", "index", "lock", "read", "write", "repladmin", "serviceadmin" ]
+      }
+    ]
+  },
+  "securityZones": {
+    "sales":    { "zoneName": "sales",    "resources": [ { "database": [ "sales" ]    } ] },
+    "finance":  { "zoneName": "finance",  "resources": [ { "database": [ "finance" ]  } ] },
+    "shipping": { "zoneName": "shipping", "resources": [ { "database": [ "shipping" ] } ] }
+  },
+  "gdsInfo": {
+    "serviceName": "dev_hive",
+    "dataShares": [
+      { "id": 1, "name": "hive-sales-2023",         "zoneName": "sales",    "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+      { "id": 2, "name": "hive-finance-2023",       "zoneName": "finance",  "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+      { "id": 3, "name": "hive-shipping-2023",      "zoneName": "shipping", "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+      { "id": 4, "name": "hive-new-customers-2023", "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+      { "id": 5, "name": "hive-facilities",         "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] }
+    ],
+    "dshids": [
+      { "dataShareId": 1, "datasetId": 1, "status": "ACTIVE", "validitySchedule": null },
+      { "dataShareId": 2, "datasetId": 1, "status": "ACTIVE", "validitySchedule": null },
+      { "dataShareId": 2, "datasetId": 2, "status": "ACTIVE", "validitySchedule": null },
+      { "dataShareId": 3, "datasetId": 2, "status": "ACTIVE", "validitySchedule": null },
+      { "dataShareId": 4, "datasetId": 3, "status": "ACTIVE", "validitySchedule": null },
+      { "dataShareId": 5, "datasetId": 4, "status": "ACTIVE", "validitySchedule": null }
+    ],
+    "dips": [
+      { "datasetId": 1, "projectId": 1, "status": "ACTIVE", "validitySchedule": null },
+      { "datasetId": 2, "projectId": 1, "status": "ACTIVE", "validitySchedule": null },
+      { "datasetId": 3, "projectId": 2, "status": "ACTIVE", "validitySchedule": null }
+    ],
+    "resources": [
+      {
+        "id": 11, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "prospects" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      },
+      {
+        "id": 12, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "orders" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      },
+      {
+        "id": 21, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "invoices" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      },
+      {
+        "id": 22, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "payments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      },
+      {
+        "id": 31, "dataShareId": 3, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "shipping" ] }, "table": { "values": [ "shipments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      },
+      {
+        "id": 41, "dataShareId": 4, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
+      },
+      {
+        "id": 51, "dataShareId": 5, "conditionExpr": "", "accessTypes": [ "select" ],
+        "resource": { "database": { "values": [ "operations" ] }, "table": { "values": [ "facilities" ] } }, "rowFilter": null,
+        "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
+      }
+    ],
+    "datasets": [
+      {
+        "id":   1,
+        "name": "dataset-1",
+        "policies": [
+          { "id": 2001, "name": "dataset-3", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "dataset-id": { "values": ["1"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+            ]
+          }
+        ]
+      },
+      {
+        "id":   2,
+        "name": "dataset-2",
+        "policies": [
+          { "id": 2002, "name": "dataset-2", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "dataset-id": { "values": ["2"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+            ]
+          }
+        ]
+      },
+      {
+        "id":   3,
+        "name": "dataset-3",
+        "policies": [
+          { "id": 2003, "name": "dataset-3", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "dataset-id": { "values": ["3"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+            ]
+          }
+        ]
+      },
+      {
+        "id":   4,
+        "name": "dataset-4",
+        "policies": [
+          { "id": 2004, "name": "dataset-4", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "dataset-id": { "values": ["4"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+            ]
+          }
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": 1,
+        "name": "project-1",
+        "policies": [
+          { "id": 3001, "name": "project-1", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "project-id": { "values": ["1"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
+            ]
+          }
+        ]
+      },
+      {
+        "id":   2,
+        "name": "project-2",
+        "policies": [
+          { "id": 3002, "name": "project-2", "isEnabled": true, "isAuditEnabled": true,
+            "resources": { "project-id": { "values": ["2"] } },
+            "policyItems":[
+              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
+            ]
+          }
+        ]
+      }
+    ],
+    "gdsServiceDef": {
+      "name": "gds",
+      "id":   3,
+      "resources": [
+        { "name": "dataset-id", "level":1, "parent": "", "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": false, "ignoreCase": true }, "label": "Dataset ID", "description": "Dataset ID" },
+        { "name": "project-id", "level":1, "parent": "", "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": false, "ignoreCase": true }, "label": "Project ID", "description": "Project ID" }
+      ],
+      "accessTypes":[
+        { "itemId": 1, "name": "_CREATE",  "label": "_CREATE" },
+        { "itemId": 2, "name": "_READ",    "label": "_READ" },
+        { "itemId": 3, "name": "_UPDATE",  "label": "_UPDATE" },
+        { "itemId": 4, "name": "_DELETE",  "label": "_DELETE" },
+        { "itemId": 5, "name": "_MANAGE",  "label": "_MANAGE" },
+        { "itemId": 6, "name": "_ALL",     "label": "_ALL" }
+      ]
+    },
+    "gdsVersion": 1
+  },
+  "tests": [
+    {
+      "name": "table: sales.prospects, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
+      "name": "table: sales.orders, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "orders" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
+      "name": "table: finance.invoices, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
+      "name": "table: finance.payments, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "payments" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
+      "name": "table: shipping.shipments, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2002 }
+    },
+    {
+      "name": "table: customers.contact_info, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+    },
+    {
+      "name": "table: operations.facilities, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": true, "isAudited": true, "policyId": 2004 }
+    },
+
+
+    {
+      "name": "table: sales.prospects, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+    },
+    {
+      "name": "table: sales.orders, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "orders" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+    },
+    {
+      "name": "table: finance.invoices, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+    },
+    {
+      "name": "table: finance.payments, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "payments" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+    },
+    {
+      "name": "table: shipping.shipments, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+    },
+    {
+      "name": "table: customers.contact_info, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002 }
+    },
+    {
+      "name": "table: operations.facilities, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+
+
+    {
+      "name": "table: sales.prospects, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: sales.orders, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "orders" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: finance.invoices, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: finance.payments, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "payments" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: shipping.shipments, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: customers.contact_info, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    {
+      "name": "table: operations.facilities, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+    
+
+    {
+      "name": "table: operations.facilities, user: scott, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "scott", "userGroups": []
+      },
+      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+    },
+
+    {
+      "name": "table: operations.facilities, user: ds-user, access: update",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "update", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": null, "projects": null, "datasetNames": null, "projectNames": null, "isAllowed": false, "isAudited": false, "policyId": -1 }
+    }
+  ]
+}

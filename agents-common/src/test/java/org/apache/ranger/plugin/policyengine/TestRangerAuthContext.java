@@ -31,6 +31,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -107,9 +108,9 @@ public class TestRangerAuthContext {
 				} else if (enricherName.equals("TagEnricher")) {
 					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerTagEnricher || enricherData instanceof RangerTagEnricher.EnrichedServiceTags));
 				} else if (enricherName.equals(IMPLICIT_GDS_ENRICHER_NAME) || enricher instanceof RangerGdsEnricher) {
-					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerGdsEnricher || enricherData instanceof RangerGdsEnricher.EnhancedGdsInfo));
+					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerGdsEnricher || enricherData instanceof GdsPolicyEngine));
 				} else {
-					assertTrue(fileName + "-" + testName + " - Unexpected type of contextEnricher", false);
+					fail(fileName + "-" + testName + " - Unexpected type of contextEnricher: " + enricher);
 				}
 			}
 		}

@@ -29,6 +29,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_ACCESSTYPES = "ACCESSTYPES";
 	public static final String KEY_CONTEXT_IS_ANY_ACCESS = "ISANYACCESS";
 	public static final String KEY_CONTEXT_REQUEST       = "_REQUEST";
+	public static final String KEY_CONTEXT_GDS_RESULT    = "_GDS_RESULT";
 	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED = "ISREQUESTPREPROCESSED";
 	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES     = "RESOURCE_ZONE_NAMES";
 
@@ -134,6 +136,7 @@ public class RangerAccessRequestUtil {
 			ret.remove(KEY_CONTEXT_RESOURCE);
 			ret.remove(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
 			ret.remove(KEY_CONTEXT_REQUEST);
+			ret.remove(KEY_CONTEXT_GDS_RESULT);
 			ret.remove(KEY_CONTEXT_ACCESSTYPES);
 			ret.remove(KEY_CONTEXT_IS_ANY_ACCESS);
 			ret.remove(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
@@ -252,6 +255,32 @@ public class RangerAccessRequestUtil {
 					ret = (RangerAccessRequest) val;
 				} else {
 					LOG.error("getRequestFromContext(): expected RangerAccessRequest, but found " + val.getClass().getCanonicalName());
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public static void setGdsResultInContext(RangerAccessRequest request, GdsAccessResult result) {
+		Map<String, Object> context = request.getContext();
+
+		if (context != null) {
+			context.put(KEY_CONTEXT_GDS_RESULT, result);
+		}
+	}
+
+	public static GdsAccessResult getGdsResultFromContext(Map<String, Object> context) {
+		GdsAccessResult ret = null;
+
+		if (context != null) {
+			Object val = context.get(KEY_CONTEXT_GDS_RESULT);
+
+			if (val != null) {
+				if (val instanceof GdsAccessResult) {
+					ret = (GdsAccessResult) val;
+				} else {
+					LOG.error("getGdsResultFromContext(): expected RangerGdsAccessResult, but found " + val.getClass().getCanonicalName());
 				}
 			}
 		}
