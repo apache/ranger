@@ -108,10 +108,14 @@ public class RangerBasePlugin {
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles) {
-		this(pluginConfig, policies, tags, roles, null);
+		this(pluginConfig, policies, tags, roles, null, null);
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore) {
+		this(pluginConfig, policies, tags, roles, userStore, null);
+	}
+
+	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore, ServiceGdsInfo gdsInfo) {
 		this(pluginConfig);
 
 		init();
@@ -136,6 +140,16 @@ public class RangerBasePlugin {
 				userStoreEnricher.setRangerUserStore(userStore);
 			} else {
 				LOG.warn("RangerBasePlugin(userStoreVersion=" + userStore.getUserStoreVersion() + "): no userstore enricher found. Plugin will not enforce user/group attribute-based policies");
+			}
+		}
+
+		if (gdsInfo != null) {
+			RangerGdsEnricher gdsEnricher = getGdsEnricher();
+
+			if (gdsEnricher != null) {
+				gdsEnricher.setGdsInfo(gdsInfo);
+			} else {
+				LOG.warn("RangerBasePlugin(gdsInfo=" + gdsInfo.getGdsVersion() + "): no GDS enricher found. Plugin will not enforce GDS policies");
 			}
 		}
 	}
@@ -1154,8 +1168,8 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
-	public GdsPolicyEngine getGdsPolicyEngine() {
-		GdsPolicyEngine   ret         = null;
+	public RangerGdsEnricher getGdsEnricher() {
+		RangerGdsEnricher ret         = null;
 		RangerAuthContext authContext = getCurrentRangerAuthContext();
 
 		if (authContext != null) {
@@ -1166,9 +1180,7 @@ public class RangerBasePlugin {
 
 				for (RangerContextEnricher enricher : contextEnrichers) {
 					if (enricher instanceof RangerGdsEnricher) {
-						RangerGdsEnricher gdsEnricher = (RangerGdsEnricher) enricher;
-
-						ret = gdsEnricher.getGdsPolicyEngine();
+						ret = (RangerGdsEnricher) enricher;
 
 						break;
 					}
@@ -1177,6 +1189,12 @@ public class RangerBasePlugin {
 		}
 
 		return ret;
+	}
+
+	public GdsPolicyEngine getGdsPolicyEngine() {
+		RangerGdsEnricher gdsEnricher = getGdsEnricher();
+
+		return gdsEnricher != null ? gdsEnricher.getGdsPolicyEngine() : null;
 	}
 
 	public static RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {

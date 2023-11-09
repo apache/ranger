@@ -114,6 +114,8 @@ public class GdsPolicyEngine {
             }
         }
 
+        ret.finalizeAcls();
+
         return ret;
     }
 

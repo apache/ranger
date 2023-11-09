@@ -768,6 +768,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					ret.setIsAllowed(false);
 				} else if (isAllowedByTags) {
 					ret.setIsAllowed(true);
+				} else {
+					updateFromGdsResult(ret);
 				}
 				if (!ret.getIsAllowed() &&
 						!getIsFallbackSupported()) {

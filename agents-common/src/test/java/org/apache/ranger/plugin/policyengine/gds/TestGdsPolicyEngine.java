@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine.gds;
 
 import com.google.gson.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
@@ -67,6 +68,12 @@ public class TestGdsPolicyEngine {
     private void runTests(Reader reader, String testName) {
         GdsPolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, GdsPolicyEngineTestCase.class);
 
+        if (StringUtils.isNotBlank(testCase.gdsInfoFilename)) {
+            InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename);
+
+            testCase.gdsInfo = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class);
+        }
+
         assertTrue("invalid input: " + testName, testCase != null && testCase.gdsInfo != null && testCase.tests != null);
 
         testCase.serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(testCase.serviceDef.getAccessTypes()));
@@ -98,6 +105,7 @@ public class TestGdsPolicyEngine {
         public RangerServiceDef              serviceDef;
         public Map<String, SecurityZoneInfo> securityZones;
         public ServiceGdsInfo                gdsInfo;
+        public String                        gdsInfoFilename;
         public List<TestData>                tests;
     }
 
