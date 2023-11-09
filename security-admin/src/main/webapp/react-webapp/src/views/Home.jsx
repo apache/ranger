@@ -35,7 +35,7 @@ class Home extends Component {
   }
 
   tabChange = (tabName) => {
-    this.props.navigate(`/policymanager/${tabName}`, { replace: true });
+    this.props.navigate(`/policymanager/${tabName}`);
   };
 
   componentDidUpdate(nextProps, prevState) {

@@ -62,7 +62,7 @@ function Plugins() {
       fetchSearchFilterParams("agent", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -248,7 +248,7 @@ function Plugins() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("agent", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {

@@ -124,7 +124,7 @@ function Access() {
     if (localStorage?.excludeServiceUser) {
       searchParam["excludeServiceUser"] = checked;
     }
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     setSearchFilterParams(searchFilterParam);
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     localStorage.setItem("bigData", JSON.stringify(searchParam));
@@ -146,7 +146,7 @@ function Access() {
         }
         searchParam["excludeServiceUser"] = localStorage?.excludeServiceUser;
       }
-      setSearchParams(searchParam);
+      setSearchParams(searchParam, { replace: true });
       if (
         JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
       ) {
@@ -229,7 +229,7 @@ function Access() {
       "excludeServiceUser",
       JSON.stringify(chkVal?.target?.checked)
     );
-    setSearchParams(currentParams);
+    setSearchParams(currentParams, { replace: true });
     setAccessLogs([]);
     setChecked(chkVal?.target?.checked);
     setLoader(true);
@@ -733,7 +733,7 @@ function Access() {
     searchParam["excludeServiceUser"] = checked;
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("bigData", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {

@@ -90,7 +90,7 @@ const SecurityZoneForm = () => {
 
   useEffect(() => {
     fetchInitalData();
-  }, []);
+  }, [params.zoneId]);
 
   const validate = (values) => {
     const errors = {};

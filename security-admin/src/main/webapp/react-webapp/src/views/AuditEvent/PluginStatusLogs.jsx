@@ -71,7 +71,7 @@ function Plugin_Status() {
         );
 
       // Updating the states for search params, search filter, default search filter and localStorage
-      setSearchParams(searchParam);
+      setSearchParams(searchParam, { replace: true });
       if (
         JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
       ) {
@@ -470,7 +470,7 @@ function Plugin_Status() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {
