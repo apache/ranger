@@ -51,6 +51,7 @@ import ResourceTagContent from "./ResourceTagContent";
 import { PathAssociateWithModule } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 import { SideBarBody } from "./SideBarBody";
+import { getLandingPageURl } from "../../utils/XAUtils";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -242,7 +243,7 @@ export const SideBar = () => {
         <div className="sidebar-header">
           <NavLink
             id="rangerIcon"
-            to="/policymanager/resource"
+            to={getLandingPageURl()}
             onClick={() => {
               setActive(null);
               setDrawer(false);

@@ -72,7 +72,11 @@ export const PolicyListingTabView = () => {
 
   useEffect(() => {
     fetchServiceDetails();
-  }, [params?.serviceId, JSON.parse(localStorageZoneDetails)?.value]);
+  }, [
+    params?.serviceId,
+    params?.policyType,
+    JSON.parse(localStorageZoneDetails)?.value
+  ]);
 
   const fetchServiceDetails = async () => {
     document
@@ -166,10 +170,7 @@ export const PolicyListingTabView = () => {
         }
       });
       navigate(
-        `/service/${selectedServiceData?.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-        {
-          replace: true
-        }
+        `/service/${selectedServiceData?.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
       );
       localStorage.removeItem("zoneDetails");
     }
@@ -198,10 +199,7 @@ export const PolicyListingTabView = () => {
       localStorage.removeItem("zoneDetails");
     }
     navigate(
-      `/service/${params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-      {
-        replace: true
-      }
+      `/service/${params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
     );
   };
 
@@ -223,9 +221,7 @@ export const PolicyListingTabView = () => {
   };
 
   const tabChange = (tabName) => {
-    navigate(`/service/${params?.serviceId}/policies/${tabName}`, {
-      replace: true
-    });
+    navigate(`/service/${params?.serviceId}/policies/${tabName}`);
   };
 
   return (

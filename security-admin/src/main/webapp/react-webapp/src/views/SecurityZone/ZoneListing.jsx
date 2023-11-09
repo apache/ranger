@@ -50,6 +50,12 @@ class ZoneListing extends Component {
     this.fetchData();
   }
 
+  componentDidUpdate(prevState) {
+    if (this.props.params.zoneId != prevState.params.zoneId) {
+      this.fetchData();
+    }
+  }
+
   fetchData = async () => {
     let servicesResp;
     let zoneList = [],
@@ -103,7 +109,7 @@ class ZoneListing extends Component {
     let selectedZone = this.state.zones.find((obj) => zoneid === obj.id);
     if (selectedZone) {
       this.setState({ selectedZone: selectedZone });
-      this.props.navigate(`/zones/zone/${zoneid}`, { replace: true });
+      this.props.navigate(`/zones/zone/${zoneid}`);
     }
   };
 
@@ -144,11 +150,9 @@ class ZoneListing extends Component {
       });
 
       if (getSelectedZone && getSelectedZone !== undefined) {
-        this.props.navigate(`/zones/zone/${getSelectedZone.id}`, {
-          replace: true
-        });
+        this.props.navigate(`/zones/zone/${getSelectedZone.id}`);
       } else {
-        this.props.navigate(`/zones/zone/list`, { replace: true });
+        this.props.navigate(`/zones/zone/list`);
       }
       toast.success("Successfully deleted the zone");
     } catch (error) {

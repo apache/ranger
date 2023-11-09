@@ -72,7 +72,7 @@ function User_Sync() {
     }
 
     // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     setSearchFilterParams(searchFilterParam);
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     localStorage.setItem("userSync", JSON.stringify(searchParam));
@@ -84,7 +84,7 @@ function User_Sync() {
       fetchSearchFilterParams("userSync", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -305,7 +305,7 @@ function User_Sync() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("userSync", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {

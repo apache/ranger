@@ -182,8 +182,7 @@ class ServiceDefinitions extends Component {
 
         zonesResp &&
           this.props.navigate(
-            `${this.props.location.pathname}?securityZone=${e.label}`,
-            { replace: true }
+            `${this.props.location.pathname}?securityZone=${e.label}`
           );
 
         let zoneServiceNames = map(zonesResp.data, "name");

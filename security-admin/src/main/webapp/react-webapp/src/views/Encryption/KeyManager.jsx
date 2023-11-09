@@ -201,7 +201,7 @@ const KeyManager = () => {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       (!isEmpty(searchFilterParams) || !isEmpty(searchFilterParam)) &&
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
@@ -558,7 +558,7 @@ const KeyManager = () => {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
   };
 
   return (

@@ -138,7 +138,7 @@ export default function AddUpdatePolicyForm() {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [serviceId, policyType, policyId]);
 
   const showDeleteModal = () => {
     setShowDelete(true);
@@ -239,8 +239,7 @@ export default function AddUpdatePolicyForm() {
         Object.keys(serviceCompData.rowFilterDef).length != 0
       )
         serviceDefPolicyType++;
-      if (+policyType > serviceDefPolicyType)
-        navigate("/pageNotFound", { replace: true });
+      if (+policyType > serviceDefPolicyType) navigate("/pageNotFound");
     }
     let policyData = null;
     if (policyId) {
