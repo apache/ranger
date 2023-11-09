@@ -197,11 +197,11 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         }
 
         final void startRefresher() {
-            super.start();
-
             try {
                 downloadTimer = new Timer("gdsInfoDownloadTimer", true);
                 downloadQueue = new LinkedBlockingQueue<>();
+
+                super.start();
 
                 downloadTimer.schedule(new DownloaderTask(downloadQueue), pollingIntervalMs, pollingIntervalMs);
 
@@ -212,8 +212,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
                 LOG.error("Error scheduling gdsInfo download", exception);
                 LOG.error("*** GdsInfo will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
 
-                downloadTimer = null;
-                downloadQueue = null;
+                stopRefresher();
             }
         }
 
@@ -259,9 +258,16 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         @Override
         public void run() {
             while (true) {
-                DownloadTrigger trigger = null;
+                BlockingQueue<DownloadTrigger> downloadQueue = this.downloadQueue;
+                DownloadTrigger                trigger       = null;
 
                 try {
+                    if (downloadQueue == null) {
+                        LOG.error("RangerGdsInfoRefresher(serviceName=" + serviceName + ").run(): downloadQueue is null");
+
+                        break;
+                    }
+
                     trigger = downloadQueue.take();
 
                     populateGdsInfo();
