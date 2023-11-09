@@ -40,14 +40,16 @@ public class GdsProjectEvaluator {
     public static final GdsProjectEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsProjectEvalOrderComparator();
 
     private final ProjectInfo                 project;
+    private final RangerServiceDef            gdsServiceDef;
     private final String                      name;
     private final List<RangerPolicyEvaluator> policyEvaluators;
 
     public GdsProjectEvaluator(ProjectInfo project, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsProjectEvaluator({})", project);
 
-        this.project = project;
-        this.name    = StringUtils.isBlank(project.getName()) ? StringUtils.EMPTY : project.getName();
+        this.project       = project;
+        this.gdsServiceDef = gdsServiceDef;
+        this.name          = StringUtils.isBlank(project.getName()) ? StringUtils.EMPTY : project.getName();
 
         if (project.getPolicies() != null) {
             policyEvaluators = new ArrayList<>(project.getPolicies().size());
@@ -74,10 +76,10 @@ public class GdsProjectEvaluator {
         return name;
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result, RangerServiceDef gdsServiceDef) {
+    public void evaluate(RangerAccessRequest request, GdsAccessResult result) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
 
-        result.addProjectName(getName());
+        result.addProject(getName());
 
         if (!policyEvaluators.isEmpty()) {
             GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);

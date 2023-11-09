@@ -21,12 +21,11 @@ package org.apache.ranger.plugin.policyengine.gds;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
-import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
-import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.util.RangerResourceEvaluatorsRetriever;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInfo;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.SharedResourceInfo;
@@ -56,8 +55,8 @@ public class GdsDataShareEvaluator {
         this.conditionEvaluator = RangerCustomConditionEvaluator.getInstance().getExpressionEvaluator(dsh.getConditionExpr(), serviceDefHelper.getServiceDef());
 
         if (resources != null) {
-            Set<String>                   resourceKeys = new HashSet<>();
-            List<RangerResourceEvaluator> evaluators   = new ArrayList<>(resources.size());
+            Set<String>                      resourceKeys = new HashSet<>();
+            List<GdsSharedResourceEvaluator> evaluators   = new ArrayList<>(resources.size());
 
             for (SharedResourceInfo resource : resources) {
                 GdsSharedResourceEvaluator evaluator = new GdsSharedResourceEvaluator(resource, dsh.getDefaultAccessTypes(), serviceDefHelper);
@@ -68,8 +67,8 @@ public class GdsDataShareEvaluator {
             }
 
             for (String resourceKey : resourceKeys) {
-                RangerServiceDef.RangerResourceDef resourceDef  = serviceDefHelper.getResourceDef(resourceKey);
-                RangerResourceTrie                 resourceTrie = new RangerResourceTrie<>(resourceDef, evaluators);
+                RangerResourceDef                              resourceDef  = serviceDefHelper.getResourceDef(resourceKey);
+                RangerResourceTrie<GdsSharedResourceEvaluator> resourceTrie = new RangerResourceTrie<>(resourceDef, evaluators);
 
                 resourceTries.put(resourceKey, resourceTrie);
             }
@@ -94,7 +93,7 @@ public class GdsDataShareEvaluator {
         dsidEvaluators.add(dhidEvaluator);
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result) {
+    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> datasetIds) {
         LOG.debug("==> GdsDataShareEvaluator.evaluate({}, {})", request, result);
 
         Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
@@ -126,9 +125,9 @@ public class GdsDataShareEvaluator {
 
                 if (isAllowed) { // now find dsidEvaluators that allow the request and collect their datasetIds
                     for (GdsDshidEvaluator dsidEvaluator : dsidEvaluators) {
-                        if (!result.hasDataset(dsidEvaluator.getDatasetId())) {
+                        if (!datasetIds.contains(dsidEvaluator.getDatasetId())) {
                             if (dsidEvaluator.isAllowed(request)) {
-                                result.addDataset(dsidEvaluator.getDatasetId());
+                                datasetIds.add(dsidEvaluator.getDatasetId());
                             }
                         }
                     }

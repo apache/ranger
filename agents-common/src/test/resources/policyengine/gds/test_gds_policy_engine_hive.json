@@ -192,7 +192,7 @@
         "resource":   { "elements": { "database": "sales", "table": "prospects" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
       "name": "table: sales.orders, user: ds-user, access: select",
@@ -200,7 +200,7 @@
         "resource":   { "elements": { "database": "sales", "table": "orders" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
       "name": "table: finance.invoices, user: ds-user, access: select",
@@ -208,7 +208,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
       "name": "table: finance.payments, user: ds-user, access: select",
@@ -216,7 +216,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
       "name": "table: shipping.shipments, user: ds-user, access: select",
@@ -224,7 +224,7 @@
         "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2002 }
+      "result": { "datasets": [ "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2002 }
     },
     {
       "name": "table: customers.contact_info, user: ds-user, access: select",
@@ -232,7 +232,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
       "name": "table: operations.facilities, user: ds-user, access: select",
@@ -240,7 +240,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": true, "isAudited": true, "policyId": 2004 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": true, "isAudited": true, "policyId": 2004 }
     },
 
 
@@ -250,7 +250,7 @@
         "resource":   { "elements": { "database": "sales", "table": "prospects" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name": "table: sales.orders, user: proj-user, access: select",
@@ -258,7 +258,7 @@
         "resource":   { "elements": { "database": "sales", "table": "orders" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name": "table: finance.invoices, user: proj-user, access: select",
@@ -266,7 +266,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name": "table: finance.payments, user: proj-user, access: select",
@@ -274,7 +274,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name": "table: shipping.shipments, user: proj-user, access: select",
@@ -282,7 +282,7 @@
         "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name": "table: customers.contact_info, user: proj-user, access: select",
@@ -290,7 +290,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002 }
+      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002 }
     },
     {
       "name": "table: operations.facilities, user: proj-user, access: select",
@@ -298,7 +298,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
 
 
@@ -308,7 +308,7 @@
         "resource":   { "elements": { "database": "sales", "table": "prospects" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: sales.orders, user: scott, access: select",
@@ -316,7 +316,7 @@
         "resource":   { "elements": { "database": "sales", "table": "orders" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 1 ], "projects": [ 1 ], "datasetNames": [ "dataset-1" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: finance.invoices, user: scott, access: select",
@@ -324,7 +324,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: finance.payments, user: scott, access: select",
@@ -332,7 +332,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 1, 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-1", "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: shipping.shipments, user: scott, access: select",
@@ -340,7 +340,7 @@
         "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 2 ], "projects": [ 1 ], "datasetNames": [ "dataset-2" ], "projectNames": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-2" ], "projects": [ "project-1" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: customers.contact_info, user: scott, access: select",
@@ -348,7 +348,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 3 ], "projects": [ 2 ], "datasetNames": [ "dataset-3" ], "projectNames": [ "project-2" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name": "table: operations.facilities, user: scott, access: select",
@@ -356,7 +356,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     
 
@@ -366,7 +366,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ 4 ], "projects": null, "datasetNames": [ "dataset-4" ], "projectNames": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
 
     {
@@ -375,7 +375,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "update", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": null, "projects": null, "datasetNames": null, "projectNames": null, "isAllowed": false, "isAudited": false, "policyId": -1 }
+      "result": { "datasets": null, "projects": null, "isAllowed": false, "isAudited": false, "policyId": -1 }
     }
   ]
 }

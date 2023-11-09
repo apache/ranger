@@ -25,8 +25,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerAccessResult {
 	public  final static String KEY_MASK_TYPE      = "maskType";
@@ -328,11 +328,11 @@ public class RangerAccessResult {
 		return StringUtils.isNotEmpty(getFilterExpr());
 	}
 
-	public List<String> getDatasets() {
-		return additionalInfo == null ? null : (List<String>) additionalInfo.get(KEY_DATASETS);
+	public Set<String> getDatasets() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_DATASETS);
 	}
 
-	public void setDatasets(List<String> datasets) {
+	public void setDatasets(Set<String> datasets) {
 		if (datasets == null) {
 			removeAdditionalInfo(KEY_DATASETS);
 		} else {
@@ -340,11 +340,11 @@ public class RangerAccessResult {
 		}
 	}
 
-	public List<String> getProjects() {
-		return additionalInfo == null ? null : (List<String>) additionalInfo.get(KEY_PROJECTS);
+	public Set<String> getProjects() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_PROJECTS);
 	}
 
-	public void setProjects(List<String> projects) {
+	public void setProjects(Set<String> projects) {
 		if (projects == null) {
 			removeAdditionalInfo(KEY_PROJECTS);
 		} else {

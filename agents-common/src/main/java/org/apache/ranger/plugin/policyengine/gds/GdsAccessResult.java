@@ -22,73 +22,39 @@ package org.apache.ranger.plugin.policyengine.gds;
 import java.util.*;
 
 public class GdsAccessResult {
-    private Set<Long>    datasets;
-    private Set<Long>    projects;
-    private List<String> datasetNames;
-    private List<String> projectNames;
-    private boolean      isAllowed;
-    private boolean      isAudited;
-    private long         policyId = -1;
-    private Long         policyVersion;
+    private Set<String> datasets;
+    private Set<String> projects;
+    private boolean     isAllowed;
+    private boolean     isAudited;
+    private long        policyId = -1;
+    private Long        policyVersion;
 
 
     public GdsAccessResult() {
     }
 
-    public void addDataset(Long datasetId) {
+    public void addDataset(String name) {
         if (datasets == null) {
             datasets = new HashSet<>();
         }
 
-        datasets.add(datasetId);
+        datasets.add(name);
     }
 
-    public boolean hasDataset(Long datasetId) {
-        return datasets != null && datasets.contains(datasetId);
-    }
-
-    public Set<Long> getDatasets() {
+    public Set<String> getDatasets() {
         return datasets;
     }
 
-    public void addDatasetName(String name) {
-        if (datasetNames == null) {
-            datasetNames = datasets == null ? new ArrayList<>() : new ArrayList<>(datasets.size());
-        }
-
-        datasetNames.add(name);
-    }
-
-    public List<String> getDatasetNames() {
-        return datasetNames;
-    }
-
-    public void addProject(Long projectId) {
+    public void addProject(String name) {
         if (projects == null) {
             projects = new HashSet<>();
         }
 
-        projects.add(projectId);
+        projects.add(name);
     }
 
-    public boolean hasProject(Long projectId) {
-        return projects != null && projects.contains(projectId);
-    }
-
-    public Set<Long> getProjects() {
+    public Set<String> getProjects() {
         return projects;
-    }
-
-    public void addProjectName(String name) {
-        if (projectNames == null) {
-            projectNames = projects == null ? new ArrayList<>() : new ArrayList<>(projects.size());
-        }
-
-        projectNames.add(name);
-    }
-
-    public List<String> getProjectNames() {
-        return projectNames;
     }
 
     public boolean getIsAllowed() {
@@ -125,7 +91,7 @@ public class GdsAccessResult {
 
     @Override
     public int hashCode() {
-        return Objects.hash(datasets, projects, datasetNames, projectNames, isAllowed, isAudited, policyId, policyVersion);
+        return Objects.hash(datasets, projects, isAllowed, isAudited, policyId, policyVersion);
     }
 
     @Override
@@ -139,8 +105,6 @@ public class GdsAccessResult {
 
             return Objects.equals(datasets, other.datasets) &&
                    Objects.equals(projects, other.projects) &&
-                   Objects.equals(datasetNames, other.datasetNames) &&
-                   Objects.equals(projectNames, other.projectNames) &&
                    Objects.equals(isAllowed, other.isAllowed) &&
                    Objects.equals(isAudited, other.isAudited) &&
                    Objects.equals(policyId, other.policyId) &&
@@ -161,8 +125,6 @@ public class GdsAccessResult {
         sb.append("RangerGdsAccessResult={");
         sb.append("datasets={").append(datasets).append("}");
         sb.append(", projects={").append(projects).append("}");
-        sb.append(", datasetNames={").append(datasetNames).append("}");
-        sb.append(", projectNames={").append(projectNames).append("}");
         sb.append(", isAllowed={").append(isAllowed).append("}");
         sb.append(", isAudited={").append(isAudited).append("}");
         sb.append(", policyId={").append(policyId).append("}");

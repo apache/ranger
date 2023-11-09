@@ -1154,8 +1154,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				result.setIsAudited(true);
 			}
 
-			result.setDatasets(gdsResult.getDatasetNames());
-			result.setProjects(gdsResult.getProjectNames());
+			result.setDatasets(gdsResult.getDatasets());
+			result.setProjects(gdsResult.getProjects());
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("updateFromGdsResult(): no GdsAccessResult found in request context({})", request);

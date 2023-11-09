@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine.gds;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -65,7 +64,7 @@ public class GdsPolicyEngine {
     }
 
     public GdsAccessResult evaluate(RangerAccessRequest request) {
-        LOG.debug("==> RangerGdsPolicyEngine.evaluate({})", request);;
+        LOG.debug("==> RangerGdsPolicyEngine.evaluate({})", request);
 
         GdsAccessResult             ret        = null;
         List<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
@@ -77,12 +76,21 @@ public class GdsPolicyEngine {
                 dataShares.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
             }
 
+            Set<Long> datasetIds = new HashSet<>();
+
             for (GdsDataShareEvaluator dshEvaluator : dataShares) {
-                dshEvaluator.evaluate(request, ret);
+                dshEvaluator.evaluate(request, ret, datasetIds);
             }
 
-            evaluateDatasetPolicies(ret.getDatasets(), request, ret);
-            evaluateProjectPolicies(ret.getProjects(), request, ret);
+            if (!datasetIds.isEmpty()) {
+                Set<Long> projectIds = new HashSet<>();
+
+                evaluateDatasetPolicies(datasetIds, request, ret, projectIds);
+
+                if (!projectIds.isEmpty()) {
+                    evaluateProjectPolicies(projectIds, request, ret);
+                }
+            }
         }
 
         LOG.debug("<== RangerGdsPolicyEngine.evaluate({}): {}", request, ret);
@@ -229,70 +237,76 @@ public class GdsPolicyEngine {
         return ret;
     }
 
-    private void evaluateDatasetPolicies(Set<Long> datasetIds, RangerAccessRequest request, GdsAccessResult result) {
-        if (CollectionUtils.isNotEmpty(datasetIds)) {
-            List<GdsDatasetEvaluator> evaluators = new ArrayList<>(datasetIds.size());
+    private void evaluateDatasetPolicies(Set<Long> datasetIds, RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
+        List<GdsDatasetEvaluator> evaluators = new ArrayList<>(datasetIds.size());
 
-            for (Long datasetId : datasetIds) {
-                GdsDatasetEvaluator evaluator = datasets.get(datasetId);
+        for (Long datasetId : datasetIds) {
+            GdsDatasetEvaluator evaluator = datasets.get(datasetId);
 
-                if (evaluator == null) {
-                    LOG.error("evaluateDatasetPolicies(): invalid datasetId in result: {}. Ignored", datasetId);
+            if (evaluator == null) {
+                LOG.error("evaluateDatasetPolicies(): invalid datasetId in result: {}. Ignored", datasetId);
 
-                    continue;
-                }
-
-                evaluators.add(evaluator);
+                continue;
             }
 
-            if (evaluators.size() > 1) {
-                evaluators.sort(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
-            }
+            evaluators.add(evaluator);
+        }
 
+        if (evaluators.size() > 1) {
+            evaluators.sort(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
+        }
+
+        if (!evaluators.isEmpty()) {
             for (GdsDatasetEvaluator evaluator : evaluators) {
-                evaluator.evaluate(request, result, gdsInfo.getGdsServiceDef());
+                evaluator.evaluate(request, result, projectIds);
             }
         }
     }
 
     private void evaluateProjectPolicies(Set<Long> projectIds, RangerAccessRequest request, GdsAccessResult result) {
-        if (CollectionUtils.isNotEmpty(projectIds)) {
-            List<GdsProjectEvaluator> evaluators = new ArrayList<>(projectIds.size());
+        List<GdsProjectEvaluator> evaluators = new ArrayList<>(projectIds.size());
 
-            for (Long projectId : projectIds) {
-                GdsProjectEvaluator evaluator = projects.get(projectId);
+        for (Long projectId : projectIds) {
+            GdsProjectEvaluator evaluator = projects.get(projectId);
 
-                if (evaluator == null) {
-                    LOG.error("evaluateProjectPolicies(): invalid projectId in result: {}. Ignored", projectId);
+            if (evaluator == null) {
+                LOG.error("evaluateProjectPolicies(): invalid projectId in result: {}. Ignored", projectId);
 
-                    continue;
-                }
-
-                evaluators.add(evaluator);
+                continue;
             }
 
-            if (evaluators.size() > 1) {
-                evaluators.sort(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR);
-            }
+            evaluators.add(evaluator);
+        }
 
-            for (GdsProjectEvaluator evaluator : evaluators) {
-                evaluator.evaluate(request, result, gdsInfo.getGdsServiceDef());
-            }
+        if (evaluators.size() > 1) {
+            evaluators.sort(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR);
+        }
+
+        for (GdsProjectEvaluator evaluator : evaluators) {
+            evaluator.evaluate(request, result);
         }
     }
 }
 
 /*
-     sharedRes-1--\
-                   |-- dataShare-1-------  dataset-1--\
-     sharedRes-2--/                   /                \
-                                     /                  \_____ project-1
-     sharedRes-3------ dataShare-2---\                  /
-                                      \___ dataset-2---/
-                                         /
-     sharedRes-4------ dataShare-3------/
+     dataShare-1 ----------------------- dataset-1 ---
+           resource-1                 /                \
+           resource-2                /                  \
+                                    /                    \
+     dataShare-2 -------------------|                    | ---- project-1
+           resource-3                \                  /
+                                      \                /
+                                       -- dataset-2---
+                                      /
+     dataShare-3 ---------------------
+           resource-3
+           resource-4
 
-     sharedRes-5------ dataShare-4-------- dataset-3 --------- project-2
+     dataShare-4 ------------------------- dataset-3 --------- project-2
+           resource-4
+           resource-5
 
-     sharedRes-6------ dataShare-5-------- dataset-4
+     dataShare-5 ------------------------- dataset-4
+           resource-6
+           resource-7
  */

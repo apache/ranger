@@ -29,10 +29,7 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class GdsDatasetEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
@@ -41,6 +38,7 @@ public class GdsDatasetEvaluator {
 
 
     private final DatasetInfo                 dataset;
+    private final RangerServiceDef            gdsServiceDef;
     private final String                      name;
     private final List<GdsDipEvaluator>       dipEvaluators = new ArrayList<>();
     private final List<RangerPolicyEvaluator> policyEvaluators;
@@ -49,8 +47,9 @@ public class GdsDatasetEvaluator {
     public GdsDatasetEvaluator(DatasetInfo dataset, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsDatasetEvaluator()");
 
-        this.dataset = dataset;
-        this.name    = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
+        this.dataset       = dataset;
+        this.gdsServiceDef = gdsServiceDef;
+        this.name          = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
 
         if (dataset.getPolicies() != null) {
             policyEvaluators = new ArrayList<>(dataset.getPolicies().size());
@@ -81,10 +80,10 @@ public class GdsDatasetEvaluator {
         dipEvaluators.add(dipEvaluator);
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result, RangerServiceDef gdsServiceDef) {
+    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
 
-        result.addDatasetName(getName());
+        result.addDataset(getName());
 
         if (!policyEvaluators.isEmpty()) {
             GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
@@ -108,9 +107,9 @@ public class GdsDatasetEvaluator {
         }
 
         for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-            if (!result.hasProject(dipEvaluator.getProjectId())) {
+            if (!projectIds.contains(dipEvaluator.getProjectId())) {
                 if (dipEvaluator.isAllowed(request)) {
-                    result.addProject(dipEvaluator.getProjectId());
+                    projectIds.add(dipEvaluator.getProjectId());
                 }
             }
         }
