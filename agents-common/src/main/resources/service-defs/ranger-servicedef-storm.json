@@ -52,7 +52,7 @@
 			"itemId": 5,
 			"name": "fileDownload",
 			"label": "File Download",
-			"category": "UPDATE"
+			"category": "READ"
 		},
 
 		{
