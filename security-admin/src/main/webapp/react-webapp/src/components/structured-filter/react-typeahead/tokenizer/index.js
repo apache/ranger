@@ -23,7 +23,7 @@ import KeyEvent from "../keyevent";
 import Typeahead from "../typeahead";
 import createReactClass from "create-react-class";
 import PropTypes from "prop-types";
-import { find, map, some, trim } from "lodash";
+import { find, filter, map, some, trim, includes } from "lodash";
 var classNames = require("classnames");
 /**
  * A typeahead that, when an option is selected, instead of simply filling
@@ -74,7 +74,7 @@ var TypeaheadTokenizer = createReactClass({
       !!this.props.customClasses.token;
     var classList = classNames(tokenClasses);
     var result = this.state.selected.map(function (selected, index) {
-      let mykey = selected.category + selected.value;
+      let mykey = selected.category + selected.value + index;
       let categoryLabel = this._getFilterCategoryLabel(selected.category);
       let categoryValue = this._getFilterCategoryLabelForOption(
         selected.category,
@@ -113,7 +113,15 @@ var TypeaheadTokenizer = createReactClass({
     if (this.state.category == "") {
       var categories = [];
       let selectedCategory = [];
-      selectedCategory = map(this.state.selected, "category");
+      let bypassCategory = map(
+        filter(this.props.options, ["addMultiple", true]),
+        "category"
+      );
+      selectedCategory = this.state.selected
+        .map((item) => {
+          if (!bypassCategory.includes(item.category)) return item.category;
+        })
+        .filter(Boolean);
       for (var i = 0; i < this.props.options.length; i++) {
         selectedCategory.indexOf(this.props.options[i].category) === -1 &&
           categories.push(this.props.options[i].category);
@@ -245,7 +253,16 @@ var TypeaheadTokenizer = createReactClass({
   _getOptionsLabel: function () {
     var currentHeader = this._getHeader();
     var optionsLabel = [];
-    let selectedCategory = map(this.state.selected, "category");
+    let selectedCategory = [];
+    let bypassCategory = map(
+      filter(this.props.options, ["addMultiple", true]),
+      "category"
+    );
+    selectedCategory = this.state.selected
+      .map((item) => {
+        if (!bypassCategory.includes(item.category)) return item.category;
+      })
+      .filter(Boolean);
     if (currentHeader == "Category") {
       for (var i = 0; i < this.props.options.length; i++) {
         selectedCategory.indexOf(this.props.options[i].category) === -1 &&

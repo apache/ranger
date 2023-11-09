@@ -41,7 +41,8 @@ import {
   isNull,
   some,
   has,
-  sortBy
+  sortBy,
+  isArray
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -1141,28 +1142,49 @@ export const fetchSearchFilterParams = (
   let defaultSearchFilterParam = [];
 
   // Get search filter params from current search params
-  const currentParams = Object.fromEntries([...searchParams]);
-  for (const param in currentParams) {
+  for (const [key, value] of searchParams.entries()) {
     let searchFilterObj = find(searchFilterOptions, {
-      urlLabel: param
+      urlLabel: key
     });
 
     if (!isUndefined(searchFilterObj)) {
       let category = searchFilterObj.category;
-      let value = currentParams[param];
+      let categoryValue = value;
 
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          label: value
-        });
-        value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
+      if (searchFilterObj?.addMultiple) {
+        let oldValue = searchFilterParam[category];
+        let newValue = value;
+        if (oldValue) {
+          if (isArray(oldValue)) {
+            searchFilterParam[category].push(newValue);
+            searchParam[key].push(newValue);
+          } else {
+            searchFilterParam[category] = [oldValue, newValue];
+            searchParam[key] = [oldValue, newValue];
+          }
+        } else {
+          searchFilterParam[category] = newValue;
+          searchParam[key] = newValue;
+        }
+      } else {
+        if (searchFilterObj.type == "textoptions") {
+          let textOptionObj = find(searchFilterObj.options(), {
+            label: categoryValue
+          });
+          categoryValue = !isUndefined(textOptionObj)
+            ? textOptionObj.value
+            : categoryValue;
+        }
+
+        searchFilterParam[category] = categoryValue;
+        searchParam[key] = value;
       }
-
-      searchFilterParam[category] = value;
       defaultSearchFilterParam.push({
         category: category,
-        value: value
+        value: categoryValue
       });
+    } else {
+      searchParam[key] = value;
     }
   }
 
@@ -1182,26 +1204,49 @@ export const fetchSearchFilterParams = (
           let category = searchFilterObj.category;
           let value = localStorageParams[localParam];
 
-          if (searchFilterObj.type == "textoptions") {
-            let textOptionObj = find(searchFilterObj.options(), {
-              label: value
-            });
-            value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
-          }
+          if (searchFilterObj?.addMultiple) {
+            if (isArray(value)) {
+              for (const val of value) {
+                searchFilterParam[category] = value;
+                defaultSearchFilterParam.push({
+                  category: category,
+                  value: val
+                });
+                searchParam[localParam] = value;
+              }
+            } else {
+              searchFilterParam[category] = value;
+              defaultSearchFilterParam.push({
+                category: category,
+                value: value
+              });
+              searchParam[localParam] = value;
+            }
+          } else {
+            if (searchFilterObj.type == "textoptions") {
+              let textOptionObj = find(searchFilterObj.options(), {
+                label: value
+              });
+              value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
+            }
 
-          searchFilterParam[category] = value;
-          defaultSearchFilterParam.push({
-            category: category,
-            value: value
-          });
+            searchFilterParam[category] = value;
+            defaultSearchFilterParam.push({
+              category: category,
+              value: value
+            });
+            searchParam[localParam] = localStorageParams[localParam];
+          }
+        } else {
           searchParam[localParam] = localStorageParams[localParam];
         }
       }
     }
   }
+
   finalSearchFilterData["searchFilterParam"] = searchFilterParam;
   finalSearchFilterData["defaultSearchFilterParam"] = defaultSearchFilterParam;
-  finalSearchFilterData["searchParam"] = { ...currentParams, ...searchParam };
+  finalSearchFilterData["searchParam"] = searchParam;
 
   return finalSearchFilterData;
 };
@@ -1217,7 +1262,21 @@ export const parseSearchFilter = (filter, searchFilterOptions) => {
     });
 
     if (searchFilterObj !== undefined) {
-      searchFilterParam[obj.category] = obj.value;
+      if (searchFilterObj?.addMultiple) {
+        let oldValue = searchFilterParam[obj.category];
+        let newValue = obj.value;
+        if (oldValue) {
+          if (isArray(oldValue)) {
+            searchFilterParam[obj.category].push(newValue);
+          } else {
+            searchFilterParam[obj.category] = [oldValue, newValue];
+          }
+        } else {
+          searchFilterParam[obj.category] = newValue;
+        }
+      } else {
+        searchFilterParam[obj.category] = obj.value;
+      }
 
       let urlLabelParam = searchFilterObj.urlLabel;
 
@@ -1228,7 +1287,12 @@ export const parseSearchFilter = (filter, searchFilterOptions) => {
         searchParam[urlLabelParam] =
           textOptionObj !== undefined ? textOptionObj.label : obj.value;
       } else {
-        searchParam[urlLabelParam] = obj.value;
+        if (searchFilterObj?.addMultiple) {
+          searchParam[urlLabelParam] =
+            searchFilterParam[searchFilterObj.category];
+        } else {
+          searchParam[urlLabelParam] = obj.value;
+        }
       }
     }
   });
@@ -1352,9 +1416,8 @@ export const updateTagActive = (isTagView) => {
 };
 
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
-  let logoutResp = {};
   try {
-    logoutResp = await fetchApi({
+    await fetchApi({
       url: "logout",
       baseURL: "",
       headers: {
