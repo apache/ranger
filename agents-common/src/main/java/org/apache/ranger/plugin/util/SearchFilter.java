@@ -108,6 +108,7 @@ public class SearchFilter {
 	public static final String DATA_SHARE_NAME          = "dataShareName";        // search, sort
 	public static final String DATA_SHARE_NAME_PARTIAL  = "dataShareNamePartial"; // search, sort
 	public static final String DATA_SHARE_ID            = "dataShareId";          // search, sort
+	public static final String EXCLUDE_DATASET_ID       = "excludeDatasetId";     // search
 	public static final String SHARED_RESOURCE_NAME     = "sharedResourceName";   // search, sort
 	public static final String SHARED_RESOURCE_NAME_PARTIAL = "sharedResourceNamePartial";   // search, sort
 	public static final String RESOURCE_CONTAINS        = "resourceContains";     // search

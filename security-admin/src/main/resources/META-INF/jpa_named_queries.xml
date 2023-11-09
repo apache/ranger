@@ -2265,6 +2265,10 @@
 		<query>select obj from XXGdsDataShareInDataset obj where obj.datasetId = :datasetId</query>
 	</named-query>
 
+	<named-query name="XXGdsDataShareInDataset.findDataShareIdsInStatuses">
+		<query>SELECT obj.dataShareId FROM XXGdsDataShareInDataset obj WHERE obj.datasetId = :datasetId AND obj.status IN :statuses</query>
+	</named-query>
+
 	<named-query name="XXGdsDatasetInProject.findByGuid">
 		<query>select obj from XXGdsDatasetInProject obj where obj.guid = :guid</query>
 	</named-query>

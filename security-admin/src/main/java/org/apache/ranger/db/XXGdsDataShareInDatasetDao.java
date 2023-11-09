@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class XXGdsDataShareInDatasetDao extends BaseDao<XXGdsDataShareInDataset> {
@@ -124,5 +125,22 @@ public class XXGdsDataShareInDatasetDao extends BaseDao<XXGdsDataShareInDataset>
 		}
 
 		return ret;
+	}
+
+	public List<Long> findDataShareIdsInStatuses(Long datasetId, Set<Integer> statuses) {
+		List<Long> ret = null;
+
+		if (datasetId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findDataShareIdsInStatuses", Long.class)
+				                        .setParameter("datasetId", datasetId)
+				                        .setParameter("statuses", statuses)
+				                        .getResultList();
+			} catch (NoResultException e) {
+				LOG.debug("XXGdsDataShareInDataset({}, {}): ", datasetId, statuses, e);
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
 	}
 }

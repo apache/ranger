@@ -66,6 +66,8 @@ public class GdsDBStore extends AbstractGdsStore {
     public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
     public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
 
+    private static final Set<Integer> SHARE_STATUS_AGR = new HashSet<>(Arrays.asList(GdsShareStatus.ACTIVE.ordinal(), GdsShareStatus.GRANTED.ordinal(), GdsShareStatus.REQUESTED.ordinal()));
+
     @Autowired
     RangerGdsValidator validator;
 
@@ -818,7 +820,7 @@ public class GdsDBStore extends AbstractGdsStore {
             if (gdsPermission.equals(GdsPermission.LIST)) {
                 scrubDataShareForListing(dataShare);
             }
-	}
+        }
 
         LOG.debug("<== searchDataShares({}): ret={}", filter, ret);
 
@@ -1383,6 +1385,7 @@ public class GdsDBStore extends AbstractGdsStore {
         int startIndex = filter.getStartIndex();
 
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
+
         GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
         RangerDatasetList   result        = datasetService.searchDatasets(filter);
         List<RangerDataset> datasets      = new ArrayList<>();
@@ -1402,6 +1405,21 @@ public class GdsDBStore extends AbstractGdsStore {
         int startIndex = filter.getStartIndex();
 
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
+
+        String     datasetId           = filter.getParam(SearchFilter.DATASET_ID);
+        boolean    excludeDatasetId    = Boolean.parseBoolean(filter.getParam(SearchFilter.EXCLUDE_DATASET_ID));
+        List<Long> dataSharesToExclude = null;
+
+        if (excludeDatasetId) {
+            filter.removeParam(SearchFilter.DATASET_ID);
+
+            dataSharesToExclude = daoMgr.getXXGdsDataShareInDataset().findDataShareIdsInStatuses(Long.parseLong(datasetId), SHARE_STATUS_AGR);
+        }
+
+        if (dataSharesToExclude == null) {
+            dataSharesToExclude = Collections.emptyList();
+        }
+
         GdsPermission         gdsPermission = getGdsPermissionFromFilter(filter);
         RangerDataShareList   result        = dataShareService.searchDataShares(filter);
         List<RangerDataShare> dataShares    = new ArrayList<>();
@@ -1409,7 +1427,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
         for (RangerDataShare dataShare : result.getList()) {
             if (dataShare != null && validator.hasPermission(dataShare.getAcl(), gdsPermission)) {
-                dataShares.add(dataShare);
+                if (!dataSharesToExclude.contains(dataShare.getId())) {
+                    dataShares.add(dataShare);
+                }
             }
         }
 
