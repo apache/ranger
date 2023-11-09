@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useSearchParams, useOutletContext } from "react-router-dom";
+import { useSearchParams, useOutletContext, Link } from "react-router-dom";
 import { Badge, Button, Row, Col, Table, Modal } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import dateFormat from "dateformat";
@@ -40,10 +40,12 @@ import {
   toString,
   toUpper,
   has,
-  filter
+  filter,
+  find,
+  isArray
 } from "lodash";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import qs from "qs";
 import { AccessMoreLess } from "Components/CommonComponents";
 import { PolicyViewDetails } from "./AdminLogs/PolicyViewDetails";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
@@ -120,10 +122,13 @@ function Access() {
       });
     }
 
-    // Updating the states for search params, search filter, default search filter and localStorage
-    if (localStorage?.excludeServiceUser) {
+    // Add excludeServiceUser if not present in the search param with default state value of checked
+    if (!has(searchParam, "excludeServiceUser")) {
       searchParam["excludeServiceUser"] = checked;
     }
+    localStorage.setItem("excludeServiceUser", checked);
+
+    // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
     setSearchFilterParams(searchFilterParam);
     setDefaultSearchFilterParams(defaultSearchFilterParam);
@@ -135,17 +140,16 @@ function Access() {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
 
-      // Updating the states for search params, search filter, default search filter and localStorage
-      if (localStorage?.excludeServiceUser || searchParam?.excludeServiceUser) {
-        if (searchParam?.excludeServiceUser) {
-          setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
-          localStorage.setItem(
-            "excludeServiceUser",
-            searchParam?.excludeServiceUser
-          );
-        }
-        searchParam["excludeServiceUser"] = localStorage?.excludeServiceUser;
+      // Update excludeServiceUser in the search param and in the localStorage
+      if (searchParam?.excludeServiceUser) {
+        setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
+        localStorage.setItem(
+          "excludeServiceUser",
+          searchParam?.excludeServiceUser
+        );
       }
+
+      // Updating the states for search params, search filter, default search filter and localStorage
       setSearchParams(searchParam, { replace: true });
       if (
         JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
@@ -154,6 +158,7 @@ function Access() {
       }
       setDefaultSearchFilterParams(defaultSearchFilterParam);
       localStorage.setItem("bigData", JSON.stringify(searchParam));
+
       setContentLoader(false);
     }
   }, [searchParams, servicesAvailable]);
@@ -186,7 +191,10 @@ function Access() {
           try {
             logsResp = await fetchApi({
               url: "assets/accessAudit",
-              params: params
+              params: params,
+              paramsSerializer: function (params) {
+                return qs.stringify(params, { arrayFormat: "repeat" });
+              }
             });
             logs = logsResp.data.vXAccessAudits;
             totalCount = logsResp.data.totalCount;
@@ -223,13 +231,39 @@ function Access() {
   };
 
   const toggleChange = (chkVal) => {
-    let currentParams = Object.fromEntries([...searchParams]);
-    currentParams["excludeServiceUser"] = chkVal?.target?.checked;
-    localStorage.setItem(
-      "excludeServiceUser",
-      JSON.stringify(chkVal?.target?.checked)
-    );
-    setSearchParams(currentParams, { replace: true });
+    let checkBoxValue = chkVal?.target?.checked;
+    let searchParam = {};
+
+    for (const [key, value] of searchParams.entries()) {
+      let searchFilterObj = find(searchFilterOptions, {
+        urlLabel: key
+      });
+
+      if (!isUndefined(searchFilterObj)) {
+        if (searchFilterObj?.addMultiple) {
+          let oldValue = searchParam[key];
+          let newValue = value;
+          if (oldValue) {
+            if (isArray(oldValue)) {
+              searchParam[key].push(newValue);
+            } else {
+              searchParam[key] = [oldValue, newValue];
+            }
+          } else {
+            searchParam[key] = newValue;
+          }
+        } else {
+          searchParam[key] = value;
+        }
+      } else {
+        searchParam[key] = value;
+      }
+    }
+
+    searchParam["excludeServiceUser"] = checkBoxValue;
+    localStorage.setItem("excludeServiceUser", checkBoxValue);
+
+    setSearchParams(searchParam, { replace: true });
     setAccessLogs([]);
     setChecked(chkVal?.target?.checked);
     setLoader(true);
@@ -238,6 +272,7 @@ function Access() {
 
   const handleClosePolicyId = () => setPolicyViewModal(false);
   const handleClose = () => setShowRowModal(false);
+
   const rowModal = (row) => {
     setShowRowModal(true);
     setRowData(row.original);
@@ -770,7 +805,7 @@ function Access() {
       category: "eventId",
       label: "Audit ID",
       urlLabel: "eventId",
-      type: "number"
+      type: "text"
     },
     {
       category: "clientIP",
@@ -794,7 +829,8 @@ function Access() {
       category: "excludeUser",
       label: "Exclude User",
       urlLabel: "excludeUser",
-      type: "number"
+      addMultiple: true,
+      type: "text"
     },
     {
       category: "policyId",
@@ -857,6 +893,7 @@ function Access() {
       category: "requestUser",
       label: "User",
       urlLabel: "user",
+      addMultiple: true,
       type: "text"
     },
     {
