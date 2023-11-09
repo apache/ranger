@@ -26,6 +26,7 @@ import StructuredFilter from "../../../components/structured-filter/react-typeah
 import { Loader, BlockUi } from "../../../components/CommonComponents";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
+import viewRequestIcon from "../../../images/view-request.svg";
 
 import {
   getTableSortBy,
@@ -278,7 +279,6 @@ const DatashareInDatasetListComp = ({
       {
         Header: "",
         accessor: "actions",
-        width: 100,
         Cell: ({ row: { original } }) => {
           return (
             <div>
@@ -286,7 +286,19 @@ const DatashareInDatasetListComp = ({
                 variant="outline-dark"
                 size="sm"
                 className="mr-2"
-                title="View"
+                style={{ height: "31px" }}
+                title="View Request"
+                onClick={() => navigate(`/gds/request/detail/${original.id}`)}
+                data-name="viewRequest"
+                data-id={original.dataShareId}
+              >
+                <img src={viewRequestIcon} height="18px" width="18px" />
+              </Button>
+              <Button
+                variant="outline-dark"
+                size="sm"
+                className="mr-2"
+                title="View Datashare"
                 onClick={() =>
                   navigate(`/gds/datashare/${original.dataShareId}/detail`)
                 }
@@ -333,7 +345,7 @@ const DatashareInDatasetListComp = ({
   const toggleConfirmModalForDelete = (id, name, status) => {
     let deleteMsg = "";
     if (status == "ACTIVE") {
-      deleteMsg = `Do you want to remove Datashare ${id} from ${datasetInfo.name}`;
+      deleteMsg = `Do you want to remove Datashare ${id} from ${name}`;
     } else {
       deleteMsg = `Do you want to delete request of Datashare ${id}`;
     }

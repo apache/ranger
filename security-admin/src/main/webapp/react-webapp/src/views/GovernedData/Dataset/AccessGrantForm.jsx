@@ -73,6 +73,7 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
   const [validityPeriod, setValidityPeriod] = useState([]);
   const dragOverItem = useRef();
   const dragItem = useRef();
+  const addPolicyItemClickRef = useRef();
 
   useEffect(() => {
     fetchInitalData();
@@ -91,6 +92,10 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
         formData: generateFormData(policyData, serviceCompDetails)
       });
     }
+    if (policyData == null) {
+      addPolicyItemClickRef.current.click();
+    }
+    return policyData;
   };
 
   const fetchAccessGrantData = async () => {
@@ -445,178 +450,241 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
               dirty,
               modified,
               initialValues
-            }) => (
-              <div className="gds-access-content">
-                <FormChange
-                  isDirtyField={
-                    dirty == true || !isEqual(initialValues, values)
-                      ? isDirtyFieldCheck(
-                          dirtyFields,
-                          modified,
-                          values,
-                          initialValues
-                        )
-                      : false
-                  }
-                  formValues={values}
-                />
-                <div className="datasetPolicyItem">
-                  <div className="mb-5 gds-content-border">
-                    <div>
-                      <p className="formHeader">Grants</p>
-                    </div>
-                    <div className="drag-drop-wrap">
-                      <FieldArray name="policyItems">
-                        {({ fields }) =>
-                          fields.map((name, index) => (
-                            <table className="w-100">
-                              <tr
-                                key={name}
-                                onDragStart={(e) =>
-                                  dragStart(e, index, dragItem)
-                                }
-                                onDragEnter={(e) =>
-                                  dragEnter(e, index, dragOverItem)
-                                }
-                                onDragEnd={(e) =>
-                                  drop(e, fields, dragItem, dragOverItem)
-                                }
-                                onDragOver={(e) => dragOver(e)}
-                                draggable
-                                id={index}
-                                className="drag-drop-wrap"
-                              >
-                                <div className="gds-grant-row">
-                                  <i className="fa-fw fa fa-bars mt-2"></i>
-                                  <div className="d-flex gap-half">
-                                    <div className="flex-1 mg-b-10 gds-grant-principle">
-                                      <Field
-                                        name={`${name}.principle`}
-                                        render={({ input, meta }) => (
-                                          <div>
-                                            <AsyncSelect
-                                              {...input}
-                                              placeholder="Select users, groups, roles"
-                                              isMulti
-                                              loadOptions={fetchPrincipleData}
-                                              data-name="usersSeusersPrinciplelect"
-                                              data-cy="usersPrinciple"
-                                            />
-                                          </div>
-                                        )}
-                                      />
-                                    </div>
-
-                                    <div className="d-flex gap-1 mg-b-10 gds-grant-permission">
-                                      <Field
-                                        name={`${name}.accesses`}
-                                        render={({ input, meta }) => (
-                                          <div className="flex-1">
-                                            <Select
-                                              {...input}
-                                              options={getAccessTypeOptions()}
-                                              menuPlacement="auto"
-                                              placeholder="Permissions"
-                                              isClearable
-                                              isMulti
-                                            />
-                                          </div>
-                                        )}
-                                      />
-                                    </div>
-                                    <div className="d-flex gap-1 mg-b-10 gds-grant-condition">
-                                      {serviceCompDetails?.policyConditions
-                                        ?.length > 0 && (
-                                        <td
-                                          key="Policy Conditions"
-                                          className="align-middle w-100"
-                                        >
-                                          <Field
-                                            className="form-control "
-                                            name={`${name}.conditions`}
-                                            validate={(value, formValues) =>
-                                              requiredForPolicyItem(
-                                                formValues["policyItems"],
-                                                index
-                                              )
-                                            }
-                                            render={({ input }) => (
-                                              <div className="table-editable">
-                                                <Editable
-                                                  {...input}
-                                                  placement="auto"
-                                                  type="custom"
-                                                  conditionDefVal={policyConditionUpdatedJSON(
-                                                    serviceCompDetails.policyConditions
-                                                  )}
-                                                  selectProps={{
-                                                    isMulti: true
-                                                  }}
-                                                  isGDS={true}
-                                                />
-                                              </div>
-                                            )}
-                                          />
-                                        </td>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <Button
-                                      variant="danger"
-                                      size="sm"
-                                      title="Remove"
-                                      onClick={() => {
-                                        fields.remove(index);
-                                        onRemovingPolicyItem();
-                                      }}
-                                      data-action="delete"
-                                      data-cy="delete"
-                                    >
-                                      <i className="fa-fw fa fa-remove"></i>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </tr>
-                            </table>
-                          ))
-                        }
-                      </FieldArray>
-                    </div>
-                    <Button
-                      className="btn btn-mini mt-2"
-                      type="button"
-                      onClick={() => addPolicyItem("policyItems", undefined)}
-                      data-action="addGroup"
-                      data-cy="addGroup"
-                      title="Add"
-                    >
-                      Add More
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="d-flex gap-1">
-                  <Card
-                    className={
-                      isEmpty(values.conditions)
-                        ? "gds-no-data gds-action-card gds-grant-det-cond gds-bg-white"
-                        : "gds-action-card gds-grant-det-cond gds-bg-white"
+            }) => {
+              return (
+                <div className="gds-access-content">
+                  <FormChange
+                    isDirtyField={
+                      dirty == true || !isEqual(initialValues, values)
+                        ? isDirtyFieldCheck(
+                            dirtyFields,
+                            modified,
+                            values,
+                            initialValues
+                          )
+                        : false
                     }
-                  >
-                    <div className="gds-section-title">
-                      <p className="gds-card-heading">Conditions</p>
+                    formValues={values}
+                  />
+                  <div className="datasetPolicyItem">
+                    <div className="mb-5 gds-content-border gds-action-card pb-4 mt-3">
+                      <div className="gds-section-title">
+                        <p
+                          className="formHeader border-0 m-0"
+                          style={{ fontSize: "1.125rem", fontWeight: "400" }}
+                        >
+                          Grants
+                        </p>
+                        <div className="d-flex gap-half">
+                          {(values.conditions == undefined ||
+                            isEmpty(values.conditions)) && (
+                            <Button
+                              className="btn btn-sm"
+                              onClick={() => {
+                                policyConditionState(true);
+                              }}
+                              data-js="customPolicyConditions"
+                              data-cy="customPolicyConditions"
+                              variant="secondary"
+                            >
+                              Add Conditions
+                            </Button>
+                          )}
+                          {(validityPeriod == undefined ||
+                            validityPeriod.length == 0) && (
+                            <PolicyValidityPeriodComp
+                              addPolicyItem={addPolicyItem}
+                              isGDS={true}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="drag-drop-wrap pt-3">
+                        <FieldArray name="policyItems">
+                          {({ fields }) =>
+                            fields.map((name, index) => (
+                              <table className="w-100 mg-b-10">
+                                <tr
+                                  key={name}
+                                  onDragStart={(e) =>
+                                    dragStart(e, index, dragItem)
+                                  }
+                                  onDragEnter={(e) =>
+                                    dragEnter(e, index, dragOverItem)
+                                  }
+                                  onDragEnd={(e) =>
+                                    drop(e, fields, dragItem, dragOverItem)
+                                  }
+                                  onDragOver={(e) => dragOver(e)}
+                                  draggable
+                                  id={index}
+                                  className="drag-drop-wrap"
+                                >
+                                  <div className="gds-grant-row">
+                                    <i className="fa-fw fa fa-bars mt-2"></i>
+                                    <div className="d-flex gap-half">
+                                      <div className="flex-1 mg-b-10 gds-grant-principle">
+                                        <Field
+                                          name={`${name}.principle`}
+                                          render={({ input, meta }) => (
+                                            <div>
+                                              <AsyncSelect
+                                                {...input}
+                                                placeholder="Select users, groups, roles"
+                                                isMulti
+                                                loadOptions={fetchPrincipleData}
+                                                data-name="usersSeusersPrinciplelect"
+                                                data-cy="usersPrinciple"
+                                              />
+                                            </div>
+                                          )}
+                                        />
+                                      </div>
+
+                                      <div className="d-flex gap-1 mg-b-10 gds-grant-permission">
+                                        <Field
+                                          name={`${name}.accesses`}
+                                          render={({ input, meta }) => (
+                                            <div className="flex-1">
+                                              <Select
+                                                {...input}
+                                                options={getAccessTypeOptions()}
+                                                menuPlacement="auto"
+                                                placeholder="Permissions"
+                                                isClearable
+                                                isMulti
+                                              />
+                                            </div>
+                                          )}
+                                        />
+                                      </div>
+                                      <div className="d-flex gap-1 mg-b-10 gds-grant-condition">
+                                        {serviceCompDetails?.policyConditions
+                                          ?.length > 0 && (
+                                          <div
+                                            key="Policy Conditions"
+                                            className="align-middle w-100"
+                                          >
+                                            <Field
+                                              className="form-control "
+                                              name={`${name}.conditions`}
+                                              validate={(value, formValues) =>
+                                                requiredForPolicyItem(
+                                                  formValues["policyItems"],
+                                                  index
+                                                )
+                                              }
+                                              render={({ input }) => (
+                                                <div className="table-editable">
+                                                  <Editable
+                                                    {...input}
+                                                    placement="auto"
+                                                    type="custom"
+                                                    conditionDefVal={policyConditionUpdatedJSON(
+                                                      serviceCompDetails.policyConditions
+                                                    )}
+                                                    selectProps={{
+                                                      isMulti: true
+                                                    }}
+                                                    isGDS={true}
+                                                  />
+                                                </div>
+                                              )}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Button
+                                        variant="danger"
+                                        size="sm"
+                                        title="Remove"
+                                        onClick={() => {
+                                          fields.remove(index);
+                                          onRemovingPolicyItem();
+                                        }}
+                                        data-action="delete"
+                                        data-cy="delete"
+                                      >
+                                        <i className="fa-fw fa fa-remove"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </tr>
+                              </table>
+                            ))
+                          }
+                        </FieldArray>
+                      </div>
                       <Button
-                        className="btn btn-sm"
-                        onClick={() => {
-                          policyConditionState(true);
-                        }}
-                        data-js="customPolicyConditions"
-                        data-cy="customPolicyConditions"
+                        className="btn btn-sm mt-2 mg-l-32 mb-5"
+                        type="button"
+                        onClick={() => addPolicyItem("policyItems", undefined)}
+                        data-action="addGroup"
+                        data-cy="addGroup"
+                        title="Add"
+                        ref={addPolicyItemClickRef}
                       >
-                        Add Conditions
+                        Add More
                       </Button>
-                      {/* <div> */}
+
+                      {values?.conditions && !isEmpty(values.conditions) && (
+                        <div className="gds-action-card mb-5 pl-0 pr-0">
+                          <div className="gds-section-title">
+                            <p className="gds-card-heading">Conditions</p>
+                            <Button
+                              className="btn btn-sm"
+                              onClick={() => {
+                                policyConditionState(true);
+                              }}
+                              data-js="customPolicyConditions"
+                              data-cy="customPolicyConditions"
+                              variant="secondary"
+                            >
+                              Edit Conditions
+                            </Button>
+                          </div>
+                          {Object.keys(values.conditions).map((keyName) => {
+                            if (
+                              values.conditions[keyName] != "" &&
+                              values.conditions[keyName] != null
+                            ) {
+                              let conditionObj = find(
+                                serviceCompDetails?.policyConditions,
+                                function (m) {
+                                  if (m.name == keyName) {
+                                    return m;
+                                  }
+                                }
+                              );
+                              return (
+                                <div className="pt-3">
+                                  {isObject(values.conditions[keyName]) ? (
+                                    <div>
+                                      <span className="fnt-14">
+                                        {values.conditions[keyName].length > 1
+                                          ? values.conditions[keyName].map(
+                                              (m) => {
+                                                return ` ${m.label} `;
+                                              }
+                                            )
+                                          : values.conditions[keyName].label}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <span className="fnt-14">
+                                        {values.conditions[keyName]}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          })}
+                        </div>
+                      )}
                       {showModal && (
                         <Field
                           className="form-control"
@@ -633,122 +701,70 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                           )}
                         />
                       )}
-                    </div>
-                    <Card.Body className="px-0 pb-0">
-                      <>
-                        {values?.conditions && !isEmpty(values.conditions) ? (
-                          Object.keys(values.conditions).map((keyName) => {
-                            if (
-                              values.conditions[keyName] != "" &&
-                              values.conditions[keyName] != null
-                            ) {
-                              let conditionObj = find(
-                                serviceCompDetails?.policyConditions,
-                                function (m) {
-                                  if (m.name == keyName) {
-                                    return m;
-                                  }
-                                }
-                              );
+
+                      {validityPeriod != undefined &&
+                        validityPeriod.length > 0 && (
+                          <div className="gds-action-card pl-0 pr-0">
+                            <div className="gds-section-title">
+                              <p className="gds-card-heading">
+                                Validity Period
+                              </p>
+                              <PolicyValidityPeriodComp
+                                addPolicyItem={addPolicyItem}
+                                editValidityPeriod={true}
+                                isGDS={true}
+                              />
+                            </div>
+                            {validityPeriod.map((obj, index) => {
                               return (
-                                <div>
-                                  {isObject(values.conditions[keyName]) ? (
-                                    <div>
-                                      <span>
-                                        {values.conditions[keyName].length > 1
-                                          ? values.conditions[keyName].map(
-                                              (m) => {
-                                                return ` ${m.label} `;
-                                              }
-                                            )
-                                          : values.conditions[keyName].label}
+                                <div className="gds-inline-field-grp gds-inline-listing w-100">
+                                  <div className="wrapper pt-3">
+                                    <div className="gds-left-inline-field">
+                                      <span className="gds-label-color fnt-14">
+                                        Start Date
                                       </span>
                                     </div>
-                                  ) : (
-                                    <div>
-                                      <span>{values.conditions[keyName]}</span>
+                                    {obj?.startTime != undefined ? (
+                                      <span className="fnt-14">
+                                        {dateFormat(
+                                          obj.startTime,
+                                          "mm/dd/yyyy hh:MM:ss TT"
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <p className="mb-0">--</p>
+                                    )}
+                                    <span className="gds-label-color pl-5 fnt-14">
+                                      {obj?.timeZone}
+                                    </span>
+                                  </div>
+                                  <div className="wrapper ">
+                                    <div className="gds-left-inline-field">
+                                      <span className="gds-label-color fnt-14">
+                                        End Date
+                                      </span>
                                     </div>
-                                  )}
+                                    {obj?.endTime != undefined ? (
+                                      <span className="fnt-14">
+                                        {dateFormat(
+                                          obj.endTime,
+                                          "mm/dd/yyyy hh:MM:ss TT"
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <p className="mb-0">--</p>
+                                    )}
+                                  </div>
                                 </div>
                               );
-                            }
-                          })
-                        ) : (
-                          <div></div>
+                            })}
+                          </div>
                         )}
-                      </>
-                    </Card.Body>
-                  </Card>
-                </div>
-                <div className="d-flex gap-1">
-                  <Card
-                    className={
-                      validityPeriod == undefined || validityPeriod.length == 0
-                        ? "gds-no-data gds-action-card gds-grant-det-cond gds-bg-white"
-                        : "gds-action-card gds-grant-det-cond gds-bg-white"
-                    }
-                  >
-                    <div className="gds-section-title">
-                      <p className="gds-card-heading">Validity Period</p>
-                      <PolicyValidityPeriodComp addPolicyItem={addPolicyItem} />
                     </div>
-                    <Card.Body className="px-0 pb-0">
-                      <>
-                        {validityPeriod != undefined &&
-                        validityPeriod.length > 0 ? (
-                          validityPeriod.map((obj, index) => {
-                            return (
-                              <div className="gds-inline-field-grp gds-inline-listing w-100">
-                                <div className="wrapper">
-                                  <div className="gds-left-inline-field">
-                                    <span className="gds-label-color">
-                                      Start Date{" "}
-                                    </span>
-                                  </div>
-                                  {obj?.startTime != undefined ? (
-                                    <span>
-                                      {dateFormat(
-                                        obj.startTime,
-                                        "mm/dd/yyyy hh:MM:ss TT"
-                                      )}
-                                    </span>
-                                  ) : (
-                                    <p className="mb-0">--</p>
-                                  )}
-                                  <span className="gds-label-color pl-5">
-                                    {obj?.timeZone}
-                                  </span>
-                                </div>
-                                <div className="wrapper ">
-                                  <div className="gds-left-inline-field">
-                                    <span className="gds-label-color">
-                                      {" "}
-                                      End Date{" "}
-                                    </span>
-                                  </div>
-                                  {obj?.endTime != undefined ? (
-                                    <span>
-                                      {dateFormat(
-                                        obj.endTime,
-                                        "mm/dd/yyyy hh:MM:ss TT"
-                                      )}
-                                    </span>
-                                  ) : (
-                                    <p className="mb-0">--</p>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div></div>
-                        )}
-                      </>
-                    </Card.Body>
-                  </Card>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            }}
           />
         </div>
       )}

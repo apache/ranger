@@ -469,7 +469,7 @@ const MyDatasetListing = () => {
   const searchFilterOptions = [
     {
       category: "datasetNamePartial",
-      label: "DatasetName Name",
+      label: "Name",
       urlLabel: "datasetNamePartial",
       type: "text"
     }

@@ -87,13 +87,13 @@ export default function PolicyValidityPeriodComp(props) {
     <>
       <Button
         onClick={handleBtnClick}
-        variant="primary"
+        variant={props.isGDS ? "secondary" : "primary"}
         size="sm"
         className="pull-right btn-sm"
         data-js="policyTimeBtn"
         data-cy="policyTimeBtn"
       >
-        <i className="fa fa-clock-o"></i>{" "}
+        {!props.isGDS && <i className="fa fa-clock-o"></i>}{" "}
         {props.editValidityPeriod ? "Edit" : "Add"} Validity Period
       </Button>
       <Modal show={showModal} size="lg" onHide={toggleModal} backdrop="static">

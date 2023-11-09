@@ -30,7 +30,7 @@ import {
   Modal,
   Form as FormB
 } from "react-bootstrap";
-import { Form, Field } from "react-final-form";
+import { Form, Field, useForm } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import Select from "react-select";
 import { groupBy, isArray, maxBy, find } from "lodash";
@@ -40,14 +40,12 @@ import { getServiceDef } from "../../../utils/appState";
 
 const AddSharedResourceComp = ({
   datashareId,
-  onToggleAddResourceClose,
   sharedResource,
   showModal,
   setShowModal,
   resourceModalUpdateTable,
   datashareInfo,
   setResourceUpdateTable,
-  resourceUpdateTable,
   serviceDetails,
   isEdit
 }) => {
@@ -58,42 +56,17 @@ const AddSharedResourceComp = ({
   const [showAddResourceModal, setShowAddResourceModal] = useState(
     showModal ? true : false
   );
+  let closeModalFag = false;
   const [openConfigAccordion, setOpenConfigAccordion] = useState(false);
   const [formData, setFormData] = useState();
   const [selectedResShareMask, setSelectedResShareMask] = useState({});
-  //const [loadSharedResource, setLoadSharedResource] = useState();
-  //const [serviceDef, setServiceDef] = useState();
-  //const [serviceDetails, setService] = useState({});
-  //const serviceDef = getServiceDef();
   const { allServiceDefs } = getServiceDef();
+
   const serviceDef = allServiceDefs?.find((servicedef) => {
     return servicedef.name == serviceDetails?.type;
   });
 
-  const fetchSharedResource = async () => {
-    try {
-      let params = {};
-      const resp = await fetchApi({
-        url: `gds/resource/${sharedResourceId}`
-      });
-      setLoadSharedResource(resp.data);
-      setFormData(generateFormData(resp.data, serviceDef));
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching shared resource details ! ${error}`
-      );
-    }
-  };
-
   useEffect(() => {
-    // if (isEdit) {
-    //   //fetchSharedResource(sharedResourceId);
-    //   setLoadSharedResource(sharedResource);
-    // }
-    //
-    // //setShowAddResourceModal(true);
-    // fetchDatashareInfo(datashareId);
-    //fetchDatashareInfo(datashareId);
     loadData();
   }, [resourceModalUpdateTable]);
 
@@ -209,9 +182,7 @@ const AddSharedResourceComp = ({
     input.onChange(event);
   };
 
-  const handleSubmit = async (values, closeModal) => {
-    console.log(values);
-    console.log(values);
+  const handleSubmit = async (values, form) => {
     let data = {};
     data.dataShareId = datashareId;
     let serviceCompRes = serviceDef.resources;
@@ -244,10 +215,10 @@ const AddSharedResourceComp = ({
     data.accessTypes = values.permission?.map((item) => item.value);
     data.rowFilter = values.rowFilter;
     data.resourceMask = values.resourceMask;
-
-    try {
+    let errorList = [];
+    if (isEdit) {
       setLoader(true);
-      if (isEdit) {
+      try {
         data.guid = sharedResource.guid;
         await fetchApi({
           url: `gds/resource/${sharedResource.id}`,
@@ -255,31 +226,40 @@ const AddSharedResourceComp = ({
           data: data
         });
         toast.success("Shared resource updated successfully!!");
-      } else {
+        setShowModal(false);
+      } catch (error) {
+        errorList.push(error);
+        toast.error("Error occurred while updating Shared resource");
+        console.error(`Error occurred while updating Shared resource ${error}`);
+      }
+    } else {
+      try {
         await fetchApi({
           url: `gds/resource`,
           method: "post",
-          data: data
+          data: data,
+          skipNavigate: true
         });
         toast.success("Shared resource created successfully!!");
+        if (closeModalFag) {
+          closeModalFag = false;
+          setShowModal(false);
+          values = {};
+        } else {
+          Object.keys(values).forEach((key) => {
+            if (!key.includes("resourceName")) {
+              form.change(key, undefined);
+            }
+          });
+        }
+      } catch (error) {
+        errorList.push(error);
+        toast.error("Error occurred while creating Shared resource");
+        console.error(`Error occurred while creating Shared resource ${error}`);
       }
-    } catch (error) {
-      serverError(error);
-      if (sharedResource != undefined) {
-        toast.success("Error occurred while updating Shared resource");
-      } else {
-        toast.success("Error occurred while creating Shared resource");
-      }
-      console.error(
-        `Error occurred while creating/updating Shared resource  ${error}`
-      );
     }
     setResourceUpdateTable(moment.now());
     setLoader(false);
-    if (closeModal) {
-      setShowModal(false);
-    }
-    console.log(data);
   };
 
   const toggleAddResourceClose = () => {
@@ -301,63 +281,18 @@ const AddSharedResourceComp = ({
 
   return (
     <>
-      {/* <div className="gds-form-header-wrapper gap-half">
-        <Button
-          variant="light"
-          className="border-0 bg-transparent"
-          onClick={back}
-          size="sm"
-          data-id="back"
-          data-cy="back"
-        >
-          <i className="fa fa-angle-left fa-lg font-weight-bold" />
-        </Button>
-        <h3 className="gds-header bold">Add Resource</h3>
-      </div> */}
       {loader ? (
         <Loader />
       ) : (
         <>
-          {/* <div className="gds-header-btn-grp">
-            {!isEdit ? (
-              <Button
-                variant="primary"
-                onClick={addResource}
-                style={{ whiteSpace: "nowrap" }}
-                size="sm"
-                data-id="save"
-                data-cy="save"
-              >
-                Add Resources
-              </Button>
-            ) : (
-              <Button
-                variant="outline-dark"
-                size="sm"
-                title="Edit"
-                onClick={(e) => {
-                  fetchSharedResource(sharedResourceId);
-                  setShowAddResourceModal(true);
-                }}
-                data-name="editSharedResource"
-                data-id="editSharedResource"
-              >
-                <i className="fa-fw fa fa-edit"></i>
-              </Button>
-            )}
-          </div> */}
           <Modal
-            //show={showAddResourceModal}
             show={showModal}
             onHide={toggleAddResourceModalClose}
-            //className="mb-7"
             size="xl"
           >
             <Modal.Header closeButton>
               <h5 className="mb-0">Add Resources</h5>
             </Modal.Header>
-            {/* <div className="gds-form-wrap"> */}
-            {/* <div className="gds-form-content"> */}
             <div>
               <div className="mb-2 gds-chips flex-wrap">
                 <span
@@ -397,7 +332,8 @@ const AddSharedResourceComp = ({
                   values,
                   invalid,
                   errors,
-                  required
+                  required,
+                  form
                 }) => (
                   <div>
                     <form
@@ -504,8 +440,6 @@ const AddSharedResourceComp = ({
                                           onChange={(e) =>
                                             onAccessTypeChange(e, input)
                                           }
-                                          //menuPortalTarget={document.body}
-                                          //value={accessType}
                                           menuPlacement="auto"
                                           isClearable
                                           isMulti
@@ -592,11 +526,12 @@ const AddSharedResourceComp = ({
                                                             {...input}
                                                             placeholder="Enter masked value or expression..."
                                                           />
-                                                          {meta.error && (
-                                                            <span className="invalid-field">
-                                                              {meta.error}
-                                                            </span>
-                                                          )}
+                                                          {meta.error &&
+                                                            meta.touched && (
+                                                              <span className="invalid-field">
+                                                                {meta.error}
+                                                              </span>
+                                                            )}
                                                         </>
                                                       )}
                                                     />
@@ -652,16 +587,20 @@ const AddSharedResourceComp = ({
                           <Button
                             variant="primary"
                             size="sm"
-                            onClick={(event) => {
-                              handleSubmit(event, true);
+                            name="SaveAndClose"
+                            onClick={() => {
+                              closeModalFag = true;
+                              handleSubmit();
                             }}
                           >
                             {isEdit ? "Update" : "Save & Close"}
                           </Button>
                           {!isEdit ? (
                             <Button
-                              onClick={(event) => {
-                                handleSubmit(event, false);
+                              name="Save"
+                              onClick={() => {
+                                closeModalFag = false;
+                                handleSubmit();
                               }}
                               variant="primary"
                               size="sm"
@@ -680,8 +619,6 @@ const AddSharedResourceComp = ({
                 )}
               />
             </div>
-            {/* </div> */}
-            {/* </div> */}
           </Modal>
         </>
       )}

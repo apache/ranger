@@ -165,10 +165,13 @@ const DatasetDetailLayout = () => {
   const handleDatasetDeleteClick = async () => {
     toggleClose();
     try {
+      let params = {};
+      params["forceDelete"] = true;
       setBlockUI(true);
       await fetchApi({
         url: `gds/dataset/${datasetId}`,
-        method: "DELETE"
+        method: "DELETE",
+        params: params
       });
       setBlockUI(false);
       toast.success(" Success! Dataset deleted successfully");
@@ -665,6 +668,11 @@ const DatasetDetailLayout = () => {
     setRequestActiveKey(key);
   };
 
+  const updateDatasetAndAccessGrant = async () => {
+    updateDatasetDetails();
+    updateDatasetAccessGrant();
+  };
+
   const updateDatasetDetails = async () => {
     datasetInfo.name = datasetName;
     datasetInfo.description = datasetDescription;
@@ -806,6 +814,7 @@ const DatasetDetailLayout = () => {
             "Access Grant updated successfully!!"
           );
           showSaveCancelButton(false);
+          setAccessGrantFormValues();
         } catch (error) {
           setLoader(false);
           let errorMsg = `Failed to update Access Grant`;
@@ -829,6 +838,7 @@ const DatasetDetailLayout = () => {
             "Access Grant created successfully!!"
           );
           showSaveCancelButton(false);
+          setAccessGrantFormValues();
         } catch (error) {
           setLoader(false);
           let errorMsg = `Failed to create Access Grant`;
@@ -1140,13 +1150,20 @@ const DatasetDetailLayout = () => {
   const handleEditClick = () => {
     if (isSystemAdmin() || userAclPerm == "ADMIN") {
       isDatasetNameEditable(true);
+      showSaveCancelButton(true);
     }
   };
 
   return (
     <>
       <React.Fragment>
-        <div className="gds-header-wrapper gap-half">
+        <div
+          className={
+            saveCancelButtons
+              ? "gds-header-wrapper gap-half pt-2 pb-2"
+              : "gds-header-wrapper gap-half"
+          }
+        >
           <Button
             variant="light"
             className="border-0 bg-transparent"
@@ -1158,44 +1175,42 @@ const DatasetDetailLayout = () => {
             <i className="fa fa-angle-left fa-lg font-weight-bold" />
           </Button>
           <h3 className="gds-header bold">
-            <span>Dataset :</span>
-            {!datasetNameEditable ? (
-              <span
-                title={datasetName}
-                className="text-truncate"
-                style={{ maxWidth: "700px", display: "inline-block" }}
-                onClick={() => handleEditClick()}
-              >
-                {datasetName}
-              </span>
-            ) : (
-              <input
-                type="text"
-                name="shareName"
-                className="form-control"
-                data-cy="shareName"
-                value={datasetName}
-                onChange={onDatasetNameChange}
-              />
-            )}
-
-            {/* <input
-              type="text"
-              name="shareName"
-              className="form-control"
-              data-cy="shareName"
-              value={datasetName}
-              onChange={onDatasetNameChange}
-            /> */}
+            <div className="d-flex align-items-center">
+              <span className="mr-1">Dataset: </span>
+              {!datasetNameEditable ? (
+                <span
+                  title={datasetName}
+                  className="text-truncate"
+                  style={{ maxWidth: "700px", display: "inline-block" }}
+                  onClick={() => handleEditClick()}
+                >
+                  {datasetName}
+                </span>
+              ) : (
+                <input
+                  type="text"
+                  name="datasetName"
+                  style={{ height: "39px" }}
+                  className="form-control"
+                  data-cy="datasetName"
+                  value={datasetName}
+                  onChange={onDatasetNameChange}
+                />
+              )}
+            </div>
           </h3>
-          <CustomBreadcrumb />
-          {(isSystemAdmin() || userAclPerm == "ADMIN") && (
-            <span className="pipe"></span>
+          {!datasetNameEditable && !saveCancelButtons && (
+            <>
+              <CustomBreadcrumb />
+              <span className="pipe" />
+            </>
           )}
-          {(isSystemAdmin() ||
+
+          {datasetNameEditable ||
+          ((isSystemAdmin() ||
             userAclPerm == "ADMIN" ||
             userAclPerm == "POLICY_ADMIN") &&
-          saveCancelButtons ? (
+            saveCancelButtons) ? (
             <div className="gds-header-btn-grp">
               <Button
                 variant="secondary"
@@ -1209,7 +1224,12 @@ const DatasetDetailLayout = () => {
               <Button
                 variant="primary"
                 onClick={
-                  activeKey != "accessGrants"
+                  activeKey == "accessGrants" &&
+                  accessGrantFormValues != undefined &&
+                  datasetNameEditable
+                    ? updateDatasetAndAccessGrant
+                    : activeKey != "accessGrants" ||
+                      (activeKey == "accessGrants" && datasetNameEditable)
                     ? updateDatasetDetails
                     : updateDatasetAccessGrant
                 }
@@ -1223,58 +1243,60 @@ const DatasetDetailLayout = () => {
           ) : (
             <div></div>
           )}
-          <div>
-            <DropdownButton
-              id="dropdown-item-button"
-              title={<i className="fa fa-ellipsis-v" fontSize="36px" />}
-              size="sm"
-              className="hide-arrow"
-            >
-              <Dropdown.Item
-                as="button"
-                onClick={() => {
-                  navidateToFullViewPage();
-                }}
-                data-name="fullView"
-                data-id="fullView"
-                data-cy="fullView"
+          {!datasetNameEditable && !saveCancelButtons && (
+            <div>
+              <DropdownButton
+                id="dropdown-item-button"
+                title={<i className="fa fa-ellipsis-v" fontSize="36px" />}
+                size="sm"
+                className="hide-arrow"
               >
-                Full View
-              </Dropdown.Item>
-              <Dropdown.Item
-                as="button"
-                onClick={() => {
-                  copyURL();
-                }}
-                data-name="copyDatasetLink"
-                data-id="copyDatasetLink"
-                data-cy="copyDatasetLink"
-              >
-                Copy Dataset Link
-              </Dropdown.Item>
-              <Dropdown.Item
-                as="button"
-                onClick={() => downloadJsonFile()}
-                data-name="downloadJson"
-                data-id="downloadJson"
-                data-cy="downloadJson"
-              >
-                Download Json
-              </Dropdown.Item>
-              <hr />
-              <Dropdown.Item
-                as="button"
-                onClick={() => {
-                  toggleConfirmModalForDatasetDelete();
-                }}
-                data-name="deleteDataset"
-                data-id="deleteDataset"
-                data-cy="deleteDataset"
-              >
-                Delete Dataset
-              </Dropdown.Item>
-            </DropdownButton>
-          </div>
+                <Dropdown.Item
+                  as="button"
+                  onClick={() => {
+                    navidateToFullViewPage();
+                  }}
+                  data-name="fullView"
+                  data-id="fullView"
+                  data-cy="fullView"
+                >
+                  Full View
+                </Dropdown.Item>
+                <Dropdown.Item
+                  as="button"
+                  onClick={() => {
+                    copyURL();
+                  }}
+                  data-name="copyDatasetLink"
+                  data-id="copyDatasetLink"
+                  data-cy="copyDatasetLink"
+                >
+                  Copy Dataset Link
+                </Dropdown.Item>
+                <Dropdown.Item
+                  as="button"
+                  onClick={() => downloadJsonFile()}
+                  data-name="downloadJson"
+                  data-id="downloadJson"
+                  data-cy="downloadJson"
+                >
+                  Download Json
+                </Dropdown.Item>
+                <hr />
+                <Dropdown.Item
+                  as="button"
+                  onClick={() => {
+                    toggleConfirmModalForDatasetDelete();
+                  }}
+                  data-name="deleteDataset"
+                  data-id="deleteDataset"
+                  data-cy="deleteDataset"
+                >
+                  Delete Dataset
+                </Dropdown.Item>
+              </DropdownButton>
+            </div>
+          )}
         </div>
         {loader ? (
           <Loader />
@@ -1366,10 +1388,7 @@ const DatasetDetailLayout = () => {
                                 </div>
                               </div>
                             </div>
-                            {(isSystemAdmin() ||
-                              userAclPerm == "ADMIN" ||
-                              userAclPerm == "POLICY_ADMIN" ||
-                              userAclPerm == "AUDIT") && (
+                            {(isSystemAdmin() || userAclPerm != "VIEW") && (
                               <PrinciplePermissionComp
                                 userList={userList}
                                 groupList={groupList}
@@ -1459,7 +1478,7 @@ const DatasetDetailLayout = () => {
                             <input
                               type="search"
                               className="form-control gds-input"
-                              placeholder="Search..."
+                              placeholder="Search Users, Groups and Roles..."
                               onChange={(e) =>
                                 onChangeSharedWithPrincipleName(e)
                               }
@@ -1475,7 +1494,7 @@ const DatasetDetailLayout = () => {
                               }
                               value={sharedWithAccessFilter}
                               menuPlacement="auto"
-                              placeholder="All Permissions"
+                              placeholder="Select Permission"
                               isClearable
                             />
                           </div>

@@ -100,6 +100,10 @@ a:active {
   margin-left: 20px;
 }
 
+.mg-l-32 {
+  margin-left: 32px;
+}
+
 .mg-t-5 {
   margin-top: 5px;
 }
@@ -2601,7 +2605,7 @@ li.list-group-item:hover {
 .gds-header {
   color: #222222;
   font-size: 18px;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 20px;
   margin: 0;
   padding: 0;
@@ -2611,7 +2615,8 @@ li.list-group-item:hover {
 
 .gds-header-btn-grp {
   display: flex;
-  gap: 0.875rem;
+  gap: 0.5rem;
+  height: 39px;
 }
 
 .gds-form-wrap {
@@ -2843,7 +2848,7 @@ li.list-group-item:hover {
 .gds-grant-row {
   display: grid;
   grid-gap: 0.5rem;
-  grid-template-columns: 32px 1fr 32px;
+  grid-template-columns: 24px 1fr 32px;
 }
 
 .gds-flex {
@@ -2998,8 +3003,9 @@ textarea.gds-placeholder::placeholder,
 .gds-grant-condition .editable-label {
   margin-top: 0;
   margin-bottom: 0;
-  max-height: 126px;
+  max-height: 118px;
   overflow-y: scroll;
+  background-color: hsl(0, 0%, 90%);
 }
 
 .gds-grant-principle [class$="-indicatorsContainer"],

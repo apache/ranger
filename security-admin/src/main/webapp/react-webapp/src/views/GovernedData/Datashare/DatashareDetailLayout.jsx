@@ -54,36 +54,20 @@ import arrayMutators from "final-form-arrays";
 import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
-import { isSystemAdmin, parseSearchFilter } from "../../../utils/XAUtils";
+import {
+  isSystemAdmin,
+  parseSearchFilter,
+  serverError
+} from "../../../utils/XAUtils";
 import XATableLayout from "../../../components/XATableLayout";
 import moment from "moment-timezone";
 import { getServiceDef } from "../../../utils/appState";
 
-// const initialState = {
-//   serviceDef: {},
-//   serviceDetails: {}
-// };
-
-// function reducer(state, action) {
-//   switch (action.type) {
-//     case "SET_SERVICE_DATA":
-//       return {
-//         ...state,
-//         serviceDef: action?.serviceDef,
-//         serviceDetails: action.serviceDetails
-//       };
-//     default:
-//       throw new Error();
-//   }
-// }
-
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
   const { state } = useLocation();
-  // const [serviceState, dispatch] = useReducer(reducer, initialState);
-  // const { serviceDef, serviceDetails } = serviceState;
   const userAclPerm = state?.userAclPerm;
-  const datashareName = state?.datashareName;
+  const [datashareName, setDatashareName] = useState(state?.datashareName);
   const [activeKey, setActiveKey] = useState("overview");
   const [datashareInfo, setDatashareInfo] = useState({});
   const [datashareDescription, setDatashareDescription] = useState();
@@ -110,11 +94,9 @@ const DatashareDetailLayout = () => {
   const [resourceAccordionState, setResourceAccordionState] = useState({});
   const [requestAccordionState, setRequestAccordionState] = useState({});
   const itemsPerPage = 5;
-  const [currentPage, setCurrentPage] = useState(0);
   const [requestCurrentPage, setRequestCurrentPage] = useState(0);
   const [sharedResourcePageCount, setSharedResourcePageCount] = useState();
   const [requestPageCount, setRequestPageCount] = useState();
-  const [loadSharedResource, setLoadSharedResource] = useState();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteDatashareReqInfo, setDeleteDatashareReqInfo] = useState({});
   const [
@@ -125,7 +107,6 @@ const DatashareDetailLayout = () => {
     useState(false);
   const [serviceDef, setServiceDef] = useState();
   const [serviceDetails, setService] = useState({});
-  const [sharedResourceTotalCount, setSharedResourceTotalCount] = useState(0);
   const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
     useState(0);
   const [resourceSearchFilterParams, setResourceSearchFilterParams] = useState(
@@ -139,12 +120,9 @@ const DatashareDetailLayout = () => {
   const [sharedResourceListData, setSharedResourceListData] = useState([]);
   const [entries, setEntries] = useState([]);
   const [resourceUpdateTable, setResourceUpdateTable] = useState(moment.now());
-  const serviceDef2 = useRef({});
   const toggleConfirmModalForDatashareDelete = () => {
     setShowDeleteDatashareModal(true);
   };
-  const [showEditSharedResourceModal, setShowEditSharedResourceModal] =
-    useState(false);
   const [sharedResource, setSharedResource] = useState();
   const toggleConfirmModalClose = () => {
     setShowConfirmModal(false);
@@ -155,53 +133,17 @@ const DatashareDetailLayout = () => {
   const [resourceModalUpdateTable, setResourceModalUpdateTable] = useState(
     moment.now()
   );
+  const [datashareNameEditable, isDatashareNameEditable] = useState(false);
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
   }, []);
 
-  // const fetchServiceByName = async (serviceName) => {
-  //   let serviceResp = [];
-  //   try {
-  //     serviceResp = await fetchApi({
-  //       url: `plugins/services/name/${serviceName}`
-  //     });
-  //   } catch (error) {
-  //     console.error(
-  //       `Error occurred while fetching Service or CSRF headers! ${error}`
-  //     );
-  //   }
-  //   setService(serviceResp.data);
-  //   fetchServiceDef(serviceResp.data.type);
-  // };
-
-  // const fetchServiceDef = async (serviceDefName) => {
-  //   let serviceDefsResp = [];
-  //   try {
-  //     serviceDefsResp = await fetchApi({
-  //       url: `plugins/definitions/name/${serviceDefName}`
-  //     });
-  //   } catch (error) {
-  //     console.error(
-  //       `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-  //     );
-  //   }
-  //   let modifiedServiceDef = serviceDefsResp.data;
-  //   for (const obj of modifiedServiceDef.resources) {
-  //     obj.recursiveSupported = false;
-  //     obj.excludesSupported = false;
-  //   }
-  //   setServiceDef(modifiedServiceDef);
-  // };
-
   const handleTabSelect = (key) => {
     if (saveCancelButtons == true) {
       setShowConfirmModal(true);
     } else {
-      if (key == "resources") {
-        //fetchServiceByName(datashareInfo.service);
-        //fetchSharedResourceForDatashare(resourceSearchFilterParams, 0, false);
-      } else if (key == "sharedWith") {
+      if (key == "sharedWith") {
         fetchDatashareRequestList(undefined, 0, false);
       }
       setActiveKey(key);
@@ -211,7 +153,6 @@ const DatashareDetailLayout = () => {
   const fetchDatashareInfo = async (datashareId) => {
     let datashareResp = {};
     let serviceResp = [];
-    let serviceDefsResp = [];
     try {
       setLoader(true);
       datashareResp = await fetchApi({
@@ -220,9 +161,6 @@ const DatashareDetailLayout = () => {
       serviceResp = await fetchApi({
         url: `plugins/services/name/${datashareResp.data.service}`
       });
-      // serviceDefsResp = await fetchApi({
-      //   url: `plugins/definitions/name/${serviceResp.data.type}`
-      // });
       const serviceDefs = getServiceDef();
       let serviceDef = serviceDefs?.allServiceDefs?.find((servicedef) => {
         return servicedef.name == serviceResp.type;
@@ -234,26 +172,14 @@ const DatashareDetailLayout = () => {
         `Error occurred while fetching datashare details ! ${error}`
       );
     }
-    // let modifiedServiceDef = serviceDefsResp.data;
-    // for (const obj of modifiedServiceDef.resources) {
-    //   obj.recursiveSupported = false;
-    //   obj.excludesSupported = false;
-    // }
-    //serviceState.serviceDef = modifiedServiceDef;
-    //serviceDef2.current = modifiedServiceDef;
+    setDatashareName(datashareResp.data.name);
     setService(serviceResp.data);
     setDatashareInfo(datashareResp.data);
     setDatashareDescription(datashareResp.data.description);
     setDatashareTerms(datashareResp.data.termsOfUse);
     if (datashareResp.data.acl != undefined)
       setPrincipleAccordianData(datashareResp.data.acl);
-    //fetchServiceByName(datashareResp.data.service);
     setLoader(false);
-  };
-
-  const showConfitionModal = (data) => {
-    setConditionModalData(data);
-    setShowConditionModal(true);
   };
 
   const toggleConditionModalClose = () => {
@@ -324,7 +250,6 @@ const DatashareDetailLayout = () => {
       if (!getCompleteList) {
         setSharedResources(resp.data.list);
       }
-      setSharedResourceTotalCount(resp.data.totalCount);
       return resp.data.list;
     } catch (error) {
       setResourceContentLoader(false);
@@ -332,15 +257,6 @@ const DatashareDetailLayout = () => {
         `Error occurred while fetching shared resource details ! ${error}`
       );
     }
-  };
-
-  const handleSharedResourcePageClick = ({ selected }) => {
-    setCurrentPage(selected);
-    fetchSharedResourceForDatashare(
-      resourceSearchFilterParams,
-      selected,
-      false
-    );
   };
 
   const handleRequestPageClick = ({ selected }) => {
@@ -422,7 +338,6 @@ const DatashareDetailLayout = () => {
       setBlockUI(false);
       toast.success(" Success! Shared resource deleted successfully");
       setResourceUpdateTable(moment.now());
-      //fetchSharedResourceForDatashare(undefined, 0, false);
     } catch (error) {
       setBlockUI(false);
       let errorMsg = "Failed to delete Shared resource  : ";
@@ -432,21 +347,6 @@ const DatashareDetailLayout = () => {
       toast.error(errorMsg);
       console.error(
         "Error occurred during deleting Shared resource  : " + error
-      );
-    }
-  };
-
-  const fetchSharedResource = async (sharedResourceId) => {
-    try {
-      let params = {};
-      const resp = await fetchApi({
-        url: `gds/resource/${sharedResourceId}`
-      });
-      setLoadSharedResource(resp.data);
-      //setFormData(generateFormData(resp.data, serviceDef));
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching shared resource details ! ${error}`
       );
     }
   };
@@ -464,13 +364,6 @@ const DatashareDetailLayout = () => {
 
   const handleSubmit = () => {};
 
-  const onSharedResourceAccordionChange = (id) => {
-    setResourceAccordionState({
-      ...resourceAccordionState,
-      ...{ [id]: !resourceAccordionState[id] }
-    });
-  };
-
   const onRequestAccordionChange = (id) => {
     setRequestAccordionState({
       ...requestAccordionState,
@@ -479,6 +372,7 @@ const DatashareDetailLayout = () => {
   };
 
   const updateDatashareDetails = async () => {
+    datashareInfo.name = datashareName;
     datashareInfo.description = datashareDescription;
     datashareInfo.termsOfUse = datashareTerms;
 
@@ -503,21 +397,23 @@ const DatashareDetailLayout = () => {
         method: "put",
         data: datashareInfo
       });
-      setBlockUI(false);
       toast.success("Datashare updated successfully!!");
+      isDatashareNameEditable(false);
       showSaveCancelButton(false);
     } catch (error) {
-      setBlockUI(false);
       serverError(error);
       console.error(`Error occurred while updating datashare  ${error}`);
     }
-    toggleConfirmModalClose();
+    setBlockUI(false);
+    setShowConfirmModal(false);
   };
 
   const removeChanges = () => {
     fetchDatashareInfo(datashareId);
     showSaveCancelButton(false);
-    toggleConfirmModalClose();
+    setShowConfirmModal(false);
+    isDatashareNameEditable(false);
+    setShowDatashareRequestDeleteConfirmModal(false);
   };
 
   const toggleRequestDeleteModal = (id, datashareId, name, status) => {
@@ -573,10 +469,13 @@ const DatashareDetailLayout = () => {
   const handleDatashareDeleteClick = async () => {
     toggleClose();
     try {
+      let params = {};
+      params["forceDelete"] = true;
       setBlockUI(true);
       await fetchApi({
         url: `gds/datashare/${datashareId}`,
-        method: "DELETE"
+        method: "DELETE",
+        params: params
       });
       setBlockUI(false);
       toast.success(" Success! Datashare deleted successfully");
@@ -618,7 +517,7 @@ const DatashareDetailLayout = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = datashareInfo.name + ".json"; // Set the desired file name
+    a.download = datashareInfo.name + ".json";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -639,7 +538,6 @@ const DatashareDetailLayout = () => {
     );
     setResourceSearchFilterParams(searchFilterParam);
     setSearchFilterParams(searchFilterParam);
-    //fetchSharedResourceForDatashare(searchFilterParam, 0, false);
   };
 
   const requestSearchFilterOptions = [];
@@ -654,15 +552,13 @@ const DatashareDetailLayout = () => {
   };
 
   const fetchSharedResourcetList = useCallback(
-    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      //setLoader(true);
+    async ({ pageSize, pageIndex }) => {
+      setResourceContentLoader(true);
       let resp = [];
-      let totalCount = 0;
       let page =
         state && state.showLastPage
           ? state.addPageData.totalPage - 1
           : pageIndex;
-      let totalPageCount = 0;
       const fetchId = ++fetchIdRef.current;
       let params = { ...searchFilterParams };
       if (fetchId === fetchIdRef.current) {
@@ -671,37 +567,30 @@ const DatashareDetailLayout = () => {
           state && state.showLastPage
             ? (state.addPageData.totalPage - 1) * pageSize
             : pageIndex * pageSize;
-        // if (sortBy.length > 0) {
-        //   params["sortBy"] = getTableSortBy(sortBy);
-        //   params["sortType"] = getTableSortType(sortBy);
-        // }
         params["dataShareId"] = datashareId;
         try {
           resp = await fetchApi({
             url: "gds/resource",
             params: params
           });
+          setSharedResourceListData(resp.data?.list);
+          setEntries(resp.data);
+          setSharedResourcePageCount(
+            Math.ceil(resp.data.totalCount / pageSize)
+          );
         } catch (error) {
           console.error(
             `Error occurred while fetching Datashare list! ${error}`
           );
         }
-        //await fetchServiceByName(datashareInfo.service);
-        console.log(serviceDef, "table call");
-        setSharedResourceListData(resp.data?.list);
-        setEntries(resp.data);
-        setSharedResourcePageCount(Math.ceil(resp.data.totalCount / pageSize));
-        //setResetpage({ page: gotoPage });
       }
-      //setLoader(false);
+      setResourceContentLoader(false);
     },
     [resourceUpdateTable, searchFilterParams]
   );
 
   const editSharedResourceModal = (sharedResource) => {
-    //fetchSharedResource(sharedResourceId);
     setSharedResource(sharedResource);
-    //setShowEditSharedResourceModal(true);
     setResourceModalUpdateTable(moment.now());
     setIsEditSharedResourceModal(true);
     setShowAddResourceModal(true);
@@ -729,7 +618,7 @@ const DatashareDetailLayout = () => {
       {
         Header: "Resource",
         accessor: "resource",
-        //width: 500,
+        width: 450,
         disableSortBy: true,
         Cell: ({ row: { original } }) => {
           return (
@@ -739,7 +628,7 @@ const DatashareDetailLayout = () => {
                 console.log(value);
                 return (
                   <div className="mb-1 form-group row">
-                    <Col sm={3}>
+                    <Col sm={4}>
                       <span
                         className="form-label fnt-14 text-muted"
                         style={{ textTransform: "capitalize" }}
@@ -747,7 +636,7 @@ const DatashareDetailLayout = () => {
                         {key}
                       </span>
                     </Col>
-                    <Col sm={9}>
+                    <Col sm={8}>
                       <span>{value.values.toString()}</span>
                     </Col>
                   </div>
@@ -775,14 +664,6 @@ const DatashareDetailLayout = () => {
                   </span>
                 ))}
               </div>
-              {/* {original.accessTypes?.accessTypes?.toString()}
-              <Link
-                className="mb-3"
-                to=""
-                onClick={() => showConfitionModal(original)}
-              >
-                View Access Details
-              </Link> */}
             </div>
           );
         }
@@ -838,6 +719,18 @@ const DatashareDetailLayout = () => {
     []
   );
 
+  const onDatashareNameChange = (event) => {
+    setDatashareName(event.target.value);
+    showSaveCancelButton(true);
+  };
+
+  const handleEditClick = () => {
+    if (isSystemAdmin() || userAclPerm == "ADMIN") {
+      isDatashareNameEditable(true);
+      showSaveCancelButton(true);
+    }
+  };
+
   return (
     <>
       <Form
@@ -847,7 +740,13 @@ const DatashareDetailLayout = () => {
         }}
         render={({}) => (
           <React.Fragment>
-            <div className="gds-header-wrapper gap-half">
+            <div
+              className={
+                saveCancelButtons
+                  ? "gds-header-wrapper gap-half pt-2 pb-2"
+                  : "gds-header-wrapper gap-half"
+              }
+            >
               <Button
                 variant="light"
                 className="border-0 bg-transparent"
@@ -859,13 +758,31 @@ const DatashareDetailLayout = () => {
                 <i className="fa fa-angle-left fa-lg font-weight-bold" />
               </Button>
               <h3 className="gds-header bold">
-                <span
-                  title={datashareInfo?.name}
-                  className="text-truncate"
-                  style={{ maxWidth: "300px", display: "inline-block" }}
-                >
-                  Datashare: {datashareInfo?.name}
-                </span>
+                <div className="d-flex align-items-center">
+                  <span className="mr-1">Datashare: </span>
+                  {!datashareNameEditable ? (
+                    <div>
+                      <span
+                        title={datashareName}
+                        className="text-truncate"
+                        style={{ maxWidth: "300px", display: "inline-block" }}
+                        onClick={() => handleEditClick()}
+                      >
+                        {datashareName}
+                      </span>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      name="shareName"
+                      style={{ height: "39px" }}
+                      className="form-control"
+                      data-cy="shareName"
+                      value={datashareName}
+                      onChange={onDatashareNameChange}
+                    />
+                  )}
+                </div>
               </h3>
               <h3 className="gds-header bold">
                 <span
@@ -876,99 +793,108 @@ const DatashareDetailLayout = () => {
                   Service: {datashareInfo?.service}
                 </span>
               </h3>
-              <h3 className="gds-header bold">
-                <span
-                  title={datashareInfo?.zone}
-                  className="text-truncate"
-                  style={{ maxWidth: "300px", display: "inline-block" }}
-                >
-                  Zone: {datashareInfo?.zone}
-                </span>
-              </h3>
-              <CustomBreadcrumb />
-
-              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
-                <span className="pipe"></span>
+              {datashareInfo?.zone?.length > 0 && (
+                <h3 className="gds-header bold">
+                  <span
+                    title={datashareInfo?.zone}
+                    className="text-truncate"
+                    style={{ maxWidth: "300px", display: "inline-block" }}
+                  >
+                    Zone: {datashareInfo?.zone}
+                  </span>
+                </h3>
               )}
-              {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+
+              {!datashareNameEditable && !saveCancelButtons && (
+                <>
+                  <CustomBreadcrumb />
+                  <span className="pipe" />
+                </>
+              )}
+              {!datashareNameEditable ||
+                ((isSystemAdmin() ||
+                  userAclPerm == "ADMIN" ||
+                  userAclPerm == "POLICY_ADMIN") && (
+                  <div>
+                    {saveCancelButtons ? (
+                      <div className="gds-header-btn-grp">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => removeChanges()}
+                          data-id="cancel"
+                          data-cy="cancel"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="primary"
+                          onClick={updateDatashareDetails}
+                          size="sm"
+                          data-id="save"
+                          data-cy="save"
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    ) : (
+                      <p></p>
+                    )}
+                  </div>
+                ))}
+
+              {!datashareNameEditable && !saveCancelButtons && (
                 <div>
-                  {saveCancelButtons ? (
-                    <div className="gds-header-btn-grp">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => removeChanges()}
-                        data-id="cancel"
-                        data-cy="cancel"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={updateDatashareDetails}
-                        size="sm"
-                        data-id="save"
-                        data-cy="save"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  ) : (
-                    <p></p>
-                  )}
+                  <DropdownButton
+                    id="dropdown-item-button"
+                    title={<i className="fa fa-ellipsis-v" fontSize="36px" />}
+                    size="sm"
+                    className="hide-arrow"
+                  >
+                    <Dropdown.Item
+                      as="button"
+                      onClick={() => navigateToFullView()}
+                      data-name="fullView"
+                      data-id="fullView"
+                      data-cy="fullView"
+                    >
+                      Full View
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      as="button"
+                      onClick={() => {
+                        copyURL();
+                      }}
+                      data-name="copyDatashareLink"
+                      data-id="copyDatashareLink"
+                      data-cy="copyDatashareLink"
+                    >
+                      Copy Datashare Link
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      as="button"
+                      onClick={() => downloadJsonFile()}
+                      data-name="downloadJson"
+                      data-id="downloadJson"
+                      data-cy="downloadJson"
+                    >
+                      Download Json
+                    </Dropdown.Item>
+                    <hr />
+                    <Dropdown.Item
+                      as="button"
+                      onClick={() => {
+                        toggleConfirmModalForDatashareDelete();
+                      }}
+                      data-name="deleteDatashare"
+                      data-id="deleteDatashare"
+                      data-cy="deleteDatashare"
+                    >
+                      Delete Datashare
+                    </Dropdown.Item>
+                  </DropdownButton>
                 </div>
               )}
-
-              <div>
-                <DropdownButton
-                  id="dropdown-item-button"
-                  title={<i className="fa fa-ellipsis-v" fontSize="36px" />}
-                  size="sm"
-                  className="hide-arrow"
-                >
-                  <Dropdown.Item
-                    as="button"
-                    onClick={() => navigateToFullView()}
-                    data-name="fullView"
-                    data-id="fullView"
-                    data-cy="fullView"
-                  >
-                    Full View
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    as="button"
-                    onClick={() => {
-                      copyURL();
-                    }}
-                    data-name="copyDatashareLink"
-                    data-id="copyDatashareLink"
-                    data-cy="copyDatashareLink"
-                  >
-                    Copy Datashare Link
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    as="button"
-                    onClick={() => downloadJsonFile()}
-                    data-name="downloadJson"
-                    data-id="downloadJson"
-                    data-cy="downloadJson"
-                  >
-                    Download Json
-                  </Dropdown.Item>
-                  <hr />
-                  <Dropdown.Item
-                    as="button"
-                    onClick={() => {
-                      toggleConfirmModalForDatashareDelete();
-                    }}
-                    data-name="deleteDatashare"
-                    data-id="deleteDatashare"
-                    data-cy="deleteDatashare"
-                  >
-                    Delete Datashare
-                  </Dropdown.Item>
-                </DropdownButton>
-              </div>
             </div>
             {loader ? (
               <Loader />
@@ -985,6 +911,15 @@ const DatashareDetailLayout = () => {
                         <div>
                           <div className="gds-tab-content gds-content-border px-3">
                             <div className="gds-inline-field-grp">
+                              <div className="wrapper">
+                                <div
+                                  className="gds-left-inline-field"
+                                  height="30px"
+                                >
+                                  <span className="gds-label-color">ID</span>
+                                </div>
+                                <div line-height="30px">{datashareInfo.id}</div>
+                              </div>
                               <div className="wrapper">
                                 <div
                                   className="gds-left-inline-field pl-1 fnt-14"
@@ -1043,9 +978,7 @@ const DatashareDetailLayout = () => {
                               </div>
                             </div>
                           </div>
-                          {(isSystemAdmin() ||
-                            userAclPerm == "ADMIN" ||
-                            userAclPerm == "AUDIT") && (
+                          {(isSystemAdmin() || userAclPerm != "VIEW") && (
                             <PrinciplePermissionComp
                               userList={userList}
                               groupList={groupList}
@@ -1067,7 +1000,7 @@ const DatashareDetailLayout = () => {
                     </Tab>
                     <Tab eventKey="resources" title="RESOURCES">
                       {activeKey == "resources" ? (
-                        <div className="gds-tab-content">
+                        <div className="gds-request-content">
                           <div className="mb-3">
                             <div className="w-100 d-flex gap-1 mb-3">
                               <StructuredFilter
@@ -1075,7 +1008,6 @@ const DatashareDetailLayout = () => {
                                 placeholder="Search resources..."
                                 options={resourceSearchFilterOptions}
                                 onChange={updateResourceSearchFilter}
-                                //defaultSelected={defaultSearchFilterParams}
                               />
                               {(isSystemAdmin() || userAclPerm == "ADMIN") && (
                                 <>
@@ -1099,7 +1031,6 @@ const DatashareDetailLayout = () => {
                               getRowProps={(row) => ({
                                 onClick: (e) => {
                                   e.stopPropagation();
-                                  //rowModal(row);
                                 }
                               })}
                               columnHide={false}
@@ -1107,193 +1038,7 @@ const DatashareDetailLayout = () => {
                               columnSort={true}
                               defaultSort={getDefaultSort}
                             />
-                            {/* <input
-                              type="search"
-                              className="form-control gds-input"
-                              placeholder="Search..."
-                              onChange={(e) => onResourceNameChange(e)}
-                              onKeyPress={handleSearchResourceNameKeyPress}
-                              value={searchResourceName}
-                            /> */}
                           </div>
-
-                          {/* <div>
-                            <Card className="border-0">
-                              <div>
-                                {resourceContentLoader ? (
-                                  <Loader />
-                                ) : (
-                                  <div>
-                                    {sharedResources.length > 0 ? (
-                                      sharedResources.map((obj, index) => {
-                                        return (
-                                          // <ResourceAccordian item={obj} />
-                                          <div>
-                                            <Accordion
-                                              className="mg-b-10"
-                                              defaultActiveKey="0"
-                                            >
-                                              <div className="border-bottom">
-                                                <Accordion.Toggle
-                                                  as={Card.Header}
-                                                  eventKey={obj.id}
-                                                  onClick={() =>
-                                                    onSharedResourceAccordionChange(
-                                                      obj.id
-                                                    )
-                                                  }
-                                                  className="border-bottom-0"
-                                                  data-id="panel"
-                                                  data-cy="panel"
-                                                >
-                                                  <div className="d-flex justify-content-between align-items-center">
-                                                    <div className="d-flex align-items-center gap-1">
-                                                      {resourceAccordionState[
-                                                        obj.id
-                                                      ] ? (
-                                                        <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                                      ) : (
-                                                        <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                      )}
-                                                      <div className="d-flex justify-content-between">
-                                                        <h6 className="m-0">
-                                                          {obj.name}
-                                                        </h6>
-                                                      </div>
-                                                    </div>
-                                                    {(isSystemAdmin() ||
-                                                      userAclPerm ==
-                                                        "ADMIN") && (
-                                                      <div className="d-flex gap-half align-items-start">
-                                                        <AddSharedResourceComp
-                                                          datashareId={
-                                                            datashareId
-                                                          }
-                                                          onSharedResourceDataChange={
-                                                            handleSharedResourceChange
-                                                          }
-                                                          onToggleAddResourceClose={
-                                                            toggleAddResourceModalClose
-                                                          }
-                                                          isEdit={true}
-                                                          sharedResourceId={
-                                                            obj.id
-                                                          }
-                                                          loadSharedResource={
-                                                            loadSharedResource
-                                                          }
-                                                          datashareInfo={
-                                                            datashareInfo
-                                                          }
-                                                          serviceDef={
-                                                            serviceDef
-                                                          }
-                                                          serviceDetails={
-                                                            serviceDetails
-                                                          }
-                                                          setResourceUpdateTable={
-                                                            setResourceUpdateTable
-                                                          }
-                                                        />
-                                                        <Button
-                                                          variant="danger"
-                                                          size="sm"
-                                                          title="Delete"
-                                                          onClick={() =>
-                                                            toggleConfirmModalForDelete(
-                                                              obj.id,
-                                                              obj.name
-                                                            )
-                                                          }
-                                                          data-name="deleteDatashareRequest"
-                                                          data-id={obj.id}
-                                                          data-cy={obj.id}
-                                                        >
-                                                          <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                        </Button>
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </Accordion.Toggle>
-                                                <Accordion.Collapse
-                                                  eventKey={obj.id}
-                                                >
-                                                  <Card.Body>
-                                                    <div className="gds-added-res-listing">
-                                                      {Object.entries(
-                                                        obj.resource
-                                                      ).map(([key, value]) => {
-                                                        console.log(key);
-                                                        console.log(value);
-                                                        return (
-                                                          <div className="mb-1 form-group row">
-                                                            <Col sm={3}>
-                                                              <label className="form-label fnt-14">
-                                                                {key}
-                                                              </label>
-                                                            </Col>
-                                                            <Col sm={9}>
-                                                              {value.values.toString()}
-                                                            </Col>
-                                                          </div>
-                                                        );
-                                                      })}
-                                                      <div className="mb-1 form-group row">
-                                                        <Col sm={3}>
-                                                          <label className="form-label gds-detail-label fnt-14">
-                                                            Additional Info
-                                                          </label>
-                                                        </Col>
-                                                        <Col sm={9}>
-                                                          <Link
-                                                            className="mb-3"
-                                                            to=""
-                                                            onClick={() =>
-                                                              showConfitionModal(
-                                                                obj
-                                                              )
-                                                            }
-                                                          >
-                                                            View Access Details
-                                                          </Link>
-                                                        </Col>
-                                                      </div>
-                                                    </div>
-                                                  </Card.Body>
-                                                </Accordion.Collapse>
-                                              </div>
-                                            </Accordion>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div></div>
-                                    )}
-                                  </div>
-                                )}
-
-                                {sharedResourceTotalCount > itemsPerPage && (
-                                  <ReactPaginate
-                                    previousLabel={"Previous"}
-                                    nextLabel={"Next"}
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    previousClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextClassName="page-item"
-                                    nextLinkClassName="page-link"
-                                    breakLabel={"..."}
-                                    pageCount={sharedResourcePageCount}
-                                    onPageChange={handleSharedResourcePageClick}
-                                    breakClassName="page-item"
-                                    breakLinkClassName="page-link"
-                                    containerClassName="pagination"
-                                    activeClassName="active"
-                                  />
-                                )}
-                              </div>
-                            </Card>
-                          </div> */}
                         </div>
                       ) : (
                         <div></div>
@@ -1771,7 +1516,6 @@ const DatashareDetailLayout = () => {
                   datashareId={datashareId}
                   onToggleAddResourceClose={toggleAddResourceModalClose}
                   sharedResource={sharedResource}
-                  loadSharedResource={loadSharedResource}
                   datashareInfo={datashareInfo}
                   serviceDef={serviceDef}
                   showModal={showAddResourceModal}

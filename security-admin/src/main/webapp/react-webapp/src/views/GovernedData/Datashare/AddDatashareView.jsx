@@ -17,47 +17,21 @@
  * under the License.
  */
 
-import React, { useState, useReducer, useEffect, useMemo } from "react";
-import {
-  serverError,
-  policyConditionUpdatedJSON
-} from "../../../utils/XAUtils";
-import Editable from "Components/Editable";
+import React, { useState, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Form as FormB, Card } from "react-bootstrap";
 import Select from "react-select";
-import { filter, groupBy, some, sortBy, forIn, has, isArray } from "lodash";
+import { groupBy } from "lodash";
 import AsyncSelect from "react-select/async";
 import { Form, Field } from "react-final-form";
 import { fetchApi } from "Utils/fetchAPI";
 import PrinciplePermissionComp from "../Dataset/PrinciplePermissionComp";
 import { FieldArray } from "react-final-form-arrays";
-import AddSharedResourceComp from "./AddSharedResourceComp";
 import { toast } from "react-toastify";
 import arrayMutators from "final-form-arrays";
+import { BlockUi } from "../../../components/CommonComponents";
 
-const initialState = {
-  loader: false,
-  preventUnBlock: false,
-  blockUI: false,
-  formData: {}
-};
-
-function reducer(state, action) {
-  switch (action.type) {
-    case "SET_DATA":
-      return {
-        ...state,
-        loader: false,
-        serviceDetails: action.serviceDetails,
-        serviceCompDetails: action.serviceCompDetails,
-        policyData: action?.policyData,
-        formData: action.formData
-      };
-    default:
-      throw new Error();
-  }
-}
+const initialState = {};
 
 const datashareFormReducer = (state, action) => {
   switch (action.type) {
@@ -70,16 +44,6 @@ const datashareFormReducer = (state, action) => {
       return {
         ...state,
         selectedZone: action.selectedZone
-      };
-    case "SET_PREVENT_ALERT":
-      return {
-        ...state,
-        preventUnBlock: action.preventUnBlock
-      };
-    case "SET_BLOCK_UI":
-      return {
-        ...state,
-        blockUI: action.blockUI
       };
     default:
       throw new Error();
@@ -95,17 +59,9 @@ const AddDatashareView = () => {
     datashareFormReducer,
     initialState
   );
-  const { loader, selectedService, selectedZone, preventUnBlock } =
-    datashareDetails;
+  const { selectedService, selectedZone } = datashareDetails;
   const [serviceDef, setServiceDef] = useState({});
-  const [serviceDetails, setService] = useState({});
-  const [policyState, policyDispatch] = useReducer(reducer, initialState);
-  const { loaders, serviceDetailss, serviceCompDetails, policyData, formData } =
-    policyState;
   const [blockUI, setBlockUI] = useState(false);
-  const [tagName, setTagName] = useState();
-  const [showModal, policyConditionState] = useState(false);
-  const [sharedResourceList, setSharedResourceList] = useState([]);
   const [userList, setUserList] = useState([]);
   const [groupList, setGroupList] = useState([]);
   const [roleList, setRoleList] = useState([]);
@@ -197,32 +153,25 @@ const AddDatashareView = () => {
       roleList.forEach((role) => {
         dataShareInfo.acl.roles[role.name] = role.perm;
       });
-
-      dispatch({
-        type: "SET_PREVENT_ALERT",
-        preventUnBlock: true
-      });
       try {
-        dispatch({
-          type: "SET_BLOCK_UI",
-          blockUI: true
-        });
+        setBlockUI(true);
         const createDatashareResp = await fetchApi({
           url: `gds/datashare`,
           method: "post",
-          data: dataShareInfo
+          data: dataShareInfo,
+          skipNavigate: true
         });
         toast.success("Datashare created successfully!!");
-        self.location.hash = "#/gds/mydatasharelisting";
+        navigate("/gds/mydatasharelisting");
       } catch (error) {
-        dispatch({
-          type: "SET_BLOCK_UI",
-          blockUI: false
-        });
-        serverError(error);
-        toast.error(error);
+        let errorMsg = `Failed to create datashare`;
+        if (error?.response?.data?.msgDesc) {
+          errorMsg = `Error! ${error.response.data.msgDesc}`;
+        }
+        toast.error(errorMsg);
         console.error(`Error occurred while creating datashare  ${error}`);
       }
+      setBlockUI(false);
     } else if (step == 4) {
       setSaveButtonText("Create Datashare");
       setStep(step + 1);
@@ -292,10 +241,6 @@ const AddDatashareView = () => {
   const datashareNameChange = (event) => {
     setName(event.target.value);
     console.log("DatashareName is:", event.target.value);
-  };
-
-  const tagNameChange = (event) => {
-    setTagName(event.target.value);
   };
 
   const datashareDescriptionChange = (event) => {
@@ -920,6 +865,7 @@ const AddDatashareView = () => {
                 </table>
               </div>
             )}
+            <BlockUi isUiBlock={blockUI} />
           </div>
         )}
       />

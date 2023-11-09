@@ -66,19 +66,19 @@ const MyDatashareListing = () => {
   const searchFilterOptions = [
     {
       category: "dataShareNamePartial",
-      label: "Datashare Name",
+      label: "Name",
       urlLabel: "dataShareNamePartial",
       type: "text"
     },
     {
       category: "serviceNamePartial",
-      label: "Service Name",
+      label: "Service",
       urlLabel: "serviceNamePartial",
       type: "text"
     },
     {
       category: "zoneNamePartial",
-      label: "Zone Name",
+      label: "Zone",
       urlLabel: "zoneNamePartial",
       type: "text"
     }

@@ -386,7 +386,7 @@ const PrinciplePermissionComp = ({
 
   return (
     <div className="gds-tab-content">
-      {!isDetailView && isAdmin && (
+      {!isDetailView && (
         <div className="gds-form-input">
           <Field
             className="form-control"
@@ -574,7 +574,7 @@ const PrinciplePermissionComp = ({
                                 defaultValue={[
                                   { label: obj.perm, value: obj.perm }
                                 ]}
-                                isDisabled={!isAdmin}
+                                isDisabled={isDetailView && !isAdmin}
                                 isClearable
                               />
                             )}
@@ -644,7 +644,7 @@ const PrinciplePermissionComp = ({
                                 defaultValue={[
                                   { label: obj.perm, value: obj.perm }
                                 ]}
-                                isDisabled={!isAdmin}
+                                isDisabled={isDetailView && !isAdmin}
                                 isClearable
                               />
                             )}
@@ -709,7 +709,7 @@ const PrinciplePermissionComp = ({
                                     "ROLE"
                                   )
                                 }
-                                isDisabled={!isAdmin}
+                                isDisabled={isDetailView && !isAdmin}
                                 menuPlacement="auto"
                                 defaultValue={[
                                   { label: obj.perm, value: obj.perm }
