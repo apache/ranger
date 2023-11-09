@@ -96,10 +96,10 @@
         "id":   1,
         "name": "dataset-1",
         "policies": [
-          { "id": 2001, "name": "dataset-3", "isEnabled": true, "isAuditEnabled": true,
+          { "id": 2001, "name": "dataset-1", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "dataset-id": { "values": ["1"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
             ]
           }
         ]
@@ -111,7 +111,7 @@
           { "id": 2002, "name": "dataset-2", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "dataset-id": { "values": ["2"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
             ]
           }
         ]
@@ -123,7 +123,7 @@
           { "id": 2003, "name": "dataset-3", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "dataset-id": { "values": ["3"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
             ]
           }
         ]
@@ -135,7 +135,7 @@
           { "id": 2004, "name": "dataset-4", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "dataset-id": { "values": ["4"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user" ], "groups": []}
             ]
           }
         ]
@@ -149,7 +149,7 @@
           { "id": 3001, "name": "project-1", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "project-id": { "values": ["1"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
             ]
           }
         ]
@@ -161,7 +161,7 @@
           { "id": 3002, "name": "project-2", "isEnabled": true, "isAuditEnabled": true,
             "resources": { "project-id": { "values": ["2"] } },
             "policyItems":[
-              { "accesses":[ { "type": "_READ", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
+              { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "proj-user" ], "groups": []}
             ]
           }
         ]
@@ -376,6 +376,131 @@
         "accessType": "update", "user": "ds-user", "userGroups": []
       },
       "result": { "datasets": null, "projects": null, "isAllowed": false, "isAudited": false, "policyId": -1 }
+    },
+
+    {
+      "name": "ACLs: database: sales",
+      "request": { "resource": { "elements": { "database": "sales" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: table: sales.prospects",
+      "request": { "resource": { "elements": { "database": "sales", "table": "prospects" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-1" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: sales.orders",
+      "request": { "resource": { "elements": { "database": "sales", "table": "orders" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-1" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: sales.non_existent_table",
+      "request": { "resource": { "elements": { "database": "sales", "table": "non_existent_table" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: column: sales.orders.created_time",
+      "request": { "resource": { "elements": { "database": "sales", "table": "orders", "column": "created_time" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-1" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: database: finance",
+      "request": { "resource": { "elements": { "database": "finance" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: table: finance.invoices",
+      "request": { "resource": { "elements": { "database": "finance", "table": "invoices" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-1", "dataset-2" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: finance.payments",
+      "request": { "resource": { "elements": { "database": "finance", "table": "payments" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-1", "dataset-2" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: database: shipping",
+      "request": { "resource": { "elements": { "database": "shipping" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: table: shipping.shipments",
+      "request": { "resource": { "elements": { "database": "shipping", "table": "shipments" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-2" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: database: customers",
+      "request": { "resource": { "elements": { "database": "customers" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: table: customers.contact_info",
+      "request": { "resource": { "elements": { "database": "customers", "table": "contact_info" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } },
+          "proj-user": { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-3" ],
+        "projects": [ "project-2" ]
+      }
+    },
+    {
+      "name": "ACLs: database: operations",
+      "request": { "resource": { "elements": { "database": "operations" } } },
+      "acls": { }
+    },
+    {
+      "name": "ACLs: table: operations.facilities",
+      "request": { "resource": { "elements": { "database": "operations", "table": "facilities" } } },
+      "acls": {
+        "userACLs": {
+          "ds-user":   { "select": { "result": 1, "isFinal": false } }
+        },
+        "datasets": [ "dataset-4" ]
+      }
     }
   ]
 }

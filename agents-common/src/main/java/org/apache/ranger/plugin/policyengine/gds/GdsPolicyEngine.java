@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
@@ -94,6 +95,24 @@ public class GdsPolicyEngine {
         }
 
         LOG.debug("<== RangerGdsPolicyEngine.evaluate({}): {}", request, ret);
+
+        return ret;
+    }
+
+    public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
+        RangerResourceACLs ret = new RangerResourceACLs();
+
+        List<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
+
+        if (!dataShares.isEmpty()) {
+            if (dataShares.size() > 1) {
+                dataShares.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
+            }
+
+            for (GdsDataShareEvaluator dshEvaluator : dataShares) {
+                dshEvaluator.getResourceACLs(request, ret, datasets, projects);
+            }
+        }
 
         return ret;
     }

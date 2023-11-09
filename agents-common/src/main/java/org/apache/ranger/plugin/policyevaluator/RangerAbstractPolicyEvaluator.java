@@ -154,7 +154,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, MatchType matchType, PolicyEngine policyEngine) {
+	public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> targetAccessTypes, MatchType matchType, PolicyEngine policyEngine) {
 		boolean isMatched          = false;
 		boolean isConditionalMatch = false;
 
@@ -186,11 +186,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			int policyType = getPolicyType();
 
 			if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
-				updateFromPolicyACLs(isConditionalMatch, acls);
+				updateFromPolicyACLs(isConditionalMatch, acls, targetAccessTypes);
 			} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
-				updateRowFiltersFromPolicy(isConditionalMatch, acls);
+				updateRowFiltersFromPolicy(isConditionalMatch, acls, targetAccessTypes);
 			} else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
-				updateDataMasksFromPolicy(isConditionalMatch, acls);
+				updateDataMasksFromPolicy(isConditionalMatch, acls, targetAccessTypes);
 			}
 		}
 	}
@@ -317,7 +317,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 
-	private void updateFromPolicyACLs(boolean isConditional, RangerResourceACLs resourceACLs) {
+	private void updateFromPolicyACLs(boolean isConditional, RangerResourceACLs resourceACLs, Set<String> targetAccessTypes) {
 		PolicyACLSummary aclSummary = getPolicyACLSummary();
 
 		if (aclSummary == null) {
@@ -328,6 +328,12 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			final String userName = userAccessInfo.getKey();
 
 			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : userAccessInfo.getValue().entrySet()) {
+				String accessType = accessInfo.getKey();
+
+				if (targetAccessTypes != null && !targetAccessTypes.contains(accessType)) {
+					continue;
+				}
+
 				Integer accessResult;
 
 				if (isConditional) {
@@ -342,7 +348,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 				RangerPolicy policy = getPolicy();
 
-				resourceACLs.setUserAccessInfo(userName, accessInfo.getKey(), accessResult, policy);
+				resourceACLs.setUserAccessInfo(userName, accessType, accessResult, policy);
 			}
 		}
 
@@ -350,6 +356,12 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			final String groupName = groupAccessInfo.getKey();
 
 			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : groupAccessInfo.getValue().entrySet()) {
+				String accessType = accessInfo.getKey();
+
+				if (targetAccessTypes != null && !targetAccessTypes.contains(accessType)) {
+					continue;
+				}
+
 				Integer accessResult;
 
 				if (isConditional) {
@@ -364,7 +376,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 				RangerPolicy policy = getPolicy();
 
-				resourceACLs.setGroupAccessInfo(groupName, accessInfo.getKey(), accessResult, policy);
+				resourceACLs.setGroupAccessInfo(groupName, accessType, accessResult, policy);
 			}
 		}
 
@@ -372,6 +384,12 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			final String roleName = roleAccessInfo.getKey();
 
 			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : roleAccessInfo.getValue().entrySet()) {
+				String accessType = accessInfo.getKey();
+
+				if (targetAccessTypes != null && !targetAccessTypes.contains(accessType)) {
+					continue;
+				}
+
 				Integer accessResult;
 
 				if (isConditional) {
@@ -386,16 +404,20 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 				RangerPolicy policy = getPolicy();
 
-				resourceACLs.setRoleAccessInfo(roleName, accessInfo.getKey(), accessResult, policy);
+				resourceACLs.setRoleAccessInfo(roleName, accessType, accessResult, policy);
 			}
 		}
 	}
 
-	private void updateRowFiltersFromPolicy(boolean isConditional, RangerResourceACLs resourceACLs) {
+	private void updateRowFiltersFromPolicy(boolean isConditional, RangerResourceACLs resourceACLs, Set<String> targetAccessTypes) {
 		PolicyACLSummary aclSummary = getPolicyACLSummary();
 
 		if (aclSummary != null) {
 			for (RowFilterResult rowFilterResult : aclSummary.getRowFilters()) {
+				if (targetAccessTypes != null && !CollectionUtils.containsAny(targetAccessTypes, rowFilterResult.getAccessTypes())) {
+					continue;
+				}
+
 				rowFilterResult = copyRowFilter(rowFilterResult);
 
 				if (isConditional) {
@@ -407,11 +429,15 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		}
 	}
 
-	private void updateDataMasksFromPolicy(boolean isConditional, RangerResourceACLs resourceACLs) {
+	private void updateDataMasksFromPolicy(boolean isConditional, RangerResourceACLs resourceACLs, Set<String> targetAccessTypes) {
 		PolicyACLSummary aclSummary = getPolicyACLSummary();
 
 		if (aclSummary != null) {
 			for (DataMaskResult dataMaskResult : aclSummary.getDataMasks()) {
+				if (targetAccessTypes != null && !CollectionUtils.containsAny(targetAccessTypes, dataMaskResult.getAccessTypes())) {
+					continue;
+				}
+
 				dataMaskResult = copyDataMask(dataMaskResult);
 
 				if (isConditional) {

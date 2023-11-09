@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -106,6 +107,10 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         return resource != null && resource.getResource() != null ? resource.getResource().keySet() : Collections.emptySet();
     }
 
+    public boolean isConditional() { return conditionEvaluator != null; }
+
+    public Set<String> getAllowedAccessTypes() { return allowedAccessTypes; }
+
     public boolean isAllowed(RangerAccessRequest request) {
         LOG.debug("==> GdsSharedResourceEvaluator.evaluate({})", request);
 
@@ -130,6 +135,22 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         LOG.debug("<== GdsSharedResourceEvaluator.evaluate({})", request);
 
         return ret;
+    }
+
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, List<GdsDshidEvaluator> dshidEvaluators, Map<Long, GdsDatasetEvaluator> datasets, Map<Long, GdsProjectEvaluator> projects) {
+        LOG.debug("==> GdsSharedResourceEvaluator.getResourceACLs({}, {})", request, acls);
+
+        boolean isResourceMatch = policyResourceMatcher.isMatch(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
+
+        if (isResourceMatch) {
+            isConditional = isConditional || conditionEvaluator != null;
+
+            for (GdsDshidEvaluator dshidEvaluator : dshidEvaluators) {
+                dshidEvaluator.getResourceACLs(request, acls, isConditional, datasets, projects, getAllowedAccessTypes());
+            }
+        }
+
+        LOG.debug("<== GdsSharedResourceEvaluator.getResourceACLs({}, {})", request, acls);
     }
 
     public RangerPolicyItemRowFilterInfo getRowFilter() {

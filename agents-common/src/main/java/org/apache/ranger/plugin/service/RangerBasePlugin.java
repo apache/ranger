@@ -51,6 +51,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.*;
@@ -698,6 +699,20 @@ public class RangerBasePlugin {
 			}
 		}
 
+		GdsPolicyEngine gdsPolicyEngine = getGdsPolicyEngine();
+
+		if (gdsPolicyEngine != null) {
+			RangerResourceACLs gdsACLs = gdsPolicyEngine.getResourceACLs(request);
+
+			if (gdsACLs != null) {
+				if (ret != null) {
+					ret = getMergedResourceACLs(ret, gdsACLs);
+				} else {
+					ret = gdsACLs;
+				}
+			}
+		}
+
 		return ret;
 	}
 
@@ -1139,6 +1154,31 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
+	public GdsPolicyEngine getGdsPolicyEngine() {
+		GdsPolicyEngine   ret         = null;
+		RangerAuthContext authContext = getCurrentRangerAuthContext();
+
+		if (authContext != null) {
+			Map<RangerContextEnricher, Object> contextEnricherMap = authContext.getRequestContextEnrichers();
+
+			if (MapUtils.isNotEmpty(contextEnricherMap)) {
+				Set<RangerContextEnricher> contextEnrichers = contextEnricherMap.keySet();
+
+				for (RangerContextEnricher enricher : contextEnrichers) {
+					if (enricher instanceof RangerGdsEnricher) {
+						RangerGdsEnricher gdsEnricher = (RangerGdsEnricher) enricher;
+
+						ret = gdsEnricher.getGdsPolicyEngine();
+
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	public static RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.getMergedResourceACLs()");
@@ -1149,6 +1189,8 @@ public class RangerBasePlugin {
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.USER);
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.GROUP);
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.ROLE);
+		baseACLs.getDatasets().addAll(chainedACLs.getDatasets());
+		baseACLs.getProjects().addAll(chainedACLs.getProjects());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");

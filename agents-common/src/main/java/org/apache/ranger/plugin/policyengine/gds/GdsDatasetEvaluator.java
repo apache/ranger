@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +118,21 @@ public class GdsDatasetEvaluator {
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
     }
 
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes, Map<Long, GdsProjectEvaluator> projects) {
+        acls.getDatasets().add(getName());
+
+        if (!policyEvaluators.isEmpty()) {
+            GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
+
+            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                policyEvaluator.getResourceACLs(datasetRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+            }
+        }
+
+        for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
+            dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes, projects);
+        }
+    }
 
     public static class GdsDatasetAccessRequest extends RangerAccessRequestImpl {
         public GdsDatasetAccessRequest(Long datasetId, RangerServiceDef gdsServiceDef, RangerAccessRequest request) {

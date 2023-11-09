@@ -24,6 +24,7 @@ import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
 import org.apache.ranger.plugin.util.RangerResourceEvaluatorsRetriever;
@@ -138,6 +139,42 @@ public class GdsDataShareEvaluator {
         }
 
         LOG.debug("<== GdsDataShareEvaluator.evaluate({}, {})", request, result);
+    }
+
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, Map<Long, GdsDatasetEvaluator> datasets, Map<Long, GdsProjectEvaluator> projects) {
+        LOG.debug("==> GdsDataShareEvaluator.getResourceACLs({}, {})", request, acls);
+
+        List<GdsSharedResourceEvaluator> evaluators = getResourceEvaluators(request);
+
+        if (!evaluators.isEmpty()) {
+            boolean isConditional = conditionEvaluator != null;
+
+            for (GdsSharedResourceEvaluator evaluator : evaluators) {
+                evaluator.getResourceACLs(request, acls, isConditional, dsidEvaluators, datasets, projects);
+            }
+        }
+
+        LOG.debug("<== GdsDataShareEvaluator.getResourceACLs({}, {})", request, acls);
+    }
+
+    private List<GdsSharedResourceEvaluator> getResourceEvaluators(RangerAccessRequest request) {
+        final List<GdsSharedResourceEvaluator> ret;
+
+        Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
+
+        if (evaluators == null) {
+            ret = Collections.emptyList();
+        } else if (evaluators.size() > 1) {
+            ret = new ArrayList<>(evaluators);
+
+            ret.sort(GdsSharedResourceEvaluator.EVAL_ORDER_COMPARATOR);
+        } else {
+            ret = Collections.singletonList(evaluators.iterator().next());
+        }
+
+        LOG.debug("GdsDataShareEvaluator.getResourceEvaluators({}): found {} evaluators", request, ret.size());
+
+        return ret;
     }
 
     public static class GdsDataShareEvalOrderComparator implements Comparator<GdsDataShareEvaluator> {

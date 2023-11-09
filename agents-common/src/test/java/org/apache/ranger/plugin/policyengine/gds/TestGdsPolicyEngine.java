@@ -80,9 +80,17 @@ public class TestGdsPolicyEngine {
 
             RangerAccessRequestUtil.setResourceZoneNamesInContext(test.request, zoneNames);
 
-            GdsAccessResult result = policyEngine.evaluate(test.request);
+            if (test.result != null) {
+                GdsAccessResult result = policyEngine.evaluate(test.request);
 
-            assertEquals(test.name, test.result, result);
+                assertEquals(test.name, test.result, result);
+            }
+
+            if (test.acls != null) {
+                RangerResourceACLs acls = policyEngine.getResourceACLs(test.request);
+
+                assertEquals(test.name, test.acls, acls);
+            }
         }
     }
 
@@ -97,6 +105,7 @@ public class TestGdsPolicyEngine {
         public String              name;
         public RangerAccessRequest request;
         public GdsAccessResult     result;
+        public RangerResourceACLs  acls;
     }
 
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {

@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.ProjectInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class GdsProjectEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
@@ -103,6 +105,18 @@ public class GdsProjectEvaluator {
         }
 
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
+    }
+
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
+        acls.getProjects().add(getName());
+
+        if (!policyEvaluators.isEmpty()) {
+            GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
+
+            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                policyEvaluator.getResourceACLs(projectRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+            }
+        }
     }
 
 

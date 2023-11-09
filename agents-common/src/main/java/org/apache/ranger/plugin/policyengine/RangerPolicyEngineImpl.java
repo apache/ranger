@@ -317,7 +317,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					boolean   isTemporalTagPolicy = policyIdForTemporalTags.contains(evaluator.getPolicyId());
 					MatchType tagMatchType        = tagMatchTypeMap.get(evaluator.getPolicyId());
 
-					evaluator.getResourceACLs(request, ret, isTemporalTagPolicy, tagMatchType, policyEngine);
+					evaluator.getResourceACLs(request, ret, isTemporalTagPolicy, null, tagMatchType, policyEngine);
 				}
 
 				ret.finalizeAcls();

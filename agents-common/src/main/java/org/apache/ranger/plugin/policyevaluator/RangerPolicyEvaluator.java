@@ -104,7 +104,7 @@ public interface RangerPolicyEvaluator {
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
-	void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, MatchType matchType, PolicyEngine policyEngine);
+	void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> targetAccessTypes, MatchType matchType, PolicyEngine policyEngine);
 
 	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 

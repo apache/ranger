@@ -31,6 +31,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +47,8 @@ public class RangerResourceACLs {
 	final private Map<String, Map<String, AccessResult>> roleACLs   = new HashMap<>();
 	final private List<RowFilterResult>                  rowFilters = new ArrayList<>();
 	final private List<DataMaskResult>                   dataMasks  = new ArrayList<>();
+	final private Set<String>                            datasets   = new HashSet<>();
+	final private Set<String>                            projects   = new HashSet<>();
 
 	public RangerResourceACLs() {
 	}
@@ -63,6 +66,10 @@ public class RangerResourceACLs {
 	public List<RowFilterResult> getRowFilters() { return rowFilters; }
 
 	public List<DataMaskResult> getDataMasks() { return dataMasks; }
+
+	public Set<String> getDatasets() { return datasets; }
+
+	public Set<String> getProjects() { return projects; }
 
 	public void finalizeAcls() {
 		Map<String, AccessResult>  publicGroupAccessInfo = groupACLs.get(RangerPolicyEngine.GROUP_PUBLIC);
@@ -163,6 +170,30 @@ public class RangerResourceACLs {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hash(userACLs, groupACLs, roleACLs, rowFilters, dataMasks);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		} else {
+			RangerResourceACLs other = (RangerResourceACLs) obj;
+
+			return Objects.equals(userACLs, other.userACLs) &&
+			       Objects.equals(groupACLs, other.groupACLs) &&
+			       Objects.equals(roleACLs, other.roleACLs) &&
+			       Objects.equals(rowFilters, other.rowFilters) &&
+			       Objects.equals(dataMasks, other.dataMasks) &&
+			       Objects.equals(datasets, other.datasets) &&
+			       Objects.equals(projects, other.projects);
+		}
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
@@ -217,6 +248,18 @@ public class RangerResourceACLs {
 		for (DataMaskResult dataMask : dataMasks) {
 			dataMask.toString(sb);
 			sb.append(" ");
+		}
+		sb.append("]");
+
+		sb.append(", datasets=[");
+		for (String dataset : datasets) {
+			sb.append(dataset).append(" ");
+		}
+		sb.append("]");
+
+		sb.append(", projects=[");
+		for (String project : projects) {
+			sb.append(project).append(" ");
 		}
 		sb.append("]");
 
