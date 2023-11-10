@@ -116,7 +116,7 @@
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
-        <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
+        <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
         <graalvm.version>22.3.0</graalvm.version>
