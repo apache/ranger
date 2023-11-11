@@ -327,6 +327,7 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
+                <module>ranger-metrics</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -565,6 +566,7 @@
                 <module>ranger-util</module>
                 <module>plugin-kms</module>
                 <module>ranger-kms-plugin-shim</module>
+                <module>ranger-metrics</module>
             </modules>
         </profile>
         <profile>
@@ -761,7 +763,6 @@
             <modules>
                 <module>jisql</module>
                 <module>agents-audit</module>
-                <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>intg</module>
                 <module>agents-installer</module>
@@ -813,6 +814,8 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
+                <module>ranger-metrics</module>
             </modules>
             <build>
                 <plugins>
@@ -894,9 +897,15 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+                <version>${junit.jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
