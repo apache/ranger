@@ -64,6 +64,10 @@ public class GdsPolicyEngine {
         LOG.debug("<== RangerGdsPolicyEngine()");
     }
 
+    public ServiceGdsInfo getGdsInfo() {
+        return gdsInfo;
+    }
+
     public GdsAccessResult evaluate(RangerAccessRequest request) {
         LOG.debug("==> RangerGdsPolicyEngine.evaluate({})", request);
 
