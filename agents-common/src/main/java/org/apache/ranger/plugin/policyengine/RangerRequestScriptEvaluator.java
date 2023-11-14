@@ -91,6 +91,8 @@ public final class RangerRequestScriptEvaluator {
 	private static String[] dateFormatStrings = null;
 
 	private final RangerAccessRequest              accessRequest;
+	private final ScriptEngine                     scriptEngine;
+	private final Bindings                         bindings;
 	private       boolean                          initDone   = false;
 	private       Map<String, String>              userAttrs  = Collections.emptyMap();
 	private       Map<String, Map<String, String>> groupAttrs = Collections.emptyMap();
@@ -190,20 +192,47 @@ public final class RangerRequestScriptEvaluator {
 		return MACRO_PROCESSOR.expandMacros(script);
 	}
 
-	public RangerRequestScriptEvaluator(final RangerAccessRequest accessRequest) {
+	public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine) {
+		this(accessRequest, scriptEngine, true);
+	}
+
+	public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine, boolean enableJsonCtx) {
 		this.accessRequest = accessRequest.getReadOnlyCopy();
+		this.scriptEngine  = scriptEngine;
+		this.bindings      = scriptEngine.createBindings();
+
+		RangerTagForEval    currentTag = this.getCurrentTag();
+		Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+
+		bindings.put(SCRIPT_VAR_ctx, this);
+		bindings.put(SCRIPT_VAR_tag, currentTag);
+		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+
+		String preExecScript = "";
+
+		if (enableJsonCtx) {
+			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+
+			preExecScript += SCRIPT_PREEXEC;
+		}
+
+		if (StringUtils.isNotBlank(preExecScript)) {
+			try {
+				scriptEngine.eval(preExecScript, bindings);
+			} catch (ScriptException excp) {
+				LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+			}
+		}
 	}
 
-	public Object evaluateScript(ScriptEngine scriptEngine, String script) {
+	public Object evaluateScript(String script) {
 		script = expandMacros(script);
 
-		return evaluateScript(scriptEngine, script, needsJsonCtxEnabled(script));
+		return evaluateScriptImpl(script);
 	}
 
-	public Object evaluateConditionScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		script = expandMacros(script);
-
-		Object ret = evaluateScript(scriptEngine, script, enableJsonCtx);
+	public Object evaluateConditionScript(String script) {
+		Object ret = evaluateScript(script);
 
 		if (ret == null) {
 			ret = getResult();
@@ -216,58 +245,34 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
-	private Object evaluateScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		Object              ret           = null;
-		Bindings            bindings      = scriptEngine.createBindings();
-		RangerTagForEval    currentTag    = this.getCurrentTag();
-		Map<String, String> tagAttribs    = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
-		boolean             hasIncludes   = StringUtils.contains(script, ".includes(");
-		boolean             hasIntersects = StringUtils.contains(script, ".intersects(");
-
-		bindings.put(SCRIPT_VAR_ctx, this);
-		bindings.put(SCRIPT_VAR_tag, currentTag);
-		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
-
-		script = SCRIPT_SAFE_PREEXEC + script;
-
-		if (enableJsonCtx) {
-			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
-
-			script = SCRIPT_PREEXEC + script;
-		}
-
-		if (hasIncludes) {
-			script = SCRIPT_POLYFILL_INCLUDES + script;
-		}
-
-		if (hasIntersects) {
-			script = SCRIPT_POLYFILL_INTERSECTS + script;
-		}
-
-		if (JavaScriptEdits.hasDoubleBrackets(script)) {
-			script = JavaScriptEdits.replaceDoubleBrackets(script);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerRequestScriptEvaluator.evaluateScript(): script={" + script + "}");
-		}
-
+	private Object evaluateScriptImpl(String script) {
+		Object           ret  = null;
 		RangerPerfTracer perf = null;
 
 		try {
-			long requestHash = accessRequest.hashCode();
-
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_EVAL)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + requestHash + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + accessRequest.hashCode() + ")");
 			}
 
-			ret = scriptEngine.eval(script, bindings);
+			String preExec = SCRIPT_SAFE_PREEXEC;
+
+			if (script.contains(".includes(")) {
+				preExec += SCRIPT_POLYFILL_INCLUDES;
+			}
+
+			if (script.contains(".intersects(")) {
+				preExec += SCRIPT_POLYFILL_INTERSECTS;
+			}
+
+			if (JavaScriptEdits.hasDoubleBrackets(script)) {
+				script = JavaScriptEdits.replaceDoubleBrackets(script);
+			}
+
+			ret = scriptEngine.eval(preExec + script, bindings);
 		} catch (NullPointerException nullp) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): eval called with NULL argument(s)", nullp);
-
-		} catch (ScriptException exception) {
-			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script," +
-					" exception=" + exception);
+		} catch (ScriptException excp) {
+			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", excp);
 		} catch (Throwable t) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", t);
 		} finally {
@@ -280,10 +285,8 @@ public final class RangerRequestScriptEvaluator {
 	private String toJson() {
 		RangerPerfTracer perf = null;
 
-		long requestHash = accessRequest.hashCode();
-
 		if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_TOJSON)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + requestHash + ")");
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + accessRequest.hashCode() + ")");
 		}
 
 		Map<String, Object> ret        = new HashMap<>();
@@ -1404,5 +1407,4 @@ public final class RangerRequestScriptEvaluator {
 			return ret;
 		}
 	}
-
 }

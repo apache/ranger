@@ -32,7 +32,8 @@ import javax.script.ScriptEngine;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_OPTION_ENABLE_JSON_CTX;
+
 
 public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvaluator {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
@@ -100,13 +101,13 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
 				}
 
-				RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
-
 				if (enableJsonCtx == null) { // if not specified in evaluatorOptions, set it on first call to isMatched()
 					enableJsonCtx = RangerRequestScriptEvaluator.needsJsonCtxEnabled(script);
 				}
 
-				evaluator.evaluateConditionScript(scriptEngine, script, enableJsonCtx);
+				RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, enableJsonCtx);
+
+				evaluator.evaluateConditionScript(script);
 
 				result = evaluator.getResult();
 			} else {

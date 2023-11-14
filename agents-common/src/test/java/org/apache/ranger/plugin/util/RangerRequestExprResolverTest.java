@@ -42,6 +42,7 @@ public class RangerRequestExprResolverTest {
 
         exprValue.put("s3://mybucket/users/${{USER._name}}/${{USER.state}}/test.txt", "s3://mybucket/users/test-user/CA/test.txt");
         exprValue.put("state == '${{USER.state}}' AND dept == '${{UGA.sVal.dept}}'", "state == 'CA' AND dept == 'ENGG'");
+        exprValue.put("state == '${{USER.state}}' AND group IN (${{GET_UG_NAMES_Q()}})", "state == 'CA' AND group IN ('test-group1','test-group2')");
         exprValue.put("attr1 == '${{TAG.attr1}}'", "attr1 == 'PII_value'");
 
         exprValue.put("${{USER._name}}", "test-user");
