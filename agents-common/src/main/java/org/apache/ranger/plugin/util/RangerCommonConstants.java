@@ -175,13 +175,13 @@ public class RangerCommonConstants {
 			"      Array.prototype, 'intersects', {\n" +
 			"          value: function (x) {\n" +
 			"           if (x == null) {return false;}\n" +
-			"                        var o = Object(this);\n" +
-			"                        var len = o.length >>> 0;\n" +
-			"            if (len === 0) { return false; }\n" +
-			"            var result = o.filter(function(n) { return x.indexOf(n) > -1;})\n" +
-			"            return result.length != 0;\n" +
+			"           var o = Object(this);\n" +
+			"           var len = o.length >>> 0;\n" +
+			"           if (len === 0) { return false; }\n" +
+			"           var result = o.filter(function(n) { return x.indexOf(n) > -1;})\n" +
+			"           return result.length != 0;\n" +
 			"        }\n" +
 			"      }\n" +
-			"    )\n" +
+			"    );\n" +
 			"}; ";
 }
