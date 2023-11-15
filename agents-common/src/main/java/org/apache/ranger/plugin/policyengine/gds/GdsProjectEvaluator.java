@@ -119,8 +119,22 @@ public class GdsProjectEvaluator {
         }
     }
 
+    public boolean hasReference(Set<String> users, Set<String> groups, Set<String> roles) {
+        boolean ret = false;
 
-    public static class GdsProjectAccessRequest extends RangerAccessRequestImpl {
+        for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+            ret = policyEvaluator.hasReference(users, groups, roles);
+
+            if (ret) {
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+
+    private static class GdsProjectAccessRequest extends RangerAccessRequestImpl {
         public GdsProjectAccessRequest(Long projectId, RangerServiceDef gdsServiceDef, RangerAccessRequest request) {
             super.setResource(new RangerProjectResource(projectId, gdsServiceDef, request.getResource().getOwnerUser()));
 

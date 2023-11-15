@@ -114,13 +114,64 @@ public class GdsPolicyEngine {
             }
 
             for (GdsDataShareEvaluator dshEvaluator : dataShares) {
-                dshEvaluator.getResourceACLs(request, ret, datasets, projects);
+                dshEvaluator.getResourceACLs(request, ret);
             }
         }
 
         ret.finalizeAcls();
 
         return ret;
+    }
+
+    public Set<String> getDatasetsForPrincipals(Set<String> users, Set<String> groups, Set<String> roles) {
+        Set<String> ret = new HashSet<>();
+
+        for (GdsDatasetEvaluator dataset : datasets.values()) {
+            if (dataset.hasReference(users, groups, roles)) {
+                ret.add(dataset.getName());
+            }
+        }
+
+        return ret;
+    }
+
+    public Set<String> getProjectsForPrincipals(Set<String> users, Set<String> groups, Set<String> roles) {
+        Set<String> ret = new HashSet<>();
+
+        for (GdsProjectEvaluator project : projects.values()) {
+            if (project.hasReference(users, groups, roles)) {
+                ret.add(project.getName());
+            }
+        }
+
+        return ret;
+    }
+
+    public long getDatasetId(String datasetName) {
+        GdsDatasetEvaluator evaluator = getDatasetEvaluator(datasetName);
+
+        return evaluator == null ? -1 : evaluator.getId();
+    }
+
+    public long getProjectId(String projectName) {
+        GdsProjectEvaluator evaluator = getProjectEvaluator(projectName);
+
+        return evaluator == null ? -1 : evaluator.getId();
+    }
+
+    public Iterator<GdsSharedResourceEvaluator> getDatasetResources(long datasetId) {
+        return new SharedResourceIter(getDataSharesForDataset(datasetId).listIterator());
+    }
+
+    public Iterator<GdsSharedResourceEvaluator> getProjectResources(long projectId) {
+        return new SharedResourceIter(getDataSharesForProject(projectId).listIterator());
+    }
+
+    public Iterator<GdsSharedResourceEvaluator> getDataShareResources(long dataShareId) {
+        GdsDataShareEvaluator       evaluator  = getDataShareEvaluator(dataShareId);
+        List<GdsDataShareEvaluator> evaluators = evaluator == null ? Collections.emptyList() : Collections.singletonList(evaluator);
+
+        return new SharedResourceIter(evaluators.listIterator());
     }
 
     private void init(RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
@@ -180,7 +231,15 @@ public class GdsPolicyEngine {
                     continue;
                 }
 
-                GdsDshidEvaluator dshidEvaluator = new GdsDshidEvaluator(dshid);
+                GdsDatasetEvaluator datasetEvaluator = datasets.get(dshid.getDatasetId());
+
+                if (datasetEvaluator == null) {
+                    LOG.error("RangerGdsPolicyEngine(): invalid datasetId in dshid: {}. Ignored", dshid);
+
+                    continue;
+                }
+
+                GdsDshidEvaluator dshidEvaluator = new GdsDshidEvaluator(dshid, datasetEvaluator);
 
                 dshEvaluator.addDshidEvaluator(dshidEvaluator);
             }
@@ -202,7 +261,15 @@ public class GdsPolicyEngine {
                     continue;
                 }
 
-                GdsDipEvaluator dipEvaluator = new GdsDipEvaluator(dip);
+                GdsProjectEvaluator projectEvaluator = projects.get(dip.getProjectId());
+
+                if (projectEvaluator == null) {
+                    LOG.error("RangerGdsPolicyEngine(): invalid projectId in dip: {}. Ignored", dip);
+
+                    continue;
+                }
+
+                GdsDipEvaluator dipEvaluator = new GdsDipEvaluator(dip, projectEvaluator);
 
                 datasetEvaluator.addDipEvaluator(dipEvaluator);
             }
@@ -311,27 +378,162 @@ public class GdsPolicyEngine {
             evaluator.evaluate(request, result);
         }
     }
+
+    private GdsDatasetEvaluator getDatasetEvaluator(String dsName) {
+        GdsDatasetEvaluator ret = null;
+
+        for (GdsDatasetEvaluator evaluator : datasets.values()) {
+            if (StringUtils.equals(evaluator.getName(), dsName)) {
+                ret = evaluator;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private GdsProjectEvaluator getProjectEvaluator(String projectName) {
+        GdsProjectEvaluator ret = null;
+
+        for (GdsProjectEvaluator evaluator : projects.values()) {
+            if (StringUtils.equals(evaluator.getName(), projectName)) {
+                ret = evaluator;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private GdsDataShareEvaluator getDataShareEvaluator(long dataShareId) {
+        GdsDataShareEvaluator ret = null;
+
+        for (List<GdsDataShareEvaluator> dshEvaluators : zoneDataShares.values()) {
+            for (GdsDataShareEvaluator dshEvaluator : dshEvaluators) {
+                if (dshEvaluator.getId().equals(dataShareId)) {
+                    ret = dshEvaluator;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private List<GdsDataShareEvaluator> getDataSharesForDataset(long datasetId) {
+        Set<GdsDataShareEvaluator> evaluators = null;
+
+        for (List<GdsDataShareEvaluator> dshEvaluators : zoneDataShares.values()) {
+            for (GdsDataShareEvaluator dshEvaluator : dshEvaluators) {
+                if (dshEvaluator.isInDataset(datasetId)) {
+                    if (evaluators == null) {
+                        evaluators = new HashSet<>();
+                    }
+
+                    evaluators.add(dshEvaluator);
+                }
+            }
+        }
+
+        List<GdsDataShareEvaluator> ret = (evaluators == null) ? Collections.emptyList() : new ArrayList<>(evaluators);
+
+        if (ret.size() > 1) {
+            ret.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
+        }
+
+        return ret;
+    }
+
+    private List<GdsDataShareEvaluator> getDataSharesForProject(long projectId) {
+        Set<GdsDataShareEvaluator> evaluators = null;
+
+        for (List<GdsDataShareEvaluator> dshEvaluators : zoneDataShares.values()) {
+            for (GdsDataShareEvaluator dshEvaluator : dshEvaluators) {
+                if (dshEvaluator.isInProject(projectId)) {
+                    if (evaluators == null) {
+                        evaluators = new HashSet<>();
+                    }
+
+                    evaluators.add(dshEvaluator);
+                }
+            }
+        }
+
+        List<GdsDataShareEvaluator> ret = (evaluators == null) ? Collections.emptyList() : new ArrayList<>(evaluators);
+
+        if (ret.size() > 1) {
+            ret.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
+        }
+
+        return ret;
+    }
+
+    static class SharedResourceIter implements Iterator<GdsSharedResourceEvaluator> {
+        private final Iterator<GdsDataShareEvaluator>      dataShareIter;
+        private       Iterator<GdsSharedResourceEvaluator> sharedResourceIter;
+        private       GdsSharedResourceEvaluator           nextResource;
+
+        SharedResourceIter(Iterator<GdsDataShareEvaluator> dataShareIter) {
+            this.dataShareIter      = dataShareIter;
+            this.sharedResourceIter = Collections.emptyIterator();
+            this.nextResource       = null;
+
+            setNext();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextResource != null;
+        }
+
+        @Override
+        public GdsSharedResourceEvaluator next() {
+            GdsSharedResourceEvaluator ret = nextResource;
+
+            if (ret != null) {
+                setNext();
+            }
+
+            return ret;
+        }
+
+        private void setNext() {
+            if (!sharedResourceIter.hasNext()) {
+                while (dataShareIter.hasNext()) {
+                    GdsDataShareEvaluator dataShareEvaluator = dataShareIter.next();
+
+                    sharedResourceIter = dataShareEvaluator.getSharedResourceEvaluators().iterator();
+
+                    if (sharedResourceIter.hasNext()) {
+                        break;
+                    }
+                }
+            }
+
+            nextResource = sharedResourceIter.hasNext() ? sharedResourceIter.next() : null;
+        }
+    }
 }
 
 /*
      dataShare-1 ----------------------- dataset-1 ---
-           resource-1                 /                \
-           resource-2                /                  \
+           resource-11                /                \
+           resource-12               /                  \
                                     /                    \
      dataShare-2 -------------------|                    | ---- project-1
-           resource-3                \                  /
-                                      \                /
+           resource-21               \                  /
+           resource-22                \                /
                                        -- dataset-2---
                                       /
      dataShare-3 ---------------------
-           resource-3
-           resource-4
+           resource-31
 
      dataShare-4 ------------------------- dataset-3 --------- project-2
-           resource-4
-           resource-5
+           resource-41
 
      dataShare-5 ------------------------- dataset-4
-           resource-6
-           resource-7
+           resource-51
  */

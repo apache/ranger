@@ -83,20 +83,62 @@ public class TestGdsPolicyEngine {
         GdsPolicyEngine           policyEngine  = new GdsPolicyEngine(testCase.gdsInfo, new RangerServiceDefHelper(testCase.serviceDef, false), pluginContext);
 
         for (TestData test : testCase.tests) {
-            Set<String> zoneNames = zoneMatcher.getZonesForResourceAndChildren(test.request.getResource());
+            if (test.request != null) {
+                Set<String> zoneNames = zoneMatcher.getZonesForResourceAndChildren(test.request.getResource());
 
-            RangerAccessRequestUtil.setResourceZoneNamesInContext(test.request, zoneNames);
+                RangerAccessRequestUtil.setResourceZoneNamesInContext(test.request, zoneNames);
 
-            if (test.result != null) {
-                GdsAccessResult result = policyEngine.evaluate(test.request);
+                if (test.result != null) {
+                    GdsAccessResult result = policyEngine.evaluate(test.request);
 
-                assertEquals(test.name, test.result, result);
-            }
+                    assertEquals(test.name, test.result, result);
+                }
 
-            if (test.acls != null) {
-                RangerResourceACLs acls = policyEngine.getResourceACLs(test.request);
+                if (test.acls != null) {
+                    RangerResourceACLs acls = policyEngine.getResourceACLs(test.request);
 
-                assertEquals(test.name, test.acls, acls);
+                    assertEquals(test.name, test.acls, acls);
+                }
+            } else if (test.principals != null) {
+                Set<String> users  = test.principals.get("users");
+                Set<String> groups = test.principals.get("groups");
+                Set<String> roles  = test.principals.get("roles");
+
+                if (test.datasets != null) {
+                    Set<String> datasets = policyEngine.getDatasetsForPrincipals(users, groups, roles);
+
+                    assertEquals(test.name, test.datasets, datasets);
+                }
+
+                if (test.projects != null) {
+                    Set<String> projects = policyEngine.getProjectsForPrincipals(users, groups, roles);
+
+                    assertEquals(test.name, test.projects, projects);
+                }
+            } else if (test.resourceIds != null) {
+                Set<Long> resourceIds = new HashSet<>();
+
+                if (test.datasetId != null) {
+                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getDatasetResources(test.datasetId);
+
+                    while (iter.hasNext()) {
+                        resourceIds.add(iter.next().getId());
+                    }
+                } else if (test.projectId != null) {
+                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getProjectResources(test.projectId);
+
+                    while (iter.hasNext()) {
+                        resourceIds.add(iter.next().getId());
+                    }
+                } else if (test.dataShareId != null) {
+                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getDataShareResources(test.dataShareId);
+
+                    while (iter.hasNext()) {
+                        resourceIds.add(iter.next().getId());
+                    }
+                }
+
+                assertEquals(test.name, test.resourceIds, resourceIds);
             }
         }
     }
@@ -110,10 +152,17 @@ public class TestGdsPolicyEngine {
     }
 
     static class TestData {
-        public String              name;
-        public RangerAccessRequest request;
-        public GdsAccessResult     result;
-        public RangerResourceACLs  acls;
+        public String                   name;
+        public RangerAccessRequest      request;
+        public GdsAccessResult          result;
+        public RangerResourceACLs       acls;
+        public Map<String, Set<String>> principals;
+        public Set<String>              datasets;
+        public Set<String>              projects;
+        public Long                     datasetId;
+        public Long                     projectId;
+        public Long                     dataShareId;
+        public Set<Long>                resourceIds;
     }
 
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {

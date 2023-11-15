@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
@@ -150,7 +151,37 @@ public interface RangerPolicyEvaluator {
 		return false;
 	}
 
-        default boolean hasRoles(final RangerPolicy policy) {
+	default boolean hasReference(Set<String> users, Set<String> groups, Set<String> roles) {
+		RangerPolicy policy = getPolicy();
+
+		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+		return false;
+
+	}
+
+	default boolean hasRoles(final RangerPolicy policy) {
 		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
 			if (hasRoles(policyItem)) {
 				return true;
@@ -188,6 +219,12 @@ public interface RangerPolicyEvaluator {
 		return  CollectionUtils.isNotEmpty(policyItem.getConditions()) || policyItem.getUsers().contains(RangerPolicyEngine.RESOURCE_OWNER); /* || policyItem.getGroups().contains(RangerPolicyEngine.RESOURCE_GROUP_OWNER) */
 	}
 
+	static boolean hasReference(RangerPolicyItem policyItem, Set<String> users, Set<String> groups, Set<String> roles) {
+		return containsAny(policyItem.getUsers(), users) ||
+		       containsAny(policyItem.getGroups(), groups) ||
+		       containsAny(policyItem.getRoles(), roles);
+	}
+
 	static boolean hasRoles(RangerPolicyItem policyItem) {
 		return  CollectionUtils.isNotEmpty(policyItem.getRoles());
 	}
@@ -198,6 +235,10 @@ public interface RangerPolicyEvaluator {
 		} else {
 			return str2 == null ? 1 : str1.compareTo(str2);
 		}
+	}
+
+	static boolean containsAny(Collection<String> coll1, Collection<String> coll2) {
+		return coll1 != null && coll2 != null && CollectionUtils.containsAny(coll1, coll2);
 	}
 
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {

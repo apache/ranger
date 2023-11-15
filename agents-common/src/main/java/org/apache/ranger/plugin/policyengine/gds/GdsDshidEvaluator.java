@@ -27,17 +27,18 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInDatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Set;
 
 public class GdsDshidEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDshidEvaluator.class);
 
-    private final        DataShareInDatasetInfo dshid;
+    private final DataShareInDatasetInfo          dshid;
+    private final GdsDatasetEvaluator             datasetEvaluator;;
     private final RangerValidityScheduleEvaluator scheduleEvaluator;
 
-    public GdsDshidEvaluator(DataShareInDatasetInfo dshid) {
-        this.dshid = dshid;
+    public GdsDshidEvaluator(DataShareInDatasetInfo dshid, GdsDatasetEvaluator datasetEvaluator) {
+        this.dshid            = dshid;
+        this.datasetEvaluator = datasetEvaluator;
 
         if (dshid.getValiditySchedule() != null) {
             scheduleEvaluator = new RangerValidityScheduleEvaluator(dshid.getValiditySchedule());
@@ -46,12 +47,16 @@ public class GdsDshidEvaluator {
         }
     }
 
-    public long getDataShareId() {
+    public Long getDataShareId() {
         return dshid.getDataShareId();
     }
 
-    public long getDatasetId() {
+    public Long getDatasetId() {
         return dshid.getDatasetId();
+    }
+
+    public GdsDatasetEvaluator getDatasetEvaluator() {
+        return datasetEvaluator;
     }
 
     public boolean isAllowed(RangerAccessRequest request) {
@@ -64,20 +69,12 @@ public class GdsDshidEvaluator {
         return ret;
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Map<Long, GdsDatasetEvaluator> datasets, Map<Long, GdsProjectEvaluator> projects, Set<String> allowedAccessTypes) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
         LOG.debug("==> GdsDshidEvaluator.getResourceACLs({}, {})", request, acls);
 
-        if (dshid.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
-            GdsDatasetEvaluator datasetEvaluator = datasets.get(dshid.getDatasetId());
+        isConditional = isConditional || scheduleEvaluator != null;
 
-            if (datasetEvaluator != null) {
-                isConditional = isConditional || scheduleEvaluator != null;
-
-                datasetEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes, projects);
-            } else {
-                LOG.warn("GdsDshidEvaluator.getResourceACLs({}): datasetEvaluator for datasetId={} not found", request, dshid.getDatasetId());
-            }
-        }
+        datasetEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
 
         LOG.debug("<== GdsDshidEvaluator.getResourceACLs({}, {})", request, acls);
     }

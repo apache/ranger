@@ -137,7 +137,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         return ret;
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, List<GdsDshidEvaluator> dshidEvaluators, Map<Long, GdsDatasetEvaluator> datasets, Map<Long, GdsProjectEvaluator> projects) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, List<GdsDshidEvaluator> dshidEvaluators) {
         LOG.debug("==> GdsSharedResourceEvaluator.getResourceACLs({}, {})", request, acls);
 
         boolean isResourceMatch = policyResourceMatcher.isMatch(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
@@ -146,7 +146,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             isConditional = isConditional || conditionEvaluator != null;
 
             for (GdsDshidEvaluator dshidEvaluator : dshidEvaluators) {
-                dshidEvaluator.getResourceACLs(request, acls, isConditional, datasets, projects, getAllowedAccessTypes());
+                dshidEvaluator.getResourceACLs(request, acls, isConditional, getAllowedAccessTypes());
             }
         }
 

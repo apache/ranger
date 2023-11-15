@@ -27,17 +27,18 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInProjectInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Set;
 
 public class GdsDipEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDipEvaluator.class);
 
     private final DatasetInProjectInfo            dip;
+    private final GdsProjectEvaluator             projectEvaluator;
     private final RangerValidityScheduleEvaluator scheduleEvaluator;
 
-    public GdsDipEvaluator(DatasetInProjectInfo dip) {
-        this.dip = dip;
+    public GdsDipEvaluator(DatasetInProjectInfo dip, GdsProjectEvaluator projectEvaluator) {
+        this.dip              = dip;
+        this.projectEvaluator = projectEvaluator;
 
         if (dip.getValiditySchedule() != null) {
             scheduleEvaluator = new RangerValidityScheduleEvaluator(dip.getValiditySchedule());
@@ -46,13 +47,15 @@ public class GdsDipEvaluator {
         }
     }
 
-    public long getDatasetId() {
+    public Long getDatasetId() {
         return dip.getDatasetId();
     }
 
-    public long getProjectId() {
+    public Long getProjectId() {
         return dip.getProjectId();
     }
+
+    public GdsProjectEvaluator getProjectEvaluator() { return projectEvaluator; }
 
     public boolean isAllowed(RangerAccessRequest request) {
         boolean ret = isActive();
@@ -64,21 +67,12 @@ public class GdsDipEvaluator {
         return ret;
     }
 
-
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes, Map<Long, GdsProjectEvaluator> projects) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
         LOG.debug("==> GdsDipEvaluator.getResourceACLs({}, {})", request, acls);
 
-        if (dip.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
-            GdsProjectEvaluator evaluator = projects.get(dip.getProjectId());
+        isConditional = isConditional || scheduleEvaluator != null;
 
-            if (evaluator != null) {
-                isConditional = isConditional || scheduleEvaluator != null;
-
-                evaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
-            } else {
-                LOG.warn("GdsDipEvaluator.getResourceACLs({}): evaluator for projectId={} not found", request, dip.getProjectId());
-            }
-        }
+        projectEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
 
         LOG.debug("<== GdsDipEvaluator.getResourceACLs({}, {})", request, acls);
     }

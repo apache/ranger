@@ -77,8 +77,18 @@ public class GdsDatasetEvaluator {
         return name;
     }
 
-    public void addDipEvaluator(GdsDipEvaluator dipEvaluator) {
-        dipEvaluators.add(dipEvaluator);
+    public boolean isInProject(long projectId) {
+        boolean ret = false;
+
+        for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
+            if (dipEvaluator.getProjectId().equals(projectId)) {
+                ret = true;
+
+                break;
+            }
+        }
+
+        return ret;
     }
 
     public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
@@ -118,7 +128,7 @@ public class GdsDatasetEvaluator {
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes, Map<Long, GdsProjectEvaluator> projects) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
         acls.getDatasets().add(getName());
 
         if (!policyEvaluators.isEmpty()) {
@@ -130,11 +140,29 @@ public class GdsDatasetEvaluator {
         }
 
         for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-            dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes, projects);
+            dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
         }
     }
 
-    public static class GdsDatasetAccessRequest extends RangerAccessRequestImpl {
+    public boolean hasReference(Set<String> users, Set<String> groups, Set<String> roles) {
+        boolean ret = false;
+
+        for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+            ret = policyEvaluator.hasReference(users, groups, roles);
+
+            if (ret) {
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    void addDipEvaluator(GdsDipEvaluator dipEvaluator) {
+        dipEvaluators.add(dipEvaluator);
+    }
+
+    private static class GdsDatasetAccessRequest extends RangerAccessRequestImpl {
         public GdsDatasetAccessRequest(Long datasetId, RangerServiceDef gdsServiceDef, RangerAccessRequest request) {
             super.setResource(new RangerDatasetResource(datasetId, gdsServiceDef, request.getResource().getOwnerUser()));
 
