@@ -454,7 +454,6 @@ public class GdsREST {
 
     @GET
     @Path(("/dataset/{id}/policy/{policyId}"))
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
     public RangerPolicy getDatasetPolicy(@PathParam("id") Long datasetId, @PathParam("policyId") Long policyId) {
@@ -482,7 +481,6 @@ public class GdsREST {
 
     @GET
     @Path(("/dataset/{id}/policy"))
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DATASET_POLICY + "\")")
     public List<RangerPolicy> getDatasetPolicies(@PathParam("id") Long datasetId, @Context HttpServletRequest request) {
@@ -780,7 +778,6 @@ public class GdsREST {
 
     @GET
     @Path(("/project/{id}/policy/{policyId}"))
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
     public RangerPolicy getProjectPolicy(@PathParam("id") Long projectId, @PathParam("policyId") Long policyId) {
@@ -808,7 +805,6 @@ public class GdsREST {
 
     @GET
     @Path(("/project/{id}/policy"))
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.PROJECT_POLICY + "\")")
     public List<RangerPolicy> getProjectPolicies(@PathParam("id") Long projectId, @Context HttpServletRequest request) {
@@ -1277,7 +1273,6 @@ public class GdsREST {
 
     @GET
     @Path("/datashare/dataset/{id}")
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASHARE_IN_DATASET + "\")")
     public RangerDataShareInDataset getDataShareInDataset(@PathParam("id") Long id) {
@@ -1433,7 +1428,6 @@ public class GdsREST {
 
     @GET
     @Path("/dataset/project/{id}")
-    @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASET_IN_PROJECT + "\")")
     public RangerDatasetInProject getDatasetInProject(@PathParam("id") Long id) {

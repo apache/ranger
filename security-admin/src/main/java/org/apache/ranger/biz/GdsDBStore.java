@@ -163,6 +163,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateUpdate(dataset, existing);
 
+        copyExistingBaseFields(dataset, existing);
+
         RangerDataset ret = datasetService.update(dataset);
 
         datasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
@@ -454,6 +456,8 @@ public class GdsDBStore extends AbstractGdsStore {
         project.setName(StringUtils.trim(project.getName()));
 
         validator.validateUpdate(project, existing);
+
+        copyExistingBaseFields(project, existing);
 
         RangerProject ret = projectService.update(project);
 
@@ -754,6 +758,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateUpdate(dataShare, existing);
 
+        copyExistingBaseFields(dataShare, existing);
+
         RangerDataShare ret = dataShareService.update(dataShare);
 
         dataShareService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
@@ -865,6 +871,8 @@ public class GdsDBStore extends AbstractGdsStore {
         resource.setName(StringUtils.trim(resource.getName()));
 
         validator.validateUpdate(resource, existing);
+
+        copyExistingBaseFields(resource, existing);
 
         RangerSharedResource ret = sharedResourceService.update(resource);
 
@@ -1005,6 +1013,8 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateUpdate(dataShareInDataset, existing);
 
+        copyExistingBaseFields(dataShareInDataset, existing);
+
         dataShareInDataset.setApprover(validator.needApproverUpdate(existing.getStatus(), dataShareInDataset.getStatus()) ? bizUtil.getCurrentUserLoginId() : existing.getApprover());
 
         RangerDataShareInDataset ret = dataShareInDatasetService.update(dataShareInDataset);
@@ -1104,6 +1114,8 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDatasetInProject existing = datasetInProjectService.read(datasetInProject.getId());
 
         validator.validateUpdate(datasetInProject, existing);
+
+        copyExistingBaseFields(datasetInProject, existing);
 
         datasetInProject.setApprover(validator.needApproverUpdate(existing.getStatus(), datasetInProject.getStatus()) ? bizUtil.getCurrentUserLoginId() : existing.getApprover());
 
@@ -1875,6 +1887,32 @@ public class GdsDBStore extends AbstractGdsStore {
 
         if (dataShare != null) {
             updateGdsVersionForService(dataShare.getServiceId());
+        }
+    }
+
+    private void copyExistingBaseFields(RangerGdsBaseModelObject objToUpdate, RangerGdsBaseModelObject existingObj) {
+        if (objToUpdate != null && existingObj != null) {
+            // retain existing values for: guid, createdBy, createTime
+            objToUpdate.setGuid(existingObj.getGuid());
+            objToUpdate.setCreatedBy(existingObj.getCreatedBy());
+            objToUpdate.setCreateTime(existingObj.getCreateTime());
+
+            // retain existing values if objToUpdate has null for: isEnabled, description, options, additionalInfo
+            if (objToUpdate.getIsEnabled() == null) {
+                objToUpdate.setIsEnabled(existingObj.getIsEnabled());
+            }
+
+            if (objToUpdate.getDescription() == null) {
+                objToUpdate.setDescription(existingObj.getDescription());
+            }
+
+            if (objToUpdate.getOptions() == null) {
+                objToUpdate.setOptions(existingObj.getOptions());
+            }
+
+            if (objToUpdate.getAdditionalInfo() == null) {
+                objToUpdate.setAdditionalInfo(existingObj.getAdditionalInfo());
+            }
         }
     }
 
