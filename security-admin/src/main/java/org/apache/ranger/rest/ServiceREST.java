@@ -22,19 +22,9 @@ package org.apache.ranger.rest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.IntStream;
-import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
@@ -98,16 +88,10 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXRole;
-import org.apache.ranger.plugin.model.RangerPluginInfo;
-import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.ServiceDeleteResponse;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -1109,6 +1093,32 @@ public class ServiceREST {
 		return ret;
 	}
 
+	public List<RangerServiceHeaderInfo> getServiceHeaders(@Context HttpServletRequest request) {
+		LOG.debug("==> ServiceREST.getServiceHeaders()");
+
+		String  namePrefix         = request.getParameter(SearchFilter.SERVICE_NAME_PREFIX);
+		String  svcType            = request.getParameter(SearchFilter.SERVICE_TYPE);
+		boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+		boolean filterByType       = StringUtils.isNotBlank(svcType);
+
+		List<RangerServiceHeaderInfo> ret = daoManager.getXXService().findServiceHeaders();
+
+		if (!ret.isEmpty() && (filterByNamePrefix || filterByType)) {
+			for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+				RangerServiceHeaderInfo serviceHeader = iter.next();
+
+				if (filterByNamePrefix && !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
+					iter.remove();
+				} else if (filterByType && !StringUtils.equals(serviceHeader.getType(), svcType)) {
+					iter.remove();
+				}
+			}
+		}
+
+		LOG.debug("<== ServiceREST.getServiceHeaders(namePrefix={}, svcType={}): ret={}", namePrefix, svcType, ret);
+
+		return ret;
+	}
 
 	@GET
 	@Path("/services/count")
