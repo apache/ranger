@@ -51,6 +51,7 @@ import ResourceTagContent from "./ResourceTagContent";
 import { PathAssociateWithModule } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 import { SideBarBody } from "./SideBarBody";
+import { getLandingPageURl } from "../../utils/XAUtils";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -242,7 +243,7 @@ export const SideBar = () => {
         <div className="sidebar-header">
           <NavLink
             id="rangerIcon"
-            to="/policymanager/resource"
+            to={getLandingPageURl()}
             onClick={() => {
               setActive(null);
               setDrawer(false);
@@ -345,7 +346,7 @@ export const SideBar = () => {
 
           {hasAccessToTab("Security Zone") && (
             <React.Fragment>
-              {!isKeyAdmin() && (
+              {!isKMSRole && (
                 <li>
                   <NavLink
                     className={activeClass("Security Zone")}
@@ -366,22 +367,20 @@ export const SideBar = () => {
 
           {hasAccessToTab("Key Manager") && (
             <React.Fragment>
-              {(isKeyAdmin() || isKMSAuditor()) && (
-                <li>
-                  <NavLink
-                    className={activeClass("Key Manager")}
-                    to="/kms/keys/new/manage/service"
-                    onClick={() => {
-                      setActive(null);
-                      setDrawer(false);
-                      setAccountDrawer(false);
-                    }}
-                  >
-                    <i className="fa fa-fw fa-key"></i>
-                    <span>Key Manager</span>
-                  </NavLink>
-                </li>
-              )}
+              <li>
+                <NavLink
+                  className={activeClass("Key Manager")}
+                  to="/kms/keys/new/manage/service"
+                  onClick={() => {
+                    setActive(null);
+                    setDrawer(false);
+                    setAccountDrawer(false);
+                  }}
+                >
+                  <i className="fa fa-fw fa-key"></i>
+                  <span>Key Manager</span>
+                </NavLink>
+              </li>
             </React.Fragment>
           )}
 

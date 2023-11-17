@@ -237,7 +237,7 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 final class CaseSensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
     private final char levelSeparatorChar;
     CaseSensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, true);
+        super(value, options);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -245,13 +245,19 @@ final class CaseSensitiveURLRecursiveWildcardMatcher extends AbstractStringResou
     boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
         return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.SENSITIVE);
     }
+
+    @Override
+    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+        return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.SENSITIVE);
+    }
+
     int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
 final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
     private final char levelSeparatorChar;
     CaseInsensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, false);
+        super(value, options);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -259,6 +265,12 @@ final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringRes
     boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
         return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.INSENSITIVE);
     }
+
+    @Override
+    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+        return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
+    }
+
     int getPriority() { return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 
 }
@@ -268,8 +280,8 @@ abstract class RecursiveMatcher extends AbstractStringResourceMatcher {
     String valueWithoutSeparator;
     String valueWithSeparator;
 
-    RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar, boolean isCaseSensitive) {
-        super(value, options, isCaseSensitive);
+    RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+        super(value, options);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -284,7 +296,7 @@ abstract class RecursiveMatcher extends AbstractStringResourceMatcher {
 
 final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
     CaseSensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar, true);
+        super(value, options, levelSeparatorChar);
     }
 
     @Override
@@ -311,12 +323,18 @@ final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
 
         return ret;
     }
+
+    @Override
+    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+        return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
+    }
+
     int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
 final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
     CaseInsensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar, false);
+        super(value, options, levelSeparatorChar);
     }
 
     @Override
@@ -342,6 +360,11 @@ final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
         }
 
         return ret;
+    }
+
+    @Override
+    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+        return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
     }
 
     int getPriority() { return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}

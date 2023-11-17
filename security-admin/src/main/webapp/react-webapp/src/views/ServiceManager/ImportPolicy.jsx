@@ -65,7 +65,7 @@ class ImportPolicy extends Component {
     });
   };
 
-  handleFileUpload = (e) => {
+  handleFileUpload = (e, values) => {
     e.preventDefault();
     const fileReader = new FileReader();
     fileReader.readAsText(e.target.files[0]);
@@ -132,6 +132,7 @@ class ImportPolicy extends Component {
       const formFields = {};
       formFields["serviceFields"] = serviceFieldsFromJson;
       formFields["sourceZoneName"] = zoneNameJsonParseFile;
+      formFields["isOverride"] = values.isOverride;
 
       this.setState({
         fileJsonData: jsonParseFileData,
@@ -204,7 +205,8 @@ class ImportPolicy extends Component {
     }
   };
 
-  handleSelectedZone = async (e) => {
+  handleSelectedZone = async (e, values) => {
+    const formFields = {};
     let zonesResp = [];
 
     try {
@@ -238,10 +240,10 @@ class ImportPolicy extends Component {
           };
         });
 
-        const formFields = {};
         formFields["serviceFields"] = serviceFieldsFromJson;
         formFields["sourceZoneName"] =
           this.state.initialFormFields["sourceZoneName"];
+        formFields["isOverride"] = values.isOverride;
 
         this.setState({
           destZoneName: e && e.label,
@@ -249,18 +251,24 @@ class ImportPolicy extends Component {
           filterFormFields: formFields
         });
       } else {
+        formFields["serviceFields"] =
+          this.state.initialFormFields["serviceFields"];
+        formFields["sourceZoneName"] =
+          this.state.initialFormFields["sourceZoneName"];
+        formFields["isOverride"] = values.isOverride;
+
         this.setState({
           destZoneName: "",
           destServices: this.props.isParentImport
             ? this.props.allServices
             : this.props.services,
-          filterFormFields: this.state.initialFormFields
+          filterFormFields: formFields
         });
       }
     } catch (error) {
       serverError(error);
       console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
+        `Error occurred while fetching Services from selected Zone! ${error}`
       );
     }
   };
@@ -323,6 +331,7 @@ class ImportPolicy extends Component {
             initialValues={this.state.filterFormFields}
             render={({
               handleSubmit,
+              values,
               form: {
                 mutators: { push: addItem, pop: removeItem }
               }
@@ -359,7 +368,9 @@ class ImportPolicy extends Component {
                                       type="file"
                                       className="form-control-file"
                                       accept=" .json "
-                                      onChange={this.handleFileUpload}
+                                      onChange={(e) =>
+                                        this.handleFileUpload(e, values)
+                                      }
                                     />
                                   </label>
                                 </div>
@@ -452,7 +463,9 @@ class ImportPolicy extends Component {
                               <Col sm={1}>To</Col>
                               <Col sm={4}>
                                 <Select
-                                  onChange={this.handleSelectedZone}
+                                  onChange={(e) =>
+                                    this.handleSelectedZone(e, values)
+                                  }
                                   isClearable
                                   components={{
                                     IndicatorSeparator: () => null

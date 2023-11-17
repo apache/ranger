@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -34,6 +35,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -56,6 +58,11 @@ import java.util.Map;
 
 public class ServiceDefUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceDefUtil.class);
+
+    public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR = RangerScriptConditionEvaluator.class.getCanonicalName();
+    public static final String IMPLICIT_CONDITION_EXPRESSION_NAME      = "_expression";
+    public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL     = "Enter boolean expression";
+    public static final String IMPLICIT_CONDITION_EXPRESSION_DESC      = "Boolean expression";
 
     private static final String USER_STORE_ENRICHER = RangerUserStoreEnricher.class.getCanonicalName();
 
@@ -97,6 +104,22 @@ public class ServiceDefUtil {
         normalizeRowFilterDef(serviceDef);
 
         return serviceDef;
+    }
+
+    public static RangerPolicyConditionDef getConditionDef(RangerServiceDef serviceDef, String conditionName) {
+        RangerPolicyConditionDef ret = null;
+
+        if (serviceDef != null && serviceDef.getPolicyConditions() != null) {
+            for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
+                if (StringUtils.equals(conditionDef.getName(), conditionName)) {
+                    ret = conditionDef;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
     }
 
     public static RangerResourceDef getResourceDef(RangerServiceDef serviceDef, String resource) {
@@ -535,6 +558,8 @@ public class ServiceDefUtil {
 
             serviceDef.setContextEnrichers(enricherDefs);
 
+            ret = true;
+
             LOG.info("addUserStoreEnricher(serviceName={}): added userStoreEnricher {}", policies.getServiceName(), userStoreEnricher);
         }
 
@@ -581,6 +606,31 @@ public class ServiceDefUtil {
                 addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
 
                 ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    public static RangerPolicyConditionDef createImplicitExpressionConditionDef(Long itemId) {
+        RangerPolicyConditionDef ret = new RangerPolicyConditionDef(itemId, IMPLICIT_CONDITION_EXPRESSION_NAME, IMPLICIT_CONDITION_EXPRESSION_EVALUATOR, new HashMap<>());
+
+        ret.getEvaluatorOptions().put("ui.isMultiline", "true");
+        ret.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
+        ret.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
+        ret.setUiHint("{ \"isMultiline\":true }");
+
+        return ret;
+    }
+
+    public static long getConditionsMaxItemId(List<RangerPolicyConditionDef> conditions) {
+        long ret = 0;
+
+        if (conditions != null) {
+            for (RangerPolicyConditionDef condition : conditions) {
+                if (condition != null && condition.getItemId() != null && ret < condition.getItemId()) {
+                    ret = condition.getItemId();
+                }
             }
         }
 

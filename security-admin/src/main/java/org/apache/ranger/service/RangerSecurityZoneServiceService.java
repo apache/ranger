@@ -18,9 +18,11 @@
 package org.apache.ranger.service;
 
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +31,8 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
@@ -39,6 +43,7 @@ import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,15 +54,18 @@ import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import javax.annotation.PostConstruct;
+
 @Service
 @Scope("singleton")
 public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceBase<XXSecurityZone, RangerSecurityZone> {
-
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
 
 	@Autowired
 	ServiceDBStore serviceDBStore;
+
+    boolean compressJsonData = false;
 
     private static final Logger logger = LoggerFactory.getLogger(RangerSecurityZoneServiceService.class);
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
@@ -74,12 +82,31 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 		trxLogAttrs.put("adminUserGroups", new VTrxLogAttr("adminUserGroups", "Zone Admin User Groups", false));
 		trxLogAttrs.put("auditUsers", new VTrxLogAttr("auditUsers", "Zone Audit Users", false));
 		trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups", false));
+		trxLogAttrs.put("adminRoles", new VTrxLogAttr("adminRoles", "Zone Admin Roles", false));
+		trxLogAttrs.put("auditRoles", new VTrxLogAttr("auditRoles", "Zone Audit Roles", false));
 		trxLogAttrs.put("description", new VTrxLogAttr("description", "Zone Description", false));
                 trxLogAttrs.put("tagServices", new VTrxLogAttr("tagServices", "Zone Tag Services", false));
 	}
 
     public RangerSecurityZoneServiceService() {
         super();
+    }
+
+    @PostConstruct
+    public void initService() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> RangerSecurityZoneServiceService.initService()");
+        }
+
+        RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+        compressJsonData = config.getBoolean("ranger.admin.store.security.zone.compress.json_data", false);
+
+        logger.info("ranger.admin.store.security.zone.compress.json_data={}", compressJsonData);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerSecurityZoneServiceService.initService()");
+        }
     }
 
     @Override
@@ -99,19 +126,36 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     protected XXSecurityZone mapViewToEntityBean(RangerSecurityZone securityZone, XXSecurityZone xxSecurityZone, int OPERATION_CONTEXT) {
         XXSecurityZone ret = super.mapViewToEntityBean(securityZone, xxSecurityZone, OPERATION_CONTEXT);
 
-        ret.setJsonData(gsonBuilder.toJson(securityZone));
+        String json = gsonBuilder.toJson(securityZone);
+
+        if (StringUtils.isNotEmpty(json) && compressJsonData) {
+            try {
+                json = StringUtil.compressString(json);
+            } catch (IOException excp) {
+                logger.error("mapViewToEntityBean(): json compression failed (length={}). Will save uncompressed json", json.length(), excp);
+            }
+        }
+
+        ret.setJsonData(json);
 
         return ret;
     }
     @Override
     protected RangerSecurityZone mapEntityToViewBean(RangerSecurityZone securityZone, XXSecurityZone xxSecurityZone) {
-        RangerSecurityZone ret = super.mapEntityToViewBean(securityZone, xxSecurityZone);
+        RangerSecurityZone ret  = super.mapEntityToViewBean(securityZone, xxSecurityZone);
+        String             json = xxSecurityZone.getJsonData();
 
-        if (StringUtils.isNotEmpty(xxSecurityZone.getJsonData())) {
-            RangerSecurityZone zoneFromJsonData = gsonBuilder.fromJson(xxSecurityZone.getJsonData(), RangerSecurityZone.class);
+        if (StringUtils.isNotEmpty(json)) {
+            try {
+                json = StringUtil.decompressString(json);
+            } catch (IOException excp) {
+                logger.error("mapEntityToViewBean(): json decompression failed (length={}). Will treat as uncompressed json", json.length(), excp);
+            }
+
+            RangerSecurityZone zoneFromJsonData = gsonBuilder.fromJson(json, RangerSecurityZone.class);
 
             if (zoneFromJsonData == null) {
-                logger.info("Cannot read jsonData into RangerSecurityZone object in [" + xxSecurityZone.getJsonData() + "]!!");
+                logger.info("Cannot read jsonData into RangerSecurityZone object in [" + json + "]!!");
             } else {
                 ret.setName(zoneFromJsonData.getName());
                 ret.setServices(zoneFromJsonData.getServices());
@@ -266,8 +310,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 					}
 				}
 				if("services".equalsIgnoreCase(fieldName)) {
-					Gson gson = new Gson();
-					value = gson.toJson(vSecurityZone.getServices(), HashMap.class);
+					value = toTrxLog(vSecurityZone.getServices());
 				}
 				if ("create".equalsIgnoreCase(action)) {
 					xTrxLog.setNewValue(value);
@@ -285,8 +328,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 						String mFieldName = mField.getName();
 						if (fieldName.equalsIgnoreCase(mFieldName)) {
 							if("services".equalsIgnoreCase(mFieldName)) {
-								Gson gson = new Gson();
-								oldValue = gson.toJson(securityZoneDB.getServices(), HashMap.class);
+								oldValue = toTrxLog(securityZoneDB.getServices());
 							}
 							else {
 								oldValue = mField.get(securityZoneDB) + "";
@@ -317,4 +359,33 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 		}
 		return trxLogList;
 	}
+
+    private String toTrxLog(Map<String, RangerSecurityZoneService> services) {
+        String ret;
+
+        if (services == null) {
+            services = Collections.emptyMap();
+        }
+
+        if (compressJsonData) { // when compression is enabled, summarize services info for trx log
+            Map<String, RangerSecurityZoneService> servicesSummary = new HashMap<>(services.size());
+
+            for (Map.Entry<String, RangerSecurityZoneService> entry : services.entrySet()) {
+                String                    serviceName        = entry.getKey();
+                RangerSecurityZoneService zoneService        = entry.getValue();
+                Integer                   resourceCount      = (zoneService != null && zoneService.getResources() != null) ? zoneService.getResources().size() : 0;
+                RangerSecurityZoneService zoneServiceSummary = new RangerSecurityZoneService();
+
+                zoneServiceSummary.getResources().add(new HashMap<String, List<String>>() {{ put("resourceCount", Collections.singletonList(resourceCount.toString())); }});
+
+                servicesSummary.put(serviceName, zoneServiceSummary);
+            }
+
+            ret = new Gson().toJson(servicesSummary, Map.class);
+        } else {
+            ret = new Gson().toJson(services, Map.class);
+        }
+
+        return ret;
+    }
 }

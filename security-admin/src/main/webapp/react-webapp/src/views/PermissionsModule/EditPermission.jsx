@@ -32,7 +32,7 @@ import { Loader } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
-import { cloneDeep, find, findIndex, reverse } from "lodash";
+import { cloneDeep, find, findIndex, isEmpty, map, reverse } from "lodash";
 import { AccessResult } from "Utils/XAEnums";
 import {
   CustomInfinteScroll,
@@ -88,7 +88,7 @@ function reducer(state, action) {
       throw new Error();
   }
 }
-const EditPermission = (props) => {
+const EditPermission = () => {
   let { permissionId } = useParams();
   const navigate = useNavigate();
   const toastId = useRef(null);
@@ -211,18 +211,27 @@ const EditPermission = (props) => {
   };
 
   const fetchGroups = async (inputValue) => {
-    let params = {};
+    let params = { isVisible: 1 };
+    let groupsOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const groupResp = await fetchApi({
-      url: "xusers/groups",
-      params: params
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/groups",
+        params: params
+      });
+      groupsOp = groupResp.data?.vXGroups;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
+      serverError(error);
+    }
+
+    return map(groupsOp, function (group) {
+      return { label: group.name, value: group.id };
     });
-    return groupResp.data.vXGroups.map(({ name, id }) => ({
-      label: name,
-      value: id
-    }));
   };
 
   const filterGrpOp = ({ data }) => {
@@ -255,19 +264,27 @@ const EditPermission = (props) => {
   };
 
   const fetchUsers = async (inputValue) => {
-    let params = {};
+    let params = { isVisible: 1 };
+    let usersOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const userResp = await fetchApi({
-      url: "xusers/users",
-      params: params
-    });
 
-    return userResp.data.vXUsers.map(({ name, id }) => ({
-      label: name,
-      value: id
-    }));
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/users",
+        params: params
+      });
+      usersOp = userResp.data?.vXUsers;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
+      serverError(error);
+    }
+
+    return map(usersOp, function (user) {
+      return { label: user.name, value: user.id };
+    });
   };
 
   const filterUsrOp = ({ data }) => {
@@ -375,7 +392,7 @@ const EditPermission = (props) => {
                                 <Field
                                   className="form-control"
                                   name="selectGroups"
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div>
                                       {" "}
                                       <AsyncSelect
@@ -469,7 +486,7 @@ const EditPermission = (props) => {
                               </td>
                             </tr>
                             <tr>
-                              {!_.isEmpty(selectedGrp) ? (
+                              {!isEmpty(selectedGrp) ? (
                                 <td>
                                   {grploading ? (
                                     <div className="permission-infinite-scroll text-center">
@@ -495,7 +512,7 @@ const EditPermission = (props) => {
                                 </td>
                               )}
 
-                              {!_.isEmpty(selectedUsr) ? (
+                              {!isEmpty(selectedUsr) ? (
                                 <td>
                                   {usrloading ? (
                                     <div className="permission-infinite-scroll text-center">

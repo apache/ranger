@@ -57,11 +57,11 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isUser,
-  parseSearchFilter
+  parseSearchFilter,
+  getResourcesDefVal
 } from "../../utils/XAUtils";
 import {
   alertMessage,
-  RangerPolicyType,
   ResourcesOverrideInfoMsg,
   ServerAttrName
 } from "../../utils/XAEnums";
@@ -145,7 +145,7 @@ function PolicyListing(props) {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -155,7 +155,11 @@ function PolicyListing(props) {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(policyListingData);
+    }
+  }, [totalCount]);
   const getTableSortBy = (sortArr = []) => {
     return sortArr
       .map(({ id }) => {
@@ -223,14 +227,7 @@ function PolicyListing(props) {
         setCurrentPageSize(pageSize);
         setResetpage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(policyData, policyResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams, serviceData]
   );
@@ -299,7 +296,7 @@ function PolicyListing(props) {
       toast.error(errorMsg);
       console.error("Error occurred during deleting policy : " + error);
     }
-    if (policyListingData.length == 1 && currentpageIndex > 1) {
+    if (policyListingData.length == 1 && currentpageIndex > 0) {
       let page = currentpageIndex - currentpageIndex;
       if (typeof resetPage?.page === "function") {
         resetPage.page(page);
@@ -671,15 +668,8 @@ function PolicyListing(props) {
     let resourceSearchOpt = [];
     let serverRsrcAttrName = [];
     let policySearchInfoMsg = [];
-    if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
-      resources = serviceDef.dataMaskDef?.resources || [];
-    } else if (
-      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
-    ) {
-      resources = serviceDef.rowFilterDef?.resources || [];
-    } else {
-      resources = serviceDef?.resources || [];
-    }
+
+    resources = getResourcesDefVal(serviceDef, policyType);
 
     resourceSearchOpt = map(resources, function (resource) {
       return {
@@ -725,7 +715,7 @@ function PolicyListing(props) {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);

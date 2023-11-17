@@ -19,12 +19,10 @@
 package org.apache.ranger.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_policy_ref_datamask_type")
 public class XXPolicyRefDataMaskType extends XXDBBase implements
 		java.io.Serializable {

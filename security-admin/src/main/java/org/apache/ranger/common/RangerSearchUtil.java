@@ -194,25 +194,27 @@ public class RangerSearchUtil extends SearchUtil {
 				StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortBy", MessageEnums.INVALID_INPUT_DATA,
 				null, SearchFilter.SORT_BY);
 
-		boolean sortSet = false;
 		if (!StringUtils.isEmpty(sortBy)) {
+			boolean sortSet = false;
+
 			for (SortField sortField : sortFields) {
 				if (sortField.getParamName().equalsIgnoreCase(sortBy)) {
 					ret.setSortBy(sortField.getParamName());
-					String sortType = restErrorUtil.validateString(request.getParameter("sortType"),
-							StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortType",
-							MessageEnums.INVALID_INPUT_DATA, null, "sortType");
-					ret.setSortType(sortType);
 					sortSet = true;
 					break;
 				}
 			}
+
+			if (!sortSet) {
+				logger.info("Invalid or unsupported sortBy field passed. sortBy=" + sortBy, new Throwable());
+			}
 		}
 
-		if (!sortSet && !StringUtils.isEmpty(sortBy)) {
-			logger.info("Invalid or unsupported sortBy field passed. sortBy=" + sortBy, new Throwable());
-		}
-		
+		String sortType = restErrorUtil.validateString(request.getParameter("sortType"),
+				StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortType",
+				MessageEnums.INVALID_INPUT_DATA, null, "sortType");
+		ret.setSortType(sortType);
+
 		if(ret.getParams() == null) {
 			ret.setParams(new HashMap<String, String>());
 		}
@@ -270,9 +272,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (intFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -281,12 +283,9 @@ public class RangerSearchUtil extends SearchUtil {
 				String strFieldValue = searchCriteria.getParam(searchField.getClientFieldName());
 				if (strFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")");
-						if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
-							whereClause.append("= :").append(searchField.getClientFieldName());
-						} else {
-							whereClause.append("like :").append(searchField.getClientFieldName());
-						}
+						whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")")
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -299,9 +298,9 @@ public class RangerSearchUtil extends SearchUtil {
 				if (boolFieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
 						whereClause.append(" and ")
-								.append(searchField.getFieldName())
-								.append("=:")
-								.append(searchField.getClientFieldName());
+						           .append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -312,17 +311,9 @@ public class RangerSearchUtil extends SearchUtil {
 						null, searchField.getClientFieldName(), null);
 				if (fieldValue != null) {
 					if (searchField.getCustomCondition() == null) {
-						whereClause.append(" and ").append(searchField.getFieldName());
-						if (SearchField.SEARCH_TYPE.LESS_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("< :");
-						} else if (SearchField.SEARCH_TYPE.LESS_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("<= :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_THAN.equals(searchField.getSearchType())) {
-							whereClause.append("> :");
-						} else if (SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN.equals(searchField.getSearchType())) {
-							whereClause.append(">= :");
-						}
-						whereClause.append(searchField.getClientFieldName());
+						whereClause.append(" and ").append(searchField.getFieldName())
+						           .append(getSqlOperator(searchField.getSearchType()))
+						           .append(":").append(searchField.getClientFieldName());
 					} else {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
@@ -394,11 +385,14 @@ public class RangerSearchUtil extends SearchUtil {
 	}
 	
 	public String constructSortClause(SearchFilter searchCriteria, List<SortField> sortFields) {
-		String sortBy = searchCriteria.getSortBy();
+		String ret         = null;
+		String sortBy      = searchCriteria.getSortBy();
+		String sortType    = getSortType(searchCriteria);
 		String querySortBy = null;
 		
 		if (!stringUtil.isEmpty(sortBy)) {
 			sortBy = sortBy.trim();
+
 			for (SortField sortField : sortFields) {
 				if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
 					querySortBy = sortField.getFieldName();
@@ -415,31 +409,40 @@ public class RangerSearchUtil extends SearchUtil {
 					querySortBy = sortField.getFieldName();
 					// Override the sortBy using the default value
 					searchCriteria.setSortBy(sortField.getParamName());
-					searchCriteria.setSortType(sortField.getDefaultOrder().name());
+
+					if(sortType == null) {
+						sortType = sortField.getDefaultOrder().name();
+					}
+
+					searchCriteria.setSortType(sortType);
 					break;
 				}
 			}
 		}
 
 		if (querySortBy != null) {
-			String sortType = searchCriteria.getSortType();
-			String querySortType = "asc";
-			if (sortType != null) {
-				if ("asc".equalsIgnoreCase(sortType) || "desc".equalsIgnoreCase(sortType)) {
-					querySortType = sortType;
-				} else {
-					logger.error("Invalid sortType. sortType=" + sortType);
-				}
-			}
-			
-			if(querySortType!=null){
-				searchCriteria.setSortType(querySortType.toLowerCase());
-			}
-			String sortClause = " ORDER BY " + querySortBy + " " + querySortType;
+			String querySortType = stringUtil.isEmpty(sortType) ? RangerConstants.DEFAULT_SORT_ORDER : sortType;
 
-			return sortClause;
+			searchCriteria.setSortType(querySortType.toLowerCase());
+
+			ret = " ORDER BY " + querySortBy + " " + querySortType;
 		}
-		return null;
+
+		return ret;
 	}
-	
+
+	private String getSortType(SearchFilter searchCriteria) {
+		String ret      = null;
+		String sortType = searchCriteria.getSortType();
+
+		if (!stringUtil.isEmpty(sortType)) {
+			if ("asc".equalsIgnoreCase(sortType) || "desc".equalsIgnoreCase(sortType)) {
+				ret = sortType;
+			} else {
+				logger.error("Invalid sortType. sortType=" + sortType);
+			}
+		}
+
+		return ret;
+	}
 }

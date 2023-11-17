@@ -30,14 +30,12 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 
 @Entity
 @Cacheable
 @Table(name="x_tag")
-@XmlRootElement
 public class XXTag extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 

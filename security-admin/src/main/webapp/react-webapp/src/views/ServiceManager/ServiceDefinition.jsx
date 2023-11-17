@@ -19,7 +19,7 @@
 
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Col, Modal, Row, Table } from "react-bootstrap";
+import { Alert, Badge, Button, Col, Modal, Row, Table } from "react-bootstrap";
 import { difference, isEmpty, keys, map, omit, pick } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import ExportPolicy from "./ExportPolicy";
@@ -193,9 +193,22 @@ class ServiceDefinition extends Component {
       return tableRow;
     }
 
-    auditFilters = JSON.parse(
-      auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
-    );
+    try {
+      auditFilters = JSON.parse(
+        auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
+      );
+    } catch (error) {
+      tableRow.push(
+        <tr key="error-service-audit-filter">
+          <td className="text-center" colSpan="8">
+            <Alert variant="danger">
+              Error occured while parsing service audit filter!
+            </Alert>
+          </td>
+        </tr>
+      );
+      return tableRow;
+    }
 
     auditFilters.map((a, index) =>
       tableRow.push(
@@ -476,15 +489,17 @@ class ServiceDefinition extends Component {
                                 <p className="form-header">
                                   Config Properties :
                                 </p>
-                                <Table bordered size="sm">
-                                  <tbody className="service-config">
-                                    {s?.configs &&
-                                      this.getServiceConfigs(
-                                        this.state.serviceDef,
-                                        s.configs
-                                      )}
-                                  </tbody>
-                                </Table>
+                                <div className="table-responsive">
+                                  <Table bordered size="sm">
+                                    <tbody className="service-config">
+                                      {s?.configs &&
+                                        this.getServiceConfigs(
+                                          this.state.serviceDef,
+                                          s.configs
+                                        )}
+                                    </tbody>
+                                  </Table>
+                                </div>
                                 <p className="form-header">Audit Filter :</p>
                                 <div className="table-responsive">
                                   <Table

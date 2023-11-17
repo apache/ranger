@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile.ranger-knox
       args:
         - KNOX_VERSION=${KNOX_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - KNOX_PLUGIN_VERSION=${KNOX_PLUGIN_VERSION}
     image: ranger-knox
     container_name: ranger-knox
     hostname: ranger-knox.example.com
@@ -23,7 +23,7 @@ services:
         condition: service_started
     environment:
       - KNOX_VERSION
-      - RANGER_VERSION
+      - KNOX_PLUGIN_VERSION
 
 networks:
   ranger:

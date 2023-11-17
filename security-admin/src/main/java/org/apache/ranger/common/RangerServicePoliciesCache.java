@@ -33,9 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -203,6 +205,7 @@ public class RangerServicePoliciesCache {
 		if (policies != null) {
 			RangerAdminConfig config = RangerAdminConfig.getInstance();
 			boolean doSaveToDisk = config.getBoolean("ranger.admin.policy.save.to.disk", false);
+			int maxVersionsToSaveToDisk = config.getInt("ranger.admin.policy.max.versions.to.save.to.disk", 1);
 
 			if (doSaveToDisk) {
 				File cacheFile = null;
@@ -236,6 +239,47 @@ public class RangerServicePoliciesCache {
 						gson.toJson(policies, writer);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+					}
+					String serviceDefName = policies.getServiceDef().getName();
+					String serviceName    = policies.getServiceName();
+
+					File parentFile = cacheFile.getParentFile();
+					FileFilter logFileFilter = (file) -> file.getName().matches(serviceDefName +"_.+json_.+");
+					File[] filesInParent = parentFile.listFiles(logFileFilter);
+					List<Long> policyVersions = new ArrayList<>();
+					if (filesInParent != null && filesInParent.length > 0) {
+						for (File f : filesInParent) {
+							String fileName = f.getName();
+							// Extract the part after json_
+							int policyVersionIdx = fileName.lastIndexOf("json_");
+							String policyVersionStr = fileName.substring(policyVersionIdx + 5);
+							Long policyVersion = Long.valueOf(policyVersionStr);
+							policyVersions.add(policyVersion);
+						}
+					} else {
+						LOG.info("No files matching '" + serviceDefName + "_.+json_*' found");
+					}
+					if (!policyVersions.isEmpty()) {
+						policyVersions.sort(new Comparator<Long>() {
+							@Override
+							public int compare(Long o1, Long o2) {
+								if (o1.equals(o2)) return 0;
+								return o1 < o2 ? -1 : 1;
+							}
+						});
+					}
+
+					if (policyVersions.size() > maxVersionsToSaveToDisk) {
+						String fileName = serviceDefName + "_" + serviceName + ".json_" + Long.toString(policyVersions.get(0));
+						String pathName = parentFile.getAbsolutePath() + File.separator + fileName;
+						File toDelete = new File(pathName);
+						if (toDelete.exists()) {
+							//LOG.info("Deleting file :[" + pathName + "]");
+							boolean isDeleted = toDelete.delete();
+							//LOG.info("file :[" + pathName + "] is deleted");
+						} else {
+							LOG.info("File: " + pathName + " does not exist!");
+						}
 					}
 				}
 			}

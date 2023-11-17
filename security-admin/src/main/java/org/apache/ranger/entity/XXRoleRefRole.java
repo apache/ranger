@@ -29,7 +29,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * The persistent class for the x_role_ref_role database table.
@@ -37,7 +36,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name="x_role_ref_role")
 public class XXRoleRefRole extends XXDBBase implements Serializable {
 

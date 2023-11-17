@@ -40,6 +40,7 @@ import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
 
     protected static final String AUTHORIZATION_HEADER = "Authorization";
+    protected static final String DO_AS_PARAMETER      = "doAs";
 
     @Override
     public ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector) {
@@ -57,8 +58,9 @@ public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
         RangerAuth rangerAuth       = null;
         String     jwtAuthHeaderStr = getJwtAuthHeader(httpServletRequest);
         String     jwtCookieStr     = StringUtils.isBlank(jwtAuthHeaderStr) ? getJwtCookie(httpServletRequest) : null;
+        String     doAsUser         = httpServletRequest.getParameter(DO_AS_PARAMETER);
 
-        AuthenticationToken authenticationToken = authenticate(jwtAuthHeaderStr, jwtCookieStr);
+        AuthenticationToken authenticationToken = authenticate(jwtAuthHeaderStr, jwtCookieStr, doAsUser);
 
         if (authenticationToken != null) {
             rangerAuth = new RangerAuth(authenticationToken, RangerAuth.AUTH_TYPE.JWT_JWKS);

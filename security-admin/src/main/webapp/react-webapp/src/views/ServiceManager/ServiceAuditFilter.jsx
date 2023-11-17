@@ -26,7 +26,7 @@ import AsyncSelect from "react-select/async";
 import Editable from "Components/Editable";
 import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "../Resources/ModalResourceComp";
-import { uniq, map, join, isEmpty, find, toUpper } from "lodash";
+import { uniq, map, join, isEmpty, find, toUpper, isArray } from "lodash";
 import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
 import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
@@ -110,7 +110,9 @@ export default function ServiceAuditFilter(props) {
               </span>
               :
               <span className="ml-1">
-                {join(map(resourceData[`value-${level}`], "value"), ", ")}
+                {isArray(resourceData[`value-${level}`])
+                  ? join(map(resourceData[`value-${level}`], "value"), ", ")
+                  : [resourceData[`value-${level}`].value]}
               </span>
             </div>
             <div>
@@ -277,7 +279,8 @@ export default function ServiceAuditFilter(props) {
                                 <Select
                                   {...input}
                                   menuPortalTarget={document.body}
-                                  isClearable={false}
+                                  isClearable={true}
+                                  isSearchable={false}
                                   options={[
                                     { value: "DENIED", label: "DENIED" },
                                     { value: "ALLOWED", label: "ALLOWED" },
@@ -558,7 +561,6 @@ export default function ServiceAuditFilter(props) {
         handleSave={handleSave}
         modelState={modelState}
         handleClose={handleClose}
-        policyItem={false}
       />
     </div>
   );

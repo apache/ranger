@@ -50,6 +50,12 @@ class ZoneListing extends Component {
     this.fetchData();
   }
 
+  componentDidUpdate(prevState) {
+    if (this.props.params.zoneId != prevState.params.zoneId) {
+      this.fetchData();
+    }
+  }
+
   fetchData = async () => {
     let servicesResp;
     let zoneList = [],
@@ -103,7 +109,7 @@ class ZoneListing extends Component {
     let selectedZone = this.state.zones.find((obj) => zoneid === obj.id);
     if (selectedZone) {
       this.setState({ selectedZone: selectedZone });
-      this.props.navigate(`/zones/zone/${zoneid}`, { replace: true });
+      this.props.navigate(`/zones/zone/${zoneid}`);
     }
   };
 
@@ -144,11 +150,9 @@ class ZoneListing extends Component {
       });
 
       if (getSelectedZone && getSelectedZone !== undefined) {
-        this.props.navigate(`/zones/zone/${getSelectedZone.id}`, {
-          replace: true
-        });
+        this.props.navigate(`/zones/zone/${getSelectedZone.id}`);
       } else {
-        this.props.navigate(`/zones/zone/list`, { replace: true });
+        this.props.navigate(`/zones/zone/list`);
       }
       toast.success("Successfully deleted the zone");
     } catch (error) {
@@ -172,7 +176,7 @@ class ZoneListing extends Component {
     return (
       <React.Fragment>
         <div className="header-wraper">
-          <h3 className="wrap-header bold">Security Zones</h3>
+          <h3 className="wrap-header bold">Security Zone</h3>
           <CustomBreadcrumb />
         </div>
         {this.state.loader ? (
@@ -258,7 +262,7 @@ class ZoneListing extends Component {
                       <Col md="auto">
                         <div className="pt-5 pr-5">
                           <img
-                            alt="Avatar"
+                            alt="No Zones"
                             className="w-50 p-3 d-block mx-auto"
                             src={noZoneImage}
                           />

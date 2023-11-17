@@ -18,7 +18,7 @@
  */
 
 import React, { Component } from "react";
-import { Button, Row } from "react-bootstrap";
+import { Button, Col, Row } from "react-bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { filter, map, sortBy, uniq, isEmpty } from "lodash";
@@ -37,6 +37,7 @@ import ImportPolicy from "./ImportPolicy";
 import { serverError } from "../../utils/XAUtils";
 import { BlockUi, Loader } from "../../components/CommonComponents";
 import { getServiceDef } from "../../utils/appState";
+import noServiceImage from "Images/no-service.svg";
 
 class ServiceDefinitions extends Component {
   constructor(props) {
@@ -72,7 +73,9 @@ class ServiceDefinitions extends Component {
 
   initialFetchResp = async () => {
     await this.fetchServices();
-    await this.fetchZones();
+    if (!this.state.isKMSRole) {
+      await this.fetchZones();
+    }
   };
 
   showExportModal = () => {
@@ -119,8 +122,7 @@ class ServiceDefinitions extends Component {
       loader: false
     });
     this.props.disableTabs(false);
-    this.state.selectedZone != "" &&
-      this.getSelectedZone(this.state.selectedZone);
+    this.getSelectedZone(this.state.selectedZone);
   };
 
   fetchServices = async () => {
@@ -180,8 +182,7 @@ class ServiceDefinitions extends Component {
 
         zonesResp &&
           this.props.navigate(
-            `${this.props.location.pathname}?securityZone=${e.label}`,
-            { replace: true }
+            `${this.props.location.pathname}?securityZone=${e.label}`
           );
 
         let zoneServiceNames = map(zonesResp.data, "name");
@@ -248,8 +249,10 @@ class ServiceDefinitions extends Component {
   deleteService = async (sid) => {
     let localStorageZoneDetails = localStorage.getItem("zoneDetails");
     let zonesResp = [];
+
     try {
       this.setState({ blockUI: true });
+
       await fetchApi({
         url: `plugins/services/${sid}`,
         method: "delete"
@@ -266,17 +269,20 @@ class ServiceDefinitions extends Component {
         });
 
         if (isEmpty(zonesResp?.data)) {
-          localStorage.removeItem("zoneDetails");
           this.setState({
-            selectedZone: ""
+            zones: this.state.zones.filter(
+              (z) => z.id !== JSON.parse(localStorageZoneDetails)?.value
+            )
           });
         }
       }
+
       this.setState({
         services: this.state.services.filter((s) => s.id !== sid),
         filterServices: this.state.filterServices.filter((s) => s.id !== sid),
         blockUI: false
       });
+
       toast.success("Successfully deleted the service");
       this.props.navigate(this.props.location.pathname);
     } catch (error) {
@@ -297,11 +303,13 @@ class ServiceDefinitions extends Component {
       }
     };
   };
+
   formatOptionLabel = ({ label }) => (
     <div title={label} className="text-truncate">
       {label}
     </div>
   );
+
   render() {
     const {
       filterServiceDefs,
@@ -446,28 +454,41 @@ class ServiceDefinitions extends Component {
           <Loader />
         ) : (
           <div className="wrap policy-manager">
-            <Row>
-              {filterServiceDefs?.map((serviceDef) => (
-                <ServiceDefinition
-                  key={serviceDef && serviceDef.id}
-                  serviceDefData={serviceDef}
-                  servicesData={sortBy(
-                    filterServices.filter(
-                      (service) => service.type === serviceDef.name
-                    ),
-                    "name"
-                  )}
-                  deleteService={this.deleteService}
-                  selectedZone={selectedZone}
-                  zones={zones}
-                  isAdminRole={isAdminRole}
-                  isUserRole={isUserRole}
-                  showBlockUI={this.showBlockUI}
-                  allServices={this.state.allServices}
-                ></ServiceDefinition>
-              ))}
-            </Row>
-
+            {!isEmpty(filterServiceDefs) ? (
+              <Row>
+                {filterServiceDefs?.map((serviceDef) => (
+                  <ServiceDefinition
+                    key={serviceDef && serviceDef.id}
+                    serviceDefData={serviceDef}
+                    servicesData={sortBy(
+                      filterServices.filter(
+                        (service) => service.type === serviceDef.name
+                      ),
+                      "name"
+                    )}
+                    deleteService={this.deleteService}
+                    selectedZone={selectedZone}
+                    zones={zones}
+                    isAdminRole={isAdminRole}
+                    isUserRole={isUserRole}
+                    showBlockUI={this.showBlockUI}
+                    allServices={this.state.allServices}
+                  ></ServiceDefinition>
+                ))}
+              </Row>
+            ) : (
+              <Row className="justify-content-md-center">
+                <Col md="auto">
+                  <div className="pt-5 pr-5">
+                    <img
+                      alt="No Services"
+                      className="w-50 p-3 d-block mx-auto"
+                      src={noServiceImage}
+                    />
+                  </div>
+                </Col>
+              </Row>
+            )}
             <BlockUi isUiBlock={this.state.blockUI} />
           </div>
         )}

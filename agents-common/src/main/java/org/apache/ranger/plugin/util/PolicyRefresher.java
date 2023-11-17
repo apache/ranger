@@ -20,10 +20,14 @@
 package org.apache.ranger.plugin.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -449,14 +453,15 @@ public class PolicyRefresher extends Thread {
 		        } catch (Exception excp) {
 		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 		        } finally {
-		        	if(writer != null) {
-		        		try {
-		        			writer.close();
-		        		} catch(Exception excp) {
-		        			LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-		        		}
-		        	}
-		        }
+					if (writer != null) {
+						try {
+							writer.close();
+							deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
+						} catch (Exception excp) {
+							LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+						}
+					}
+				}
 
 				RangerPerfTracer.log(perf);
 
@@ -487,6 +492,51 @@ public class PolicyRefresher extends Thread {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
+		}
+	}
+
+	private void deleteOldestVersionCacheFileInCacheDirectory(File cacheDirectory) {
+		int maxVersionsToPreserve = plugIn.getConfig().getInt(plugIn.getConfig().getPropertyPrefix() + "max.versions.to.preserve", 1);
+		FileFilter logFileFilter = (file) -> file.getName().matches(".+json_.+");
+
+		File[] filesInParent = cacheDirectory.listFiles(logFileFilter);
+		List<Long> policyVersions = new ArrayList<>();
+
+		if (filesInParent != null && filesInParent.length > 0) {
+			for (File f : filesInParent) {
+				String fileName = f.getName();
+				// Extract the part after json_
+				int policyVersionIdx = fileName.lastIndexOf("json_");
+				String policyVersionStr = fileName.substring(policyVersionIdx + 5);
+				Long policyVersion = Long.valueOf(policyVersionStr);
+				policyVersions.add(policyVersion);
+			}
+		} else {
+			LOG.info("No files matching '.+json_*' found");
+		}
+
+		if (!policyVersions.isEmpty()) {
+			policyVersions.sort(new Comparator<Long>() {
+				@Override
+				public int compare(Long o1, Long o2) {
+					if (o1.equals(o2)) return 0;
+					return o1 < o2 ? -1 : 1;
+				}
+			});
+		}
+
+		if (policyVersions.size() > maxVersionsToPreserve) {
+			String fileName = this.cacheFileName + "_" + Long.toString(policyVersions.get(0));
+			String pathName = cacheDirectory.getAbsolutePath() + File.separator + fileName;
+			File toDelete = new File(pathName);
+			if (toDelete.exists()) {
+				boolean isDeleted = toDelete.delete();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("file :[" + pathName + "] is deleted");
+				}
+			} else {
+				LOG.info("File: " + pathName + " does not exist!");
+			}
 		}
 	}
 

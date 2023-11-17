@@ -32,7 +32,7 @@ class UserGroupRoleListing extends Component {
   }
   tabChange = (tabName) => {
     this.setState({ activeKey: tabName });
-    this.props.navigate(`/users/${tabName}`, { replace: true });
+    this.props.navigate(`/users/${tabName}`);
   };
   componentDidUpdate(nextProps, prevState) {
     let activeTabVal = this.activeTab();
@@ -58,7 +58,7 @@ class UserGroupRoleListing extends Component {
     return (
       <React.Fragment>
         <div className="header-wraper">
-          <h3 className="wrap-header bold">User/Groups/Roles</h3>
+          <h3 className="wrap-header bold">Users/Groups/Roles</h3>
           <CustomBreadcrumb />
         </div>
         <div className="usrGrpRoleListing">

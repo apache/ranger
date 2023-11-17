@@ -130,7 +130,7 @@ function Users() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -140,7 +140,11 @@ function Users() {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(userListingData);
+    }
+  }, [totalCount]);
   const fetchUserInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -199,14 +203,7 @@ function Users() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(userData, userResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -282,7 +279,7 @@ function Users() {
           setBlockUI(false);
         } catch (error) {
           setBlockUI(false);
-          if (error.response.data.msgDesc) {
+          if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
@@ -300,7 +297,7 @@ function Users() {
         if (
           (userListingData.length == 1 ||
             userListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);
@@ -608,7 +605,7 @@ function Users() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -647,8 +644,7 @@ function Users() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  style={{ display: "inline-block" }}
-                  className="ml-1 btn-sm"
+                  className="ml-1 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
@@ -695,15 +691,14 @@ function Users() {
           <Modal show={showModal} onHide={toggleConfirmModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                {" "}
-                Are you sure you want to delete user&nbsp;
+                Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                    <b>"{selectedRows.current[0].original.name}"</b> user ?
                   </>
                 ) : (
                   <>
-                    "<b>{selectedRows.current.length}</b>" ?
+                    selected<b> {selectedRows.current.length}</b> users?
                   </>
                 )}
               </span>

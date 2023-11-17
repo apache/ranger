@@ -219,30 +219,47 @@ public class ChangePasswordUtil extends BaseLoader {
 				String currentEncryptedPassword = null;
 				String md5EncryptedPassword = null;
 				try {
-					currentEncryptedPassword = userMgr.encrypt(userLoginIdTemp, currentPasswordTemp);
-					if (currentEncryptedPassword.equals(dbPassword)) {
-						validatePassword(newPasswordTemp);
-						userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-						logger.info("User '" + userLoginIdTemp + "' Password updated sucessfully.");
-					} else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
-						logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
-						md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
-						if (md5EncryptedPassword.equals(dbPassword)) {
+					if (config.isFipsEnabled()) {
+						if (defaultPwdChangeRequest) {
+							currentEncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
+							if (currentEncryptedPassword.equals(dbPassword)) {
+								validatePassword(newPasswordTemp);
+								userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
+								logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+							} else {
+								System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
+								logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+								System.exit(2);
+							}
+						} else if (userMgr.isPasswordValid(userLoginIdTemp, dbPassword, currentPasswordTemp)) {
 							validatePassword(newPasswordTemp);
 							userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-							logger.info("User '" + userLoginIdTemp + "' Password updated sucessfully.");
-						} else {
-							System.out.println(
-									"Skipping default password change request as provided password doesn't match with existing password.");
-							logger.error(
-									"Skipping default password change request as provided password doesn't match with existing password.");
-							System.exit(2);
+							logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
 						}
 					} else {
-						System.out.println("Invalid user password");
-						logger.error("Invalid user password");
-						System.exit(1);
-						break;
+						currentEncryptedPassword = userMgr.encrypt(userLoginIdTemp, currentPasswordTemp);
+						if (currentEncryptedPassword.equals(dbPassword)) {
+							validatePassword(newPasswordTemp);
+							userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
+							logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+						} else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
+							logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
+							md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
+							if (md5EncryptedPassword.equals(dbPassword)) {
+								validatePassword(newPasswordTemp);
+								userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
+								logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+							} else {
+								System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
+								logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+								System.exit(2);
+							}
+						} else {
+							System.out.println("Invalid user password");
+							logger.error("Invalid user password");
+							System.exit(1);
+							break;
+						}
 					}
 				} catch (Exception e) {
 					logger.error("Update Admin Password failure. Detail:  \n", e);

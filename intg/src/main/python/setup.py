@@ -19,7 +19,7 @@
 from setuptools import setup, find_packages
 
 # External dependencies
-requirements = ['requests>=2.24']
+requirements = ['requests>=2.24','strenum>=0.4.15']
 
 long_description = ''
 with open("README.md", "r") as fh:
@@ -27,7 +27,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="apache-ranger",
-    version="0.0.11",
+    version="0.0.12",
     author="Apache Ranger",
     author_email="dev@ranger.apache.org",
     description="Apache Ranger Python client",

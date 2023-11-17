@@ -188,9 +188,9 @@
 			},
 			"validationRegEx":"",
 			"validationMessage":"",
-			"uiHint":"",
 			"label":"IP Address Range",
-			"description":"IP Address Range"
+			"description":"IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 		
 	]

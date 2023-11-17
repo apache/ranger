@@ -538,6 +538,9 @@ h3.wrap-header {
 .editable-popover {
   min-width: 250px;
 }
+.popover-minHeight {
+  min-width: 200px;
+}
 
 .table-editable {
   text-align: center !important;
@@ -2477,7 +2480,7 @@ li.list-group-item:hover {
   margin-top: 5px;
   margin-bottom: 5px;
 }
-.custom-nav-search [class$="-IndicatorsContainer"] {
+.custom-nav-search [class$="-indicatorContainer"] {
   visibility: hidden;
 }
 /* Access Audit Tags */
@@ -2529,15 +2532,30 @@ li.list-group-item:hover {
   background-color: #e9ecef;
 }
 .manage-service .dropdown-toggle:focus,
-.manage-export .dropdown-toggle:focus {
+.manage-export .dropdown-toggle:focus,
+.manage-visibility .dropdown-toggle:focus {
   color: #0b7fad;
   background-color: #fff;
   border-color: #0062cc;
   box-shadow: 0 0 0 0.2rem rgb(38 143 255 / 50%);
+}
+.Toastify__toast {
+  word-break: break-word;
+}
+.Toastify__toast-container {
+  width: 384px;
+}
+.Toastify__toast-icon {
+  width: 16px;
 }
 .manage-service .dropdown-toggle::after {
   vertical-align: 0.125em;
 }
 .text-word-break {
   word-break: break-all;
+}
+.resource-block {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #dddddd;
+  margin:1rem 2rem;
 }

@@ -65,9 +65,9 @@ public class PerfDataRecorder {
 		}
 	}
 
-	public static void recordStatistic(String tag, long elapsedTime) {
+	public static void recordStatistic(String tag, long cpuTime, long elapsedTime) {
 		if (instance != null) {
-			instance.record(tag, elapsedTime);
+			instance.record(tag, cpuTime, elapsedTime);
 		}
 	}
 
@@ -79,7 +79,12 @@ public class PerfDataRecorder {
 		for (String tag : tags) {
 			PerfStatistic perfStatistic = perfStatistics.get(tag);
 
+			long averageTimeSpentCpu = 0L;
 			long averageTimeSpent = 0L;
+
+			if (perfStatistic.numberOfInvocations.get() != 0L) {
+				averageTimeSpentCpu = perfStatistic.microSecondsSpentCpu.get()/perfStatistic.numberOfInvocations.get();
+			}
 
 			if (perfStatistic.numberOfInvocations.get() != 0L) {
 				averageTimeSpent = perfStatistic.microSecondsSpent.get()/perfStatistic.numberOfInvocations.get();
@@ -87,6 +92,10 @@ public class PerfDataRecorder {
 
 			String logMsg = "[" + tag + "]" +
                              " execCount: " + perfStatistic.numberOfInvocations.get() +
+					", totalTimeTakenCpu: " + perfStatistic.microSecondsSpentCpu.get() + " μs" +
+					", maxTimeTakenCpu: " + perfStatistic.maxTimeSpentCpu.get() + " μs" +
+					", minTimeTakenCpu: " + perfStatistic.minTimeSpentCpu.get() + " μs" +
+					", avgTimeTakenCpu: " + averageTimeSpentCpu + " μs" +
                              ", totalTimeTaken: " + perfStatistic.microSecondsSpent.get() + " μs" +
                              ", maxTimeTaken: " + perfStatistic.maxTimeSpent.get() + " μs" +
                              ", minTimeTaken: " + perfStatistic.minTimeSpent.get() + " μs" +
@@ -101,7 +110,7 @@ public class PerfDataRecorder {
 		perfStatistics.clear();
 	}
 
-	private void record(String tag, long elapsedTime) {
+	private void record(String tag, long cpuTime, long elapsedTime) {
 		PerfStatistic perfStatistic = perfStatistics.get(tag);
 
 		if (perfStatistic == null) {
@@ -115,7 +124,7 @@ public class PerfDataRecorder {
 			}
 		}
 
-		perfStatistic.addPerfDataItem(elapsedTime);
+		perfStatistic.addPerfDataItem(cpuTime, elapsedTime);
 	}
 
 	private PerfDataRecorder(List<String> names) {
@@ -136,20 +145,34 @@ public class PerfDataRecorder {
 
 	public static class PerfStatistic {
 		private AtomicLong numberOfInvocations = new AtomicLong(0L);
+
+		private AtomicLong microSecondsSpentCpu = new AtomicLong(0L);
+		private AtomicLong minTimeSpentCpu = new AtomicLong(Long.MAX_VALUE);
+		private AtomicLong maxTimeSpentCpu = new AtomicLong(Long.MIN_VALUE);
+
 		private AtomicLong microSecondsSpent = new AtomicLong(0L);
 		private AtomicLong minTimeSpent = new AtomicLong(Long.MAX_VALUE);
 		private AtomicLong maxTimeSpent = new AtomicLong(Long.MIN_VALUE);
 
-		void addPerfDataItem(final long timeTaken) {
+		void addPerfDataItem(final long cpuTime, final long timeTaken) {
 			numberOfInvocations.getAndIncrement();
+			microSecondsSpentCpu.getAndAdd(cpuTime);
 			microSecondsSpent.getAndAdd(timeTaken);
 
-			long min = minTimeSpent.get();
+			long min = minTimeSpentCpu.get();
+			if(cpuTime < min) {
+				minTimeSpentCpu.compareAndSet(min, cpuTime);
+			}
+			min = minTimeSpent.get();
 			if(timeTaken < min) {
 				minTimeSpent.compareAndSet(min, timeTaken);
 			}
 
-			long max = maxTimeSpent.get();
+			long max = maxTimeSpentCpu.get();
+			if(cpuTime > max) {
+				maxTimeSpentCpu.compareAndSet(max, cpuTime);
+			}
+			max = maxTimeSpent.get();
 			if(timeTaken > max) {
 				maxTimeSpent.compareAndSet(max, timeTaken);
 			}
@@ -157,6 +180,18 @@ public class PerfDataRecorder {
 
 		public long getNumberOfInvocations() {
 			return numberOfInvocations.get();
+		}
+
+		public long getMicroSecondsSpentCpu() {
+			return microSecondsSpentCpu.get();
+		}
+
+		public long getMinTimeSpentCpu() {
+			return minTimeSpentCpu.get();
+		}
+
+		public long getMaxTimeSpentCpu() {
+			return maxTimeSpentCpu.get();
 		}
 
 		public long getMicroSecondsSpent() {

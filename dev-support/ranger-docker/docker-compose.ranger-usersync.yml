@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-usersync
       args:
-        - RANGER_VERSION=${RANGER_VERSION}
+        - USERSYNC_VERSION=${USERSYNC_VERSION}
     image: ranger-usersync
     container_name: ranger-usersync
     hostname: ranger-usersync.example.com
@@ -17,7 +17,7 @@ services:
       ranger:
         condition: service_started
     environment:
-      - RANGER_VERSION
+      - USERSYNC_VERSION
       - ENABLE_FILE_SYNC_SOURCE
       - DEBUG_USERSYNC=${DEBUG_USERSYNC:-false}
 

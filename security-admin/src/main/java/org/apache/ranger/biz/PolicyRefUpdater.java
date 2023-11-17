@@ -53,8 +53,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.service.RangerAuditFields;
-import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
@@ -253,7 +253,7 @@ public class PolicyRefUpdater {
 			XXPolicyConditionDef xPolCondDef = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndName(xServiceDef.getId(), condition);
 
 			if (xPolCondDef == null) {
-				if (StringUtils.equalsIgnoreCase(condition, RangerServiceDefService.IMPLICIT_CONDITION_EXPRESSION_NAME)) {
+				if (StringUtils.equalsIgnoreCase(condition, ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_NAME)) {
 					continue;
 				}
 

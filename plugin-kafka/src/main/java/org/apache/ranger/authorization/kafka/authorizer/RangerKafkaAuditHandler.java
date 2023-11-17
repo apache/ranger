@@ -28,6 +28,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
 public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerKafkaAuditHandler.class);
 
@@ -40,16 +42,42 @@ public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
     public void processResult(RangerAccessResult result) {
         // If Cluster Resource Level Topic Creation is not Allowed we don't audit.
         // Subsequent call from Kafka for Topic Creation at Topic resource Level will be audited.
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("==> RangerKafkaAuditHandler.processResult()");
+        }
         if (!isAuditingNeeded(result)) {
             return;
         }
         auditEvent = super.getAuthzEvents(result);
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("<== RangerKafkaAuditHandler.processResult()");
+        }
+    }
+    @Override
+    public void processResults(Collection<RangerAccessResult> results) {
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("==> RangerKafkaAuditHandler.processResults(" + results + ")");
+        }
+        if (results!=null){
+            for(RangerAccessResult res: results){
+                processResult(res);
+                flushAudit();
+            }
+        }
+
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("<== RangerKafkaAuditHandler.processResults(" + results + ")");
+        }
     }
 
+
     private boolean isAuditingNeeded(final RangerAccessResult result) {
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("==> RangerKafkaAuditHandler.isAuditingNeeded()");
+        }
         boolean ret = true;
         boolean 			    isAllowed = result.getIsAllowed();
-        RangerAccessRequest request = result.getAccessRequest();
+        RangerAccessRequest       request = result.getAccessRequest();
         RangerAccessResourceImpl resource = (RangerAccessResourceImpl) request.getResource();
         String resourceName 			  = (String) resource.getValue(RangerKafkaAuthorizer.KEY_CLUSTER);
         if (resourceName != null) {
@@ -57,18 +85,28 @@ public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
                 ret = false;
             }
         }
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("RangerKafkaAuditHandler: isAuditingNeeded()");
+            LOG.trace("request:"+request);
+            LOG.trace("resource:"+resource);
+            LOG.trace("resourceName:"+resourceName);
+            LOG.trace("request.getAccessType():"+request.getAccessType());
+            LOG.trace("isAllowed:"+isAllowed);
+            LOG.trace("ret="+ret);
+            LOG.trace("<== RangerKafkaAuditHandler.isAuditingNeeded() = "+ret+" for result="+result);
+        }
         return ret;
     }
 
     public void flushAudit() {
-        if(LOG.isDebugEnabled()) {
-            LOG.info("==> RangerYarnAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("==> RangerKafkaAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent+")");
         }
         if (auditEvent != null) {
             super.logAuthzAudit(auditEvent);
         }
-        if(LOG.isDebugEnabled()) {
-            LOG.info("<== RangerYarnAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("<== RangerKafkaAuditHandler.flushAudit()");
         }
     }
 }

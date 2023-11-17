@@ -28,7 +28,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import moment from "moment-timezone";
-import { find, isEmpty } from "lodash";
+import { find, isEmpty, map } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
 import {
@@ -110,7 +110,7 @@ function Roles() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -120,6 +120,12 @@ function Roles() {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(roleListingData);
+    }
+  }, [totalCount]);
 
   const fetchRoleInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
@@ -168,11 +174,7 @@ function Roles() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (localStorage.getItem("newDataAdded") == "true") {
-          scrollToNewData(roleData, roleResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -181,7 +183,7 @@ function Roles() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.info("Please select atleast one role!!");
+      toast.warning("Please select atleast one role!!");
     }
   };
 
@@ -224,7 +226,7 @@ function Roles() {
         if (
           (roleListingData.length == 1 ||
             roleListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);
@@ -265,7 +267,7 @@ function Roles() {
         Header: "Users",
         accessor: "users",
         accessor: (raw) => {
-          let usersList = _.map(raw.users, "name");
+          let usersList = map(raw.users, "name");
           return !isEmpty(usersList) ? (
             <MoreLess data={usersList} key={raw.id} />
           ) : (
@@ -277,7 +279,7 @@ function Roles() {
         Header: "Groups",
         accessor: "groups",
         accessor: (raw) => {
-          let groupsList = _.map(raw.groups, "name");
+          let groupsList = map(raw.groups, "name");
           return !isEmpty(groupsList) ? (
             <MoreLess data={groupsList} key={raw.id} />
           ) : (
@@ -289,7 +291,7 @@ function Roles() {
         Header: "Roles",
         accessor: "roles",
         accessor: (raw) => {
-          let rolesList = _.map(raw.roles, "name");
+          let rolesList = map(raw.roles, "name");
 
           return !isEmpty(rolesList) ? (
             <MoreLess data={rolesList} key={raw.id} />
@@ -333,7 +335,7 @@ function Roles() {
       searchFilterOptions
     );
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -404,15 +406,14 @@ function Roles() {
           <Modal show={showModal} onHide={toggleConfirmModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                {" "}
-                Are you sure you want to delete group&nbsp;
+                Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                    <b>"{selectedRows.current[0].original.name}"</b> role ?
                   </>
                 ) : (
                   <>
-                    "<b>{selectedRows.current.length}</b>" ?
+                    selected<b> {selectedRows.current.length}</b> roles?
                   </>
                 )}
               </span>

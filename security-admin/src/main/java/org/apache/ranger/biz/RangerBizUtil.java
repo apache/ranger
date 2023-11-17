@@ -1553,14 +1553,8 @@ public class RangerBizUtil {
 	}
 
 	public static boolean setBulkMode(boolean val) {
-		if(RangerContextHolder.getOpContext()!=null){
-			RangerContextHolder.getOpContext().setBulkModeContext(val);
-		}
-		else {
-			  RangerAdminOpContext opContext = new RangerAdminOpContext();
-			  opContext.setBulkModeContext(val);
-			  RangerContextHolder.setOpContext(opContext);
-		}
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(val);
+
 		return isBulkMode();
 	}
 

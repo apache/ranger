@@ -19,11 +19,8 @@
 
  package org.apache.ranger.common.view;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.RangerCommonEnums;
 
-@XmlRootElement
 public class VEnumElement extends ViewBaseBean implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

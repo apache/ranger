@@ -129,7 +129,7 @@ function Groups() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -139,7 +139,11 @@ function Groups() {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(groupListingData);
+    }
+  }, [totalCount]);
   const fetchGroupInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -187,14 +191,7 @@ function Groups() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(groupData, groupResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -252,7 +249,7 @@ function Groups() {
         if (
           (groupListingData.length == 1 ||
             groupListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);
@@ -543,7 +540,7 @@ function Groups() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -581,8 +578,7 @@ function Groups() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  style={{ display: "inline-block" }}
-                  className="ml-2"
+                  className="ml-2 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
@@ -629,15 +625,14 @@ function Groups() {
           <Modal show={showModal} onHide={toggleConfirmModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                {" "}
-                Are you sure you want to delete group&nbsp;
+                Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                    <b>"{selectedRows.current[0].original.name}"</b> group ?
                   </>
                 ) : (
                   <>
-                    "<b>{selectedRows.current.length}</b>" ?
+                    selected<b> {selectedRows.current.length}</b> groups?
                   </>
                 )}
               </span>

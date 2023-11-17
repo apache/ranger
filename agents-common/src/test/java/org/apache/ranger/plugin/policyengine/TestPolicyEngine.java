@@ -44,7 +44,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
-import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
@@ -492,6 +491,13 @@ public class TestPolicyEngine {
 	@Test
 	public void testAnyResourceAccess_S3() throws Exception {
 		String[] resourceFiles = {"/policyengine/test_policyengine_aws_s3.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testResourceHierarchyTags() throws Exception {
+		String[] resourceFiles = {"/policyengine/test_policyengine_resource_hierarchy_tags.json"};
 
 		runTestsFromResourceFiles(resourceFiles);
 	}
@@ -979,17 +985,7 @@ public class TestPolicyEngine {
 		}
 
 		if (ret) {
-			ret = Objects.equals(me.getResourceZoneTrie().keySet(), other.getResourceZoneTrie().keySet());
-
-			if (ret) {
-				for (Map.Entry<String, RangerResourceTrie<RangerZoneResourceMatcher>> entry : me.getResourceZoneTrie().entrySet()) {
-					ret = compareSubtree(entry.getValue(), other.getResourceZoneTrie().get(entry.getKey()));
-
-					if (!ret) {
-						break;
-					}
-				}
-			}
+			ret = Objects.equals(me.getZoneMatcher(), other.getZoneMatcher());
 		}
 
 		if (ret) {

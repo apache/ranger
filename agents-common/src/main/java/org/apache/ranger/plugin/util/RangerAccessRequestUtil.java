@@ -48,6 +48,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_IS_ANY_ACCESS = "ISANYACCESS";
 	public static final String KEY_CONTEXT_REQUEST       = "_REQUEST";
 	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED = "ISREQUESTPREPROCESSED";
+	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES     = "RESOURCE_ZONE_NAMES";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -131,6 +132,7 @@ public class RangerAccessRequestUtil {
 			ret.remove(KEY_CONTEXT_TAGS);
 			ret.remove(KEY_CONTEXT_TAG_OBJECT);
 			ret.remove(KEY_CONTEXT_RESOURCE);
+			ret.remove(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
 			ret.remove(KEY_CONTEXT_REQUEST);
 			ret.remove(KEY_CONTEXT_ACCESSTYPES);
 			ret.remove(KEY_CONTEXT_IS_ANY_ACCESS);
@@ -257,4 +259,38 @@ public class RangerAccessRequestUtil {
 		return ret;
 	}
 
+	public static void setResourceZoneNamesInContext(RangerAccessRequest request, Set<String> zoneNames) {
+		Map<String, Object> context = request.getContext();
+
+		if (context != null) {
+			context.put(KEY_CONTEXT_RESOURCE_ZONE_NAMES, zoneNames);
+		} else {
+			LOG.error("setResourceZoneNamesInContext({}): context is null", request);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Set<String> getResourceZoneNamesFromContext(Map<String, Object> context) {
+		Set<String> ret = null;
+
+		if (context != null) {
+			Object val = context.get(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
+
+			if (val instanceof Set) {
+				ret = (Set<String>) val;
+			} else {
+				if (val != null) {
+					LOG.error("getResourceZoneNamesFromContext(): expected Set<String>, but found {}", val.getClass().getCanonicalName());
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public static String getResourceZoneNameFromContext(Map<String, Object> context) {
+		Set<String> ret = getResourceZoneNamesFromContext(context);
+
+		return ret != null && ret.size() == 1 ? ret.iterator().next() : null;
+	}
 }

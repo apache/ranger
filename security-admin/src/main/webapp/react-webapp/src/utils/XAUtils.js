@@ -18,8 +18,14 @@
  */
 
 import React, { useState } from "react";
-import { getUserProfile, setUserProfile } from "Utils/appState";
-import { UserRoles, PathAssociateWithModule, QueryParams } from "Utils/XAEnums";
+import { getUserProfile } from "Utils/appState";
+import {
+  UserRoles,
+  PathAssociateWithModule,
+  QueryParams,
+  RangerPolicyType,
+  ServiceType
+} from "Utils/XAEnums";
 import {
   filter,
   find,
@@ -34,7 +40,8 @@ import {
   isUndefined,
   isNull,
   some,
-  has
+  has,
+  sortBy
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -43,7 +50,6 @@ import CustomBreadcrumb from "../views/CustomBreadcrumb";
 import { CustomTooltip } from "../components/CommonComponents";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
-import { RangerPolicyType, ServiceType } from "./XAEnums";
 import { policyInfoMessage } from "./XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 
@@ -1162,10 +1168,11 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from localStorage
   if (isEmpty(searchFilterParam)) {
-    const localStorageParams =
-      !isEmpty(localStorage.getItem(auditTabName)) &&
-      JSON.parse(localStorage.getItem(auditTabName));
-    if (!isNull(localStorageParams) && !isEmpty(localStorageParams)) {
+    if (!isNull(localStorage.getItem(auditTabName))) {
+      const localStorageParams =
+        !isEmpty(localStorage.getItem(auditTabName)) &&
+        JSON.parse(localStorage.getItem(auditTabName));
+
       for (const localParam in localStorageParams) {
         let searchFilterObj = find(searchFilterOptions, {
           urlLabel: localParam
@@ -1187,7 +1194,7 @@ export const fetchSearchFilterParams = (
             category: category,
             value: value
           });
-          searchParam[localParam] = value;
+          searchParam[localParam] = localStorageParams[localParam];
         }
       }
     }
@@ -1347,7 +1354,7 @@ export const updateTagActive = (isTagView) => {
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
   let logoutResp = {};
   try {
-    logoutResp = fetchApi({
+    logoutResp = await fetchApi({
       url: "logout",
       baseURL: "",
       headers: {
@@ -1355,7 +1362,7 @@ export const handleLogout = async (checkKnoxSSOVal, navigate) => {
       }
     });
     if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-      if (checkKnoxSSOVal == false) {
+      if (checkKnoxSSOVal?.toString() == "false") {
         window.location.replace("/locallogin");
         window.localStorage.clear();
       } else {
@@ -1371,7 +1378,7 @@ export const handleLogout = async (checkKnoxSSOVal, navigate) => {
 
 export const checkKnoxSSO = async (navigate) => {
   const userProfile = getUserProfile();
-  let checkKnoxSSOresp;
+  let checkKnoxSSOresp = {};
   try {
     checkKnoxSSOresp = await fetchApi({
       url: "plugins/checksso",
@@ -1381,12 +1388,12 @@ export const checkKnoxSSO = async (navigate) => {
       }
     });
     if (
-      checkKnoxSSOresp.data == "true" &&
+      checkKnoxSSOresp?.data?.toString() == "true" &&
       userProfile?.configProperties?.inactivityTimeout > 0
     ) {
       window.location.replace("index.html?action=timeout");
     } else {
-      handleLogout(checkKnoxSSOresp.data, navigate);
+      handleLogout(checkKnoxSSOresp?.data, navigate);
     }
   } catch (error) {
     if (checkKnoxSSOresp?.status == "419") {
@@ -1415,4 +1422,53 @@ export const requestDataTitle = (serviceType) => {
     title = "Solr Query";
   }
   return title;
+};
+
+//Policy condition evaluation
+
+export const policyConditionUpdatedJSON = (policyCond) => {
+  let newPolicyConditionJSON = [...policyCond];
+  newPolicyConditionJSON.filter(function (key) {
+    if (!key?.uiHint || key?.uiHint == "") {
+      if (
+        key.evaluatorOptions &&
+        key.evaluatorOptions?.["ui.isMultiline"] == "true"
+      ) {
+        key["uiHint"] = '{ "isMultiline":true }';
+      } else {
+        key["uiHint"] = '{ "isMultiValue":true }';
+      }
+    }
+  });
+  return newPolicyConditionJSON;
+};
+
+// Get resources with help of policy type
+
+export const getResourcesDefVal = (serviceDef, policyType) => {
+  let resources = [];
+  if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
+    resources = sortBy(serviceDef.dataMaskDef.resources, "itemId");
+  } else if (
+    RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
+  ) {
+    resources = sortBy(serviceDef.rowFilterDef.resources, "itemId");
+  } else {
+    resources = sortBy(serviceDef.resources, "itemId");
+  }
+  return resources;
+};
+
+// Get defult landing page
+
+export const getLandingPageURl = () => {
+  if (hasAccessToTab("Resource Based Policies")) {
+    return "/policymanager/resource";
+  } else {
+    if (hasAccessToTab("Tag Based Policies")) {
+      return "/policymanager/tag";
+    } else {
+      return "/userprofile";
+    }
+  }
 };

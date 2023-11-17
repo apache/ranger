@@ -29,11 +29,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_policy_label")
 public class XXPolicyLabel extends XXDBBase implements Serializable {
         private static final long serialVersionUID = 1L;

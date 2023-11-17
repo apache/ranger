@@ -59,6 +59,7 @@ function XATableLayout({
   loading,
   data,
   fetchData,
+  showPagination = true,
   pageCount: controlledPageCount,
   currentpageIndex,
   currentpageSize,
@@ -85,6 +86,7 @@ function XATableLayout({
       : [];
     return filterColVal;
   };
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -160,6 +162,7 @@ function XATableLayout({
       });
     }
   );
+
   const currentPageValRef = useRef();
   const [currentPageVal, setCurrentPageVal] = useState("");
 
@@ -317,7 +320,7 @@ function XATableLayout({
                   </tbody>
                 ) : (
                   <tbody {...getTableBodyProps()}>
-                    {rows.map((row, index) => {
+                    {rows.map((row) => {
                       prepareRow(row);
                       return (
                         <tr
@@ -339,7 +342,7 @@ function XATableLayout({
               </>
             </Table>
           </div>
-          {totalCount > 25 && (
+          {showPagination && totalCount > 25 && (
             <div className="row mt-2">
               <div className="col-md-12 m-b-sm">
                 <div className="text-center d-flex justify-content-end align-items-center pb-2">
@@ -406,7 +409,7 @@ function XATableLayout({
                             currPage > pageOptions.length ||
                             !Number.isInteger(Number(currPage))
                           ) {
-                            return (currPage = currPage);
+                            return currPage;
                           } else {
                             const page = currPage ? Number(currPage) - 1 : 0;
                             gotoPage(page);

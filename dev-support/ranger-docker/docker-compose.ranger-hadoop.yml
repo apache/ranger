@@ -6,7 +6,8 @@ services:
       dockerfile: Dockerfile.ranger-hadoop
       args:
         - HADOOP_VERSION=${HADOOP_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
+        - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}
     image: ranger-hadoop
     container_name: ranger-hadoop
     hostname: ranger-hadoop.example.com
@@ -28,7 +29,8 @@ services:
       start_period: 40s
     environment:
       - HADOOP_VERSION
-      - RANGER_VERSION
+      - HDFS_PLUGIN_VERSION
+      - YARN_PLUGIN_VERSION
 
 networks:
   ranger:
