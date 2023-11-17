@@ -400,24 +400,28 @@ public class SecurityZoneREST {
     @GET
     @Path("/zones/zone-headers/for-service/{serviceId}")
     @Produces({ "application/json" })
-    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId( @PathParam("serviceId") Long serviceId
-            , @DefaultValue("false") @QueryParam ("isTagService") Boolean isTagService
-    ) {
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(@PathParam("serviceId") Long serviceId,
+                                                                                       @DefaultValue("false") @QueryParam ("isTagService") Boolean isTagService,
+                                                                                       @Context HttpServletRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId() serviceId:{}, isTagService:{}",serviceId,isTagService);
         }
+
         List<RangerSecurityZoneHeaderInfo> ret;
+
         try {
-            ret = securityZoneStore.getSecurityZoneHeaderInfoListByServiceId(serviceId, isTagService);
+            ret = securityZoneStore.getSecurityZoneHeaderInfoListByServiceId(serviceId, isTagService, request);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
             LOG.error("SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId() failed", excp);
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId():" + ret);
         }
+
         return ret;
     }
 
