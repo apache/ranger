@@ -27,14 +27,19 @@ import {
   matchRoutes
 } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
-import { hasAccessToPath, checkKnoxSSO, navigateTo } from "Utils/XAUtils";
+import {
+  hasAccessToPath,
+  checkKnoxSSO,
+  navigateTo,
+  getLandingPageURl
+} from "Utils/XAUtils";
 import { useIdleTimer } from "react-idle-timer";
 import { getUserProfile } from "Utils/appState";
 import SideBar from "./SideBar/SideBar";
 import { Loader } from "../components/CommonComponents";
 import { Suspense } from "react";
 import { PathAssociateWithModule } from "../utils/XAEnums";
-import { flatMap, includes, values } from "lodash";
+import { flatMap, values } from "lodash";
 
 const Layout = () => {
   let location = useLocation();
@@ -133,7 +138,7 @@ const Layout = () => {
           window.location.pathname != "/dataNotFound" &&
           window.location.pathname != "/pageNotFound" &&
           window.location.pathname != "/forbidden" && (
-            <Navigate to="/policymanager/resource" replace={true} />
+            <Navigate to={getLandingPageURl()} replace={true} />
           )}
         <div id="content" className="content-body">
           <div id="ranger-content">

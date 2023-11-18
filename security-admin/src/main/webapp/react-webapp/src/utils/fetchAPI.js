@@ -97,13 +97,13 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
       (error?.response?.data?.messageList?.[0]?.name == "DATA_NOT_FOUND" ||
         error?.response?.data?.messageList?.[0]?.name == "INVALID_INPUT_DATA")
     ) {
-      navigateTo.navigate("/dataNotFound", { replace: true });
+      navigateTo.navigate("/dataNotFound");
     }
     if (error?.response?.status === 404) {
-      navigateTo.navigate("/pageNotFound", { replace: true });
+      navigateTo.navigate("/pageNotFound");
     }
     if (error?.response?.status === 403) {
-      navigateTo.navigate("/forbidden", { replace: true });
+      navigateTo.navigate("/forbidden");
     }
     throw error;
   }

@@ -103,7 +103,7 @@ class ServiceForm extends Component {
     });
 
     if (servicedefs == undefined) {
-      return navigateTo.navigate("/pageNotFound", { replace: true });
+      return navigateTo.navigate("/pageNotFound");
     }
     this.fetchServiceDef();
   }

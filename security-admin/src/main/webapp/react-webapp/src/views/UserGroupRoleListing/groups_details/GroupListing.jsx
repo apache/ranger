@@ -129,7 +129,7 @@ function Groups() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -540,7 +540,7 @@ function Groups() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);

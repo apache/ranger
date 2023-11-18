@@ -1428,7 +1428,7 @@ export const requestDataTitle = (serviceType) => {
 
 export const policyConditionUpdatedJSON = (policyCond) => {
   let newPolicyConditionJSON = [...policyCond];
-  newPolicyConditionJSON.filter(function (key, val) {
+  newPolicyConditionJSON.filter(function (key) {
     if (!key?.uiHint || key?.uiHint == "") {
       if (
         key.evaluatorOptions &&
@@ -1457,4 +1457,18 @@ export const getResourcesDefVal = (serviceDef, policyType) => {
     resources = sortBy(serviceDef.resources, "itemId");
   }
   return resources;
+};
+
+// Get defult landing page
+
+export const getLandingPageURl = () => {
+  if (hasAccessToTab("Resource Based Policies")) {
+    return "/policymanager/resource";
+  } else {
+    if (hasAccessToTab("Tag Based Policies")) {
+      return "/policymanager/tag";
+    } else {
+      return "/userprofile";
+    }
+  }
 };

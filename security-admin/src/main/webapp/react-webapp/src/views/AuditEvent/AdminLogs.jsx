@@ -63,7 +63,7 @@ function Admin() {
 
   const updateSessionId = (id) => {
     navigate(`/reports/audit/admin?sessionId=${id}`);
-    setSearchParams({ sessionId: id });
+    setSearchParams({ sessionId: id }, { replace: true });
     setContentLoader(true);
   };
 
@@ -79,7 +79,7 @@ function Admin() {
       fetchSearchFilterParams("admin", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -356,7 +356,7 @@ function Admin() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("admin", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {

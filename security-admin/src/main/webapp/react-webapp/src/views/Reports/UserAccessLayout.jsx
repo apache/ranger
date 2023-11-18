@@ -248,9 +248,7 @@ function UserAccessLayout() {
       }
     }
 
-    navigate(`/reports/userAccess?${urlSearchParams}`, {
-      replace: true
-    });
+    navigate(`/reports/userAccess?${urlSearchParams}`);
 
     setFilterServiceDefs(serviceDefsList);
     setSearchParamsObj(searchFields);
@@ -412,17 +410,13 @@ function UserAccessLayout() {
       if (!has(Object.fromEntries(searchParams), "policyType")) {
         searchParams.set("policyType", "0");
         searchFields.policyType = "0";
-        navigate(`${location.pathname}?${searchParams}`, {
-          replace: true
-        });
+        navigate(`${location.pathname}?${searchParams}`);
         setSearchParamsObj(searchFields);
       }
       if (has(searchFields, "serviceType")) {
         let filterServiceType = searchFields.serviceType.split(",");
         searchParams.set("serviceType", uniq(filterServiceType).join(","));
-        navigate(`${location.pathname}?${searchParams}`, {
-          replace: true
-        });
+        navigate(`${location.pathname}?${searchParams}`);
       }
     }
   };
