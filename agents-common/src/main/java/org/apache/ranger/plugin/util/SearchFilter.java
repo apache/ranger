@@ -68,8 +68,10 @@ public class SearchFilter {
 	public static final String GROUP_NAME            = "groupName";      // search, sort
 	public static final String USER_NAME             = "userName";      // search, sort
 	public static final String ROLE_NAME_PARTIAL     = "roleNamePartial";      // search
-	public static final String GROUP_NAME_PARTIAL    = "groupNamePartial";      // search
+	public static final String GROUP_NAME_PARTIAL    = "groupNamePartial";     // search
 	public static final String USER_NAME_PARTIAL     = "userNamePartial";      // search
+	public static final String SERVICE_NAME_PREFIX   = "serviceNamePrefix";    // search
+	public static final String ZONE_NAME_PREFIX      = "zoneNamePrefix";       // search
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search

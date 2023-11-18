@@ -90,6 +90,9 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.CLUSTER_NAME, request.getParameter(SearchFilter.CLUSTER_NAME));
 		ret.setParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES, request.getParameter(SearchFilter.FETCH_ZONE_UNZONE_POLICIES));
 		ret.setParam(SearchFilter.FETCH_TAG_POLICIES, request.getParameter(SearchFilter.FETCH_TAG_POLICIES));
+		ret.setParam(SearchFilter.SERVICE_NAME_PREFIX, request.getParameter(SearchFilter.SERVICE_NAME_PREFIX));
+		ret.setParam(SearchFilter.ZONE_NAME_PREFIX, request.getParameter(SearchFilter.ZONE_NAME_PREFIX));
+
 		for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
 			String name = e.getKey();
 			String[] values = e.getValue();

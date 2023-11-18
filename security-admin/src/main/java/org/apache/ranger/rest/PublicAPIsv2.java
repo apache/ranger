@@ -161,14 +161,14 @@ public class PublicAPIsv2 {
     @GET
     @Path("/api/zone-headers")
 	@Produces({ "application/json" })
-    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList(@Context HttpServletRequest request) {
         if (logger.isDebugEnabled()) {
             logger.debug("==> PublicAPIsv2.getSecurityZoneHeaderInfoList()");
         }
 
         List<RangerSecurityZoneHeaderInfo> ret;
         try {
-            ret = securityZoneStore.getSecurityZoneHeaderInfoList();
+            ret = securityZoneStore.getSecurityZoneHeaderInfoList(request);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -192,10 +192,10 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/zones/zone-headers/for-service/{serviceId}")
 	@Produces({ "application/json" })
-	public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId( @PathParam("serviceId") Long serviceId
-			, @DefaultValue("false") @QueryParam("isTagService") Boolean isTagService
-	) {
-		return securityZoneRest.getSecurityZoneHeaderInfoListByServiceId(serviceId,isTagService);
+	public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(@PathParam("serviceId") Long serviceId,
+	                                                                                   @DefaultValue("false") @QueryParam("isTagService") Boolean isTagService,
+	                                                                                   @Context HttpServletRequest request) {
+		return securityZoneRest.getSecurityZoneHeaderInfoListByServiceId(serviceId,isTagService, request);
 	}
 
     /**
@@ -207,14 +207,14 @@ public class PublicAPIsv2 {
     @GET
     @Path("/api/zones/{zoneId}/service-headers")
 	@Produces({ "application/json" })
-    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(@PathParam("zoneId") Long zoneId) {
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(@PathParam("zoneId") Long zoneId, @Context HttpServletRequest request) {
         if (logger.isDebugEnabled()) {
             logger.debug("==> PublicAPIsv2.getServiceHeaderInfoListByZoneId({})" + zoneId);
         }
 
         List<RangerServiceHeaderInfo> ret;
         try {
-            ret = securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId);
+            ret = securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId, request);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -434,6 +434,14 @@ public class PublicAPIsv2 {
 		return serviceREST.getServices(request).getServices();
 	}
 
+	@GET
+	@Path("/api/service-headers")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
+	public List<RangerServiceHeaderInfo> getServiceHeaders(@Context HttpServletRequest request) {
+		return serviceREST.getServiceHeaders(request);
+	}
+
 	@POST
 	@Path("/api/service/")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
@@ -459,7 +467,6 @@ public class PublicAPIsv2 {
 
 		return serviceREST.updateService(service, request);
 	}
-
 
 	@PUT
 	@Path("/api/service/name/{name}")
@@ -515,6 +522,7 @@ public class PublicAPIsv2 {
 		RangerService service = serviceREST.getServiceByName(name);
 		serviceREST.deleteService(service.getId());
 	}
+
 
 	/*
 	* Policy Manipulation APIs

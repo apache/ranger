@@ -712,6 +712,13 @@
 		<query>select obj.id from XXService obj</query>
 	</named-query>
 
+	<named-query name="XXService.getAllServiceHeaders">
+		<query>
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+		</query>
+	</named-query>
+
 	<!-- XXServiceVersionInfo -->
 	<named-query name="XXServiceVersionInfo.findByServiceName">
 		<query>
@@ -1753,7 +1760,9 @@
 
     <named-query name="XXSecurityZoneRefService.findServiceHeaderInfosByZoneId">
         <query>
-            SELECT obj.serviceId, obj.serviceName FROM XXSecurityZoneRefService obj WHERE obj.zoneId = :zoneId
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+			 WHERE obj.id IN (SELECT ref.serviceId FROM XXSecurityZoneRefService ref WHERE ref.zoneId = :zoneId)
         </query>
     </named-query>
 
@@ -1771,7 +1780,9 @@
 
     <named-query name="XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId">
         <query>
-            SELECT obj.tagServiceId, obj.tagServiceName FROM XXSecurityZoneRefTagService obj WHERE obj.zoneId = :zoneId
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+			 WHERE obj.id IN (SELECT ref.tagServiceId FROM XXSecurityZoneRefTagService ref WHERE ref.zoneId = :zoneId)
         </query>
     </named-query>
 

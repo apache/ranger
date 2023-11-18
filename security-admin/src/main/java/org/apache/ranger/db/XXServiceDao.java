@@ -25,6 +25,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.springframework.stereotype.Service;
 
 /**
@@ -161,5 +162,23 @@ public class XXServiceDao extends BaseDao<XXService> {
 		} catch (NoResultException e) {
 			return new ArrayList<>();
 		}
+	}
+
+	public List<RangerServiceHeaderInfo> findServiceHeaders() {
+		List<RangerServiceHeaderInfo> ret;
+
+		try {
+			List<Object[]> results = getEntityManager().createNamedQuery("XXService.getAllServiceHeaders", Object[].class).getResultList();
+
+			ret = new ArrayList<>(results.size());
+
+			for (Object[] result : results) {
+				ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3]));
+			}
+		} catch (NoResultException excp) {
+			ret = Collections.emptyList();
+		}
+
+		return ret;
 	}
 }

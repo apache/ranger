@@ -98,14 +98,14 @@ public class RangerRequestExprResolver {
         String ret = str;
 
         if (hasTokens) {
-            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request);
             ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
+            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
             StringBuffer                 sb              = new StringBuffer();
             Matcher                      matcher         = PATTERN.matcher(str);
 
             while (matcher.find()) {
                 String expr = matcher.group(REGEX_GROUP_EXPR);
-                String val  = Objects.toString(scriptEvaluator.evaluateScript(scriptEngine, expr));
+                String val  = Objects.toString(scriptEvaluator.evaluateScript(expr));
 
                 matcher.appendReplacement(sb, val);
             }

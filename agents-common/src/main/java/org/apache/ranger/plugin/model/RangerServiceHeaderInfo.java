@@ -21,12 +21,16 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
+
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 public class RangerServiceHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     private String  name;
+    private String  displayName;
+    private String  type;
     private Boolean isTagService;
     private Boolean isGdsService;
 
@@ -46,12 +50,37 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
         setIsGdsService(isGdsService);
     }
 
+    public RangerServiceHeaderInfo(Long id, String name, String displayName, String type) {
+        super();
+        setId(id);
+        setName(name);
+        setDisplayName(displayName);
+        setType(type);
+        setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Boolean getIsTagService() {
