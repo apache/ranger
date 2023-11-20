@@ -469,8 +469,6 @@ class ServiceForm extends Component {
     });
   };
   deleteService = async (serviceId) => {
-    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
-    let zonesResp = [];
     this.hideDeleteModal();
     try {
       this.setState({ blockUI: true });
@@ -478,20 +476,6 @@ class ServiceForm extends Component {
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
-      if (
-        localStorageZoneDetails !== undefined &&
-        localStorageZoneDetails !== null
-      ) {
-        zonesResp = await fetchApi({
-          url: `public/v2/api/zones/${
-            JSON.parse(localStorageZoneDetails)?.value
-          }/service-headers`
-        });
-
-        if (isEmpty(zonesResp?.data)) {
-          localStorage.removeItem("zoneDetails");
-        }
-      }
       this.setState({ blockUI: false });
       toast.success("Successfully deleted the service");
       this.props.navigate(
