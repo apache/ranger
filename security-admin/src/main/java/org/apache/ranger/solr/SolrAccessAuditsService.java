@@ -254,6 +254,14 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		if (value != null) {
 			accessAudit.setTags(value.toString());
 		}
+		value = doc.getFieldValue("datasets");
+		if (value != null) {
+			accessAudit.setDatasets(value.toString());
+		}
+		value = doc.getFieldValue("projects");
+		if (value != null) {
+			accessAudit.setProjects(value.toString());
+		}
 		return accessAudit;
 	}
 

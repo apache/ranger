@@ -275,6 +275,14 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		if (value != null) {
 			accessAudit.setTags(value.toString());
 		}
+		value = source.get("datasets");
+		if (value != null) {
+			accessAudit.setDatasets(value.toString());
+		}
+		value = source.get("projects");
+		if (value != null) {
+			accessAudit.setProjects(value.toString());
+		}
 		return accessAudit;
 	}
 

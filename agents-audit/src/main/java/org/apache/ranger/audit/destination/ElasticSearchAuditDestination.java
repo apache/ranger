@@ -334,6 +334,8 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         doc.put("event_count", auditEvent.getEventCount());
         doc.put("event_dur_ms", auditEvent.getEventDurationMS());
         doc.put("tags", auditEvent.getTags());
+        doc.put("datasets", auditEvent.getDatasets());
+        doc.put("projects", auditEvent.getProjects());
         doc.put("cluster", auditEvent.getClusterName());
         doc.put("zoneName", auditEvent.getZoneName());
         doc.put("agentHost", auditEvent.getAgentHostname());

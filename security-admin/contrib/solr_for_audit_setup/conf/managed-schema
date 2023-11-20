@@ -92,4 +92,6 @@
   <field name="text" type="text_std_token_lower_case" multiValued="true" indexed="true" stored="false"/>
   <field name="zoneName" type="key_lower_case" multiValued="false"/>
   <field name="policyVersion" type="tlong" multiValued="false"/>
+  <field name="datasets" type="key_lower_case" multiValued="true"/>
+  <field name="projects" type="key_lower_case" multiValued="true"/>
 </schema>
