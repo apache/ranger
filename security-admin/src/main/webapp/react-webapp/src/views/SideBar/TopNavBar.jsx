@@ -161,28 +161,12 @@ export const TopNavBar = (props) => {
   };
 
   const deleteService = async (serviceId) => {
-    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
-    let zonesResp = [];
     hideDeleteModal();
     try {
       await fetchApi({
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
-      if (
-        localStorageZoneDetails !== undefined &&
-        localStorageZoneDetails !== null
-      ) {
-        zonesResp = await fetchApi({
-          url: `public/v2/api/zones/${
-            JSON.parse(localStorageZoneDetails)?.value
-          }/service-headers`
-        });
-
-        if (isEmpty(zonesResp?.data)) {
-          localStorage.removeItem("zoneDetails");
-        }
-      }
       toast.success("Successfully deleted the service");
       navigate(
         serviceDefData?.name === "tag"
