@@ -162,6 +162,7 @@ public enum ValidationErrorCode {
     GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND(4124, "Data share-in-dataset with ID [{0}] does not exist"),
     GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE(4125, "invalid status change from [{0}] to [{1}]"),
     GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD(4126, "[{0}] can't be updated"),
+    GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND(4127, "Dataset-in-project with ID [{0}] does not exist"),
 
     ;
 

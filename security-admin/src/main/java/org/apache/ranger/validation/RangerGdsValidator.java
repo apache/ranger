@@ -320,8 +320,8 @@ public class RangerGdsValidator {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dshInDataset.getDatasetId()));
         }
 
-        if (dataShare != null && dataset != null) {
-            if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
+        if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
+            if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
                 validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
             }
 
@@ -381,7 +381,7 @@ public class RangerGdsValidator {
                 dataset = null;
             }
 
-            if (dataShare != null && dataset != null) {
+            if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
                 boolean requireDataShareAdmin = false;
                 boolean requireDatasetAdmin   = false;
 
@@ -484,10 +484,10 @@ public class RangerGdsValidator {
         }
 
         if (project == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "project", dsInProject.getProjectId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", dsInProject.getProjectId()));
         }
 
-        if (dataset != null && project != null) {
+        if (dataset != null && project != null && !dataProvider.isAdminUser()) {
             switch (dsInProject.getStatus()) {
                 case GRANTED:
                 case DENIED:
@@ -516,9 +516,21 @@ public class RangerGdsValidator {
     public void validateUpdate(RangerDatasetInProject dsInProject, RangerDatasetInProject existing) {
         LOG.debug("==> validateUpdate(dsInProject={}, existing={})", dsInProject, existing);
 
-        ValidationResult result = new ValidationResult();
+        ValidationResult result  = new ValidationResult();
+        RangerDataset    dataset = dataProvider.getDataset(dsInProject.getDatasetId());
+        RangerProject    project = dataProvider.getProject(dsInProject.getProjectId());
 
-        // TODO:
+        if (dataset == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dsInProject.getDatasetId()));
+        }
+
+        if (project == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", dsInProject.getProjectId()));
+        }
+
+        if (dataset != null && project != null && !dataProvider.isAdminUser()) {
+            // TODO:
+        }
 
         if (!result.isSuccess()) {
             result.throwRESTException();
@@ -532,7 +544,24 @@ public class RangerGdsValidator {
 
         ValidationResult result = new ValidationResult();
 
-        // TODO:
+        if (existing == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND, "id", dsInProjectId));
+        } else {
+            RangerDataset dataset = dataProvider.getDataset(existing.getDatasetId());
+            RangerProject project = dataProvider.getProject(existing.getProjectId());
+
+            if (dataset == null) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", existing.getDatasetId()));
+            }
+
+            if (project == null) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", existing.getProjectId()));
+            }
+
+            if (dataset != null && project != null && !dataProvider.isAdminUser()) {
+                // TODO: must be either a dataset admin or project admin
+            }
+        }
 
         if (!result.isSuccess()) {
             result.throwRESTException();
