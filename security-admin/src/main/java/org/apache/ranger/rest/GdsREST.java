@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -32,6 +33,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
@@ -102,6 +104,9 @@ public class GdsREST {
 
     @Autowired
     ServiceUtil serviceUtil;
+
+    @Autowired
+    AssetMgr assetMgr;
 
 
     @POST
@@ -1500,9 +1505,10 @@ public class GdsREST {
                                                      @Context HttpServletRequest request) {
         LOG.debug("==> GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities);
 
-        ServiceGdsInfo ret      = null;
-        int            httpCode = HttpServletResponse.SC_OK;
-        String         logMsg   = null;
+        ServiceGdsInfo ret               = null;
+        int            httpCode          = HttpServletResponse.SC_OK;
+        Long           downloadedVersion = null;
+        String         logMsg            = null;
 
         try {
             bizUtil.failUnauthenticatedDownloadIfNotAllowed();
@@ -1513,8 +1519,11 @@ public class GdsREST {
                 ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
 
                 if (ret == null) {
-                    httpCode = HttpServletResponse.SC_NOT_MODIFIED;
-                    logMsg   = "No change since last update";
+                    downloadedVersion = lastKnownVersion;
+                    httpCode          = HttpServletResponse.SC_NOT_MODIFIED;
+                    logMsg            = "No change since last update";
+                } else {
+                    downloadedVersion = ret.getGdsVersion();
                 }
             }
         } catch (WebApplicationException webException) {
@@ -1526,6 +1535,8 @@ public class GdsREST {
 
             LOG.error("GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, e);
         }
+
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_GDS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
@@ -1550,9 +1561,10 @@ public class GdsREST {
                                                            @Context HttpServletRequest request) {
         LOG.debug("==> GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities);
 
-        ServiceGdsInfo ret      = null;
-        int            httpCode = HttpServletResponse.SC_OK;
-        String         logMsg   = null;
+        ServiceGdsInfo ret               = null;
+        int            httpCode          = HttpServletResponse.SC_OK;
+        Long           downloadedVersion = null;
+        String         logMsg            = null;
 
         try {
             bizUtil.failUnauthenticatedDownloadIfNotAllowed();
@@ -1563,8 +1575,11 @@ public class GdsREST {
                 ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
 
                 if (ret == null) {
-                    httpCode = HttpServletResponse.SC_NOT_MODIFIED;
-                    logMsg   = "No change since last update";
+                    downloadedVersion = lastKnownVersion;
+                    httpCode          = HttpServletResponse.SC_NOT_MODIFIED;
+                    logMsg            = "No change since last update";
+                } else {
+                    downloadedVersion = ret.getGdsVersion();
                 }
             }
         } catch (WebApplicationException webException) {
@@ -1576,6 +1591,8 @@ public class GdsREST {
 
             LOG.error("GdsREST.getServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, e);
         }
+
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_GDS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
