@@ -69,6 +69,11 @@ define(function(require) {
             /** ui events hash */
             events: function() {
                 var events = {};
+                events['change ' + this.ui.adminUsers]      = 'onAddUsersGroups';
+                events['change ' + this.ui.adminUserGroups]      = 'onAddUsersGroups';
+                events['change ' + this.ui.auditUsers]      = 'onAddUsersGroups';
+                events['change ' + this.ui.auditUserGroups]      = 'onAddUsersGroups';
+
                 return events;
             },
 
@@ -207,6 +212,25 @@ define(function(require) {
                         }));
                     }
                 })
+            },
+
+            onAddUsersGroups : function(e, val){
+                console.log(e)
+                var initialVal = [];
+                if(e && e.added){
+                    if(_.isUndefined(this.model.get(e.currentTarget.dataset.id))){
+                       initialVal.push(e.added.text);
+                       this.model.set(e.currentTarget.dataset.id , initialVal)
+
+                    } else {
+                        this.model.get(e.currentTarget.dataset.id).push(e.added.text);
+                    }
+                }
+                if(e && e.removed){
+                    var removeVal = _.without(this.model.get(e.currentTarget.dataset.id), e.removed.text);
+                    this.model.set(e.currentTarget.dataset.id , removeVal);
+                }
+
             },
 
             zoneTable: function() {

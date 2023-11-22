@@ -814,7 +814,6 @@ define(function(require) {'use strict';
 				closeOnSelect : true,
 				placeholder : 'Select Group',
 				maximumSelectionSize : 1,
-				tokenSeparators: [",", " "],
 				allowClear: true,
 				// tags : this.groupArr,
 				initSelection : function (element, callback) {
@@ -831,7 +830,7 @@ define(function(require) {'use strict';
 					results: function (data, page) { 
 						var results = [],selectedVals = [];
 						if(!_.isEmpty(that.ui.userGroup.val()))
-							selectedVals = that.ui.userGroup.val().split(',');
+							selectedVals.push(that.ui.userGroup.val());
 						if(data.totalCount != "0"){
 							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
@@ -874,8 +873,8 @@ define(function(require) {'use strict';
 					},
 					results: function (data, page) { 
 						var results = [],selectedVals=[];
-						if(!_.isEmpty(that.ui.userName.select2('val')))
-							selectedVals = that.ui.userName.select2('val');
+						if(!_.isEmpty(that.ui.userName.val()))
+							selectedVals.push(that.ui.userName.val());
 						if(data.totalCount != "0"){
 							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
@@ -920,8 +919,8 @@ define(function(require) {'use strict';
 					},
 					results: function (data, page) {
 						var results = [],selectedVals=[];
-						if(!_.isEmpty(that.ui.roleName.select2('val')))
-							selectedVals = that.ui.roleName.select2('val');
+						if(!_.isEmpty(that.ui.roleName.val()))
+							selectedVals.push(that.ui.roleName.val());
 						if(data.totalCount != "0"){
 							results = data.roles.map(function(m){	return {id : _.escape(m.name), text: _.escape(m.name) };});
 							if(!_.isEmpty(selectedVals))

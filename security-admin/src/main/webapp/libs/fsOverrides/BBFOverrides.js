@@ -137,15 +137,18 @@ define(['jquery', 'underscore', 'backbone', 'backbone-forms', 'backbone-forms.li
 
 			return this;
 		},
-		getValue: function() {
-		    return this.$el.val();
-		  },
-
-		  setValue: function(value) {
-		    this.$el.val(value);
-		  }
-
-
+		getValue : function(val ,name){
+			var arr = [];
+			if (_.isArray(this.$el.select2("data"))){
+				this.$el.select2("data").map(function(m){
+					arr.push(m.text)
+					return m.text
+				})
+			} else {
+				return this.$el.val();
+			}
+			return arr;
+		}
 	});
 
 	/**

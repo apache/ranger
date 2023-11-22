@@ -2498,6 +2498,27 @@ textarea:read-only{
 } */
 
 /* Security Zone */
+.zone-administration .form-control{
+  height: auto !important;
+}
+.role-form .form-control {
+  height: auto !important;
+}
+.permissions-table .form-control {
+  height: auto !important;
+}
+.groups-permission {
+  min-width: 480px;
+}
+.groups-permission .select2-container{
+  width: 100%;
+}
+.users-permission {
+  min-width: 480px;
+}
+.users-permission .select2-container{
+  width: 100%;
+}
 .security-panel {
   background-color: #fff;
   border-radius: 3px;
@@ -4147,8 +4168,7 @@ ul.tagit{
 }
 
 .addbtngroup .select2-container{
-  width: 300px !important;
-  display: inline-block;
+ display: inline-block;
 }
 
 .dropdown-menu a:hover{

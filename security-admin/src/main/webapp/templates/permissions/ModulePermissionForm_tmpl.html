@@ -28,7 +28,7 @@
 	</fieldset>
 	<fieldset>
 		<p class="formHeader">User and Group Permissions:</p>
-		<div class="row">
+		<div class="row permissions-table">
 			<label class="col-sm-2 text-right" style="font-weight: normal;">{{tt 'lbl.permissions'}}</label>
 			<div class="col-sm-10">
 				<table class="table-permission table-condensed visible-border">
@@ -42,11 +42,11 @@
 					<tbody class="js-formInput">
 						<tr>
 							<td>
-                                                                <div data-editors="selectGroups" class="list-inline inline-block" style="vertical-align: middle;"></div>
+                                                                <div data-editors="selectGroups" class="list-inline inline-block groups-permission" style="vertical-align: middle;"></div>
                                                                 <button data-id="addGroupBtn" class="fa fa-plus btn btn-default btn-sm" title="Add Group" style="padding: 6px 12px;"></button>
 							</td>
 							<td>
-                                                                <div data-editors="selectUsers" class="list-inline inline-block" style="vertical-align: middle;"></div>
+                                                                <div data-editors="selectUsers" class="list-inline inline-block users-permission" style="vertical-align: middle;"></div>
                                                                 <button data-id="addUserBtn" class="fa fa-plus btn btn-default btn-sm" title="Add User" style="padding: 6px 12px;"></button>
 
 							</td>
