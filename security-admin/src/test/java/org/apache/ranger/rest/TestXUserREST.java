@@ -59,8 +59,6 @@ import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
 import org.apache.ranger.view.VXGroup;
-import org.apache.ranger.view.VXGroupGroup;
-import org.apache.ranger.view.VXGroupGroupList;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXGroupPermissionList;
@@ -147,8 +145,6 @@ public class TestXUserREST {
 	@Mock VXGroupUser vXGroupUser;
 	@Mock XGroupUserService xGroupUserService;
 	@Mock VXGroupUserList vXGroupUserList;
-	@Mock VXGroupGroup vXGroupGroup;
-	@Mock VXGroupGroupList vXGroupGroupList;
 	@Mock XGroupGroupService xGroupGroupService;
 	@Mock VXPermMap vXPermMap;
 	@Mock RESTErrorUtil restErrorUtil;
@@ -645,92 +641,6 @@ public class TestXUserREST {
 		assertNotNull(testvxLong);
 		assertEquals(testvxLong.getValue(),vXLong.getValue());
 		assertEquals(testvxLong.getClass(),vXLong.getClass());
-	}
-	@Test
-	public void test32getXGroupGroup() {
-		VXGroupGroup compareTestVXGroup=createVXGroupGroup();
-		
-		Mockito.when(xUserMgr.getXGroupGroup(id)).thenReturn(compareTestVXGroup);
-		VXGroupGroup retVxGroup= xUserRest.getXGroupGroup(id);
-		
-		assertNotNull(retVxGroup);
-		assertEquals(compareTestVXGroup.getClass(),retVxGroup.getClass());
-		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
-		Mockito.verify(xUserMgr).getXGroupGroup(id);
-	}	@Test
-	public void test33createXGroupGroup() {
-		VXGroupGroup compareTestVXGroup=createVXGroupGroup();
-		 
-		Mockito.when(xUserMgr.createXGroupGroup(compareTestVXGroup)).thenReturn(compareTestVXGroup);
-		VXGroupGroup retVxGroup= xUserRest.createXGroupGroup(compareTestVXGroup);
-			
-		assertNotNull(retVxGroup);
-		assertEquals(compareTestVXGroup.getClass(),retVxGroup.getClass());
-		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
-		Mockito.verify(xUserMgr).createXGroupGroup(compareTestVXGroup);
-	}
-	@Test
-	public void test34updateXGroupGroup() {
-		VXGroupGroup compareTestVXGroup=createVXGroupGroup();
-		 
-		Mockito.when(xUserMgr.updateXGroupGroup(compareTestVXGroup)).thenReturn(compareTestVXGroup);
-		VXGroupGroup retVxGroup= xUserRest.updateXGroupGroup(compareTestVXGroup);
-			
-		assertNotNull(retVxGroup);
-		assertEquals(compareTestVXGroup.getClass(),retVxGroup.getClass());
-		assertEquals(compareTestVXGroup.getId(),retVxGroup.getId());
-		Mockito.verify(xUserMgr).updateXGroupGroup(compareTestVXGroup);
-	}
-	@Test
-	public void test35deleteXGroupGroup() {
-		boolean forceDelete = false;
-		
-		Mockito.doNothing().when(xUserMgr).deleteXGroupGroup(id, forceDelete);
-		xUserRest.deleteXGroupGroup(id,request);
-		Mockito.verify(xUserMgr).deleteXGroupGroup(id,forceDelete);
-	}
-	@SuppressWarnings("unchecked")
-	@Test
-	public void test36searchXGroupGroups() {
-		VXGroupGroupList testvXGroupGroupList=new VXGroupGroupList();
-		VXGroupGroup testVXGroup=createVXGroupGroup();
-		List<VXGroupGroup> testVXGroupGroups= new ArrayList<VXGroupGroup>();
-		testVXGroupGroups.add(testVXGroup);
-		testvXGroupGroupList.setVXGroupGroups(testVXGroupGroups);
-		
-		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		SearchCriteria testSearchCriteria=createsearchCriteria();
-		
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
-
-		Mockito.when(xUserMgr.searchXGroupGroups(testSearchCriteria)).thenReturn(testvXGroupGroupList);
-		VXGroupGroupList outputvXGroupGroupList=xUserRest.searchXGroupGroups(request);
-		
-		Mockito.verify(xUserMgr).searchXGroupGroups(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
-		
-		assertNotNull(outputvXGroupGroupList);
-		assertEquals(outputvXGroupGroupList.getClass(),testvXGroupGroupList.getClass());
-		assertEquals(outputvXGroupGroupList.getResultSize(),testvXGroupGroupList.getResultSize());
-	}
-	@SuppressWarnings("unchecked")
-	@Test
-	public void test37countXGroupGroups() {
-		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		SearchCriteria testSearchCriteria=createsearchCriteria();
-				
-		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any())).thenReturn(testSearchCriteria);
-		
-		vXLong.setValue(1);
-			
-		Mockito.when(xUserMgr.getXGroupGroupSearchCount(testSearchCriteria)).thenReturn(vXLong);
-		VXLong testvxLong=xUserRest.countXGroupGroups(request);
-		Mockito.verify(xUserMgr).getXGroupGroupSearchCount(testSearchCriteria);
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
-			
-		assertNotNull(testvxLong);
-		assertEquals(testvxLong.getClass(),vXLong.getClass());
-		assertEquals(testvxLong.getValue(),vXLong.getValue());
 	}
 	@Test
 	public void test38getXPermMapVXResourceNull() throws Exception{
@@ -2181,17 +2091,7 @@ public class TestXUserREST {
 		testVXGroupUser.setUserId(id);
 		return testVXGroupUser;
 	}
-	private VXGroupGroup createVXGroupGroup() {
-		VXGroupGroup testVXGroupGroup= new VXGroupGroup();
-		testVXGroupGroup.setName("testGroup");
-		testVXGroupGroup.setCreateDate(new Date());
-		testVXGroupGroup.setUpdateDate(new Date());
-		testVXGroupGroup.setUpdatedBy("Admin");
-		testVXGroupGroup.setOwner("Admin");
-		testVXGroupGroup.setId(id);
-		testVXGroupGroup.setParentGroupId(id);
-		return testVXGroupGroup;
-	}
+
 	private VXPermMap testcreateXPermMap(){
 		VXPermMap testVXPermMap= new VXPermMap();
 		testVXPermMap.setCreateDate(new Date());

@@ -374,6 +374,7 @@ public class RoleREST {
         }
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
         try {
+            ensureAdminAccess(null, null);
             roleStore.getRoles(filter,ret);
         } catch(WebApplicationException excp) {
             throw excp;

@@ -401,7 +401,7 @@ public class TestUserREST {
 
 		Mockito.verify(daoManager).getXXPortalUser();
 		Mockito.verify(xxPortalUserDao).getById(userId);
-		Mockito.verify(userManager).checkAccessForUpdate(xxPUser);
+		Mockito.verify(userManager).checkAccess(xxPUser);
 		Mockito.verify(userManager).changePassword(vxPasswordChange);
 	}
 
@@ -440,7 +440,7 @@ public class TestUserREST {
 
 		Mockito.verify(daoManager).getXXPortalUser();
 		Mockito.verify(xxPortalUserDao).getById(userId);
-		Mockito.verify(userManager).checkAccessForUpdate(xxPUser);
+		Mockito.verify(userManager).checkAccess(xxPUser);
 		Mockito.verify(userManager).changeEmailAddress(xxPUser, changeEmail);
 	}
 

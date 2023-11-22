@@ -238,6 +238,7 @@ public class TestRoleREST {
         RangerRoleList rangerRoleList = new RangerRoleList();
         Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(roleService.sortFields))).
                 thenReturn(Mockito.mock(SearchFilter.class));
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
         RangerRoleList returnedRangerRoleList = roleRest.getAllRoles(Mockito.mock(HttpServletRequest.class));
         Assert.assertNotNull(returnedRangerRoleList);
         Assert.assertEquals(returnedRangerRoleList.getListSize(), rangerRoleList.getListSize());

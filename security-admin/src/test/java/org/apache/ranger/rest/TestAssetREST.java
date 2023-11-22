@@ -18,8 +18,6 @@ package org.apache.ranger.rest;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -29,8 +27,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -51,17 +47,9 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XCredentialStoreService;
@@ -254,47 +242,6 @@ public class TestAssetREST {
 		policy.setService("HDFS_1");
 
 		return policy;
-	}
-
-	private RangerServiceDef rangerServiceDef() {
-		List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
-		List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
-		List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
-		List<RangerPolicyConditionDef> policyConditions = new ArrayList<RangerPolicyConditionDef>();
-		List<RangerContextEnricherDef> contextEnrichers = new ArrayList<RangerContextEnricherDef>();
-		List<RangerEnumDef> enums = new ArrayList<RangerEnumDef>();
-
-		RangerServiceDef rangerServiceDef = new RangerServiceDef();
-		rangerServiceDef.setId(Id);
-		rangerServiceDef.setImplClass("RangerServiceHdfs");
-		rangerServiceDef.setLabel("HDFS Repository");
-		rangerServiceDef.setDescription("HDFS Repository");
-		rangerServiceDef.setRbKeyDescription(null);
-		rangerServiceDef.setUpdatedBy("Admin");
-		rangerServiceDef.setUpdateTime(new Date());
-		rangerServiceDef.setConfigs(configs);
-		rangerServiceDef.setResources(resources);
-		rangerServiceDef.setAccessTypes(accessTypes);
-		rangerServiceDef.setPolicyConditions(policyConditions);
-		rangerServiceDef.setContextEnrichers(contextEnrichers);
-		rangerServiceDef.setEnums(enums);
-
-		return rangerServiceDef;
-	}
-
-	private ServicePolicies servicePolicies() {
-		RangerPolicy rangerPolicy = rangerPolicy(Id);
-		RangerServiceDef rangerServiceDef = rangerServiceDef();
-		ServicePolicies servicePolicies = new ServicePolicies();
-		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
-		policies.add(rangerPolicy);
-		servicePolicies.setServiceId(Id);
-		servicePolicies.setServiceName("Hdfs_1");
-		servicePolicies.setPolicyVersion(1L);
-		servicePolicies.setPolicyUpdateTime(new Date());
-		servicePolicies.setServiceDef(rangerServiceDef);
-		servicePolicies.setPolicies(policies);
-		return servicePolicies;
 	}
 
 	private VXPolicy vXPolicy(RangerPolicy policy, RangerService service) {
@@ -637,73 +584,6 @@ public class TestAssetREST {
 		VXLong actualvXLong = assetREST.countXCredentialStores(request);
 		Assert.assertEquals(expectedvXLong, actualvXLong);
 		Mockito.verify(assetMgr).getXCredentialStoreSearchCount(searchCriteria);
-	}
-
-	@Test
-	public void testGetXResourceFile() {
-		File file = new File("testGetXResource");
-		Response expectedResponse = Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
-				.header("Content-Disposition", "attachment;filename=" + file.getName()).build();
-		VXResource vxResource = vxResource(Id);
-		Mockito.when(
-				searchUtil.extractString((HttpServletRequest) Mockito.any(), (SearchCriteria) Mockito.any(),
-						(String) Mockito.any(), (String) Mockito.any(), (String) Mockito.any()))
-				.thenReturn("json");
-		Mockito.when(assetREST.getXResource(Id)).thenReturn(vxResource);
-		Mockito.when(assetMgr.getXResourceFile(vxResource, "json")).thenReturn(file);
-		Response reponse = assetREST.getXResourceFile(request, Id);
-		Assert.assertEquals(expectedResponse.getStatus(), reponse.getStatus());
-		Mockito.verify(assetMgr).getXResourceFile(vxResource, "json");
-		Mockito.verify(searchUtil).extractString((HttpServletRequest) Mockito.any(),
-				(SearchCriteria) Mockito.any(), (String) Mockito.any(), (String) Mockito.any(),
-				(String) Mockito.any());
-	}
-
-	@Test
-	public void testGetResourceJSON() {
-		RangerService rangerService = rangerService(Id);
-		String file = "testGetResourceJSON";
-		VXAsset vXAsset = vXAsset(Id);
-		Date date = new Date();
-		String strdt = date.toString();
-		X509Certificate[] certchain = new X509Certificate[1];
-		certchain[0] = Mockito.mock(X509Certificate.class);
-		ServicePolicies servicePolicies = servicePolicies();
-		RangerPolicy rangerPolicy = rangerPolicy(Id);
-		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
-		policies.add(rangerPolicy);
-		Mockito.when(request.getParameter("epoch")).thenReturn(strdt);
-		Mockito.when(request.getAttribute("javax.servlet.request.X509Certificate")).thenReturn(certchain);
-		Mockito.when(request.getHeader("X-FORWARDED-FOR")).thenReturn("valid");
-		Mockito.when(request.isSecure()).thenReturn(true);
-		Mockito.when(request.getParameter("policyCount")).thenReturn("4");
-		Mockito.when(request.getParameter("agentId")).thenReturn("12");
-		// Mockito.when(PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true)).thenReturn(true);
-		try {
-			Mockito.when(serviceREST.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(),
-					Mockito.anyLong(), Mockito.anyString(), Mockito.anyString() , Mockito.anyString() , Mockito.anyBoolean(), Mockito.anyString(), (HttpServletRequest) Mockito.any()))
-					.thenReturn(servicePolicies);
-		} catch (Exception e) {
-			fail("test failed due to: " + e.getMessage());
-		}
-		Mockito.when(serviceUtil.getServiceByName("hdfs_dev")).thenReturn(rangerService);
-		Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
-		Mockito.when(assetMgr.getLatestRepoPolicy((VXAsset) Mockito.any(), Mockito.<VXResource>anyList(), Mockito.anyLong(),
-				(X509Certificate[]) Mockito.any(), Mockito.anyBoolean(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyBoolean(), Mockito.anyString(), Mockito.anyString())).thenReturn(file);
-		String actualFile = assetREST.getResourceJSON(request, "hdfs_dev");
-		Assert.assertEquals(file, actualFile);
-		Mockito.verify(serviceUtil).getServiceByName("hdfs_dev");
-		Mockito.verify(serviceUtil).toVXAsset(rangerService);
-		Mockito.verify(request).getParameter("epoch");
-		Mockito.verify(request).getAttribute("javax.servlet.request.X509Certificate");
-		Mockito.verify(request).getHeader("X-FORWARDED-FOR");
-		Mockito.verify(request).isSecure();
-		Mockito.verify(request).getParameter("policyCount");
-		Mockito.verify(request).getParameter("agentId");
-		Mockito.verify(assetMgr).getLatestRepoPolicy((VXAsset) Mockito.any(), Mockito.<VXResource>anyList(),
-				Mockito.anyLong(), (X509Certificate[]) Mockito.any(), Mockito.anyBoolean(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.anyBoolean(), Mockito.anyString(), Mockito.anyString());
 	}
 
 	@Test
