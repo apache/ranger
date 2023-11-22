@@ -138,15 +138,51 @@ define(function(require) {
         },
 
         evSelectUsers : function (e) {
-            this.model.set('users', e.val)
+            if(!_.isUndefined(e.added)){
+                var Val = [];
+                Val.push(e.added.text)
+                if(_.isUndefined(this.model.get(e.currentTarget.dataset.type))){
+                    this.model.set('users', Val)
+                } else {
+                    this.model.get(e.currentTarget.dataset.type).push(e.added.text)
+                }
+            }
+            if(!_.isUndefined(e.removed)){
+                var removeVal = _.without(this.model.get(e.currentTarget.dataset.type), e.removed.text);
+                this.model.set(e.currentTarget.dataset.type , removeVal);
+            }
         },
 
         evSelectGroup : function (e) {
-            this.model.set('groups', e.val)
+            if(!_.isUndefined(e.added)){
+                var Val = [];
+                Val.push(e.added.text)
+                if(_.isUndefined(this.model.get(e.currentTarget.dataset.type))){
+                    this.model.set('groups', Val);
+                } else {
+                    this.model.get(e.currentTarget.dataset.type).push(e.added.text);
+                }
+            }
+            if(!_.isUndefined(e.removed)){
+                var removeVal = _.without(this.model.get(e.currentTarget.dataset.type), e.removed.text);
+                this.model.set(e.currentTarget.dataset.type , removeVal);
+            }
         },
 
         evSelectRoles : function (e) {
-            this.model.set('roles', e.val)
+            if(!_.isUndefined(e.added)){
+                var Val = [];
+                Val.push(e.added.text)
+                if(_.isUndefined(this.model.get(e.currentTarget.dataset.type))){
+                    this.model.set('roles', Val)
+                } else {
+                    this.model.get(e.currentTarget.dataset.type).push(e.added.text)
+                }
+            }
+            if(!_.isUndefined(e.removed)){
+                var removeVal = _.without(this.model.get(e.currentTarget.dataset.type), e.removed.text);
+                this.model.set(e.currentTarget.dataset.type , removeVal);
+            }
         },
 
         evOparations : function (e) {

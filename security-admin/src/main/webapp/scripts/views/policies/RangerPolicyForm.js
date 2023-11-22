@@ -454,7 +454,7 @@ define(function(require){
 			}
 
             if(this.model.has('policyLabels')){
-                var policyLabel = _.isEmpty(this.model.get('policyLabels')) ? [] : this.model.get('policyLabels').split(',');
+                var policyLabel = _.isEmpty(this.model.get('policyLabels')) ? [] : this.model.get('policyLabels');
                 this.model.set('policyLabels', policyLabel);
             }
             if(!_.isUndefined(App.vZone) && App.vZone.vZoneName){

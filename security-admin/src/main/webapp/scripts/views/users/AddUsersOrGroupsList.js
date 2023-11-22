@@ -128,7 +128,7 @@ define(function(require) {
                 this.$el.find('[data-id="userGroupsTable"]').html('<tr data-name="'+this.fieldName+'"><td colspan="3"> No '
                     +this.fieldName+' found</td></tr>');
             }
-            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this, '300px'));
+            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this, '500px'));
             this.ui.selectUsersOrGroups.attr("data-name", this.fieldName+"Select");
             this.ui.addUserGroupRoleBtn.attr("data-name", this.fieldName+"AddBtn")
         },
@@ -143,8 +143,8 @@ define(function(require) {
                 return
             } else {
                 this.$el.find('[data-name='+this.fieldName+']').hide();
-                _.each(this.ui.selectUsersOrGroups.val().split(','), function(name){
-                    that.collection.add(new Backbone.Model({'name' : name , 'isAdmin' : false}));
+                _.each(this.ui.selectUsersOrGroups.select2("data"), function(name){
+                    that.collection.add(new Backbone.Model({'name' : name.text , 'isAdmin' : false}));
                 });
                 this.ui.selectUsersOrGroups.select2('data',[]);
             }

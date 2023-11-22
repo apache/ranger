@@ -1673,6 +1673,7 @@ define(function(require) {
         return {
             closeOnSelect : true,
             placeholder   : placeholder,
+            separator : "@-undefined-@",
             tags : true,
             width : width,
             initSelection: function(element, callback) {
@@ -1725,8 +1726,14 @@ define(function(require) {
                         //remove selected values
                         if(that.collection && that.collection.models){
                             _.filter(that.collection.models, function(model){
-                                if(model && !_.isUndefined(model.get('name'))){
-                                    selectedVals.push(model.get('name'));
+                                if(auditFilter !== "auditFilter"){
+                                    if(model && !_.isUndefined(model.get('name'))){
+                                        selectedVals.push(model.get('name'));
+                                    }
+                                } else {
+                                    if(model && !_.isUndefined(model.get($select))){
+                                        selectedVals = model.get($select);
+                                    }
                                 }
                             })
                         }
