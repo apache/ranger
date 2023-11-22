@@ -259,6 +259,10 @@ public class UserMgr {
 			userProfile.setPublicScreenName(gjUser.getLoginId());
 		}
 
+		if (rangerBizUtil.isKeyAdmin() && userProfile.getStatus() != gjUser.getStatus()) {
+			throw restErrorUtil.createRESTException("Status update is not permitted to logged in user.", MessageEnums.INVALID_INPUT_DATA);
+		}
+
 		// userRoleList
 		updateRoles(userProfile.getId(), userProfile.getUserRoleList());
 
@@ -338,17 +342,10 @@ public class UserMgr {
 
 	/**
 	 * @param pwdChange
-         * @return
-         */
-        public VXResponse changePassword(VXPasswordChange pwdChange) {
-
-                VXResponse ret = new VXResponse();
-
-                // First let's get the XXPortalUser for the current logged in user
-		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
-		XXPortalUser gjUserCurrent = daoManager.getXXPortalUser().findByLoginId(currentUserLoginId);
-		checkAccessForUpdate(gjUserCurrent);
-
+	 * @return
+	 */
+	public VXResponse changePassword(VXPasswordChange pwdChange) {
+		VXResponse ret = new VXResponse();
 		// Get the user of whom we want to change the password
 		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(pwdChange.getLoginId());
 		if (gjUser == null) {
@@ -362,8 +359,8 @@ public class UserMgr {
             vXResponse.setMsgDesc("SECURITY:changePassword().Ranger External Users cannot change password. LoginId=" + pwdChange.getLoginId());
             throw restErrorUtil.generateRESTException(vXResponse);
         }
-        
-        String currentPassword = gjUser.getPassword();
+		checkAccess(gjUser);
+		String currentPassword = gjUser.getPassword();
 		//check current password and provided old password is same or not
 		if (this.isFipsEnabled) {
 			if (!isPasswordValid(pwdChange.getLoginId(), currentPassword, pwdChange.getOldPassword())) {
@@ -436,8 +433,7 @@ public class UserMgr {
 	 * @return
 	 */
 	public VXPortalUser changeEmailAddress(XXPortalUser gjUser, VXPasswordChange changeEmail) {
-		checkAccessForUpdate(gjUser);
-		rangerBizUtil.blockAuditorRoleUser();
+		checkAccess(gjUser);
 		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
 			changeEmail.setEmailAddress(null);
 		}
@@ -625,33 +621,24 @@ public class UserMgr {
 			}
 
 			userProfile.setId(user.getId());
-			List<XXUserPermission> xUserPermissions = daoManager
-					.getXXUserPermission().findByUserPermissionIdAndIsAllowed(
-							userProfile.getId());
-			List<XXGroupPermission> xxGroupPermissions = daoManager
-					.getXXGroupPermission().findbyVXPortalUserId(
-							userProfile.getId());
-
-			List<VXGroupPermission> groupPermissions = new ArrayList<VXGroupPermission>();
-			List<VXUserPermission> vxUserPermissions = new ArrayList<VXUserPermission>();
-			for (XXGroupPermission xxGroupPermission : xxGroupPermissions) {
-				VXGroupPermission groupPermission = xGroupPermissionService
-						.populateViewBean(xxGroupPermission);
-				groupPermission.setModuleName(daoManager.getXXModuleDef()
-						.findByModuleId(groupPermission.getModuleId())
-						.getModule());
-				groupPermissions.add(groupPermission);
+			if (sess.isUserAdmin() || sess.getXXPortalUser().getId().equals(user.getId())) {
+				List<XXUserPermission> xUserPermissions = daoManager.getXXUserPermission().findByUserPermissionIdAndIsAllowed(userProfile.getId());
+				List<XXGroupPermission> xxGroupPermissions = daoManager.getXXGroupPermission().findbyVXPortalUserId(userProfile.getId());
+				List<VXGroupPermission> groupPermissions = new ArrayList<VXGroupPermission>();
+				List<VXUserPermission> vxUserPermissions = new ArrayList<VXUserPermission>();
+				for (XXGroupPermission xxGroupPermission : xxGroupPermissions) {
+					VXGroupPermission groupPermission = xGroupPermissionService.populateViewBean(xxGroupPermission);
+					groupPermission.setModuleName(daoManager.getXXModuleDef().findByModuleId(groupPermission.getModuleId()).getModule());
+					groupPermissions.add(groupPermission);
+				}
+				for (XXUserPermission xUserPermission : xUserPermissions) {
+					VXUserPermission vXUserPermission = xUserPermissionService.populateViewBean(xUserPermission);
+					vXUserPermission.setModuleName(daoManager.getXXModuleDef().findByModuleId(vXUserPermission.getModuleId()).getModule());
+					vxUserPermissions.add(vXUserPermission);
+				}
+				userProfile.setGroupPermissions(groupPermissions);
+				userProfile.setUserPermList(vxUserPermissions);
 			}
-			for (XXUserPermission xUserPermission : xUserPermissions) {
-				VXUserPermission vXUserPermission = xUserPermissionService
-						.populateViewBean(xUserPermission);
-				vXUserPermission.setModuleName(daoManager.getXXModuleDef()
-						.findByModuleId(vXUserPermission.getModuleId())
-						.getModule());
-				vxUserPermissions.add(vXUserPermission);
-			}
-			userProfile.setGroupPermissions(groupPermissions);
-			userProfile.setUserPermList(vxUserPermissions);
 			userProfile.setFirstName(user.getFirstName());
 			userProfile.setLastName(user.getLastName());
 			userProfile.setPublicScreenName(user.getPublicScreenName());
@@ -765,14 +752,20 @@ public class UserMgr {
 		@SuppressWarnings("rawtypes")
 		List resultList = query.getResultList();
 		// Iterate over the result list and create the return list
+		int adminCount = 0;
 		for (Object object : resultList) {
 			XXPortalUser gjUser = (XXPortalUser) object;
 			VXPortalUser userProfile = new VXPortalUser();
 			gjUserToUserProfile(gjUser, userProfile);
-			objectList.add(userProfile);
+			if (rangerBizUtil.isKeyAdmin() && (userProfile.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || userProfile.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR))) {
+				adminCount++;
+				continue;
+			} else {
+				objectList.add(userProfile);
+			}
 		}
 
-		returnList.setResultSize(resultSize);
+		returnList.setResultSize(resultSize-adminCount);
 		returnList.setPageSize(query.getMaxResults());
 		returnList.setSortBy(sortBy);
 		returnList.setSortType(querySortType);
@@ -1007,9 +1000,7 @@ public class UserMgr {
 	public void checkAccess(Long userId) {
 		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
 		if (gjUser == null) {
-			throw restErrorUtil
-					.create403RESTException("serverMsg.userMgrWrongUser: "
-							+ userId);
+			throw restErrorUtil.create403RESTException("serverMsg.userMgrWrongUser: " + userId);
 		}
 
 		checkAccess(gjUser);
@@ -1021,58 +1012,14 @@ public class UserMgr {
 	 */
 	public void checkAccess(XXPortalUser gjUser) {
 		if (gjUser == null) {
-			throw restErrorUtil
-					.create403RESTException("serverMsg.userMgrWrongUser");
+			throw restErrorUtil.create403RESTException("serverMsg.userMgrWrongUser");
 		}
-		UserSessionBase sess = ContextUtil.getCurrentUserSession();
-		if (sess != null) {
-
-			// Admin
-			if (sess.isUserAdmin() || sess.isKeyAdmin()) {
-				return;
-			}
-
-			// Self
-			if (sess.getXXPortalUser().getId().equals(gjUser.getId())) {
-				return;
-			}
-
+		VXPortalUser requestedVXUser = getUserProfileByLoginId(gjUser.getLoginId());
+		if (requestedVXUser !=null && CollectionUtils.isNotEmpty(requestedVXUser.getUserRoleList()) && hasAccessToGetUserInfo(requestedVXUser)) {
+			return;
 		}
-		throw restErrorUtil.create403RESTException("User "
-				+ " access denied. loggedInUser="
-				+ (sess != null ? sess.getXXPortalUser().getId()
-						: "Not Logged In") + ", accessing user="
-				+ gjUser.getId());
-
-	}
-
-	public void checkAccessForUpdate(XXPortalUser gjUser) {
-		if (gjUser == null) {
-			throw restErrorUtil
-					.create403RESTException("serverMsg.userMgrWrongUser");
-		}
-		UserSessionBase sess = ContextUtil.getCurrentUserSession();
-		if (sess != null) {
-
-			// Admin
-			if (sess.isUserAdmin()) {
-				return;
-			}
-
-			// Self
-			if (sess.getXXPortalUser().getId().equals(gjUser.getId())) {
-				return;
-			}
-
-		}
-		VXResponse vXResponse = new VXResponse();
-		vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
-		vXResponse.setMsgDesc("User "
-				+ " access denied. loggedInUser="
-				+ (sess != null ? sess.getXXPortalUser().getId()
-						: "Not Logged In") + ", accessing user="
-				+ gjUser.getId());
-		throw restErrorUtil.generateRESTException(vXResponse);
+		logger.info("Logged-In user is not allowed to access requested user data.");
+		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Logged-In user is not allowed to access requested user data", true);
 
 	}
 
@@ -1459,5 +1406,28 @@ public class UserMgr {
 		} catch (NoSuchAlgorithmException e) {
 			throw restErrorUtil.createRESTException("algorithm `" + algorithm + "' not supported");
 		}
+	}
+
+	private boolean hasAccessToGetUserInfo(VXPortalUser requestedVXUser) {
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null && userSession.getLoginId() != null) {
+			VXPortalUser loggedInVXUser = getUserProfileByLoginId(userSession.getLoginId());
+			if (loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
+				if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+					return requestedVXUser.getId().equals(loggedInVXUser.getId()) ? true : false;
+				} else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+					if (requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+						return true;
+					}
+				} else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+					if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
+						return true;
+					} else if (requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

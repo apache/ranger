@@ -621,6 +621,7 @@ public class ServiceREST {
 
 			if (policyAdmin != null) {
 				ret = policyAdmin.getMatchingPolicies(new RangerAccessResourceImpl(resource));
+				ret = applyAdminAccessFilter(ret);
 			}
 
 		}
@@ -674,7 +675,7 @@ public class ServiceREST {
 							LOG.error("Invalid service-name:[" + serviceName + "]");
 						}
 						if (service == null || !StringUtils.equals(service.getType(), serviceDefName)) {
-							ret = "Invalid service-name:[" + serviceName + "] or service-name is not of service-type:[" + serviceDefName + "]";
+							ret = "Invalid service-name:[" + serviceName + "] or service-type:[" + serviceDefName + "]";
 						} else {
 							services.add(service);
 							ret = StringUtils.EMPTY;
@@ -3507,7 +3508,11 @@ public class ServiceREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_FOR_VERSION_NO + "\")")
 	public RangerPolicy getPolicyForVersionNumber(@PathParam("policyId") Long policyId,
 			@PathParam("versionNo") int versionNo) {
-		return svcStore.getPolicyForVersionNumber(policyId, versionNo);
+		RangerPolicy policy = svcStore.getPolicyForVersionNumber(policyId, versionNo);
+		if (policy != null) {
+			ensureAdminAndAuditAccess(policy);
+		}
+		return policy;
 	}
 
 	@GET
@@ -4133,7 +4138,7 @@ public class ServiceREST {
 		VXUser   vxUser = null;
 		if (grantor != null) {
 			try {
-				vxUser = userMgr.getXUserByUserName(grantor);
+				vxUser = xUserService.getXUserByUserName(grantor);
 				if (vxUser == null) {
 					throw restErrorUtil.createGrantRevokeRESTException("Grantor user " + grantor + " doesn't exist");
 				}
@@ -4147,7 +4152,7 @@ public class ServiceREST {
 		VXUser   vxUser = null;
 		for (String userName : grantees) {
 			try {
-				vxUser = userMgr.getXUserByUserName(userName);
+				vxUser = xUserService.getXUserByUserName(userName);
 				if (vxUser == null) {
 					throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
 				}
@@ -4468,6 +4473,10 @@ public class ServiceREST {
 
             if (dbPolicy != null) {
                 ret = policyService.getPopulatedViewObject(dbPolicy);
+            }
+
+            if (ret != null) {
+                ensureAdminAndAuditAccess(ret);
             }
         }
 
