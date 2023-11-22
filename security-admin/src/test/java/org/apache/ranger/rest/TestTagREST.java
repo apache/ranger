@@ -499,10 +499,12 @@ public class TestTagREST {
 	
 	@Test
 	public void test16getTagTypes(){
+		boolean isAdmin = true;
 		List<String> ret = new ArrayList<String>();
 		ret.add(name);
 		
 		try {
+			Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
 			Mockito.when(tagStore.getTagTypes()).thenReturn(ret);
 		} catch (Exception e) {
 		}
@@ -760,6 +762,7 @@ public class TestTagREST {
 	
 	@Test
 	public void test26getAllTags() {
+		boolean isAdmin = true;
 		List<RangerTag> ret = new ArrayList<RangerTag>();
 		RangerTag rangerTag = new RangerTag();
 		rangerTag.setId(id);
@@ -767,6 +770,7 @@ public class TestTagREST {
 		ret.add(rangerTag);
 		
 		try {
+			Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
 			Mockito.when(tagStore.getTags((SearchFilter)Mockito.any())).thenReturn(ret);
 		} catch (Exception e) {
 		}
@@ -784,9 +788,10 @@ public class TestTagREST {
 	
 	@Test
 	public void test60getAllTags() {
+		boolean isAdmin = true;
 		List<RangerTag> ret = new ArrayList<RangerTag>();
-		
 		try {
+			Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
 			Mockito.when(tagStore.getTags((SearchFilter)Mockito.any())).thenReturn(ret);
 		} catch (Exception e) {
 		}
@@ -1118,6 +1123,7 @@ public class TestTagREST {
 	
 	@Test
 	public void test37getAllServiceResources() {
+		boolean isAdmin = true;
 		List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
 		RangerServiceResource rangerServiceResource =  new RangerServiceResource();
 		rangerServiceResource.setId(id);
@@ -1125,6 +1131,7 @@ public class TestTagREST {
 		ret.add(rangerServiceResource);
 		
 		try {
+			Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
 			Mockito.when(tagStore.getServiceResources((SearchFilter)Mockito.any())).thenReturn(ret);
 		} catch (Exception e) {
 		}

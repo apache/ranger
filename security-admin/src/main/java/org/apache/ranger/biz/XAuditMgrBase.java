@@ -19,12 +19,15 @@
 
  package org.apache.ranger.biz;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.plugin.store.PList;
-import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.RangerTrxLogV2Service;
+import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
@@ -32,9 +35,6 @@ import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXTrxLogV2;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class XAuditMgrBase {
 
