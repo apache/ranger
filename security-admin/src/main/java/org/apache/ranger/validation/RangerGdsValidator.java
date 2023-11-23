@@ -305,34 +305,34 @@ public class RangerGdsValidator {
         LOG.debug("<== validateDelete(resourceId={}, existing={})", resourceId, existing);
     }
 
-    public void validateCreate(RangerDataShareInDataset dshInDataset) {
-        LOG.debug("==> validateCreate(dshInDataset={})", dshInDataset);
+    public void validateCreate(RangerDataShareInDataset dshid) {
+        LOG.debug("==> validateCreate(dshid={})", dshid);
 
         ValidationResult result    = new ValidationResult();
-        RangerDataShare  dataShare = dataProvider.getDataShare(dshInDataset.getDataShareId());
-        RangerDataset    dataset   = dataProvider.getDataset(dshInDataset.getDatasetId());
+        RangerDataShare  dataShare = dataProvider.getDataShare(dshid.getDataShareId());
+        RangerDataset    dataset   = dataProvider.getDataset(dshid.getDatasetId());
 
         if (dataShare == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", dshInDataset.getDataShareId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", dshid.getDataShareId()));
         }
 
         if (dataset == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dshInDataset.getDatasetId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dshid.getDatasetId()));
         }
 
         if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
             if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
             }
 
-            switch (dshInDataset.getStatus()) {
+            switch (dshid.getStatus()) {
                 case GRANTED:
                 case DENIED:
-                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
                 break;
 
                 case ACTIVE:
-                    validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
                 break;
 
@@ -347,16 +347,16 @@ public class RangerGdsValidator {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateCreate(dshInDataset={})", dshInDataset);
+        LOG.debug("<== validateCreate(dshid={})", dshid);
     }
 
-    public void validateUpdate(RangerDataShareInDataset dshInDataset, RangerDataShareInDataset existing) {
-        LOG.debug("==> validateUpdate(dshInDataset={}, existing={})", dshInDataset, existing);
+    public void validateUpdate(RangerDataShareInDataset dshid, RangerDataShareInDataset existing) {
+        LOG.debug("==> validateUpdate(dshid={}, existing={})", dshid, existing);
 
         ValidationResult result = new ValidationResult();
 
         if (existing == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND, "id", dshInDataset.getId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND, "id", dshid.getId()));
         } else {
             RangerDataShare dataShare = dataProvider.getDataShare(existing.getDataShareId());
             RangerDataset   dataset   = dataProvider.getDataset(existing.getDatasetId());
@@ -369,66 +369,43 @@ public class RangerGdsValidator {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", existing.getDatasetId()));
             }
 
-            if (!Objects.equals(dshInDataset.getDataShareId(), existing.getDataShareId())) {
+            if (!Objects.equals(dshid.getDataShareId(), existing.getDataShareId())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD, "dataShareId"));
 
                 dataShare = null;
             }
 
-            if (!Objects.equals(dshInDataset.getDatasetId(), existing.getDatasetId())) {
+            if (!Objects.equals(dshid.getDatasetId(), existing.getDatasetId())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD, "datasetId"));
 
                 dataset = null;
             }
 
             if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
-                boolean requireDataShareAdmin = false;
-                boolean requireDatasetAdmin   = false;
-
-                if (!Objects.equals(existing.getStatus(), dshInDataset.getStatus())) {
-                    switch (existing.getStatus()) {
-                        case NONE:
-                            if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.REQUESTED) {
-                                requireDatasetAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED || dshInDataset.getStatus() == RangerGds.GdsShareStatus.DENIED) {
-                                requireDataShareAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
-                                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshInDataset.getStatus()));
-                            }
-                            break;
-
-                        case REQUESTED:
-                            if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.NONE) {
-                                requireDatasetAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED || dshInDataset.getStatus() == RangerGds.GdsShareStatus.DENIED) {
-                                requireDataShareAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
-                                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshInDataset.getStatus()));
-                            }
-                            break;
-
-                        case GRANTED:
-                            if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
-                                requireDatasetAdmin = true;
-                            }
-                            break;
-
-                        case ACTIVE:
-                        case DENIED:
-                        default:
-                            break;
-                    }
+                if (!Objects.equals(existing.getStatus(), dshid.getStatus())) {
+                    boolean requireDataShareAdmin = needsSharedObjectAdmin(existing.getStatus(), dshid.getStatus());
+                    boolean requireDatasetAdmin   = needsReceivingObjectAdmin(existing.getStatus(), dshid.getStatus());
 
                     if (requireDataShareAdmin) {
-                        if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                            validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+                        if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
+                            validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
                         }
-                    } else if (requireDatasetAdmin) {
-                        if (!dataProvider.isAdminUser()) {
-                            validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                    }
+
+                    if (requireDatasetAdmin) {
+                        validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                    }
+
+                    if (!requireDataShareAdmin && !requireDatasetAdmin){ // must be either a dataShare admin or a dataset admin
+                        String  userName  = dataProvider.getCurrentUserLoginId();
+                        boolean isAllowed = isAdmin(userName, dataShare.getAcl()) ||
+                                            dataProvider.isServiceAdmin(dataShare.getService()) ||
+                                            dataProvider.isZoneAdmin(dataShare.getZone()) ||
+                                            isAdmin(userName, dataset.getAcl());
+
+                        if (!isAllowed) {
+                            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshid.getStatus()));
                         }
-                    } else { // must be either a dataset admin or a datashare admin
-                        // TODO:
                     }
                 }
             }
@@ -438,16 +415,16 @@ public class RangerGdsValidator {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateUpdate(dshInDataset={}, existing={})", dshInDataset, existing);
+        LOG.debug("<== validateUpdate(dshid={}, existing={})", dshid, existing);
     }
 
-    public void validateDelete(Long dshInDatasetId, RangerDataShareInDataset existing) {
-        LOG.debug("==> validateDelete(dshInDatasetId={}, existing={})", dshInDatasetId, existing);
+    public void validateDelete(Long dshidId, RangerDataShareInDataset existing) {
+        LOG.debug("==> validateDelete(dshidId={}, existing={})", dshidId, existing);
 
         ValidationResult result = new ValidationResult();
 
         if (existing == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND, "id", dshInDatasetId));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND, "id", dshidId));
         } else {
             RangerDataShare dataShare = dataProvider.getDataShare(existing.getDataShareId());
             RangerDataset   dataset   = dataProvider.getDataset(existing.getDatasetId());
@@ -460,8 +437,16 @@ public class RangerGdsValidator {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", existing.getDatasetId()));
             }
 
-            if (dataShare != null && dataset != null) {
-                // TODO: must be either a dataset admin or datashare admin
+            if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {  // must be either a dataset admin or a dataShare admin
+                String  userName  = dataProvider.getCurrentUserLoginId();
+                boolean isAllowed = isAdmin(userName, dataShare.getAcl()) ||
+                                    dataProvider.isServiceAdmin(dataShare.getService()) ||
+                                    dataProvider.isZoneAdmin(dataShare.getZone()) ||
+                                    isAdmin(userName, dataset.getAcl());
+
+                if (!isAllowed) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_NOT_ADMIN, null, userName, "dataShareInDataset", "dataShare (name=" + dataShare.getName() + ") or dataset (name=" + dataset.getName() + ")"));
+                }
             }
         }
 
@@ -469,26 +454,26 @@ public class RangerGdsValidator {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateDelete(dshInDatasetId={}, existing={})", dshInDatasetId, existing);
+        LOG.debug("<== validateDelete(dshidId={}, existing={})", dshidId, existing);
     }
 
-    public void validateCreate(RangerDatasetInProject dsInProject) {
-        LOG.debug("==> validateCreate(dsInProject={})", dsInProject);
+    public void validateCreate(RangerDatasetInProject dip) {
+        LOG.debug("==> validateCreate(dip={})", dip);
 
         ValidationResult result  = new ValidationResult();
-        RangerDataset    dataset = dataProvider.getDataset(dsInProject.getDatasetId());
-        RangerProject    project = dataProvider.getProject(dsInProject.getProjectId());
+        RangerDataset    dataset = dataProvider.getDataset(dip.getDatasetId());
+        RangerProject    project = dataProvider.getProject(dip.getProjectId());
 
         if (dataset == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dsInProject.getDatasetId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dip.getDatasetId()));
         }
 
         if (project == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", dsInProject.getProjectId()));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", dip.getProjectId()));
         }
 
         if (dataset != null && project != null && !dataProvider.isAdminUser()) {
-            switch (dsInProject.getStatus()) {
+            switch (dip.getStatus()) {
                 case GRANTED:
                 case DENIED:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
@@ -510,42 +495,79 @@ public class RangerGdsValidator {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateCreate(dsInProject={})", dsInProject);
+        LOG.debug("<== validateCreate(dip={})", dip);
     }
 
-    public void validateUpdate(RangerDatasetInProject dsInProject, RangerDatasetInProject existing) {
-        LOG.debug("==> validateUpdate(dsInProject={}, existing={})", dsInProject, existing);
+    public void validateUpdate(RangerDatasetInProject dip, RangerDatasetInProject existing) {
+        LOG.debug("==> validateUpdate(dip={}, existing={})", dip, existing);
 
         ValidationResult result  = new ValidationResult();
-        RangerDataset    dataset = dataProvider.getDataset(dsInProject.getDatasetId());
-        RangerProject    project = dataProvider.getProject(dsInProject.getProjectId());
 
-        if (dataset == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", dsInProject.getDatasetId()));
-        }
+        if (existing == null) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND, "id", dip.getId()));
+        } else {
+            RangerDataset dataset = dataProvider.getDataset(existing.getDatasetId());
+            RangerProject project = dataProvider.getProject(existing.getProjectId());
 
-        if (project == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", dsInProject.getProjectId()));
-        }
+            if (dataset == null) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND, "datasetId", existing.getDatasetId()));
+            }
 
-        if (dataset != null && project != null && !dataProvider.isAdminUser()) {
-            // TODO:
+            if (project == null) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND, "projectId", existing.getProjectId()));
+            }
+
+            if (!Objects.equals(dip.getDatasetId(), existing.getDatasetId())) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD, "datasetId"));
+
+                dataset = null;
+            }
+
+            if (!Objects.equals(dip.getProjectId(), existing.getProjectId())) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD, "projectId"));
+
+                project = null;
+            }
+
+            if (dataset != null && project != null && !dataProvider.isAdminUser()) {
+                if (!Objects.equals(existing.getStatus(), dip.getStatus())) {
+                    boolean requireDatasetAdmin = needsSharedObjectAdmin(existing.getStatus(), dip.getStatus());
+                    boolean requireProjectAdmin = needsReceivingObjectAdmin(existing.getStatus(), dip.getStatus());
+
+                    if (requireDatasetAdmin) {
+                        validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                    }
+
+                    if (requireProjectAdmin) {
+                        validateAdmin(dataProvider.getCurrentUserLoginId(), "project", project.getName(), project.getAcl(), result);
+                    }
+
+                    if (!requireDatasetAdmin && !requireProjectAdmin){ // must be either a dataset admin or a project admin
+                        String  userName  = dataProvider.getCurrentUserLoginId();
+                        boolean isAllowed = isAdmin(userName, dataset.getAcl()) || isAdmin(userName, project.getAcl());
+
+                        if (!isAllowed) {
+                            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dip.getStatus()));
+                        }
+                    }
+                }
+            }
         }
 
         if (!result.isSuccess()) {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateUpdate(dsInProject={}, existing={})", dsInProject, existing);
+        LOG.debug("<== validateUpdate(dip={}, existing={})", dip, existing);
     }
 
-    public void validateDelete(Long dsInProjectId, RangerDatasetInProject existing) {
-        LOG.debug("==> validateDelete(dsInProjectId={}, existing={})", dsInProjectId, existing);
+    public void validateDelete(Long dipId, RangerDatasetInProject existing) {
+        LOG.debug("==> validateDelete(dipId={}, existing={})", dipId, existing);
 
         ValidationResult result = new ValidationResult();
 
         if (existing == null) {
-            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND, "id", dsInProjectId));
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND, "id", dipId));
         } else {
             RangerDataset dataset = dataProvider.getDataset(existing.getDatasetId());
             RangerProject project = dataProvider.getProject(existing.getProjectId());
@@ -559,7 +581,12 @@ public class RangerGdsValidator {
             }
 
             if (dataset != null && project != null && !dataProvider.isAdminUser()) {
-                // TODO: must be either a dataset admin or project admin
+                String  userName  = dataProvider.getCurrentUserLoginId();
+                boolean isAllowed = isAdmin(userName, dataset.getAcl()) || isAdmin(userName, project.getAcl());
+
+                if (!isAllowed) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_NOT_ADMIN, null, userName, "datasetInProject", "dataset (name=" + dataset.getName() + ") or project (name=" + project.getName() + ")"));
+                }
             }
         }
 
@@ -567,7 +594,7 @@ public class RangerGdsValidator {
             result.throwRESTException();
         }
 
-        LOG.debug("<== validateDelete(dsInProjectId={}, existing={})", dsInProjectId, existing);
+        LOG.debug("<== validateDelete(dipId={}, existing={})", dipId, existing);
     }
 
     public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
@@ -740,45 +767,7 @@ public class RangerGdsValidator {
     }
 
     private void validateAdmin(String userName, String objType, String objName, RangerGdsObjectACL acl, ValidationResult result) {
-        boolean isAdmin = false;
-
-        if (acl != null) {
-            if (MapUtils.isNotEmpty(acl.getUsers())) {
-                isAdmin = isAllowed(acl.getUsers().get(userName), GdsPermission.ADMIN);
-            }
-
-            if (!isAdmin && MapUtils.isNotEmpty(acl.getGroups())) {
-                isAdmin = isAllowed(acl.getGroups().get(RangerConstants.GROUP_PUBLIC), GdsPermission.ADMIN);
-
-                if (!isAdmin) {
-                    Set<String> userGroups = dataProvider.getGroupsForUser(userName);
-
-                    if (userGroups != null) {
-                        for (String userGroup : userGroups) {
-                            isAdmin = isAllowed(acl.getGroups().get(userGroup), GdsPermission.ADMIN);
-
-                            if (isAdmin) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isAdmin && MapUtils.isNotEmpty(acl.getRoles())) {
-                Set<String> userRoles  = dataProvider.getRolesForUser(userName);
-
-                if (userRoles != null) {
-                    for (String userRole : userRoles) {
-                        isAdmin = isAllowed(acl.getRoles().get(userRole), GdsPermission.ADMIN);
-
-                        if (isAdmin) {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+        boolean isAdmin = isAdmin(userName, acl);
 
         if (!isAdmin) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_NOT_ADMIN, null, userName, objType, objName));
@@ -842,6 +831,50 @@ public class RangerGdsValidator {
         }
     }
 
+    private boolean isAdmin(String userName, RangerGdsObjectACL acl) {
+        boolean ret = false;
+
+        if (acl != null) {
+            if (MapUtils.isNotEmpty(acl.getUsers())) {
+                ret = isAllowed(acl.getUsers().get(userName), GdsPermission.ADMIN);
+            }
+
+            if (!ret && MapUtils.isNotEmpty(acl.getGroups())) {
+                ret = isAllowed(acl.getGroups().get(RangerConstants.GROUP_PUBLIC), GdsPermission.ADMIN);
+
+                if (!ret) {
+                    Set<String> userGroups = dataProvider.getGroupsForUser(userName);
+
+                    if (userGroups != null) {
+                        for (String userGroup : userGroups) {
+                            ret = isAllowed(acl.getGroups().get(userGroup), GdsPermission.ADMIN);
+
+                            if (ret) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!ret && MapUtils.isNotEmpty(acl.getRoles())) {
+                Set<String> userRoles  = dataProvider.getRolesForUser(userName);
+
+                if (userRoles != null) {
+                    for (String userRole : userRoles) {
+                        ret = isAllowed(acl.getRoles().get(userRole), GdsPermission.ADMIN);
+
+                        if (ret) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
     private boolean isAllowed(GdsPermission hasPermission, GdsPermission accessPermission) {
         final boolean ret;
 
@@ -894,6 +927,78 @@ public class RangerGdsValidator {
 
         if (permission2 != null) {
             ret = permission1.compareTo(permission2) > 0 ? permission1 : permission2;
+        }
+
+        return ret;
+    }
+
+    // Shared object:
+    //   DataShareInDataset => dataShare
+    //   DatasetInProject   => dataset
+    private static boolean needsSharedObjectAdmin(GdsShareStatus existing, GdsShareStatus updated) {
+        boolean ret = false;
+
+        if (!Objects.equals(existing, updated)) {
+            switch (existing) {
+                case NONE:
+                case REQUESTED:
+                    ret = (updated == GdsShareStatus.GRANTED) ||
+                            (updated == GdsShareStatus.DENIED) ||
+                            (updated == GdsShareStatus.ACTIVE); // implicit approval
+
+                    break;
+
+                case GRANTED:
+                    ret = (updated == GdsShareStatus.DENIED);
+                    break;
+
+                case DENIED:
+                    ret = (updated == GdsShareStatus.GRANTED) ||
+                            (updated == GdsShareStatus.ACTIVE); // implicit approval
+                    break;
+
+                case ACTIVE:
+                    ret = (updated == GdsShareStatus.GRANTED) ||
+                            (updated == GdsShareStatus.DENIED);
+                    break;
+            }
+
+        }
+
+        return ret;
+    }
+
+    // Receiving object:
+    //   DataShareInDataset => dataset
+    //   DatasetInProject   => project
+    private static boolean needsReceivingObjectAdmin(GdsShareStatus existing, GdsShareStatus updated) {
+        boolean ret = false;
+
+        if (!Objects.equals(existing, updated)) {
+            switch (existing) {
+                case NONE:
+                    ret = (updated == GdsShareStatus.REQUESTED) ||
+                          (updated == GdsShareStatus.ACTIVE);
+                break;
+
+                case REQUESTED:
+                    ret = (updated == GdsShareStatus.NONE) ||
+                          (updated == GdsShareStatus.ACTIVE);
+                break;
+
+                case GRANTED:
+                case DENIED:
+                    ret = (updated == GdsShareStatus.NONE) ||
+                          (updated == GdsShareStatus.REQUESTED) ||
+                          (updated == GdsShareStatus.ACTIVE);
+                break;
+
+                case ACTIVE:
+                    ret = (updated == GdsShareStatus.NONE) ||
+                          (updated == GdsShareStatus.REQUESTED);
+                break;
+            }
+
         }
 
         return ret;
