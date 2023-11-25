@@ -25,22 +25,29 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.testng.annotations.BeforeMethod;
-
-import java.util.*;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-@RunWith(MockitoJUnitRunner.class)
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyString;
+
+@ExtendWith(MockitoExtension.class)
 public class TestRangerClient {
     private static final RangerClient.API GET_TEST_API  = new RangerClient.API("/relative/path/test", HttpMethod.GET, Response.Status.OK);
 
@@ -64,10 +71,10 @@ public class TestRangerClient {
 
             RangerService ret = client.getService(service.getName());
 
-            Assert.assertNotNull(ret);
-            Assert.assertEquals(ret.getName(), service.getName());
+            Assertions.assertNotNull(ret);
+            Assertions.assertEquals(ret.getName(), service.getName());
         } catch(RangerServiceException excp){
-            Assert.fail("Not expected to fail! Found exception: " + excp);
+            Assertions.fail("Not expected to fail! Found exception: " + excp);
         }
     }
 
@@ -83,9 +90,9 @@ public class TestRangerClient {
 
             RangerService ret = client.getService(1L);
 
-            Assert.assertNull(ret);
+            Assertions.assertNull(ret);
         } catch(RangerServiceException excp){
-            Assert.fail("Not expected to fail! Found exception: " + excp);
+            Assertions.fail("Not expected to fail! Found exception: " + excp);
         }
     }
 
@@ -101,10 +108,10 @@ public class TestRangerClient {
 
             client.getService(1L);
 
-            Assert.fail("supposed to fail with RangerServiceException");
+            Assertions.fail("supposed to fail with RangerServiceException");
         } catch(RangerServiceException excp) {
-            Assert.assertTrue(excp.getMessage().contains("statusCode=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
-            Assert.assertTrue(excp.getMessage().contains("status=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getReasonPhrase()));
+            Assertions.assertTrue(excp.getMessage().contains("statusCode=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
+            Assertions.assertTrue(excp.getMessage().contains("status=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getReasonPhrase()));
         }
     }
 
@@ -118,10 +125,10 @@ public class TestRangerClient {
 
             client.getService(1L);
 
-            Assert.fail("supposed to fail with RangerServiceException");
+            Assertions.fail("supposed to fail with RangerServiceException");
         } catch(RangerServiceException excp) {
-            Assert.assertTrue(excp.getMessage().contains("statusCode=null"));
-            Assert.assertTrue(excp.getMessage().contains("status=null"));
+            Assertions.assertTrue(excp.getMessage().contains("statusCode=null"));
+            Assertions.assertTrue(excp.getMessage().contains("status=null"));
         }
     }
 
@@ -129,9 +136,9 @@ public class TestRangerClient {
     public void api_UrlMissingFormat() {
         try {
             new RangerClient.API("%dtest%dpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1,1);
-            Assert.fail("supposed to fail with RangerServiceException");
+            Assertions.fail("supposed to fail with RangerServiceException");
         } catch(RangerServiceException exp){
-            Assert.assertTrue(exp.getMessage().contains("MissingFormatArgumentException"));
+            Assertions.assertTrue(exp.getMessage().contains("MissingFormatArgumentException"));
         }
     }
 
@@ -139,16 +146,16 @@ public class TestRangerClient {
     public void api_UrlIllegalFormatConversion() {
         try {
             new RangerClient.API("testpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat("1");
-            Assert.fail("supposed to fail with RangerServiceException");
+            Assertions.fail("supposed to fail with RangerServiceException");
         } catch(RangerServiceException exp){
-            Assert.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
+            Assertions.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
 
         try {
             new RangerClient.API("testpath%f", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1);
-            Assert.fail("supposed to fail with RangerServiceException");
+            Assertions.fail("supposed to fail with RangerServiceException");
         } catch(RangerServiceException exp){
-            Assert.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
+            Assertions.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
     }
 
@@ -161,7 +168,7 @@ public class TestRangerClient {
 
         List<RangerSecurityZoneHeaderInfo> zoneHeaders = client.getSecurityZoneHeaders(filter);
 
-        Assert.assertEquals(Collections.emptyList(), zoneHeaders);
+        Assertions.assertEquals(Collections.emptyList(), zoneHeaders);
     }
 
     @Test
@@ -173,7 +180,7 @@ public class TestRangerClient {
 
         List<RangerServiceHeaderInfo> serviceHeaders = client.getSecurityZoneServiceHeaders(filter);
 
-        Assert.assertEquals(Collections.emptyList(), serviceHeaders);
+        Assertions.assertEquals(Collections.emptyList(), serviceHeaders);
     }
 
     @Test
@@ -189,7 +196,7 @@ public class TestRangerClient {
 
         Set<String> zoneNames = client.getSecurityZoneNamesForResource(serviceName, resource);
 
-        Assert.assertEquals(Collections.emptySet(), zoneNames);
+        Assertions.assertEquals(Collections.emptySet(), zoneNames);
     }
 
     @Test
@@ -201,7 +208,7 @@ public class TestRangerClient {
 
         List<RangerSecurityZone> securityZones = client.findSecurityZones(filter);
 
-        Assert.assertEquals(Collections.emptyList(), securityZones);
+        Assertions.assertEquals(Collections.emptyList(), securityZones);
     }
 
     @Test
@@ -214,6 +221,6 @@ public class TestRangerClient {
 
         List<RangerPurgeResult> purgeResults = client.purgeRecords(recordType, retentionDays);
 
-        Assert.assertEquals(Collections.emptyList(), purgeResults);
+        Assertions.assertEquals(Collections.emptyList(), purgeResults);
     }
 }

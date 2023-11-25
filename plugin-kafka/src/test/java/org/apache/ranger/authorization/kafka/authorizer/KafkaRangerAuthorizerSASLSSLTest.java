@@ -43,8 +43,11 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.utils.Time;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
@@ -64,7 +67,7 @@ import scala.Some;
  * 
  * Clients and services authenticate to Kafka using the SASL SSL protocol as part of this test.
  */
-@org.junit.Ignore("Causing JVM to abort on some platforms")
+@Disabled("Causing JVM to abort on some platforms")
 public class KafkaRangerAuthorizerSASLSSLTest {
     private static KafkaServer kafkaServer;
     private static TestingServer zkServer;
@@ -74,7 +77,7 @@ public class KafkaRangerAuthorizerSASLSSLTest {
     private static String truststorePath;
     private static Path tempDir;
 
-    @org.junit.BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
     	// JAAS Config file
         String basedir = System.getProperty("basedir");
@@ -163,7 +166,7 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         KafkaTestUtils.createSomeTopics(adminProps);
     }
     
-    @org.junit.AfterClass
+    @AfterAll
     public static void cleanup() throws Exception {
         if (kafkaServer != null) {
             kafkaServer.shutdown();
@@ -248,8 +251,8 @@ public class KafkaRangerAuthorizerSASLSSLTest {
                     Thread.sleep(1000);
                 }
 
-                Assert.assertNotNull(record);
-                Assert.assertEquals("somevalue", record.value());
+                Assertions.assertNotNull(record);
+                Assertions.assertEquals("somevalue", record.value());
             }
         }
     }
