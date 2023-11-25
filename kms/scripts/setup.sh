@@ -47,6 +47,19 @@ get_prop(){
 	echo $value
 }
 
+get_prop_or_default() {
+  validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+
+  if test -z "$validateProperty" ;
+  then
+    value=$3 # default value
+  else
+    value=$(echo $validateProperty | cut -d "=" -f2-)
+  fi
+
+  echo $value
+}
+
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
 SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
@@ -80,7 +93,7 @@ LOGFILE=$(eval echo "$(get_prop 'LOGFILE' $PROPFILE)")
 JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
 JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
 JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
-java_opts=$(get_prop 'java_opts' $PROPFILE)
+java_opts=$(get_prop_or_default 'java_opts' $PROPFILE '')
 mysql_core_file=$(get_prop 'mysql_core_file' $PROPFILE)
 oracle_core_file=$(get_prop 'oracle_core_file' $PROPFILE)
 postgres_core_file=$(get_prop 'postgres_core_file' $PROPFILE)
