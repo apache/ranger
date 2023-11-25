@@ -41,7 +41,9 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +61,7 @@ public class KafkaRangerTopicCreationTest {
     private static Path tempDir;
     private static SimpleKdcServer kerbyServer;
 
-    @org.junit.BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
@@ -162,7 +164,7 @@ public class KafkaRangerTopicCreationTest {
         kerbyServer.start();
     }
 
-    @org.junit.AfterClass
+    @AfterAll
     public static void cleanup() throws Exception {
         if (kafkaServer != null) {
             kafkaServer.shutdown();
