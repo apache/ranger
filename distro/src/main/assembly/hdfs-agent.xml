@@ -59,8 +59,8 @@
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>org.apache.htrace:htrace-core4</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>

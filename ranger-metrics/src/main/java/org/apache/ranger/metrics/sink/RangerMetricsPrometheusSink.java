@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.apache.commons.configuration2.SubsetConfiguration;
+import org.apache.hadoop.shaded.org.apache.commons.configuration2.SubsetConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricType;
