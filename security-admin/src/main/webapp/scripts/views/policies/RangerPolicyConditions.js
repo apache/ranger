@@ -70,7 +70,7 @@ define(function(require){
                         if(m.type == inputFieldName){
                             tag = _.map(m.values.filter(Boolean), function(val){
                                 if(!_.isEmpty(val)){
-                                    return{'id':_.escape(val), 'text':_.escape(val)}
+                                    return{'id':val, 'text':val}
                                 }
                             });
                         }
@@ -88,7 +88,7 @@ define(function(require){
                         callback(tag);
                     },
                     createSearchChoice: function(term, data) {
-                        term = _.escape(term);
+                        term = term;
                         if ($(data).filter(function() {
                             return this.text.localeCompare(term) === 0;
                         }).length === 0) {

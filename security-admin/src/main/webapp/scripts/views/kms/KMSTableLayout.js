@@ -200,7 +200,7 @@ define(function(require){
 						fromRaw: function (rawValue) {
 							var html = '';
 							_.each(rawValue, function(val, key) {
-								html += key+' <i class="fa-fw fa fa-long-arrow-right fa-fw fa fa-3"></i>  '+val+'<br/>';
+								html += _.escape(key)+' <i class="fa-fw fa fa-long-arrow-right fa-fw fa fa-3"></i>  '+_.escape(val)+'<br/>';
 							});
 							return html;
 						}	

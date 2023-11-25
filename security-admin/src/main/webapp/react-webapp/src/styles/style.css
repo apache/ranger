@@ -2557,6 +2557,9 @@ li.list-group-item:hover {
 .Toastify__toast-icon {
   width: 16px;
 }
+.td-padding-modal {
+  padding: 0.5rem 0.75rem !important;
+}
 .manage-service .dropdown-toggle::after {
   vertical-align: 0.125em;
 }
