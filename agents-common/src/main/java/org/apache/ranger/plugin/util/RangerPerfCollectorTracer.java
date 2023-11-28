@@ -37,7 +37,7 @@ public class RangerPerfCollectorTracer extends RangerPerfTracer {
 		long reportingThreshold = threadInfo == null ? 0L : (1000000/1000 - 1); // just about a microsecond
 
 		if (elapsedTime > reportingThreshold) {
-			logger.debug("[PERF]:" + (threadInfo != null ? threadInfo.getThreadName() : "") + ":" + tag + data + ":" + getElapsedCpuTime() + ":" + getElapsedUserTime());
+			PerfDataRecorder.recordStatistic(tag, (getElapsedCpuTime()+500)/1000, (getElapsedUserTime() + 500)/1000);
 		}
 	}
 
