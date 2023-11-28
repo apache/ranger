@@ -246,7 +246,7 @@ public class RangerGdsValidator {
             if (existing != null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT, "name", resource.getName(), dataShare.getName(), existing));
             } else {
-                validateDataShareAdmin(dataShare, result);
+				validateSharedResourceCreateAndUpdate(dataShare, result);
             }
         }
 
@@ -270,7 +270,7 @@ public class RangerGdsValidator {
             if (dataShare == null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", resource.getDataShareId()));
             } else {
-                validateDataShareAdmin(dataShare, result);
+				validateSharedResourceCreateAndUpdate(dataShare, result);
             }
         }
 
@@ -717,6 +717,16 @@ public class RangerGdsValidator {
     private void validateDataShareAdmin(RangerDataShare dataShare, ValidationResult result) {
         if (!dataProvider.isAdminUser() && !dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
             validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+        }
+    }
+
+    private void validateSharedResourceCreateAndUpdate(RangerDataShare dataShare, ValidationResult result) {
+        if (!dataProvider.isAdminUser()) {
+            validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
+
+            if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_OR_ZONE_ADMIN, null, dataShare.getService(), dataShare.getZone()));
+            }
         }
     }
 
