@@ -920,7 +920,7 @@ public class RangerGdsValidator {
             break;
 
             case NONE:
-                ret = true;
+                ret = false;
             break;
 
             default:
