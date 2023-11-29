@@ -89,6 +89,12 @@ public class RangerBasePlugin {
 		this.pluginConfig  = pluginConfig;
 		this.pluginContext = new RangerPluginContext(pluginConfig);
 
+		boolean usePerfDataRecorder  = pluginConfig.getBoolean("ranger.perf.aggregate.data", false);
+		int     perfDataDumpInterval = pluginConfig.getInt("ranger.perf.aggregate.data.dump.interval", 0);
+		boolean usePerfDataLock  = pluginConfig.getBoolean("ranger.perf.aggregate.data.lock.enabled", false);
+
+		PerfDataRecorder.initialize(usePerfDataRecorder, perfDataDumpInterval, usePerfDataLock, null);
+
 		Set<String> superUsers         = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.users"));
 		Set<String> superGroups        = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.groups"));
 		Set<String> auditExcludeUsers  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.users"));

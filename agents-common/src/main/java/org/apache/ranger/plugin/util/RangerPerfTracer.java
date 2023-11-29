@@ -57,7 +57,10 @@ public class RangerPerfTracer {
 
 				if (indexOfTagEndMarker != -1) {
 					realTag = StringUtils.substring(tag, 0, indexOfTagEndMarker);
-					data    = StringUtils.substring(tag, indexOfTagEndMarker);
+
+					if (!PerfDataRecorder.collectStatistics()) {
+						data = StringUtils.substring(tag, indexOfTagEndMarker);
+					}
 				} else {
 					realTag = tag;
 				}

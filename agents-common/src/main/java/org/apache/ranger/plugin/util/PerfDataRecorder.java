@@ -37,13 +37,27 @@ public class PerfDataRecorder {
 	private static final Logger PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
 
 	private static volatile PerfDataRecorder instance;
-	private Map<String, PerfStatistic> perfStatistics = new HashMap<>();
+	final private Map<String, PerfStatistic> perfStatistics = Collections.synchronizedMap(new HashMap<>());
+	private RangerReadWriteLock lock = null;
 
 	public static void initialize(List<String> names) {
-		if (instance == null) {
-			synchronized (PerfDataRecorder.class) {
-				if (instance == null) {
-					instance = new PerfDataRecorder(names);
+		initialize(true, 0, false, names);
+	}
+
+	public static void initialize(final boolean useRecorder, final int collectionIntervalInSeconds, final boolean usePerfDataLock, List<String> names) {
+		if (useRecorder) {
+			if (instance == null) {
+				synchronized (PerfDataRecorder.class) {
+					if (instance == null) {
+						instance = new PerfDataRecorder(names);
+						instance.lock = new RangerReadWriteLock(usePerfDataLock);
+						if (collectionIntervalInSeconds > 0) {
+							Thread statDumper = new StatisticsDumper(collectionIntervalInSeconds);
+							statDumper.setName("Perf-Statistics-Dumper");
+							statDumper.setDaemon(true);
+							statDumper.start();
+						}
+					}
 				}
 			}
 		}
@@ -61,7 +75,9 @@ public class PerfDataRecorder {
 
 	public static void clearStatistics() {
 		if (instance != null) {
-			instance.clear();
+			try (RangerReadWriteLock.RangerLock writeLock = instance.lock.getWriteLock()) {
+				instance.clear();
+			}
 		}
 	}
 
@@ -72,7 +88,11 @@ public class PerfDataRecorder {
 	}
 
 	private void dumpStatistics() {
-		List<String> tags = new ArrayList<>(perfStatistics.keySet());
+		List<String> tags;
+
+		try (RangerReadWriteLock.RangerLock readLock = lock.getReadLock()) {
+			tags = new ArrayList<>(perfStatistics.keySet());
+		}
 
 		Collections.sort(tags);
 
@@ -111,20 +131,24 @@ public class PerfDataRecorder {
 	}
 
 	private void record(String tag, long cpuTime, long elapsedTime) {
-		PerfStatistic perfStatistic = perfStatistics.get(tag);
+		try (RangerReadWriteLock.RangerLock writeLock = lock.getWriteLock()) {
 
-		if (perfStatistic == null) {
-			synchronized (PerfDataRecorder.class) {
-				perfStatistic = perfStatistics.get(tag);
+			PerfStatistic perfStatistic = perfStatistics.get(tag);
 
-				if(perfStatistic == null) {
-					perfStatistic = new PerfStatistic();
-					perfStatistics.put(tag, perfStatistic);
+			if (perfStatistic == null) {
+				synchronized (PerfDataRecorder.class) {
+					perfStatistic = perfStatistics.get(tag);
+
+					if (perfStatistic == null) {
+						perfStatistic = new PerfStatistic();
+						perfStatistics.put(tag, perfStatistic);
+					}
 				}
 			}
-		}
 
-		perfStatistic.addPerfDataItem(cpuTime, elapsedTime);
+			perfStatistic.addPerfDataItem(cpuTime, elapsedTime);
+
+		}
 	}
 
 	private PerfDataRecorder(List<String> names) {
@@ -204,6 +228,27 @@ public class PerfDataRecorder {
 
 		public long getMaxTimeSpent() {
 			return maxTimeSpent.get();
+		}
+	}
+
+	private static class StatisticsDumper extends Thread {
+		final int collectionIntervalInSeconds;
+		StatisticsDumper(final int collectionIntervalInSeconds) {
+			this.collectionIntervalInSeconds = collectionIntervalInSeconds;
+		}
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					sleep(collectionIntervalInSeconds * 1000);
+					printStatistics();
+					clearStatistics();
+				} catch (InterruptedException exception) {
+					printStatistics();
+					LOG.warn("Thread[" + this.getName() + "] was interrupted. Returning from thread. Performance statistics will NOT be dumped periodically!!");
+					break;
+				}
+			}
 		}
 	}
 }
