@@ -160,7 +160,7 @@ const CustomCondition = (props) => {
   return (
     <>
       {conditionDefVal?.length > 0 &&
-        conditionDefVal.map((m, index) => {
+        conditionDefVal.map((m) => {
           let uiHintAttb =
             m.uiHint != undefined && m.uiHint != "" ? JSON.parse(m.uiHint) : "";
           if (uiHintAttb != "") {
