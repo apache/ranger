@@ -1456,21 +1456,34 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void scrubDatasetForListing(RangerDataset dataset) {
-        dataset.setAcl(null);
+        dataset.setAcl(getPublicAclIfAllowed(dataset.getAcl()));
         dataset.setOptions(null);
         dataset.setAdditionalInfo(null);
     }
 
     private void scrubProjectForListing(RangerProject project) {
-        project.setAcl(null);
+        project.setAcl(getPublicAclIfAllowed(project.getAcl()));
         project.setOptions(null);
         project.setAdditionalInfo(null);
     }
 
     private void scrubDataShareForListing(RangerDataShare dataShare) {
-        dataShare.setAcl(null);
+        dataShare.setAcl(getPublicAclIfAllowed(dataShare.getAcl()));
         dataShare.setOptions(null);
         dataShare.setAdditionalInfo(null);
+    }
+
+    private RangerGdsObjectACL getPublicAclIfAllowed(RangerGdsObjectACL acl) {
+        RangerGdsObjectACL ret           = null;
+        GdsPermission      grpPublicPerm = acl != null && acl.getGroups() != null ? acl.getGroups().get(RangerConstants.GROUP_PUBLIC) : null;
+
+        if (grpPublicPerm != null) {
+            ret = new RangerGdsObjectACL();
+
+            ret.setGroups(Collections.singletonMap(RangerConstants.GROUP_PUBLIC, grpPublicPerm));
+        }
+
+        return ret;
     }
 
     private void removeDshInDsForDataShare(Long dataShareId) {
