@@ -53,6 +53,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
 import { policyInfoMessage } from "./XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
+import folderIcon from "Images/folder-grey.png";
 
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
@@ -1534,4 +1535,32 @@ export const getLandingPageURl = () => {
       return "/userprofile";
     }
   }
+};
+
+export const getServiceDefIcon = (serviceDefName) => {
+  let imagePath = folderIcon;
+  let imageStyling;
+
+  try {
+    const serviceDefIcon =
+      require(`../images/serviceDefIcons/${serviceDefName}/icon.svg`).default;
+    imagePath = serviceDefIcon;
+    imageStyling = { height: "27px", width: "27px" };
+  } catch (error) {
+    console.log(
+      `Continuing to use default icon for ${serviceDefName.toUpperCase()}`
+    );
+  }
+
+  return (
+    <span className={imageStyling !== undefined ? "serviceDef-icon m-r-5" : ""}>
+      <img
+        src={imagePath}
+        style={imageStyling !== undefined ? imageStyling : {}}
+        className={imageStyling !== undefined ? "" : "m-r-5"}
+        alt={`${serviceDefName.toUpperCase()} Icon`}
+        title={`${serviceDefName.toUpperCase()}`}
+      />
+    </span>
+  );
 };
