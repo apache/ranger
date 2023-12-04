@@ -213,7 +213,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(ret) && filter != null) {
             List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
             predicateUtil.applyFilter(copy, filter);

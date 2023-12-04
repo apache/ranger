@@ -57,7 +57,12 @@ get_prop_or_default() {
     value=$(echo $validateProperty | cut -d "=" -f2-)
   fi
 
-  echo $value
+  if [[ $1 == *password* ]]
+  then
+    echo $value
+  else
+   echo $value | tr -d \'\"
+ fi
 }
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)

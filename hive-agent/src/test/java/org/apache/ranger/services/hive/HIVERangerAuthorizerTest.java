@@ -33,8 +33,11 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.service.server.HiveServer2;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -57,14 +60,14 @@ import org.junit.Test;
  * b) The tag "HiveDatabaseTag" is associated with "create" permission to the "dev" group to the "hivetable" database.
  * c) The tag "HiveColumnTag" is associated with "select" permission to the "frank" user to the "word" column of the "words" table.
  */
-@org.junit.Ignore
+@Disabled
 public class HIVERangerAuthorizerTest {
 
     private static final File hdfsBaseDir = new File("./target/hdfs/").getAbsoluteFile();
     private static HiveServer2 hiveServer;
     private static int port;
 
-    @org.junit.BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         // Get a random port
         ServerSocket serverSocket = new ServerSocket(0);
@@ -130,9 +133,9 @@ public class HIVERangerAuthorizerTest {
         // Just test to make sure it's working
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
-            Assert.assertEquals("Mr.", resultSet.getString(1));
+            Assertions.assertEquals("Mr.", resultSet.getString(1));
         } else {
-            Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -146,7 +149,7 @@ public class HIVERangerAuthorizerTest {
 
     }
 
-    @org.junit.AfterClass
+    @AfterAll
     public static void cleanup() throws Exception {
         hiveServer.stop();
         FileUtil.fullyDelete(hdfsBaseDir);
@@ -164,10 +167,10 @@ public class HIVERangerAuthorizerTest {
 
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
-            Assert.assertEquals("Mr.", resultSet.getString(1));
-            Assert.assertEquals(100, resultSet.getInt(2));
+            Assertions.assertEquals("Mr.", resultSet.getString(1));
+            Assertions.assertEquals(100, resultSet.getInt(2));
         } else {
-            Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -187,7 +190,7 @@ public class HIVERangerAuthorizerTest {
 
                 try {
                     statement.executeQuery("SELECT * FROM words where count == '100'");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -209,9 +212,9 @@ public class HIVERangerAuthorizerTest {
 
         ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
         if (resultSet.next()) {
-            Assert.assertEquals(100, resultSet.getInt(1));
+            Assertions.assertEquals(100, resultSet.getInt(1));
         } else {
-            Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -232,9 +235,9 @@ public class HIVERangerAuthorizerTest {
 
                 ResultSet resultSet = statement.executeQuery("SELECT count FROM words where count == '100'");
                 if (resultSet.next()) {
-                    Assert.assertEquals(100, resultSet.getInt(1));
+                    Assertions.assertEquals(100, resultSet.getInt(1));
                 } else {
-                    Assert.fail("No ResultSet found");
+                    Assertions.fail("No ResultSet found");
                 }
 
                 statement.close();
@@ -254,7 +257,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.executeQuery("SELECT count FROM words where count == '100'");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -277,7 +280,7 @@ public class HIVERangerAuthorizerTest {
 
                 try {
                     statement.executeQuery("SELECT count FROM words where count == '100'");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -292,7 +295,7 @@ public class HIVERangerAuthorizerTest {
     // this should be allowed (by the policy - user)
     // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
+    @Disabled
     public void testHiveUpdateAllAsBob() throws Exception {
 
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -303,10 +306,10 @@ public class HIVERangerAuthorizerTest {
 
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where word == 'newword'");
         if (resultSet.next()) {
-            Assert.assertEquals("newword", resultSet.getString(1));
-            Assert.assertEquals(5, resultSet.getInt(2));
+            Assertions.assertEquals("newword", resultSet.getString(1));
+            Assertions.assertEquals(5, resultSet.getInt(2));
         } else {
-            Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -325,7 +328,7 @@ public class HIVERangerAuthorizerTest {
 
                 try {
                     statement.execute("insert into words (word, count) values ('newword2', 5)");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -359,7 +362,7 @@ public class HIVERangerAuthorizerTest {
 				  ++rowCounter;
 				}
 			}
-			Assert.assertEquals(2, rowCounter);
+			Assertions.assertEquals(2, rowCounter);
 			// clean up
 			statement.execute("DROP FUNCTION IF EXISTS tmp");
 			statement.execute("DROP FUNCTION IF EXISTS test1.tmp");
@@ -387,7 +390,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.execute("CREATE DATABASE if not exists alicetemp");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -398,7 +401,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.execute("drop DATABASE bobtemp");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -442,7 +445,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.executeQuery("SELECT count FROM words where count == '100'");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -479,7 +482,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.executeQuery("SELECT count FROM words2 where count == '100'");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -517,7 +520,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.execute("ALTER TABLE WORDS2 ADD COLUMNS (newcol STRING)");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -540,7 +543,7 @@ public class HIVERangerAuthorizerTest {
 
         try {
             statement.execute("ALTER TABLE WORDS2 REPLACE COLUMNS (word STRING, count INT)");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             // expected
         }
@@ -578,15 +581,15 @@ public class HIVERangerAuthorizerTest {
         // "dave" can select where count >= 80
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
-        	Assert.assertEquals("Mr.", resultSet.getString(1));
-        	Assert.assertEquals(100, resultSet.getInt(2));
+            Assertions.assertEquals("Mr.", resultSet.getString(1));
+            Assertions.assertEquals(100, resultSet.getInt(2));
         } else {
-        	Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         resultSet = statement.executeQuery("SELECT * FROM words where count == '79'");
         if (resultSet.next()) {
-        	Assert.fail("Authorization should not be granted for count < 80");
+            Assertions.fail("Authorization should not be granted for count < 80");
         }
 
         statement.close();
@@ -598,10 +601,10 @@ public class HIVERangerAuthorizerTest {
 
         resultSet = statement.executeQuery("SELECT * FROM words where count == '79'");
         if (resultSet.next()) {
-        	Assert.assertEquals("cannot", resultSet.getString(1));
-        	Assert.assertEquals(79, resultSet.getInt(2));
+            Assertions.assertEquals("cannot", resultSet.getString(1));
+            Assertions.assertEquals(79, resultSet.getInt(2));
         } else {
-        	Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -618,11 +621,11 @@ public class HIVERangerAuthorizerTest {
         // "jane" can only set a hash of the word, and not the word itself
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
-        	Assert.assertNotEquals("Mr.", resultSet.getString(1));
-            Assert.assertEquals("1a24b7688c199c24d87b5984d152b37d1d528911ec852d9cdf98c3ef29b916ea", resultSet.getString(1));
-        	Assert.assertEquals(100, resultSet.getInt(2));
+            Assertions.assertNotEquals("Mr.", resultSet.getString(1));
+            Assertions.assertEquals("1a24b7688c199c24d87b5984d152b37d1d528911ec852d9cdf98c3ef29b916ea", resultSet.getString(1));
+            Assertions.assertEquals(100, resultSet.getInt(2));
         } else {
-        	Assert.fail("No ResultSet found");
+            Assertions.fail("No ResultSet found");
         }
 
         statement.close();
@@ -631,7 +634,7 @@ public class HIVERangerAuthorizerTest {
 
     // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
+    @Disabled
     public void testCreateDropMacro() throws Exception {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
@@ -654,25 +657,25 @@ public class HIVERangerAuthorizerTest {
         //Verify Table Created And Contains Data
 
         if (resultSet.next()) {
-            Assert.assertEquals(5, resultSet.getInt(2));
+            Assertions.assertEquals(5, resultSet.getInt(2));
         } else {
-            Assert.fail("No Resultset Found");
+            Assertions.fail("No Resultset Found");
         }
 
         statement.execute("create temporary macro math_cube(x int) x*x*x");
         ResultSet resultSet2 = statement.executeQuery("select math_cube(b) from rangerauthz2.macro_testing");
 
         if (resultSet2.next()) {
-            Assert.assertEquals(125, resultSet2.getInt(1));
+            Assertions.assertEquals(125, resultSet2.getInt(1));
         } else {
-            Assert.fail("Macro Not Created Properly");
+            Assertions.fail("Macro Not Created Properly");
         }
 
         statement.execute("drop temporary macro math_cube");
 
         try{
             statement.executeQuery("select math_cube(b) from rangerauthz2.macro_testing");
-            Assert.fail("macro deleted already");
+            Assertions.fail("macro deleted already");
         }
         catch(SQLException ex){
             //expected
@@ -687,7 +690,7 @@ public class HIVERangerAuthorizerTest {
 
     // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
+    @Disabled
     public void testCreateDropFunction() throws Exception {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
@@ -705,9 +708,9 @@ public class HIVERangerAuthorizerTest {
         ResultSet resultSet2 = statement.executeQuery("select round(b) from rangerauthz3.function_testing");
 
         if (resultSet2.next()) {
-            Assert.assertEquals(6, resultSet2.getInt(1));
+            Assertions.assertEquals(6, resultSet2.getInt(1));
         } else {
-            Assert.fail("No Resultset Found");
+            Assertions.fail("No Resultset Found");
         }
 
         statement.execute("DROP TABLE rangerauthz3.function_testing");
@@ -727,7 +730,7 @@ public class HIVERangerAuthorizerTest {
             connection = DriverManager.getConnection(url, "bob", "bob");
             statement = connection.createStatement();
             statement.executeQuery("create table if not exists words (word STRING, count INT) row format delimited fields terminated by '\t' stored as textfile LOCATION 's3a://test/data'");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
             //expected we don't get any resultset here
         } catch(SQLException ex){
                 //expected
@@ -754,7 +757,7 @@ public class HIVERangerAuthorizerTest {
         try{
             statement.execute("use rangerauthzx");
             statement.execute("grant select ON TABLE rangerauthzx.tbl1 to USER jane with grant option");
-            Assert.fail("access should not have been granted");
+            Assertions.fail("access should not have been granted");
         }
         catch(SQLException ex){
             //expected
@@ -767,7 +770,7 @@ public class HIVERangerAuthorizerTest {
             statement.execute("grant select ON TABLE rangerauthzx.tbl1 to USER jane with grant option");
         }
         catch(SQLException ex){
-            Assert.fail("access should have been granted to da_test_user");
+            Assertions.fail("access should have been granted to da_test_user");
         }
         statement.close();
         connection.close();
@@ -810,7 +813,7 @@ public class HIVERangerAuthorizerTest {
 
                 // "words" should work
                 ResultSet resultSet = statement.executeQuery("SELECT * FROM words");
-                Assert.assertNotNull(resultSet);
+                Assertions.assertNotNull(resultSet);
 
                 statement.close();
 
@@ -818,7 +821,7 @@ public class HIVERangerAuthorizerTest {
                 try {
                     // "words2" should not
                     statement.executeQuery("SELECT * FROM words2");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -860,7 +863,7 @@ public class HIVERangerAuthorizerTest {
                 try {
                     // "hivetable2" should not be allowed to be created by the "dev" group
                     statement.execute("CREATE DATABASE hivetable2");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -914,13 +917,13 @@ public class HIVERangerAuthorizerTest {
                 // we can select "word" from "words"
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery("SELECT word FROM words");
-                Assert.assertNotNull(resultSet);
+                Assertions.assertNotNull(resultSet);
                 statement.close();
 
                 try {
                     // we can't select "word" from "words2" as "frank"
                     statement.executeQuery("SELECT word FROM words2");
-                    Assert.fail("Failure expected on an unauthorized call");
+                    Assertions.fail("Failure expected on an unauthorized call");
                 } catch (SQLException ex) {
                     // expected
                 }
@@ -948,7 +951,7 @@ public class HIVERangerAuthorizerTest {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
-        Assert.assertTrue(statement.execute("show grant user admin on table words"));
+        Assertions.assertTrue(statement.execute("show grant user admin on table words"));
         statement.close();
         connection.close();
     }
@@ -964,7 +967,7 @@ public class HIVERangerAuthorizerTest {
             try {
                 statement.execute("repl dump rangerauthz");
             } catch (SQLException ex) {
-                Assert.fail("access should have been granted to da_test_user");
+                Assertions.fail("access should have been granted to da_test_user");
             }
             statement.close();
             connection.close();
@@ -973,7 +976,7 @@ public class HIVERangerAuthorizerTest {
             statement = connection.createStatement();
             try {
                 statement.execute("repl dump rangerauthz");
-                Assert.fail("Failure expected on an unauthorized call");
+                Assertions.fail("Failure expected on an unauthorized call");
             } catch (SQLException ex) {
               //Excepted
             }
@@ -992,7 +995,7 @@ public class HIVERangerAuthorizerTest {
         try {
             statement.execute("repl dump rangerauthz.words");
         } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
+            Assertions.fail("access should have been granted to da_test_user");
         }
         statement.close();
         connection.close();
@@ -1001,7 +1004,7 @@ public class HIVERangerAuthorizerTest {
         statement = connection.createStatement();
         try {
             statement.execute("repl dump rangerauthz.words");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             //Excepted
         }
@@ -1019,7 +1022,7 @@ public class HIVERangerAuthorizerTest {
         try {
             statement.execute("kill query 'dummyQueryId'");
         } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
+            Assertions.fail("access should have been granted to da_test_user");
         }
         statement.close();
         connection.close();
@@ -1028,7 +1031,7 @@ public class HIVERangerAuthorizerTest {
         statement = connection.createStatement();
         try {
             statement.execute("kill query 'dummyQueryId'");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             //Excepted
         }
@@ -1046,7 +1049,7 @@ public class HIVERangerAuthorizerTest {
         try {
             statement.execute("show resource plans");
         } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
+            Assertions.fail("access should have been granted to da_test_user");
         }
         statement.close();
         connection.close();
@@ -1056,7 +1059,7 @@ public class HIVERangerAuthorizerTest {
         try {
             statement.execute("create resource plan myplan1");
         } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
+            Assertions.fail("access should have been granted to da_test_user");
         }
         statement.close();
         connection.close();
@@ -1065,7 +1068,7 @@ public class HIVERangerAuthorizerTest {
         statement = connection.createStatement();
         try {
             statement.execute("create resource plan myplan1");
-            Assert.fail("Failure expected on an unauthorized call");
+            Assertions.fail("Failure expected on an unauthorized call");
         } catch (SQLException ex) {
             //Excepted
         }

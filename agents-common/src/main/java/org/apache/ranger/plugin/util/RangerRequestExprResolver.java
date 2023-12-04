@@ -70,7 +70,8 @@ public class RangerRequestExprResolver {
 
             while (matcher.find()) {
                 String expr = matcher.group(REGEX_GROUP_EXPR);
-                String val  = Objects.toString(exprValues.get(expr));
+                Object oVal = exprValues.get(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
 
                 matcher.appendReplacement(sb, val);
             }
@@ -105,7 +106,8 @@ public class RangerRequestExprResolver {
 
             while (matcher.find()) {
                 String expr = matcher.group(REGEX_GROUP_EXPR);
-                String val  = Objects.toString(scriptEvaluator.evaluateScript(expr));
+                Object oVal = scriptEvaluator.evaluateScript(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
 
                 matcher.appendReplacement(sb, val);
             }

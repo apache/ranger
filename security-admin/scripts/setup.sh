@@ -52,7 +52,12 @@ get_prop_or_default() {
     value=$(echo $validateProperty | cut -d "=" -f2-)
   fi
 
-  echo $value
+  if [[ $1 == *password* ]]
+  then
+    echo $value
+  else
+   echo $value | tr -d \'\"
+ fi
 }
 
 PROPFILE=${RANGER_ADMIN_CONF:-$PWD}/install.properties
