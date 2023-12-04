@@ -126,6 +126,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.UPDATE_TIME_START, request.getParameter(SearchFilter.UPDATE_TIME_START));
 		ret.setParam(SearchFilter.UPDATE_TIME_END, request.getParameter(SearchFilter.UPDATE_TIME_END));
 		ret.setParam(SearchFilter.RESOURCE_CONTAINS, request.getParameter(SearchFilter.RESOURCE_CONTAINS));
+		ret.setParam(SearchFilter.SHARED_WITH_ME, request.getParameter(SearchFilter.SHARED_WITH_ME));
 
 		extractCommonCriteriasForFilter(request, ret, sortFields);
 

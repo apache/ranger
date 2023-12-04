@@ -20,17 +20,15 @@
 package org.apache.ranger.common;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.RangerCache;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.service.*;
-import org.apache.ranger.util.RangerCacheDBValueLoader;
+import org.apache.ranger.util.RangerAdminCache;
 import org.apache.ranger.view.RangerGdsVList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,16 +45,8 @@ import java.util.List;
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
 
 @Component
-public class ServiceGdsInfoCache extends RangerCache<String, ServiceGdsInfo> {
+public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo> {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceGdsInfoCache.class);
-
-    public static final String PROP_LOADER_THREAD_POOL_SIZE  = "ranger.admin.cache.gds-info.loader.threadpool.size";
-    public static final String PROP_VALUE_INIT_TIMEOUT_MS    = "ranger.admin.cache.gds-info.value.init.timeout.ms";
-    public static final String PROP_VALUE_REFRESH_TIMEOUT_MS = "ranger.admin.cache.gds-info.value.refresh.timeout.ms";
-
-    private static final int DEFAULT_LOADER_THREAD_POOL_SIZE       = 1;
-    private static final int DEFAULT_VALUE_INIT_LOAD_TIMEOUT_MS    = -1;
-    private static final int DEFAULT_VALUE_REFRESH_LOAD_TIMEOUT_MS = 10 * 1000; // 10 seconds
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -87,13 +77,7 @@ public class ServiceGdsInfoCache extends RangerCache<String, ServiceGdsInfo> {
     PlatformTransactionManager txManager;
 
     public ServiceGdsInfoCache() {
-        super("ServiceGdsInfoCache",
-              null, // loader will be set in init(), so that txManager is initialized
-              getLoaderThreadPoolSize(),
-              RefreshMode.ON_ACCESS,
-              0, // every access should look to refresh
-              getValueInitLoadTimeout(),
-              getValueRefreshLoadTimeout());
+        super("gds-info", null);
     }
 
     @PostConstruct
@@ -102,19 +86,7 @@ public class ServiceGdsInfoCache extends RangerCache<String, ServiceGdsInfo> {
     }
 
 
-    private static int getLoaderThreadPoolSize() {
-        return RangerAdminConfig.getInstance().getInt(PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_LOADER_THREAD_POOL_SIZE);
-    }
-
-    private static long getValueInitLoadTimeout() {
-        return RangerAdminConfig.getInstance().getLong(PROP_VALUE_INIT_TIMEOUT_MS, DEFAULT_VALUE_INIT_LOAD_TIMEOUT_MS);
-    }
-
-    private static long getValueRefreshLoadTimeout() {
-        return RangerAdminConfig.getInstance().getLong(PROP_VALUE_REFRESH_TIMEOUT_MS, DEFAULT_VALUE_REFRESH_LOAD_TIMEOUT_MS);
-    }
-
-    private class ServiceGdsInfoLoader extends RangerCacheDBValueLoader<String, ServiceGdsInfo> {
+    private class ServiceGdsInfoLoader extends RangerDBValueLoader<String, ServiceGdsInfo> {
         public ServiceGdsInfoLoader(PlatformTransactionManager txManager) {
             super(txManager);
         }

@@ -99,19 +99,19 @@ public class TestGdsPolicyEngine {
 
                     assertEquals(test.name, test.acls, acls);
                 }
-            } else if (test.principals != null) {
-                Set<String> users  = test.principals.get("users");
-                Set<String> groups = test.principals.get("groups");
-                Set<String> roles  = test.principals.get("roles");
+            } else if (test.sharedWith != null) {
+                Set<String> users  = test.sharedWith.get("users");
+                Set<String> groups = test.sharedWith.get("groups");
+                Set<String> roles  = test.sharedWith.get("roles");
 
                 if (test.datasets != null) {
-                    Set<String> datasets = policyEngine.getDatasetsForPrincipals(users, groups, roles);
+                    Set<Long> datasets = policyEngine.getDatasetsSharedWith(users, groups, roles);
 
                     assertEquals(test.name, test.datasets, datasets);
                 }
 
                 if (test.projects != null) {
-                    Set<String> projects = policyEngine.getProjectsForPrincipals(users, groups, roles);
+                    Set<Long> projects = policyEngine.getProjectsSharedWith(users, groups, roles);
 
                     assertEquals(test.name, test.projects, projects);
                 }
@@ -136,6 +136,12 @@ public class TestGdsPolicyEngine {
                     while (iter.hasNext()) {
                         resourceIds.add(iter.next().getId());
                     }
+                } else if (test.projectIds != null || test.datasetIds != null || test.dataShareIds != null) {
+                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getResources(test.projectIds, test.datasetIds, test.dataShareIds);
+
+                    while (iter.hasNext()) {
+                        resourceIds.add(iter.next().getId());
+                    }
                 }
 
                 assertEquals(test.name, test.resourceIds, resourceIds);
@@ -156,12 +162,15 @@ public class TestGdsPolicyEngine {
         public RangerAccessRequest      request;
         public GdsAccessResult          result;
         public RangerResourceACLs       acls;
-        public Map<String, Set<String>> principals;
-        public Set<String>              datasets;
-        public Set<String>              projects;
+        public Map<String, Set<String>> sharedWith; // principals
+        public Set<Long>                datasets;
+        public Set<Long>                projects;
         public Long                     datasetId;
         public Long                     projectId;
         public Long                     dataShareId;
+        public List<Long>               datasetIds;
+        public List<Long>               projectIds;
+        public List<Long>               dataShareIds;
         public Set<Long>                resourceIds;
     }
 

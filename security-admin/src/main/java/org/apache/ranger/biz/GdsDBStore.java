@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.service.*;
+import org.apache.ranger.validation.RangerGdsValidationDBProvider;
 import org.apache.ranger.validation.RangerGdsValidator;
 import org.apache.ranger.view.RangerGdsVList.*;
 import org.slf4j.Logger;
@@ -68,6 +69,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     RangerGdsValidator validator;
+
+    @Autowired
+    RangerGdsValidationDBProvider validationDBProvider;
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -107,6 +111,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     ServiceGdsInfoCache serviceGdsInfoCache;
+
+    @Autowired
+    GdsPolicyAdminCache gdsPolicyAdminCache;
 
     @PostConstruct
     public void initStore() {
@@ -270,10 +277,9 @@ public class GdsDBStore extends AbstractGdsStore {
         LOG.debug("==> searchDatasets({})", filter);
 
         PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
-        List<RangerDataset>  datasets      = ret.getList();
         GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
 
-        for (RangerDataset dataset : datasets) {
+        for (RangerDataset dataset : ret.getList()) {
             if (gdsPermission.equals(GdsPermission.LIST)) {
                 scrubDatasetForListing(dataset);
             }
@@ -562,22 +568,14 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerProject> searchProjects(SearchFilter filter) {
         LOG.debug("==> searchProjects({})", filter);
 
-        int maxRows    = filter.getMaxRows();
-        int startIndex = filter.getStartIndex();
+        GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
+        PList<RangerProject> ret           = getUnscrubbedProjects(filter);
 
-        GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
-        RangerProjectList   result        = projectService.searchProjects(filter);
-        List<RangerProject> projects      = new ArrayList<>();
-
-        for (RangerProject project : result.getList()) {
+        for (RangerProject project : ret.getList()) {
             if (gdsPermission.equals(GdsPermission.LIST)) {
                 scrubProjectForListing(project);
             }
-
-            projects.add(project);
         }
-
-        PList<RangerProject> ret = getPList(projects, startIndex, maxRows, result.getSortBy(), result.getSortType());
 
         LOG.debug("<== searchProjects({}): ret={}", filter, ret);
 
@@ -1254,10 +1252,6 @@ public class GdsDBStore extends AbstractGdsStore {
         for (RangerDataset dataset : datasets) {
             GdsPermission permissionForCaller = validator.getGdsPermissionForUser(dataset.getAcl(), currentUser);
 
-            if (permissionForCaller.equals(GdsPermission.NONE)) {
-                continue;
-            }
-
             DatasetSummary datasetSummary = new DatasetSummary();
 
             datasetSummary.setId(dataset.getId());
@@ -1374,30 +1368,76 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) {
-        int maxRows    = filter.getMaxRows();
-        int startIndex = filter.getStartIndex();
-
+    private PList<RangerProject> getUnscrubbedProjects(SearchFilter filter) {
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
 
-        GdsPermission       gdsPermission = getGdsPermissionFromFilter(filter);
-        RangerDatasetList   result        = datasetService.searchDatasets(filter);
-        List<RangerDataset> datasets      = new ArrayList<>();
+        GdsPermission       gdsPermission  = getGdsPermissionFromFilter(filter);
+        RangerProjectList   result         = projectService.searchProjects(filter);
+        List<RangerProject> projects       = new ArrayList<>();
+        boolean             isSharedWithMe = Boolean.parseBoolean(filter.getParam(SearchFilter.SHARED_WITH_ME));
+        String              userName       = bizUtil.getCurrentUserLoginId();
+        Collection<String>  groups         = null;
+        Collection<String>  roles          = null;
 
+        if (isSharedWithMe) {
+            groups = validationDBProvider.getGroupsForUser(userName);
+            roles  = validationDBProvider.getRolesForUser(userName);
+        }
+
+        for (RangerProject project : result.getList()) {
+            if (project == null) {
+                continue;
+            }
+
+            if (isSharedWithMe) {
+                if (gdsPolicyAdminCache.isProjectSharedWith(project.getId(), userName, groups, roles)) {
+                    projects.add(project);
+                }
+            } else if (validator.hasPermission(project.getAcl(), gdsPermission)) {
+                projects.add(project);
+            }
+        }
+
+        return getPList(projects, filter.getStartIndex(), filter.getMaxRows(), result.getSortBy(), result.getSortType());
+    }
+
+    private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) {
+        filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
+
+        GdsPermission       gdsPermission  = getGdsPermissionFromFilter(filter);
+        RangerDatasetList   result         = datasetService.searchDatasets(filter);
+        List<RangerDataset> datasets       = new ArrayList<>();
+        boolean             isSharedWithMe = Boolean.parseBoolean(filter.getParam(SearchFilter.SHARED_WITH_ME));
+        String              userName       = bizUtil.getCurrentUserLoginId();
+        Collection<String>  groups         = null;
+        Collection<String>  roles          = null;
+
+        if (isSharedWithMe) {
+            groups = validationDBProvider.getGroupsForUser(userName);
+            roles  = validationDBProvider.getRolesForUser(userName);
+        }
 
         for (RangerDataset dataset : result.getList()) {
-            if (dataset != null && validator.hasPermission(dataset.getAcl(), gdsPermission)) {
+            if (dataset == null) {
+                continue;
+            }
+
+            if (isSharedWithMe) {
+                if (gdsPolicyAdminCache.isDatasetSharedWith(dataset.getId(), userName, groups, roles)) {
+                    datasets.add(dataset);
+                }
+            } else if (validator.hasPermission(dataset.getAcl(), gdsPermission)) {
                 datasets.add(dataset);
             }
         }
+
+        int maxRows    = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
 
         return getPList(datasets, startIndex, maxRows, result.getSortBy(), result.getSortType());
     }
 
     private PList<RangerDataShare> getUnscrubbedDataShares(SearchFilter filter) {
-        int maxRows    = filter.getMaxRows();
-        int startIndex = filter.getStartIndex();
-
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
 
         String     datasetId           = filter.getParam(SearchFilter.DATASET_ID);
@@ -1414,20 +1454,23 @@ public class GdsDBStore extends AbstractGdsStore {
             dataSharesToExclude = Collections.emptyList();
         }
 
-        GdsPermission         gdsPermission = getGdsPermissionFromFilter(filter);
-        RangerDataShareList   result        = dataShareService.searchDataShares(filter);
-        List<RangerDataShare> dataShares    = new ArrayList<>();
-
+        GdsPermission         gdsPermission    = getGdsPermissionFromFilter(filter);
+        RangerDataShareList   result           = dataShareService.searchDataShares(filter);
+        List<RangerDataShare> dataShares       = new ArrayList<>();
 
         for (RangerDataShare dataShare : result.getList()) {
-            if (dataShare != null && validator.hasPermission(dataShare.getAcl(), gdsPermission)) {
+            if (dataShare == null) {
+                continue;
+            }
+
+            if (validator.hasPermission(dataShare.getAcl(), gdsPermission)) {
                 if (!dataSharesToExclude.contains(dataShare.getId())) {
                     dataShares.add(dataShare);
                 }
             }
         }
 
-        return getPList(dataShares, startIndex, maxRows, result.getSortBy(), result.getSortType());
+        return getPList(dataShares, filter.getStartIndex(), filter.getMaxRows(), result.getSortBy(), result.getSortType());
     }
 
     private <T> PList<T> getPList(List<T> list, int startIndex, int maxEntries, String sortBy, String sortType) {
