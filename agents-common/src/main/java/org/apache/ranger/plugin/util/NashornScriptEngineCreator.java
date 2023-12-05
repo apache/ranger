@@ -23,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import org.openjdk.nashorn.api.scripting.ClassFilter;
+import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 public class NashornScriptEngineCreator implements ScriptEngineCreator {
     private static final Logger LOG = LoggerFactory.getLogger(NashornScriptEngineCreator.class);
