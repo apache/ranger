@@ -24,6 +24,7 @@ define(function(require){
     var Backbone            = require('backbone');
     var XALinks             = require('modules/XALinks');
     var XAEnums             = require('utils/XAEnums');
+    var XAGlobals           = require('utils/XAGlobals');
     var XAUtil              = require('utils/XAUtils');
     var SessionMgr          = require('mgrs/SessionMgr');
     var App                 = require('App');
