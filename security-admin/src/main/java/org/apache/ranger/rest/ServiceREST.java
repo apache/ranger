@@ -1255,7 +1255,7 @@ public class ServiceREST {
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = grantRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(grantRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					VXUser               vxUser = xUserService.getXUserByUserName(userName);
 
@@ -1300,10 +1300,7 @@ public class ServiceREST {
 			
 						if(! CollectionUtils.isEmpty(resourceNames)) {
 							for(String resourceName : resourceNames) {
-								RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
-								policyResource.setIsRecursive(grantRequest.getIsRecursive());
-		
-								policyResources.put(resourceName, policyResource);
+								policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
 							}
 						}
 						policy.setResources(policyResources);
@@ -1376,7 +1373,7 @@ public class ServiceREST {
 					Set<String>          userGroups = grantRequest.getGrantorGroups();
 					String				 ownerUser  = grantRequest.getOwnerUser();
 
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(grantRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					String               zoneName   = getRangerAdminZoneName(serviceName, grantRequest);
 
@@ -1417,10 +1414,7 @@ public class ServiceREST {
 
 							if(! CollectionUtils.isEmpty(resourceNames)) {
 								for(String resourceName : resourceNames) {
-									RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
-									policyResource.setIsRecursive(grantRequest.getIsRecursive());
-
-									policyResources.put(resourceName, policyResource);
+									policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
 								}
 							}
 							policy.setResources(policyResources);
@@ -1493,7 +1487,7 @@ public class ServiceREST {
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = revokeRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(revokeRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					VXUser vxUser = xUserService.getXUserByUserName(userName);
 
@@ -1578,7 +1572,7 @@ public class ServiceREST {
 					Set<String> userGroups = revokeRequest.getGrantorGroups();
 					String ownerUser = revokeRequest.getOwnerUser();
 
-					RangerAccessResource resource = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					RangerAccessResource resource = new RangerAccessResourceImpl(getAccessResourceObjectMap(revokeRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					String               zoneName = getRangerAdminZoneName(serviceName, revokeRequest);
 
@@ -4008,6 +4002,37 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.purgeRecords(" + recordType + ", " + olderThan + "): ret=" + ret);
+		}
+
+		return ret;
+	}
+
+	public RangerPolicyResource getPolicyResource(Object resourceName, GrantRevokeRequest grantRequest) {
+		RangerPolicyResource ret;
+		if (resourceName instanceof List) {
+			List<String> resourceValues = (List<String>) resourceName;
+			ret = new RangerPolicyResource(resourceValues, false, grantRequest.getIsRecursive());
+		} else {
+			ret = new RangerPolicyResource((String) resourceName);
+			ret.setIsRecursive(grantRequest.getIsRecursive());
+		}
+		return ret;
+	}
+
+	public static Map<String, Object> getAccessResourceObjectMap(Map<String, String> map) {
+		Map<String, Object> ret = null;
+
+		if (map != null) {
+			ret = new HashMap<>(map.size());
+
+			for (Map.Entry<String, String> e : map.entrySet()) {
+				if (e.getValue().contains(",")) {
+					List<String> values = Arrays.asList(e.getValue().split(","));
+					ret.put(e.getKey(),values);
+				} else {
+					ret.put(e.getKey(), e.getValue());
+				}
+			}
 		}
 
 		return ret;
