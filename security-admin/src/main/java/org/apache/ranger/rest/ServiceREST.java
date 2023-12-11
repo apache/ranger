@@ -1103,15 +1103,15 @@ public class ServiceREST {
 
 		List<RangerServiceHeaderInfo> ret = daoManager.getXXService().findServiceHeaders();
 
-		if (!ret.isEmpty() && (filterByNamePrefix || filterByType)) {
-			for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
-				RangerServiceHeaderInfo serviceHeader = iter.next();
+		for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+			RangerServiceHeaderInfo serviceHeader = iter.next();
 
-				if (filterByNamePrefix && !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
-					iter.remove();
-				} else if (filterByType && !StringUtils.equals(serviceHeader.getType(), svcType)) {
-					iter.remove();
-				}
+			if (EMBEDDED_SERVICEDEF_GDS_NAME.equals(serviceHeader.getType())) {
+				iter.remove();
+			} else if (filterByNamePrefix && !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
+				iter.remove();
+			} else if (filterByType && !StringUtils.equals(serviceHeader.getType(), svcType)) {
+				iter.remove();
 			}
 		}
 
