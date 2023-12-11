@@ -62,6 +62,7 @@ import {
 import XATableLayout from "../../../components/XATableLayout";
 import moment from "moment-timezone";
 import { getServiceDef } from "../../../utils/appState";
+import DatashareInDatasetListComp from "../Dataset/DatashareInDatasetListComp";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
@@ -134,6 +135,7 @@ const DatashareDetailLayout = () => {
     moment.now()
   );
   const [datashareNameEditable, isDatashareNameEditable] = useState(false);
+  const [updateTable, setUpdateTable] = useState(moment.now());
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
@@ -1064,245 +1066,13 @@ const DatashareDetailLayout = () => {
                                 className="mg-b-10"
                               >
                                 <Tab eventKey="All" title="All">
-                                  <Card className="border-0">
-                                    <div>
-                                      {dataShareRequestsList != undefined &&
-                                      dataShareRequestsList.length > 0 ? (
-                                        dataShareRequestsList.map(
-                                          (obj, index) => {
-                                            return (
-                                              <div>
-                                                <Accordion
-                                                  className="mg-b-10"
-                                                  defaultActiveKey="0"
-                                                >
-                                                  <div className="border-bottom">
-                                                    <Accordion.Toggle
-                                                      as={Card.Header}
-                                                      eventKey="1"
-                                                      onClick={() =>
-                                                        onRequestAccordionChange(
-                                                          obj.id
-                                                        )
-                                                      }
-                                                      className="border-bottom-0"
-                                                      data-id="panel"
-                                                      data-cy="panel"
-                                                    >
-                                                      <div className="d-flex justify-content-between align-items-center">
-                                                        <div className="d-flex align-items-center gap-half">
-                                                          {requestAccordionState[
-                                                            obj.id
-                                                          ] ? (
-                                                            <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                                          ) : (
-                                                            <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                                          )}
-                                                          <h6 className="m-0">
-                                                            {obj.name} Dataset{" "}
-                                                            {obj.datasetId}
-                                                          </h6>
-                                                        </div>
-                                                        <div className="d-flex align-items-center gap-half">
-                                                          <span
-                                                            className={
-                                                              obj["status"] ===
-                                                              "REQUESTED"
-                                                                ? "badge badge-light gds-requested-status"
-                                                                : obj[
-                                                                    "status"
-                                                                  ] ===
-                                                                  "GRANTED"
-                                                                ? "badge badge-light gds-granted-status"
-                                                                : obj[
-                                                                    "status"
-                                                                  ] === "ACTIVE"
-                                                                ? "badge badge-light gds-active-status"
-                                                                : "badge badge-light gds-denied-status"
-                                                            }
-                                                          >
-                                                            {obj["status"]}
-                                                          </span>
-                                                          <Button
-                                                            variant="outline-dark"
-                                                            size="sm"
-                                                            title="View"
-                                                            onClick={() =>
-                                                              redirectToDatasetDetailView(
-                                                                obj.datasetId
-                                                              )
-                                                            }
-                                                            data-name="viewDatashare"
-                                                            data-id={obj["id"]}
-                                                          >
-                                                            <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
-                                                          </Button>
-                                                          {(isSystemAdmin() ||
-                                                            userAclPerm ==
-                                                              "ADMIN") && (
-                                                            <Button
-                                                              variant="danger"
-                                                              size="sm"
-                                                              title="Delete"
-                                                              onClick={() =>
-                                                                toggleRequestDeleteModal(
-                                                                  obj.id,
-                                                                  obj.datasetId,
-                                                                  obj.name,
-                                                                  obj.status
-                                                                )
-                                                              }
-                                                              data-name="deleteDatashareRequest"
-                                                              data-id={
-                                                                obj["id"]
-                                                              }
-                                                              data-cy={
-                                                                obj["id"]
-                                                              }
-                                                            >
-                                                              <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                                            </Button>
-                                                          )}
-                                                        </div>
-                                                      </div>
-                                                    </Accordion.Toggle>
-                                                    <Accordion.Collapse eventKey="1">
-                                                      <Card.Body>
-                                                        <div className="d-flex justify-content-between">
-                                                          <div></div>
-                                                          {false && (
-                                                            <div className="gds-inline-field-grp">
-                                                              <div className="wrapper">
-                                                                <div
-                                                                  className="gds-left-inline-field"
-                                                                  height="30px"
-                                                                >
-                                                                  Validity
-                                                                  Period
-                                                                </div>
-                                                                <div line-height="30px">
-                                                                  {
-                                                                    obj[
-                                                                      "service"
-                                                                    ]
-                                                                  }
-                                                                </div>
-                                                              </div>
-                                                              {obj.validitySchedule !=
-                                                              undefined ? (
-                                                                <div className="gds-inline-field-grp">
-                                                                  <div className="wrapper">
-                                                                    <div className="gds-left-inline-field">
-                                                                      <span className="gds-label-color">
-                                                                        Start
-                                                                        Date{" "}
-                                                                      </span>
-                                                                    </div>
-                                                                    <span>
-                                                                      {dateFormat(
-                                                                        obj
-                                                                          .validitySchedule
-                                                                          .startTime,
-                                                                        "mm/dd/yyyy hh:MM:ss TT"
-                                                                      )}
-                                                                    </span>
-                                                                    <span className="gds-label-color pl-5">
-                                                                      {
-                                                                        obj
-                                                                          .validitySchedule
-                                                                          .timeZone
-                                                                      }
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="wrapper">
-                                                                    <div className="gds-left-inline-field">
-                                                                      <span className="gds-label-color">
-                                                                        {" "}
-                                                                        End Date{" "}
-                                                                      </span>
-                                                                    </div>
-                                                                    <span>
-                                                                      {dateFormat(
-                                                                        obj
-                                                                          .validitySchedule
-                                                                          .endTime,
-                                                                        "mm/dd/yyyy hh:MM:ss TT"
-                                                                      )}
-                                                                    </span>
-                                                                  </div>
-                                                                </div>
-                                                              ) : (
-                                                                <p>--</p>
-                                                              )}
-                                                            </div>
-                                                          )}
-                                                          <div className="gds-right-inline-field-grp">
-                                                            <div className="wrapper">
-                                                              <div>Added</div>
-                                                              <div className="gds-right-inline-field">
-                                                                {dateFormat(
-                                                                  obj[
-                                                                    "createTime"
-                                                                  ],
-                                                                  "mm/dd/yyyy hh:MM:ss TT"
-                                                                )}
-                                                              </div>
-                                                            </div>
-                                                            <div className="wrapper">
-                                                              <div>Updated</div>
-                                                              <div className="gds-right-inline-field">
-                                                                {dateFormat(
-                                                                  obj[
-                                                                    "updateTime"
-                                                                  ],
-                                                                  "mm/dd/yyyy hh:MM:ss TT"
-                                                                )}
-                                                              </div>
-                                                            </div>
-                                                            <div className="w-100 text-right">
-                                                              <div>
-                                                                <Link
-                                                                  to={`/gds/request/detail/${obj.id}`}
-                                                                >
-                                                                  View Request
-                                                                </Link>
-                                                              </div>
-                                                            </div>
-                                                          </div>
-                                                        </div>
-                                                      </Card.Body>
-                                                    </Accordion.Collapse>
-                                                  </div>
-                                                </Accordion>
-                                              </div>
-                                            );
-                                          }
-                                        )
-                                      ) : (
-                                        <div></div>
-                                      )}
-                                      {datashareRequestTotalCount >
-                                        itemsPerPage && (
-                                        <ReactPaginate
-                                          previousLabel={"Previous"}
-                                          nextLabel={"Next"}
-                                          pageClassName="page-item"
-                                          pageLinkClassName="page-link"
-                                          previousClassName="page-item"
-                                          previousLinkClassName="page-link"
-                                          nextClassName="page-item"
-                                          nextLinkClassName="page-link"
-                                          breakLabel={"..."}
-                                          pageCount={requestPageCount}
-                                          onPageChange={handleRequestPageClick}
-                                          breakClassName="page-item"
-                                          breakLinkClassName="page-link"
-                                          containerClassName="pagination"
-                                          activeClassName="active"
-                                        />
-                                      )}
-                                    </div>
-                                  </Card>
+                                  <DatashareInDatasetListComp
+                                    id={Number(datashareId)}
+                                    type="datashare"
+                                    setUpdateTable={setUpdateTable}
+                                    updateTable={updateTable}
+                                    userAclPerm={userAclPerm}
+                                  />
                                 </Tab>
                                 <Tab eventKey="Active" title="Active" />
                                 <Tab eventKey="Requested" title="Requested" />

@@ -202,7 +202,8 @@ const AddDatashareView = () => {
     let serviceDefsResp = [];
     try {
       serviceDefsResp = await fetchApi({
-        url: `plugins/definitions/name/${serviceDefName}`
+        url: `plugins/definitions/name/${serviceDefName}`,
+        skipNavigate: true
       });
     } catch (error) {
       console.error(
@@ -258,7 +259,8 @@ const AddDatashareView = () => {
     try {
       let serviceResp = await fetchApi({
         url: "plugins/services",
-        params: params
+        params: params,
+        skipNavigate: true
       });
       return serviceResp.data.services[0].type;
     } catch (error) {
@@ -266,26 +268,70 @@ const AddDatashareView = () => {
     }
   };
 
+  const filterServiceByName = async (inputValue) => {
+    let params = { serviceNamePrefix: inputValue || "" };
+    let op = [];
+    let serviceResp = [];
+    if (selectedZone?.id) {
+      serviceResp = await fetchApi({
+        url: `public/v2/api/zones/${selectedZone?.id}/service-headers`,
+        params: params
+      });
+    } else {
+      serviceResp = await fetchApi({
+        url: "/public/v2/api/service-headers",
+        params: params
+      });
+    }
+    op = serviceResp.data;
+    return op.map((obj) => ({
+      label: obj.name,
+      id: obj.id,
+      def: obj.type
+    }));
+  };
+
+  const filterZoneByName = async (inputValue) => {
+    let params = { zoneNamePrefix: inputValue || "" };
+    let op = [];
+    let zoneResp = [];
+    if (selectedService?.id) {
+      zoneResp = await fetchApi({
+        url: `public/v2/api/zones/zone-headers/for-service/${selectedService?.id}`,
+        params: params
+      });
+    } else {
+      zoneResp = await fetchApi({
+        url: "/public/v2/api/zone-headers",
+        params: params
+      });
+    }
+    op = zoneResp.data;
+    return op.map((obj) => ({
+      label: obj.name,
+      id: obj.id
+    }));
+  };
+
   const fetchService = async (zoneId) => {
+    let serviceResp = [];
     try {
       if (zoneId == undefined) {
-        let serviceResp = await fetchApi({
-          url: "plugins/services"
+        serviceResp = await fetchApi({
+          url: "public/v2/api/service-headers",
+          skipNavigate: true
         });
-        return serviceResp.data.services.map(({ name, id, type }) => ({
-          label: name,
-          id: id,
-          def: type
-        }));
       } else {
-        let serviceResp = await fetchApi({
-          url: `public/v2/api/zones/${zoneId}/service-headers`
+        serviceResp = await fetchApi({
+          url: `public/v2/api/zones/${zoneId}/service-headers`,
+          skipNavigate: true
         });
-        return serviceResp.data.map(({ name, id }) => ({
-          label: name,
-          id: id
-        }));
       }
+      return serviceResp.data.map(({ name, id, type }) => ({
+        label: name,
+        id: id,
+        def: type
+      }));
     } catch (error) {
       console.error(`Error occurred while fetching service details ! ${error}`);
     }
@@ -308,12 +354,14 @@ const AddDatashareView = () => {
     try {
       if (serviceId == undefined) {
         zoneResp = await fetchApi({
-          url: "public/v2/api/zone-headers"
+          url: "public/v2/api/zone-headers",
+          skipNavigate: true
         });
         console.log("test");
       } else {
         zoneResp = await fetchApi({
-          url: `public/v2/api/zones/zone-headers/for-service/${serviceId}`
+          url: `public/v2/api/zones/zone-headers/for-service/${serviceId}`,
+          skipNavigate: true
         });
       }
     } catch (e) {
@@ -586,13 +634,12 @@ const AddDatashareView = () => {
                       render={({ input }) => (
                         <div className="gds-form-input">
                           <AsyncSelect
-                            {...input}
                             defaultOptions={defaultServiceOptions}
                             onFocus={() => {
                               onFocusServiceSelect();
                             }}
                             value={selectedService}
-                            loadOptions={fetchService}
+                            loadOptions={filterServiceByName}
                             onChange={(e) => onServiceChange(e, input)}
                             isClearable={true}
                             placeholder="Select Service"
@@ -610,7 +657,7 @@ const AddDatashareView = () => {
                             <AsyncSelect
                               {...input}
                               value={selectedZone}
-                              loadOptions={fetchSecurityZone}
+                              loadOptions={filterZoneByName}
                               onFocus={() => {
                                 onFocusZoneSelect();
                               }}

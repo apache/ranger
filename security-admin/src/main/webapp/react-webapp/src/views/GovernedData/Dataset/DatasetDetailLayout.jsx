@@ -1445,7 +1445,8 @@ const DatasetDetailLayout = () => {
                           >
                             <Tab eventKey="All" title="All">
                               <DatashareInDatasetListComp
-                                datasetId={Number(datasetId)}
+                                id={Number(datasetId)}
+                                type="dataset"
                                 setUpdateTable={setUpdateTable}
                                 updateTable={updateTable}
                                 userAclPerm={userAclPerm}

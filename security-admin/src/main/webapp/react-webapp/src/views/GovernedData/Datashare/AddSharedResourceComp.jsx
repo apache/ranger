@@ -291,7 +291,7 @@ const AddSharedResourceComp = ({
             size="xl"
           >
             <Modal.Header closeButton>
-              <h5 className="mb-0">Add Resources</h5>
+              <h5 className="mb-0">{!isEdit ? "Add" : "Edit"} Resources</h5>
             </Modal.Header>
             <div>
               <div className="mb-2 gds-chips flex-wrap">

@@ -38,7 +38,8 @@ import {
 import { Button, Row, Col, Modal } from "react-bootstrap";
 
 const DatashareInDatasetListComp = ({
-  datasetId,
+  id,
+  type,
   setUpdateTable,
   updateTable,
   userAclPerm
@@ -88,7 +89,11 @@ const DatashareInDatasetListComp = ({
       const fetchId = ++fetchIdRef.current;
       let params = { ...searchFilterParams };
       if (fetchId === fetchIdRef.current) {
-        params["datasetId"] = datasetId;
+        if (type == "dataset") {
+          params["datasetId"] = id;
+        } else if (type == "datashare") {
+          params["dataShareId"] = id;
+        }
         params["pageSize"] = pageSize;
         params["startIndex"] =
           state && state.showLastPage
@@ -178,6 +183,132 @@ const DatashareInDatasetListComp = ({
       resetPage.page(0);
     }
   };
+
+  const datasetReqColumns = React.useMemo(
+    () => [
+      {
+        Header: "Name",
+        accessor: "dataShareId",
+        //width: 200,
+        Cell: (val) => {
+          return (
+            <span
+              className="text-truncate"
+              title={val.value}
+              style={{ maxWidth: "240px", display: "inline-block" }}
+            >
+              Dataset {val.value}
+            </span>
+          );
+        }
+      },
+      {
+        Header: "Status",
+        accessor: "status",
+        width: 108,
+        Cell: (val) => {
+          return (
+            <span
+              className={
+                val.value === "REQUESTED"
+                  ? "badge badge-light gds-requested-status"
+                  : val.value === "GRANTED"
+                  ? "badge badge-light gds-granted-status"
+                  : val.value === "ACTIVE"
+                  ? "badge badge-light gds-active-status"
+                  : "badge badge-light gds-denied-status"
+              }
+            >
+              {val.value}
+            </span>
+          );
+        }
+      },
+      {
+        Header: "Last Updated",
+        accessor: "updateTime",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy");
+        },
+        width: 108,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Approver",
+        accessor: "approver",
+        Cell: (rawValue) => {
+          return (
+            <div className="position-relative text-center">
+              <span>{rawValue.value}</span>
+            </div>
+          );
+        },
+        width: 108,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "",
+        accessor: "actions",
+        Cell: ({ row: { original } }) => {
+          return (
+            <div>
+              <Button
+                variant="outline-dark"
+                size="sm"
+                className="mr-2"
+                style={{ height: "31px" }}
+                title="View Request"
+                onClick={() => navigate(`/gds/request/detail/${original.id}`)}
+                data-name="viewRequest"
+                data-id={original.dataShareId}
+              >
+                <img src={viewRequestIcon} height="18px" width="18px" />
+              </Button>
+              <Button
+                variant="outline-dark"
+                size="sm"
+                className="mr-2"
+                title="View Datashare"
+                onClick={() =>
+                  navigate(`/gds/datashare/${original.dataShareId}/detail`)
+                }
+                data-name="viewDatashare"
+                data-id={original.dataShareId}
+              >
+                <i className="fa-fw fa fa-eye fa-fw fa fa-large"></i>
+              </Button>
+
+              <>
+                {(isSystemAdmin() || userAclPerm == "ADMIN") && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    title="Delete"
+                    onClick={() =>
+                      toggleConfirmModalForDelete(
+                        original.id,
+                        "Dummy",
+                        original.status
+                      )
+                    }
+                    data-name="deleteDatashareRequest"
+                    data-id={original.id}
+                    data-cy={original.id}
+                  >
+                    <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
+                  </Button>
+                )}
+              </>
+            </div>
+          );
+        },
+        disableSortBy: true
+      }
+    ],
+    []
+  );
 
   const requestColumns = React.useMemo(
     () => [
@@ -409,26 +540,51 @@ const DatashareInDatasetListComp = ({
 
   return (
     <>
-      <XATableLayout
-        data={requestListData}
-        columns={requestColumns}
-        fetchData={fetchRequestList}
-        totalCount={entries && entries.totalCount}
-        loading={loader}
-        pageCount={pageCount}
-        getRowProps={(row) => ({
-          onClick: (e) => {
-            e.stopPropagation();
-            //rowModal(row);
-          }
-        })}
-        currentpageIndex={currentpageIndex}
-        currentpageSize={currentpageSize}
-        columnHide={false}
-        columnResizable={false}
-        columnSort={true}
-        defaultSort={getDefaultSort}
-      />
+      {type == "dataset" && (
+        <XATableLayout
+          data={requestListData}
+          columns={requestColumns}
+          fetchData={fetchRequestList}
+          totalCount={entries && entries.totalCount}
+          loading={loader}
+          pageCount={pageCount}
+          getRowProps={(row) => ({
+            onClick: (e) => {
+              e.stopPropagation();
+              //rowModal(row);
+            }
+          })}
+          currentpageIndex={currentpageIndex}
+          currentpageSize={currentpageSize}
+          columnHide={false}
+          columnResizable={false}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+      )}
+
+      {type == "datashare" && (
+        <XATableLayout
+          data={requestListData}
+          columns={datasetReqColumns}
+          fetchData={fetchRequestList}
+          totalCount={entries && entries.totalCount}
+          loading={loader}
+          pageCount={pageCount}
+          getRowProps={(row) => ({
+            onClick: (e) => {
+              e.stopPropagation();
+              //rowModal(row);
+            }
+          })}
+          currentpageIndex={currentpageIndex}
+          currentpageSize={currentpageSize}
+          columnHide={false}
+          columnResizable={false}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+      )}
 
       <Modal
         show={showDatashareRequestDeleteConfirmModal}

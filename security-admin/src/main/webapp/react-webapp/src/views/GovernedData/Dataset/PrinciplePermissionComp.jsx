@@ -80,17 +80,17 @@ const PrinciplePermissionComp = ({
   const accessOptions = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
-    { value: "ADMIN", label: "ADMIN" },
     { value: "AUDIT", label: "AUDIT" },
-    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" }
+    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" },
+    { value: "ADMIN", label: "ADMIN" }
   ];
 
   const accessOptionsWithRemove = [
     { value: "LIST", label: "LIST" },
     { value: "VIEW", label: "VIEW" },
-    { value: "ADMIN", label: "ADMIN" },
     { value: "AUDIT", label: "AUDIT" },
-    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" }
+    { value: "POLICY_ADMIN", label: "POLICY_ADMIN" },
+    { value: "ADMIN", label: "ADMIN" }
   ];
 
   if (isAdmin) {
