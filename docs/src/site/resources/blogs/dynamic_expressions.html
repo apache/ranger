@@ -1,0 +1,556 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>Apache Ranger Policy Model</title>
+    <style>
+        <!--
+         /* Font Definitions */
+         @font-face {font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;}
+         @font-face {font-family:"Calibri Light"; panose-1:2 15 3 2 2 2 4 3 2 4;}
+
+         /* Style Definitions */
+         p.MsoNormal, li.MsoNormal, div.MsoNormal
+                {margin:0in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+         p.HalfLine
+                {margin:0in; font-size:6.0pt; font-family:"Calibri",sans-serif;}
+        h1
+                {mso-style-link:"Heading 1 Char"; margin-top:12.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:16.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+        h2
+                {mso-style-link:"Heading 1 Char"; margin-top:10.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:14.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+
+         span.Heading1Char
+                {mso-style-name:"Heading 1 Char"; mso-style-link:"Heading 1"; font-family:"Calibri Light",sans-serif; color:#2F5496;}
+         span.FootnoteTextChar
+                {mso-style-name:"Footnote Text Char"; mso-style-link:"Footnote Text";}
+         .MsoChpDefault
+                {font-family:"Calibri",sans-serif;}
+
+         /* Page Definitions */
+         @page WordSection1
+                {size:8.5in 11.0in; margin:1.0in 1.0in 1.0in 1.0in;}
+         div.WordSection1
+                {page:WordSection1;}
+
+         /* List Definitions */
+         ol
+                {margin-bottom:0in;}
+         ul
+                {margin-bottom:0in;}
+        -->
+    </style>
+</head>
+
+<body lang=EN-US style='width:800px;word-wrap:break-word;align:center;margin:auto;border:ridge'>
+<div style="margin-left:10pt;margin-right:10pt">
+    <h1 style="text-align:center">Apache Ranger - Dynamic Expression</h1>
+    <p class=MsoNormal style='font:5.0pt "Times New Roman"'>&nbsp;</p>
+    <div style="text-align:center">
+        <p class=MsoNormal>Madhan Neethiraj, Apache Ranger committer</p>
+        <p class=MsoNormal>Dec 10, 2023</p>
+    </div>
+    <p class=MsoNormal>&nbsp;</p>
+
+    <div class=WordSection>
+        <h1>Introduction</h1>
+
+        <p class=MsoNormal>
+            Apache Ranger policy model offers a rich set of features that help security administrators handle various
+            access
+            and governance requirements with ease. These features include:
+        </p>
+
+        <p class=HalfLine>&nbsp;</p>
+
+        <span lang=ENG>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>1. Consistent model to authorize access for data across large number of services</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>2. Ability to dynamically apply data masking and row-filtering</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>3. Delegated access control administration</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>4. Ability to explicitly deny access</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>5. Use of wildcards in resource names in access policies</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>6. Role-based access control (RBAC)</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>7. Tag-based access control (TBAC), based on tags associated with resources</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:0.5in;text-indent:-.25in'>8. Attribute-based access control (ABAC), based on attributes of users, groups and tags</p>
+            <p class=HalfLine>&nbsp;</p>
+        </span>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+            In addition to above, Apache Ranger policies can use various attributes available in the access context to
+            authorize the access - attributes including resource owner, time of access, tags associated with the
+            accessed
+            resource, attributes of user/groups/tags, groups/roles the user belongs to. This document explores use cases
+            that can leverage such attributes in policies using dynamic expressions.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>Dynamic expressions</h1>
+
+        <p class=MsoNormal>
+            Apache Ranger policy engine evaluates dynamic expressions specified in policies using the script engine
+            included in the JVM, in a sandboxed environment. Dynamic expressions can be used in Apache Ranger policies
+            in
+            following contexts:
+        </p>
+
+        <h2>Policy conditions</h2>
+
+        <p class=MsoNormal>
+            Expressions used in policy conditions should evaluate to a boolean value i.e., true or false. Examples:
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <span lang=ENG>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>TAG.sensitiveLevel >= 10</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>USER.allowedSensitiveLevel >= TAG.sensitiveLevel</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>IS_IN_GROUP('finance') AND IS_IN_ROLE('analyst')</p>
+            <p class=HalfLine>&nbsp;</p>
+        </span>
+
+        <h2>Row filters</h2>
+        <p class=MsoNormal>
+            Expressions can be used to set up row-filters with dynamic values. To distinguish
+            expressions from the rest of the row-filter text, they should be enclosed within delimiters
+            ${{ and }}. Examples:
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <span lang=ENG>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>dept_code == ${{USER.department}}</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>data_source in (${{USER.allowedSources}})</p>
+            <p class=HalfLine>&nbsp;</p>
+        </span>
+
+        <h2>Resource names</h2>
+        <p class=MsoNormal>
+            Use of expressions in resource names can help reduce the number of policies, which in
+            turn makes it easier to manage policies. Examples:
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <span lang=ENG>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>/home/${{REQ.user}}</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>/data/dept/${{USER.dept}}</p>
+            <p class=HalfLine>&nbsp;</p>
+            <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;font-family:"Courier New"'>db_${{USER.dept}}</p>
+            <p class=HalfLine>&nbsp;</p>
+        </span>
+
+        <h1>Supported expressions</h1>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=a style='border-collapse: collapse;border:none'>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='text-align:center;line-height:normal; border:none'><b><span lang=EN>Variable/Function name</span></b></p>
+              </td>
+              <td style='width:300pt;border:solid black 1.0pt; border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='text-align:center;line-height:normal; border:none'><b><span lang=EN>Description</span></b></p>
+              </td>
+              <td style='width:200pt;border:solid black 1.0pt; border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='text-align:center;line-height:normal; border:none'><b><span lang=EN>Example values</span></b></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_TAG_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Names of tags associated with the resource, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>PII,FINANCE</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_TAG_ATTR_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of attributes in all tags associated with the resource, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>piiType,sensitiveLevel</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_TAG_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Value of the given attribute in tags associated with the resource, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>email</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_UG_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of groups the user belongs to, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>managers,finance-admins</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_UG_ATTR_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of all attributes in groups the user belongs to, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>attr1,attr2</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_UG_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Value of the given attribute in groups the user belongs to, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>val1</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_UR_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Names of roles assigned to the user,  as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>analyst,dba</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_USER_ATTR_NAMES()</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Names of all attributes of the user, as CSV</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>allowedSensitiveLevel, allowedSources</span></p>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>&nbsp;</span></p>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>&nbsp;</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>GET_USER_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Value of the given attribute associated with the user</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>10</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_TAG(tagName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Is the given tag associated with the resource?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_ANY_TAG</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Is any tag associated with the resource?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_NO_TAG</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Are not tags associated with the resource?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_USER_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Does the user have the given attribute?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN style='font-family:"Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_UG_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Does any group associated with the user have the specified attribute?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>HAS_TAG_ATTR(attrName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Does any tag associated with the resource have the specified attribute?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_IN_GROUP(groupName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Does the user belong to the specified group?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_IN_ROLE(roleName)</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Is the user assigned to the specified role?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_IN_ANY_GROUP</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Does the user belong to any group?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_IN_ANY_ROLE</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>Is any role assigned to the user?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_NOT_IN_ANY_GROUP</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Does the user belong to no group?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal;border:none'><span lang=EN>IS_NOT_IN_ANY_ROLE</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Is the user associated with no roles?</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>true</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>false</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>REQ</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Request details, as a map</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>{</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;accessType&quot;:  &quot;select&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;clientIPAddress&quot;: &quot;10.120.27.49&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;clusterType&quot;: &quot;etl&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;clusterName&quot;: &quot;etl-e1&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;accessType&quot;:  &quot;select&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;user&quot;:        &quot;scott&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;userGroups&quot;:  [ &quot;g1&quot; ],</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;userRoles&quot;:   [ &quot;r1&quot; ],</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>}</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>RES</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Resource details, as a map</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>{</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;database&quot;:   &quot;db1&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;table&quot;:      &quot;tbl1&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;Column&quot;:     &quot;col1&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;_ownerUser&quot;: &quot;jane&quot;</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>}</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>TAG</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Current tag, as a map.</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>This is available only in tag-based policies.</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>{</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;_type&quot;: &quot;SENSITIVE&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;sensitiveLevel&quot;: 10</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>}</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>TAGNAMES</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of tags associated with the resource, as a list </span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>[ &quot;PII&quot;, &quot;SENSITIVE&quot; ]</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>TAGS</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>All tags associated with the resource, as a map</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>{</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;SENSITIVE&quot;: {</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;_type&quot;, &quot;SENSITIVE&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;level&quot;: 10</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> },</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> &quot;PII&quot;: {</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;_type&quot;,   &quot;PII&quot;,</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>  &quot;piiType&quot;: &quot;email&quot;</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'> }</span></p>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>}</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>UGNAMES</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of groups the user belongs to, as a list</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>[ &quot;g1&quot; ]</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>URNAMES</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Names of roles the user is assigned to, as a list</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>[ &quot;r1&quot; ]</span></p>
+              </td>
+            </tr>
+            <tr>
+              <td style='width:150pt;border:solid black 1.0pt; border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>USER</span></p>
+              </td>
+              <td style='width:300pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN>Name of the user</span></p>
+              </td>
+              <td style='width:200pt;border-top:none;border-left: none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt; padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+                <p class=MsoNormal style='line-height:normal'><span lang=EN style='font-family: "Courier New"'>&quot;scott&quot;</span></p>
+              </td>
+            </tr>
+          </table>
+    </div>
+    <p class=MsoNormal>&nbsp;</p>
+</div>
+</body>
+
+<footer>
+    <div align=center>
+        <a href="/blogs.html">Apache Ranger&#8482; blogs</a>
+    </div>
+</footer>
+</html>
