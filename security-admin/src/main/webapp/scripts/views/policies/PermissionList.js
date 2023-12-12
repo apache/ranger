@@ -162,7 +162,9 @@ define(function(require) {
 				_.each(this.model.get('accesses'), function(p){
 					if(p.isAllowed){
 						var access = _.find(that.accessTypes,function(obj){if(obj.name == p.type) return obj});
-						this.permsIds.push(access.name);
+						if(access !== undefined){
+							this.permsIds.push(access.name);
+						}
 					}
 					
 				}, this);
