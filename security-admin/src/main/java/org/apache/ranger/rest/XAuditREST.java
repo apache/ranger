@@ -153,10 +153,11 @@ public class XAuditREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
 	public VXLong countXAccessAudits(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xAccessAuditService.sortFields);
+		VXLong ret = new VXLong();
 
-		 return xAuditMgr.getXAccessAuditSearchCount(searchCriteria);
+		ret.setValue(searchXAccessAudits(request).getTotalCount());
+
+		return ret;
 	}
 
 }
