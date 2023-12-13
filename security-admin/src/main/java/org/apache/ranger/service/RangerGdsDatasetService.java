@@ -68,6 +68,7 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         searchFields.add(new SearchField(SearchFilter.PROJECT_ID,              "dip.projectId",     SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,    "XXGdsDatasetInProject dip",                    "obj.id = dip.datasetId"));
         searchFields.add(new SearchField(SearchFilter.PROJECT_NAME,            "proj.name",         SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDatasetInProject dip, XXGdsProject proj", "obj.id = dip.datasetId and dip.projectId = proj.id"));
         searchFields.add(new SearchField(SearchFilter.PROJECT_NAME_PARTIAL,    "proj.name",         SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDatasetInProject dip, XXGdsProject proj", "obj.id = dip.datasetId and dip.projectId = proj.id"));
+        searchFields.add(new SearchField(SearchFilter.CREATED_BY,              "obj.addedByUserId", SearchField.DATA_TYPE.INTEGER,  SearchField.SEARCH_TYPE.FULL));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));

@@ -276,6 +276,12 @@ public class GdsDBStore extends AbstractGdsStore {
     public PList<RangerDataset> searchDatasets(SearchFilter filter) {
         LOG.debug("==> searchDatasets({})", filter);
 
+		if (filter.getParam(SearchFilter.CREATED_BY) != null) {
+			String userName = filter.getParam(SearchFilter.CREATED_BY);
+			Long userId = daoMgr.getXXPortalUser().findByLoginId(userName).getId();
+			filter.setParam(SearchFilter.CREATED_BY, Long.toString(userId));
+		}
+
         PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
         GdsPermission        gdsPermission = getGdsPermissionFromFilter(filter);
 

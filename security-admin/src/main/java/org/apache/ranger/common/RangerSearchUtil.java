@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RangerSearchUtil extends SearchUtil {
 	final static Logger logger = LoggerFactory.getLogger(RangerSearchUtil.class);
-	
+
 	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
 		Validate.notNull(request, "request");
 		SearchFilter ret = new SearchFilter();
@@ -92,6 +92,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.FETCH_TAG_POLICIES, request.getParameter(SearchFilter.FETCH_TAG_POLICIES));
 		ret.setParam(SearchFilter.SERVICE_NAME_PREFIX, request.getParameter(SearchFilter.SERVICE_NAME_PREFIX));
 		ret.setParam(SearchFilter.ZONE_NAME_PREFIX, request.getParameter(SearchFilter.ZONE_NAME_PREFIX));
+		ret.setParam(SearchFilter.CREATED_BY, request.getParameter(SearchFilter.CREATED_BY));
 
 		for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
 			String name = e.getKey();
