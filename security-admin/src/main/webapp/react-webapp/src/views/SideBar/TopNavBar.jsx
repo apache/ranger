@@ -254,7 +254,7 @@ export const TopNavBar = (props) => {
             {isAdminRole && (
               <Dropdown.ItemText>
                 <Link
-                  to={`/service/${serviceDefData.id}/edit/${serviceData?.id}`}
+                  to={`/service/${serviceDefData?.id}/edit/${serviceData?.id}`}
                   onClick={(e) => policyLoader && e.preventDefault()}
                   state={allServicesData[0]?.id}
                   disabled={policyLoader ? true : false}

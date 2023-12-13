@@ -72,7 +72,6 @@ import {
 } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
-  //const { serviceDef, serviceData } = props;
   const { serviceDef, serviceData, serviceZone } = props;
   const { state } = useLocation();
   const [policyListingData, setPolicyData] = useState([]);
@@ -229,7 +228,7 @@ function PolicyListing(props) {
         setLoader(false);
       }
     },
-    [updateTable, searchFilterParams, serviceData]
+    [updateTable, searchFilterParams]
   );
 
   const toggleConfirmModalForDelete = (policyID, policyName) => {
@@ -724,26 +723,25 @@ function PolicyListing(props) {
 
   return (
     <div className="wrap">
-      {(props.serviceData.type == "hdfs" || props.serviceData.type == "yarn") &&
-        show && (
-          <Alert variant="warning" onClose={() => setShow(false)} dismissible>
-            <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
-            <p className="pd-l-10 d-inline">
-              {`By default, fallback to ${
-                alertMessage[props.serviceData.type].label
-              } ACLs are enabled. If access cannot be
+      {(serviceData.type == "hdfs" || serviceData.type == "yarn") && show && (
+        <Alert variant="warning" onClose={() => setShow(false)} dismissible>
+          <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
+          <p className="pd-l-10 d-inline">
+            {`By default, fallback to ${
+              alertMessage[serviceData.type].label
+            } ACLs are enabled. If access cannot be
               determined by Ranger policies, authorization will fall back to
               ${
-                alertMessage[props.serviceData.type].label
+                alertMessage[serviceData.type].label
               } ACLs. If this behavior needs to be changed, modify ${
-                alertMessage[props.serviceData.type].label
-              }
+              alertMessage[serviceData.type].label
+            }
               plugin config - ${
-                alertMessage[props.serviceData.type].configs
+                alertMessage[serviceData.type].configs
               }-authorization.`}
-            </p>
-          </Alert>
-        )}
+          </p>
+        </Alert>
+      )}
       {pageLoader ? (
         <Loader />
       ) : (
