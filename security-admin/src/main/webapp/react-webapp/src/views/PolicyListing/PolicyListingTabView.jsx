@@ -31,7 +31,7 @@ import {
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
-import { map, sortBy } from "lodash";
+import { isEmpty, map, sortBy } from "lodash";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
@@ -135,12 +135,12 @@ export const PolicyListingTabView = () => {
       serviceData: getServiceData?.data,
       serviceDefData: getServiceDefData
     });
-
-    dispatch({
-      type: "SET_LOADER",
-      loader: false
-    });
-
+    if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+      dispatch({
+        type: "SET_LOADER",
+        loader: false
+      });
+    }
     document
       .getElementById("resourceSelectedZone")
       ?.classList?.remove("disabledEvents");
