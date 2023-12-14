@@ -2563,6 +2563,16 @@ li.list-group-item:hover {
 .manage-service .dropdown-toggle::after {
   vertical-align: 0.125em;
 }
+.serviceDef-icon {
+  vertical-align: baseline;
+  background-repeat: no-repeat;
+  width: 27px;
+  height: 20px;
+  text-align: center;
+  display: inline-block;
+  padding: 0 2px;
+  position: relative;
+}
 .text-word-break {
   word-break: break-all;
 }
