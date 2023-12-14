@@ -459,7 +459,6 @@ const MyDatasetListing = () => {
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    //localStorage.setItem("bigData", JSON.stringify(searchParams));
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);

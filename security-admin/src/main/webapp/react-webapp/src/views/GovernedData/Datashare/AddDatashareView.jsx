@@ -73,7 +73,6 @@ const AddDatashareView = () => {
   const [selectedShareMask, setSelectedShareMask] = useState({});
   const [datashareTermsAndConditions, setDatashareTermsAndConditions] =
     useState();
-  const [datashareConditionExpr, setDatashareConditionExpr] = useState();
   const navigate = useNavigate();
   const [defaultZoneOptions, setDefaultZoneOptions] = useState([]);
   const [defaultServiceOptions, setDefaultServiceOptions] = useState([]);
@@ -105,7 +104,7 @@ const AddDatashareView = () => {
   };
 
   const subhmitDatashareDetails = async (values) => {
-    if (step == 5) {
+    if (step == 4) {
       let dataShareInfo = {
         name: datashareName,
         acl: {
@@ -116,7 +115,6 @@ const AddDatashareView = () => {
         service: selectedService.label,
         description: datashareDescription,
         termsOfUse: datashareTermsAndConditions,
-        conditionExpr: datashareConditionExpr,
         defaultAccessTypes:
           values.permission != undefined
             ? Object.entries(values.permission).map(([key, obj]) => {
@@ -172,7 +170,7 @@ const AddDatashareView = () => {
         console.error(`Error occurred while creating datashare  ${error}`);
       }
       setBlockUI(false);
-    } else if (step == 4) {
+    } else if (step == 3) {
       setSaveButtonText("Create Datashare");
       setStep(step + 1);
     } else if (step == 1) {
@@ -445,10 +443,6 @@ const AddDatashareView = () => {
     setRoleList(roleList);
   };
 
-  const datashareBooleanExpression = (event) => {
-    setDatashareConditionExpr(event.target.value);
-  };
-
   const MaskingConfig = (props) => {
     const { addTagMaskingConfig } = props;
     return (
@@ -690,32 +684,6 @@ const AddDatashareView = () => {
             {step == 2 && (
               <div className="gds-form-wrap">
                 <div className="gds-form-header">
-                  <h6 className="gds-form-step-num">Step 2</h6>
-                  <h2 className="gds-form-step-name">Specify Conditions</h2>
-                </div>
-                <div>
-                  <Card className="gds-section-card gds-bg-white">
-                    <div className="gds-section-title">
-                      <p className="gds-card-heading">Conditions</p>
-                    </div>
-                    <div className="gds-flex mg-b-10">
-                      <textarea
-                        placeholder="Boolean Expression"
-                        className="form-control"
-                        id="dsBooleanExpression"
-                        onChange={datashareBooleanExpression}
-                        data-cy="dsBooleanExpression"
-                        rows={4}
-                      />
-                    </div>
-                  </Card>
-                </div>
-              </div>
-            )}
-
-            {step == 3 && (
-              <div className="gds-form-wrap">
-                <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 3</h6>
                   <h2 className="gds-form-step-name">
                     Select default access types
@@ -871,7 +839,7 @@ const AddDatashareView = () => {
               </div>
             )}
 
-            {step == 4 && (
+            {step == 3 && (
               <div className="gds-form-wrap">
                 <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 4</h6>
@@ -887,7 +855,7 @@ const AddDatashareView = () => {
               </div>
             )}
 
-            {step == 5 && (
+            {step == 4 && (
               <div className="gds-form-wrap">
                 <div className="gds-form-header">
                   <h6 className="gds-form-step-num">Step 5</h6>

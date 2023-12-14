@@ -22,8 +22,6 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import XATableLayout from "../../../components/XATableLayout";
 import dateFormat from "dateformat";
 import { fetchApi } from "../../../utils/fetchAPI";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import { Loader, BlockUi } from "../../../components/CommonComponents";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
 import viewRequestIcon from "../../../images/view-request.svg";
@@ -35,14 +33,17 @@ import {
   parseSearchFilter,
   isSystemAdmin
 } from "../../../utils/XAUtils";
-import { Button, Row, Col, Modal } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 
 const DatashareInDatasetListComp = ({
   id,
   type,
+  shareStatus,
   setUpdateTable,
   updateTable,
-  userAclPerm
+  userAclPerm,
+  searchFilter,
+  fetchShareStatusMetrics
 }) => {
   const { state } = useLocation();
   const [requestListData, setRequestListData] = useState([]);
@@ -87,48 +88,118 @@ const DatashareInDatasetListComp = ({
           : pageIndex;
       let totalPageCount = 0;
       const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
+      let params = { ...searchFilter };
       if (fetchId === fetchIdRef.current) {
+        params["pageSize"] = 999999999;
+        if (sortBy.length > 0) {
+          if (getTableSortBy(sortBy) == "name")
+            params["sortBy"] = "datasetName";
+          else params["sortBy"] = getTableSortBy(sortBy);
+
+          params["sortType"] = getTableSortType(sortBy);
+        }
         if (type == "dataset") {
           params["datasetId"] = id;
+          try {
+            resp = await fetchApi({
+              url: "gds/datashare/summary",
+              params: params
+            });
+            if (resp.data.list.length > 0) {
+              requestList = resp.data.list;
+              requestList?.forEach((datashare) => {
+                for (let i = 0; i < datashare.datasets.length; i++) {
+                  if (datashare.datasets[i].datasetId == id) {
+                    datashare.shareStatus = datashare.datasets[i].shareStatus;
+                    datashare.requestId = datashare.datasets[i].id;
+                    datashare.datasetName = datashare.datasets[i].datasetName;
+                    break;
+                  }
+                }
+              });
+              totalCount = requestList != undefined ? requestList.length : 0;
+            }
+          } catch (error) {
+            serverError(error);
+            console.error(
+              `Error occurred while fetching Datashare request list! ${error}`
+            );
+          }
+          if (shareStatus != undefined) {
+            let tempReqList = requestList;
+            requestList = [];
+            tempReqList?.forEach((request) => {
+              if (request.shareStatus == shareStatus) {
+                requestList.push(request);
+              }
+            });
+            totalCount = requestList.length;
+          }
         } else if (type == "datashare") {
           params["dataShareId"] = id;
+          try {
+            resp = await fetchApi({
+              url: "gds/dataset/summary",
+              params: params
+            });
+            if (resp.data.list.length > 0) {
+              requestList = resp.data.list;
+              requestList?.forEach((dataset) => {
+                for (let i = 0; i < dataset.dataShares.length; i++) {
+                  if (dataset.dataShares[i].dataShareId == id) {
+                    dataset.shareStatus = dataset.dataShares[i].shareStatus;
+                    dataset.requestId = dataset.dataShares[i].id;
+                    dataset.dataShareName = dataset.dataShares[i].dataShareName;
+                    dataset.approver = dataset.dataShares[i].approver;
+                    break;
+                  }
+                }
+              });
+              totalCount = requestList != undefined ? requestList.length : 0;
+            }
+          } catch (error) {
+            serverError(error);
+            console.error(
+              `Error occurred while fetching Dataset request list! ${error}`
+            );
+          }
+          if (shareStatus != undefined) {
+            let tempReqList = requestList;
+            requestList = [];
+            tempReqList?.forEach((request) => {
+              if (request.shareStatus == shareStatus) {
+                requestList.push(request);
+              }
+            });
+            totalCount = requestList.length;
+          }
         }
+        resp.data.totalCount = totalCount;
+        console.log("Total count: " + totalCount);
         params["pageSize"] = pageSize;
-        params["startIndex"] =
+        let startIndex =
           state && state.showLastPage
             ? (state.addPageData.totalPage - 1) * pageSize
             : pageIndex * pageSize;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
-
-        try {
-          resp = await fetchApi({
-            url: "gds/datashare/dataset",
-            params: params
-          });
-          requestList = resp.data.list;
-          totalCount = resp.data.totalCount;
-        } catch (error) {
-          serverError(error);
-          console.error(
-            `Error occurred while fetching Datashare list! ${error}`
-          );
-        }
+        let endIndex = startIndex + pageSize;
+        requestList = requestList.slice(startIndex, endIndex);
+        // if (sortBy.length > 0) {
+        //   params["sortBy"] = getTableSortBy(sortBy);
+        //   params["sortType"] = getTableSortType(sortBy);
+        // }
         //setUpdateTable(moment.now());
+
         setTotalCount(totalCount);
         setRequestListData(requestList);
         setEntries(resp.data);
         setCurrentPageIndex(page);
         setCurrentPageSize(pageSize);
         setPageCount(Math.ceil(totalCount / pageSize));
-        setResetpage({ page: gotoPage });
+        //setResdatasetReqColumnsetpage({ page: gotoPage });
         setLoader(false);
       }
     },
-    [searchFilterParams, updateTable]
+    [searchFilter, updateTable]
   );
 
   useEffect(() => {
@@ -176,19 +247,13 @@ const DatashareInDatasetListComp = ({
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
-    //localStorage.setItem("bigData", JSON.stringify(searchParams));
-
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
-    }
   };
 
   const datasetReqColumns = React.useMemo(
     () => [
       {
         Header: "Name",
-        accessor: "dataShareId",
+        accessor: "name",
         //width: 200,
         Cell: (val) => {
           return (
@@ -197,15 +262,16 @@ const DatashareInDatasetListComp = ({
               title={val.value}
               style={{ maxWidth: "240px", display: "inline-block" }}
             >
-              Dataset {val.value}
+              {val.value}
             </span>
           );
         }
       },
       {
         Header: "Status",
-        accessor: "status",
+        accessor: "shareStatus",
         width: 108,
+        disableSortBy: true,
         Cell: (val) => {
           return (
             <span
@@ -260,9 +326,11 @@ const DatashareInDatasetListComp = ({
                 className="mr-2"
                 style={{ height: "31px" }}
                 title="View Request"
-                onClick={() => navigate(`/gds/request/detail/${original.id}`)}
+                onClick={() =>
+                  navigate(`/gds/request/detail/${original.requestId}`)
+                }
                 data-name="viewRequest"
-                data-id={original.dataShareId}
+                data-id={original.requestId}
               >
                 <img src={viewRequestIcon} height="18px" width="18px" />
               </Button>
@@ -270,12 +338,10 @@ const DatashareInDatasetListComp = ({
                 variant="outline-dark"
                 size="sm"
                 className="mr-2"
-                title="View Datashare"
-                onClick={() =>
-                  navigate(`/gds/datashare/${original.dataShareId}/detail`)
-                }
-                data-name="viewDatashare"
-                data-id={original.dataShareId}
+                title="View Dataset"
+                onClick={() => navigate(`/gds/dataset/${original.id}/detail`)}
+                data-name="viewDataset"
+                data-id={original.id}
               >
                 <i className="fa-fw fa fa-eye fa-fw fa fa-large"></i>
               </Button>
@@ -288,9 +354,10 @@ const DatashareInDatasetListComp = ({
                     title="Delete"
                     onClick={() =>
                       toggleConfirmModalForDelete(
-                        original.id,
-                        "Dummy",
-                        original.status
+                        original.requestId,
+                        original.dataShareName,
+                        original.name,
+                        original.shareStatus
                       )
                     }
                     data-name="deleteDatashareRequest"
@@ -314,7 +381,7 @@ const DatashareInDatasetListComp = ({
     () => [
       {
         Header: "Name",
-        accessor: "dataShareId",
+        accessor: "name",
         //width: 200,
         Cell: (val) => {
           return (
@@ -323,14 +390,14 @@ const DatashareInDatasetListComp = ({
               title={val.value}
               style={{ maxWidth: "240px", display: "inline-block" }}
             >
-              Datashare {val.value}
+              {val.value}
             </span>
           );
         }
       },
       {
         Header: "Service",
-        accessor: "service",
+        accessor: "serviceName",
         //width: 200,
         Cell: (val) => {
           return (
@@ -346,7 +413,7 @@ const DatashareInDatasetListComp = ({
       },
       {
         Header: "Zone",
-        accessor: "zone",
+        accessor: "zoneName",
         // width: 200,
         Cell: (val) => {
           return (
@@ -364,6 +431,7 @@ const DatashareInDatasetListComp = ({
         Header: "Resources",
         accessor: "resourceCount",
         width: 100,
+        disableSortBy: true,
         Cell: (val) => {
           return (
             <span
@@ -377,8 +445,9 @@ const DatashareInDatasetListComp = ({
       },
       {
         Header: "Status",
-        accessor: "status",
+        accessor: "shareStatus",
         width: 108,
+        disableSortBy: true,
         Cell: (val) => {
           return (
             <span
@@ -419,7 +488,9 @@ const DatashareInDatasetListComp = ({
                 className="mr-2"
                 style={{ height: "31px" }}
                 title="View Request"
-                onClick={() => navigate(`/gds/request/detail/${original.id}`)}
+                onClick={() =>
+                  navigate(`/gds/request/detail/${original.requestId}`)
+                }
                 data-name="viewRequest"
                 data-id={original.dataShareId}
               >
@@ -430,9 +501,7 @@ const DatashareInDatasetListComp = ({
                 size="sm"
                 className="mr-2"
                 title="View Datashare"
-                onClick={() =>
-                  navigate(`/gds/datashare/${original.dataShareId}/detail`)
-                }
+                onClick={() => navigate(`/gds/datashare/${original.id}/detail`)}
                 data-name="viewDatashare"
                 data-id={original.dataShareId}
               >
@@ -447,9 +516,10 @@ const DatashareInDatasetListComp = ({
                     title="Delete"
                     onClick={() =>
                       toggleConfirmModalForDelete(
-                        original.id,
-                        "Dummy",
-                        original.status
+                        original.requestId,
+                        original.name,
+                        original.datasetName,
+                        original.shareStatus
                       )
                     }
                     data-name="deleteDatashareRequest"
@@ -473,12 +543,16 @@ const DatashareInDatasetListComp = ({
     setShowDatashareRequestDeleteConfirmModal(false);
   };
 
-  const toggleConfirmModalForDelete = (id, name, status) => {
+  const toggleConfirmModalForDelete = (id, name, datasetName, status) => {
     let deleteMsg = "";
     if (status == "ACTIVE") {
-      deleteMsg = `Do you want to remove Datashare ${id} from ${name}`;
+      deleteMsg = `Do you want to remove Datashare: ${name} from ${datasetName}`;
     } else {
-      deleteMsg = `Do you want to delete request of Datashare ${id}`;
+      if (type == "datashare") {
+        deleteMsg = `Do you want to delete request of Dataset: ${datasetName}`;
+      } else {
+        deleteMsg = `Do you want to delete request of Datashare: ${name}`;
+      }
     }
     let data = { id: id, name: name, status: status, msg: deleteMsg };
     setDeleteDatashareReqInfo(data);
@@ -501,6 +575,7 @@ const DatashareInDatasetListComp = ({
       setShowDatashareRequestDeleteConfirmModal(false);
       toast.success(successMsg);
       setUpdateTable(moment.now());
+      fetchShareStatusMetrics();
 
       //   fetchDatashareRequestList(
       //     undefined,

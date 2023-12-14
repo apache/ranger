@@ -37,8 +37,17 @@ import { toast } from "react-toastify";
 import { Form } from "react-final-form";
 import { CustomTooltip, Loader } from "../../../components/CommonComponents";
 import moment from "moment-timezone";
-import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { serverError, isSystemAdmin } from "../../../utils/XAUtils";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearchParams
+} from "react-router-dom";
+import {
+  serverError,
+  isSystemAdmin,
+  parseSearchFilter
+} from "../../../utils/XAUtils";
 import Select from "react-select";
 import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
@@ -161,6 +170,61 @@ const DatasetDetailLayout = () => {
   const [updateTable, setUpdateTable] = useState(moment.now());
   const gdsServiceDefName = "gds";
   const [datasetNameEditable, isDatasetNameEditable] = useState(false);
+  const [requestSearchFilterParams, setRequestSearchFilterParams] = useState(
+    []
+  );
+  const [shareStatusMetrics, setShareStatusMetrics] = useState({
+    totalCount: 0,
+    REQUESTED: 0,
+    GRANTED: 0,
+    ACTIVE: 0,
+    DENIED: 0
+  });
+
+  const fetchShareStatusMetrics = async () => {
+    try {
+      setLoader(true);
+      let params = {};
+      params["datasetId"] = datasetId;
+      const resp = await fetchApi({
+        url: `gds/dataset/summary`,
+        params: params
+      });
+      let datashareReqList = resp.data.list[0].dataShares;
+      let activeCount = 0;
+      let requestedCount = 0;
+      let grantedCount = 0;
+      let deniedCount = 0;
+      datashareReqList.forEach((request) => {
+        switch (request.shareStatus) {
+          case "REQUESTED":
+            requestedCount += 1;
+            break;
+          case "GRANTED":
+            grantedCount += 1;
+            break;
+          case "ACTIVE":
+            activeCount += 1;
+            break;
+          case "DENIED":
+            deniedCount += 1;
+            break;
+        }
+      });
+      setShareStatusMetrics({
+        totalCount: datashareReqList.length,
+        REQUESTED: requestedCount,
+        GRANTED: grantedCount,
+        ACTIVE: activeCount,
+        DENIED: deniedCount
+      });
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching dataset summary details ! ${error}`
+      );
+    }
+    setLoader(false);
+  };
 
   const handleDatasetDeleteClick = async () => {
     toggleClose();
@@ -201,6 +265,35 @@ const DatasetDetailLayout = () => {
       );
     }
     return data;
+  };
+
+  const requestSearchFilterOptions = [
+    {
+      category: "dataShareNamePartial",
+      label: "Name",
+      urlLabel: "dataShareNamePartial",
+      type: "text"
+    },
+    {
+      category: "serviceNamePartial",
+      label: "Service",
+      urlLabel: "serviceNamePartial",
+      type: "text"
+    },
+    {
+      category: "ZoneNamePartial",
+      label: "Zone",
+      urlLabel: "ZoneNamePartial",
+      type: "text"
+    }
+  ];
+
+  const updateRequestSearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      requestSearchFilterOptions
+    );
+    setRequestSearchFilterParams(searchFilterParam);
   };
 
   useEffect(() => {
@@ -466,6 +559,7 @@ const DatasetDetailLayout = () => {
         });
         toast.success("Request created successfully!!");
         setDatashareModal(false);
+        fetchShareStatusMetrics();
         setUpdateTable(moment.now());
       } catch (error) {
         dispatch({
@@ -660,6 +754,8 @@ const DatasetDetailLayout = () => {
       setActiveKey(key);
       if (key == "sharedWith") {
         fetchAccessGrantInfo();
+      } else if (key == "datashares") {
+        fetchShareStatusMetrics();
       }
     }
   };
@@ -1419,6 +1515,8 @@ const DatasetDetailLayout = () => {
                           <StructuredFilter
                             key="user-listing-search-filter"
                             placeholder="Search datashares..."
+                            onChange={updateRequestSearchFilter}
+                            options={requestSearchFilterOptions}
                           />
                         </div>
                         {(isSystemAdmin() || userAclPerm == "ADMIN") && (
@@ -1443,19 +1541,112 @@ const DatasetDetailLayout = () => {
                             activeKey={requestActiveKey}
                             onSelect={handleRequestTabSelect}
                           >
-                            <Tab eventKey="All" title="All">
-                              <DatashareInDatasetListComp
-                                id={Number(datasetId)}
-                                type="dataset"
-                                setUpdateTable={setUpdateTable}
-                                updateTable={updateTable}
-                                userAclPerm={userAclPerm}
-                              />
+                            <Tab
+                              eventKey="All"
+                              title={
+                                "All (" + shareStatusMetrics.totalCount + ")"
+                              }
+                            >
+                              {requestActiveKey == "All" && (
+                                <DatashareInDatasetListComp
+                                  id={Number(datasetId)}
+                                  type="dataset"
+                                  setUpdateTable={setUpdateTable}
+                                  updateTable={updateTable}
+                                  userAclPerm={userAclPerm}
+                                  searchFilter={requestSearchFilterParams}
+                                  fetchShareStatusMetrics={
+                                    fetchShareStatusMetrics
+                                  }
+                                />
+                              )}
                             </Tab>
-                            <Tab eventKey="Active" title="Active"></Tab>
-                            <Tab eventKey="Requested" title="Requested"></Tab>
-                            <Tab eventKey="Granted" title="Granted"></Tab>
-                            <Tab eventKey="Denied" title="Denied"></Tab>
+                            <Tab
+                              eventKey="Active"
+                              title={
+                                "Active (" + shareStatusMetrics.ACTIVE + ")"
+                              }
+                            >
+                              {requestActiveKey == "Active" && (
+                                <DatashareInDatasetListComp
+                                  id={Number(datasetId)}
+                                  type="dataset"
+                                  shareStatus="ACTIVE"
+                                  setUpdateTable={setUpdateTable}
+                                  updateTable={updateTable}
+                                  userAclPerm={userAclPerm}
+                                  searchFilter={requestSearchFilterParams}
+                                  fetchShareStatusMetrics={
+                                    fetchShareStatusMetrics
+                                  }
+                                />
+                              )}
+                            </Tab>
+                            <Tab
+                              eventKey="Requested"
+                              title={
+                                "Requested (" +
+                                shareStatusMetrics.REQUESTED +
+                                ")"
+                              }
+                            >
+                              {requestActiveKey == "Requested" && (
+                                <DatashareInDatasetListComp
+                                  id={Number(datasetId)}
+                                  type="dataset"
+                                  shareStatus="REQUESTED"
+                                  setUpdateTable={setUpdateTable}
+                                  updateTable={updateTable}
+                                  userAclPerm={userAclPerm}
+                                  searchFilter={requestSearchFilterParams}
+                                  fetchShareStatusMetrics={
+                                    fetchShareStatusMetrics
+                                  }
+                                />
+                              )}
+                            </Tab>
+                            <Tab
+                              eventKey="Granted"
+                              title={
+                                "Granted (" + shareStatusMetrics.GRANTED + ")"
+                              }
+                            >
+                              {requestActiveKey == "Granted" && (
+                                <DatashareInDatasetListComp
+                                  id={Number(datasetId)}
+                                  type="dataset"
+                                  shareStatus="GRANTED"
+                                  setUpdateTable={setUpdateTable}
+                                  updateTable={updateTable}
+                                  userAclPerm={userAclPerm}
+                                  searchFilter={requestSearchFilterParams}
+                                  fetchShareStatusMetrics={
+                                    fetchShareStatusMetrics
+                                  }
+                                />
+                              )}
+                            </Tab>
+                            <Tab
+                              eventKey="Denied"
+                              title={
+                                "Denied (" + shareStatusMetrics.DENIED + ")"
+                              }
+                            >
+                              {requestActiveKey == "Denied" && (
+                                <DatashareInDatasetListComp
+                                  id={Number(datasetId)}
+                                  type="dataset"
+                                  shareStatus="DENIED"
+                                  setUpdateTable={setUpdateTable}
+                                  updateTable={updateTable}
+                                  userAclPerm={userAclPerm}
+                                  searchFilter={requestSearchFilterParams}
+                                  fetchShareStatusMetrics={
+                                    fetchShareStatusMetrics
+                                  }
+                                />
+                              )}
+                            </Tab>
                           </Tabs>
                         </div>
                       </div>
