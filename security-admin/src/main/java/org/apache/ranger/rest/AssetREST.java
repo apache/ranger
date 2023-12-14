@@ -22,7 +22,9 @@
 import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -446,12 +448,39 @@ public class AssetREST {
 			logger.debug("==> AssetREST.countXResources()");
 		}
 
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
+
+		filter.setMaxRows(Integer.MAX_VALUE);
+
+		List<RangerPolicy> policies      = serviceREST.getPolicies(filter);
+		int                policiesCount = 0;
+
+		if (policies != null) {
+			Map<String, RangerService> services = new HashMap<>();
+
+			for (RangerPolicy policy : policies) {
+				RangerService service = services.get(policy.getService());
+
+				if (service == null) {
+					service = serviceREST.getServiceByName(policy.getService());
+
+					services.put(policy.getService(), service);
+				}
+
+				VXResource resource = serviceUtil.toVXResource(policy, service);
+
+				if (resource != null) {
+					policiesCount++;
+				}
+			}
+		}
+
 		VXLong ret = new VXLong();
 
-		ret.setValue(searchXResources(request).getListSize());
+		ret.setValue(policiesCount);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== AssetREST.countXAssets(): " + ret);
+			logger.debug("<== AssetREST.countXResources(): " + ret);
 		}
 
 		return ret;
