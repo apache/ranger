@@ -801,12 +801,14 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataShare getDataShare(Long dataShareId) {
+    public RangerDataShare getDataShare(Long dataShareId) throws Exception {
         LOG.debug("==> getDataShare({})", dataShareId);
 
         RangerDataShare ret = dataShareService.read(dataShareId);
 
-        // TODO: enforce RangerDataShare.acl
+        if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
+            throw new Exception("no permission on dataShare id=" + dataShareId);
+        }
 
         LOG.debug("<== getDataShare({}): ret={}", dataShareId, ret);
 
