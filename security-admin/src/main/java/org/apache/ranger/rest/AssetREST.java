@@ -277,9 +277,26 @@ public class AssetREST {
 			logger.debug("==> AssetREST.countXAssets()");
 		}
 
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
+
+		filter.setMaxRows(Integer.MAX_VALUE);
+
+		List<RangerService> services      = serviceREST.getServices(filter);
+		int                 servicesCount = 0;
+
+		if (services != null) {
+			for (RangerService service : services) {
+				VXAsset asset = serviceUtil.toVXAsset(service);
+
+				if (asset != null) {
+					servicesCount++;
+				}
+			}
+		}
+
 		VXLong ret = new VXLong();
 
-		ret.setValue(searchXAssets(request).getListSize());
+		ret.setValue(servicesCount);
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== AssetREST.countXAssets(): " + ret);
