@@ -217,9 +217,12 @@ const SecurityZoneForm = () => {
     setLoader(false);
   };
 
-  const renderResourcesModal = (input, serviceType) => {
-    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const renderResourcesModal = (resourceInput, resourceField) => {
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -232,7 +235,7 @@ const SecurityZoneForm = () => {
     setModalstate({
       showModalResource: true,
       data: {},
-      inputval: input,
+      inputval: resourceInput,
       index: -1
     });
 
@@ -240,10 +243,13 @@ const SecurityZoneForm = () => {
     setResourceService(filterService);
   };
 
-  const editResourcesModal = (idx, input, serviceType) => {
-    let editData = input.input.value[idx];
-    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const editResourcesModal = (resourceIndex, resourceInput, resourceField) => {
+    let editData = resourceInput.input.value[resourceIndex];
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -256,8 +262,8 @@ const SecurityZoneForm = () => {
     setModalstate({
       showModalResource: true,
       data: editData,
-      inputval: input,
-      index: idx
+      inputval: resourceInput,
+      index: resourceIndex
     });
 
     setResourceServiceDef(filterServiceDef);
@@ -635,12 +641,12 @@ const SecurityZoneForm = () => {
     }
   };
 
-  const handleRemove = (idx, input) => {
-    input.input.value.splice(idx, 1);
+  const handleRemove = (resourceIndex, resourceInput) => {
+    resourceInput.input.value.splice(resourceIndex, 1);
     handleClose();
   };
 
-  const showResources = (value, serviceType) => {
+  const showResources = (resourceObj, serviceType) => {
     let data = {};
     let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
 
@@ -663,15 +669,15 @@ const SecurityZoneForm = () => {
 
     for (const level of grpResourcesKeys) {
       if (
-        value[`resourceName-${level}`] &&
-        value[`resourceName-${level}`].value !== noneOptions.value
+        resourceObj[`resourceName-${level}`] &&
+        resourceObj[`resourceName-${level}`].value !== noneOptions.value
       ) {
-        data.resources[value[`resourceName-${level}`].name] = {
-          isExcludes: value[`isExcludesSupport-${level}`] || false,
-          isRecursive: value[`isRecursiveSupport-${level}`] || false,
+        data.resources[resourceObj[`resourceName-${level}`].name] = {
+          isExcludes: resourceObj[`isExcludesSupport-${level}`] || false,
+          isRecursive: resourceObj[`isRecursiveSupport-${level}`] || false,
           values:
-            value[`value-${level}`] !== undefined
-              ? value[`value-${level}`].map(({ value }) => value)
+            resourceObj[`value-${level}`] !== undefined
+              ? resourceObj[`value-${level}`].map(({ value }) => value)
               : ""
         };
       }
@@ -1195,7 +1201,7 @@ const SecurityZoneForm = () => {
                                     {fields.value[index].serviceName}
                                   </td>
                                   <td className="align-middle" width="20%">
-                                    {fields.value[index].serviceType.toString()}
+                                    {fields.value[index].serviceType}
                                   </td>
                                   <td
                                     className="text-center"
@@ -1210,16 +1216,19 @@ const SecurityZoneForm = () => {
                                           {input.input.value &&
                                           input.input.value.length > 0
                                             ? input.input.value.map(
-                                                (obj, idx) => (
+                                                (
+                                                  resourceObj,
+                                                  resourceIndex
+                                                ) => (
                                                   <div
                                                     className="resource-group text-break"
-                                                    key={idx}
+                                                    key={resourceIndex}
                                                   >
                                                     <Row>
                                                       <Col xs={9}>
                                                         <span className="m-t-xs">
                                                           {showResources(
-                                                            obj,
+                                                            resourceObj,
                                                             fields.value[index]
                                                               .serviceType
                                                           )}
@@ -1232,11 +1241,11 @@ const SecurityZoneForm = () => {
                                                           size="sm"
                                                           onClick={() =>
                                                             editResourcesModal(
-                                                              idx,
+                                                              resourceIndex,
                                                               input,
                                                               fields.value[
                                                                 index
-                                                              ].serviceType
+                                                              ]
                                                             )
                                                           }
                                                           data-action="editResource"
@@ -1250,7 +1259,7 @@ const SecurityZoneForm = () => {
                                                           size="sm"
                                                           onClick={() =>
                                                             handleRemove(
-                                                              idx,
+                                                              resourceIndex,
                                                               input
                                                             )
                                                           }
@@ -1275,7 +1284,6 @@ const SecurityZoneForm = () => {
                                                 renderResourcesModal(
                                                   input,
                                                   fields.value[index]
-                                                    .serviceType
                                                 )
                                               }
                                               data-action="addResource"
