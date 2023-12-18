@@ -24,7 +24,7 @@ import { difference, isEmpty, keys, map, omit, pick } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import ExportPolicy from "./ExportPolicy";
 import ImportPolicy from "./ImportPolicy";
-import folderLogo from "Images/folder-grey.png";
+import { getServiceDefIcon } from "../../utils/XAUtils";
 
 class ServiceDefinition extends Component {
   constructor(props) {
@@ -319,13 +319,10 @@ class ServiceDefinition extends Component {
                 <th>
                   <div className="policy-title clearfix">
                     <span className="float-left">
-                      <img
-                        src={folderLogo}
-                        alt="Folder logo"
-                        className="m-r-5"
-                      />
+                      {getServiceDefIcon(serviceDef.name)}
                       {serviceDef.displayName}
                     </span>
+
                     {this.props.isAdminRole && (
                       <span className="float-right">
                         {isEmpty(this.props.selectedZone) ? (

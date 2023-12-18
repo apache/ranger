@@ -59,11 +59,12 @@ public class AbstractPredicateUtil {
 		}
 
 		Comparator<RangerBaseModelObject> sorter = getSorter(filter);
+		boolean isDesc = (filter.getSortType() != null) && "desc".equalsIgnoreCase(filter.getSortType());
 
-		if (sorter != null) {
-			boolean isDesc = "desc".equalsIgnoreCase(filter.getSortType());
-
+		if (sorter != null){
 			Collections.sort(objList, isDesc ? new ReverseComparator(sorter) : sorter);
+		}else if(isDesc) {
+			Collections.reverse(objList);
 		}
 	}
 
