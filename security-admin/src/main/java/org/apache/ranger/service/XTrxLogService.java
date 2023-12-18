@@ -74,7 +74,9 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("objectClassType", "obj.objectClassType",
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
-		
+		searchFields.add(new SearchField("objectId", "obj.objectId",
+				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+
 		sortFields.add(new SortField("createDate", "obj.createTime", true, SORT_ORDER.DESC));
 		}
 
