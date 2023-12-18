@@ -606,6 +606,7 @@ public class AssetREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xTrxLogService.sortFields);
                 searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
+		searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
 		searchUtil.extractString(request, searchCriteria, "attributeName",
 				"Attribute Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "action",
