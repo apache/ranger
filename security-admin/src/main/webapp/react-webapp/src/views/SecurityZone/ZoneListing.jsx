@@ -50,8 +50,11 @@ class ZoneListing extends Component {
     this.fetchData();
   }
 
-  componentDidUpdate(prevState) {
-    if (this.props.params.zoneId != prevState.params.zoneId) {
+  componentDidUpdate(prevProps) {
+    if (
+      prevProps?.params?.zoneId !== undefined &&
+      this.props.params.zoneId != prevProps.params.zoneId
+    ) {
       this.fetchData();
     }
   }
