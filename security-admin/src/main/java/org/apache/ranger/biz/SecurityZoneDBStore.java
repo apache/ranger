@@ -395,6 +395,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
                 summary.setId(xService.getId());
                 summary.setName(serviceName);
                 summary.setType(serviceDef.getName());
+                summary.setDisplayName(xService.getDisplayName());
                 summary.setResourceCount((long)zoneService.getResources().size());
 
                 ret.add(summary);
