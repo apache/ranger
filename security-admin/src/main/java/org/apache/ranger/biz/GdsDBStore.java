@@ -1282,6 +1282,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
             datasetSummary.setProjectsCount(getDIPCountForDataset(dataset.getId()));
             datasetSummary.setPrincipalsCount(getPrincipalCountForDataset(dataset));
+            datasetSummary.setAclPrincipalsCount(getAclPrincipalCountForDataset(dataset));
 
             SearchFilter                    filter            = new SearchFilter(SearchFilter.DATASET_ID, dataset.getId().toString());
             RangerDataShareList             dataShares        = dataShareService.searchDataShares(filter);
@@ -1375,6 +1376,33 @@ public class GdsDBStore extends AbstractGdsStore {
 
         return ret;
     }
+
+    private Map<PrincipalType, Integer> getAclPrincipalCountForDataset(RangerDataset dataset) {
+        Map<PrincipalType, Integer> ret = new HashMap<>();
+
+        ret.put(PrincipalType.USER, 0);
+        ret.put(PrincipalType.GROUP, 0);
+        ret.put(PrincipalType.ROLE, 0);
+
+        RangerGdsObjectACL acl = dataset.getAcl();
+
+        if (acl != null) {
+            if (acl.getUsers() != null) {
+                ret.put(PrincipalType.USER, acl.getUsers().size());
+            }
+
+            if (acl.getGroups() != null) {
+                ret.put(PrincipalType.GROUP, acl.getGroups().size());
+            }
+
+            if (acl.getRoles() != null) {
+                ret.put(PrincipalType.ROLE, acl.getRoles().size());
+            }
+        }
+
+        return ret;
+    }
+
 
     private PList<RangerProject> getUnscrubbedProjects(SearchFilter filter) {
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");

@@ -552,6 +552,7 @@ public class RangerGds {
         private String                          description;
         private GdsPermission                   permissionForCaller;
         private Map<PrincipalType, Integer>     principalsCount;
+        private Map<PrincipalType, Integer>     aclPrincipalsCount;
         private Long                            projectsCount;
         private Long                            totalResourceCount;
         private List<DataShareInDatasetSummary> dataShares;
@@ -610,6 +611,14 @@ public class RangerGds {
             this.dataShares = dataShares;
         }
 
+        public Map<PrincipalType, Integer> getAclPrincipalsCount() {
+            return aclPrincipalsCount;
+        }
+
+        public void setAclPrincipalsCount(Map<PrincipalType, Integer> aclPrincipalsCount) {
+            this.aclPrincipalsCount = aclPrincipalsCount;
+        }
+
         @Override
         public String toString() {
             return toString(new StringBuilder()).toString();
@@ -625,6 +634,7 @@ public class RangerGds {
               .append("permissionForCaller={").append(permissionForCaller).append("} ")
               .append("principalsCount={").append(principalsCount).append("} ")
               .append("projectsCount={").append(projectsCount).append("} ")
+              .append("aclPrincipalsCount={").append(aclPrincipalsCount).append("} ")
               .append("totalResourceCount={").append(totalResourceCount).append("} ")
               .append("dataShares={").append(dataShares).append("} ")
               .append("}");
