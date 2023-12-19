@@ -286,6 +286,7 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         private Long   id;
         private String name;
         private String type;
+        private String displayName;
         private Long   resourceCount;
 
         public Long getId() {
@@ -318,6 +319,14 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 
         public void setResourceCount(Long resourceCount) {
             this.resourceCount = resourceCount;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
         }
     }
 }
