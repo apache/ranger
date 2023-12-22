@@ -21,19 +21,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -78,6 +72,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -813,6 +809,73 @@ public class TestServiceREST {
 
 		Mockito.when(
 				serviceUtil.isValidateHttpsAuthentication(serviceName, request))
+				.thenReturn(false);
+		RESTResponse restResponse = serviceREST.grantAccess(serviceName,
+				grantRequestObj, request);
+		Assert.assertNotNull(restResponse);
+		Mockito.verify(serviceUtil).isValidateHttpsAuthentication(serviceName,
+				request);
+	}
+
+	@Test
+	public void test14_1_grantAccessWithMultiColumns() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		String serviceName = "HIVE";
+		Set<String> userList = new HashSet<String>();
+		userList.add("user1");
+		userList.add("user2");
+		userList.add("user3");
+
+		Map<String, String> grantResource = new HashMap<>();
+		grantResource.put("database", "demo");
+		grantResource.put("table", "testtbl");
+		grantResource.put("column", "column1,column2,colum3");
+		GrantRevokeRequest grantRequestObj = new GrantRevokeRequest();
+
+		grantRequestObj.setResource(grantResource);
+		grantRequestObj.setUsers(userList);
+		grantRequestObj.setAccessTypes(new HashSet<>(Arrays.asList("select")));
+		grantRequestObj.setDelegateAdmin(true);
+		grantRequestObj.setEnableAudit(true);
+		grantRequestObj.setGrantor("systest");
+		grantRequestObj.setIsRecursive(true);
+
+		RangerAccessResource resource = new RangerAccessResourceImpl(serviceREST.getAccessResourceObjectMap(grantRequestObj.getResource()), "systest");
+
+		RangerPolicy createPolicy = new RangerPolicy();
+		createPolicy.setService(serviceName);
+		createPolicy.setName("grant-" + System.currentTimeMillis());
+		createPolicy.setDescription("created by grant");
+		createPolicy.setIsAuditEnabled(grantRequestObj.getEnableAudit());
+
+		Map<String, RangerPolicyResource> policyResources = new HashMap<>();
+		Set<String> resourceNames = resource.getKeys();
+
+		if (!CollectionUtils.isEmpty(resourceNames)) {
+			for (String resourceName : resourceNames) {
+				policyResources.put(resourceName, serviceREST.getPolicyResource(resource.getValue(resourceName), grantRequestObj));
+			}
+		}
+		createPolicy.setResources(policyResources);
+
+		RangerPolicyItem policyItem = new RangerPolicyItem();
+		policyItem.setDelegateAdmin(grantRequestObj.getDelegateAdmin());
+		policyItem.getUsers().addAll(grantRequestObj.getUsers());
+		for (String accessType : grantRequestObj.getAccessTypes()) {
+			policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+		}
+		createPolicy.getPolicyItems().add(policyItem);
+		createPolicy.setZoneName(null);
+
+		List<String> grantColumns = (List<String>) resource.getValue("column");
+		Map<String, RangerPolicyResource> policyResourceMap = createPolicy.getResources();
+		List<String> createdPolicyColumns = policyResourceMap.get("column").getValues();
+
+		Assert.assertTrue(createdPolicyColumns.containsAll(grantColumns));
+
+		Mockito.when(
+						serviceUtil.isValidateHttpsAuthentication(serviceName, request))
 				.thenReturn(false);
 		RESTResponse restResponse = serviceREST.grantAccess(serviceName,
 				grantRequestObj, request);
