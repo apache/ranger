@@ -230,8 +230,6 @@ public class RangerPolicyRepository {
             LOG.debug("RangerPolicyRepository : building policy-repository for service[" + serviceName + "], and zone:[" + zoneName + "] with auditMode[" + auditModeEnum + "]");
         }
 
-        init(options);
-
         if (StringUtils.isEmpty(zoneName)) {
             this.contextEnrichers = buildContextEnrichers(options);
             this.auditPolicyEvaluators = buildAuditPolicyEvaluators(servicePolicies.getServiceConfig());
@@ -239,6 +237,8 @@ public class RangerPolicyRepository {
             this.contextEnrichers = null;
             this.auditPolicyEvaluators = Collections.emptyList();
         }
+
+        init(options);
 
         if (options.disableTrieLookupPrefilter) {
             policyResourceTrie      = null;
@@ -284,8 +284,6 @@ public class RangerPolicyRepository {
             LOG.debug("RangerPolicyRepository : building tag-policy-repository for tag service:[" + serviceName +"], with auditMode[" + auditModeEnum +"]");
         }
 
-        init(options);
-
         if (StringUtils.isEmpty(zoneName)) {
             this.contextEnrichers = buildContextEnrichers(options);
             this.auditPolicyEvaluators = buildAuditPolicyEvaluators(tagPolicies.getServiceConfig());
@@ -293,6 +291,8 @@ public class RangerPolicyRepository {
             this.contextEnrichers = null;
             this.auditPolicyEvaluators = Collections.emptyList();
         }
+
+        init(options);
 
         if (options.disableTrieLookupPrefilter) {
             policyResourceTrie      = null;
