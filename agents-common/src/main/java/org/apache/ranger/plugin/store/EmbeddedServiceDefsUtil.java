@@ -27,7 +27,9 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,6 +182,8 @@ public class EmbeddedServiceDefsUtil {
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
+
+			getOrCreateService(store, EMBEDDED_SERVICEDEF_GDS_NAME, GdsPolicyEngine.GDS_SERVICE_NAME);
 		} catch(Throwable excp) {
 			LOG.error("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
@@ -376,5 +380,39 @@ public class EmbeddedServiceDefsUtil {
 			LOG.error("EmbeddedServiceDefsUtil.getSupportedServiceDef(): failed", ex);
 		}
 		return supportedServiceDef;
+	}
+
+	private RangerService getOrCreateService(ServiceStore store, String serviceType, String serviceName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> EmbeddedServiceDefsUtil.getOrCreateService(" + serviceType + ", " + serviceName + ")");
+		}
+
+		RangerService ret = null;
+
+		try {
+			ret = store.getServiceByName(serviceName);
+
+			if(ret == null) {
+				LOG.info("Creating service " + serviceName + " of type " + serviceType);
+
+				ret = new RangerService();
+
+				ret.setName(serviceName);
+				ret.setDisplayName(serviceName);
+				ret.setType(serviceType);
+
+				ret = store.createService(ret);
+
+				LOG.info("Created service " + serviceName + ". ID=" + (ret != null ? ret.getId() : null));
+			}
+		} catch(Exception excp) {
+			LOG.error("EmbeddedServiceDefsUtil.getOrCreateService(): failed to load/create service " + serviceName, excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== EmbeddedServiceDefsUtil.getOrCreateService(" + serviceType + ", " + serviceName + "): " + ret);
+		}
+
+		return ret;
 	}
 }

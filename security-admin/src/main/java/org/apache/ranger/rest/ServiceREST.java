@@ -4329,17 +4329,7 @@ public class ServiceREST {
 			}
 		};
 
-		Runnable createGdsServiceTask = new Runnable() {
-			@Override
-			public void run() {
-				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EMBEDDED_SERVICEDEF_GDS_NAME, ServiceDBStore.GDS_SERVICE_NAME, true, false);
-
-				creator.doCreateAndLinkService();
-			}
-		};
-
 		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
-		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createGdsServiceTask);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== createOrGetLinkedServices(resourceService=" + resourceService.getName() + ")");
@@ -4361,14 +4351,6 @@ public class ServiceREST {
 			this.linkedServiceName   = computeLinkedServiceName();
 			this.isAutoCreate        = config.getBoolean("ranger." + linkedServiceType + "service.auto.create", true);
 			this.isAutoLink          = config.getBoolean("ranger." + linkedServiceType + "service.auto.link", true);
-		}
-
-		LinkedServiceCreator(@Nonnull String resourceServiceName, @Nonnull String linkedServiceType, String linkedServiceName, boolean autoCreate, boolean autoLink) {
-			this.resourceServiceName = resourceServiceName;
-			this.linkedServiceType   = linkedServiceType;
-			this.linkedServiceName   = linkedServiceName;
-			this.isAutoCreate        = autoCreate;
-			this.isAutoLink          = autoLink;
 		}
 
 		void doCreateAndLinkService() {
