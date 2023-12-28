@@ -135,12 +135,18 @@ public class RangerSecurityZoneHelper {
                     if (zoneServiceHelper.getResourceCount() == 0) {
                         removeService(serviceName);
                     }
+                } else {
+                    throw new Exception(serviceName + ": service not in zone");
                 }
             }
         }
 
         if (changeData.getTagServicesToAdd() != null) {
-            changeData.getTagServicesToAdd().forEach(tagService -> addIfAbsent(tagService, zone.getTagServices()));
+			for (String tagServiceToAdd : changeData.getTagServicesToAdd()) {
+				if (!addIfAbsent(tagServiceToAdd, zone.getTagServices())) {
+					throw new Exception(tagServiceToAdd + ": tag service already exists in zone");
+				}
+			}
         }
 
         if (changeData.getTagServicesToRemove() != null) {
@@ -170,14 +176,20 @@ public class RangerSecurityZoneHelper {
         return zone;
     }
 
-    private void addPrincipals(List<RangerPrincipal> principals, List<String> users, List<String> groups, List<String> roles) {
+    private void addPrincipals(List<RangerPrincipal> principals, List<String> users, List<String> groups, List<String> roles) throws Exception {
         for (RangerPrincipal principal : principals) {
+            boolean isAdded = false;
+
             if (principal.getType() == RangerPrincipal.PrincipalType.USER) {
-                addIfAbsent(principal.getName(), users);
+                isAdded = addIfAbsent(principal.getName(), users);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.GROUP) {
-                addIfAbsent(principal.getName(), groups);
+				isAdded = addIfAbsent(principal.getName(), groups);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
-                addIfAbsent(principal.getName(), roles);
+				isAdded = addIfAbsent(principal.getName(), roles);
+            }
+
+            if(!isAdded) {
+                throw new Exception(principal + ": principal already an admin or auditor in zone");
             }
         }
     }
@@ -200,10 +212,16 @@ public class RangerSecurityZoneHelper {
         }
     }
 
-    private void addIfAbsent(String item, List<String> lst) {
+    private boolean addIfAbsent(String item, List<String> lst) {
+        final boolean ret;
+
         if (!lst.contains(item)) {
-            lst.add(item);
+            ret = lst.add(item);
+        } else {
+            ret = false;
         }
+
+        return ret;
     }
 
     public static class RangerSecurityZoneServiceHelper {
