@@ -115,6 +115,8 @@ public class SearchFilter {
 	public static final String SHARED_RESOURCE_NAME_PARTIAL = "sharedResourceNamePartial";   // search, sort
 	public static final String RESOURCE_CONTAINS        = "resourceContains";     // search
 	public static final String SHARED_RESOURCE_ID       = "sharedResourceId";     // search, sort
+	public static final String APPROVER                 = "approver";             // search, sort
+	public static final String SHARE_STATUS             = "shareStatus";          // search, sort
 	public static final String PROFILE_NAME             = "profileName";          // search
 	public static final String OWNER_NAME               = "ownerName";            // search
 	public static final String OWNER_TYPE               = "ownerType";            // search: valid-values(user, group, role)

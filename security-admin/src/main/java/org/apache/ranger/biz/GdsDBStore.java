@@ -26,6 +26,7 @@ import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -48,6 +49,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
@@ -277,9 +280,7 @@ public class GdsDBStore extends AbstractGdsStore {
         LOG.debug("==> searchDatasets({})", filter);
 
 		if (filter.getParam(SearchFilter.CREATED_BY) != null) {
-			String userName = filter.getParam(SearchFilter.CREATED_BY);
-			Long userId = daoMgr.getXXPortalUser().findByLoginId(userName).getId();
-			filter.setParam(SearchFilter.CREATED_BY, Long.toString(userId));
+			setUserId(filter, SearchFilter.CREATED_BY);
 		}
 
         PList<RangerDataset> ret           = getUnscrubbedDatasets(filter);
@@ -1230,9 +1231,77 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
+    public PList<DataShareInDatasetSummary> getDshInDsSummary(SearchFilter filter) {
+		LOG.debug("==> getDshInDsSummary({})", filter);
+
+		int maxRows    = filter.getMaxRows();
+		int startIndex = filter.getStartIndex();
+
+        filter.setParam(SearchFilter.GDS_PERMISSION, GdsPermission.ADMIN.name());
+
+		if (filter.getParam(SearchFilter.CREATED_BY) != null) {
+			setUserId(filter, SearchFilter.CREATED_BY);
+		}
+
+		if(filter.getParam(SearchFilter.APPROVER)!= null) {
+			setUserId(filter, SearchFilter.APPROVER);
+		}
+
+		if (filter.getParam(SearchFilter.SHARE_STATUS) != null) {
+			String shareStatus = filter.getParam(SearchFilter.SHARE_STATUS);
+			int    status      = GdsShareStatus.valueOf(shareStatus).ordinal();
+
+			filter.setParam(SearchFilter.SHARE_STATUS, Integer.toString(status));
+		}
+
+		List<RangerDataset>             datasets       = getUnscrubbedDatasets(filter).getList();
+		List<RangerDataShare>           dataShares     = getUnscrubbedDataShares(filter).getList();
+		RangerDataShareInDatasetList    dshInDsList    = dataShareInDatasetService.searchDataShareInDatasets(filter);
+		List<DataShareInDatasetSummary> dshInDsSummary = getDshInDsSummary(dataShares, datasets, dshInDsList);
+
+		PList<DataShareInDatasetSummary> ret = getPList(dshInDsSummary, startIndex, maxRows, filter.getSortBy(),	filter.getSortType());
+
+		LOG.debug("<== getDshInDsSummary({}): ret={}", filter, ret);
+
+		return ret;
+	}
+
+	private List<DataShareInDatasetSummary> getDshInDsSummary(List<RangerDataShare> dataShares, List<RangerDataset> datasets, RangerDataShareInDatasetList dshInDsList) {
+		Set<DataShareInDatasetSummary> ret          = new LinkedHashSet<>();
+		Map<Long, RangerDataset>       datasetMap   = toMap(datasets);
+		Map<Long, RangerDataShare>     dataShareMap = toMap(dataShares);
+
+		for (RangerDataShareInDataset dshInDs : dshInDsList.getList()) {
+			RangerDataset   dataset   = datasetMap.get(dshInDs.getDatasetId());
+			RangerDataShare dataShare = dataShareMap.get(dshInDs.getDataShareId());
+
+			if (dataset != null || dataShare != null) {
+                if (dataset == null) {
+                    dataset = datasetService.read(dshInDs.getDatasetId());
+                } else if (dataShare == null) {
+                    dataShare = dataShareService.read(dshInDs.getDataShareId());
+                }
+
+				ret.add(toDshInDsSummary(dataset, dataShare, dshInDs));
+			}
+		}
+
+		return Collections.unmodifiableList(new ArrayList<>(ret));
+	}
+
+	private <T extends RangerGdsBaseModelObject> Map<Long, T> toMap(List<T> gdsObjects) {
+		return gdsObjects.stream().collect(Collectors.toMap(RangerGdsBaseModelObject::getId, Function.identity()));
+	}
+
     private void updateGdsVersion() {
         transactionSynchronizationAdapter.executeOnTransactionCommit(new GlobalVersionUpdater(daoMgr, RANGER_GLOBAL_STATE_NAME_GDS));
     }
+
+	private void setUserId(SearchFilter filter, String filterParam) {
+		String userName = filter.getParam(filterParam);
+		Long userId = daoMgr.getXXPortalUser().findByLoginId(userName).getId();
+		filter.setParam(filterParam, Long.toString(userId));
+	}
 
     private static class GlobalVersionUpdater implements Runnable {
         final RangerDaoManager daoManager;
@@ -1807,6 +1876,36 @@ public class GdsDBStore extends AbstractGdsStore {
 
         return summary;
     }
+
+	private DataShareInDatasetSummary toDshInDsSummary(RangerDataset dataset, RangerDataShare dataShare,
+			RangerDataShareInDataset dshInDs) {
+		Map<String, Long> zoneIds = new HashMap<>();
+		DataShareInDatasetSummary summary = new DataShareInDatasetSummary();
+
+		summary.setId(dshInDs.getId());
+		summary.setGuid(dshInDs.getGuid());
+		summary.setCreatedBy(dshInDs.getCreatedBy());
+		summary.setCreateTime(dshInDs.getCreateTime());
+		summary.setUpdatedBy(dshInDs.getUpdatedBy());
+		summary.setUpdateTime(dshInDs.getUpdateTime());
+
+		summary.setApprover(dshInDs.getApprover());
+		summary.setShareStatus(dshInDs.getStatus());
+		summary.setDatasetId(dataset.getId());
+		summary.setDatasetName(dataset.getName());
+		summary.setDataShareId(dataShare.getId());
+		summary.setDataShareName(dataShare.getName());
+		if (dataShare.getZone() != null && !dataShare.getZone().isEmpty()) {
+			summary.setZoneName(dataShare.getZone());
+			summary.setZoneId(getZoneId(dataShare.getZone(),zoneIds));
+		}
+		summary.setServiceName(dataShare.getService());
+		summary.setServiceId(getServiceId(dataShare.getService()));
+		summary.setDataShareName(dataShare.getName());
+		summary.setResourceCount(sharedResourceService.getResourceCountForDataShare(dataShare.getId()));
+
+		return summary;
+	}
 
     private Long getServiceId(String serviceName) {
         XXService xService = daoMgr.getXXService().findByName(serviceName);

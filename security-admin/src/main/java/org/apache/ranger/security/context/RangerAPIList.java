@@ -251,6 +251,7 @@ public class RangerAPIList {
 	public static final String REMOVE_DATASHARE_IN_DATASET = "GdsREST.removeDataShareInDataset";
 	public static final String GET_DATASHARE_IN_DATASET    = "GdsREST.getDataShareInDataset";
 	public static final String SEARCH_DATASHARE_IN_DATASET = "GdsREST.searchDataShareInDataset";
+	public static final String SEARCH_DATASHARE_IN_DATASET_SUMMARY = "GdsREST.getDshInDsSummary";
 
 	public static final String ADD_DATASET_IN_PROJECT    = "GdsREST.addDatasetInProject";
 	public static final String UPDATE_DATASET_IN_PROJECT = "GdsREST.updateDatasetInProject";

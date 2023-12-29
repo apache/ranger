@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
+import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -1337,6 +1338,35 @@ public class GdsREST {
         return ret;
     }
 
+	@GET
+	@Path("/datashare/dataset/summary")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_DATASHARE_IN_DATASET_SUMMARY + "\")")
+	public PList<DataShareInDatasetSummary> getDshInDsSummary(@Context HttpServletRequest request) {
+		LOG.debug("==> GdsREST.searchDshInDsSummary()");
+
+		PList<DataShareInDatasetSummary> ret;
+		SearchFilter                     filter = null;
+		RangerPerfTracer                 perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDshInDsSummary()");
+
+		try {
+			filter = searchUtil.getSearchFilter(request, dshidService.sortFields);
+
+			ret = gdsStore.getDshInDsSummary(filter);
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("getDshInDsSummary({}) failed", filter, excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+		LOG.debug("<== GdsREST.getDshInDsSummary({}): {}", filter, ret);
+
+		return ret;
+	}
 
     @POST
     @Path("/dataset/project")
