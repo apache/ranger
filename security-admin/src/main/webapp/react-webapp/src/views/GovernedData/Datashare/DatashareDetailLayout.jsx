@@ -49,20 +49,25 @@ import dateFormat from "dateformat";
 import { toast } from "react-toastify";
 import { BlockUi } from "../../../components/CommonComponents";
 import PrinciplePermissionComp from "../Dataset/PrinciplePermissionComp";
-import { Form } from "react-final-form";
+import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
 import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
+import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
 import {
   isSystemAdmin,
   parseSearchFilter,
-  serverError
+  serverError,
+  policyConditionUpdatedJSON,
+  capitalizeFirstLetter
 } from "../../../utils/XAUtils";
 import XATableLayout from "../../../components/XATableLayout";
 import moment from "moment-timezone";
 import { getServiceDef } from "../../../utils/appState";
 import DatashareInDatasetListComp from "../Dataset/DatashareInDatasetListComp";
+import { isEmpty, isObject, isEqual } from "lodash";
+import Select from "react-select";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
@@ -72,6 +77,7 @@ const DatashareDetailLayout = () => {
   const [activeKey, setActiveKey] = useState("overview");
   const [datashareInfo, setDatashareInfo] = useState({});
   const [datashareDescription, setDatashareDescription] = useState();
+  const [datashareConditionExpr, setDatashareConditionExpr] = useState();
   const [datashareTerms, setDatashareTerms] = useState();
   const [loader, setLoader] = useState(true);
   const [resourceContentLoader, setResourceContentLoader] = useState(false);
@@ -113,6 +119,7 @@ const DatashareDetailLayout = () => {
   const [resourceSearchFilterParams, setResourceSearchFilterParams] = useState(
     []
   );
+  const [showModal, policyConditionState] = useState(false);
   const fetchIdRef = useRef(0);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [sharedResourceListData, setSharedResourceListData] = useState([]);
@@ -144,26 +151,54 @@ const DatashareDetailLayout = () => {
     ACTIVE: 0,
     DENIED: 0
   });
+  const [accessTypeOptions, setAccessTypeOptions] = useState([]);
+  const [accessType, setAccessType] = useState([]);
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
   }, []);
 
-  const fetchShareStatusMetrics = async () => {
+  const fetchShareStatusMetrics = async (requestSearchFilterOptions) => {
     try {
       setLoader(true);
-      let params = {};
+      let requestList = [];
+      let params =
+        requestSearchFilterParams != undefined
+          ? { ...requestSearchFilterOptions }
+          : {};
+      params["pageSize"] = 999999999;
       params["dataShareId"] = datashareId;
-      const resp = await fetchApi({
-        url: `gds/datashare/summary`,
-        params: params
-      });
-      let datasetReqList = resp.data.list[0].datasets;
+      try {
+        let resp = await fetchApi({
+          url: "gds/dataset/summary",
+          params: params
+        });
+        if (resp.data.list.length > 0) {
+          requestList = resp.data.list;
+          requestList?.forEach((dataset) => {
+            for (let i = 0; i < dataset.dataShares.length; i++) {
+              if (dataset.dataShares[i].dataShareId == datashareId) {
+                dataset.shareStatus = dataset.dataShares[i].shareStatus;
+                dataset.requestId = dataset.dataShares[i].id;
+                dataset.dataShareName = dataset.dataShares[i].dataShareName;
+                dataset.approver = dataset.dataShares[i].approver;
+                break;
+              }
+            }
+          });
+        }
+      } catch (error) {
+        serverError(error);
+        console.error(
+          `Error occurred while fetching Dataset request list! ${error}`
+        );
+      }
+
       let activeCount = 0;
       let requestedCount = 0;
       let grantedCount = 0;
       let deniedCount = 0;
-      datasetReqList.forEach((request) => {
+      requestList.forEach((request) => {
         switch (request.shareStatus) {
           case "REQUESTED":
             requestedCount += 1;
@@ -180,7 +215,7 @@ const DatashareDetailLayout = () => {
         }
       });
       setShareStatusMetrics({
-        totalCount: datasetReqList.length,
+        totalCount: requestList.length,
         REQUESTED: requestedCount,
         GRANTED: grantedCount,
         ACTIVE: activeCount,
@@ -192,6 +227,11 @@ const DatashareDetailLayout = () => {
       );
     }
     setLoader(false);
+  };
+
+  const onAccessTypeChange = (event, input) => {
+    setAccessType(event);
+    input.onChange(event);
   };
 
   const handleTabSelect = (key) => {
@@ -206,6 +246,18 @@ const DatashareDetailLayout = () => {
     }
   };
 
+  const DSpolicyConditions = [
+    {
+      itemId: 1,
+      name: "expression",
+      evaluator:
+        "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      evaluatorOptions: { engineName: "JavaScript", "ui.isMultiline": "true" },
+      label: "Enter boolean expression",
+      description: "Boolean expression"
+    }
+  ];
+
   const fetchDatashareInfo = async (datashareId) => {
     let datashareResp = {};
     let serviceResp = [];
@@ -219,15 +271,32 @@ const DatashareDetailLayout = () => {
       });
       const serviceDefs = getServiceDef();
       let serviceDef = serviceDefs?.allServiceDefs?.find((servicedef) => {
-        return servicedef.name == serviceResp.type;
+        return servicedef.name == serviceResp.data.type;
       });
       setServiceDef(serviceDef);
+      setAccessTypeOptions(
+        serviceDef.accessTypes.map(({ label, name: value }) => ({
+          label,
+          value
+        }))
+      );
     } catch (error) {
       setLoader(false);
       console.error(
         `Error occurred while fetching datashare details ! ${error}`
       );
     }
+    if (datashareResp.data.conditionExpr !== undefined) {
+      datashareResp.data.conditions = {
+        expression: datashareResp.data.conditionExpr
+      };
+    }
+    setAccessType(
+      datashareResp.data.defaultAccessTypes?.map((item) => ({
+        label: capitalizeFirstLetter(item),
+        value: item
+      }))
+    );
     setDatashareName(datashareResp.data.name);
     setService(serviceResp.data);
     setDatashareInfo(datashareResp.data);
@@ -431,6 +500,12 @@ const DatashareDetailLayout = () => {
     datashareInfo.name = datashareName;
     datashareInfo.description = datashareDescription;
     datashareInfo.termsOfUse = datashareTerms;
+    datashareInfo.conditionExpr = datashareConditionExpr;
+    datashareInfo.defaultAccessTypes = [];
+
+    accessType?.forEach((access) =>
+      datashareInfo.defaultAccessTypes.push(access.value)
+    );
 
     datashareInfo.acl = { users: {}, groups: {}, roles: {} };
 
@@ -454,12 +529,12 @@ const DatashareDetailLayout = () => {
         data: datashareInfo
       });
       toast.success("Datashare updated successfully!!");
-      isDatashareNameEditable(false);
-      showSaveCancelButton(false);
     } catch (error) {
       serverError(error);
       console.error(`Error occurred while updating datashare  ${error}`);
     }
+    isDatashareNameEditable(false);
+    showSaveCancelButton(false);
     setBlockUI(false);
     setShowConfirmModal(false);
   };
@@ -611,7 +686,7 @@ const DatashareDetailLayout = () => {
       requestSearchFilterOptions
     );
     setRequestSearchFilterParams(searchFilterParam);
-    //fetchDatashareRequestList(searchFilterParam, 0, false);
+    fetchShareStatusMetrics(searchFilterParam);
   };
 
   const fetchSharedResourcetList = useCallback(
@@ -723,7 +798,7 @@ const DatashareDetailLayout = () => {
                     title={accessObj}
                     key={accessObj}
                   >
-                    {accessObj}
+                    {capitalizeFirstLetter(accessObj)}
                   </span>
                 ))}
               </div>
@@ -738,7 +813,6 @@ const DatashareDetailLayout = () => {
         Cell: ({ row: { original } }) => {
           return (
             <div>
-              {console.log(serviceDef, "table")}
               {(isSystemAdmin() || userAclPerm == "ADMIN") && (
                 <div className="d-flex gap-half align-items-start">
                   {(isSystemAdmin() || userAclPerm == "ADMIN") && (
@@ -798,6 +872,26 @@ const DatashareDetailLayout = () => {
     setRequestActiveKey(key);
   };
 
+  const FormChange = (props) => {
+    const { isDirtyField, formValues } = props;
+    if (isDirtyField) {
+      setDatashareConditionExpr(props.formValues.conditions?.expression);
+      showSaveCancelButton(true);
+    }
+    return null;
+  };
+
+  const isDirtyFieldCheck = (values, initialValues) => {
+    let modifiedVal = false;
+    if (
+      !isEqual(values?.conditions, initialValues?.conditions) ||
+      !isEqual(values?.defaultAccessTypes, initialValues?.defaultAccessTypes)
+    ) {
+      modifiedVal = true;
+    }
+    return modifiedVal;
+  };
+
   return (
     <>
       <Form
@@ -805,7 +899,8 @@ const DatashareDetailLayout = () => {
         mutators={{
           ...arrayMutators
         }}
-        render={({}) => (
+        initialValues={datashareInfo}
+        render={({ values, dirty, initialValues }) => (
           <React.Fragment>
             <div
               className={
@@ -878,37 +973,36 @@ const DatashareDetailLayout = () => {
                   <span className="pipe" />
                 </>
               )}
-              {!datashareNameEditable ||
-                ((isSystemAdmin() ||
-                  userAclPerm == "ADMIN" ||
-                  userAclPerm == "POLICY_ADMIN") && (
-                  <div>
-                    {saveCancelButtons ? (
-                      <div className="gds-header-btn-grp">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => removeChanges()}
-                          data-id="cancel"
-                          data-cy="cancel"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={updateDatashareDetails}
-                          size="sm"
-                          data-id="save"
-                          data-cy="save"
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    ) : (
-                      <p></p>
-                    )}
-                  </div>
-                ))}
+              {(isSystemAdmin() ||
+                userAclPerm == "ADMIN" ||
+                userAclPerm == "POLICY_ADMIN") && (
+                <div>
+                  {saveCancelButtons ? (
+                    <div className="gds-header-btn-grp">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => removeChanges()}
+                        data-id="cancel"
+                        data-cy="cancel"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={updateDatashareDetails}
+                        size="sm"
+                        data-id="save"
+                        data-cy="save"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  ) : (
+                    <p></p>
+                  )}
+                </div>
+              )}
 
               {!datashareNameEditable && !saveCancelButtons && (
                 <div>
@@ -976,6 +1070,14 @@ const DatashareDetailLayout = () => {
                     <Tab eventKey="overview" title="OVERVIEW">
                       {activeKey == "overview" ? (
                         <div>
+                          <FormChange
+                            isDirtyField={
+                              dirty == true || !isEqual(initialValues, values)
+                                ? isDirtyFieldCheck(values, initialValues)
+                                : false
+                            }
+                            formValues={values}
+                          />
                           <div className="gds-tab-content gds-content-border px-3">
                             <div className="gds-inline-field-grp">
                               <div className="wrapper">
@@ -1045,6 +1147,133 @@ const DatashareDetailLayout = () => {
                               </div>
                             </div>
                           </div>
+
+                          <div className="gds-action-card mb-5 gds-tab-content gds-content-border px-3">
+                            <div
+                              className={
+                                values.conditions == undefined
+                                  ? "gds-section-title border-0 p-0"
+                                  : "gds-section-title"
+                              }
+                            >
+                              <p className="gds-card-heading">
+                                Default Condition
+                              </p>
+                              {isSystemAdmin() || userAclPerm == "ADMIN" ? (
+                                <Button
+                                  className="btn btn-sm"
+                                  onClick={() => {
+                                    policyConditionState(true);
+                                  }}
+                                  data-js="customPolicyConditions"
+                                  data-cy="customPolicyConditions"
+                                  variant="secondary"
+                                >
+                                  {values.conditions !== undefined
+                                    ? "Modify Condition"
+                                    : "Set Condition"}
+                                </Button>
+                              ) : (
+                                <></>
+                              )}
+                            </div>
+                            {values.conditions !== undefined &&
+                              Object.keys(values.conditions).map((keyName) => {
+                                if (
+                                  values.conditions[keyName] != "" &&
+                                  values.conditions[keyName] != null
+                                ) {
+                                  let conditionObj = find(
+                                    DSpolicyConditions,
+                                    function (m) {
+                                      if (m.name == keyName) {
+                                        return m;
+                                      }
+                                    }
+                                  );
+                                  return (
+                                    <div className="pt-3">
+                                      {isObject(values.conditions[keyName]) ? (
+                                        <div>
+                                          <span className="fnt-14">
+                                            {values.conditions[keyName].length >
+                                            1
+                                              ? values.conditions[keyName].map(
+                                                  (m) => {
+                                                    return ` ${m.label} `;
+                                                  }
+                                                )
+                                              : values.conditions[keyName]
+                                                  .label}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div>
+                                          <span className="fnt-14">
+                                            {values.conditions[keyName]}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                              })}
+                          </div>
+
+                          {showModal && (
+                            <Field
+                              className="form-control"
+                              name="conditions"
+                              render={({ input }) => (
+                                <PolicyConditionsComp
+                                  policyConditionDetails={policyConditionUpdatedJSON(
+                                    DSpolicyConditions
+                                  )}
+                                  inputVal={input}
+                                  showModal={showModal}
+                                  handleCloseModal={policyConditionState}
+                                />
+                              )}
+                            />
+                          )}
+
+                          <div className="gds-action-card mb-5 gds-tab-content gds-content-border px-3">
+                            <div className="gds-section-title">
+                              <p className="gds-card-heading">
+                                Default access types:
+                              </p>
+                            </div>
+                            <div className="gds-flex mg-b-10 mg-t-20">
+                              <div className="w-100">
+                                <Field
+                                  name={`defaultAccessTypes`}
+                                  render={({ input, meta }) => (
+                                    <div>
+                                      <Select
+                                        {...input}
+                                        className="w-100"
+                                        options={accessTypeOptions}
+                                        onChange={(e) =>
+                                          onAccessTypeChange(e, input)
+                                        }
+                                        menuPortalTarget={document.body}
+                                        value={accessType}
+                                        isDisabled={
+                                          !isSystemAdmin() &&
+                                          userAclPerm != "ADMIN"
+                                        }
+                                        menuPlacement="auto"
+                                        placeholder="All Permissions"
+                                        isClearable
+                                        isMulti
+                                      />
+                                    </div>
+                                  )}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
                           {(isSystemAdmin() || userAclPerm != "VIEW") && (
                             <PrinciplePermissionComp
                               userList={userList}

@@ -181,21 +181,46 @@ const DatasetDetailLayout = () => {
     DENIED: 0
   });
 
-  const fetchShareStatusMetrics = async () => {
+  const fetchShareStatusMetrics = async (requestSearchFilterParams) => {
     try {
       setLoader(true);
-      let params = {};
+      let requestList = [];
+      let params =
+        requestSearchFilterParams != undefined
+          ? { ...requestSearchFilterParams }
+          : {};
+      params["pageSize"] = 999999999;
       params["datasetId"] = datasetId;
-      const resp = await fetchApi({
-        url: `gds/dataset/summary`,
-        params: params
-      });
-      let datashareReqList = resp.data.list[0].dataShares;
+      try {
+        let resp = await fetchApi({
+          url: "gds/datashare/summary",
+          params: params
+        });
+        if (resp.data.list.length > 0) {
+          requestList = resp.data.list;
+          requestList?.forEach((datashare) => {
+            for (let i = 0; i < datashare.datasets.length; i++) {
+              if (datashare.datasets[i].datasetId == datasetId) {
+                datashare.shareStatus = datashare.datasets[i].shareStatus;
+                datashare.requestId = datashare.datasets[i].id;
+                datashare.datasetName = datashare.datasets[i].datasetName;
+                break;
+              }
+            }
+          });
+        }
+      } catch (error) {
+        serverError(error);
+        console.error(
+          `Error occurred while fetching Datashare request metrics! ${error}`
+        );
+      }
+
       let activeCount = 0;
       let requestedCount = 0;
       let grantedCount = 0;
       let deniedCount = 0;
-      datashareReqList.forEach((request) => {
+      requestList.forEach((request) => {
         switch (request.shareStatus) {
           case "REQUESTED":
             requestedCount += 1;
@@ -212,7 +237,7 @@ const DatasetDetailLayout = () => {
         }
       });
       setShareStatusMetrics({
-        totalCount: datashareReqList.length,
+        totalCount: requestList.length,
         REQUESTED: requestedCount,
         GRANTED: grantedCount,
         ACTIVE: activeCount,
@@ -281,9 +306,9 @@ const DatasetDetailLayout = () => {
       type: "text"
     },
     {
-      category: "ZoneNamePartial",
+      category: "zoneNamePartial",
       label: "Zone",
-      urlLabel: "ZoneNamePartial",
+      urlLabel: "zoneNamePartial",
       type: "text"
     }
   ];
@@ -294,6 +319,7 @@ const DatasetDetailLayout = () => {
       requestSearchFilterOptions
     );
     setRequestSearchFilterParams(searchFilterParam);
+    fetchShareStatusMetrics(searchFilterParam);
   };
 
   useEffect(() => {
@@ -414,7 +440,7 @@ const DatasetDetailLayout = () => {
       const userMap = new Map();
       const groupMap = new Map();
       const roleMap = new Map();
-      grantItems.forEach((item) => {
+      grantItems?.forEach((item) => {
         if (item.users !== undefined) {
           item.users.forEach((user) => {
             let accessList = [];
@@ -748,7 +774,7 @@ const DatasetDetailLayout = () => {
   };
 
   const handleTabSelect = (key) => {
-    if (saveCancelButtons == true) {
+    if (saveCancelButtons == true && userAclPerm != "AUDIT") {
       setShowConfirmModal(true);
     } else {
       setActiveKey(key);
@@ -816,13 +842,15 @@ const DatasetDetailLayout = () => {
   };
 
   const handleAccessGrantChange = (accessGrantData, policyData) => {
-    if (accessGrantData != undefined) {
-      setAccessGrantFormValues(accessGrantData);
+    if (userAclPerm != "AUDIT") {
+      if (accessGrantData != undefined) {
+        setAccessGrantFormValues(accessGrantData);
+      }
+      if (policyData != undefined) {
+        setPolicyData(policyData);
+      }
+      showSaveCancelButton(true);
     }
-    if (policyData != undefined) {
-      setPolicyData(policyData);
-    }
-    showSaveCancelButton(true);
   };
 
   const updateDatasetAccessGrant = async () => {
@@ -1897,6 +1925,11 @@ const DatasetDetailLayout = () => {
                           dataset={datasetInfo}
                           onDataChange={handleAccessGrantChange}
                           serviceCompDetails={serviceDef}
+                          isAdmin={
+                            isSystemAdmin() ||
+                            userAclPerm == "ADMIN" ||
+                            userAclPerm == "POLICY_ADMIN"
+                          }
                         />
                       ) : (
                         <div></div>

@@ -28,7 +28,8 @@ import {
   drop,
   dragOver,
   getAllTimeZoneList,
-  policyConditionUpdatedJSON
+  policyConditionUpdatedJSON,
+  isSystemAdmin
 } from "../../../utils/XAUtils";
 import { fetchApi } from "Utils/fetchAPI";
 import { maxBy, find, isEmpty, isArray, isEqual, isObject } from "lodash";
@@ -66,7 +67,12 @@ function reducer(state, action) {
   }
 }
 
-function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
+function AccessGrantForm({
+  dataset,
+  onDataChange,
+  serviceCompDetails,
+  isAdmin
+}) {
   const [policyState, dispatch] = useReducer(reducer, initialState);
   const { loader, policyData, formData } = policyState;
   const [showModal, policyConditionState] = useState(false);
@@ -349,6 +355,15 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
           modifiedVal = true;
           break;
         }
+        if (
+          dirtyFieldVal == "policyItems" &&
+          values.policyItems.length == 1 &&
+          values.policyItems[0] == undefined
+        ) {
+        } else if (!isEqual(values.policyItems, initialValues.policyItems)) {
+          modifiedVal = true;
+          break;
+        }
       }
     }
     if (
@@ -475,29 +490,33 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                         >
                           Grants
                         </p>
-                        <div className="d-flex gap-half">
-                          {(values.conditions == undefined ||
-                            isEmpty(values.conditions)) && (
-                            <Button
-                              className="btn btn-sm"
-                              onClick={() => {
-                                policyConditionState(true);
-                              }}
-                              data-js="customPolicyConditions"
-                              data-cy="customPolicyConditions"
-                              variant="secondary"
-                            >
-                              Add Conditions
-                            </Button>
-                          )}
-                          {(validityPeriod == undefined ||
-                            validityPeriod.length == 0) && (
-                            <PolicyValidityPeriodComp
-                              addPolicyItem={addPolicyItem}
-                              isGDS={true}
-                            />
-                          )}
-                        </div>
+                        {isAdmin ? (
+                          <div className="d-flex gap-half">
+                            {(values.conditions == undefined ||
+                              isEmpty(values.conditions)) && (
+                              <Button
+                                className="btn btn-sm"
+                                onClick={() => {
+                                  policyConditionState(true);
+                                }}
+                                data-js="customPolicyConditions"
+                                data-cy="customPolicyConditions"
+                                variant="secondary"
+                              >
+                                Add Conditions
+                              </Button>
+                            )}
+                            {(validityPeriod == undefined ||
+                              validityPeriod.length == 0) && (
+                              <PolicyValidityPeriodComp
+                                addPolicyItem={addPolicyItem}
+                                isGDS={true}
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          <></>
+                        )}
                       </div>
                       <div className="drag-drop-wrap pt-3">
                         <FieldArray name="policyItems">
@@ -532,6 +551,7 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                                                 {...input}
                                                 placeholder="Select users, groups, roles"
                                                 isMulti
+                                                isDisabled={!isAdmin}
                                                 loadOptions={fetchPrincipleData}
                                                 data-name="usersSeusersPrinciplelect"
                                                 data-cy="usersPrinciple"
@@ -553,6 +573,7 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                                                 placeholder="Permissions"
                                                 isClearable
                                                 isMulti
+                                                isDisabled={!isAdmin}
                                               />
                                             </div>
                                           )}
@@ -595,21 +616,25 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                                         )}
                                       </div>
                                     </div>
-                                    <div>
-                                      <Button
-                                        variant="danger"
-                                        size="sm"
-                                        title="Remove"
-                                        onClick={() => {
-                                          fields.remove(index);
-                                          onRemovingPolicyItem();
-                                        }}
-                                        data-action="delete"
-                                        data-cy="delete"
-                                      >
-                                        <i className="fa-fw fa fa-remove"></i>
-                                      </Button>
-                                    </div>
+                                    {isAdmin ? (
+                                      <div>
+                                        <Button
+                                          variant="danger"
+                                          size="sm"
+                                          title="Remove"
+                                          onClick={() => {
+                                            fields.remove(index);
+                                            onRemovingPolicyItem();
+                                          }}
+                                          data-action="delete"
+                                          data-cy="delete"
+                                        >
+                                          <i className="fa-fw fa fa-remove"></i>
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <></>
+                                    )}
                                   </div>
                                 </tr>
                               </table>
@@ -617,17 +642,23 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                           }
                         </FieldArray>
                       </div>
-                      <Button
-                        className="btn btn-sm mt-2 mg-l-32 mb-5"
-                        type="button"
-                        onClick={() => addPolicyItem("policyItems", undefined)}
-                        data-action="addGroup"
-                        data-cy="addGroup"
-                        title="Add"
-                        ref={addPolicyItemClickRef}
-                      >
-                        Add More
-                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          className="btn btn-sm mt-2 mg-l-32 mb-5"
+                          type="button"
+                          onClick={() =>
+                            addPolicyItem("policyItems", undefined)
+                          }
+                          data-action="addGroup"
+                          data-cy="addGroup"
+                          title="Add"
+                          ref={addPolicyItemClickRef}
+                        >
+                          Add More
+                        </Button>
+                      ) : (
+                        <></>
+                      )}
 
                       {values?.conditions && !isEmpty(values.conditions) && (
                         <div className="gds-action-card mb-5 pl-0 pr-0">
@@ -685,7 +716,7 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                           })}
                         </div>
                       )}
-                      {showModal && (
+                      {isAdmin && showModal && (
                         <Field
                           className="form-control"
                           name="conditions"
@@ -709,11 +740,15 @@ function AccessGrantForm({ dataset, onDataChange, serviceCompDetails }) {
                               <p className="gds-card-heading">
                                 Validity Period
                               </p>
-                              <PolicyValidityPeriodComp
-                                addPolicyItem={addPolicyItem}
-                                editValidityPeriod={true}
-                                isGDS={true}
-                              />
+                              {isAdmin ? (
+                                <PolicyValidityPeriodComp
+                                  addPolicyItem={addPolicyItem}
+                                  editValidityPeriod={true}
+                                  isGDS={true}
+                                />
+                              ) : (
+                                <></>
+                              )}
                             </div>
                             {validityPeriod.map((obj, index) => {
                               return (

@@ -21,7 +21,7 @@ import React, { useState, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Form as FormB, Card } from "react-bootstrap";
 import Select from "react-select";
-import { groupBy } from "lodash";
+import { groupBy, filter } from "lodash";
 import AsyncSelect from "react-select/async";
 import { Form, Field } from "react-final-form";
 import { fetchApi } from "Utils/fetchAPI";
@@ -281,7 +281,7 @@ const AddDatashareView = () => {
         params: params
       });
     }
-    op = serviceResp.data;
+    op = filter(serviceResp.data, ["isTagService", false]);
     return op.map((obj) => ({
       label: obj.name,
       id: obj.id,
@@ -325,7 +325,8 @@ const AddDatashareView = () => {
           skipNavigate: true
         });
       }
-      return serviceResp.data.map(({ name, id, type }) => ({
+      let data = filter(serviceResp.data, ["isTagService", false]);
+      return data.map(({ name, id, type }) => ({
         label: name,
         id: id,
         def: type
@@ -632,12 +633,18 @@ const AddDatashareView = () => {
                             onFocus={() => {
                               onFocusServiceSelect();
                             }}
+                            components={{
+                              DropdownIndicator: () => null,
+                              IndicatorSeparator: () => null
+                            }}
                             value={selectedService}
                             loadOptions={filterServiceByName}
                             onChange={(e) => onServiceChange(e, input)}
                             isClearable={true}
                             placeholder="Select Service"
                             width="500px"
+                            data-name="serviceSelect"
+                            data-cy="serviceSelect"
                           />
                         </div>
                       )}

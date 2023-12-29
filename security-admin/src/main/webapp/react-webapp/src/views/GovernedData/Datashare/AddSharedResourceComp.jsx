@@ -37,6 +37,7 @@ import { groupBy, isArray, maxBy, find } from "lodash";
 import { toast } from "react-toastify";
 import moment from "moment-timezone";
 import { getServiceDef } from "../../../utils/appState";
+import { capitalizeFirstLetter } from "../../../utils/XAUtils";
 
 const AddSharedResourceComp = ({
   datashareId,
@@ -118,7 +119,7 @@ const AddSharedResourceComp = ({
     }
     if (obj?.accessTypes != undefined) {
       data.permission = obj.accessTypes.map((item) => ({
-        label: item,
+        label: capitalizeFirstLetter(item),
         value: item
       }));
     }
