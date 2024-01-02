@@ -93,28 +93,7 @@ public class RangerCache<K, V> {
     public long getValueRefreshLoadTimeoutMs() { return valueRefreshLoadTimeoutMs; }
 
     public V get(K key) {
-        final long        startTime = System.currentTimeMillis();
-        final CachedValue value     = cache.computeIfAbsent(key, f -> new CachedValue(key));
-        final long        timeoutMs = value.isInitialized() ? valueRefreshLoadTimeoutMs : valueInitLoadTimeoutMs;
-        final V           ret;
-
-        if (timeoutMs >= 0) {
-            final long timeTaken = System.currentTimeMillis() - startTime;
-
-            if (timeoutMs <= timeTaken) {
-                ret = value.getCurrentValue();
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("key={}: cache-lookup={}ms took longer than timeout={}ms. Using current value {}", key, timeTaken, timeoutMs, ret);
-                }
-            } else {
-                ret = value.getValue(timeoutMs - timeTaken);
-            }
-        } else {
-            ret = value.getValue();
-        }
-
-        return ret;
+        return get(key, null);
     }
 
     public Set<K> getKeys() {
@@ -147,6 +126,31 @@ public class RangerCache<K, V> {
         return value != null;
     }
 
+    protected V get(K key, Object context) {
+        final long        startTime = System.currentTimeMillis();
+        final CachedValue value     = cache.computeIfAbsent(key, f -> new CachedValue(key));
+        final long        timeoutMs = value.isInitialized() ? valueRefreshLoadTimeoutMs : valueInitLoadTimeoutMs;
+        final V           ret;
+
+        if (timeoutMs >= 0) {
+            final long timeTaken = System.currentTimeMillis() - startTime;
+
+            if (timeoutMs <= timeTaken) {
+                ret = value.getCurrentValue();
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("key={}: cache-lookup={}ms took longer than timeout={}ms. Using current value {}", key, timeTaken, timeoutMs, ret);
+                }
+            } else {
+                ret = value.getValue(timeoutMs - timeTaken);
+            }
+        } else {
+            ret = value.getValue(context);
+        }
+
+        return ret;
+    }
+
     public static class RefreshableValue<V> {
         private final V    value;
         private       long nextRefreshTimeMs = -1;
@@ -165,7 +169,7 @@ public class RangerCache<K, V> {
     }
 
     public static abstract class ValueLoader<K, V> {
-        public abstract RefreshableValue<V> load(K key, RefreshableValue<V> currentValue) throws Exception;
+        public abstract RefreshableValue<V> load(K key, RefreshableValue<V> currentValue, Object context) throws Exception;
     }
 
     private class CachedValue {
@@ -185,17 +189,17 @@ public class RangerCache<K, V> {
 
         public K getKey() { return key; }
 
-        public V getValue() {
-            refreshIfNeeded();
+        public V getValue(Object context) {
+            refreshIfNeeded(context);
 
             return getCurrentValue();
         }
 
-        public V getValue(long timeoutMs) {
+        public V getValue(long timeoutMs, Object context) {
             if (timeoutMs < 0) {
-                refreshIfNeeded();
+                refreshIfNeeded(context);
             } else {
-                refreshIfNeeded(timeoutMs);
+                refreshIfNeeded(timeoutMs, context);
             }
 
             return getCurrentValue();
@@ -217,7 +221,7 @@ public class RangerCache<K, V> {
             return value != null;
         }
 
-        private void refreshIfNeeded() {
+        private void refreshIfNeeded(Object context) {
             if (needsRefresh()) {
                 try (AutoClosableLock ignored = new AutoClosableLock(lock)) {
                     if (needsRefresh()) {
@@ -228,7 +232,7 @@ public class RangerCache<K, V> {
                                 LOG.debug("refreshIfNeeded(key={}): using caller thread", key);
                             }
 
-                            refreshValue();
+                            refreshValue(context);
                         } else { // wait for the refresher to complete
                             try {
                                 future.get();
@@ -243,7 +247,7 @@ public class RangerCache<K, V> {
             }
         }
 
-        private void refreshIfNeeded(long timeoutMs) {
+        private void refreshIfNeeded(long timeoutMs, Object context) {
             if (needsRefresh()) {
                 long startTime = System.currentTimeMillis();
 
@@ -253,7 +257,7 @@ public class RangerCache<K, V> {
                             Future<?> future = this.refresher;
 
                             if (future == null) {
-                                future = this.refresher = loaderThreadPool.submit(this::refreshValue);
+                                future = this.refresher = loaderThreadPool.submit(new RefreshWithContext(context));
 
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug("refresher scheduled for key {}", key);
@@ -287,7 +291,7 @@ public class RangerCache<K, V> {
             }
         }
 
-        private Boolean refreshValue() {
+        private Boolean refreshValue(Object context) {
             long                startTime = System.currentTimeMillis();
             boolean             isSuccess = false;
             RefreshableValue<V> newValue  = null;
@@ -296,7 +300,7 @@ public class RangerCache<K, V> {
                 ValueLoader<K, V> loader = RangerCache.this.loader;
 
                 if (loader != null) {
-                    newValue  = loader.load(key, value);
+                    newValue  = loader.load(key, value, context);
                     isSuccess = true;
                 }
             } catch (KeyNotFoundException excp) {
@@ -319,7 +323,7 @@ public class RangerCache<K, V> {
                      if (!isRemoved) {
                          ScheduledExecutorService scheduledExecutor = ((ScheduledExecutorService) loaderThreadPool);
 
-                         scheduledExecutor.schedule(this::refreshValue, valueValidityPeriodMs, TimeUnit.MILLISECONDS);
+                         scheduledExecutor.schedule(new RefreshWithContext(context), valueValidityPeriodMs, TimeUnit.MILLISECONDS);
                      } else {
                          if (LOG.isDebugEnabled()) {
                              LOG.debug("key {} was removed. Not scheduling next refresh ", key);
@@ -336,6 +340,19 @@ public class RangerCache<K, V> {
                 this.value = value;
 
                 this.value.setNextRefreshTimeMs(System.currentTimeMillis() + valueValidityPeriodMs);
+            }
+        }
+
+        private class RefreshWithContext implements Callable<Boolean> {
+            private final Object context;
+
+            public RefreshWithContext(Object context) {
+                this.context = context;
+            }
+
+            @Override
+            public Boolean call() {
+                return refreshValue(context);
             }
         }
     }

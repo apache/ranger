@@ -21,6 +21,8 @@ package org.apache.ranger.util;
 
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.util.RangerCache;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,6 +50,11 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
         super(name, loader, loaderThreadsCount, refreshMode, valueValidityPeriodMs, valueInitLoadTimeoutMs, valueRefreshLoadTimeoutMs);
     }
 
+    @Override
+    public V get(K key)  {
+        return super.get(key, RangerContextHolder.getSecurityContext());
+    }
+
     private static int getLoaderThreadPoolSize(String cacheName) {
         return RangerAdminConfig.getInstance().getInt(PROP_PREFIX + cacheName + PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT);
     }
@@ -70,16 +77,28 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
         }
 
         @Override
-        final public RefreshableValue<V> load(K key, RefreshableValue<V> currentValue) throws Exception {
+        final public RefreshableValue<V> load(K key, RefreshableValue<V> currentValue, Object context) throws Exception {
             Exception[] ex = new Exception[1];
 
             RefreshableValue<V> ret = txTemplate.execute(status -> {
+                RangerSecurityContext currentContext = null;
+
                 try {
+                    if (context instanceof RangerSecurityContext) {
+                        currentContext = RangerContextHolder.getSecurityContext();
+
+                        RangerContextHolder.setSecurityContext((RangerSecurityContext) context);
+                    }
+
                     return dbLoad(key, currentValue);
                 } catch (Exception excp) {
                     LOG.error("RangerDBLoaderCache.load(): failed to load for key={}", key, excp);
 
                     ex[0] = excp;
+                } finally {
+                    if (context instanceof RangerSecurityContext) {
+                        RangerContextHolder.setSecurityContext(currentContext);
+                    }
                 }
 
                 return null;

@@ -26,7 +26,6 @@ import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
-import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;

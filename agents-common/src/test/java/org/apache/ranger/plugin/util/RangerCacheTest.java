@@ -412,7 +412,7 @@ public class RangerCacheTest {
             }
 
             @Override
-            public RefreshableValue<List<String>> load(String userName, RefreshableValue<List<String>> currVal) throws Exception {
+            public RefreshableValue<List<String>> load(String userName, RefreshableValue<List<String>> currVal, Object context) throws Exception {
                 long startTimeMs = System.currentTimeMillis();
 
                 UserStats userStats = stats.get(userName);
