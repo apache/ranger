@@ -122,8 +122,16 @@
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.htrace:htrace-core4</include>
+        </includes>
       </binaries>
     </moduleSet>
   </moduleSets>
