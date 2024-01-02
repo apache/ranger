@@ -99,6 +99,16 @@ public class SearchFilter {
 	public static final String SERVICE_DISPLAY_NAME_PARTIAL	= "serviceDisplayNamePartial";	// search
 	public static final String SERVICE_TYPE_DISPLAY_NAME	= "serviceTypeDisplayName";		// search, sort
 
+	public static final String PROFILE_NAME             = "profileName";          // search
+	public static final String OWNER_NAME               = "ownerName";            // search
+	public static final String OWNER_TYPE               = "ownerType";            // search: valid-values(user, group, role)
+	public static final String CREATE_TIME_START        = "createdTimeStart";     // search
+	public static final String CREATE_TIME_END    	    = "createdTimeEnd";       // search
+	public static final String CREATED_BY    	        = "createdBy";            // search
+	public static final String UPDATE_TIME_START        = "updatedTimeStart";     // search
+	public static final String UPDATE_TIME_END          = "updatedTimeEnd";       // search
+	public static final String IS_DISTINCT              = "isDistinct";           // search, sort
+
 	private Map<String, String> params;
 	private int                 startIndex;
 	private int                 maxRows    = Integer.MAX_VALUE;

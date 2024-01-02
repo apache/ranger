@@ -96,8 +96,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
         Map<String, Map<String, AccessTypeCategory>> embeddedCategories = new HashMap<>();
 
         for (RangerServiceDef serviceDef : serviceDefs) {
-            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) ||
-                StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                 continue;
             }
 
