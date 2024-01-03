@@ -101,6 +101,8 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 			throw restErrorUtil.createRESTException("No corresponding service found for policyName: " + vObj.getName()
 					+ "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
 		}
+		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
+		xObj.setZoneId(zoneId);
 
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
 		if (xServiceDef != null) {
@@ -133,9 +135,6 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
 		xObj.setIsEnabled(vObj.getIsEnabled());
-		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
-
-		xObj.setZoneId(zoneId);
 
 		String              validitySchedules = JsonUtils.listToJson(vObj.getValiditySchedules());
 		Map<String, Object> options           = vObj.getOptions();
