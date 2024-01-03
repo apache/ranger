@@ -810,14 +810,22 @@ export const ServiceRequestDataRangerAcl = [
 export const ServiceRequestDataHadoopAcl = [ServiceType.Service_HDFS.label];
 
 export const UsersyncDetailsKeyDisplayMap = {
-    'unixBackend': 'Unix',
-    'fileName': 'File Name',
-    'syncTime': 'Sync time',
-    'lastModified': 'Last modified time',
-    'minUserId': 'Minimum user id',
-    'minGroupId': 'Minimum group id',
-    'totalUsersSynced': 'Total number of users synced',
-    'totalGroupsSynced': 'Total number of groups synced',
-    'totalUsersDeleted': 'Total number of users marked for delete',
-    'totalGroupsDeleted': 'Total number of groups marked for delete'
-}
+  unixBackend: "Unix",
+  fileName: "File Name",
+  syncTime: "Sync time",
+  lastModified: "Last modified time",
+  minUserId: "Minimum user id",
+  minGroupId: "Minimum group id",
+  totalUsersSynced: "Total number of users synced",
+  totalGroupsSynced: "Total number of groups synced",
+  totalUsersDeleted: "Total number of users marked for delete",
+  totalGroupsDeleted: "Total number of groups marked for delete",
+  ldapUrl: "Ldap url",
+  isIncrementalSync: "Incremental sync",
+  userSearchEnabled: "User search enabled",
+  userSearchFilter: "User search filter",
+  groupSearchEnabled: "Group search enabled",
+  groupSearchFilter: "Group search filter",
+  groupSearchFirstEnabled: "Group search first enabled",
+  groupHierarchyLevel: "Group hierarchy level"
+};
