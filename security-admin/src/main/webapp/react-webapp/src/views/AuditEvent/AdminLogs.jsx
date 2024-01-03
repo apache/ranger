@@ -220,6 +220,42 @@ function Admin() {
                   Role {action}d <strong>{objectname}</strong>
                 </span>
               );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_DATASET.value)
+              operation = (
+                <span>
+                  Dataset {action}d <strong>{objectname}</strong>
+                </span>
+              );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_PROJECT.value)
+              operation = (
+                <span>
+                  Project {action}d <strong>{objectname}</strong>
+                </span>
+              );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value)
+              operation = (
+                <span>
+                  Data Share {action}d <strong>{objectname}</strong>
+                </span>
+              );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value)
+              operation = (
+                <span>
+                  Shared Resource {action}d <strong>{objectname}</strong>
+                </span>
+              );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET.value)
+              operation = (
+                <span>
+                  DataShare in Dataset {action}d <strong>{objectname}</strong>
+                </span>
+              );
+            else if (classtype == ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT.value)
+              operation = (
+                <span>
+                  Dataset in Project {action}d <strong>{objectname}</strong>
+                </span>
+              );
             return <div className="text-truncate">{operation}</div>;
           }
         },
