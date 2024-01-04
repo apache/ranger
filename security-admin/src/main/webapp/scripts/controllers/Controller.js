@@ -574,6 +574,9 @@ define(function(require) {
                 cache: false,
                 async: false,
             });
+            rangerZoneList.models = rangerZoneList.sortBy(function(model) {
+                return model.get('name').toLowerCase();
+            });
             App.rContent.show(new vSecurityZone({
                 rangerService: rangerServiceList,
                 collection: rangerZoneList,

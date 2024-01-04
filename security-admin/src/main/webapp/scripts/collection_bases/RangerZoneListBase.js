@@ -41,9 +41,6 @@ define(function(require){
                         this.modelName = 'RangerZone';
                         this.modelAttrName = 'securityZones';
                         this.bindErrorEvents();
-                },
-                comparator: function(def) {
-                        return def.get('name');
                 }
         },{
                 // static class members

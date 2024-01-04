@@ -552,6 +552,9 @@ define(function(require) {
                 cache: false,
                 async: false,
             });
+            rangerZoneList.models = rangerZoneList.sortBy(function(model) {
+                return model.get('name').toLowerCase();
+            });
             if (App.rSideBar.currentView) {
                 this.rSidebarContentHideAndShow('SecurityZone');
                 if (!_.isNaN(parseInt(listId))) {
