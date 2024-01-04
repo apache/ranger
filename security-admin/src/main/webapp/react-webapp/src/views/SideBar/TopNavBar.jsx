@@ -203,6 +203,7 @@ export const TopNavBar = (props) => {
           value={!policyLoader ? getCurrentService(serviceData) : ""}
           menuPlacement="auto"
           placeholder="Select Service Name"
+          hideSelectedOptions
         />
         {!isKMSRole && (
           <React.Fragment>
@@ -219,6 +220,7 @@ export const TopNavBar = (props) => {
               menuPlacement="auto"
               placeholder="Select Zone Name"
               isClearable
+              hideSelectedOptions
             />
           </React.Fragment>
         )}
@@ -260,7 +262,7 @@ export const TopNavBar = (props) => {
             {isAdminRole && (
               <Dropdown.ItemText>
                 <Link
-                  to={`/service/${serviceDefData.id}/edit/${serviceData?.id}`}
+                  to={`/service/${serviceDefData?.id}/edit/${serviceData?.id}`}
                   onClick={(e) => policyLoader && e.preventDefault()}
                   state={allServicesData[0]?.id}
                   disabled={policyLoader ? true : false}
@@ -316,8 +318,8 @@ export const TopNavBar = (props) => {
       <Modal show={showDelete} onHide={hideDeleteModal}>
         <Modal.Header closeButton>
           <span className="text-word-break">
-            Are you sure want to delete service&nbsp;"
-            <b>{`${serviceData?.displayName}`}</b>" ?
+            Are you sure want to delete service&nbsp;&quot;
+            <b>{`${serviceData?.displayName}`}</b>&quot; ?
           </span>
         </Modal.Header>
         <Modal.Footer>

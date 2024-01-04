@@ -48,6 +48,7 @@ import {
   selectCustomStyles
 } from "../../components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
+import { getServiceDef } from "../../utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -64,7 +65,7 @@ const SecurityZoneForm = () => {
   const navigate = useNavigate();
   const params = useParams();
   const toastId = useRef(null);
-  const [serviceDefs, setServiceDefs] = useState([]);
+  const { allServiceDefs } = getServiceDef();
   const [services, setServices] = useState([]);
   const [zone, setZone] = useState({});
   const [resourceServiceDef, setResourceServiceDef] = useState({});
@@ -161,23 +162,8 @@ const SecurityZoneForm = () => {
   };
 
   const fetchInitalData = async () => {
-    await fetchServiceDefs();
     await fetchResourceServices();
     await fetchZones();
-  };
-
-  const fetchServiceDefs = async () => {
-    let servicetypeResp;
-
-    try {
-      servicetypeResp = await fetchApi({
-        url: `plugins/definitions`
-      });
-    } catch (error) {
-      console.error(`Error occurred while fetching Services! ${error}`);
-    }
-
-    setServiceDefs(servicetypeResp.data.serviceDefs);
   };
 
   const fetchResourceServices = async () => {
@@ -232,7 +218,7 @@ const SecurityZoneForm = () => {
   };
 
   const renderResourcesModal = (input, serviceType) => {
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
+    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
     let filterService = find(services, ["type", serviceType]);
 
     for (const obj of filterServiceDef.resources) {
@@ -256,7 +242,7 @@ const SecurityZoneForm = () => {
 
   const editResourcesModal = (idx, input, serviceType) => {
     let editData = input.input.value[idx];
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
+    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
     let filterService = find(services, ["type", serviceType]);
 
     for (const obj of filterServiceDef.resources) {
@@ -479,7 +465,7 @@ const SecurityZoneForm = () => {
       let serviceType = find(services, ["name", name]);
       tableValues["serviceType"] = serviceType.type;
 
-      let filterServiceDef = find(serviceDefs, ["name", serviceType.type]);
+      let filterServiceDef = find(allServiceDefs, ["name", serviceType.type]);
 
       for (const obj of filterServiceDef.resources) {
         obj.recursiveSupported = false;
@@ -656,9 +642,9 @@ const SecurityZoneForm = () => {
 
   const showResources = (value, serviceType) => {
     let data = {};
-    let filterdef = serviceDefs.find((obj) => obj.name == serviceType);
+    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
 
-    for (const obj of filterdef.resources) {
+    for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
       obj.excludesSupported = false;
       if (obj.level !== 10) {
@@ -666,13 +652,15 @@ const SecurityZoneForm = () => {
       }
     }
 
-    const grpResources = groupBy(filterdef.resources || [], "level");
+    const grpResources = groupBy(filterServiceDef.resources || [], "level");
+
     let grpResourcesKeys = [];
     for (const resourceKey in grpResources) {
       grpResourcesKeys.push(+resourceKey);
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     data.resources = {};
+
     for (const level of grpResourcesKeys) {
       if (
         value[`resourceName-${level}`] &&
@@ -703,6 +691,7 @@ const SecurityZoneForm = () => {
       </p>
     ));
   };
+
   const onFocusUserSelect = () => {
     setUserLoading(true);
     fetchUsersData().then((opts) => {
@@ -718,6 +707,7 @@ const SecurityZoneForm = () => {
       setGroupLoading(false);
     });
   };
+
   const onFocusRoleSelect = () => {
     setRoleLoading(true);
     fetchRolesData().then((opts) => {
@@ -725,6 +715,7 @@ const SecurityZoneForm = () => {
       setRoleLoading(false);
     });
   };
+
   const onFocusTagServiceSelect = () => {
     setTagServiceLoading(true);
     fetchTagServices().then((opts) => {
@@ -732,6 +723,7 @@ const SecurityZoneForm = () => {
       setTagServiceLoading(false);
     });
   };
+
   return (
     <React.Fragment>
       <div className="clearfix">
@@ -1014,6 +1006,7 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <Field
                       name="auditUserGroups"
                       render={({ input, meta }) => (
@@ -1141,6 +1134,7 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <Field
                       name="resourceServices"
                       render={({ input }) => (
@@ -1176,6 +1170,7 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <Table striped bordered>
                       <thead>
                         <tr>
@@ -1309,6 +1304,7 @@ const SecurityZoneForm = () => {
                         </FieldArray>
                       </tbody>
                     </Table>
+
                     <Row className="form-actions">
                       <Col sm={{ span: 9, offset: 3 }}>
                         <Button

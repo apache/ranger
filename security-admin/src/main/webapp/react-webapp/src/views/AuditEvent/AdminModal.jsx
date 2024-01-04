@@ -39,6 +39,7 @@ export const AdminModal = (props) => {
   const handleShow = async () => {
     let authlogs = [];
     try {
+      setLoader(true);
       const authResp = await fetchApi({
         url: "xusers/authSessions",
         params: {
@@ -47,8 +48,9 @@ export const AdminModal = (props) => {
       });
       authlogs = authResp.data.vXAuthSessions;
       setAuthSession(authlogs);
-      authlogs ? setLoader(false) : setLoader(true);
+      setLoader(false);
     } catch (error) {
+      setLoader(false);
       console.error(`Error occurred while fetching Admin logs! ${error}`);
     }
   };
