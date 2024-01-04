@@ -170,7 +170,7 @@ export const PolicyListingTabView = () => {
         }
       });
       navigate(
-        `/service/${selectedServiceData?.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
+        `/service/${selectedServiceData?.id}/policies/${params.policyType}`
       );
       localStorage.removeItem("zoneDetails");
     }
@@ -198,9 +198,7 @@ export const PolicyListingTabView = () => {
     } else {
       localStorage.removeItem("zoneDetails");
     }
-    navigate(
-      `/service/${params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
-    );
+    navigate(`/service/${params.serviceId}/policies/${params.policyType}`);
   };
 
   const getServiceZone = () => {
