@@ -130,4 +130,21 @@ public class XXGdsSharedResourceDao extends BaseDao<XXGdsSharedResource> {
 
 		return ret;
 	}
+
+	public Long getIdByDataShareIdAndResourceSignature(Long dataShareId, String resourceSignature) {
+		Long ret = null;
+
+		if (dataShareId != null && resourceSignature != null) {
+			try {
+				ret = getEntityManager()
+						.createNamedQuery("XXGdsSharedResource.getIdByDataShareIdAndResourceSignature", Long.class)
+						.setParameter("dataShareId", dataShareId).setParameter("resourceSignature", resourceSignature)
+						.getSingleResult();
+			} catch (NoResultException e) {
+				LOG.debug("getIdByDataShareIdAndName({}, {}): ", dataShareId, resourceSignature, e);
+			}
+		}
+
+		return ret;
+	}
 }

@@ -222,6 +222,7 @@ public class GdsREST {
 
     @DELETE
     @Path("/dataset/{id}")
+    @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_DATASET + "\")")
     public void deleteDataset(@PathParam("id") Long datasetId, @Context HttpServletRequest request) {
         LOG.debug("==> deleteDataset({})", datasetId);
@@ -580,6 +581,7 @@ public class GdsREST {
 
     @DELETE
     @Path("/project/{id}")
+    @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_PROJECT + "\")")
     public void deleteProject(@PathParam("id") Long projectId, @Context HttpServletRequest request) {
         LOG.debug("==> deleteProject({})", projectId);
@@ -904,6 +906,7 @@ public class GdsREST {
 
     @DELETE
     @Path("/datashare/{id}")
+    @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_DATA_SHARE + "\")")
     public void deleteDataShare(@PathParam("id") Long dataShareId, @Context HttpServletRequest request) {
         LOG.debug("==> GdsREST.deleteDataShare({})", dataShareId);
@@ -1094,6 +1097,7 @@ public class GdsREST {
 
     @DELETE
     @Path("/resource/{id}")
+    @Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.REMOVE_SHARED_RESOURCE + "\")")
     public void removeSharedResource(@PathParam("id") Long resourceId) {
         LOG.debug("==> GdsREST.removeSharedResource({})", resourceId);

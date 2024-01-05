@@ -18,6 +18,7 @@
 package org.apache.ranger.validation;
 
 
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
@@ -67,4 +68,6 @@ public abstract class RangerGdsValidationDataProvider {
     public abstract RangerDataShare getDataShare(Long id);
 
     public abstract Long getSharedResourceId(Long dataShareId, String name);
+
+    public abstract Long getSharedResourceId(Long dataShareId, RangerPolicyResourceSignature signature);
 }

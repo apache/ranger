@@ -36,7 +36,9 @@ import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.view.VXResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +89,16 @@ public class RangerGdsValidator {
         } else {
             validateDatasetAdmin(existing, result);
             validateAcl(dataset.getAcl(), "acl", result);
+
+            boolean renamed = !StringUtils.equalsIgnoreCase(dataset.getName(), existing.getName());
+
+            if (renamed) {
+                Long existingDatasetNameId = dataProvider.getDatasetId(dataset.getName());
+
+                if (existingDatasetNameId != null) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT, "name", dataset.getName(), existingDatasetNameId));
+                }
+            }
         }
 
         if (!result.isSuccess()) {
@@ -143,6 +155,16 @@ public class RangerGdsValidator {
         } else {
             validateProjectAdmin(existing, result);
             validateAcl(project.getAcl(), "acl", result);
+
+            boolean renamed = !StringUtils.equalsIgnoreCase(project.getName(), existing.getName());
+
+            if (renamed) {
+                Long existingProjectNameId = dataProvider.getProjectId(project.getName());
+
+                if (existingProjectNameId != null) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_NAME_CONFLICT, "name", project.getName(), existingProjectNameId));
+                }
+            }
         }
 
         if (!result.isSuccess()) {
@@ -205,6 +227,16 @@ public class RangerGdsValidator {
             validateAcl(dataShare.getAcl(), "acl", result);
             validateAccessTypes(dataShare.getService(), "defaultAccessTypes", dataShare.getDefaultAccessTypes(), result);
             validateMaskTypes(dataShare.getService(), "defaultTagMasks", dataShare.getDefaultTagMasks(), result);
+
+            boolean renamed = !StringUtils.equalsIgnoreCase(dataShare.getName(), existing.getName());
+
+            if (renamed) {
+                Long existingDataShareNameId = dataProvider.getDataShareId(dataShare.getName());
+
+                if (existingDataShareNameId != null) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NAME_CONFLICT, "name", dataShare.getName(), existingDataShareNameId));
+                }
+            }
         }
 
         if (!result.isSuccess()) {
@@ -246,7 +278,15 @@ public class RangerGdsValidator {
             if (existing != null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT, "name", resource.getName(), dataShare.getName(), existing));
             } else {
-				validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(dataShare, result);
+
+                if (result.isSuccess()) {
+                    existing = dataProvider.getSharedResourceId(resource.getDataShareId(), new RangerPolicyResourceSignature(resource));
+
+                    if (existing != null) {
+                        result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT, "resource", resource.getResource(), dataShare.getName()));
+                    }
+                }
             }
         }
 
@@ -270,7 +310,27 @@ public class RangerGdsValidator {
             if (dataShare == null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", resource.getDataShareId()));
             } else {
-				validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(dataShare, result);
+
+                if (result.isSuccess()) {
+                    boolean renamed = !StringUtils.equalsIgnoreCase(resource.getName(), existing.getName());
+
+                    if (renamed) {
+                        Long existingSharedResourceNameId = dataProvider.getSharedResourceId(resource.getDataShareId(), resource.getName());
+
+                        if (existingSharedResourceNameId != null) {
+                            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT, "name", resource.getName(), dataShare.getName(), existing));
+                        }
+                    }
+
+                    if (result.isSuccess()) {
+                        Long existingSharedResourceNameId = dataProvider.getSharedResourceId(resource.getDataShareId(),new RangerPolicyResourceSignature(resource));
+
+                        if (existingSharedResourceNameId != null && !existingSharedResourceNameId.equals(existing.getId())) {
+                            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT, "resource", resource.getResource(), dataShare.getName()));
+                        }
+                    }
+                }
             }
         }
 
@@ -1030,6 +1090,14 @@ public class RangerGdsValidator {
 
         public void throwRESTException() {
             throw restErrorUtil.createRESTException(validationFailures.toString(), MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        public void throwREST403Exception() {
+            VXResponse gjResponse = new VXResponse();
+
+            gjResponse.setMsgDesc(validationFailures.toString());
+
+            throw restErrorUtil.create403RESTException(gjResponse);
         }
     }
 }

@@ -27,6 +27,7 @@ import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
@@ -231,6 +232,11 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
         return ret;
     }
 
+    public Long getSharedResourceId(Long dataShareId, RangerPolicyResourceSignature signature) {
+		Long ret = daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndResourceSignature(dataShareId, signature.getSignature());
+
+		return ret;
+    }
 
     private RangerRolesUtil initGetRolesUtil() {
         RangerRolesUtil ret              = this.rolesUtil;

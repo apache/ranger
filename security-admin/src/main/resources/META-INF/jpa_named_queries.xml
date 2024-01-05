@@ -2260,6 +2260,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGdsSharedResource.getIdByDataShareIdAndResourceSignature">
+			<query>select obj.id from XXGdsSharedResource obj
+			        where obj.dataShareId = :dataShareId
+			          and obj.resourceSignature = :resourceSignature
+			</query>
+	</named-query>
+
 	<named-query name="XXGdsDataShareInDataset.findByGuid">
 		<query>select obj from XXGdsDataShareInDataset obj where obj.guid = :guid</query>
 	</named-query>
