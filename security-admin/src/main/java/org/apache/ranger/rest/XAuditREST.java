@@ -48,6 +48,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 
 @Path("xaudit")
 @Component
@@ -67,6 +69,10 @@ public class XAuditREST {
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
+
+	@Autowired
+	RangerBizUtil bizUtil;
+
 	// Handle XTrxLog
 	@GET
 	@Path("/trx_log/{id}")
@@ -144,7 +150,19 @@ public class XAuditREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
 	public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+		SearchCriteria searchCriteria  = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+		long           kmsServiceDefId = EmbeddedServiceDefsUtil.instance().getKmsServiceDefId();
+
+		if (kmsServiceDefId != -1) {
+			boolean includeKmsAuditLogs = bizUtil.isKeyAdmin() || bizUtil.isAuditKeyAdmin();
+
+			if (includeKmsAuditLogs) {
+				searchCriteria.getParamList().put("repoType", kmsServiceDefId);
+			} else {
+				searchCriteria.getParamList().put("-repoType", kmsServiceDefId);
+			}
+		}
+
 		return xAuditMgr.searchXAccessAudits(searchCriteria);
 	}
 
@@ -153,10 +171,11 @@ public class XAuditREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
 	public VXLong countXAccessAudits(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xAccessAuditService.sortFields);
+		VXLong ret = new VXLong();
 
-		 return xAuditMgr.getXAccessAuditSearchCount(searchCriteria);
+		ret.setValue(searchXAccessAudits(request).getTotalCount());
+
+		return ret;
 	}
 
 }
