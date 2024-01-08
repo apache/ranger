@@ -502,7 +502,13 @@ public class RangerBasePlugin {
 					LOG.debug("BasePlugin.isAccessAllowed result=[" + ret + "]");
 					LOG.debug("Calling chainedPlugin.isAccessAllowed for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "]");
 				}
-				RangerAccessResult chainedResult = chainedPlugin.isAccessAllowed(request);
+				RangerAccessResult chainedResult;
+
+				if (ret.getIsAccessDetermined() && chainedPlugin.skipAccessCheckIfAlreadyDetermined) {
+					chainedResult = null;
+				} else {
+					chainedResult = chainedPlugin.isAccessAllowed(request);
+				}
 
 				if (chainedResult != null) {
 					if (LOG.isDebugEnabled()) {
