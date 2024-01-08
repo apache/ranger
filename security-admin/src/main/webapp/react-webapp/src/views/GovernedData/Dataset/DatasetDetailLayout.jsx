@@ -17,10 +17,18 @@
  * under the License.
  */
 
-import React, { useState, useEffect, useCallback, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useReducer,
+  useRef
+} from "react";
 import withRouter from "Hooks/withRouter";
 import { fetchApi } from "../../../utils/fetchAPI";
 import dateFormat from "dateformat";
+import XATableLayout from "../../../components/XATableLayout";
+import { ClassTypes } from "../../../utils/XAEnums";
 import {
   Button,
   Tab,
@@ -44,6 +52,8 @@ import {
   useSearchParams
 } from "react-router-dom";
 import {
+  getTableSortBy,
+  getTableSortType,
   serverError,
   isSystemAdmin,
   parseSearchFilter
@@ -52,6 +62,7 @@ import Select from "react-select";
 import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
 import roleColourIcon from "../../../images/role-colour.svg";
+import historyDetailsIcon from "../../../images/history-details.svg";
 import arrayMutators from "final-form-arrays";
 import { groupBy, isEmpty, isArray } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
@@ -59,6 +70,7 @@ import ReactPaginate from "react-paginate";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import ErrorPage from "../../../views/ErrorPage";
 import DatashareInDatasetListComp from "./DatashareInDatasetListComp";
+import OperationAdminModal from "../../AuditEvent/OperationAdminModal";
 
 const initialState = {
   loader: false,
@@ -180,6 +192,19 @@ const DatasetDetailLayout = () => {
     ACTIVE: 0,
     DENIED: 0
   });
+  const [searchHistoryFilterParams, setSearchHistoryFilterParams] = useState(
+    []
+  );
+  const fetchIdRef = useRef(0);
+  const [historyListData, setHistoryListData] = useState([]);
+  const [historyLoader, setHistoryLoader] = useState(false);
+  const [entries, setEntries] = useState([]);
+  const [pageCount, setPageCount] = useState(
+    state && state.showLastPage ? state.addPageData.totalPage : 0
+  );
+  const [showrowmodal, setShowRowModal] = useState(false);
+  const [rowdata, setRowData] = useState([]);
+  const handleClosed = () => setShowRowModal(false);
 
   const fetchShareStatusMetrics = async (requestSearchFilterParams) => {
     try {
@@ -291,6 +316,124 @@ const DatasetDetailLayout = () => {
     }
     return data;
   };
+
+  const historySearchFilterOptions = [
+    {
+      category: "owner",
+      label: "User",
+      urlLabel: "owner",
+      type: "text"
+    }
+  ];
+
+  const updateHistorySearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      historySearchFilterOptions
+    );
+    setSearchHistoryFilterParams(searchFilterParam);
+  };
+
+  const fetchHistoryList = useCallback(
+    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
+      setHistoryLoader(true);
+      let resp = [];
+      let historyList = [];
+      let totalCount = 0;
+      let page =
+        state && state.showLastPage
+          ? state.addPageData.totalPage - 1
+          : pageIndex;
+      let totalPageCount = 0;
+      const fetchId = ++fetchIdRef.current;
+      let params = { ...searchHistoryFilterParams };
+      if (fetchId === fetchIdRef.current) {
+        params["pageSize"] = pageSize;
+        params["startIndex"] =
+          state && state.showLastPage
+            ? (state.addPageData.totalPage - 1) * pageSize
+            : pageIndex * pageSize;
+        if (sortBy.length > 0) {
+          params["sortBy"] = getTableSortBy(sortBy);
+          params["sortType"] = getTableSortType(sortBy);
+        }
+        params["objectClassType"] = ClassTypes.CLASS_TYPE_RANGER_DATASET.value;
+        params["objectId"] = datasetId;
+        try {
+          resp = await fetchApi({
+            url: "assets/report",
+            params: params
+          });
+          historyList = resp.data.vXTrxLogs;
+          totalCount = resp.data.totalCount;
+        } catch (error) {
+          serverError(error);
+          console.error(
+            `Error occurred while fetching Dataset History! ${error}`
+          );
+        }
+        setHistoryListData(historyList);
+        setEntries(resp.data);
+        setPageCount(Math.ceil(totalCount / pageSize));
+        //setResetpage({ page: gotoPage });
+        setHistoryLoader(false);
+      }
+    },
+    [searchHistoryFilterParams]
+  );
+
+  const openOperationalModal = async (row) => {
+    setShowRowModal(true);
+    setRowData(row);
+  };
+
+  const historyColumns = React.useMemo(
+    () => [
+      {
+        Header: "Time",
+        accessor: "createDate",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "User",
+        accessor: "owner",
+        width: 650,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "",
+        accessor: "actions",
+        width: 30,
+        Cell: ({ row: { original } }) => {
+          return (
+            <div className="d-flex gap-half align-items-start">
+              <div className="d-flex gap-half align-items-start">
+                <Button
+                  variant="outline-dark"
+                  size="sm"
+                  title="showDetails"
+                  onClick={() => openOperationalModal(original)}
+                  data-name="showDetails"
+                  data-id="showDetails"
+                >
+                  <img src={historyDetailsIcon} height="30px" width="30px" />
+                </Button>
+              </div>
+            </div>
+          );
+        },
+        disableSortBy: true
+      }
+    ],
+    []
+  );
 
   const requestSearchFilterOptions = [
     {
@@ -1278,6 +1421,16 @@ const DatasetDetailLayout = () => {
     }
   };
 
+  const getDefaultSort = React.useMemo(
+    () => [
+      {
+        id: "createdDate",
+        desc: true
+      }
+    ],
+    []
+  );
+
   return (
     <>
       <React.Fragment>
@@ -1938,12 +2091,45 @@ const DatasetDetailLayout = () => {
                   </Tab>
                 )}
 
-                {false &&
-                  (isSystemAdmin() ||
-                    userAclPerm === "ADMIN" ||
-                    userAclPerm === "AUDIT") && (
-                    <Tab eventKey="history" title="HISTORY" />
-                  )}
+                {(isSystemAdmin() ||
+                  userAclPerm === "ADMIN" ||
+                  userAclPerm === "AUDIT") && (
+                  <Tab eventKey="history" title="HISTORY">
+                    {activeKey == "history" && (
+                      <div className="gds-request-content">
+                        <div className="mb-3">
+                          <div className="usr-grp-role-search-width mb-3 mg-t-20">
+                            <StructuredFilter
+                              key="dataset-history-search-filter"
+                              placeholder="Search..."
+                              onChange={updateHistorySearchFilter}
+                              options={historySearchFilterOptions}
+                            />
+                          </div>
+                          <div className="gds-header-btn-grp"></div>
+                        </div>
+                        <XATableLayout
+                          data={historyListData}
+                          columns={historyColumns}
+                          fetchData={fetchHistoryList}
+                          totalCount={entries && entries.totalCount}
+                          loading={historyLoader}
+                          pageCount={pageCount}
+                          getRowProps={(row) => ({
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              // rowModal(row);
+                            }
+                          })}
+                          columnHide={false}
+                          columnResizable={false}
+                          columnSort={true}
+                          defaultSort={getDefaultSort}
+                        />
+                      </div>
+                    )}
+                  </Tab>
+                )}
 
                 <Tab
                   eventKey="termsOfUse"
@@ -2179,6 +2365,12 @@ const DatasetDetailLayout = () => {
                 </Button>
               </Modal.Footer>
             </Modal>
+
+            <OperationAdminModal
+              show={showrowmodal}
+              data={rowdata}
+              onHide={handleClosed}
+            ></OperationAdminModal>
           </React.Fragment>
         )}
       </React.Fragment>

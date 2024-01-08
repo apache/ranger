@@ -56,6 +56,8 @@ import AddSharedResourceComp from "./AddSharedResourceComp";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
 import {
+  getTableSortBy,
+  getTableSortType,
   isSystemAdmin,
   parseSearchFilter,
   serverError,
@@ -68,11 +70,14 @@ import { getServiceDef } from "../../../utils/appState";
 import DatashareInDatasetListComp from "../Dataset/DatashareInDatasetListComp";
 import { isEmpty, isObject, isEqual } from "lodash";
 import Select from "react-select";
+import OperationAdminModal from "../../AuditEvent/OperationAdminModal";
+import historyDetailsIcon from "../../../images/history-details.svg";
+import { ClassTypes } from "../../../utils/XAEnums";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
   const { state } = useLocation();
-  const userAclPerm = state?.userAclPerm;
+  const userAclPerm = state == null ? fetchDatashareSummary : state.userAclPerm;
   const [datashareName, setDatashareName] = useState(state?.datashareName);
   const [activeKey, setActiveKey] = useState("overview");
   const [datashareInfo, setDatashareInfo] = useState({});
@@ -153,10 +158,54 @@ const DatashareDetailLayout = () => {
   });
   const [accessTypeOptions, setAccessTypeOptions] = useState([]);
   const [accessType, setAccessType] = useState([]);
+  const [cancel, setCancel] = useState(true);
+  let cancelFlag = false;
+  let saveFlag = false;
+  const [showrowmodal, setShowRowModal] = useState(false);
+  const [rowdata, setRowData] = useState([]);
+  const handleClosed = () => setShowRowModal(false);
+  const [searchHistoryFilterParams, setSearchHistoryFilterParams] = useState(
+    []
+  );
+  const [historyListData, setHistoryListData] = useState([]);
+  const [historyEntries, setHistoryEntries] = useState([]);
+  const [historyLoader, setHistoryLoader] = useState(false);
+  const [pageCount, setPageCount] = useState(
+    state && state.showLastPage ? state.addPageData.totalPage : 0
+  );
+
+  const fetchDatashareSummary = async () => {
+    setLoader(false);
+    let resp = [];
+    let params = { ...searchFilterParams };
+    params["dataShareId"] = dataShareId;
+    try {
+      resp = await fetchApi({
+        url: "gds/datashare/summary",
+        params: params
+      });
+      return resp.data.list[0].permissionForCaller;
+    } catch (error) {
+      serverError(error);
+      console.error(
+        `Error occurred while fetching Datashare summary! ${error}`
+      );
+    }
+    setLoader(false);
+  };
 
   useEffect(() => {
     fetchDatashareInfo(datashareId);
   }, []);
+
+  const historySearchFilterOptions = [
+    {
+      category: "owner",
+      label: "User",
+      urlLabel: "owner",
+      type: "text"
+    }
+  ];
 
   const fetchShareStatusMetrics = async (requestSearchFilterOptions) => {
     try {
@@ -231,6 +280,7 @@ const DatashareDetailLayout = () => {
 
   const onAccessTypeChange = (event, input) => {
     setAccessType(event);
+    showSaveCancelButton(true);
     input.onChange(event);
   };
 
@@ -239,7 +289,6 @@ const DatashareDetailLayout = () => {
       setShowConfirmModal(true);
     } else {
       if (key == "sharedWith") {
-        //fetchDatashareRequestList(undefined, 0, false);
         fetchShareStatusMetrics();
       }
       setActiveKey(key);
@@ -286,11 +335,12 @@ const DatashareDetailLayout = () => {
         `Error occurred while fetching datashare details ! ${error}`
       );
     }
-    if (datashareResp.data.conditionExpr !== undefined) {
+    if (datashareResp?.data?.conditionExpr !== undefined) {
       datashareResp.data.conditions = {
         expression: datashareResp.data.conditionExpr
       };
     }
+    setDatashareConditionExpr(datashareResp.data.conditionExpr);
     setAccessType(
       datashareResp.data.defaultAccessTypes?.map((item) => ({
         label: capitalizeFirstLetter(item),
@@ -535,12 +585,15 @@ const DatashareDetailLayout = () => {
     }
     isDatashareNameEditable(false);
     showSaveCancelButton(false);
+    saveFlag = true;
     setBlockUI(false);
     setShowConfirmModal(false);
   };
 
   const removeChanges = () => {
     fetchDatashareInfo(datashareId);
+    cancelFlag = true;
+    setCancel(true);
     showSaveCancelButton(false);
     setShowConfirmModal(false);
     isDatashareNameEditable(false);
@@ -688,6 +741,68 @@ const DatashareDetailLayout = () => {
     setRequestSearchFilterParams(searchFilterParam);
     fetchShareStatusMetrics(searchFilterParam);
   };
+
+  const updateHistorySearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      historySearchFilterOptions
+    );
+    setSearchHistoryFilterParams(searchFilterParam);
+  };
+
+  const openOperationalModal = async (row) => {
+    setShowRowModal(true);
+    setRowData(row);
+  };
+
+  const fetchHistoryList = useCallback(
+    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
+      setHistoryLoader(true);
+      let resp = [];
+      let historyList = [];
+      let totalCount = 0;
+      let page =
+        state && state.showLastPage
+          ? state.addPageData.totalPage - 1
+          : pageIndex;
+      let totalPageCount = 0;
+      const fetchId = ++fetchIdRef.current;
+      let params = { ...searchHistoryFilterParams };
+      if (fetchId === fetchIdRef.current) {
+        params["pageSize"] = pageSize;
+        params["startIndex"] =
+          state && state.showLastPage
+            ? (state.addPageData.totalPage - 1) * pageSize
+            : pageIndex * pageSize;
+        if (sortBy.length > 0) {
+          params["sortBy"] = getTableSortBy(sortBy);
+          params["sortType"] = getTableSortType(sortBy);
+        }
+        params["objectClassType"] =
+          ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value;
+        params["objectId"] = datashareId;
+        try {
+          resp = await fetchApi({
+            url: "assets/report",
+            params: params
+          });
+          historyList = resp.data.vXTrxLogs;
+          totalCount = resp.data.totalCount;
+        } catch (error) {
+          serverError(error);
+          console.error(
+            `Error occurred while fetching Datashare History! ${error}`
+          );
+        }
+        setHistoryListData(historyList);
+        setHistoryEntries(resp.data);
+        setPageCount(Math.ceil(totalCount / pageSize));
+        //setResetpage({ page: gotoPage });
+        setHistoryLoader(false);
+      }
+    },
+    [searchHistoryFilterParams]
+  );
 
   const fetchSharedResourcetList = useCallback(
     async ({ pageSize, pageIndex }) => {
@@ -874,7 +989,7 @@ const DatashareDetailLayout = () => {
 
   const FormChange = (props) => {
     const { isDirtyField, formValues } = props;
-    if (isDirtyField) {
+    if (isDirtyField && (!cancelFlag || !saveFlag)) {
       setDatashareConditionExpr(props.formValues.conditions?.expression);
       showSaveCancelButton(true);
     }
@@ -884,13 +999,63 @@ const DatashareDetailLayout = () => {
   const isDirtyFieldCheck = (values, initialValues) => {
     let modifiedVal = false;
     if (
-      !isEqual(values?.conditions, initialValues?.conditions) ||
-      !isEqual(values?.defaultAccessTypes, initialValues?.defaultAccessTypes)
+      values?.conditions?.expression &&
+      !isEqual(values?.conditions?.expression, datashareConditionExpr)
     ) {
       modifiedVal = true;
+      saveFlag = false;
+      cancelFlag = false;
     }
     return modifiedVal;
   };
+
+  const historyColumns = React.useMemo(
+    () => [
+      {
+        Header: "Time",
+        accessor: "createDate",
+        Cell: (rawValue) => {
+          return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
+        },
+        width: 170,
+        disableResizing: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "User",
+        accessor: "owner",
+        width: 650,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "",
+        accessor: "actions",
+        width: 30,
+        Cell: ({ row: { original } }) => {
+          return (
+            <div className="d-flex gap-half align-items-start">
+              <div className="d-flex gap-half align-items-start">
+                <Button
+                  variant="outline-dark"
+                  size="sm"
+                  title="showDetails"
+                  onClick={() => openOperationalModal(original)}
+                  data-name="showDetails"
+                  data-id="showDetails"
+                >
+                  <img src={historyDetailsIcon} height="30px" width="30px" />
+                </Button>
+              </div>
+            </div>
+          );
+        },
+        disableSortBy: true
+      }
+    ],
+    []
+  );
 
   return (
     <>
@@ -1070,14 +1235,17 @@ const DatashareDetailLayout = () => {
                     <Tab eventKey="overview" title="OVERVIEW">
                       {activeKey == "overview" ? (
                         <div>
-                          <FormChange
-                            isDirtyField={
-                              dirty == true || !isEqual(initialValues, values)
-                                ? isDirtyFieldCheck(values, initialValues)
-                                : false
-                            }
-                            formValues={values}
-                          />
+                          {!cancelFlag && !saveFlag && (
+                            <FormChange
+                              isDirtyField={
+                                dirty == !isEqual(initialValues, values)
+                                  ? isDirtyFieldCheck(values, initialValues)
+                                  : false
+                              }
+                              formValues={values}
+                            />
+                          )}
+
                           <div className="gds-tab-content gds-content-border px-3">
                             <div className="gds-inline-field-grp">
                               <div className="wrapper">
@@ -1240,7 +1408,7 @@ const DatashareDetailLayout = () => {
                           <div className="gds-action-card mb-5 gds-tab-content gds-content-border px-3">
                             <div className="gds-section-title">
                               <p className="gds-card-heading">
-                                Default access types:
+                                Default access types
                               </p>
                             </div>
                             <div className="gds-flex mg-b-10 mg-t-20">
@@ -1298,7 +1466,7 @@ const DatashareDetailLayout = () => {
                       {activeKey == "resources" ? (
                         <div className="gds-request-content">
                           <div className="mb-3">
-                            <div className="w-100 d-flex gap-1 mb-3">
+                            <div className="w-100 d-flex gap-1 mb-3 mg-t-20">
                               <StructuredFilter
                                 key="shared-reource-search-filter"
                                 placeholder="Search resources..."
@@ -1480,12 +1648,41 @@ const DatashareDetailLayout = () => {
                       )}
                     </Tab>
 
-                    {false &&
-                      (isSystemAdmin() ||
-                        userAclPerm == "ADMIN" ||
-                        userAclPerm == "AUDIT") && (
-                        <Tab eventKey="history" title="HISTORY"></Tab>
-                      )}
+                    {(isSystemAdmin() ||
+                      userAclPerm == "ADMIN" ||
+                      userAclPerm == "AUDIT") && (
+                      <Tab eventKey="history" title="HISTORY">
+                        {activeKey == "history" && (
+                          <div className="gds-request-content">
+                            <div className="mb-3">
+                              <div className="usr-grp-role-search-width mb-3 mg-t-20">
+                                <StructuredFilter
+                                  key="dataset-history-search-filter"
+                                  placeholder="Search..."
+                                  onChange={updateHistorySearchFilter}
+                                  options={historySearchFilterOptions}
+                                />
+                              </div>
+                              <div className="gds-header-btn-grp"></div>
+                            </div>
+                            <XATableLayout
+                              data={historyListData}
+                              columns={historyColumns}
+                              fetchData={fetchHistoryList}
+                              totalCount={
+                                historyEntries && historyEntries.totalCount
+                              }
+                              loading={historyLoader}
+                              pageCount={pageCount}
+                              columnHide={false}
+                              columnResizable={false}
+                              columnSort={true}
+                              defaultSort={getDefaultSort}
+                            />
+                          </div>
+                        )}
+                      </Tab>
+                    )}
 
                     <Tab eventKey="termsOfUse" title="TERMS OF USE">
                       <div className="gds-tab-content gds-content-border">
@@ -1689,6 +1886,12 @@ const DatashareDetailLayout = () => {
                   setResourceUpdateTable={setResourceUpdateTable}
                   resourceModalUpdateTable={resourceModalUpdateTable}
                 />
+
+                <OperationAdminModal
+                  show={showrowmodal}
+                  data={rowdata}
+                  onHide={handleClosed}
+                ></OperationAdminModal>
               </React.Fragment>
             )}
             <BlockUi isUiBlock={blockUI} />

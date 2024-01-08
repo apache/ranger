@@ -209,6 +209,8 @@ const AddSharedResourceComp = ({
             ? values[`value-${level}`]?.map(({ value }) => value)
             : [values[`value-${level}`].value]
         };
+        data.resource[values[`resourceName-${level}`].name]["isRecursive"] =
+          values[`resourceName-${level}`].recursiveSupported;
       }
     }
     data.conditionExpr = values.booleanExpression;

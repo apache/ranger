@@ -18,23 +18,19 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Row, Col, Button } from "react-bootstrap";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import XATableLayout from "../../../components/XATableLayout";
 import { fetchApi } from "../../../utils/fetchAPI";
 import dateFormat from "dateformat";
-import {
-  CustomTooltip,
-  Loader,
-  BlockUi
-} from "../../../components/CommonComponents";
-import moment from "moment-timezone";
+import { Loader, BlockUi } from "../../../components/CommonComponents";
 import CustomBreadcrumb from "../../CustomBreadcrumb";
 import {
   getTableSortBy,
   getTableSortType,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "../../../utils/XAUtils";
 
 const RequestListing = () => {
@@ -51,6 +47,78 @@ const RequestListing = () => {
     state && state.showLastPage ? state.addPageData.totalPage : 0
   );
   const { state } = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
+    []
+  );
+
+  const searchFilterOptions = [
+    {
+      category: "dataShareNamePartial",
+      label: "Datashare Name",
+      urlLabel: "dataShareNamePartial",
+      type: "text"
+    },
+    {
+      category: "datasetNamePartial",
+      label: "Dataset Name",
+      urlLabel: "datasetNamePartial",
+      type: "text"
+    },
+    {
+      category: "shareStatus",
+      label: "Status",
+      urlLabel: "shareStatus",
+      type: "textoptions",
+      options: () => {
+        return [
+          { value: "REQUESTED", label: "REQUESTED" },
+          { value: "GRANTED", label: "GRANTED" },
+          { value: "ACTIVE", label: "ACTIVE" },
+          { value: "DENIED", label: "DENIED" }
+        ];
+      }
+    },
+    {
+      category: "createdBy",
+      label: "Requested By",
+      urlLabel: "createdBy",
+      type: "text"
+    },
+    {
+      category: "approver",
+      label: "Approved By",
+      urlLabel: "approver",
+      type: "text"
+    }
+  ];
+
+  useEffect(() => {
+    let searchFilterParam = {};
+    let searchParam = {};
+    let defaultSearchFilterParam = [];
+
+    // Get Search Filter Params from current search params
+    const currentParams = Object.fromEntries([...searchParams]);
+    for (const param in currentParams) {
+      let category = param;
+      let value = currentParams[param];
+      searchFilterParam[category] = value;
+      defaultSearchFilterParam.push({
+        category: category,
+        value: value
+      });
+    }
+    setSearchParams({ ...currentParams, ...searchParam });
+    if (
+      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+    ) {
+      setSearchFilterParams(searchFilterParam);
+    }
+    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    setContentLoader(false);
+    localStorage.setItem("newDataAdded", state && state.showLastPage);
+  }, [searchParams]);
 
   const fetchRequestList = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
@@ -77,14 +145,14 @@ const RequestListing = () => {
         }
         try {
           resp = await fetchApi({
-            url: "gds/datashare/dataset",
+            url: "gds/datashare/dataset/summary",
             params: params
           });
           requestList = resp.data.list;
           totalCount = resp.data.totalCount;
         } catch (error) {
           serverError(error);
-          console.error(`Error occurred while fetching Dataset list! ${error}`);
+          console.error(`Error occurred while fetching Request list! ${error}`);
         }
         setRequestListData(requestList);
         setEntries(resp.data);
@@ -103,7 +171,7 @@ const RequestListing = () => {
   const columns = React.useMemo(
     () => [
       {
-        Header: "Id",
+        Header: "ID",
         accessor: "id",
         width: 80,
         disableResizing: true,
@@ -135,16 +203,16 @@ const RequestListing = () => {
         }
       },
       {
-        Header: "Name",
-        accessor: "name",
+        Header: "For Datashare",
+        accessor: "dataShareName",
         width: 250,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
       },
       {
-        Header: "Type",
-        accessor: "type",
+        Header: "Into Dataset",
+        accessor: "datasetName",
         width: 250,
         disableResizing: true,
         disableSortBy: true,
@@ -152,8 +220,24 @@ const RequestListing = () => {
       },
       {
         Header: "Status",
-        accessor: "status",
+        accessor: "shareStatus",
         width: 108,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Requested By",
+        accessor: "createdBy",
+        width: 100,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Approved By",
+        accessor: "approver",
+        width: 250,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
@@ -177,22 +261,6 @@ const RequestListing = () => {
         width: 170,
         disableResizing: true,
         getResizerProps: () => {}
-      },
-      {
-        Header: "Created By",
-        accessor: "createdBy",
-        width: 100,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
-      },
-      {
-        Header: "Approver",
-        accessor: "approvedBy",
-        width: 250,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
       }
     ],
     []
@@ -207,6 +275,19 @@ const RequestListing = () => {
     ],
     []
   );
+
+  const updateSearchFilter = (filter) => {
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+    setSearchFilterParams(searchFilterParam);
+    setSearchParams(searchParam);
+
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
+  };
 
   return contentLoader ? (
     <Loader />
@@ -224,9 +305,9 @@ const RequestListing = () => {
               <StructuredFilter
                 key="user-listing-search-filter"
                 placeholder="Search..."
-                //options={sortBy(searchFilterOptions, ["label"])}
-                //onChange={updateSearchFilter}
-                //defaultSelected={defaultSearchFilterParams}
+                options={searchFilterOptions}
+                onChange={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
               />
             </Col>
           </Row>

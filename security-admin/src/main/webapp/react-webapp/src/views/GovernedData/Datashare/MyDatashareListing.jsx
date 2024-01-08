@@ -22,19 +22,13 @@ import XATableLayout from "../../../components/XATableLayout";
 import { Loader } from "../../../components/CommonComponents";
 import { Button, Row, Col } from "react-bootstrap";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import {
-  useSearchParams,
-  useNavigate,
-  useLocation,
-  Link
-} from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchApi } from "../../../utils/fetchAPI";
 import dateFormat from "dateformat";
 import {
   getTableSortBy,
   getTableSortType,
   serverError,
-  isSystemAdmin,
   parseSearchFilter
 } from "../../../utils/XAUtils";
 import moment from "moment-timezone";

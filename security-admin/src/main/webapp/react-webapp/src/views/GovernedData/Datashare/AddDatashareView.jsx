@@ -196,6 +196,27 @@ const AddDatashareView = () => {
     }
   };
 
+  const serviceSelectTheme = (theme) => {
+    return {
+      ...theme,
+      colors: {
+        ...theme.colors,
+        primary: "#0081ab"
+      }
+    };
+  };
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      maxHeight: "40px",
+      width: "172px"
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided
+    })
+  };
+
   const fetchServiceDef = async (serviceDefName) => {
     let serviceDefsResp = [];
     try {
@@ -633,6 +654,8 @@ const AddDatashareView = () => {
                             onFocus={() => {
                               onFocusServiceSelect();
                             }}
+                            // theme={serviceSelectTheme}
+                            // styles={customStyles}
                             components={{
                               DropdownIndicator: () => null,
                               IndicatorSeparator: () => null
