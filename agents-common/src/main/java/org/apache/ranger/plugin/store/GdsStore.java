@@ -131,4 +131,6 @@ public interface GdsStore {
     RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) throws Exception;
 
     PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception;
+
+    void deleteAllGdsObjectsForService(Long serviceId) throws Exception;
 }

@@ -54,6 +54,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -240,8 +241,11 @@ public class ServiceREST {
 	TagDBStore tagStore;
 
 	@Autowired
+	GdsDBStore gdsStore;
+
+	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
-	
+
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
 	private RangerPolicyEngineOptions defaultAdminOptions;
@@ -4643,7 +4647,10 @@ public class ServiceREST {
 						bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 						bizUtil.blockAuditorRoleUser();
 					}
+
 					tagStore.deleteAllTagObjectsForService(service.getName());
+					gdsStore.deleteAllGdsObjectsForService(id);
+
 					deletedServiceName = service.getName();
 
 					svcStore.deleteService(id);

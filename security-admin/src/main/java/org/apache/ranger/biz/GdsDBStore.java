@@ -1190,6 +1190,31 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
+    @Override
+    public void deleteAllGdsObjectsForService(Long serviceId) throws Exception {
+        LOG.debug("==> deleteAllGdsObjectsForService({})", serviceId);
+
+        List<XXGdsDataShare> dataShares = daoMgr.getXXGdsDataShare().findByServiceId(serviceId);
+
+        if (CollectionUtils.isNotEmpty(dataShares)) {
+            LOG.info("Deleting {} dataShares associated with service id={}", dataShares.size(), serviceId);
+
+            dataShares.forEach(dataShare -> {
+                try {
+                    LOG.info("Deleting dataShare id={}, name={}", dataShare.getId(), dataShare.getName());
+
+                    deleteDataShare(dataShare.getId(), true);
+                } catch (Exception excp) {
+                    LOG.error("failed to delete dataShare id={}, name={}", dataShare.getId(), dataShare.getName(), excp);
+
+                    throw excp;
+                }
+            });
+        }
+
+        LOG.debug("<== deleteAllGdsObjectsForService({})", serviceId);
+    }
+
     public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
         LOG.debug("==> GdsDBStore.getGdsInfoIfUpdated({}, {})", serviceName , lastKnownVersion);
 
