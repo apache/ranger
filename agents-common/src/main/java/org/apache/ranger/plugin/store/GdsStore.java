@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.SearchFilter;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -133,4 +134,8 @@ public interface GdsStore {
     PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception;
 
     void deleteAllGdsObjectsForService(Long serviceId) throws Exception;
+
+    void deleteAllGdsObjectsForSecurityZone(Long zoneId) throws Exception;
+
+    void deleteAllGdsObjectsForServicesInSecurityZone(Collection<String> serviceNames, Long zoneId) throws Exception;
 }

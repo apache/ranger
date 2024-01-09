@@ -75,9 +75,24 @@ public class XXGdsDataShareDao extends BaseDao<XXGdsDataShare> {
 		if (serviceId != null) {
 			try {
 				ret = getEntityManager().createNamedQuery("XXGdsDataShare.findByServiceId", tClass)
-						                .setParameter("serviceId", serviceId).getResultList();
+				                        .setParameter("serviceId", serviceId).getResultList();
 			} catch (NoResultException e) {
 				LOG.debug("findByServiceId({}): ", serviceId, e);
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
+	}
+
+	public List<XXGdsDataShare> findByZoneId(Long zoneId) {
+		List<XXGdsDataShare> ret = null;
+
+		if (zoneId != null) {
+			try {
+				ret = getEntityManager().createNamedQuery("XXGdsDataShare.findByZoneId", tClass)
+				                        .setParameter("zoneId", zoneId).getResultList();
+			} catch (NoResultException e) {
+				LOG.debug("findByZoneId({}): ", zoneId, e);
 			}
 		}
 
@@ -87,13 +102,13 @@ public class XXGdsDataShareDao extends BaseDao<XXGdsDataShare> {
 	public List<XXGdsDataShare> findByServiceIdAndZoneId(Long serviceId, Long zoneId) {
 		List<XXGdsDataShare> ret = null;
 
-		if (serviceId != null) {
+		if (serviceId != null && zoneId != null) {
 			try {
 				ret = getEntityManager().createNamedQuery("XXGdsDataShare.findByServiceIdAndZoneId", tClass)
-						                .setParameter("serviceId", serviceId)
-						                .setParameter("zoneId", zoneId).getResultList();
+				                        .setParameter("serviceId", serviceId)
+				                        .setParameter("zoneId", zoneId).getResultList();
 			} catch (NoResultException e) {
-				LOG.debug("findByServiceIdAndZoneId({}): ", serviceId, e);
+				LOG.debug("findByServiceIdAndZoneId({}, {}): ", serviceId, zoneId, e);
 			}
 		}
 

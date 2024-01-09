@@ -54,7 +54,6 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
-import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -239,9 +238,6 @@ public class ServiceREST {
 
 	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	GdsDBStore gdsStore;
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
@@ -4649,7 +4645,6 @@ public class ServiceREST {
 					}
 
 					tagStore.deleteAllTagObjectsForService(service.getName());
-					gdsStore.deleteAllGdsObjectsForService(id);
 
 					deletedServiceName = service.getName();
 

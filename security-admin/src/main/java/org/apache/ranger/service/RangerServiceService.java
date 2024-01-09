@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
@@ -53,6 +54,9 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceService.class.getName());
 	@Autowired
 	JSONUtil jsonUtil;
+
+	@Autowired
+	GdsDBStore gdsStore;
 
 	private String hiddenPasswordString;
 
@@ -357,6 +361,12 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		XXService ret = super.preDelete(id);
 
 		if (ret != null) {
+			try {
+				gdsStore.deleteAllGdsObjectsForService(id);
+			} catch (Exception excp) {
+				LOG.error("Error deleting GDS objects for service(id={})", id, excp);
+			}
+
 			XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
 
 			XXServiceVersionInfo serviceVersionInfo = serviceVersionInfoDao.findByServiceId(id);

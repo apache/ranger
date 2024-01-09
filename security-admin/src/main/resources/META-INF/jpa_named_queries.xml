@@ -2212,6 +2212,10 @@
 		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId</query>
 	</named-query>
 
+	<named-query name="XXGdsDataShare.findByZoneId">
+		<query>select obj from XXGdsDataShare obj where obj.zoneId = :zoneId</query>
+	</named-query>
+
 	<named-query name="XXGdsDataShare.findByServiceIdAndZoneId">
 		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId and obj.zoneId = :zoneId</query>
 	</named-query>

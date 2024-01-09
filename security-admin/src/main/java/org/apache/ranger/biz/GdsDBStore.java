@@ -1191,7 +1191,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteAllGdsObjectsForService(Long serviceId) throws Exception {
+    public void deleteAllGdsObjectsForService(Long serviceId) {
         LOG.debug("==> deleteAllGdsObjectsForService({})", serviceId);
 
         List<XXGdsDataShare> dataShares = daoMgr.getXXGdsDataShare().findByServiceId(serviceId);
@@ -1200,19 +1200,68 @@ public class GdsDBStore extends AbstractGdsStore {
             LOG.info("Deleting {} dataShares associated with service id={}", dataShares.size(), serviceId);
 
             dataShares.forEach(dataShare -> {
-                try {
-                    LOG.info("Deleting dataShare id={}, name={}", dataShare.getId(), dataShare.getName());
+                LOG.info("Deleting dataShare id={}, name={}", dataShare.getId(), dataShare.getName());
 
-                    deleteDataShare(dataShare.getId(), true);
-                } catch (Exception excp) {
-                    LOG.error("failed to delete dataShare id={}, name={}", dataShare.getId(), dataShare.getName(), excp);
-
-                    throw excp;
-                }
+                deleteDataShare(dataShare.getId(), true);
             });
         }
 
         LOG.debug("<== deleteAllGdsObjectsForService({})", serviceId);
+    }
+
+    @Override
+    public void deleteAllGdsObjectsForSecurityZone(Long zoneId) {
+        LOG.debug("==> deleteAllGdsObjectsForSecurityZone({})", zoneId);
+
+        List<XXGdsDataShare> dataShares = daoMgr.getXXGdsDataShare().findByZoneId(zoneId);
+
+        if (CollectionUtils.isNotEmpty(dataShares)) {
+            LOG.info("Deleting {} dataShares associated with securityZone id={}", dataShares.size(), zoneId);
+
+            dataShares.forEach(dataShare -> {
+                LOG.info("Deleting dataShare id={}, name={}", dataShare.getId(), dataShare.getName());
+
+                deleteDataShare(dataShare.getId(), true);
+            });
+        }
+
+        LOG.debug("<== deleteAllGdsObjectsForSecurityZone({})", zoneId);
+    }
+
+    @Override
+    public void deleteAllGdsObjectsForServicesInSecurityZone(Collection<String> serviceNames, Long zoneId) {
+        LOG.debug("==> deleteAllGdsObjectsForServicesInSecurityZone({}, {})", serviceNames, zoneId);
+
+        if (zoneId != null && CollectionUtils.isNotEmpty(serviceNames)) {
+            XXServiceDao      serviceDao   = daoMgr.getXXService();
+            XXGdsDataShareDao dataShareDao = daoMgr.getXXGdsDataShare();
+
+            for (String serviceName : serviceNames) {
+                Long serviceId = serviceDao.findIdByName(serviceName);
+
+                if (serviceId == null) {
+                    LOG.warn("deleteAllGdsObjectsForServicesInSecurityZone(): invalid service name={}. Ignored", serviceName);
+
+                    continue;
+                }
+
+                List<XXGdsDataShare> dataShares = dataShareDao.findByServiceIdAndZoneId(serviceId, zoneId);
+
+                if (CollectionUtils.isEmpty(dataShares)) {
+                    continue;
+                }
+
+                LOG.info("Deleting {} dataShares associated with service(name={}) in securityZone(id={})", dataShares.size(), serviceName, zoneId);
+
+                dataShares.forEach(dataShare -> {
+                    LOG.info("Deleting dataShare id={}, name={}", dataShare.getId(), dataShare.getName());
+
+                    deleteDataShare(dataShare.getId(), true);
+                });
+            }
+        }
+
+        LOG.debug("<== deleteAllGdsObjectsForServicesInSecurityZone({}, {})", serviceNames, zoneId);
     }
 
     public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {

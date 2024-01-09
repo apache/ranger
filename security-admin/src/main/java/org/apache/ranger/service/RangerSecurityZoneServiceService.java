@@ -33,6 +33,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
@@ -64,6 +65,9 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
 	@Autowired
 	ServiceDBStore serviceDBStore;
+
+    @Autowired
+    GdsDBStore gdsStore;
 
     boolean compressJsonData = false;
 
@@ -227,6 +231,8 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
             serviceDBStore.deleteZonePolicies(deletedTagServiceNames, ret.getId());
 
+            gdsStore.deleteAllGdsObjectsForServicesInSecurityZone(deletedServiceNames, ret.getId());
+
             oldServiceNames.addAll(updatedServiceNames);
             updateServiceInfos(oldServiceNames);
         } catch (Exception exception) {
@@ -249,6 +255,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
         try {
             serviceDBStore.deleteZonePolicies(allServiceNames, id);
+            gdsStore.deleteAllGdsObjectsForSecurityZone(id);
             updateServiceInfos(allServiceNames);
         } catch (Exception exception) {
             logger.error("preDelete processing failed for security-zone:[" + viewObject + "]", exception);
