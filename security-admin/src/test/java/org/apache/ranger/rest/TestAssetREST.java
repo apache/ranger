@@ -416,7 +416,7 @@ public class TestAssetREST {
 
 		List<RangerService> services = Arrays.asList(rangerService1, rangerService2);
 		SearchFilter searchFilter = new SearchFilter();
-		Mockito.when(searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, null))
+		Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, null))
 				.thenReturn(searchFilter);
 		Mockito.when(serviceREST.getServices(searchFilter)).thenReturn(services);
 		Mockito.when(serviceUtil.toVXAsset(rangerService1)).thenReturn(vXAsset1);
