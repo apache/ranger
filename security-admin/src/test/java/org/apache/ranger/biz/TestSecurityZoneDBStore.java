@@ -114,11 +114,7 @@ public class TestSecurityZoneDBStore {
 		RangerSecurityZone updateSecurityZone = new RangerSecurityZone();
 		updateSecurityZone.setId(2L);
 
-		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
-
-		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
-		Mockito.when(xXSecurityZoneDao.findByZoneId(securityZone.getId())).thenReturn(xxSecurityZone);
 
 		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xXGlobalStateDao);
 		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
@@ -132,7 +128,6 @@ public class TestSecurityZoneDBStore {
 
 		Assert.assertNotNull(xxSecurityZone);
 		Assert.assertEquals(updateSecurityZone.getId(), expectedSecurityZone.getId());
-		Mockito.verify(daoManager).getXXSecurityZoneDao();
 		Mockito.verify(daoManager).getXXGlobalState();
 		Mockito.verify(securityZoneService).update(securityZone);
 	}
@@ -304,10 +299,12 @@ public class TestSecurityZoneDBStore {
 		securityZoneToUpdate.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
-		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
-		Mockito.when(xXSecurityZoneDao.findByZoneId(securityZoneToUpdate.getId())).thenReturn(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
+
+		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
+		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xXGlobalStateDao);
+		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
 		securityZoneDBStore.updateSecurityZoneById(securityZoneToUpdate);
 		Mockito.verify(daoManager, times(1)).getXXSecurityZoneDao();
