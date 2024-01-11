@@ -368,6 +368,82 @@ function Plugin_Status() {
             minWidth: 190
           }
         ]
+      },
+      {
+        Header: infoIcon("GDS"),
+        id: "GDS (Time)",
+        columns: [
+          {
+            Header: "Last Update",
+            accessor: "lastGdsUpdateTime",
+            Cell: ({ row: { original } }) => {
+              return getLastUpdateTime(original.info.lastGdsUpdateTime);
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Download",
+            accessor: "gdsDownloadTime",
+            Cell: ({ row: { original } }) => {
+              return getDownloadTime(
+                original.info.gdsDownloadTime,
+                original.info.lastGdsUpdateTime,
+                "GDS"
+              );
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Active",
+            accessor: "gdsActivationTime",
+            Cell: ({ row: { original } }) => {
+              return getActivationTime(
+                original.info.gdsActivationTime,
+                original.info.lastGdsUpdateTime,
+                "GDS"
+              );
+            },
+            minWidth: 190
+          }
+        ]
+      },
+      {
+        Header: infoIcon("Role"),
+        id: "Role (Time)",
+        columns: [
+          {
+            Header: "Last Update",
+            accessor: "lastRoleUpdateTime",
+            Cell: ({ row: { original } }) => {
+              return getLastUpdateTime(original.info.lastRoleUpdateTime);
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Download",
+            accessor: "roleDownloadTime",
+            Cell: ({ row: { original } }) => {
+              return getDownloadTime(
+                original.info.roleDownloadTime,
+                original.info.lastRoleUpdateTime,
+                "Role"
+              );
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Active",
+            accessor: "roleActivationTime",
+            Cell: ({ row: { original } }) => {
+              return getActivationTime(
+                original.info.roleActivationTime,
+                original.info.lastRoleUpdateTime,
+                "Role"
+              );
+            },
+            minWidth: 190
+          }
+        ]
       }
     ],
     []

@@ -897,22 +897,44 @@ export const UsersyncDetailsKeyDisplayMap = {
 export const pluginStatusColumnInfoMsg = {
   Policy: {
     title: "Policy (Time details)",
-    lastUpdated: "Last updated time of policy.",
-    downloadTime: "Time when policy actually downloaded(sync-up with Ranger).",
-    activeTime: "Time when policy actually in use for enforcement.",
+    lastUpdated: "Last update time of policies",
+    downloadTime: "Last policies download time (sync-up with Ranger).",
+    activeTime: "Last time the downloaded policies became active for enforcement.",
     downloadTimeDelayMsg:
-      "Policy is updated but not yet downloaded(sync-up with Ranger).",
+      "Latest update in policies are not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
-      "Policy is updated but not yet used for any enforcement."
+      "Latest update in policies are not yet active for enforcement."
   },
   Tag: {
     title: "Tag Policy (Time details)",
-    lastUpdated: "Last updated time of Tag-service.",
-    downloadTime: "Time when tag-based policies sync-up with Ranger.",
-    activeTime: "Time when tag-based policies in use for enforcement.",
+    lastUpdated: "Last update time of tags.",
+    downloadTime: "Last tags download time (sync-up with Ranger).",
+    activeTime: "Last time the downloaded tags became active for enforcement.",
     downloadTimeDelayMsg:
-      "Policy is updated but not yet downloaded(sync-up with Ranger).",
+      "Latest update in tags are not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
-      "Policy is updated but not yet used for any enforcement."
+      "Latest update in tags are not yet active for enforcement."
+  },
+  GDS: {
+    title: "GDS (Time details)",
+    lastUpdated: "Last update time of GDS info.",
+    downloadTime:
+      "Last GDS info download time (sync-up with Ranger).",
+    activeTime: "Last time the downloaded GDS info became active for enforcement.",
+    downloadTimeDelayMsg:
+      "Latest update in GDS info is not yet downloaded (sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Latest update in GDS info is not yet active for enforcement."
+  },
+  Role: {
+    title: "Role (Time details)",
+    lastUpdated: "Last updated time of roles.",
+    downloadTime:
+      "Last roles download time (sync-up with Ranger).",
+    activeTime: "Last time the downloaded roles became active for enforcement.",
+    downloadTimeDelayMsg:
+      "Latest update in roles are not yet downloaded (sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Latest update in roles are not yet active for enforcement."
   }
 };
