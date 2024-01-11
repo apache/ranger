@@ -2572,3 +2572,12 @@ li.list-group-item:hover {
   border-bottom: 1px solid #dddddd;
   margin: 1rem 2rem;
 }
+.column-dropdown .dropdown-toggle:focus {
+  color: #fff;
+  background-color: #117a8b;
+  border-color: none;
+}
+.column-dropdown-maxheight {
+  max-height: 400px;
+  overflow-y: auto;
+}

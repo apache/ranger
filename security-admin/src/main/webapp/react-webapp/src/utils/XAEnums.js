@@ -829,3 +829,26 @@ export const UsersyncDetailsKeyDisplayMap = {
   groupSearchFirstEnabled: "Group search first enabled",
   groupHierarchyLevel: "Group hierarchy level"
 };
+
+export const pluginStatusColumnInfoMsg = {
+  Policy: {
+    title: "Policy (Time details)",
+    lastUpdated: "Last updated time of policy.",
+    downloadTime: "Time when policy actually downloaded(sync-up with Ranger).",
+    activeTime: "Time when policy actually in use for enforcement.",
+    downloadTimeDelayMsg:
+      "Policy is updated but not yet downloaded(sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Policy is updated but not yet used for any enforcement."
+  },
+  Tag: {
+    title: "Tag Policy (Time details)",
+    lastUpdated: "Last updated time of Tag-service.",
+    downloadTime: "Time when tag-based policies sync-up with Ranger.",
+    activeTime: "Time when tag-based policies in use for enforcement.",
+    downloadTimeDelayMsg:
+      "Policy is updated but not yet downloaded(sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Policy is updated but not yet used for any enforcement."
+  }
+};

@@ -28,7 +28,7 @@ import {
 } from "react-table";
 import { Table, ButtonGroup } from "react-bootstrap";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import { isEmpty } from "lodash";
+import { groupBy, isEmpty, uniq, uniqBy } from "lodash";
 
 const IndeterminateCheckbox = forwardRef(
   ({ indeterminate, chkType, ...rest }, ref) => {
@@ -195,6 +195,22 @@ function XATableLayout({
       </span>
     );
   };
+  /* For Column Visibility */
+  const groupedColumnsData = groupBy(allColumns, "parent[id]");
+  delete groupedColumnsData.undefined;
+  const allColumnsData = allColumns.map((column) => {
+    const columnName = column?.parent
+      ? `Group(${column?.parent.id})`
+      : `Non-Group(${column?.id})`;
+    return {
+      columnName,
+      columnData: groupedColumnsData[column.parent?.id] || column
+    };
+  });
+
+  let filterAllColumns = uniqBy(allColumnsData, function (column) {
+    return column.columnName;
+  });
 
   let columnShowHide = [];
   return (
@@ -203,7 +219,7 @@ function XATableLayout({
       {columnHide && (
         <div className="text-right mb-2 mt-n5">
           <DropdownButton
-            className="p-0"
+            className="p-0 column-dropdown"
             menuAlign="right"
             as={ButtonGroup}
             size="sm"
@@ -211,35 +227,70 @@ function XATableLayout({
             variant="info"
             title="Columns"
           >
-            <ul className="list-group">
-              {allColumns.map((column, index) => {
-                columnShowHide.push({
-                  name: column.id,
-                  renderable: column.isVisible
-                });
+            <div className="column-dropdown-maxheight">
+              <ul className="list-group fnt-14">
+                {filterAllColumns.map((column, index) => {
+                  columnShowHide.push({
+                    name: column.columnData.id,
+                    renderable: column.columnData.isVisible
+                  });
 
-                localStorage.setItem(
-                  "showHideTableCol",
-                  JSON.stringify({ bigData: columnShowHide })
-                );
-                return (
-                  <li
-                    className="column-list text-truncate"
-                    key={`col-${index}`}
-                  >
-                    <label>
-                      <input
-                        className="mr-1"
-                        type="checkbox"
-                        {...column.getToggleHiddenProps()}
-                      />
-
-                      {column.Header}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
+                  localStorage.setItem(
+                    "showHideTableCol",
+                    JSON.stringify({ bigData: columnShowHide })
+                  );
+                  return column.columnName ==
+                    `Non-Group(${column.columnData.id})` ? (
+                    <li
+                      className="column-list text-truncate"
+                      key={`col-${index}`}
+                    >
+                      <label
+                        title={column.columnData.Header}
+                        className="d-flex align-items-center"
+                      >
+                        <input
+                          className="mr-1"
+                          type="checkbox"
+                          {...column.columnData.getToggleHiddenProps()}
+                        />
+                        {column.columnData.Header}
+                      </label>
+                    </li>
+                  ) : (
+                    <li
+                      className="column-list text-truncate"
+                      key={`col-${index}`}
+                    >
+                      {column.columnName !== undefined && (
+                        <div className="font-weight-bold text-secondary mb-2 fnt-14">
+                          {column.columnName !== undefined &&
+                            column?.columnData[0]?.parent?.id}
+                        </div>
+                      )}
+                      {column.columnData.map((columns) => (
+                        <ul key={columns.id} className="p-0">
+                          <li className=" list-unstyled">
+                            {" "}
+                            <label
+                              title={columns.Header}
+                              className="d-flex align-items-center"
+                            >
+                              <input
+                                className="mr-1"
+                                type="checkbox"
+                                {...columns.getToggleHiddenProps()}
+                              />
+                              {columns.Header}
+                            </label>
+                          </li>
+                        </ul>
+                      ))}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </DropdownButton>
         </div>
       )}
