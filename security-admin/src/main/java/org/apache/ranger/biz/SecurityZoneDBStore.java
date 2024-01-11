@@ -110,7 +110,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
         RangerSecurityZone createdSecurityZone = securityZoneService.create(securityZone);
         if (createdSecurityZone == null) {
-            throw new Exception("Cannot create security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot create security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(createdSecurityZone);
         List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(createdSecurityZone, null, "create");
@@ -126,7 +126,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
         RangerSecurityZone updatedSecurityZone = securityZoneService.update(securityZone);
         if (updatedSecurityZone == null) {
-            throw new Exception("Cannot update security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot update security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
         boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
