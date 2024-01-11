@@ -441,7 +441,11 @@ export const CustomPopoverTagOnClick = ({
 export const CustomTooltip = ({ placement, content, icon }) => (
   <OverlayTrigger
     placement={placement}
-    overlay={<Popover id={`tooltip-${placement}`}>{content}</Popover>}
+    overlay={
+      <Popover id={`tooltip-${placement}`}>
+        <span className=" d-block px-2 py-1">{content}</span>
+      </Popover>
+    }
   >
     <i className={icon} data-id="infoTextFiled" data-cy="infoTextFiled"></i>
   </OverlayTrigger>

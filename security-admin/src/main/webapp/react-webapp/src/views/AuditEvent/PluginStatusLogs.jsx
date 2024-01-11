@@ -23,7 +23,6 @@ import { Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import dateFormat from "dateformat";
 import {
   setTimeStamp,
   fetchSearchFilterParams,
@@ -39,8 +38,18 @@ import {
 } from "../../components/CommonComponents";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
-import { isUndefined, map, sortBy, toUpper, filter } from "lodash";
+import {
+  isUndefined,
+  map,
+  sortBy,
+  toUpper,
+  filter,
+  isNull,
+  isEmpty
+} from "lodash";
 import { getServiceDef } from "../../utils/appState";
+import { pluginStatusColumnInfo } from "../../utils/XAMessages";
+import { pluginStatusColumnInfoMsg } from "../../utils/XAEnums";
 
 function Plugin_Status() {
   const context = useOutletContext();
@@ -120,49 +129,111 @@ function Plugin_Status() {
     return diff < 0 ? true : false;
   };
 
+  const getLastUpdateTime = (lastUpdateTime) => {
+    if (isUndefined(lastUpdateTime) || isNull(lastUpdateTime)) {
+      return <center>--</center>;
+    }
+    return setTimeStamp(lastUpdateTime);
+  };
+
+  const getDownloadTime = (downloadTime, lastUpdateTime, columnsName) => {
+    if (isUndefined(downloadTime) || isNull(downloadTime)) {
+      return <center>--</center>;
+    }
+
+    if (!isUndefined(lastUpdateTime)) {
+      let downloadDate = new Date(parseInt(downloadTime));
+      let lastUpdateDate = new Date(parseInt(lastUpdateTime));
+      if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
+        if (
+          moment(downloadDate).diff(moment(lastUpdateDate), "minutes") >= -2
+        ) {
+          return (
+            <span className="text-warning">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].downloadTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(downloadTime)}
+            </span>
+          );
+        } else {
+          return (
+            <span className="text-error">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].downloadTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(downloadTime)}{" "}
+            </span>
+          );
+        }
+      }
+    }
+    return setTimeStamp(downloadTime);
+  };
+
+  const getActivationTime = (activeTime, lastUdpateTime, columnsName) => {
+    if (isUndefined(activeTime) || isNull(activeTime) || activeTime == 0) {
+      return <center>--</center>;
+    }
+    if (!isUndefined(lastUdpateTime)) {
+      let activeDate = new Date(parseInt(activeTime));
+      let lastUpdateDate = new Date(parseInt(lastUdpateTime));
+      if (isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)) {
+        if (moment(activeDate).diff(moment(lastUpdateDate), "minutes") >= -2) {
+          return (
+            <span className="text-warning">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].activationTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(activeTime)}
+            </span>
+          );
+        } else {
+          return (
+            <span className="text-error">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].activationTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(activeTime)}
+            </span>
+          );
+        }
+      }
+    }
+    return setTimeStamp(activeTime);
+  };
+
   const refreshTable = () => {
     setPluginStatusLogs([]);
     setLoader(true);
     setUpdateTable(moment.now());
   };
 
-  const contents = (val) => {
+  const infoIcon = (columnsName) => {
     return (
       <>
-        <ul className="list-inline">
-          <li className="list-inline-item">
-            <strong>Last Update: </strong> Last updated time of{" "}
-            {val == "Tag" ? "Tag-service" : "policy"}.
-          </li>
-          <li className="list-inline-item">
-            <strong>Download: </strong>
-            {val == "Tag"
-              ? "Time when tag-based policies sync-up with Ranger."
-              : "Time when policy actually downloaded(sync-up with Ranger)."}
-          </li>
-          <li className="list-inline-item">
-            <strong>Active: </strong> Time when{" "}
-            {val == "Tag" ? "tag-based" : "policy"} actually in use for
-            enforcement.
-          </li>
-        </ul>
-      </>
-    );
-  };
-
-  const infoIcon = (val) => {
-    return (
-      <>
-        <b>{val} ( Time )</b>
+        <b>{columnsName} ( Time )</b>
 
         <CustomPopover
           icon="fa-fw fa fa-info-circle info-icon"
-          title={
-            val == "Policy"
-              ? "Policy (Time details)"
-              : "Tag Policy (Time details)"
-          }
-          content={contents(val)}
+          title={pluginStatusColumnInfoMsg[columnsName].title}
+          content={pluginStatusColumnInfo(columnsName)}
           placement="left"
           trigger={["hover", "focus"]}
         />
@@ -217,18 +288,18 @@ function Plugin_Status() {
         accessor: "clusterName",
         Cell: ({ row: { original } }) => {
           let clusterName = original?.info?.clusterName;
-          return isUndefined(clusterName) ? "--" : clusterName;
+          return !isEmpty(clusterName) ? clusterName : <center>--</center>;
         }
       },
       {
         Header: infoIcon("Policy"),
-        id: "policyinfo",
+        id: "Policy (Time)",
         columns: [
           {
             Header: "Last Update",
             accessor: "lastPolicyUpdateTime",
             Cell: ({ row: { original } }) => {
-              return setTimeStamp(original.info.lastPolicyUpdateTime);
+              return getLastUpdateTime(original.info.lastPolicyUpdateTime);
             },
             minWidth: 190
           },
@@ -236,54 +307,11 @@ function Plugin_Status() {
             Header: "Download",
             accessor: "policyDownloadTime",
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.policyDownloadTime)
+              return getDownloadTime(
+                original.info.policyDownloadTime,
+                original.info.lastPolicyUpdateTime,
+                "Policy"
               );
-
-              dateFormat(
-                parseInt(original.info.policyDownloadTime),
-                "mm/dd/yyyy hh:MM:ss TT"
-              );
-              if (!isUndefined(original.info.lastPolicyUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastPolicyUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyDownloadTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyDownloadTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.policyDownloadTime);
             },
             minWidth: 190
           },
@@ -291,51 +319,11 @@ function Plugin_Status() {
             Header: "Active",
             accessor: "policyActivationTime",
             Cell: ({ row: { original } }) => {
-              let activeDate = new Date(
-                parseInt(original.info.policyActivationTime)
+              return getActivationTime(
+                original.info.policyActivationTime,
+                original.info.lastPolicyUpdateTime,
+                "Policy"
               );
-
-              if (!isUndefined(original.info.lastPolicyUpdateTime)) {
-                let lastUpdateDate = new Date(
-                  parseInt(original.info.lastPolicyUpdateTime)
-                );
-
-                if (isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)) {
-                  if (
-                    moment(activeDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            " Policy is updated but not yet used for any enforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyActivationTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            " Policy is updated but not yet used for any enforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyActivationTime)}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.policyActivationTime);
             },
             minWidth: 190
           }
@@ -343,13 +331,13 @@ function Plugin_Status() {
       },
       {
         Header: infoIcon("Tag"),
-        id: "taginfo",
+        id: "Tag (Time)",
         columns: [
           {
             Header: "Last Update",
             accessor: "lastTagUpdateTime",
             Cell: ({ row: { original } }) => {
-              return setTimeStamp(original.info.lastTagUpdateTime);
+              return getLastUpdateTime(original.info.lastTagUpdateTime);
             },
             minWidth: 190
           },
@@ -358,50 +346,11 @@ function Plugin_Status() {
             accessor: "tagDownloadTime",
 
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.tagDownloadTime)
+              return getDownloadTime(
+                original.info.tagDownloadTime,
+                original.info.lastTagUpdateTime,
+                "Tag"
               );
-
-              if (!isUndefined(original.info.lastTagUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastTagUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagDownloadTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagDownloadTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.tagDownloadTime);
             },
             minWidth: 190
           },
@@ -410,50 +359,11 @@ function Plugin_Status() {
             accessor: "tagActivationTime",
 
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.tagActivationTime)
+              return getActivationTime(
+                original.info.tagActivationTime,
+                original.info.lastTagUpdateTime,
+                "Tag"
               );
-
-              if (!isUndefined(original.info.lastTagUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastTagUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet used for anyenforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagActivationTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet used for anyenforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagActivationTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.tagActivationTime);
             },
             minWidth: 190
           }
@@ -564,7 +474,11 @@ function Plugin_Status() {
             </div>
           </Col>
         </Row>
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <Row>
+          <Col sm={11}>
+            <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+          </Col>
+        </Row>
         <XATableLayout
           data={pluginStatusListingData}
           columns={columns}
@@ -574,6 +488,7 @@ function Plugin_Status() {
           columnSort={true}
           clientSideSorting={true}
           showPagination={false}
+          columnHide={true}
         />
       </React.Fragment>
     </div>

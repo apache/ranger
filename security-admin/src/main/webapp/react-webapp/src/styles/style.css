@@ -3032,3 +3032,13 @@ textarea.gds-placeholder::placeholder,
   max-height: 126px;
   overflow-y: scroll;
 }
+
+.column-dropdown .dropdown-toggle:focus {
+  color: #fff;
+  background-color: #117a8b;
+  border-color: none;
+}
+.column-dropdown-maxheight {
+  max-height: 400px;
+  overflow-y: auto;
+}
