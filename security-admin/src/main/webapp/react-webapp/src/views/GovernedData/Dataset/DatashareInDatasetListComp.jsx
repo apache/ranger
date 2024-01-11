@@ -388,7 +388,7 @@ const DatashareInDatasetListComp = ({
             <span
               className="text-truncate"
               title={val.value}
-              style={{ maxWidth: "240px", display: "inline-block" }}
+              style={{ maxWidth: "140px", display: "inline-block" }}
             >
               {val.value}
             </span>
@@ -404,7 +404,7 @@ const DatashareInDatasetListComp = ({
             <span
               className="text-truncate"
               title={val.value}
-              style={{ maxWidth: "240px", display: "inline-block" }}
+              style={{ maxWidth: "140px", display: "inline-block" }}
             >
               {val.value}
             </span>
@@ -420,7 +420,7 @@ const DatashareInDatasetListComp = ({
             <span
               className="text-truncate"
               title={val.value}
-              style={{ maxWidth: "240px", display: "inline-block" }}
+              style={{ maxWidth: "140px", display: "inline-block" }}
             >
               {val.value}
             </span>
