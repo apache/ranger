@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.HiveObjectRef;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -1438,6 +1439,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				} else if(StringUtils.isNotEmpty(transformer)) {
 					columnTransformer = transformer.replace("{col}", columnName);
+				}
+
+				if (columnTransformer.contains("{colType}")) {
+					String colType = getColumnType(tableOrView, columnName, metaStoreClient);
+
+					if (StringUtils.isBlank(colType)) {
+						LOG.warn("addCellValueTransformerAndCheckIfTransformed(" + databaseName + ", " + tableOrViewName + ", " + columnName + "): failed to find column datatype");
+
+						colType = "string";
+					}
+
+					columnTransformer = columnTransformer.replace("{colType}", colType);
 				}
 
 				/*
@@ -3199,6 +3212,39 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("setOwnerUser(" + hiveObj + "): ownerName=" + resource.getOwnerUser());
 		}
+	}
+
+	private static String getColumnType(HivePrivilegeObject hiveObj, String colName, IMetaStoreClient metaStoreClient) {
+		String ret = null;
+
+		if (hiveObj != null && metaStoreClient != null) {
+			try {
+				switch (hiveObj.getType()) {
+					case TABLE_OR_VIEW:
+					case COLUMN:
+						Table             table = metaStoreClient.getTable(hiveObj.getDbname(), hiveObj.getObjectName());
+						List<FieldSchema> cols  = table != null && table.getSd() != null ? table.getSd().getCols() : null;
+
+						if (CollectionUtils.isNotEmpty(cols)) {
+							for (FieldSchema col : cols) {
+								if (StringUtils.equalsIgnoreCase(col.getName(), colName)) {
+									ret = col.getType();
+									break;
+								}
+							}
+						}
+						break;
+				}
+			} catch (Exception excp) {
+				LOG.error("failed to get column type from Hive metastore. dbName=" + hiveObj.getDbname() + ", tblName=" + hiveObj.getObjectName() + ", colName=" + colName, excp);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("getColumnType(" + hiveObj + ", " + colName + "): columnType=" + ret);
+		}
+
+		return ret;
 	}
 
 	private IMetaStoreClient getMetaStoreClient() {
