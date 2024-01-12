@@ -78,6 +78,9 @@ public class TestRoleDBStore {
     RoleDBStore roleDBStore = new RoleDBStore();
 
     @Mock
+    GdsDBStore gdsStore;
+
+    @Mock
     RangerBizUtil bizUtil;
 
     @Mock
@@ -482,14 +485,11 @@ public class TestRoleDBStore {
 
     @Test
     public void testDeleteRoleByValidRoleNameWhenRoleIsAssociatedWithOneOrMorePolices() throws Exception {
-        XXRole             xxRole             = getTestRole();
-        XXRoleDao          xxRoleDao          = Mockito.mock(XXRoleDao.class);
-        XXPolicyRefRoleDao xxPolicyRefRoleDao = Mockito.mock(XXPolicyRefRoleDao.class);
+        XXRole    xxRole    = getTestRole();
+        XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
 
         Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(xxRole);
-        Mockito.when(daoMgr.getXXPolicyRefRole()).thenReturn(xxPolicyRefRoleDao);
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
-        Mockito.when(xxPolicyRefRoleDao.findRoleRefPolicyCount(roleName)).thenReturn(1L);
         thrown.expect(Exception.class);
 
         roleDBStore.deleteRole(roleName);
@@ -497,17 +497,11 @@ public class TestRoleDBStore {
 
     @Test
     public void testDeleteRoleByValidRoleNameWhenRoleIsAssociatedWithOneOrMoreRoles() throws Exception {
-        XXRole             xxRole             = getTestRole();
-        XXRoleDao          xxRoleDao          = Mockito.mock(XXRoleDao.class);
-        XXPolicyRefRoleDao xxPolicyRefRoleDao = Mockito.mock(XXPolicyRefRoleDao.class);
-        XXRoleRefRoleDao   xxRoleRefRoleDao   = Mockito.mock(XXRoleRefRoleDao.class);
+        XXRole    xxRole    = getTestRole();
+        XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
 
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(xxRole);
-        Mockito.when(daoMgr.getXXPolicyRefRole()).thenReturn(xxPolicyRefRoleDao);
-        Mockito.when(xxPolicyRefRoleDao.findRoleRefPolicyCount(roleName)).thenReturn(0L);
-        Mockito.when(daoMgr.getXXRoleRefRole()).thenReturn(xxRoleRefRoleDao);
-        Mockito.when(xxRoleRefRoleDao.findRoleRefRoleCount(roleName)).thenReturn(1L);
         thrown.expect(Exception.class);
 
         roleDBStore.deleteRole(roleName);
@@ -515,20 +509,11 @@ public class TestRoleDBStore {
 
     @Test
     public void testDeleteRoleByValidRoleNameWhenRoleIsAssociatedWithOneOrMoreSecurityZones() throws Exception {
-        XXRole                   xxRole             = getTestRole();
-        XXRoleDao                xxRoleDao          = Mockito.mock(XXRoleDao.class);
-        XXPolicyRefRoleDao       xxPolicyRefRoleDao = Mockito.mock(XXPolicyRefRoleDao.class);
-        XXRoleRefRoleDao         xxRoleRefRoleDao   = Mockito.mock(XXRoleRefRoleDao.class);
-        XXSecurityZoneRefRoleDao xxSzRefRoleDao     = Mockito.mock(XXSecurityZoneRefRoleDao.class);
+        XXRole    xxRole    = getTestRole();
+        XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
 
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(xxRole);
-        Mockito.when(daoMgr.getXXPolicyRefRole()).thenReturn(xxPolicyRefRoleDao);
-        Mockito.when(xxPolicyRefRoleDao.findRoleRefPolicyCount(roleName)).thenReturn(0L);
-        Mockito.when(daoMgr.getXXRoleRefRole()).thenReturn(xxRoleRefRoleDao);
-        Mockito.when(xxRoleRefRoleDao.findRoleRefRoleCount(roleName)).thenReturn(0L);
-        Mockito.when(daoMgr.getXXSecurityZoneRefRole()).thenReturn(xxSzRefRoleDao);
-        Mockito.when(xxSzRefRoleDao.findRoleRefZoneCount(roleName)).thenReturn(1L);
         thrown.expect(Exception.class);
 
         roleDBStore.deleteRole(roleName);

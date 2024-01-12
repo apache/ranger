@@ -220,6 +220,9 @@ public class TestXUserMgr {
 	ServiceDBStore svcStore;
 
 	@Mock
+	GdsDBStore gdsStore;
+
+	@Mock
 	XGroupGroupService xGroupGroupService;
 
 	@Mock

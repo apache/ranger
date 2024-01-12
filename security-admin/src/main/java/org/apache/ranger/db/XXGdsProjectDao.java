@@ -20,15 +20,19 @@
 package org.apache.ranger.db;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -97,5 +101,28 @@ public class XXGdsProjectDao extends BaseDao<XXGdsProject> {
 		}
 
 		return ret != null ? ret : Collections.emptyList();
+	}
+
+	public Map<Long, RangerGdsObjectACL> getProjectIdsAndACLs() {
+		Map<Long, RangerGdsObjectACL> ret = new HashMap<>();
+
+		try {
+			List<Object[]> rows = getEntityManager().createNamedQuery("XXGdsProject.getProjectIdsAndACLs", Object[].class).getResultList();
+
+			if (rows != null) {
+				for (Object[] row : rows) {
+					Long               id  = (Long) row[0];
+					RangerGdsObjectACL acl = JsonUtils.jsonToObject((String) row[1], RangerGdsObjectACL.class);
+
+					if (acl != null) {
+						ret.put(id, acl);
+					}
+				}
+			}
+		} catch (NoResultException e) {
+			LOG.debug("getProjectIdsAndACLs()", e);
+		}
+
+		return ret;
 	}
 }

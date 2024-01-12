@@ -166,6 +166,9 @@ public class XUserMgr extends XUserMgrBase {
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
+	GdsDBStore gdsStore;
+
+	@Autowired
 	@Qualifier(value = "transactionManager")
 	PlatformTransactionManager txManager;
 
@@ -2169,6 +2172,8 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			//delete group from audit filter configs
 			svcStore.updateServiceAuditConfig(vXGroup.getName(), REMOVE_REF_TYPE.GROUP);
+			// delete group from dataset,datashare,project
+			gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.GROUP.toString(), vXGroup.getName());
 			//delete XXGroup
 			xXGroupDao.remove(id);
 			//Create XXTrxLog
@@ -2396,6 +2401,8 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			//delete user from audit filter configs
 			svcStore.updateServiceAuditConfig(vXUser.getName(), REMOVE_REF_TYPE.USER);
+			//delete gdsObject mapping of user
+			gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.USER.toString(),vXUser.getName());
 			//delete XXUser entry of user
 			xXUserDao.remove(id);
 			//delete XXPortal entry of user

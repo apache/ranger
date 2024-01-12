@@ -22,6 +22,7 @@ package org.apache.ranger.biz;
 import org.apache.http.HttpStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.*;
@@ -1339,6 +1340,48 @@ public class GdsDBStore extends AbstractGdsStore {
 		return ret;
 	}
 
+    public void deletePrincipalFromGdsAcl(String principalType, String principalName) {
+        Map<Long, RangerGdsObjectACL> datsetAcls    = daoMgr.getXXGdsDataset().getDatasetIdsAndACLs();
+        Map<Long, RangerGdsObjectACL> dataShareAcls = daoMgr.getXXGdsDataShare().getDataShareIdsAndACLs();
+        Map<Long, RangerGdsObjectACL> projectAcls   = daoMgr.getXXGdsProject().getProjectIdsAndACLs();
+
+        for (Map.Entry<Long, RangerGdsObjectACL> entry : datsetAcls.entrySet()) {
+            Long               id  = entry.getKey();
+            RangerGdsObjectACL acl = entry.getValue();
+
+            if (deletePrincipalFromAcl(acl, principalName, principalType) != null) {
+                RangerDataset dataset = datasetService.read(id);
+
+                dataset.setAcl(acl);
+                datasetService.update(dataset);
+            }
+        }
+
+        for (Map.Entry<Long, RangerGdsObjectACL> entry : dataShareAcls.entrySet()) {
+            Long               id  = entry.getKey();
+            RangerGdsObjectACL acl = entry.getValue();
+
+            if (deletePrincipalFromAcl(acl, principalName, principalType) != null) {
+                RangerDataShare dataShare = dataShareService.read(id);
+
+                dataShare.setAcl(acl);
+                dataShareService.update(dataShare);
+            }
+        }
+
+        for (Map.Entry<Long, RangerGdsObjectACL> entry : projectAcls.entrySet()) {
+            Long               id  = entry.getKey();
+            RangerGdsObjectACL acl = entry.getValue();
+
+            if (deletePrincipalFromAcl(acl, principalName, principalType) != null) {
+                RangerProject project = projectService.read(id);
+
+                project.setAcl(acl);
+                projectService.update(project);
+            }
+        }
+    }
+
 	private List<DataShareInDatasetSummary> getDshInDsSummary(List<RangerDataShare> dataShares, List<RangerDataset> datasets, RangerDataShareInDatasetList dshInDsList) {
 		Set<DataShareInDatasetSummary> ret          = new LinkedHashSet<>();
 		Map<Long, RangerDataset>       datasetMap   = toMap(datasets);
@@ -2135,6 +2178,22 @@ public class GdsDBStore extends AbstractGdsStore {
             updateGdsVersionForService(dataShare.getServiceId());
         }
     }
+
+	private GdsPermission deletePrincipalFromAcl(RangerGdsObjectACL acl, String principalName, String principalType) {
+        final Map<String, GdsPermission> principalAcls;
+
+		if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.USER.toString())) {
+            principalAcls = acl.getUsers();
+		} else if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.GROUP.toString())) {
+            principalAcls = acl.getGroups();
+		} else if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.ROLE.toString())) {
+            principalAcls = acl.getRoles();
+		} else {
+            principalAcls = null;
+        }
+
+		return principalAcls != null ? principalAcls.remove(principalName) : null;
+	}
 
     private void copyExistingBaseFields(RangerGdsBaseModelObject objToUpdate, RangerGdsBaseModelObject existingObj) {
         if (objToUpdate != null && existingObj != null) {

@@ -86,6 +86,9 @@ public class RoleDBStore implements RoleStore {
 	@Autowired
 	ServiceDBStore svcStore;
 
+	@Autowired
+	GdsDBStore gdsStore;
+
     RangerAdminConfig config;
 
     private Boolean populateExistingBaseFields = false;
@@ -200,19 +203,7 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
         }
 
-        ensureRoleDeleteAllowed(roleName);
-
-        Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
-        transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
-
-        RangerRole role = roleService.read(xxRole.getId());
-        roleRefUpdater.cleanupRefTables(role);
-		// delete role from audit filter configs
-		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
-        roleService.delete(role);
-
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        deleteRole(xxRole.getId());
     }
 
     @Override
@@ -227,6 +218,10 @@ public class RoleDBStore implements RoleStore {
         roleRefUpdater.cleanupRefTables(role);
 		// delete role from audit filter configs
 		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
+
+		// delete gdsObject mapping of role
+		gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.ROLE.toString(), role.getName());
+
         roleService.delete(role);
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
         bizUtil.createTrxLog(trxLogList);
