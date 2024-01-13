@@ -1100,7 +1100,10 @@ class ServiceForm extends Component {
                               </Row>
                             )}
                           </Field>
-                          <Field name="displayName">
+                          <Field
+                          name="displayName"
+                          validate={this.composeValidators(
+                            this.validateServiceName)}>
                             {({ input, meta }) => (
                               <Row className="form-group">
                                 <Col xs={3}>
