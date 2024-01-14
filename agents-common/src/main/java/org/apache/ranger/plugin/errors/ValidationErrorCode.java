@@ -66,7 +66,7 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_INVALID_DEFAULT_INDEX(2019, "default index[{0}] for enum [{1}] is invalid"),
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT(2020, "An enum element in enum element collection of enum [{0}] is null"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS(2021, "Resource-def levels are not in increasing order in an hierarchy"),
-	SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
+    SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_MANADORY_VALUE_FOR_SERVICE_RESOURCE(2023, "{0} cannot be mandatory because {1}(parent) is not mandatory"),
 
     // POLICY VALIDATION
@@ -164,6 +164,9 @@ public enum ValidationErrorCode {
     GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD(4126, "[{0}] can't be updated"),
     GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND(4127, "Dataset-in-project with ID [{0}] does not exist"),
     GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT(4128, "Shared resource with resources [{0}] already exists for data share [{1}]"),
+    GDS_DATASET_NAME_TOO_LONG(4129, "Invalid dataset name=[{0}]. Dataset name should not be longer than 512 characters"),
+    GDS_DATASHARE_NAME_TOO_LONG(4130, "Invalid datashare name=[{0}]. Datashare name should not be longer than 512 characters"),
+    GDS_PROJECT_NAME_TOO_LONG(4131, "Invalid project name=[{0}]. Project name should not be longer than 512 characters"),
     ;
 
 

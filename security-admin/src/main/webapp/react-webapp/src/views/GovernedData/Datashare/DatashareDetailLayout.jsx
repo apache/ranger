@@ -553,6 +553,12 @@ const DatashareDetailLayout = () => {
     datashareInfo.conditionExpr = datashareConditionExpr;
     datashareInfo.defaultAccessTypes = [];
 
+    if(datashareName.length>512)
+    {
+      toast.error("Datashare name must be 512 characters or less!");
+      return;
+    }
+
     accessType?.forEach((access) =>
       datashareInfo.defaultAccessTypes.push(access.value)
     );

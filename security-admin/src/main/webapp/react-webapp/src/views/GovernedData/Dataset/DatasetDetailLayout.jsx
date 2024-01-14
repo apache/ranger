@@ -1500,16 +1500,27 @@ const DatasetDetailLayout = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={
-                  activeKey == "accessGrants" &&
-                  accessGrantFormValues != undefined &&
-                  datasetNameEditable
-                    ? updateDatasetAndAccessGrant
-                    : activeKey != "accessGrants" ||
-                      (activeKey == "accessGrants" && datasetNameEditable)
-                    ? updateDatasetDetails
-                    : updateDatasetAccessGrant
-                }
+                onClick={() => {
+                  if(datasetName.length > 512) {
+                    toast.error('Dataset name must be 512 characters or less');
+                  }
+                  else {
+                    if (
+                      activeKey === 'accessGrants' &&
+                      accessGrantFormValues !== undefined &&
+                      datasetNameEditable
+                    ) {
+                      updateDatasetAndAccessGrant();
+                    } else if (
+                      activeKey !== 'accessGrants' ||
+                      (activeKey === 'accessGrants' && datasetNameEditable)
+                    ) {
+                      updateDatasetDetails();
+                    } else {
+                      updateDatasetAccessGrant();
+                    }
+                  }
+                }}
                 size="sm"
                 data-id="save"
                 data-cy="save"

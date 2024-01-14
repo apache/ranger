@@ -177,6 +177,10 @@ const AddDatashareView = () => {
       if (datashareName == undefined) {
         toast.error("Please add Datashare Name");
         return;
+      } else if (datashareName.length>512)
+      {
+        toast.error("DataShare Name must not exceed 512 characters");
+        return;
       } else if (selectedService == undefined) {
         toast.error("Please add Service Name");
         return;

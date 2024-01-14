@@ -53,6 +53,8 @@ public class RangerGdsValidator {
 
     private final RangerGdsValidationDataProvider dataProvider;
 
+    public static final Integer GDS_ENTITIES_NAME_MAX_LENGTH = 512;
+
     @Autowired
     RESTErrorUtil restErrorUtil;
 
@@ -68,6 +70,10 @@ public class RangerGdsValidator {
 
         if (existing != null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT, "name", dataset.getName(), existing));
+        }
+
+        if (dataset.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_DATASET_NAME_TOO_LONG, "name", dataset.getName()));
         }
 
         validateAcl(dataset.getAcl(), "acl", result);
@@ -97,6 +103,10 @@ public class RangerGdsValidator {
 
                 if (existingDatasetNameId != null) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT, "name", dataset.getName(), existingDatasetNameId));
+                }
+
+                if (dataset.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_DATASET_NAME_TOO_LONG, "name", dataset.getName()));
                 }
             }
         }
@@ -136,6 +146,10 @@ public class RangerGdsValidator {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_NAME_CONFLICT, "name", project.getName(), existing));
         }
 
+        if (project.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_PROJECT_NAME_TOO_LONG, "name", project.getName()));
+        }
+
         validateAcl(project.getAcl(), "acl", result);
 
         if (!result.isSuccess()) {
@@ -163,6 +177,10 @@ public class RangerGdsValidator {
 
                 if (existingProjectNameId != null) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_PROJECT_NAME_CONFLICT, "name", project.getName(), existingProjectNameId));
+                }
+
+                if (project.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_PROJECT_NAME_TOO_LONG, "name", project.getName()));
                 }
             }
         }
@@ -202,6 +220,10 @@ public class RangerGdsValidator {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NAME_CONFLICT, "name", dataShare.getName(), existing));
         }
 
+        if (dataShare.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+            result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_DATASHARE_NAME_TOO_LONG, "name", dataShare.getName()));
+        }
+
         validateServiceZoneAdmin(dataShare.getService(), dataShare.getZone(), result);
 
         validateAcl(dataShare.getAcl(), "acl", result);
@@ -235,6 +257,10 @@ public class RangerGdsValidator {
 
                 if (existingDataShareNameId != null) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NAME_CONFLICT, "name", dataShare.getName(), existingDataShareNameId));
+                }
+
+                if (dataShare.getName().length() > GDS_ENTITIES_NAME_MAX_LENGTH) {
+                    result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_DATASHARE_NAME_TOO_LONG, "name", dataShare.getName()));
                 }
             }
         }
