@@ -29,6 +29,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_GDS_RESULT    = "_GDS_RESULT";
 	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED = "ISREQUESTPREPROCESSED";
 	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES     = "RESOURCE_ZONE_NAMES";
+	public static final String KEY_CONTEXT_ACCESS_TYPE_RESULTS = "_ACCESS_TYPE_RESULTS";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -321,5 +323,42 @@ public class RangerAccessRequestUtil {
 		Set<String> ret = getResourceZoneNamesFromContext(context);
 
 		return ret != null && ret.size() == 1 ? ret.iterator().next() : null;
+	}
+
+	public static void setAccessTypeResults(Map<String, Object> context, Map<String, RangerAccessResult> accessTypeResults) {
+		if (context != null) {
+			if (accessTypeResults != null) {
+				context.put(KEY_CONTEXT_ACCESS_TYPE_RESULTS, accessTypeResults);
+			} else {
+				context.remove(KEY_CONTEXT_ACCESS_TYPE_RESULTS);
+			}
+		}
+	}
+
+	public static Map<String, RangerAccessResult> getAccessTypeResults(Map<String, Object> context) {
+		Map<String, RangerAccessResult> ret = null;
+
+		if (context != null) {
+			Object o = context.get(KEY_CONTEXT_ACCESS_TYPE_RESULTS);
+			if (o != null) {
+				ret = (Map<String, RangerAccessResult>)o;
+			}
+		}
+
+		return ret;
+	}
+
+	public static void setAccessTypeResult(Map<String, Object> context, String accessType, RangerAccessResult result) {
+		if (context != null) {
+			Map<String, RangerAccessResult> results = getAccessTypeResults(context);
+
+			if (results == null) {
+				results = new HashMap<>();
+
+				setAccessTypeResults(context, results);
+			}
+
+			results.putIfAbsent(accessType, result);
+		}
 	}
 }

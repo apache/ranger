@@ -818,11 +818,29 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			} else {
 				Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
 
-				if (CollectionUtils.isNotEmpty(allRequestedAccesses)) {
+				if (CollectionUtils.size(allRequestedAccesses) > 1) {
 					for (String accessType : allRequestedAccesses) {
-						accessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), request.getUserRoles(), accessType);
-						if (accessResult == null) {
-							break;
+						Integer oneAccessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), request.getUserRoles(), accessType);
+						if (oneAccessResult != null) {
+							if (oneAccessResult.equals(RangerPolicyEvaluator.ACCESS_DENIED)) {
+								accessResult = oneAccessResult;
+								RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
+
+								break;
+							}
+							if (oneAccessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED)) {
+								if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
+									if (matchType != RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
+										RangerAccessResult oneResult = new RangerAccessResult(result.getPolicyType(), result.getServiceName(), result.getServiceDef(), result.getAccessRequest());
+										oneResult.setIsAllowed(true);
+										oneResult.setPolicyPriority(getPolicyPriority());
+										oneResult.setPolicyId(getPolicyId());
+										oneResult.setPolicyVersion(getPolicy().getVersion());
+
+										RangerAccessRequestUtil.setAccessTypeResult(request.getContext(), accessType, oneResult);
+									}
+								}
+							}
 						}
 					}
 				} else {
@@ -865,7 +883,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						updateAccessResult(oneResult, matchType, false, "matched deny-all-else policy");
 					}
 
-					if (request.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) {
+					if (request.isAccessTypeAny() || allRequestedAccesses.size() == 1 || RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) {
 						// Implement OR logic
 						if (oneResult.getIsAllowed()) {
 							allowResult = oneResult;
@@ -886,14 +904,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						// Implement AND logic
 						if (oneResult.getIsAccessDetermined() && !oneResult.getIsAllowed()) {
 							denyResult = oneResult;
-							allowResult = null;
+							RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
 
 							break;
 						} else if (oneResult.getIsAllowed()) {
-							allowResult = noResult ? null : oneResult;
-						} else {
-							noResult = true;
-							allowResult = null;
+							RangerAccessRequestUtil.setAccessTypeResult(request.getContext(), accessType, oneResult);
 						}
 					}
 				}
