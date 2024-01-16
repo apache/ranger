@@ -645,7 +645,10 @@ function PolicyListing(props) {
     let currentServiceDef = serviceDef;
 
     if (currentServiceDef !== undefined) {
-      let serviceDefResource = currentServiceDef.resources;
+      let serviceDefResource = getResourcesDefVal(
+        currentServiceDef,
+        policyType
+      );
 
       let serviceDefResourceOption = serviceDefResource?.map((obj) => ({
         category: "resource:" + obj.name,
