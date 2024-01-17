@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -120,7 +121,15 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             ret = request.isAccessTypeAny() ? !allowedAccessTypes.isEmpty() : allowedAccessTypes.contains(request.getAccessType());
 
             if (ret) {
-                ret = policyResourceMatcher.isMatch(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
+                MatchType matchType = policyResourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
+
+                if (request.isAccessTypeAny()) {
+                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+                } else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+                } else {
+                    ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+                }
 
                 if (!ret) {
                     LOG.debug("GdsSharedResourceEvaluator.evaluate({}): not matched for resource {}", request, request.getResource());
@@ -179,7 +188,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             int ret = 0;
 
             if (me != null && other != null) {
-                ret = StringUtils.compare(me.resource.getName(), other.resource.getName());
+                ret = compareStrings(me.resource.getName(), other.resource.getName());
 
                 if (ret == 0) {
                     ret = Integer.compare(me.resource.getResource().size(), other.resource.getResource().size());
@@ -195,6 +204,14 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             }
 
             return ret;
+        }
+
+        static int compareStrings(String str1, String str2) {
+            if (str1 == null) {
+                return str2 == null ? 0 : -1;
+            } else {
+                return str2 == null ? 1 : str1.compareTo(str2);
+            }
         }
     }
 }

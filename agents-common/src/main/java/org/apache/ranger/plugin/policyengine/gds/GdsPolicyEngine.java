@@ -50,6 +50,7 @@ public class GdsPolicyEngine {
     public static final String RESOURCE_NAME_PROJECT_ID = "project-id";
 
     private final ServiceGdsInfo                           gdsInfo;
+    private final Set<String>                              allAccessTypes;
     private final Map<String, List<GdsDataShareEvaluator>> zoneDataShares = new HashMap<>();
     private final Map<Long, GdsDatasetEvaluator>           datasets       = new HashMap<>();
     private final Map<Long, GdsProjectEvaluator>           projects       = new HashMap<>();
@@ -57,7 +58,8 @@ public class GdsPolicyEngine {
     public GdsPolicyEngine(ServiceGdsInfo gdsInfo, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         LOG.debug("==> RangerGdsPolicyEngine()");
 
-        this.gdsInfo = gdsInfo;
+        this.gdsInfo        = gdsInfo;
+        this.allAccessTypes = Collections.unmodifiableSet(getAllAccessTypes(serviceDefHelper));
 
         init(serviceDefHelper, pluginContext);
 
@@ -71,30 +73,42 @@ public class GdsPolicyEngine {
     public GdsAccessResult evaluate(RangerAccessRequest request) {
         LOG.debug("==> RangerGdsPolicyEngine.evaluate({})", request);
 
-        GdsAccessResult             ret        = null;
-        List<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
+        GdsAccessResult ret         = null;
+        boolean         isAnyAccess = request.isAccessTypeAny();
 
-        if (!dataShares.isEmpty()) {
-            ret = new GdsAccessResult();
-
-            if (dataShares.size() > 1) {
-                dataShares.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
+        try {
+            if (isAnyAccess) {
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allAccessTypes, Boolean.TRUE);
             }
 
-            Set<Long> datasetIds = new HashSet<>();
+            List<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
 
-            for (GdsDataShareEvaluator dshEvaluator : dataShares) {
-                dshEvaluator.evaluate(request, ret, datasetIds);
-            }
+            if (!dataShares.isEmpty()) {
+                ret = new GdsAccessResult();
 
-            if (!datasetIds.isEmpty()) {
-                Set<Long> projectIds = new HashSet<>();
-
-                evaluateDatasetPolicies(datasetIds, request, ret, projectIds);
-
-                if (!projectIds.isEmpty()) {
-                    evaluateProjectPolicies(projectIds, request, ret);
+                if (dataShares.size() > 1) {
+                    dataShares.sort(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
                 }
+
+                Set<Long> datasetIds = new HashSet<>();
+
+                for (GdsDataShareEvaluator dshEvaluator : dataShares) {
+                    dshEvaluator.evaluate(request, ret, datasetIds);
+                }
+
+                if (!datasetIds.isEmpty()) {
+                    Set<Long> projectIds = new HashSet<>();
+
+                    evaluateDatasetPolicies(datasetIds, request, ret, projectIds);
+
+                    if (!projectIds.isEmpty()) {
+                        evaluateProjectPolicies(projectIds, request, ret);
+                    }
+                }
+            }
+        } finally {
+            if (isAnyAccess) {
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), null, Boolean.FALSE);
             }
         }
 
@@ -502,7 +516,16 @@ public class GdsPolicyEngine {
                 }
             }
         }
+    }
 
+    private Set<String> getAllAccessTypes(RangerServiceDefHelper serviceDefHelper) {
+        Set<String> ret = new HashSet<>();
+
+        for (RangerAccessTypeDef accessTypeDef : serviceDefHelper.getServiceDef().getAccessTypes()) {
+            ret.add(accessTypeDef.getName());
+        }
+
+        return ret;
     }
 
     static class SharedResourceIter implements Iterator<GdsSharedResourceEvaluator> {

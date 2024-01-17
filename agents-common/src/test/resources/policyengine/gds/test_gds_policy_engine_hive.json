@@ -51,6 +51,14 @@
       "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
+      "name":    "database: sales, user: ds-user, access: _any",
+      "request": {
+        "resource":   { "elements": { "database": "sales" } },
+        "accessType": "", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ "dataset-1" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
       "name":    "table: finance.invoices, user: ds-user, access: select",
       "request": {
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
@@ -67,10 +75,26 @@
       "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
+      "name":    "database: finance, user: ds-user, access: _any",
+      "request": {
+        "resource":   { "elements": { "database": "finance" } },
+        "accessType": "", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+    },
+    {
       "name":    "table: shipping.shipments, user: ds-user, access: select",
       "request": {
         "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2002 }
+    },
+    {
+      "name":    "database: shipping, user: ds-user, access: _any",
+      "request": {
+        "resource":   { "elements": { "database": "shipping" } },
+        "accessType": "", "user": "ds-user", "userGroups": []
       },
       "result": { "datasets": [ "dataset-2" ], "projects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 2002 }
     },
@@ -83,10 +107,26 @@
       "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
+      "name":    "database: customers, user: ds-user, access: _any",
+      "request": {
+        "resource":   { "elements": { "database": "customers" } },
+        "accessType": "", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+    },
+    {
       "name":    "table: operations.facilities, user: ds-user, access: select",
       "request": {
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": true, "isAudited": true, "policyId": 2004 }
+    },
+    {
+      "name":    "database: operations, user: ds-user, access: _any",
+      "request": {
+        "resource":   { "elements": { "database": "operations" } },
+        "accessType": "", "user": "ds-user", "userGroups": []
       },
       "result": { "datasets": [ "dataset-4" ], "projects": null, "isAllowed": true, "isAudited": true, "policyId": 2004 }
     },
