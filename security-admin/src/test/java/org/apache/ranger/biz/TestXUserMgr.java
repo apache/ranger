@@ -584,6 +584,7 @@ public class TestXUserMgr {
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
 		policy.setPolicyLabels(policyLabels);
+		policy.setServiceType("hdfs");
 		return policy;
 	}
 

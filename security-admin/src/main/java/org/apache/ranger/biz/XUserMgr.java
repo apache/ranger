@@ -44,9 +44,11 @@ import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.UserInfo;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.service.*;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
@@ -2153,12 +2155,37 @@ public class XUserMgr extends XUserMgrBase {
 				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
 
 				try {
-					svcStore.updatePolicy(rangerPolicy);
+					if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+						Map<String, RangerPolicyResource> resources = rangerPolicy.getResources();
+
+						if (MapUtils.isEmpty(resources)) {
+							continue;
+						}
+
+						if (resources.containsKey(GdsDBStore.RESOURCE_NAME_DATASET_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_DATASET_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateDatasetPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						} else if (resources.containsKey(GdsDBStore.RESOURCE_NAME_PROJECT_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_PROJECT_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateProjectPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						}
+					} else {
+						svcStore.updatePolicy(rangerPolicy);
+					}
 				} catch (Throwable excp) {
 					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
 					restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+
 			if(CollectionUtils.isNotEmpty(xXGroupPermissions)){
 				for (XXGroupPermission xXGroupPermission : xXGroupPermissions) {
 					if(xXGroupPermission!=null){
@@ -2393,12 +2420,37 @@ public class XUserMgr extends XUserMgrBase {
 				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
 
 				try{
-					svcStore.updatePolicy(rangerPolicy);
-				}catch(Throwable excp) {
+					if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+						Map<String, RangerPolicyResource> resources = rangerPolicy.getResources();
+
+						if (MapUtils.isEmpty(resources)) {
+							continue;
+						}
+
+						if (resources.containsKey(GdsDBStore.RESOURCE_NAME_DATASET_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_DATASET_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateDatasetPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						} else if (resources.containsKey(GdsDBStore.RESOURCE_NAME_PROJECT_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_PROJECT_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateProjectPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						}
+					} else {
+						svcStore.updatePolicy(rangerPolicy);
+					}
+				} catch(Throwable excp) {
 					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
 					throw restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+
 			//delete user from audit filter configs
 			svcStore.updateServiceAuditConfig(vXUser.getName(), REMOVE_REF_TYPE.USER);
 			//delete gdsObject mapping of user
