@@ -4405,7 +4405,7 @@ public class ServiceREST {
 			if (StringUtils.isBlank(ret)) {
 				final int lastIndexOfSep = StringUtils.lastIndexOf(resourceServiceName, SEP);
 
-				ret = (lastIndexOfSep != -1) ? resourceServiceName.substring(0, lastIndexOfSep) + SEP + linkedServiceType : null;
+				ret = (lastIndexOfSep != -1) ? resourceServiceName.substring(0, lastIndexOfSep) + SEP + linkedServiceType : linkedServiceType;
 			}
 
 			return ret;
