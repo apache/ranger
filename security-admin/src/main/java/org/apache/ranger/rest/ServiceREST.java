@@ -4356,6 +4356,102 @@ public class ServiceREST {
 			this.tagServiceName = tagserviceName;
 			this.resourceServiceName = resourceServiceName;
 			this.isAutoLinkTagService = isAutoLinkTagService;
+			this.linkedServiceType   = linkedServiceType;
+			this.linkedServiceName   = computeLinkedServiceName();
+			this.isAutoCreate        = config.getBoolean("ranger." + linkedServiceType + "service.auto.create", true);
+			this.isAutoLink          = config.getBoolean("ranger." + linkedServiceType + "service.auto.link", true);
+		}
+
+		void doCreateAndLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doCreateAndLinkService()");
+			}
+
+			RangerService resourceService = null;
+
+			try {
+				resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+			} catch (Exception e) {
+				LOG.error("Resource-service:[" + resourceServiceName + "] cannot be retrieved");
+			}
+
+			if (resourceService != null) {
+				try {
+					RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+
+					if (linkedService == null && isAutoCreate) {
+						linkedService = new RangerService();
+
+						linkedService.setName(linkedServiceName);
+						linkedService.setDisplayName(linkedServiceName); //set DEFAULT display name
+						linkedService.setType(linkedServiceType);
+
+						LOG.info("creating service [" + linkedServiceName + "]");
+
+						svcStore.createService(linkedService);
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+
+				if (isAutoLink) {
+					doLinkService();
+				}
+
+			} else {
+				LOG.info("Resource service :[" + resourceServiceName + "] not found! Returning without linking " + linkedServiceType + " service!!");
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doCreateAndLinkService()");
+			}
+		}
+
+		private String computeLinkedServiceName() {
+			String ret = config.get("ranger." + linkedServiceType + "service.auto.name");
+
+			if (StringUtils.isBlank(ret)) {
+				final int lastIndexOfSep = StringUtils.lastIndexOf(resourceServiceName, SEP);
+
+				ret = (lastIndexOfSep != -1) ? resourceServiceName.substring(0, lastIndexOfSep) + SEP + linkedServiceType : linkedServiceType;
+			}
+
+			return ret;
+		}
+
+		private void doLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doLinkTagService()");
+			}
+
+			try {
+				RangerService resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+
+				RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+
+				if (linkedService == null) {
+					LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]: " + linkedServiceName + " not found");
+				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(linkedServiceType)) {
+					LOG.info("Successfully retrieved service:[" + linkedService.getName() + "]");
+
+					if (!StringUtils.equals(linkedService.getName(), resourceService.getTagService())) {
+						resourceService.setTagService(linkedService.getName());
+
+						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + linkedService.getName() + "]");
+
+						RangerService service = svcStore.updateService(resourceService, null);
+
+						LOG.info("Updated resource-service:[" + service.getName() + "]");
+					}
+				}
+			} catch (Exception e) {
+				LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]");
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doLinkTagService()");
+			}
 		}
 
 		@Override
