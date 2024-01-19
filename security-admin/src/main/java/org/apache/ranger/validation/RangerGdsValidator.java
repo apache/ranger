@@ -303,6 +303,8 @@ public class RangerGdsValidator {
 
             if (existing != null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT, "name", resource.getName(), dataShare.getName(), existing));
+            } else if (MapUtils.isEmpty(resource.getResource())) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
                 validateSharedResourceCreateAndUpdate(dataShare, result);
 
@@ -335,6 +337,8 @@ public class RangerGdsValidator {
 
             if (dataShare == null) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND, "dataShareId", resource.getDataShareId()));
+            } else if (MapUtils.isEmpty(resource.getResource())) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
                 validateSharedResourceCreateAndUpdate(dataShare, result);
 
