@@ -2178,7 +2178,7 @@
 		</query>
 	</named-query>
 
-   <named-query name="XXGdsDataset.getAlldatasetIdsAndACLs">
+   <named-query name="XXGdsDataset.getDatasetIdsAndACLs">
 		<query>select obj.id, obj.acl from XXGdsDataset obj where obj.id is NOT null
 		</query>
 	</named-query>
@@ -2205,7 +2205,7 @@
 		</query>
 	</named-query>
 
-   <named-query name="XXGdsProject.getAllProjectIdsAndACLs">
+   <named-query name="XXGdsProject.getProjectIdsAndACLs">
 		<query>select obj.id, obj.acl from XXGdsProject obj where obj.id  is NOT null
 		</query>
 	</named-query>
@@ -2237,7 +2237,7 @@
 		</query>
 	</named-query>
 
-<named-query name="XXGdsDataShare.getAlldataShareIdsAndACLs">
+<named-query name="XXGdsDataShare.getDataShareIdsAndACLs">
 		<query>select obj.id, obj.acl from XXGdsDataShare obj where obj.id is NOT null
 		</query>
 	</named-query>
