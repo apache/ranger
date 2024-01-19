@@ -214,6 +214,7 @@
             "dba":       { "create":  { "result": 1, "isFinal": true } }
           },
           "dataMasks": [
+            { "users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_NONE" }, "isConditional": false },
             { "users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": false }
           ]
         }
