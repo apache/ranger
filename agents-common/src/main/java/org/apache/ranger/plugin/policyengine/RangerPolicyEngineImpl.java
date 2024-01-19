@@ -317,6 +317,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					boolean   isTemporalTagPolicy = policyIdForTemporalTags.contains(evaluator.getPolicyId());
 					MatchType tagMatchType        = tagMatchTypeMap.get(evaluator.getPolicyId());
 
+					// tag assigned to ANCESTORS must apply to SELF as well, to be consistent with policy evaluation in RangerDefaultPolicyEvaluator.evaluate()
+					if (tagMatchType == MatchType.ANCESTOR) {
+						tagMatchType = MatchType.SELF;
+					}
+
 					evaluator.getResourceACLs(request, ret, isTemporalTagPolicy, null, tagMatchType, policyEngine);
 				}
 
