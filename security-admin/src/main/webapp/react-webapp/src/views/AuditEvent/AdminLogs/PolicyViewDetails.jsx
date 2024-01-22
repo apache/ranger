@@ -182,16 +182,20 @@ export function PolicyViewDetails(props) {
             <td>{obj.label}</td>
             <td>
               <Row>
-                <Col>
+                <Col md={9} className="d-flex flex-wrap">
                   {obj.values.map((val, index) => (
-                    <h6 className="d-inline mr-1" key={index}>
-                      <Badge className="d-inline mr-1" variant="info" key={val}>
+                    <Badge
+                      className="d-inline mr-1 text-left"
+                      variant="info"
+                      key={index}
+                    >
+                      <span className="d-inline mr-1 item" key={val}>
                         {val}
-                      </Badge>
-                    </h6>
+                      </span>
+                    </Badge>
                   ))}
                 </Col>
-                <Col className="text-right">
+                <Col className="text-right" md={3}>
                   <h6 className="d-inline mr-1">
                     <Badge variant="dark text-capitalize">{obj.Rec_Exc}</Badge>
                   </h6>

@@ -44,7 +44,8 @@ import {
   maxBy,
   map,
   isUndefined,
-  forEach
+  forEach,
+  reject
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -286,12 +287,12 @@ export default function AddUpdatePolicyForm() {
     if (inputValue) {
       params["policyLabel"] = inputValue || "";
     }
-    const policyLabalResp = await fetchApi({
+    const policyLabelResp = await fetchApi({
       url: "plugins/policyLabels",
       params: params
     });
 
-    return policyLabalResp.data.map((name) => ({
+    return policyLabelResp.data.map((name) => ({
       label: name,
       value: name
     }));
@@ -622,7 +623,7 @@ export default function AddUpdatePolicyForm() {
       let obj = {},
         accessTypesObj = [];
 
-      if (val.hasOwnProperty("delegateAdmin")) {
+      if (has(val, "delegateAdmin")) {
         obj.delegateAdmin = val.delegateAdmin;
       }
 
@@ -671,18 +672,10 @@ export default function AddUpdatePolicyForm() {
           return { label: opt, value: opt };
         });
       }
-      if (
-        val.hasOwnProperty("rowFilterInfo") &&
-        val.rowFilterInfo &&
-        val.rowFilterInfo.filterExpr
-      ) {
+      if (val?.rowFilterInfo?.filterExpr) {
         obj.rowFilterInfo = val.rowFilterInfo.filterExpr;
       }
-      if (
-        val.hasOwnProperty("dataMaskInfo") &&
-        val.dataMaskInfo &&
-        val.dataMaskInfo.dataMaskType
-      ) {
+      if (val?.dataMaskInfo?.dataMaskType) {
         obj.dataMaskInfo = {};
         let maskDataType = maskTypes.find((m) => {
           return m.name == val.dataMaskInfo.dataMaskType;
@@ -741,10 +734,10 @@ export default function AddUpdatePolicyForm() {
       values,
       "rowFilterPolicyItems"
     );
-    data.description = values.description;
-    data.isAuditEnabled = values.isAuditEnabled;
+    data.description = values.description ?? "";
+    data.isAuditEnabled = values.isAuditEnabled ?? true;
     data.isDenyAllElse = values.isDenyAllElse;
-    data.isEnabled = values.isEnabled;
+    data.isEnabled = values.isEnabled ?? true;
     data.name = values.policyName;
     data.policyLabels = (values.policyLabel || [])?.map(({ value }) => value);
     data.policyPriority = values.policyPriority ? "1" : "0";
@@ -768,7 +761,9 @@ export default function AddUpdatePolicyForm() {
       for (const level of grpResourcesKeys) {
         if (
           values[`resourceName-${level}`] &&
-          values[`resourceName-${level}`].value !== noneOptions.value
+          values[`resourceName-${level}`].value !== noneOptions.value &&
+          values[`value-${level}`] &&
+          !isEmpty(values[`value-${level}`])
         ) {
           let defObj = serviceCompRes.find(function (m) {
             if (m.name == values[`resourceName-${level}`].name) {
@@ -801,7 +796,10 @@ export default function AddUpdatePolicyForm() {
         for (const level of grpResourcesKeys) {
           if (
             resourceValue[`resourceName-${level}`] &&
-            resourceValue[`resourceName-${level}`].value !== noneOptions.value
+            resourceValue[`resourceName-${level}`].value !==
+              noneOptions.value &&
+            resourceValue[`value-${level}`] &&
+            !isEmpty(resourceValue[`value-${level}`])
           ) {
             let defObj = serviceCompRes.find(function (m) {
               if (m.name == resourceValue[`resourceName-${level}`].name) {
@@ -836,8 +834,15 @@ export default function AddUpdatePolicyForm() {
       });
     }
     if (data?.additionalResources?.length > 0) {
+      data.additionalResources = reject(data.additionalResources, isEmpty);
       data.resources = data.additionalResources[0];
       data.additionalResources.shift();
+    }
+    if (isEmpty(data.resources)) {
+      delete data.resources;
+      if (policyId) {
+        delete policyData.resources;
+      }
     }
     if (values?.validitySchedules) {
       data["validitySchedules"] = [];
@@ -890,7 +895,7 @@ export default function AddUpdatePolicyForm() {
       };
       try {
         setBlockUI(true);
-        const resp = await fetchApi({
+        await fetchApi({
           url: `plugins/policies/${policyId}`,
           method: "PUT",
           data: dataVal
@@ -911,7 +916,7 @@ export default function AddUpdatePolicyForm() {
     } else {
       try {
         setBlockUI(true);
-        const resp = await fetchApi({
+        await fetchApi({
           url: "plugins/policies",
           method: "POST",
           data
@@ -1130,7 +1135,7 @@ export default function AddUpdatePolicyForm() {
                 errors,
                 dirty,
                 form: {
-                  mutators: { push: addPolicyItem, pop: removePolicyItem }
+                  mutators: { push: addPolicyItem }
                 },
                 dirtyFields,
                 modified,
@@ -1556,7 +1561,10 @@ export default function AddUpdatePolicyForm() {
                           <FieldArray name="additionalResources">
                             {({ fields }) =>
                               fields.map((name, index) => (
-                                <Row className="resource-block">
+                                <Row
+                                  className="resource-block"
+                                  key={`${name}-${index}`}
+                                >
                                   <Col md={8}>
                                     <ResourceComp
                                       serviceDetails={serviceDetails}
@@ -1564,7 +1572,11 @@ export default function AddUpdatePolicyForm() {
                                       formValues={
                                         values.additionalResources[index]
                                       }
-                                      policyType={policyType}
+                                      policyType={
+                                        policyId
+                                          ? policyData.policyType
+                                          : policyType
+                                      }
                                       name={name}
                                       isMultiResources={isMultiResources}
                                     />
@@ -1895,8 +1907,8 @@ export default function AddUpdatePolicyForm() {
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
                             <span className="text-word-break">
-                              Are you sure want to delete policy&nbsp;"
-                              <b>{`${values?.policyName}`}</b>" ?
+                              Are you sure want to delete policy&nbsp;&quot;
+                              <b>{`${values?.policyName}`}</b>&quot; ?
                             </span>
                           </Modal.Header>
 
