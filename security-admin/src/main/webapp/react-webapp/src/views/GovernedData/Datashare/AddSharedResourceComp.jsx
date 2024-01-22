@@ -257,7 +257,11 @@ const AddSharedResourceComp = ({
         }
       } catch (error) {
         errorList.push(error);
-        toast.error("Error occurred while creating Shared resource");
+        let errorMsg = "Error occurred while creating Shared resource";
+        if (error?.response?.data?.msgDesc) {
+          errorMsg = error.response.data.msgDesc;
+        }
+        toast.error(errorMsg);
         console.error(`Error occurred while creating Shared resource ${error}`);
       }
     }

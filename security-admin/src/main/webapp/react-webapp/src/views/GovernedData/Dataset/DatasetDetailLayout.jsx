@@ -965,7 +965,8 @@ const DatasetDetailLayout = () => {
       await fetchApi({
         url: `gds/dataset/${datasetId}`,
         method: "put",
-        data: datasetInfo
+        data: datasetInfo,
+        skipNavigate: true
       });
       dispatch({
         type: "SET_BLOCK_UI",

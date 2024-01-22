@@ -582,12 +582,15 @@ const DatashareDetailLayout = () => {
       await fetchApi({
         url: `gds/datashare/${datashareId}`,
         method: "put",
-        data: datashareInfo
+        data: datashareInfo,
+        skipNavigate: true
       });
       toast.success("Datashare updated successfully!!");
     } catch (error) {
       serverError(error);
       console.error(`Error occurred while updating datashare  ${error}`);
+      setBlockUI(false);
+      return;
     }
     isDatashareNameEditable(false);
     showSaveCancelButton(false);

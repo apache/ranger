@@ -129,7 +129,8 @@ const AddDatasetView = () => {
         const createDatasetResp = await fetchApi({
           url: `gds/dataset`,
           method: "post",
-          data: dataset
+          data: dataset,
+          skipNavigate: true
         });
         toast.success("Dataset created successfully!!");
         self.location.hash = "#/gds/mydatasetlisting";
