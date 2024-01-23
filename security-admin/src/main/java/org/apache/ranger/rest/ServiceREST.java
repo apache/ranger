@@ -1658,16 +1658,16 @@ public class ServiceREST {
 			}
 
 			if(request != null) {
-				boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
+				boolean deleteIfExists= "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)));
 				if(deleteIfExists) {
-					boolean importInProgress=("true".equalsIgnoreCase(StringUtils.trimToEmpty(String.valueOf(request.getAttribute(PARAM_IMPORT_IN_PROGRESS))))) ? true : false ;
+					boolean importInProgress= "true".equalsIgnoreCase(StringUtils.trimToEmpty(String.valueOf(request.getAttribute(PARAM_IMPORT_IN_PROGRESS))));
 					if (!importInProgress) {
 						List<RangerPolicy> policies=new ArrayList<RangerPolicy>() { { add(policy); } };
 						deleteExactMatchPolicyForResource(policies, request.getRemoteUser(), null);
 					}
 				}
-				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
-				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
+				boolean updateIfExists= "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)));
+				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)));
 				// Default POLICY_MATCHING_ALGO_BY_RESOURCE
 				String policyMatchingAlgo = POLICY_MATCHING_ALGO_BY_POLICYNAME.equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_POLICY_MATCHING_ALGORITHM)))  ? POLICY_MATCHING_ALGO_BY_POLICYNAME : POLICY_MATCHING_ALGO_BY_RESOURCE;
 				if(LOG.isDebugEnabled()) {
@@ -1683,7 +1683,7 @@ public class ServiceREST {
 				    ret = applyPolicy(policy, request);
 				} else if (policyMatchingAlgo.equalsIgnoreCase(POLICY_MATCHING_ALGO_BY_RESOURCE)) {
 				    ret = applyPolicy(policy, request);
-				} else if (policyMatchingAlgo.equalsIgnoreCase(POLICY_MATCHING_ALGO_BY_POLICYNAME)) {
+				} else {
 				    RangerPolicy existingPolicy = getPolicyMatchByName(policy, request);
 				    if (existingPolicy != null) {
 				       policy.setId(existingPolicy.getId());
@@ -1700,9 +1700,7 @@ public class ServiceREST {
 
 			}
 
-			if(ret == null) {
-				ret = createPolicyUnconditionally(policy);
-			}
+			ret = createPolicyUnconditionally(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
@@ -2407,8 +2405,8 @@ public class ServiceREST {
 							}
 						}
 					}
-					boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
-					boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
+					boolean deleteIfExists= "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)));
+					boolean updateIfExists= "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)));
 					String polResource = request.getParameter(SearchFilter.POL_RESOURCE);
 					if (updateIfExists) {
 						isOverride = false;
@@ -2514,8 +2512,8 @@ public class ServiceREST {
 	
 	private int createPolicesBasedOnPolicyMap(HttpServletRequest request, Map<String, RangerPolicy> policiesMap,
 			List<String> serviceNameList, boolean updateIfExists, int totalPolicyCreate) {
-		boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
-		boolean deleteIfExists = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS))) ? true : false;
+		boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)));
+		boolean deleteIfExists = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)));
 		if (!CollectionUtils.sizeIsEmpty(policiesMap.entrySet())) {
 			for (Entry<String, RangerPolicy> entry : policiesMap.entrySet()) {
 				RangerPolicy policy = entry.getValue();
@@ -2852,27 +2850,25 @@ public class ServiceREST {
 					filter.setParam(SearchFilter.SERVICE_NAME, destinationServices.get(i));
 					RangerService service=getServiceByName(destinationServices.get(i));
 					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i),filter);
-					if (servicePolicies != null) {
-						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
-						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
-							for (RangerPolicy rangerPolicy : rangerPolicyList) {
-								if (rangerPolicy != null) {
-									validator.validate(rangerPolicy.getId(), Action.DELETE);
-									ensureAdminAccess(rangerPolicy);
-									bizUtil.blockAuditorRoleUser();
-									svcStore.deletePolicy(rangerPolicy, service);
-									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
-										bizUtil.bulkModeOnlyFlushAndClear();
-									}
-									if (LOG.isDebugEnabled()) {
-										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
-										LOG.debug("TotalDeletedPilicies: " + totalDeletedPolicies);
-									}
+					List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
+					if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
+						for (RangerPolicy rangerPolicy : rangerPolicyList) {
+							if (rangerPolicy != null) {
+								validator.validate(rangerPolicy.getId(), Action.DELETE);
+								ensureAdminAccess(rangerPolicy);
+								bizUtil.blockAuditorRoleUser();
+								svcStore.deletePolicy(rangerPolicy, service);
+								totalDeletedPolicies = totalDeletedPolicies + 1;
+								if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									bizUtil.bulkModeOnlyFlushAndClear();
+								}
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
+									LOG.debug("TotalDeletedPilicies: " + totalDeletedPolicies);
 								}
 							}
-							bizUtil.bulkModeOnlyFlushAndClear();
 						}
+						bizUtil.bulkModeOnlyFlushAndClear();
 					}
 				}
 			}
@@ -2901,46 +2897,44 @@ public class ServiceREST {
 					filter.setParam("zoneName", zoneName);
 					servicePolicies = getServicePolicies(destinationServices.get(i), filter);
 					RangerService service=getServiceByName(destinationServices.get(i));
-					if (servicePolicies != null) {
-						List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
-						if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
-							List<RangerPolicy> policiesToBeDeleted = new ArrayList<RangerPolicy>();
-							for (RangerPolicy rangerPolicy : rangerPolicyList) {
-								if (rangerPolicy != null) {
-									Map<String, RangerPolicyResource> rangerPolicyResourceMap=rangerPolicy.getResources();
-									if (rangerPolicyResourceMap!=null) {
-										RangerPolicyResource rangerPolicyResource=null;
-										if (rangerPolicyResourceMap.containsKey("path")) {
-					                        rangerPolicyResource=rangerPolicyResourceMap.get("path");
-					                    } else if (rangerPolicyResourceMap.containsKey("database")) {
-					                        rangerPolicyResource=rangerPolicyResourceMap.get("database");
-					                    }
-										if (rangerPolicyResource!=null) {
-					                        if (CollectionUtils.isNotEmpty(rangerPolicyResource.getValues()) && rangerPolicyResource.getValues().size()>1) {
-					                            continue;
-					                        }
-					                    }
+					List<RangerPolicy> rangerPolicyList = servicePolicies.getPolicies();
+					if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
+						List<RangerPolicy> policiesToBeDeleted = new ArrayList<RangerPolicy>();
+						for (RangerPolicy rangerPolicy : rangerPolicyList) {
+							if (rangerPolicy != null) {
+								Map<String, RangerPolicyResource> rangerPolicyResourceMap=rangerPolicy.getResources();
+								if (rangerPolicyResourceMap!=null) {
+									RangerPolicyResource rangerPolicyResource=null;
+									if (rangerPolicyResourceMap.containsKey("path")) {
+										rangerPolicyResource=rangerPolicyResourceMap.get("path");
+									} else if (rangerPolicyResourceMap.containsKey("database")) {
+										rangerPolicyResource=rangerPolicyResourceMap.get("database");
 									}
-									if (rangerPolicy.getId() != null) {
-										if (!exportedPolicyNames.contains(rangerPolicy.getName())) {
-											policiesToBeDeleted.add(rangerPolicy);
+									if (rangerPolicyResource!=null) {
+										if (CollectionUtils.isNotEmpty(rangerPolicyResource.getValues()) && rangerPolicyResource.getValues().size()>1) {
+											continue;
 										}
 									}
 								}
-							}
-							if (CollectionUtils.isNotEmpty(policiesToBeDeleted)) {
-								for (RangerPolicy rangerPolicy : policiesToBeDeleted) {
-									svcStore.deletePolicy(rangerPolicy, service);
-									if (LOG.isDebugEnabled()) {
-										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
-									}
-									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
-										bizUtil.bulkModeOnlyFlushAndClear();
+								if (rangerPolicy.getId() != null) {
+									if (!exportedPolicyNames.contains(rangerPolicy.getName())) {
+										policiesToBeDeleted.add(rangerPolicy);
 									}
 								}
-								bizUtil.bulkModeOnlyFlushAndClear();
 							}
+						}
+						if (CollectionUtils.isNotEmpty(policiesToBeDeleted)) {
+							for (RangerPolicy rangerPolicy : policiesToBeDeleted) {
+								svcStore.deletePolicy(rangerPolicy, service);
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
+								}
+								totalDeletedPolicies = totalDeletedPolicies + 1;
+								if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									bizUtil.bulkModeOnlyFlushAndClear();
+								}
+							}
+							bizUtil.bulkModeOnlyFlushAndClear();
 						}
 					}
 				}
@@ -2974,7 +2968,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicies(filter): count=" + (ret == null ? 0 : ret.size()));
+			LOG.debug("<== ServiceREST.getPolicies(filter): count=" + ret.size());
 		}
 
 		return ret;
@@ -3074,7 +3068,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceId + "): count="
-					+ (ret == null ? 0 : ret.getListSize()));
+					+ ret.getListSize());
 		}
 		return ret;
 	}
@@ -3095,7 +3089,7 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getServicePolicies(" + serviceName + "): count="
-					+ (ret == null ? 0 : ret.getListSize()));
+					+ ret.getListSize());
 		}
 
 		return ret;
@@ -3539,9 +3533,7 @@ public class ServiceREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_VERSION_LIST + "\")")
 	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
 
-		VXString policyVersionListStr = svcStore.getPolicyVersionList(policyId);
-
-		return policyVersionListStr;
+		return svcStore.getPolicyVersionList(policyId);
 	}
 
 	@GET
@@ -3617,13 +3609,8 @@ public class ServiceREST {
 			for (int i = 0; i < policies.size(); i++) {
 				RangerPolicy       policy      = policies.get(i);
 				String             serviceName = policy.getService();
-				List<RangerPolicy> policyList  = servicePoliciesMap.get(serviceName);
+				List<RangerPolicy> policyList = servicePoliciesMap.computeIfAbsent(serviceName, k -> new ArrayList<RangerPolicy>());
 
-				if (policyList == null) {
-					policyList = new ArrayList<RangerPolicy>();
-
-					servicePoliciesMap.put(serviceName, policyList);
-				}
 				policyList.add(policy);
 			}
 
@@ -3653,7 +3640,7 @@ public class ServiceREST {
 							if (isKmsService) {
 								ret.addAll(listToFilter);
 							}
-						} else if (isKeyAdmin) {
+						} else {
 							if (isKmsService) {
 								ret.addAll(listToFilter);
 							}
