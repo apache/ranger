@@ -23,6 +23,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 
+import java.util.Collection;
 import java.util.Set;
 
 public abstract class RangerGdsValidationDataProvider {
@@ -56,6 +57,8 @@ public abstract class RangerGdsValidationDataProvider {
     public abstract Set<String> getGroupsForUser(String userName);
 
     public abstract Set<String> getRolesForUser(String userName);
+
+    public abstract Set<String> getRolesForUserAndGroups(String userName, Collection<String> groups);
 
     public abstract Set<String> getAccessTypes(String serviceName);
 

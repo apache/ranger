@@ -1602,7 +1602,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         if (isSharedWithMe) {
             groups = validationDBProvider.getGroupsForUser(userName);
-            roles  = validationDBProvider.getRolesForUser(userName);
+            roles  = validationDBProvider.getRolesForUserAndGroups(userName, groups);
         }
 
         for (RangerProject project : result.getList()) {
@@ -1635,7 +1635,7 @@ public class GdsDBStore extends AbstractGdsStore {
 
         if (isSharedWithMe) {
             groups = validationDBProvider.getGroupsForUser(userName);
-            roles  = validationDBProvider.getRolesForUser(userName);
+            roles  = validationDBProvider.getRolesForUserAndGroups(userName, groups);
         }
 
         for (RangerDataset dataset : result.getList()) {

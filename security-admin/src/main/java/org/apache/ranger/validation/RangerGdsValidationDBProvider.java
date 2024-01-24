@@ -17,6 +17,8 @@
 
 package org.apache.ranger.validation;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.ServiceMgr;
@@ -29,6 +31,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -41,9 +44,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_ROLE;
 
@@ -164,6 +169,27 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
         return rolesUtil != null && rolesUtil.getUserRoleMapping() != null ? rolesUtil.getUserRoleMapping().get(userName) : null;
     }
 
+    public Set<String> getRolesForUserAndGroups(String userName, Collection<String> groups) {
+        RangerRolesUtil rolesUtil = initGetRolesUtil();
+        Set<String>     ret       = getRolesForUser(userName);
+
+        if (rolesUtil != null) {
+            final Map<String, Set<String>> groupRoleMapping = rolesUtil.getGroupRoleMapping();
+
+            if (MapUtils.isNotEmpty(groupRoleMapping)) {
+                if (CollectionUtils.isNotEmpty(groups)) {
+                    for (String group : groups) {
+                        ret = addRoles(ret, groupRoleMapping.get(group));
+                    }
+                }
+
+                ret = addRoles(ret, groupRoleMapping.get(RangerPolicyEngine.GROUP_PUBLIC));
+            }
+        }
+
+        return ret;
+    }
+
     public Set<String> getAccessTypes(String serviceName) {
         List<String> accessTypes = daoMgr.getXXAccessTypeDef().getNamesByServiceName(serviceName);
         Set<String>  ret         = new HashSet<>(accessTypes);
@@ -265,5 +291,17 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
         }
 
         return ret;
+    }
+
+    private Set<String> addRoles(Set<String> allRoles, Set<String> rolesToAdd) {
+        if (CollectionUtils.isNotEmpty(rolesToAdd)) {
+            if (allRoles == null) {
+                allRoles = new HashSet<>();
+            }
+
+            allRoles.addAll(rolesToAdd);
+        }
+
+        return allRoles;
     }
 }

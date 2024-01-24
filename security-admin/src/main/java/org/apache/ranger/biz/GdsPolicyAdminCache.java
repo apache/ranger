@@ -22,6 +22,7 @@ package org.apache.ranger.biz;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.slf4j.Logger;
@@ -89,8 +90,12 @@ public class GdsPolicyAdminCache {
 
                 ret = policyItem.getUsers() != null && policyItem.getUsers().contains(user);
 
-                if (!ret && groups != null && policyItem.getGroups() != null) {
-                    ret = CollectionUtils.containsAny(groups, policyItem.getGroups());
+                if (!ret && policyItem.getGroups() != null) {
+                    ret = policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC);
+
+                    if (!ret && groups != null) {
+                        ret = CollectionUtils.containsAny(groups, policyItem.getGroups());
+                    }
                 }
 
                 if (!ret && roles != null && policyItem.getRoles() != null) {
