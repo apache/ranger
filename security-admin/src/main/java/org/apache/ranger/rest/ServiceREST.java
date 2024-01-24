@@ -764,7 +764,8 @@ public class ServiceREST {
 
 			String serviceType = xxServiceDef != null ? xxServiceDef.getName() : null;
 
-			if (!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, serviceType) &&
+			if (StringUtils.isBlank(service.getTagService()) &&
+				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, serviceType) &&
 				!StringUtils.equals(EMBEDDED_SERVICEDEF_GDS_NAME, serviceType) &&
 				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , serviceType)) {
 				createOrGetLinkedServices(service);
