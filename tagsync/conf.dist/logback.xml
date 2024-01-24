@@ -21,12 +21,12 @@
     <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
     <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
     <!--for further documentation-->
-    <file>${logdir}/tagsync.log</file>
+    <file>${logdir}/tagsync-${hostname}-${user}.log</file>
     <encoder>
       <pattern>%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %L %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${logdir}/tagsync.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <fileNamePattern>${logdir}/tagsync-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
       <maxHistory>15</maxHistory>
       <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
