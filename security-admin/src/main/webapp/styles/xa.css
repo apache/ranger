@@ -1670,7 +1670,7 @@ body.login {
   border: solid #dedede;
   border-width: 0 0 1px 0;
   height: 30px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   width: 100%;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -4758,4 +4758,11 @@ input.textFiledInputPadding:disabled {
 .excludeRecursiveSupport {
   position: absolute;
   top: 30px;
+}
+.password-icon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 15px;
+  cursor: pointer;
 }
