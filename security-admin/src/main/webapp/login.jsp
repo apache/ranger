@@ -74,7 +74,10 @@
                         <label><i class="fa fa-user"></i> Username:</label>
                         <input type="text" name="username" id="username" tabindex="1" autofocus>
                         <label><i class="fa fa-lock"></i> Password:</label>
-                        <input type="password" name="password" id="password" tabindex="2" autocomplete="off">
+                        <div class="position-relative">
+                            <input type="password" name="password" id="password" tabindex="2" autocomplete="off">
+                            <i class="fa fa-eye-slash password-icon" id="show-password"></i>
+                        </div>
                     </div>
                     <span id="errorBox" class="help-inline" style="color:white;display:none;"><span class="errorMsg"></span>
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
