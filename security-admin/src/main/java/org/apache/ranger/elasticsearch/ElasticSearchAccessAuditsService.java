@@ -30,6 +30,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -277,11 +278,19 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		}
 		value = source.get("datasets");
 		if (value != null) {
-			accessAudit.setDatasets(value.toString());
+			try {
+				accessAudit.setDatasets(JsonUtilsV2.nonSerializableObjToJson(value));
+			} catch (Exception e) {
+				LOGGER.warn("Failed to convert datasets to json", e);
+			}
 		}
 		value = source.get("projects");
 		if (value != null) {
-			accessAudit.setProjects(value.toString());
+			try {
+				accessAudit.setProjects(JsonUtilsV2.nonSerializableObjToJson(value));
+			} catch (Exception e) {
+				LOGGER.warn("Failed to convert projects to json", e);
+			}
 		}
 		return accessAudit;
 	}

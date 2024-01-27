@@ -78,4 +78,8 @@ public class JsonUtilsV2 {
     static public <T> T readValue(Reader reader, Class<T> tClass) throws Exception {
         return getMapper().readValue(reader, tClass);
     }
+
+    static public String nonSerializableObjToJson(Object obj) throws Exception {
+        return getMapper().writeValueAsString(obj);
+    }
 }
