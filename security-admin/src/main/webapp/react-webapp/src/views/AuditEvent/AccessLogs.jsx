@@ -708,6 +708,40 @@ function Access() {
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
+      },
+      {
+        Header: "Datasets",
+        accessor: "datasets",
+        Cell: (rawValue) => {
+          let Datasets = [];
+          if (!isEmpty(rawValue.value)) {
+            Datasets = JSON.parse(rawValue.value).sort();
+          } else {
+            return <div className="text-center">--</div>;
+          }
+          return <AccessMoreLess Data={Datasets} />;
+        },
+        width: 140,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Projects",
+        accessor: "projects",
+        Cell: (rawValue) => {
+          let Projects = [];
+          if (!isEmpty(rawValue.value)) {
+            Projects = JSON.parse(rawValue.value).sort();
+          } else {
+            return <div className="text-center">--</div>;
+          }
+          return <AccessMoreLess Data={Projects} />;
+        },
+        width: 140,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
       }
     ],
     []
@@ -890,6 +924,18 @@ function Access() {
       type: "text"
     },
     {
+      category: "datasets",
+      label: "Datasets",
+      urlLabel: "datasets",
+      type: "text"
+    },
+    {
+      category: "projects",
+      label: "Projects",
+      urlLabel: "projects",
+      type: "text"
+    },
+    {
       category: "requestUser",
       label: "User",
       urlLabel: "user",
@@ -954,6 +1000,8 @@ function Access() {
                       <br /> <b> Exclude User :</b> Name of User.
                       <br /> <b> Application :</b> Application.
                       <br /> <b> Tags :</b> Tag Name.
+                      <br /> <b> Datasets:</b> Dataset Name.
+                      <br /> <b> Projects:</b> Project Name.
                       <br /> <b> Permission :</b> Permission
                     </p>
                   }
