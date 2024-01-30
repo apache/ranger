@@ -302,6 +302,7 @@ public class XUserMgr extends XUserMgrBase {
 					} else {
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_GOVERNED_DATA_SHARING), isCreate);
 
 						if (role.equals(RangerConstants.ROLE_SYS_ADMIN) || role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
 

@@ -42,6 +42,18 @@ BEGIN
    INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Governed Data Sharing'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
  END IF;
 
+ v_column_exists:=0;
+ select count(*) into v_column_exists from x_user_module_perm where user_id=getXportalUIdByLoginId('rangerusersync') and module_id=getModulesIdByName('Governed Data Sharing');
+ IF v_column_exists = 0 THEN
+   INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Governed Data Sharing'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+ END IF;
+
+ v_column_exists:=0;
+ select count(*) into v_column_exists from x_user_module_perm where user_id=getXportalUIdByLoginId('rangertagsync') and module_id=getModulesIdByName('Governed Data Sharing');
+ IF v_column_exists = 0 THEN
+   INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Governed Data Sharing'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+ END IF;
+
 END;
 $$ LANGUAGE plpgsql;
 select 'delimiter end';

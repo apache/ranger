@@ -43,6 +43,8 @@ DECLARE adminID bigint;
 DECLARE moduleIdGovernedDataSharing bigint;
 
 call getXportalUIdByLoginId('admin', adminID);
+call getXportalUIdByLoginId('rangerusersync', rangerusersyncID);
+call getXportalUIdByLoginId('rangertagsync', rangertagsyncID);
 
 if not exists (select * from x_modules_master where module='Governed Data Sharing') then
   INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Governed Data Sharing','');
@@ -50,6 +52,12 @@ end if;
 call getModulesIdByName('Governed Data Sharing', moduleIdGovernedDataSharing);
 if not exists (select * from x_user_module_perm where user_id=adminID and module_id=moduleIdGovernedDataSharing) then
   INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (adminID,moduleIdGovernedDataSharing,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
+end if;
+if not exists (select * from x_user_module_perm where user_id=rangerusersyncID and module_id=moduleIdGovernedDataSharing) then
+  INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangerusersyncID,moduleIdGovernedDataSharing,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
+end if;
+if not exists (select * from x_user_module_perm where user_id=rangertagsyncID and module_id=moduleIdGovernedDataSharing) then
+  INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangertagsyncID,moduleIdGovernedDataSharing,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 end if;
 
 END $$
