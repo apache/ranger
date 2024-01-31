@@ -47,6 +47,7 @@ public abstract class BaseDao<T> {
 	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
 	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
 	private static       int    BATCH_DELETE_BATCH_SIZE;
+	private static final String GDS_TABLES = "x_gds_";
 
 	static {
 		try {
@@ -348,11 +349,12 @@ public abstract class BaseDao<T> {
 		Table table = tClass.getAnnotation(Table.class);
 		if(table != null) {
 			String tableName = table.name();
-			String query = "update " + tableName + " set " + paramName+"=null"
-					+ " where " +paramName+"=" + oldID;
+			String updatedValue = tableName.contains(GDS_TABLES) ? "1" : "null";
+			String query = "update " + tableName + " set " + paramName+"=" + updatedValue + " where " +paramName+"=" + oldID;
+
 			int count=getEntityManager().createNativeQuery(query).executeUpdate();
 			if(count>0){
-				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=null where " + paramName + "=" + oldID);
+				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "="+ updatedValue + " where " + paramName + "=" + oldID);
 			}
 		}else{
 			logger.warn("Required annotation `Table` not found");

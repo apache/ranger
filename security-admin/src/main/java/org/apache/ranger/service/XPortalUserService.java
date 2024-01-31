@@ -326,5 +326,17 @@ public class XPortalUserService extends
 		daoManager.getXXPolicyRefRole().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXRole().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXRole().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataset().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataset().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataShare().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataShare().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsProject().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsProject().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsSharedResource().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsSharedResource().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataShareInDataset().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataShareInDataset().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDatasetInProject().updateUserIDReference("added_by_id", xXPortalUserId);
+		daoManager.getXXGdsDatasetInProject().updateUserIDReference("upd_by_id", xXPortalUserId);
 	}
 }
