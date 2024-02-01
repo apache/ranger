@@ -53,7 +53,7 @@ images=`docker images | cut -f 1 -d " "`
 
 if [ $build_image -eq 1 ]; then
     echo "Creating image $image_name ..."
-    docker rmi -f $image_name
+    docker rmi -f $image_name >& /dev/null
 
 docker build -t $image_name - <<Dockerfile
 FROM centos
@@ -85,7 +85,7 @@ ENV PATH $JAVA_HOME/bin:$PATH
 
 
 ADD https://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz.sha512 /tools
-ADD http://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
+ADD http://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
 RUN sha512sum  apache-maven-3.6.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
 RUN cat apache-maven-3.6.3-bin.tar.gz.sha512 | cut -f 1 -d " " > tmp.sha1.download
@@ -99,7 +99,7 @@ ENV  PATH /tools/maven/bin:$PATH
 ENV MAVEN_OPTS "-Xmx2048m -XX:MaxPermSize=512m"
 
 # Setup gosu for easier command execution
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+RUN gpg --keyserver keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
     && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
     && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64.asc" \
     && gpg --verify /usr/local/bin/gosu.asc \
@@ -122,9 +122,12 @@ Dockerfile
 
 fi
 
+[[ $? -ne 0 ]] && echo "ERROR: failed creating docker image" && exit 1
 src_folder=`pwd`
 
 LOCAL_M2="$HOME/.m2"
 mkdir -p $LOCAL_M2
+[[ $? -ne 0 ]] && echo "ERROR: creating directory ${LOCAL_M2}" && exit 1
+
 set -x
 docker run --rm  -v "${src_folder}:/ranger" -w "/ranger" -v "${LOCAL_M2}:${remote_home}/.m2" $container_name $image_name $params
