@@ -1040,7 +1040,7 @@ function Access() {
               rowModal(row);
             }
           })}
-          columnHide={true}
+          columnHide={{ tableName: "bigData", isVisible: true }}
           columnResizable={true}
           columnSort={true}
           defaultSort={getDefaultSort}

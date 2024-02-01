@@ -564,7 +564,7 @@ function Plugin_Status() {
           columnSort={true}
           clientSideSorting={true}
           showPagination={false}
-          columnHide={true}
+          columnHide={{ tableName: "pluginStatus", isVisible: true }}
         />
       </React.Fragment>
     </div>

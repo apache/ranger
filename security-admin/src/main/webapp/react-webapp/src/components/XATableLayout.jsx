@@ -28,7 +28,7 @@ import {
 } from "react-table";
 import { Table, ButtonGroup } from "react-bootstrap";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import { groupBy, isEmpty, uniq, uniqBy } from "lodash";
+import { groupBy, isEmpty, uniqBy } from "lodash";
 
 const IndeterminateCheckbox = forwardRef(
   ({ indeterminate, chkType, ...rest }, ref) => {
@@ -74,16 +74,19 @@ function XATableLayout({
 }) {
   const getLocalStorageVal = () => {
     let localStorageVal = [];
+
     if (localStorage.getItem("showHideTableCol") != null) {
       localStorageVal =
         !isEmpty(localStorage.getItem("showHideTableCol")) &&
-        JSON.parse(localStorage.getItem("showHideTableCol")).bigData;
+        JSON.parse(localStorage.getItem("showHideTableCol"));
     }
-    let filterColVal = !isEmpty(localStorageVal)
-      ? localStorageVal
-          .filter((obj) => obj.renderable == false)
-          .map((r) => r.name)
+
+    let filterColVal = !isEmpty(localStorageVal[columnHide?.tableName])
+      ? localStorageVal[columnHide?.tableName]
+          ?.filter((obj) => obj.renderable == false)
+          ?.map((r) => r.name)
       : [];
+
     return filterColVal;
   };
 
@@ -195,6 +198,7 @@ function XATableLayout({
       </span>
     );
   };
+
   /* For Column Visibility */
   const groupedColumnsData = groupBy(allColumns, "parent[id]");
   delete groupedColumnsData.undefined;
@@ -213,10 +217,11 @@ function XATableLayout({
   });
 
   let columnShowHide = [];
+
   return (
     // apply the table props
     <>
-      {columnHide && (
+      {columnHide?.isVisible && (
         <div className="text-right mb-2 mt-n5">
           <DropdownButton
             className="p-0 column-dropdown"
@@ -230,15 +235,35 @@ function XATableLayout({
             <div className="column-dropdown-maxheight">
               <ul className="list-group fnt-14">
                 {filterAllColumns.map((column, index) => {
-                  columnShowHide.push({
-                    name: column.columnData.id,
-                    renderable: column.columnData.isVisible
-                  });
+                  if (
+                    column.columnName == `Non-Group(${column.columnData.id})`
+                  ) {
+                    columnShowHide.push({
+                      name: column.columnData.id,
+                      renderable: column.columnData.isVisible
+                    });
+                  } else {
+                    column.columnData.forEach((col) => {
+                      columnShowHide.push({
+                        name: col.id,
+                        renderable: col.isVisible
+                      });
+                    });
+                  }
+
+                  let localStorageColumnData =
+                    JSON.parse(localStorage.getItem("showHideTableCol")) || {};
+
+                  let columnData = {
+                    ...localStorageColumnData,
+                    [columnHide.tableName]: columnShowHide
+                  };
 
                   localStorage.setItem(
                     "showHideTableCol",
-                    JSON.stringify({ bigData: columnShowHide })
+                    JSON.stringify(columnData)
                   );
+
                   return column.columnName ==
                     `Non-Group(${column.columnData.id})` ? (
                     <li
@@ -363,7 +388,7 @@ function XATableLayout({
                       <td colSpan={columns.length + 1}>
                         <center>
                           <span className="text-muted" data-cy="tbleDataMsg">
-                            "No data to show!!"
+                            &quot;No data to show!!&quot;
                           </span>
                         </center>
                       </td>
