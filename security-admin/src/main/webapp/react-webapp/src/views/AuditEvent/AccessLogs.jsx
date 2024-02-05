@@ -540,9 +540,9 @@ function Access() {
           let aclEnforcer = r.row.original.aclEnforcer;
           let requestData = r.row.original.requestData;
 
-          if (!isUndefined(resourcePath)) {
+          if (!isUndefined(resourcePath) || !isUndefined(requestData)) {
             let resourcePathText = isEmpty(resourcePath) ? "--" : resourcePath;
-            let resourceTypeText = isEmpty(resourceType) ? "--" : resourceType;
+            let resourceTypeText = isEmpty(resourceType) || resourceType=="@null" ? "--" : resourceType;
             return (
               <React.Fragment>
                 <div className="clearfix d-flex flex-nowrap m-0">
