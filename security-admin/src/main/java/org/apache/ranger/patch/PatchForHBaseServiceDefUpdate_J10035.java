@@ -137,8 +137,8 @@ public class PatchForHBaseServiceDefUpdate_J10035 extends BaseLoader {
                 jsonPreUpdate = xXServiceDefObj.getDefOptions();
                 serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
             } else {
-                logger.error("HBase service-definition does not exist in the Ranger DAO.");
-                return false;
+                logger.error("HBase service-definition does not exist in the Ranger DAO. No patching is needed!!");
+                return true;
             }
             dbHBaseServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HBASE_NAME);
 

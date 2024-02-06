@@ -136,8 +136,8 @@ public class PatchForTagServiceDefUpdate_J10028 extends BaseLoader {
 				jsonPreUpdate = xXServiceDefObj.getDefOptions();
 				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
 			} else {
-				logger.error("Tag service-definition does not exist in the Ranger DAO.");
-				return false;
+				logger.error("Tag service-definition does not exist in the Ranger DAO. No patching is needed");
+				return true;
 			}
 			dbTagServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
 

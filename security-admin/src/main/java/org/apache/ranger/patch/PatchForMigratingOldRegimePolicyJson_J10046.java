@@ -291,9 +291,10 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 			resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
+			if (dbServiceDef != null) {
+				for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
+				}
 			}
 		}
 
@@ -423,9 +424,10 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 			accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
+			if (dbServiceDef != null) {
+				for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
+				}
 			}
 		}
 
@@ -462,9 +464,10 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 			conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
+			if (dbServiceDef != null) {
+				for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
+				}
 			}
 		}
 
@@ -502,9 +505,10 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 			dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
+			if (dbServiceDef != null) {
+				for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
+				}
 			}
 		}
 

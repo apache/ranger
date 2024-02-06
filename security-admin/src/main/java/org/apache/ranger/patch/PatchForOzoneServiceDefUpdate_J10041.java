@@ -147,8 +147,8 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 				jsonPreUpdate = xXServiceDefObj.getDefOptions();
 				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
 			} else {
-				logger.error("Ozone service-definition does not exist in the Ranger DAO.");
-				return false;
+				logger.error("Ozone service-definition does not exist in the Ranger DAO. No patching is needed!!");
+				return true;
 			}
 			dbOzoneServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
