@@ -137,8 +137,8 @@ public class PatchForHiveServiceDefUpdate_J10027 extends BaseLoader {
 				jsonPreUpdate = xXServiceDefObj.getDefOptions();
 				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
 			} else {
-				logger.error("Hive service-definition does not exist in the Ranger DAO.");
-				return false;
+				logger.error("Hive service-definition does not exist in the Ranger DAO. No patching is needed!!");
+				return true;
 			}
 			dbHiveServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
 
