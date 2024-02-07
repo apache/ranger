@@ -1068,6 +1068,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 						result.setIsAllowed(false);
 						result.setPolicyId(rowFilterResult.getPolicyId());
+						result.setPolicyVersion(rowFilterResult.getPolicyVersion());
 						result.setReason("User does not have access to all rows of the table");
 					} else {
 						// check if masking is enabled for any column in the table/view
@@ -1082,6 +1083,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 							result.setIsAllowed(false);
 							result.setPolicyId(dataMaskResult.getPolicyId());
+							result.setPolicyVersion(dataMaskResult.getPolicyVersion());
 							result.setReason("User does not have access to unmasked column values");
 						}
 					}
