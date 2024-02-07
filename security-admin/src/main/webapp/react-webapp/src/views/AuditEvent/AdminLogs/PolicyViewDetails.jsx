@@ -33,7 +33,7 @@ export function PolicyViewDetails(props) {
   const [loader, SetLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});
   const { updateServices } = props;
-  let { allServiceDefs } = getServiceDef();
+  let { allServiceDefs, gdsServiceDef } = getServiceDef();
   const isMultiResources = true;
 
   useEffect(() => {
@@ -77,9 +77,15 @@ export function PolicyViewDetails(props) {
     } catch (error) {
       console.error(`eventTime can not be undefined ${error}`);
     }
-    accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
-      return servicedef.name == accesslogs?.data?.serviceType;
-    });
+
+    if (accesslogs?.data?.serviceType == "gds") {
+      accessLogsServiceDef = gdsServiceDef;
+    } else {
+      accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
+        return servicedef.name == accesslogs?.data?.serviceType;
+      });
+    }
+
     setAccess(accesslogs?.data);
     setServiceDef(accessLogsServiceDef);
     SetLoader(false);

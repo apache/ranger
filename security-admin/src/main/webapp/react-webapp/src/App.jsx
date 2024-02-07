@@ -167,6 +167,7 @@ export default class App extends Component {
     let getServiceDefData = [];
     let resourceServiceDef = [];
     let tagServiceDef = [];
+    let gdsServiceDef = {};
     let serviceDefUrl = "plugins/definitions";
 
     try {
@@ -209,7 +210,23 @@ export default class App extends Component {
         "id"
       );
 
-      setServiceDef(resourceServiceDef, tagServiceDef, getServiceDefData);
+      try {
+        let resp = await fetchApi({
+          url: `plugins/definitions/name/gds`
+        });
+        gdsServiceDef = resp.data;
+      } catch (error) {
+        console.error(
+          `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
+        );
+      }
+
+      setServiceDef(
+        resourceServiceDef,
+        tagServiceDef,
+        gdsServiceDef,
+        getServiceDefData
+      );
     } catch (error) {
       console.error(
         `Error occurred while fetching serviceDef details ! ${error}`

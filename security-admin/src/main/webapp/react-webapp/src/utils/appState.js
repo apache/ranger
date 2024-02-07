@@ -32,9 +32,10 @@ function getServiceDef() {
   return serviceDefData;
 }
 
-function setServiceDef(serviceDef, tagServiceDef, allServiceDefs) {
+function setServiceDef(serviceDef, tagServiceDef, gdsServiceDef, allServiceDefs) {
   serviceDefData.serviceDefs = serviceDef;
   serviceDefData.tagServiceDefs = tagServiceDef;
+  serviceDefData.gdsServiceDef = gdsServiceDef;
   serviceDefData.allServiceDefs = allServiceDefs;
 }
 
