@@ -411,9 +411,6 @@ public class RangerGdsValidator {
         }
 
         if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
-            if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
-                validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
-            }
 
             switch (dshid.getStatus()) {
                 case GRANTED:
@@ -426,8 +423,11 @@ public class RangerGdsValidator {
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
                 break;
 
-                case NONE:
                 case REQUESTED:
+                    validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
+                break;
+
+                case NONE:
                 default:
                 break;
             }
