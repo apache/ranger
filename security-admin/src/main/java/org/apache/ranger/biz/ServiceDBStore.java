@@ -1934,6 +1934,25 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	@Override
+	public boolean serviceExists(String name) {
+		boolean ret = false;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceDBStore.serviceExists({})", name);
+		}
+
+		Long id = daoMgr.getXXService().findIdByName(name);
+
+		ret = id != null;
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.serviceExists({}): ret={}", name, ret);
+		}
+
+		return ret;
+	}
+
+	@Override
 	public RangerService getService(Long id) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getService()");
