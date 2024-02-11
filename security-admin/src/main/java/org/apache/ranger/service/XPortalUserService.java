@@ -336,7 +336,9 @@ public class XPortalUserService extends
 		daoManager.getXXGdsSharedResource().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXGdsDataShareInDataset().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXGdsDataShareInDataset().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDataShareInDataset().updateUserIDReference("approver_id", xXPortalUserId);
 		daoManager.getXXGdsDatasetInProject().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXGdsDatasetInProject().updateUserIDReference("upd_by_id", xXPortalUserId);
+		daoManager.getXXGdsDatasetInProject().updateUserIDReference("approver_id", xXPortalUserId);
 	}
 }
