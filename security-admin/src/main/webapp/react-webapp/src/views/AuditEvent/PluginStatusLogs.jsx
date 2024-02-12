@@ -252,6 +252,13 @@ function Plugin_Status() {
             return a > b ? 1 : -1;
           }
           return a.length > b.length ? 1 : -1;
+        },
+        Cell: (rawValue) => {
+          return (
+            <div className="text-truncate">
+              <span title={rawValue.value}>{rawValue.value}</span>
+            </div>
+          );
         }
       },
       {
