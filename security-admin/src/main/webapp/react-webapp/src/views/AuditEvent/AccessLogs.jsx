@@ -511,7 +511,10 @@ function Access() {
         Header: "Service (Name / Type)",
         accessor: (s) => (
           <div>
-            <div className="text-left lht-2 mb-1" title={s.repoDisplayName}>
+            <div
+              className="text-left lht-2 mb-1 text-truncate"
+              title={s.repoDisplayName}
+            >
               {s.repoDisplayName}
             </div>
             <div
@@ -625,7 +628,7 @@ function Access() {
         Header: "Agent Host Name",
         accessor: "agentHost",
         Cell: (rawValue) => {
-          if (!isUndefined(rawValue.value) || !isEmpty(rawValue.value)) {
+          if (!isEmpty(rawValue?.value)) {
             return (
               <div className="text-truncate" title={rawValue.value}>
                 {rawValue.value}
@@ -651,13 +654,20 @@ function Access() {
         width: 100,
         disableResizing: true,
         disableSortBy: true,
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return <div className="text-truncate">{rawValue.value}</div>;
+          } else {
+            return <div className="text-center">--</div>;
+          }
+        },
         getResizerProps: () => {}
       },
       {
         Header: "Zone Name",
         accessor: "zoneName",
         Cell: (rawValue) => {
-          if (!isUndefined(rawValue.value) || !isEmpty(rawValue.value)) {
+          if (!isEmpty(rawValue?.value)) {
             return (
               <h6>
                 <Badge variant="dark" className="text-truncate mw-100">

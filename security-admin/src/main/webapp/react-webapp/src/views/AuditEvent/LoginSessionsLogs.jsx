@@ -177,7 +177,7 @@ function LoginSessions() {
         Cell: (rawValue) => {
           if (rawValue.value) {
             return (
-              <span className="text-center d-block">{rawValue.value}</span>
+              <span className="text-center d-block text-truncate">{rawValue.value}</span>
             );
           } else {
             return <span className="text-center d-block">--</span>;
