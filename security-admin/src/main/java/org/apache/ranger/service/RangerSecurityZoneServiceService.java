@@ -231,7 +231,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
             serviceDBStore.deleteZonePolicies(deletedTagServiceNames, ret.getId());
 
-            gdsStore.deleteAllGdsObjectsForServicesInSecurityZone(deletedServiceNames, ret.getId());
+            gdsStore.onSecurityZoneUpdate(ret.getId(), updatedServiceNames, deletedServiceNames);
 
             oldServiceNames.addAll(updatedServiceNames);
             updateServiceInfos(oldServiceNames);

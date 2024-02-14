@@ -1230,19 +1230,37 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void deleteAllGdsObjectsForServicesInSecurityZone(Collection<String> serviceNames, Long zoneId) {
-        LOG.debug("==> deleteAllGdsObjectsForServicesInSecurityZone({}, {})", serviceNames, zoneId);
+    public void onSecurityZoneUpdate(Long zoneId, Collection<String> updatedServices, Collection<String> removedServices) {
+        LOG.debug("==> onSecurityZoneUpdate({}, {}, {})", zoneId, updatedServices, removedServices);
 
-        if (zoneId != null && CollectionUtils.isNotEmpty(serviceNames)) {
-            XXServiceDao      serviceDao   = daoMgr.getXXService();
-            XXGdsDataShareDao dataShareDao = daoMgr.getXXGdsDataShare();
+        XXServiceDao      serviceDao   = daoMgr.getXXService();
+        XXGdsDataShareDao dataShareDao = daoMgr.getXXGdsDataShare();
 
-            for (String serviceName : serviceNames) {
+        if (zoneId != null && CollectionUtils.isNotEmpty(updatedServices)) {
+            for (String serviceName : updatedServices) {
                 Long serviceId = serviceDao.findIdByName(serviceName);
 
                 if (serviceId == null) {
-                    LOG.warn("deleteAllGdsObjectsForServicesInSecurityZone(): invalid service name={}. Ignored", serviceName);
+                    LOG.warn("onSecurityZoneUpdate(): updatedServices invalid service name={}. Ignored", serviceName);
+                    continue;
+                }
 
+                List<XXGdsDataShare> dataShares = dataShareDao.findByServiceIdAndZoneId(serviceId, zoneId);
+
+                if (CollectionUtils.isEmpty(dataShares)) {
+                    continue;
+                }
+
+                updateGdsVersionForService(serviceId);
+            }
+        }
+
+        if (zoneId != null && CollectionUtils.isNotEmpty(removedServices)) {
+            for (String serviceName : removedServices) {
+                Long serviceId = serviceDao.findIdByName(serviceName);
+
+                if (serviceId == null) {
+                    LOG.warn("onSecurityZoneUpdate(): removedServices invalid service name={}. Ignored", serviceName);
                     continue;
                 }
 
@@ -1262,7 +1280,7 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
 
-        LOG.debug("<== deleteAllGdsObjectsForServicesInSecurityZone({}, {})", serviceNames, zoneId);
+        LOG.debug("<== onSecurityZoneUpdate({}, {}, {})", zoneId, updatedServices, removedServices);
     }
 
     public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {

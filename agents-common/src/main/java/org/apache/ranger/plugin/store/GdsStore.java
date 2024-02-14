@@ -137,5 +137,5 @@ public interface GdsStore {
 
     void deleteAllGdsObjectsForSecurityZone(Long zoneId) throws Exception;
 
-    void deleteAllGdsObjectsForServicesInSecurityZone(Collection<String> serviceNames, Long zoneId) throws Exception;
+    void onSecurityZoneUpdate(Long zoneId, Collection<String> updatedServices, Collection<String> removedServices) throws Exception;
 }
