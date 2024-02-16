@@ -96,8 +96,11 @@ public class RESTErrorUtil {
 	 * @return
 	 */
 	public WebApplicationException create403RESTException(String logMessage) {
+		RESTResponse resp = new RESTResponse();
+		resp.setMsgDesc(logMessage);
+
 		Response errorResponse = Response.status(
-				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).build();
+				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
