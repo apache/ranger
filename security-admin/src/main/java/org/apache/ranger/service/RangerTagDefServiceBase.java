@@ -127,6 +127,11 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 		}
 
 		retList.setList(tagDefList);
+		retList.setResultSize(tagDefList.size());
+		retList.setPageSize(searchFilter.getMaxRows());
+		retList.setStartIndex(searchFilter.getStartIndex());
+		retList.setSortType(searchFilter.getSortType());
+		retList.setSortBy(searchFilter.getSortBy());
 
 		return retList;
 	}

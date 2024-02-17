@@ -142,7 +142,11 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
 		}
 
 		retList.setList(tagList);
-
+		retList.setResultSize(tagList.size());
+		retList.setPageSize(searchFilter.getMaxRows());
+		retList.setStartIndex(searchFilter.getStartIndex());
+		retList.setSortType(searchFilter.getSortType());
+		retList.setSortBy(searchFilter.getSortBy());
 		return retList;
 	}
 }

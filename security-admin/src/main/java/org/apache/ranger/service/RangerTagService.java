@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXServiceResource;
@@ -49,6 +50,12 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.type", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_TYPE, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXTagDef tagDef", "obj.type = tagDef.id"));
+		searchFields.add(new SearchField(SearchFilter.TAG_TYPE_PARTIAL, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXTagDef tagDef", "obj.type = tagDef.id"));
+
+		sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.type"));
+		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
 	}
 
 	@Override
