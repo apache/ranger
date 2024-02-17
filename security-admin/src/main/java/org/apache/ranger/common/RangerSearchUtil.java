@@ -90,6 +90,18 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.FETCH_TAG_POLICIES, request.getParameter(SearchFilter.FETCH_TAG_POLICIES));
 		ret.setParam(SearchFilter.SERVICE_NAME_PREFIX, request.getParameter(SearchFilter.SERVICE_NAME_PREFIX));
 		ret.setParam(SearchFilter.ZONE_NAME_PREFIX, request.getParameter(SearchFilter.ZONE_NAME_PREFIX));
+		ret.setParam(SearchFilter.TAG_TYPE, request.getParameter(SearchFilter.TAG_TYPE));
+		ret.setParam(SearchFilter.TAG_TYPE_PARTIAL, request.getParameter(SearchFilter.TAG_TYPE_PARTIAL));
+		ret.setParam(SearchFilter.TAG_SOURCE, request.getParameter(SearchFilter.TAG_SOURCE));
+		ret.setParam(SearchFilter.TAG_SOURCE_PARTIAL, request.getParameter(SearchFilter.TAG_SOURCE_PARTIAL));
+		ret.setParam(SearchFilter.TAG_SERVICE_NAME, request.getParameter(SearchFilter.TAG_SERVICE_NAME));
+		ret.setParam(SearchFilter.TAG_SERVICE_NAME_PARTIAL, request.getParameter(SearchFilter.TAG_SERVICE_NAME_PARTIAL));
+		ret.setParam(SearchFilter.TAG_RESOURCE_GUID, request.getParameter(SearchFilter.TAG_RESOURCE_GUID));
+		ret.setParam(SearchFilter.TAG_RESOURCE_SIGNATURE, request.getParameter(SearchFilter.TAG_RESOURCE_SIGNATURE));
+		ret.setParam(SearchFilter.TAG_DEF_GUID, request.getParameter(SearchFilter.TAG_DEF_GUID));
+		ret.setParam(SearchFilter.TAG_DEF_ID, request.getParameter(SearchFilter.TAG_DEF_ID));
+		ret.setParam(SearchFilter.TAG_ID, request.getParameter(SearchFilter.TAG_ID));
+		ret.setParam(SearchFilter.CREATED_BY, request.getParameter(SearchFilter.CREATED_BY));
 
 		for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
 			String name = e.getKey();

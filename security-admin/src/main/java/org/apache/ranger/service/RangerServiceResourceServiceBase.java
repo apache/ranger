@@ -110,6 +110,12 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 			resourceList.add(taggedRes);
 		}
 		retList.setList(resourceList);
+		retList.setResultSize(resourceList.size());
+		retList.setPageSize(searchFilter.getMaxRows());
+		retList.setStartIndex(searchFilter.getStartIndex());
+		retList.setSortType(searchFilter.getSortType());
+		retList.setSortBy(searchFilter.getSortBy());
+
 		return retList;
 	}
 

@@ -16,9 +16,12 @@
  */
 package org.apache.ranger.rest;
 
+import static org.mockito.ArgumentMatchers.eq;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.ranger.biz.AssetMgr;
@@ -26,6 +29,7 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
@@ -36,10 +40,14 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.TagValidator;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerTagDefService;
+import org.apache.ranger.service.RangerTagService;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -89,6 +97,18 @@ public class TestTagREST {
 
 	@Mock
 	AssetMgr assetMgr;
+
+	@Mock
+	RangerSearchUtil searchUtil;
+
+	@Mock
+	RangerTagDefService tagDefService;
+
+	@Mock
+	RangerTagService tagService;
+
+	@Mock
+	RangerServiceResourceService resourceService;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -420,7 +440,39 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 	}
-	
+
+	@Test
+	public void test62getTagDefs() {
+		HttpServletRequest  request      = Mockito.mock(HttpServletRequest.class);
+		PList<RangerTagDef> ret          = new PList<RangerTagDef>();
+		List<RangerTagDef>  tagDefList   = new ArrayList<RangerTagDef>();
+		SearchFilter        searchFilter = new SearchFilter();
+		RangerTagDef        rangerTagDef = new RangerTagDef();
+
+		rangerTagDef.setId(id);
+		rangerTagDef.setVersion(5L);
+		tagDefList.add(rangerTagDef);
+		ret.setList(tagDefList);
+
+		Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(tagDefService.sortFields)))
+		       .thenReturn(searchFilter);
+
+		try {
+			Mockito.when(tagStore.getPaginatedTagDefs((SearchFilter) Mockito.any())).thenReturn(ret);
+		} catch (Exception e) {
+		}
+		PList<RangerTagDef> result = tagREST.getTagDefs(request);
+
+		Assert.assertNotNull(result);
+		Assert.assertEquals(result.getList().get(0).getId(), tagDefList.get(0).getId());
+		Assert.assertEquals(result.getList().get(0).getVersion(), tagDefList.get(0).getVersion());
+
+		try {
+			Mockito.verify(tagStore).getPaginatedTagDefs((SearchFilter) Mockito.any());
+		} catch (Exception e) {
+		}
+	}
+
 	@Test
 	public void test15getAllTagDefs() {
 		try {
@@ -743,6 +795,38 @@ public class TestTagREST {
 	}
 	
 	@Test
+	public void test63getTags() {
+		HttpServletRequest request      = Mockito.mock(HttpServletRequest.class);
+		SearchFilter       searchFilter = new SearchFilter();
+		String             testTagType  = "TAG-TYPE";
+		PList<RangerTag>   ret          = new PList<RangerTag>();
+		List<RangerTag>    tagList      = new ArrayList<RangerTag>();
+		RangerTag          tag          = new RangerTag();
+
+		tag.setType(testTagType);
+		tagList.add(tag);
+		ret.setList(tagList);
+
+		Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(tagService.sortFields)))
+		       .thenReturn(searchFilter);
+
+		try {
+			Mockito.when(tagStore.getPaginatedTags(searchFilter)).thenReturn(ret);
+		} catch (Exception e) {
+		}
+
+		PList<RangerTag> result = tagREST.getTags(request);
+
+		Assert.assertNotNull(result);
+		Assert.assertEquals(result.getList().get(0).getType(), tagList.get(0).getType());
+
+		try {
+			Mockito.verify(tagStore).getPaginatedTags((SearchFilter) Mockito.any());
+		} catch (Exception e) {
+		}
+	}
+
+	@Test
 	public void test27createServiceResource() {
 		RangerServiceResource oldRSR = null;
 		RangerServiceResource newRSR = new RangerServiceResource();
@@ -1048,7 +1132,40 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 	}
-	
+
+	@Test
+	public void test64getServiceResources() {
+		HttpServletRequest           request               = Mockito.mock(HttpServletRequest.class);
+		SearchFilter                 searchFilter          = new SearchFilter();
+		PList<RangerServiceResource> ret                   = new PList<RangerServiceResource>();
+		List<RangerServiceResource>  serviceResourceList   = new ArrayList<RangerServiceResource>();
+		RangerServiceResource        rangerServiceResource = new RangerServiceResource();
+
+		rangerServiceResource.setId(id);
+		rangerServiceResource.setServiceName(serviceName);
+		serviceResourceList.add(rangerServiceResource);
+		ret.setList(serviceResourceList);
+
+		Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(resourceService.sortFields)))
+		       .thenReturn(searchFilter);
+
+		try {
+			Mockito.when(tagStore.getPaginatedServiceResources((SearchFilter) Mockito.any())).thenReturn(ret);
+		} catch (Exception e) {
+		}
+
+		PList<RangerServiceResource> result = tagREST.getServiceResources(request);
+
+		Assert.assertNotNull(result.getList().get(0).getId());
+		Assert.assertEquals(result.getList().get(0).getId(), serviceResourceList.get(0).getId());
+		Assert.assertEquals(result.getList().get(0).getServiceName(), serviceResourceList.get(0).getServiceName());
+
+		try {
+			Mockito.verify(tagStore).getPaginatedServiceResources((SearchFilter) Mockito.any());
+		} catch (Exception e) {
+		}
+	}
+
 	@Test
 	public void test38createTagResourceMap() {
 		RangerTagResourceMap oldTagResourceMap = null;

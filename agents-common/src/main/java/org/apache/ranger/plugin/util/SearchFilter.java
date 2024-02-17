@@ -37,6 +37,7 @@ public class SearchFilter {
 	public static final String IS_ENABLED      = "isEnabled";     // search
 	public static final String IS_RECURSIVE    = "isRecursive";   // search
 	public static final String TAG_SERVICE_NAME = "tagServiceName";  // search
+	public static final String TAG_SERVICE_NAME_PARTIAL = "tagServiceNamePartial";  // search
 	public static final String TAG_SERVICE_ID  = "tagServiceId";  // search
 	public static final String USER            = "user";          // search
 	public static final String GROUP           = "group";         // search
@@ -74,6 +75,9 @@ public class SearchFilter {
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search
 	public static final String TAG_TYPE                  = "tagType";             // search
+	public static final String TAG_TYPE_PARTIAL          = "tagTypePartial";      // search
+	public static final String TAG_SOURCE                = "tagSource";           // search
+	public static final String TAG_SOURCE_PARTIAL        = "tagSourcePartial";    // search
 	public static final String TAG_ID                    = "tagId";               // search
 	public static final String TAG_GUID                  = "tagGuid";             // search
 	public static final String TAG_RESOURCE_ID           = "resourceId";          // search
