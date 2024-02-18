@@ -26,6 +26,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -38,6 +39,10 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.tagId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+
+		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId"));
+		sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.tagId"));
 	}
 	
 	@Override

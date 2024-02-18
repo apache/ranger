@@ -48,6 +48,7 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerServiceResourceService;
 import org.apache.ranger.service.RangerTagDefService;
+import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +117,9 @@ public class TagREST {
 
     @Autowired
     RangerServiceResourceService rangerServiceResourceService;
+
+    @Autowired
+    RangerTagResourceMapService rangerTagResourceMapService;
 
     public TagREST() {
 	}
@@ -668,6 +672,8 @@ public class TagREST {
 
         try {
             SearchFilter filter = searchUtil.getSearchFilter(request, tagService.sortFields);
+
+            searchUtil.extractIntList(request, filter, SearchFilter.TAG_IDS, "Tag Id List");
 
             ret = tagStore.getPaginatedTags(filter);
         } catch (Exception excp) {
@@ -1261,6 +1267,38 @@ public class TagREST {
         }
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllTagResourceMaps(): " + ret);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE_PAGINATED)
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public PList<RangerTagResourceMap> getTagResourceMaps(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTagResourceMaps()");
+        }
+
+        final PList<RangerTagResourceMap> ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, rangerTagResourceMapService.sortFields);
+
+            ret = tagStore.getPaginatedTagResourceMaps(filter);
+        } catch (Exception excp) {
+            LOG.error("getTagResourceMaps() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (ret == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTagResourceMaps(): " + ret);
         }
 
         return ret;
