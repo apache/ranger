@@ -79,6 +79,7 @@ public class SearchFilter {
 	public static final String TAG_SOURCE                = "tagSource";           // search
 	public static final String TAG_SOURCE_PARTIAL        = "tagSourcePartial";    // search
 	public static final String TAG_ID                    = "tagId";               // search
+	public static final String TAG_IDS                   = "tagIds";               // search
 	public static final String TAG_GUID                  = "tagGuid";             // search
 	public static final String TAG_RESOURCE_ID           = "resourceId";          // search
 	public static final String TAG_RESOURCE_GUID         = "resourceGuid";        // search
@@ -113,12 +114,14 @@ public class SearchFilter {
 	public static final String UPDATE_TIME_END          = "updatedTimeEnd";       // search
 	public static final String IS_DISTINCT              = "isDistinct";           // search, sort
 
-	private Map<String, String> params;
-	private int                 startIndex;
-	private int                 maxRows    = Integer.MAX_VALUE;
-	private boolean             getCount   = true;
-	private String              sortBy;
-	private String              sortType;
+	private Map<String, String>   params;
+	private Map<String, Object[]> multiValueParams;
+	private int                   startIndex;
+	private int                   maxRows    = Integer.MAX_VALUE;
+	private boolean               getCount   = true;
+	private String                sortBy;
+	private String                sortType;
+	private boolean               isDistinct = true;
 
 	public SearchFilter() {
 		this((Map<String, String>) null);
@@ -127,6 +130,7 @@ public class SearchFilter {
 	public SearchFilter(SearchFilter other) {
 		if (other != null) {
 			setParams(other.params != null ? new HashMap<>(other.params) : null);
+			setMultiValueParams(other.multiValueParams != null ? new HashMap<>(other.multiValueParams) : null);
 			setStartIndex(other.startIndex);
 			setMaxRows(other.maxRows);
 			setGetCount(other.getCount);
@@ -134,6 +138,7 @@ public class SearchFilter {
 			setSortType(other.sortType);
 		} else {
 			setParams(null);
+			setMultiValueParams(null);
 		}
 	}
 
@@ -203,6 +208,26 @@ public class SearchFilter {
 
 	public boolean isEmpty() {
 		return MapUtils.isEmpty(params);
+	}
+
+	public Map<String, Object[]> getMultiValueParams() {
+		return multiValueParams;
+	}
+
+	public void setMultiValueParams(Map<String, Object[]> multiValueParams) {
+		this.multiValueParams = multiValueParams;
+	}
+
+	public void setMultiValueParam(String name, Object[] value) {
+		if (multiValueParams == null) {
+			multiValueParams = new HashMap<>();
+		}
+
+		multiValueParams.put(name, value);
+	}
+
+	public Object[] getMultiValueParam(String name) {
+		return multiValueParams != null ? multiValueParams.get(name) : null;
 	}
 	
 	public int getStartIndex() {

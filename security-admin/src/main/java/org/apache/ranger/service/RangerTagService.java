@@ -51,6 +51,7 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.type", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_TYPE, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXTagDef tagDef", "obj.type = tagDef.id"));
 		searchFields.add(new SearchField(SearchFilter.TAG_TYPE_PARTIAL, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXTagDef tagDef", "obj.type = tagDef.id"));
+		searchFields.add(new SearchField(SearchFilter.TAG_IDS, "obj.id", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 
 		sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
 		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.type"));

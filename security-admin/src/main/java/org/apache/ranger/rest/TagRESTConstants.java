@@ -32,6 +32,7 @@ public class TagRESTConstants {
 	static final String RESOURCES_RESOURCE_PAGINATED = "/resources/paginated";
 	static final String RESOURCE_RESOURCE        = "/resource/";
 	static final String TAGRESOURCEMAPS_RESOURCE = "/tagresourcemaps/";
+	static final String TAGRESOURCEMAPS_RESOURCE_PAGINATED = "/tagresourcemaps/paginated";
 	static final String IMPORT_SERVICETAGS_RESOURCE = "/importservicetags/";
 	static final String TAGRESOURCEMAP_RESOURCE  = "/tagresourcemap/";
 	static final String TAGTYPES_RESOURCE        = "/types/";
