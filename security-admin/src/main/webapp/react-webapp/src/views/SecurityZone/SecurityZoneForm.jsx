@@ -32,7 +32,8 @@ import {
   find,
   maxBy,
   sortBy,
-  map
+  map,
+  cloneDeep
 } from "lodash";
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
@@ -65,7 +66,7 @@ const SecurityZoneForm = () => {
   const navigate = useNavigate();
   const params = useParams();
   const toastId = useRef(null);
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
   const [services, setServices] = useState([]);
   const [zone, setZone] = useState({});
   const [resourceServiceDef, setResourceServiceDef] = useState({});

@@ -31,7 +31,7 @@ import {
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
-import { isEmpty, map, sortBy } from "lodash";
+import { cloneDeep, isEmpty, map, sortBy } from "lodash";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
@@ -56,7 +56,7 @@ function reducer(state, action) {
 
 export const PolicyListingTabView = () => {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const serviceDefs = getServiceDef();
+  const serviceDefs = cloneDeep(getServiceDef());
   const navigate = useNavigate();
   const params = useParams();
   const [policyState, dispatch] = useReducer(reducer, {

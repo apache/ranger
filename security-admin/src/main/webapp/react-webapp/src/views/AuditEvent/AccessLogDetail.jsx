@@ -25,19 +25,17 @@ import { toast } from "react-toastify";
 import { isEmpty } from "lodash";
 import { Loader } from "Components/CommonComponents";
 import { useParams } from "react-router-dom";
-import { getServiceDef } from "../../utils/appState";
 
 function AccessLogDetail() {
   const params = useParams();
   const [access, setAccess] = useState([]);
   const [loader, setLoader] = useState(true);
-  const { allServiceDefs } = getServiceDef();
 
   useEffect(() => {
-    fetchAcessLogs();
+    fetchAccessLogs();
   }, []);
 
-  const fetchAcessLogs = async () => {
+  const fetchAccessLogs = async () => {
     let accessResp = {};
     let accessData = {};
 
@@ -81,13 +79,7 @@ function AccessLogDetail() {
             <>
               <h5 className="heading-without-wrap">Policy Details</h5>
               <div className="wrap">
-                <PolicyViewDetails
-                  paramsData={access}
-                  serviceDef={allServiceDefs?.find((servicedef) => {
-                    return servicedef.name == access.serviceType;
-                  })}
-                  policyView={false}
-                />
+                <PolicyViewDetails paramsData={access} policyView={false} />
               </div>
             </>
           )}

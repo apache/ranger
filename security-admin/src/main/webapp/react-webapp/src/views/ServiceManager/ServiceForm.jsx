@@ -57,7 +57,8 @@ import {
   split,
   without,
   maxBy,
-  isArray
+  isArray,
+  cloneDeep
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { RangerPolicyType } from "../../utils/XAEnums";
@@ -66,7 +67,7 @@ import { getServiceDef } from "../../utils/appState";
 class ServiceForm extends Component {
   constructor(props) {
     super(props);
-    this.serviceDefData = getServiceDef();
+    this.serviceDefData = cloneDeep(getServiceDef());
     this.configsJson = {};
     this.initialValuesObj = {
       isEnabled: "true",

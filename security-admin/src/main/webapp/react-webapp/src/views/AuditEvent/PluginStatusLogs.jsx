@@ -45,7 +45,8 @@ import {
   toUpper,
   filter,
   isNull,
-  isEmpty
+  isEmpty,
+  cloneDeep
 } from "lodash";
 import { getServiceDef } from "../../utils/appState";
 import { pluginStatusColumnInfo } from "../../utils/XAMessages";
@@ -68,7 +69,7 @@ function Plugin_Status() {
   );
   const [resetPage, setResetpage] = useState({ page: null });
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     if (servicesAvailable !== null) {

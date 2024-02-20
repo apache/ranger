@@ -45,7 +45,15 @@ import {
   isKMSAuditor
 } from "Utils/XAUtils";
 import Select from "react-select";
-import { filter, isEmpty, map, sortBy, uniq, upperCase } from "lodash";
+import {
+  cloneDeep,
+  filter,
+  isEmpty,
+  map,
+  sortBy,
+  uniq,
+  upperCase
+} from "lodash";
 import { toast } from "react-toastify";
 import ResourceTagContent from "./ResourceTagContent";
 import { PathAssociateWithModule } from "../../utils/XAEnums";
@@ -86,7 +94,9 @@ function reducer(state, action) {
 }
 
 export const SideBar = () => {
-  const { allServiceDefs, serviceDefs, tagServiceDefs } = getServiceDef();
+  const { allServiceDefs, serviceDefs, tagServiceDefs } = cloneDeep(
+    getServiceDef()
+  );
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const [keyState, dispatch] = useReducer(reducer, {
     loader: false,

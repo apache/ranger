@@ -42,7 +42,8 @@ import {
   has,
   filter,
   find,
-  isArray
+  isArray,
+  cloneDeep
 } from "lodash";
 import { toast } from "react-toastify";
 import qs from "qs";
@@ -99,7 +100,7 @@ function Access() {
   );
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [policyDetails, setPolicyDetails] = useState({});
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     if (!isKMSRole) {

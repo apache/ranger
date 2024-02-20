@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import { Button, Col, Row } from "react-bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
-import { filter, map, sortBy, uniq, isEmpty } from "lodash";
+import { filter, map, sortBy, uniq, isEmpty, cloneDeep } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   isSystemAdmin,
@@ -42,7 +42,7 @@ import noServiceImage from "Images/no-service.svg";
 class ServiceDefinitions extends Component {
   constructor(props) {
     super(props);
-    this.serviceDefData = getServiceDef();
+    this.serviceDefData = cloneDeep(getServiceDef());
     this.state = {
       serviceDefs: this.props.isTagView
         ? this.serviceDefData.tagServiceDefs

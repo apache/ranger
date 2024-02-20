@@ -30,7 +30,7 @@ import {
   scrollToError
 } from "../../components/CommonComponents";
 import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
-import { find, isEmpty, values } from "lodash";
+import { cloneDeep, find, isEmpty, values } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
@@ -75,7 +75,7 @@ function KeyCreate(props) {
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
   const toastId = useRef(null);
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     fetchInitialData();
