@@ -716,6 +716,7 @@ public class ServiceDefUtil {
     public static RangerPolicyConditionDef createImplicitExpressionConditionDef(Long itemId) {
         RangerPolicyConditionDef ret = new RangerPolicyConditionDef(itemId, IMPLICIT_CONDITION_EXPRESSION_NAME, IMPLICIT_CONDITION_EXPRESSION_EVALUATOR, new HashMap<>());
 
+        ret.getEvaluatorOptions().put("engineName", "JavaScript");
         ret.getEvaluatorOptions().put("ui.isMultiline", "true");
         ret.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
         ret.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
