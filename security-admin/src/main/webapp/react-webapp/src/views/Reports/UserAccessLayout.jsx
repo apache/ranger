@@ -43,7 +43,8 @@ import {
   sortBy,
   split,
   has,
-  uniq
+  uniq,
+  cloneDeep
 } from "lodash";
 import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
@@ -69,7 +70,7 @@ function UserAccessLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = useQuery();
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   const showMoreLess = () => {
     setShow(!show);

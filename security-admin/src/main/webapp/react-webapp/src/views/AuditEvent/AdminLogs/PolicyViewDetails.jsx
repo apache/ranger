@@ -23,7 +23,7 @@ import { Table, Badge, Row, Col } from "react-bootstrap";
 import { RangerPolicyType, DefStatus } from "../../../utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
-import { find, isEmpty, map, sortBy } from "lodash";
+import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
 import { getResourcesDefVal, serverError } from "../../../utils/XAUtils";
 import { ModalLoader } from "../../../components/CommonComponents";
 import { getServiceDef } from "../../../utils/appState";
@@ -33,7 +33,7 @@ export function PolicyViewDetails(props) {
   const [loader, SetLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});
   const { updateServices } = props;
-  let { allServiceDefs, gdsServiceDef } = getServiceDef();
+  let { allServiceDefs, gdsServiceDef } = cloneDeep(getServiceDef());
   const isMultiResources = true;
 
   useEffect(() => {

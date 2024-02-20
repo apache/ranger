@@ -39,7 +39,7 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
 export default function TagBasePermissionItem(props) {
-  const serviceDefs = getServiceDef();
+  const serviceDefs = cloneDeep(getServiceDef());
   const {
     options,
     inputVal,
