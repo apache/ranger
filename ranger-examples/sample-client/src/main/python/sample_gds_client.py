@@ -360,19 +360,17 @@ policy = gds.add_project_policy(project_2.id, RangerPolicy({ 'name': project_2.n
 print(f'  added policy for project {project_2.name}: {policy}')
 
 
-exit(0)
-
 print(f'Removing dataset_in_project: id={d1_in_p1.id}')
 gds.remove_dataset_in_project(d1_in_p1.id)
 print(f'  deleted dataset_in_project: id={d1_in_p1.id}')
 
-print(f'Removing dataset_in_project: id={d1_in_p2.id}')
-gds.remove_dataset_in_project(d1_in_p2.id)
-print(f'  deleted dataset_in_project: id={d1_in_p2.id}')
+print(f'Removing dataset_in_project: id={d2_in_p1.id}')
+gds.remove_dataset_in_project(d2_in_p1.id)
+print(f'  deleted dataset_in_project: id={d2_in_p1.id}')
 
-print(f'Removing dataset_in_project: id={d2_in_p2.id}')
-gds.remove_dataset_in_project(d2_in_p2.id)
-print(f'  deleted dataset_in_project: id={d2_in_p2.id}')
+print(f'Removing dataset_in_project: id={d3_in_p2.id}')
+gds.remove_dataset_in_project(d3_in_p2.id)
+print(f'  deleted dataset_in_project: id={d3_in_p2.id}')
 
 print(f'Removing data_share_in_dataset: id={dshid_1.id}')
 gds.remove_data_share_in_dataset(dshid_1.id)
@@ -381,6 +379,26 @@ print(f'  deleted data_share_in_dataset: id={dshid_1.id}')
 print(f'Removing data_share_in_dataset: id={dshid_2.id}')
 gds.remove_data_share_in_dataset(dshid_2.id)
 print(f'  deleted data_share_in_dataset: id={dshid_2.id}')
+
+print(f'Removing data_share_in_dataset: id={dshid_3.id}')
+gds.remove_data_share_in_dataset(dshid_3.id)
+print(f'  deleted data_share_in_dataset: id={dshid_3.id}')
+
+print(f'Removing data_share_in_dataset: id={dshid_4.id}')
+gds.remove_data_share_in_dataset(dshid_4.id)
+print(f'  deleted data_share_in_dataset: id={dshid_4.id}')
+
+print(f'Removing data_share_in_dataset: id={dshid_5.id}')
+gds.remove_data_share_in_dataset(dshid_5.id)
+print(f'  deleted data_share_in_dataset: id={dshid_5.id}')
+
+print(f'Removing data_share_in_dataset: id={dshid_6.id}')
+gds.remove_data_share_in_dataset(dshid_6.id)
+print(f'  deleted data_share_in_dataset: id={dshid_6.id}')
+
+print(f'Removing data_share_in_dataset: id={dshid_7.id}')
+gds.remove_data_share_in_dataset(dshid_7.id)
+print(f'  deleted data_share_in_dataset: id={dshid_7.id}')
 
 print(f'Removing shared_resource: id={hive_resource_1.id}')
 gds.remove_shared_resource(hive_resource_1.id)
