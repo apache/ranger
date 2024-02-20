@@ -454,7 +454,11 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 								if (subDirAuthStatus != AuthzStatus.ALLOW) {
 									for(INode child : cList) {
 										if (child.isDirectory()) {
-											directories.push(new SubAccessData(child.asDirectory(), resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
+											if (data.resourcePath.endsWith(Path.SEPARATOR)) {
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + child.getLocalName()));
+											} else {
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
+											}
 										}
 									}
 								}
