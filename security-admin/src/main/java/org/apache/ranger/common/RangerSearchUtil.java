@@ -358,7 +358,6 @@ public class RangerSearchUtil extends SearchUtil {
 								whereClause.append(" ) ");
 							}
 
-							logger.debug("Where clause ...  :: " + whereClause);
 						} else {
 							whereClause.append(" and ")
 							           .append(searchField.getFieldName())

@@ -84,6 +84,7 @@ public class SearchFilter {
 	public static final String TAG_IDS                   = "tagIds";               // search
 	public static final String TAG_GUID                  = "tagGuid";             // search
 	public static final String TAG_RESOURCE_ID           = "resourceId";          // search
+	public static final String TAG_RESOURCE_IDS          = "resourceIds";          // search
 	public static final String TAG_RESOURCE_GUID         = "resourceGuid";        // search
 	public static final String TAG_RESOURCE_SERVICE_NAME = "resourceServiceName"; // search
 	public static final String TAG_RESOURCE_SIGNATURE    = "resourceSignature";   // search

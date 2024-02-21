@@ -39,6 +39,7 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.tagId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "svc.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXServiceResource svcr, XXService svc", "obj.resourceId = svcr.id and svcr.serviceId = svc.id"));
 
 		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
 		sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId"));

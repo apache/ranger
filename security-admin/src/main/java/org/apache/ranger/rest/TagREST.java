@@ -1050,6 +1050,7 @@ public class TagREST {
 
         try {
             SearchFilter filter = searchUtil.getSearchFilter(request, rangerServiceResourceService.sortFields);
+            searchUtil.extractIntList(request, filter, SearchFilter.TAG_RESOURCE_IDS, "Tag resource list");
 
             ret = tagStore.getPaginatedServiceResources(filter);
         } catch (Exception excp) {
