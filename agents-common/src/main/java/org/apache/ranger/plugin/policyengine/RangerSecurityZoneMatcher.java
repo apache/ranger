@@ -26,6 +26,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerResourceEvaluatorsRetriever;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
@@ -103,7 +104,14 @@ public class RangerSecurityZoneMatcher {
                         LOG.debug("Trying to match resource:[{}] using matcher:[{}]", accessResource, matcher);
                     }
 
-                    if (matcher.getPolicyResourceMatcher().isMatch(accessResource, RangerPolicyResourceMatcher.MatchScope.ANY, null)) {
+                    RangerPolicyResourceMatcher policyResourceMatcher = matcher.getPolicyResourceMatcher();
+                    MatchType                   matchType             = policyResourceMatcher.getMatchType(accessResource, null);
+
+                    if (matchType == MatchType.DESCENDANT) { // add unzoned name
+                        ret.add("");
+                    }
+
+                    if (matchType != MatchType.NONE) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Matched resource:[{}] using matcher:[{}]", accessResource, matcher);
                         }

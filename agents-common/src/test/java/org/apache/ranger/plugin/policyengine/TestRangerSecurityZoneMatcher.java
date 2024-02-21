@@ -72,7 +72,7 @@ public class TestRangerSecurityZoneMatcher {
 
         res   = createResource("database", "db3");
         zones = zoneMatcher.getZonesForResourceAndChildren(res);
-        assertEquals(createSet("z3", "z4"), zones);
+        assertEquals(createSet("", "z3", "z4"), zones);
     }
 
     private Map<String, SecurityZoneInfo> createSecurityZones() {
