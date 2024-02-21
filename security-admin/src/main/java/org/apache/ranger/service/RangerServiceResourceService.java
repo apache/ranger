@@ -61,6 +61,7 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
         searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME_PARTIAL, "service.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXService service", "obj.serviceId = service.id"));
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_GUID, "obj.guid", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_SIGNATURE, "obj.resourceSignature", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_IDS, "obj.id", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 
         sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId"));
