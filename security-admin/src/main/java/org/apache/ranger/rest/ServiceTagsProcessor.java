@@ -144,6 +144,10 @@ public class ServiceTagsProcessor {
 				for (int i = 0; i < resources.size(); i++) {
 					resource = resources.get(i);
 
+					if (StringUtils.isBlank(resource.getServiceName())) {
+						resource.setServiceName(serviceTags.getServiceName());
+					}
+
 					RangerServiceResource existing          = null;
 					String                resourceSignature = null;
 					Long                  resourceId        = resource.getId();
@@ -178,9 +182,6 @@ public class ServiceTagsProcessor {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.createOrUpdate_service_resource(" + resourceId + ")");
 					}
 					if (existing == null) {
-						if (StringUtils.isBlank(resource.getServiceName())) {
-							resource.setServiceName(serviceTags.getServiceName());
-						}
 						resourceInStore = tagStore.createServiceResource(resource);
 
 					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
@@ -515,11 +516,13 @@ public class ServiceTagsProcessor {
 		if (CollectionUtils.isNotEmpty(serviceResources)) {
 
 			for (RangerServiceResource serviceResource : serviceResources) {
+				if (StringUtils.isBlank(serviceResource.getServiceName())) {
+					serviceResource.setServiceName(serviceTags.getServiceName());
+				}
 
 				RangerServiceResource objToDelete = null;
 
 				try {
-
 					if (StringUtils.isNotBlank(serviceResource.getGuid())) {
 						objToDelete = tagStore.getServiceResourceByGuid(serviceResource.getGuid());
 					}
