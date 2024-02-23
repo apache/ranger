@@ -107,7 +107,8 @@ function Plugins() {
         try {
           logsResp = await fetchApi({
             url: "assets/exportAudit",
-            params: params
+            params: params,
+            skipNavigate: true
           });
           logs = logsResp.data.vXPolicyExportAudits;
           totalCount = logsResp.data.totalCount;
