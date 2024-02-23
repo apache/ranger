@@ -73,39 +73,41 @@ function UserFormComp(props) {
   const toastId = React.useRef(null);
 
   const handleSubmit = async (formData) => {
-    let userFormData = { ...formData };
+    let userFormData = {};
 
-    let userRoleListVal = [];
-    if (userFormData.groupIdList) {
-      userFormData.groupIdList = userFormData.groupIdList.map(
+    userFormData["name"] = formData.name;
+    userFormData["password"] = formData.password;
+    userFormData["firstName"] = formData.firstName;
+    userFormData["lastName"] = formData.lastName;
+    userFormData["emailAddress"] = formData.emailAddress;
+    userFormData["userRoleList"] = formData.userRoleList
+      ? [formData.userRoleList.value]
+      : [];
+
+    if (formData.groupIdList) {
+      userFormData["groupIdList"] = formData.groupIdList.map(
         (obj) => obj.value + ""
       );
     }
-    if (userFormData.userRoleList) {
-      userRoleListVal.push(userFormData.userRoleList.value);
-      userFormData.userRoleList = userRoleListVal;
-    }
-    delete userFormData.passwordConfirm;
-    userFormData.status = ActivationStatus.ACT_STATUS_ACTIVE.value;
-    if (isEditView) {
-      userFormData = {
-        ...userInfo,
-        ...userFormData
-      };
-      delete userFormData.password;
-    }
+
+    userFormData["status"] = ActivationStatus.ACT_STATUS_ACTIVE.value;
+
     setPreventUnblock(true);
     if (isEditView) {
+      let userEditData = { ...userInfo, ...userFormData };
+      delete userEditData.password;
+
       try {
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: true
         });
-        const userEdit = await fetchApi({
+        await fetchApi({
           url: `xusers/secure/users/${userInfo.id}`,
           method: "put",
-          data: userFormData
+          data: userEditData
         });
+
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
@@ -118,7 +120,7 @@ function UserFormComp(props) {
           blockUI: false
         });
         serverError(error);
-        console.error(`Error occurred while creating user`);
+        console.error("Error occurred while updating user");
       }
     } else {
       try {
@@ -126,11 +128,12 @@ function UserFormComp(props) {
           type: "SET_BLOCK_UI",
           blockUI: true
         });
-        const userCreate = await fetchApi({
+        await fetchApi({
           url: "xusers/secure/users",
           method: "post",
           data: userFormData
         });
+
         let tblpageData = {};
         if (state && state !== null) {
           tblpageData = state.tblpageData;
@@ -142,6 +145,7 @@ function UserFormComp(props) {
             }
           }
         }
+
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
