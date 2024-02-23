@@ -193,6 +193,7 @@ function Access() {
             logsResp = await fetchApi({
               url: "assets/accessAudit",
               params: params,
+              skipNavigate: true,
               paramsSerializer: function (params) {
                 return qs.stringify(params, { arrayFormat: "repeat" });
               }

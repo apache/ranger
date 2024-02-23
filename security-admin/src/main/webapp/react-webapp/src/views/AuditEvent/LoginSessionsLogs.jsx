@@ -21,6 +21,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
+import { fetchApi } from "Utils/fetchAPI";
 import { AuthStatus, AuthType } from "../../utils/XAEnums";
 import AdminModal from "./AdminModal";
 import dateFormat from "dateformat";
@@ -37,7 +38,7 @@ import {
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
 
-function Login_Sessions() {
+function LoginSessions() {
   const [loginSessionListingData, setLoginSessionLogs] = useState([]);
   const [loader, setLoader] = useState(true);
   const [sessionId, setSessionId] = useState([]);
@@ -96,10 +97,10 @@ function Login_Sessions() {
           params["sortType"] = getTableSortType(sortBy);
         }
         try {
-          const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
           logsResp = await fetchApi({
             url: "xusers/authSessions",
-            params: params
+            params: params,
+            skipNavigate: true
           });
           logs = logsResp.data.vXAuthSessions;
           totalCount = logsResp.data.totalCount;
@@ -410,4 +411,4 @@ function Login_Sessions() {
   );
 }
 
-export default Login_Sessions;
+export default LoginSessions;
