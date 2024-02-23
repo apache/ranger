@@ -175,6 +175,26 @@ export const PolicyLogs = ({ data, reportdata }) => {
   );
   const createMaskPolicyNew = createMaskPolicy.map((newval) => newval.newValue);
 
+  const getDataMaskType = (dataMaskLabel, dataMaskInfo) => {
+    let maskType = dataMaskInfo?.dataMaskType;
+
+    if (!isEmpty(dataMaskLabel)) {
+      if (dataMaskLabel == "Custom") {
+        maskType = dataMaskLabel + " : " + dataMaskInfo?.valueExpr;
+      } else {
+        maskType = dataMaskLabel;
+      }
+    } else {
+      if (dataMaskInfo.dataMaskType == "CUSTOM") {
+        maskType = dataMaskInfo.dataMaskType + " : " + dataMaskInfo?.valueExpr;
+      } else {
+        maskType = dataMaskInfo.dataMaskType;
+      }
+    }
+
+    return maskType;
+  };
+
   /* CREATE END */
 
   /* UPDATE LOGS VARIABLES */
@@ -1055,12 +1075,12 @@ export const PolicyLogs = ({ data, reportdata }) => {
           return (
             <h6 className="d-inline">
               <Badge className="d-inline-flex mr-1" variant="success">
-                {DataMasklabel}
+                {getDataMaskType(DataMasklabel, dataMaskInfo)}
               </Badge>
             </h6>
           );
         } else {
-          return DataMasklabel;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
       if (dataMaskInfo) {
@@ -1080,7 +1100,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             </h6>
           );
         } else {
-          return dataMaskInfo.dataMaskType;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
     };
@@ -1205,6 +1225,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {!isEmpty(rowFilterInfo)
                       ? getRowLevelFilter(rowFilterInfo.filterExpr, index)
                       : "--"}
+                  </td>
+                </tr>
+              )}
+              {newPolicyItemsDiff.length - 1 != index && (
+                <tr>
+                  <td>
+                    <br />
                   </td>
                 </tr>
               )}
@@ -1389,12 +1416,12 @@ export const PolicyLogs = ({ data, reportdata }) => {
           return (
             <h6 className="d-inline">
               <Badge className="d-inline-flex mr-1" variant="danger">
-                {DataMasklabel}
+                {getDataMaskType(DataMasklabel, dataMaskInfo)}
               </Badge>
             </h6>
           );
         } else {
-          return DataMasklabel;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
       if (dataMaskInfo) {
@@ -1409,12 +1436,12 @@ export const PolicyLogs = ({ data, reportdata }) => {
           return (
             <h6 className="d-inline">
               <Badge className="d-inline-flex mr-1" variant="danger">
-                {dataMaskInfo.dataMaskType}
+                {getDataMaskType(DataMasklabel, dataMaskInfo)}
               </Badge>
             </h6>
           );
         } else {
-          return dataMaskInfo.dataMaskType;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
     };
@@ -1525,7 +1552,6 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </td>
                   </tr>
                 )}
-
               {policy.attributeName == "Masked Policy Items" && (
                 <tr>
                   <td className="table-warning text-nowrap policyitem-field">
@@ -1541,6 +1567,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {!isEmpty(rowFilterInfo)
                       ? getRowLevelFilter(rowFilterInfo.filterExpr, index)
                       : "--"}
+                  </td>
+                </tr>
+              )}
+              {oldPolicyItemsDiff.length - 1 != index && (
+                <tr>
+                  <td>
+                    <br />
                   </td>
                 </tr>
               )}
@@ -1945,7 +1978,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             {action == "create" &&
               !isEmpty(createConditionNew) &&
               !isUndefined(createConditionNew) &&
-              createConditionNew != 0 && (
+              createConditionNew != 0 &&
+              createConditionNew != "[]" && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
                     Policy Conditions:
@@ -2442,7 +2476,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {createMaskPolicyNew.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning text-nowrap policyitem-field">
@@ -2498,16 +2532,21 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               )}
                             </tr>
                             <tr>
-                              {!isEmpty(policy.DataMasklabel) && (
+                              {!isEmpty(policy.dataMaskInfo) && (
                                 <td className="table-warning text-nowrap policyitem-field">
-                                  <i>{`Data Mask Types`}</i>
-                                  {!isEmpty(policy.DataMasklabel)
-                                    ? `: ${policy.DataMasklabel} `
-                                    : "<empty>"}
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
                                 </td>
                               )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <br />
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -2673,7 +2712,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               updateMaskPolicy != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
-                    Mask Policy Items:
+                    Masking Policy Items:
                   </h5>
 
                   <Row className="d-flex flex-nowrap">
@@ -3092,7 +3131,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {deletemaskPolicyOld.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning policyitem-field">
@@ -3148,15 +3187,21 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               )}
                             </tr>
                             <tr>
-                              {policy.DataMasklabel &&
-                                policy.DataMasklabel.length > 0 && (
-                                  <td className="table-warning policyitem-field">
-                                    <i>{`Data Mask Types`}</i>
-                                    {`: ${policy.DataMasklabel} `}
-                                  </td>
-                                )}
+                              {!isEmpty(policy.dataMaskInfo) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
+                                </td>
+                              )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <br />
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -3708,7 +3753,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {importdelmaskpolicyold.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning policyitem-field">
@@ -3764,15 +3809,21 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               )}
                             </tr>
                             <tr>
-                              {policy.DataMasklabel &&
-                                policy.DataMasklabel.length > 0 && (
-                                  <td className="table-warning policyitem-field">
-                                    <i>{`Data Mask Types`}</i>
-                                    {`: ${policy.DataMasklabel} `}
-                                  </td>
-                                )}
+                              {!isEmpty(policy.dataMaskInfo) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
+                                </td>
+                              )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <br />
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -3785,7 +3836,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             {action == "Import Delete" &&
               !isEmpty(importPolicyConditionOld) &&
               !isUndefined(importPolicyConditionOld) &&
-              importPolicyConditionOld != 0 && (
+              importPolicyConditionOld != 0 &&
+              importPolicyConditionOld != "[]" && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
                     Policy Conditions:
