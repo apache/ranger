@@ -152,15 +152,6 @@ export const SideBar = () => {
   };
 
   useEffect(() => {
-    if (
-      location.pathname != "/policymanager/resource" &&
-      location.pathname != "/policymanager/tag"
-    ) {
-      fetchServicesData();
-    }
-  }, []);
-
-  useEffect(() => {
     if (!isListenerAttached) {
       document?.addEventListener("mousedown", handleClickOutside);
       isListenerAttached = true;
