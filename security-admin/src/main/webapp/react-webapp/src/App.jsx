@@ -29,6 +29,7 @@ import history from "Utils/history";
 import { setUserProfile, setServiceDef } from "Utils/appState";
 import LayoutComp from "Views/Layout";
 import { filter, sortBy, has } from "lodash";
+import { fetchApi, fetchCSRFConf } from "Utils/fetchAPI";
 
 const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
@@ -134,7 +135,6 @@ export default class App extends Component {
     let serviceDefUrl = "plugins/definitions";
 
     try {
-      const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
       fetchCSRFConf();
       const profResp = await fetchApi({
         url: "users/profile"
@@ -148,14 +148,13 @@ export default class App extends Component {
       );
     }
 
-    if (hasAccessToTab("Resource Based Policies")) {
-      serviceDefUrl = "plugins/definitions";
-    } else if (hasAccessToTab("Tag Based Policies") && isUser()) {
-      serviceDefUrl = "plugins/definitions/name/tag";
-    }
+    let serviceDefUrl = hasAccessToTab("Resource Based Policies")
+      ? "plugins/definitions"
+      : hasAccessToTab("Tag Based Policies") && isUser()
+      ? "plugins/definitions/name/tag"
+      : "plugins/definitions";
 
     try {
-      const { fetchApi } = await import("Utils/fetchAPI");
       getServiceDefData = await fetchApi({
         url: serviceDefUrl
       });
@@ -179,6 +178,12 @@ export default class App extends Component {
         `Error occurred while fetching serviceDef details ! ${error}`
       );
     }
+
+    setServiceDef(
+      resourceServiceDef,
+      tagServiceDef,
+      getServiceDefData
+    );
     this.setState({
       loader: false
     });
