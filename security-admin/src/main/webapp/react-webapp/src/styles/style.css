@@ -2573,6 +2573,11 @@ li.list-group-item:hover {
   padding: 0 2px;
   position: relative;
 }
+.error-img {
+  max-width: 496px;
+  font-size: 150px;
+  opacity: 0.5;
+}
 .text-word-break {
   word-break: break-all;
 }
