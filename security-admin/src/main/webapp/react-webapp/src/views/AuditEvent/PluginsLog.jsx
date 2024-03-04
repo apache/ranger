@@ -221,7 +221,7 @@ function Plugins() {
         Cell: (rawValue) => {
           return (
             <span className="text-center d-block">
-              <Badge variant="success">{rawValue.value}</Badge>
+              <Badge bg="success">{rawValue.value}</Badge>
             </span>
           );
         },

@@ -24,7 +24,6 @@ import {
   Button,
   ButtonGroup,
   Dropdown,
-  Card,
   Col,
   InputGroup,
   Row
@@ -58,7 +57,6 @@ import { getServiceDef } from "../../utils/appState";
 function UserAccessLayout() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const isAuditRole = isAuditor() || isKMSAuditor();
-  const [show, setShow] = useState(true);
   const [contentLoader, setContentLoader] = useState(true);
   const [serviceDefs, setServiceDefs] = useState([]);
   const [filterServiceDefs, setFilterServiceDefs] = useState([]);
@@ -71,10 +69,6 @@ function UserAccessLayout() {
   const location = useLocation();
   const searchParams = useQuery();
   const { allServiceDefs } = cloneDeep(getServiceDef());
-
-  const showMoreLess = () => {
-    setShow(!show);
-  };
 
   useEffect(() => {
     fetchInitialData();
@@ -509,233 +503,213 @@ function UserAccessLayout() {
         <Row>
           <Col sm={12}>
             <Accordion defaultActiveKey="0">
-              <Card>
-                <Accordion.Toggle
-                  className="border-top-0 border-right-0 border-right-0"
-                  as={Card.Header}
-                  eventKey="0"
-                  onClick={showMoreLess}
-                >
+              <Accordion.Item eventKey="0">
+                <Accordion.Header>
                   <div className="clearfix">
-                    <span className="bold float-left">Search Criteria</span>
-                    <span className="float-right cursor-pointer">
-                      {show ? (
-                        <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                      ) : (
-                        <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                      )}
-                    </span>
+                    <span className="bold float-start">Search Criteria</span>
                   </div>
-                </Accordion.Toggle>
-                <Accordion.Collapse eventKey="0">
-                  <Card.Body>
-                    <Form
-                      onSubmit={onSubmit}
-                      initialValues={getInitialSearchParams}
-                      render={({ handleSubmit, submitting, values }) => (
-                        <form onSubmit={handleSubmit}>
-                          <Row className="form-group">
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Policy Name
-                              </label>
-                            </Col>
-                            <Col sm={4}>
-                              <Field name="policyNamePartial">
-                                {({ input }) => (
-                                  <input
-                                    {...input}
-                                    type="text"
-                                    placeholder="Enter Policy Name"
-                                    className="form-control"
-                                    data-js="policyName"
-                                    data-cy="policyName"
-                                  />
-                                )}
-                              </Field>
-                            </Col>
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Policy Type
-                              </label>
-                            </Col>
-                            <Col sm={4}>
-                              <Field name="policyType">
+                </Accordion.Header>
+                <Accordion.Body>
+                  <Form
+                    onSubmit={onSubmit}
+                    initialValues={getInitialSearchParams}
+                    render={({ handleSubmit, submitting, values }) => (
+                      <form onSubmit={handleSubmit}>
+                        <Row className="form-group">
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">
+                              Policy Name
+                            </label>
+                          </Col>
+                          <Col sm={4}>
+                            <Field name="policyNamePartial">
+                              {({ input }) => (
+                                <input
+                                  {...input}
+                                  type="text"
+                                  placeholder="Enter Policy Name"
+                                  className="form-control"
+                                  data-js="policyName"
+                                  data-cy="policyName"
+                                />
+                              )}
+                            </Field>
+                          </Col>
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">
+                              Policy Type
+                            </label>
+                          </Col>
+                          <Col sm={4}>
+                            <Field name="policyType">
+                              {({ input }) => (
+                                <Select
+                                  {...input}
+                                  isClearable={false}
+                                  options={[
+                                    { value: "0", label: "Access" },
+                                    { value: "1", label: "Masking" },
+                                    {
+                                      value: "2",
+                                      label: "Row Level Filter"
+                                    }
+                                  ]}
+                                  menuPlacement="auto"
+                                  placeholder="Select Policy Type"
+                                />
+                              )}
+                            </Field>
+                          </Col>
+                        </Row>
+                        <Row className="form-group">
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">Component</label>
+                          </Col>
+                          <Col sm={4}>
+                            <Field name="serviceType">
+                              {({ input }) => (
+                                <Select
+                                  {...input}
+                                  isMulti
+                                  isClearable={false}
+                                  options={serviceDefOpts}
+                                  placeholder="Select Component Type"
+                                  menuPlacement="auto"
+                                />
+                              )}
+                            </Field>
+                          </Col>
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">Resource</label>
+                          </Col>
+                          <Col sm={4}>
+                            <Field name="polResource">
+                              {({ input }) => (
+                                <input
+                                  {...input}
+                                  type="text"
+                                  placeholder="Enter Resource Name"
+                                  className="form-control"
+                                  data-js="resourceName"
+                                  data-cy="resourceName"
+                                />
+                              )}
+                            </Field>
+                          </Col>
+                        </Row>
+                        <Row className="form-group">
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">
+                              Policy Label
+                            </label>
+                          </Col>
+                          <Col sm={4}>
+                            <Field name="policyLabelsPartial">
+                              {({ input }) => (
+                                <AsyncCreatableSelect
+                                  {...input}
+                                  defaultOptions
+                                  isClearable={true}
+                                  loadOptions={fetchPolicyLabels}
+                                  placeholder="Select Policy Label"
+                                />
+                              )}
+                            </Field>
+                          </Col>
+                          {!isKMSRole && (
+                            <React.Fragment>
+                              <Col sm={2} className="text-end">
+                                <label className="col-form-label ">
+                                  Zone Name
+                                </label>
+                              </Col>
+                              <Col sm={4}>
+                                <Field name="zoneName">
+                                  {({ input }) => (
+                                    <Select
+                                      {...input}
+                                      isClearable={true}
+                                      options={zoneNameOpts}
+                                      menuPlacement="auto"
+                                      placeholder="Select Zone Name"
+                                    />
+                                  )}
+                                </Field>
+                              </Col>
+                            </React.Fragment>
+                          )}
+                        </Row>
+                        <Row>
+                          <Col sm={2} className="text-end">
+                            <label className="col-form-label ">Search By</label>
+                          </Col>
+                          <Col sm={10}>
+                            <InputGroup className="mb-3">
+                              <Field name="searchBy">
                                 {({ input }) => (
                                   <Select
                                     {...input}
                                     isClearable={false}
                                     options={[
-                                      { value: "0", label: "Access" },
-                                      { value: "1", label: "Masking" },
                                       {
-                                        value: "2",
-                                        label: "Row Level Filter"
+                                        value: "searchByGroup",
+                                        label: "Groupname"
+                                      },
+                                      {
+                                        value: "searchByUser",
+                                        label: "Username"
+                                      },
+                                      {
+                                        value: "searchByRole",
+                                        label: "Rolename"
                                       }
                                     ]}
                                     menuPlacement="auto"
-                                    placeholder="Select Policy Type"
+                                    placeholder="Select Search By"
+                                    onChange={(e) =>
+                                      onChangeSearchBy(e, input, values)
+                                    }
                                   />
                                 )}
                               </Field>
-                            </Col>
-                          </Row>
-                          <Row className="form-group">
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Component
-                              </label>
-                            </Col>
-                            <Col sm={4}>
-                              <Field name="serviceType">
-                                {({ input }) => (
-                                  <Select
-                                    {...input}
-                                    isMulti
-                                    isClearable={false}
-                                    options={serviceDefOpts}
-                                    placeholder=""
-                                    menuPlacement="auto"
-                                  />
-                                )}
-                              </Field>
-                            </Col>
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Resource
-                              </label>
-                            </Col>
-                            <Col sm={4}>
-                              <Field name="polResource">
-                                {({ input }) => (
-                                  <input
-                                    {...input}
-                                    type="text"
-                                    placeholder="Enter Resource Name"
-                                    className="form-control"
-                                    data-js="resourceName"
-                                    data-cy="resourceName"
-                                  />
-                                )}
-                              </Field>
-                            </Col>
-                          </Row>
-                          <Row className="form-group">
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Policy Label
-                              </label>
-                            </Col>
-                            <Col sm={4}>
-                              <Field name="policyLabelsPartial">
-                                {({ input }) => (
-                                  <AsyncCreatableSelect
-                                    {...input}
-                                    defaultOptions
-                                    isClearable={true}
-                                    loadOptions={fetchPolicyLabels}
-                                    placeholder=""
-                                  />
-                                )}
-                              </Field>
-                            </Col>
-                            {!isKMSRole && (
-                              <React.Fragment>
-                                <Col sm={2} className="text-right">
-                                  <label className="col-form-label ">
-                                    Zone Name
-                                  </label>
-                                </Col>
-                                <Col sm={4}>
-                                  <Field name="zoneName">
-                                    {({ input }) => (
-                                      <Select
-                                        {...input}
-                                        isClearable={true}
-                                        options={zoneNameOpts}
-                                        menuPlacement="auto"
-                                        placeholder="Select Zone Name"
-                                      />
-                                    )}
-                                  </Field>
-                                </Col>
-                              </React.Fragment>
-                            )}
-                          </Row>
-                          <Row>
-                            <Col sm={2} className="text-right">
-                              <label className="col-form-label ">
-                                Search By
-                              </label>
-                            </Col>
-                            <Col sm={10}>
-                              <InputGroup className="mb-3">
-                                <Field name="searchBy">
-                                  {({ input }) => (
-                                    <Select
-                                      {...input}
-                                      isClearable={false}
-                                      options={[
-                                        {
-                                          value: "searchByGroup",
-                                          label: "Group"
-                                        },
-                                        {
-                                          value: "searchByUser",
-                                          label: "Username"
-                                        },
-                                        {
-                                          value: "searchByRole",
-                                          label: "Rolename"
-                                        }
-                                      ]}
-                                      menuPlacement="auto"
-                                      placeholder="Select Search By"
-                                      onChange={(e) =>
-                                        onChangeSearchBy(e, input, values)
-                                      }
-                                    />
-                                  )}
-                                </Field>
-                                <SearchByAsyncSelect
-                                  searchByOptName={values.searchBy}
-                                  onChange={(opt, input) =>
-                                    onChangeCurrentSearchByOpt(opt, input)
-                                  }
-                                />
-                              </InputGroup>
-                            </Col>
-                          </Row>
-                          <Row>
-                            <Col sm={{ span: 10, offset: 2 }}>
-                              <Button
-                                variant="primary"
-                                type="submit"
-                                size="sm"
-                                disabled={submitting}
-                                data-js="searchBtn"
-                                data-cy="searchBtn"
-                              >
-                                <i className="fa-fw fa fa-search"></i>
-                                Search
-                              </Button>
-                            </Col>
-                          </Row>
-                        </form>
-                      )}
-                    />
-                  </Card.Body>
-                </Accordion.Collapse>
-              </Card>
+                              <SearchByAsyncSelect
+                                searchByOptName={values.searchBy}
+                                onChange={(opt, input) =>
+                                  onChangeCurrentSearchByOpt(opt, input)
+                                }
+                              />
+                            </InputGroup>
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col sm={{ span: 10, offset: 2 }}>
+                            <Button
+                              variant="primary"
+                              type="submit"
+                              size="sm"
+                              disabled={submitting}
+                              data-js="searchBtn"
+                              data-cy="searchBtn"
+                            >
+                              <i className="fa-fw fa fa-search"></i>
+                              Search
+                            </Button>
+                          </Col>
+                        </Row>
+                      </form>
+                    )}
+                  />
+                </Accordion.Body>
+              </Accordion.Item>
             </Accordion>
           </Col>
         </Row>
         <Row>
-          <Col sm={12} className="mt-3 text-right">
+          <Col sm={12} className="mt-3 text-end">
             <Dropdown
               as={ButtonGroup}
               key="left"
-              drop="left"
+              drop="start"
               size="sm"
               className="manage-export"
               title="Export all below policies"
@@ -766,7 +740,7 @@ function UserAccessLayout() {
             </Dropdown>
           </Col>
         </Row>
-        {filterServiceDefs.map((serviceDef) => (
+        {filterServiceDefs?.map((serviceDef) => (
           <SearchPolicyTable
             key={serviceDef.name}
             serviceDef={serviceDef}

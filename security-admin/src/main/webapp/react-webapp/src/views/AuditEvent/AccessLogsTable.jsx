@@ -23,7 +23,6 @@ import dateFormat from "dateformat";
 import { isEmpty } from "lodash";
 import { toast } from "react-toastify";
 import {
-  ServiceType,
   ServiceRequestDataRangerAcl,
   ServiceRequestDataHadoopAcl
 } from "../../utils/XAEnums";
@@ -120,7 +119,7 @@ export const AccessLogsTable = ({ data = {} }) => {
                 {!isEmpty(requestData) ? (
                   <>
                     <Button
-                      className="pull-right link-tag query-icon btn btn-sm"
+                      className="float-end link-tag query-icon btn btn-sm"
                       size="sm"
                       variant="link"
                       title="Copy"
@@ -147,7 +146,7 @@ export const AccessLogsTable = ({ data = {} }) => {
                 {!isEmpty(requestData) ? (
                   <>
                     <Button
-                      className="pull-right link-tag query-icon btn btn-sm"
+                      className="float-end link-tag query-icon btn btn-sm"
                       size="sm"
                       variant="link"
                       title="Copy"

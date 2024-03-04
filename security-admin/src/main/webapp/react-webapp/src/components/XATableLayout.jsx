@@ -193,7 +193,7 @@ function XATableLayout({
       error = `Value must be less than or equal to ${pageOptions.length}`;
     }
     return (
-      <span className="text-danger position-absolute text-left pagination-error-field">
+      <span className="text-danger position-absolute text-start pagination-error-field">
         {error}
       </span>
     );
@@ -222,10 +222,10 @@ function XATableLayout({
     // apply the table props
     <>
       {columnHide?.isVisible && (
-        <div className="text-right mb-2 mt-n5">
+        <div className="position-absolute top-0 end-0">
           <DropdownButton
             className="p-0 column-dropdown"
-            menuAlign="right"
+            align="end"
             as={ButtonGroup}
             size="sm"
             id="dropdown-variants-info"
@@ -275,7 +275,7 @@ function XATableLayout({
                         className="d-flex align-items-center"
                       >
                         <input
-                          className="mr-1"
+                          className="me-1"
                           type="checkbox"
                           {...column.columnData.getToggleHiddenProps()}
                         />
@@ -302,7 +302,7 @@ function XATableLayout({
                               className="d-flex align-items-center"
                             >
                               <input
-                                className="mr-1"
+                                className="me-1"
                                 type="checkbox"
                                 {...columns.getToggleHiddenProps()}
                               />
@@ -425,7 +425,7 @@ function XATableLayout({
                   <span>
                     Records per page
                     <select
-                      className="select-pagesize ml-2"
+                      className="select-pagesize ms-2"
                       value={pageSize}
                       onChange={(e) => {
                         gotoPage(0);
@@ -449,7 +449,7 @@ function XATableLayout({
                       setCurrentPageVal(1);
                     }}
                     disabled={!canPreviousPage}
-                    className="pagination-btn-last btn btn-outline-dark btn-sm mr-1"
+                    className="pagination-btn-last btn btn-outline-dark btn-sm me-1"
                   >
                     <i
                       className="fa fa-angle-double-left"
@@ -464,12 +464,12 @@ function XATableLayout({
                       setCurrentPageVal(pageIndex);
                     }}
                     disabled={!canPreviousPage}
-                    className="pagination-btn-previous btn btn-outline-dark btn-sm mr-2"
+                    className="pagination-btn-previous btn btn-outline-dark btn-sm me-2"
                   >
                     <i className="fa fa-angle-left" aria-hidden="true"></i>
                   </button>
                   Page{" "}
-                  <div className="position-relative ml-1">
+                  <div className="position-relative ms-1">
                     <input
                       className="pagination-input"
                       type="number"
@@ -498,20 +498,20 @@ function XATableLayout({
                         currentPageVal > pageOptions.length ||
                         !Number.isInteger(Number(currentPageVal))) &&
                       validatePageNumber(currentPageVal, pageOptions)}
-                    <span className="mr-1"> </span>
+                    <span className="me-1"> </span>
                   </div>
-                  <span className="mr-1">
-                    <span className="mr-1"> </span>
+                  <span className="me-1">
+                    <span className="me-1"> </span>
                     of {pageOptions.length}
                   </span>
-                  <span className="mr-1"> </span>
+                  <span className="me-1"> </span>
                   <button
                     onClick={() => {
                       currentPageValRef.current.value = pageIndex + 2;
                       nextPage();
                       setCurrentPageVal(pageIndex + 2);
                     }}
-                    className="pagination-btn-previous mr-1 btn btn-outline-dark btn-sm lh-1"
+                    className="pagination-btn-previous me-1 btn btn-outline-dark btn-sm lh-1"
                     disabled={!canNextPage}
                   >
                     <i className="fa fa-angle-right" aria-hidden="true"></i>

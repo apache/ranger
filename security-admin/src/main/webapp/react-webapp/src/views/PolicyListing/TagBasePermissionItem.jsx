@@ -262,8 +262,8 @@ export default function TagBasePermissionItem(props) {
   const tagAccessTypeDisplayVal = (val) => {
     return val.map((m, index) => {
       return (
-        <h6 className="d-inline mr-1 mb-1" key={index}>
-          <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
+        <h6 className="d-inline me-1 mb-1" key={index}>
+          <Badge bg="info">{m.serviceName.toUpperCase()}</Badge>
         </h6>
       );
     });
@@ -373,7 +373,7 @@ export default function TagBasePermissionItem(props) {
                     </FormB.Group>
                   )}
                 />
-                <Table striped bordered>
+                <Table bordered>
                   <thead>
                     <tr>
                       <th className="bg-white text-dark  align-middle">
@@ -385,7 +385,7 @@ export default function TagBasePermissionItem(props) {
                               <>
                                 <input
                                   {...input}
-                                  className="mr-1"
+                                  className="me-1"
                                   checked={isSelectAllChecked(
                                     values?.tableList
                                   )}

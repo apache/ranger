@@ -72,7 +72,7 @@ export const AdminModal = (props) => {
         {loader ? (
           <ModalLoader />
         ) : (
-          <Table striped bordered hover>
+          <Table bordered hover>
             <tbody>
               <tr>
                 <th>Login ID</th>

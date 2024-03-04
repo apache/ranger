@@ -236,11 +236,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   First Name *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="text"
@@ -265,7 +265,7 @@ class UserProfile extends Component {
                                   data-cy="firstName"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE.firstNameValidationMsg
@@ -284,11 +284,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Last Name
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="text"
@@ -313,7 +313,7 @@ class UserProfile extends Component {
                                   data-cy="lastName"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE.lastNameValidationMsg
@@ -332,11 +332,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Email Address
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   name="emailAddress"
@@ -361,7 +361,7 @@ class UserProfile extends Component {
                                   data-cy="emailAddress"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE
@@ -381,7 +381,7 @@ class UserProfile extends Component {
                         <Row className="form-group">
                           <Col xs={3}>
                             {" "}
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Role *
                             </label>
                           </Col>
@@ -479,11 +479,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Old Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -503,7 +503,7 @@ class UserProfile extends Component {
                                   data-cy="oldPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p
@@ -527,11 +527,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   New Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -551,7 +551,7 @@ class UserProfile extends Component {
                                   data-cy="newPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p
@@ -575,11 +575,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Re-enter New Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -599,7 +599,7 @@ class UserProfile extends Component {
                                   data-cy="reEnterPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p

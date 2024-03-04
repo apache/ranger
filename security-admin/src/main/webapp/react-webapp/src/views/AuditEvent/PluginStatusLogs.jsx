@@ -558,22 +558,27 @@ function Plugin_Status() {
             </div>
           </Col>
         </Row>
-        <Row>
-          <Col sm={11}>
-            <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          </Col>
-        </Row>
-        <XATableLayout
-          data={pluginStatusListingData}
-          columns={columns}
-          loading={loader}
-          totalCount={entries && entries.totalCount}
-          fetchData={fetchPluginStatusInfo}
-          columnSort={true}
-          clientSideSorting={true}
-          showPagination={false}
-          columnHide={{ tableName: "pluginStatus", isVisible: true }}
-        />
+        <div className="position-relative">
+          <Row>
+            <Col sm={11}>
+              <AuditFilterEntries
+                entries={entries}
+                refreshTable={refreshTable}
+              />
+            </Col>
+          </Row>
+          <XATableLayout
+            data={pluginStatusListingData}
+            columns={columns}
+            loading={loader}
+            totalCount={entries && entries.totalCount}
+            fetchData={fetchPluginStatusInfo}
+            columnSort={true}
+            clientSideSorting={true}
+            showPagination={false}
+            columnHide={{ tableName: "pluginStatus", isVisible: true }}
+          />
+        </div>
       </React.Fragment>
     </div>
   );

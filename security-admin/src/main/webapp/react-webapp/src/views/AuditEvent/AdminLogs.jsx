@@ -302,37 +302,37 @@ function Admin() {
           if (rawValue.value == "create") {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="success">{capitalize(rawValue.value)}</Badge>
+                <Badge bg="success">{capitalize(rawValue.value)}</Badge>
               </span>
             );
           } else if (rawValue.value == "update") {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="warning">{capitalize(rawValue.value)}</Badge>
+                <Badge bg="warning">{capitalize(rawValue.value)}</Badge>
               </span>
             );
           } else if (rawValue.value == "delete") {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="danger">{capitalize(rawValue.value)}</Badge>
+                <Badge bg="danger">{capitalize(rawValue.value)}</Badge>
               </span>
             );
           } else if (rawValue.value == "IMPORT START") {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="info">{capitalize(rawValue.value)}</Badge>
+                <Badge bg="info">{capitalize(rawValue.value)}</Badge>
               </span>
             );
           } else if (rawValue.value == "IMPORT END") {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="info">{capitalize(rawValue.value)}</Badge>
+                <Badge bg="info">{capitalize(rawValue.value)}</Badge>
               </span>
             );
           } else {
             operation = (
               <span className="text-center d-block">
-                <Badge variant="secondary">
+                <Badge bg="secondary">
                   {startCase(toLower(rawValue.value))}
                 </Badge>{" "}
               </span>

@@ -198,19 +198,19 @@ function LoginSessions() {
               if (AuthStatus[item].value == 1) {
                 html = (
                   <span className="text-center d-block">
-                    <Badge variant="success">{label}</Badge>
+                    <Badge bg="success">{label}</Badge>
                   </span>
                 );
               } else if (AuthStatus[item].value == 2) {
                 html = (
                   <span className="text-center d-block">
-                    <Badge variant="danger">{label}</Badge>
+                    <Badge bg="danger">{label}</Badge>
                   </span>
                 );
               } else {
                 html = (
                   <span className="text-center d-block">
-                    <Badge variant="secondary">{label}</Badge>
+                    <Badge bg="secondary">{label}</Badge>
                   </span>
                 );
               }

@@ -71,7 +71,7 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
         <Modal.Title>Operation :{action || ""}</Modal.Title>
       </Modal.Header>
 
-      <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+      <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">
         {loader ? (
           <>
             <ModalLoader />

@@ -38,9 +38,6 @@ a:active {
   cursor: pointer;
 }
 
-.pull-right {
-  float: right;
-}
 .overflow-x-auto {
   overflow-y: auto;
 }
@@ -166,6 +163,7 @@ a:active {
 
 .form-control {
   font-size: 0.9rem;
+  color: #495057;
 }
 
 .searchbox-border {
@@ -440,11 +438,6 @@ div#center div.letter_container_7 {
   }
 }
 
-.compulsory-resource {
-  position: absolute;
-  right: 5px;
-}
-
 /* Footer */
 footer {
   margin-top: auto;
@@ -622,7 +615,7 @@ table.no-bg-color thead tr th:first-child {
   color: #707070;
 }
 
-.position-relative .table-striped tbody tr:nth-of-type(odd) {
+.position-relative tbody tr:nth-of-type(odd) {
   background-color: #f9f9f9;
 }
 
@@ -681,7 +674,6 @@ table.no-bg-color thead tr th:first-child {
 .table-responsive .table thead th {
   font-size: 13px;
   padding: 8px;
-  border-bottom: 1px solid #dee2e6;
 }
 
 .bt-1 {
@@ -697,11 +689,6 @@ table.no-bg-color thead tr th:first-child {
 
 .show-more-less:hover {
   text-decoration: underline;
-}
-
-.zoneheader {
-  border-top: 1px solid #0b7fad;
-  margin-top: 4px;
 }
 
 header {
@@ -887,15 +874,15 @@ header {
 }
 
 /* Users / Groups / Roles CSS */
-.row-inactive {
-  background-color: #f5f5f5;
+.row-inactive td{
+  background-color: #f6f7f8 !important;
 }
 
-.row-inactive .badge-warning,
-.row-inactive .badge-success,
-.row-inactive .badge-info {
+.row-inactive .bg-warning,
+.row-inactive .bg-success,
+.row-inactive .bg-info {
   color: #fff;
-  background-color: #6c757d;
+  background-color: #6c757d !important;
 }
 
 .row-inactive a {
@@ -955,6 +942,7 @@ header {
 .table-audit-filter-ready-only th {
   padding: 7px 5px;
   text-align: center;
+  background-color: #eeeeee;
 }
 
 .table-audit-filter td:first-child {
@@ -1196,7 +1184,7 @@ header {
   height: 0;
 }
 
-.trim-containt-breadcrumb {
+.trim-breadcrumb-content {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1500,6 +1488,7 @@ header {
   padding: 3px 5px;
   width: 100%;
   display: block;
+  text-decoration: none;
 }
 
 .filter-tokenizer ul.typeahead-selector li a:hover,
@@ -1652,7 +1641,7 @@ header {
   background-color: #0b7fad;
 }
 
-.info-user-role-grp-icon {
+.input-box-info-icon {
   position: absolute;
   top: 7px;
   right: 20px;
@@ -1992,13 +1981,6 @@ tbody.drag-drop-wrap > tr > td:hover:first-child:after {
   transform: translate3d(-100%, 0, 0);
 }
 
-.collapsing.width {
-  position: relative;
-  width: 0;
-  overflow: hidden;
-  transition: width 0.35s ease;
-}
-
 .content-top-nav .nav-item .nav-link {
   color: #0b7fad;
 }
@@ -2286,17 +2268,6 @@ li.list-servicedef-title {
   }
 }
 
-.collapsing {
-  position: relative;
-  overflow: hidden;
-  width: 0;
-  transition: width 0.35s ease !important;
-}
-
-.collapsing.show {
-  width: 0 !important;
-}
-
 .select-nav-drawer {
   margin: 0.5rem 0.75rem 0.125rem 0.75rem;
 }
@@ -2383,6 +2354,7 @@ div#ranger-content {
 .header-wraper .last-response-time {
   padding-left: 1rem;
   padding-right: 1rem;
+  display: inline-block;
 }
 
 .navbar-active {
@@ -2997,7 +2969,6 @@ textarea.gds-placeholder::placeholder,
 .resource-block {
   padding: 0.5rem 0;
   border-bottom: 1px solid #dddddd;
-  margin: 1rem 2rem;
 }
 
 .gds-shared-resource div.row:last-child {
@@ -3046,4 +3017,26 @@ textarea.gds-placeholder::placeholder,
 .column-dropdown-maxheight {
   max-height: 400px;
   overflow-y: auto;
+}
+.table .thead-light th {
+  color: #495057;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+table a {
+  text-decoration: none;
+}
+.resource-drop-down {
+  display: flex;
+  justify-content:flex-end;
+  gap: 1px;
+}
+.form-check-input[type=checkbox], .form-check-input[type=radio] {
+  border-color: #6c757d;
+}
+.switch[class*="btn-outline"] .switch-handle{
+  background-color:#6c757d !important;
 }
