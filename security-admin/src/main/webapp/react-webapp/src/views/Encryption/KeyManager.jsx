@@ -601,7 +601,7 @@ const KeyManager = () => {
             />
           </Col>
           {isKeyAdmin() && (
-            <Col sm={2} className="text-right">
+            <Col sm={2} className="text-end">
               <Button
                 className={onchangeval !== null ? "" : "button-disabled"}
                 disabled={onchangeval != null ? false : true}

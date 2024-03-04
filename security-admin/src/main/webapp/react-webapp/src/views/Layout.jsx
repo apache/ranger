@@ -162,7 +162,7 @@ const Layout = () => {
 
           <footer>
             <div className="main-footer">
-              <p className="text-left">
+              <p className="text-start">
                 <a
                   target="_blank"
                   href="http://www.apache.org/licenses/LICENSE-2.0"

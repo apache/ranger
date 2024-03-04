@@ -72,16 +72,16 @@ export const RoleLogs = ({ data, reportdata }) => {
       {action == "create" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName}</div>
-            <div className="font-weight-bolder">
+            <div className="fw-bolder">Name: {objectName}</div>
+            <div className="fw-bolder">
               Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
               Standard Time
             </div>
-            <div className="font-weight-bolder">Created By: {owner} </div>
+            <div className="fw-bolder">Created By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Role Detail:</h5>
 
-            <Table className="table table-bordered table-striped w-50">
+            <Table className="table table-bordered w-50">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -104,7 +104,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "create" && !isEmpty(createUsrNew) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Users:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead className="thead-light">
                     <tr>
                       <th>Name</th>
@@ -136,7 +136,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "create" && !isEmpty(createGrpNew) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Groups:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead>
                     <tr className="thead-light">
                       <th>Name</th>
@@ -168,7 +168,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "create" && !isEmpty(createRoleNew) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Roles:</h5>
-                <Table className="table  table-bordered  table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead>
                     <tr className="thead-light">
                       <th>Name</th>
@@ -206,14 +206,14 @@ export const RoleLogs = ({ data, reportdata }) => {
           <div>
             <div className="row">
               <div className="col-md-6">
-                <div className="font-weight-bolder">Name: {objectName}</div>
-                <div className="font-weight-bolder">
+                <div className="fw-bolder">Name: {objectName}</div>
+                <div className="fw-bolder">
                   Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
                   India Standard Time
                 </div>
-                <div className="font-weight-bolder">Updated By: {owner}</div>
+                <div className="fw-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -224,7 +224,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "update" && !isEmpty(Roledetail) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Role Detail:</h5>
-                <Table className="table table-bordered table-striped w-75">
+                <Table className="table table-bordered w-75">
                   <thead className="thead-light">
                     <tr>
                       <th>Fields</th>
@@ -243,10 +243,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                             {!isEmpty(role.previousValue) ? (
                               isEmpty(role.newValue) ? (
                                 <h6>
-                                  <Badge
-                                    className="d-inline mr-1"
-                                    variant="danger"
-                                  >
+                                  <Badge className="d-inline me-1" bg="danger">
                                     {role.previousValue}
                                   </Badge>
                                 </h6>
@@ -261,10 +258,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                             {!isEmpty(role.newValue) ? (
                               isEmpty(role.previousValue) ? (
                                 <h6>
-                                  <Badge
-                                    className="d-inline mr-1"
-                                    variant="success"
-                                  >
+                                  <Badge className="d-inline me-1" bg="success">
                                     {role.newValue}
                                   </Badge>
                                 </h6>
@@ -291,7 +285,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     Old Users Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -326,7 +320,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     New Users Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -367,7 +361,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     Old Groups Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -402,7 +396,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     New Groups Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -442,7 +436,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     Old Roles Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -477,7 +471,7 @@ export const RoleLogs = ({ data, reportdata }) => {
                     New Roles Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Name</th>
@@ -517,17 +511,17 @@ export const RoleLogs = ({ data, reportdata }) => {
       {action == "delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName}</div>
-            <div className="font-weight-bolder">
+            <div className="fw-bolder">Name: {objectName}</div>
+            <div className="fw-bolder">
               Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
               Standard Time
             </div>
-            <div className="font-weight-bolder">Created By: {owner} </div>
-            <div className="font-weight-bolder">Deleted By: {owner} </div>
+            <div className="fw-bolder">Created By: {owner} </div>
+            <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Role Detail:</h5>
 
-            <Table className="table  table-bordered table-striped w-50">
+            <Table className="table table-bordered w-50">
               <>
                 <thead className="thead-light">
                   <tr>
@@ -567,7 +561,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "delete" && !isEmpty(deleteUsrOld) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Users:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead className="thead-light">
                     <tr>
                       <th>Name</th>
@@ -595,7 +589,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "delete" && !isEmpty(deleteGrpOld) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Groups:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead className="thead-light">
                     <tr>
                       <th>Name</th>
@@ -623,7 +617,7 @@ export const RoleLogs = ({ data, reportdata }) => {
             {action == "delete" && !isEmpty(deleteRoleOld) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Roles:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead className="thead-light">
                     <tr>
                       <th>Name</th>

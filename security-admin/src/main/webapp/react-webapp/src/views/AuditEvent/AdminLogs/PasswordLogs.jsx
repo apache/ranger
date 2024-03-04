@@ -34,21 +34,21 @@ export const PasswordLogs = ({ data, reportdata }) => {
           <div>
             <div className="row">
               <div className="col-md-6">
-                <div className="font-weight-bolder">Name: {objectName}</div>
-                <div className="font-weight-bolder">
+                <div className="fw-bolder">Name: {objectName}</div>
+                <div className="fw-bolder">
                   Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
                   India Standard Time
                 </div>
-                <div className="font-weight-bolder">Updated By: {owner}</div>
+                <div className="fw-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
             </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">User Details:</h5>
-            <Table striped bordered hover>
+            <Table bordered hover>
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>

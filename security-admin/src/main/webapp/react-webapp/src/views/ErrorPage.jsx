@@ -93,7 +93,7 @@ export const ErrorPage = (props) => {
                 ? navigate(-2)
                 : navigate(-1)
             }
-            className="mr-1"
+            className="me-1"
           >
             <i className="fa-fw fa fa-long-arrow-left"></i> Go back
           </Button>

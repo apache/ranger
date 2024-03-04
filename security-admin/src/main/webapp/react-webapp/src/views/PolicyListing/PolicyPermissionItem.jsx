@@ -28,7 +28,6 @@ import {
   groupBy,
   isEmpty,
   isArray,
-  has,
   map,
   filter,
   some,
@@ -512,7 +511,7 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input, meta }) => {
+                                  render={({ input }) => {
                                     if (
                                       formValues[attrName][index]?.accesses &&
                                       isArray(

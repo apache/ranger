@@ -330,9 +330,9 @@ function Access() {
         <Col sm={9} className="popover-span">
           <span>{requestData}</span>
         </Col>
-        <Col sm={3} className="pull-right">
+        <Col sm={3} className="float-end">
           <button
-            className="pull-right link-tag query-icon btn btn-sm"
+            className="float-end link-tag query-icon btn btn-sm"
             size="sm"
             title="Copy"
             onClick={(e) => {
@@ -392,7 +392,7 @@ function Access() {
 
   const queryPopupContent = (rowId, serviceType, requestData) => {
     return (
-      <div className="pull-right">
+      <div className="float-end">
         <div className="queryInfo btn btn-sm link-tag query-icon">
           <CustomPopoverOnClick
             icon="fa-fw fa fa-table"
@@ -512,13 +512,13 @@ function Access() {
         accessor: (s) => (
           <div>
             <div
-              className="text-left lht-2 mb-1 text-truncate"
+              className="text-start lht-2 mb-1 text-truncate"
               title={s.repoDisplayName}
             >
               {s.repoDisplayName}
             </div>
             <div
-              className="bt-1 text-left lht-2 mb-0"
+              className="bt-1 text-start lht-2 mb-0"
               title={s.serviceTypeDisplayName}
             >
               {s.serviceTypeDisplayName}
@@ -547,7 +547,7 @@ function Access() {
               <React.Fragment>
                 <div className="clearfix d-flex flex-nowrap m-0">
                   <div
-                    className="pull-left resource-text lht-2 mb-1"
+                    className="float-start resource-text lht-2 mb-1"
                     title={resourcePathText}
                   >
                     {resourcePathText}
@@ -582,7 +582,7 @@ function Access() {
           return (
             <h6>
               <Badge
-                variant="info"
+                bg="info"
                 title={rawValue.value}
                 className="text-truncate mw-100"
               >
@@ -602,13 +602,13 @@ function Access() {
           if (rawValue.value == 1) {
             return (
               <h6>
-                <Badge variant="success">Allowed</Badge>
+                <Badge bg="success">Allowed</Badge>
               </h6>
             );
           } else
             return (
               <h6>
-                <Badge variant="danger">Denied</Badge>
+                <Badge bg="danger">Denied</Badge>
               </h6>
             );
         },
@@ -670,7 +670,7 @@ function Access() {
           if (!isEmpty(rawValue?.value)) {
             return (
               <h6>
-                <Badge variant="dark" className="text-truncate mw-100">
+                <Badge bg="dark" className="text-truncate mw-100">
                   {rawValue.value}
                 </Badge>
               </h6>
@@ -975,40 +975,45 @@ function Access() {
             </div>
           </Col>
         </Row>
-        <Row className="mb-2">
-          <Col sm={2}>
-            <span>Exclude Service Users: </span>
-            <input
-              type="checkbox"
-              className="align-middle"
-              checked={checked}
-              onChange={toggleChange}
-              data-id="serviceUsersExclude"
-              data-cy="serviceUsersExclude"
-            />
-          </Col>
-          <Col sm={9}>
-            <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          </Col>
-        </Row>
-        <XATableLayout
-          data={accessListingData}
-          columns={columns}
-          fetchData={fetchAccessLogsInfo}
-          totalCount={entries && entries.totalCount}
-          loading={loader}
-          pageCount={pageCount}
-          getRowProps={(row) => ({
-            onClick: (e) => {
-              e.stopPropagation();
-              rowModal(row);
-            }
-          })}
-          columnHide={{ tableName: "bigData", isVisible: true }}
-          columnResizable={true}
-          columnSort={true}
-          defaultSort={getDefaultSort}
-        />
+        <div className="position-relative">
+          <Row className="mb-2">
+            <Col sm={2}>
+              <span>Exclude Service Users: </span>
+              <input
+                type="checkbox"
+                className="align-middle"
+                checked={checked}
+                onChange={toggleChange}
+                data-id="serviceUsersExclude"
+                data-cy="serviceUsersExclude"
+              />
+            </Col>
+            <Col sm={9}>
+              <AuditFilterEntries
+                entries={entries}
+                refreshTable={refreshTable}
+              />
+            </Col>
+          </Row>
+          <XATableLayout
+            data={accessListingData}
+            columns={columns}
+            fetchData={fetchAccessLogsInfo}
+            totalCount={entries && entries.totalCount}
+            loading={loader}
+            pageCount={pageCount}
+            getRowProps={(row) => ({
+              onClick: (e) => {
+                e.stopPropagation();
+                rowModal(row);
+              }
+            })}
+            columnHide={{ tableName: "bigData", isVisible: true }}
+            columnResizable={true}
+            columnSort={true}
+            defaultSort={getDefaultSort}
+          />
+        </div>
         <Modal show={showrowmodal} size="lg" onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>
@@ -1022,12 +1027,12 @@ function Access() {
                     pathname: `/reports/audit/eventlog/${rowdata.eventId}`
                   }}
                 >
-                  <i className="fa-fw fa fa-external-link pull-right text-info"></i>
+                  <i className="fa-fw fa fa-external-link float-end text-info"></i>
                 </Link>
               </h4>
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">
             <AccessLogsTable data={rowdata}></AccessLogsTable>
           </Modal.Body>
           <Modal.Footer>

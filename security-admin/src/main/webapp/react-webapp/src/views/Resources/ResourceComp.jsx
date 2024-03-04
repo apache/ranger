@@ -69,7 +69,6 @@ export default function ResourceComp(props) {
     if (index !== 0) {
       let previousKey = grpResourcesKeys[index - 1];
       const parentResourceKey = `resourceName-${previousKey}`;
-      const resourceKey = `resourceName-${levelKey}`;
       if (formValues && formValues[parentResourceKey]) {
         op = filter(grpResources[levelKey], {
           parent: formValues[parentResourceKey].name
@@ -172,25 +171,16 @@ export default function ResourceComp(props) {
       return null;
     }
 
-    const customStyles = {
-      container: () => ({
-        width: "75%",
-        display: "inline-block",
-        float: "right"
-      })
-    };
-
     return (
       <FormB.Group
         as={Row}
         className="mb-3"
-        controlId="policyName"
+        controlId={`Resource-${levelKey}`}
         key={`Resource-${levelKey}`}
       >
         <Col sm={3}>
           <Field
             defaultValue={!policyId && getResourceLabelOp(levelKey, index)[0]}
-            className="form-control"
             name={
               isMultiResources
                 ? `${name}.resourceName-${levelKey}`
@@ -199,11 +189,11 @@ export default function ResourceComp(props) {
             render={({ input }) =>
               formValues[resourceKey] ? (
                 renderResourceSelect(levelKey, index) ? (
-                  <span className="pull-right fnt-14">
-                    <FormB.Label>
+                  <span className="float-end fnt-14">
+                    <FormB.Label className="position-relative pe-2">
                       {getResourceLabelOp(levelKey, index)[0]["label"]}
+                      <RenderValidateField name={`resourceName-${levelKey}`} />
                     </FormB.Label>
-                    <RenderValidateField name={`resourceName-${levelKey}`} />
                   </span>
                 ) : (
                   <>
@@ -219,7 +209,7 @@ export default function ResourceComp(props) {
                       isSearchable={false}
                     />
                     <RenderValidateField name={`resourceName-${levelKey}`} />
-                  </>
+                  </div>
                 )
               ) : null
             }

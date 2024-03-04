@@ -28,10 +28,16 @@ import { map } from "lodash";
 function GroupAssociateUserDetails(props) {
   const { groupID } = props;
   const [userListData, setUserDataList] = useState([]);
-  const [filterUserListData, setFilterUserDataList] = useState({searchUser:null, usrData:[]});
-  const [loader, setLoader] = useState({modalLoader:true, contentLoader:false});
+  const [filterUserListData, setFilterUserDataList] = useState({
+    searchUser: null,
+    usrData: []
+  });
+  const [loader, setLoader] = useState({
+    modalLoader: true,
+    contentLoader: false
+  });
   const [showAlluser, setShowAllUser] = useState(false);
-  const [totalCount, setTotalCount] = useState(null)
+  const [totalCount, setTotalCount] = useState(null);
   const toastId = useRef(null);
 
   useEffect(() => {
@@ -58,26 +64,35 @@ function GroupAssociateUserDetails(props) {
       return { value: value.name, id: value.id };
     });
     setUserDataList(userData);
-    if(filterUserListData?.searchUser !== undefined && filterUserListData?.searchUser !== null) {
-    let userList = userData.filter((v) => {
-        return v.value.toLowerCase().includes(filterUserListData?.searchUser.toLowerCase());
+    if (
+      filterUserListData?.searchUser !== undefined &&
+      filterUserListData?.searchUser !== null
+    ) {
+      let userList = userData.filter((v) => {
+        return v.value
+          .toLowerCase()
+          .includes(filterUserListData?.searchUser.toLowerCase());
       });
-    setFilterUserDataList({usrData:userList});
+      setFilterUserDataList({ usrData: userList });
+    } else {
+      setFilterUserDataList({ usrData: userData });
     }
-    else {
-    setFilterUserDataList({usrData:userData});
-    }
-    setTotalCount(userList.data.totalCount)
-    setLoader({modalLoader:false, contentLoader:false});
+    setTotalCount(userList.data.totalCount);
+    setLoader({ modalLoader: false, contentLoader: false });
   };
 
   const onChangeSearch = (e) => {
     let userList = userListData.filter((v) => {
-      return v.value.toLowerCase().includes(e.currentTarget.value.toLowerCase());
+      return v.value
+        .toLowerCase()
+        .includes(e.currentTarget.value.toLowerCase());
     });
-    setFilterUserDataList({searchUser:e.currentTarget.value, usrData:userList});
+    setFilterUserDataList({
+      searchUser: e.currentTarget.value,
+      usrData: userList
+    });
   };
-  const copyText = (e) => {
+  const copyText = () => {
     let userCopytext = "";
     userCopytext = filterUserListData?.usrData
       .map((val) => {
@@ -100,26 +115,27 @@ function GroupAssociateUserDetails(props) {
     <>
       {userListData && userListData.length > 0 ? (
         <>
-          {totalCount > 100 &&
+          {totalCount > 100 && (
             <Alert variant="warning">
-            Initially search filter is applied for first hundred users. To get more users click on {" "}
+              Initially search filter is applied for first hundred users. To get
+              more users click on{" "}
               <Button
                 variant="outline-secondary"
                 size="sm"
-                className={`${showAlluser ? "not-allowed" : ""} ml-2 btn-mini`}
-                onClick={()=>{
+                className={`${showAlluser ? "not-allowed" : ""} ms-2 btn-mini`}
+                onClick={() => {
                   setShowAllUser(true);
-                  setLoader({modalLoader:false,contentLoader:true});
+                  setLoader({ modalLoader: false, contentLoader: true });
                 }}
                 data-id="Show All Users"
                 data-cy="Show All Users"
                 title="Show All Users"
-                disabled={showAlluser ? true :false}
-                >
+                disabled={showAlluser ? true : false}
+              >
                 Show All Users
               </Button>
             </Alert>
-          }
+          )}
           <Row className="mb-2">
             <Col className="col-sm-11">
               <input
@@ -133,7 +149,7 @@ function GroupAssociateUserDetails(props) {
             </Col>
             <Col className="col-sm-1">
               <Button
-                className="mr-2 rounded-pill border"
+                className="me-2 rounded-pill border"
                 size="sm"
                 variant="link"
                 onClick={() => navigator.clipboard.writeText(copyText())}
@@ -148,24 +164,28 @@ function GroupAssociateUserDetails(props) {
             <Col>
               {loader.contentLoader ? (
                 <ModalLoader />
-              ) : (filterUserListData?.usrData?.length > 0 ? filterUserListData?.usrData.map((val, index) => {
-                return (
-                  <Button
-                    variant="link"
-                    href={`#/user/${val.id}`}
-                    size="sm"
-                    className={`mr-2 mb-2 rounded-pill border text-truncate more-less-width ${
-                      isAuditor() || isKMSAuditor()
-                        ? "disabled-link text-secondary"
-                        : ""
-                    }`}
-                    title={val.value}
-                    key={index}
-                  >
-                    {val.value}
-                  </Button>
-                );
-              }) : "No users found.")}
+              ) : filterUserListData?.usrData?.length > 0 ? (
+                filterUserListData?.usrData.map((val, index) => {
+                  return (
+                    <Button
+                      variant="link"
+                      href={`#/user/${val.id}`}
+                      size="sm"
+                      className={`me-2 mb-2 rounded-pill border text-truncate more-less-width ${
+                        isAuditor() || isKMSAuditor()
+                          ? "disabled-link text-secondary"
+                          : ""
+                      }`}
+                      title={val.value}
+                      key={index}
+                    >
+                      {val.value}
+                    </Button>
+                  );
+                })
+              ) : (
+                "No users found."
+              )}
             </Col>
           </Row>
         </>

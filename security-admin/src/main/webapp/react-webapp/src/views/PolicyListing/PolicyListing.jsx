@@ -450,13 +450,13 @@ function PolicyListing(props) {
           if (rawValue.value)
             return (
               <h6>
-                <Badge variant="success">Enabled</Badge>
+                <Badge bg="success">Enabled</Badge>
               </h6>
             );
           else
             return (
               <h6>
-                <Badge variant="danger">Disabled</Badge>
+                <Badge bg="danger">Disabled</Badge>
               </h6>
             );
         },
@@ -470,13 +470,13 @@ function PolicyListing(props) {
           if (rawValue.value) {
             return (
               <h6>
-                <Badge variant="success">Enabled</Badge>
+                <Badge bg="success">Enabled</Badge>
               </h6>
             );
           } else
             return (
               <h6>
-                <Badge variant="danger">Disabled</Badge>
+                <Badge bg="danger">Disabled</Badge>
               </h6>
             );
         },
@@ -546,7 +546,7 @@ function PolicyListing(props) {
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 title="View"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -560,7 +560,7 @@ function PolicyListing(props) {
               {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
                 <>
                   <Link
-                    className="btn btn-outline-dark btn-sm mr-2"
+                    className="btn btn-outline-dark btn-sm me-2"
                     title="Edit"
                     to={`/service/${serviceId}/policies/${original.id}/edit`}
                   >
@@ -701,7 +701,7 @@ function PolicyListing(props) {
         {policySearchInfoMsg?.map((m, index) => {
           return (
             <p className="m-0" key={index}>
-              <span className="font-weight-bold">{m.text}: </span>
+              <span className="fw-bold">{m.text}: </span>
               <span>{m.info}</span>
             </p>
           );
@@ -775,7 +775,7 @@ function PolicyListing(props) {
                 </div>
               </Col>
               <Col sm={2}>
-                <div className="pull-right mb-1">
+                <div className="float-end mb-1">
                   {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
                     <Button
                       variant="primary"
@@ -808,8 +808,8 @@ function PolicyListing(props) {
           <Modal show={deletePolicyModal.showPopup} onHide={toggleClose}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                Are you sure you want to delete policy&nbsp;"
-                <b>{deletePolicyModal?.policyDetails?.policyName}</b>" ?
+                Are you sure you want to delete policy&nbsp;&quot;
+                <b>{deletePolicyModal?.policyDetails?.policyName}</b>&quot; ?
               </span>
             </Modal.Header>
             <Modal.Footer>
@@ -842,7 +842,7 @@ function PolicyListing(props) {
               />
             </Modal.Body>
             <Modal.Footer>
-              <div className="policy-version text-left">
+              <div className="policy-version text-start">
                 <span>
                   <i
                     className={

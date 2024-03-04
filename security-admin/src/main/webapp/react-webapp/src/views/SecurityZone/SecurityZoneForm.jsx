@@ -184,7 +184,7 @@ const SecurityZoneForm = () => {
 
     for (let key of Object.keys(servicesByType)) {
       resourceServices.push({
-        label: <span className="font-weight-bold text-body h6">{key}</span>,
+        label: <span className="fw-bold text-body h6">{key}</span>,
         options: servicesByType[key].map((name) => {
           return { label: name.name, value: name.name };
         })
@@ -785,7 +785,7 @@ const SecurityZoneForm = () => {
                       {({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Name *
                             </label>
                           </Col>
@@ -817,7 +817,7 @@ const SecurityZoneForm = () => {
                       {({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Description
                             </label>
                           </Col>
@@ -838,7 +838,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Users
                             </label>
                           </Col>
@@ -882,7 +882,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Usergroups
                             </label>
                           </Col>
@@ -926,7 +926,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Roles
                             </label>
                           </Col>
@@ -975,7 +975,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Users
                             </label>
                           </Col>
@@ -1019,7 +1019,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Usergroups
                             </label>
                           </Col>
@@ -1063,7 +1063,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Roles
                             </label>
                           </Col>
@@ -1113,7 +1113,7 @@ const SecurityZoneForm = () => {
                       render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Tag Services
                             </label>
                           </Col>
@@ -1147,7 +1147,7 @@ const SecurityZoneForm = () => {
                       render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Resource Services
                             </label>
                           </Col>
@@ -1178,7 +1178,7 @@ const SecurityZoneForm = () => {
                       )}
                     />
 
-                    <Table striped bordered>
+                    <Table bordered>
                       <thead>
                         <tr>
                           <th className="p-3 mb-2 bg-white text-dark  align-middle text-center">

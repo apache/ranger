@@ -190,7 +190,7 @@ class ZoneListing extends Component {
               <Row>
                 <BlockUi isUiBlock={this.state.blockUI} />
                 <Collapse in={this.state.isCollapse} data-id="panel">
-                  <Col sm={3} className="border-right border-grey">
+                  <Col sm={3} className="border-end border-grey">
                     <Row>
                       {this.state.isAdminRole && (
                         <Col>
@@ -277,7 +277,7 @@ class ZoneListing extends Component {
                                   detail: this.state.filterZone[0]
                                 }
                               }}
-                              className="btn-add-security2 btn-lg"
+                              className="btn-add-security2 btn-lg text-decoration-none"
                             >
                               <i className="fa-fw fa fa-plus"></i>Click here to
                               Create new Zone

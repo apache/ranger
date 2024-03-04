@@ -70,7 +70,7 @@ class ErrorBoundary extends Component {
                       <Button
                         variant="primary"
                         size="sm"
-                        className="mr-2"
+                        className="me-2"
                         onClick={() => {
                           this.setState({
                             error: null,
@@ -86,7 +86,7 @@ class ErrorBoundary extends Component {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="mr-2"
+                    className="me-2"
                     onClick={this.refresh}
                   >
                     <i className="fa-fw fa fa-refresh"></i> Try Again
@@ -96,7 +96,7 @@ class ErrorBoundary extends Component {
             </div>
             <footer>
               <div className="main-footer">
-                <p className="text-left">
+                <p className="text-start">
                   <a
                     target="_blank"
                     href="http://www.apache.org/licenses/LICENSE-2.0"

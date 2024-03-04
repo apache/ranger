@@ -403,11 +403,11 @@ function UserFormComp(props) {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         User Name *
                       </label>
                     </Col>
-                    <Col xs={4}>
+                    <Col xs={4} className={"position-relative"}>
                       <input
                         {...input}
                         type="text"
@@ -423,7 +423,7 @@ function UserFormComp(props) {
                         data-cy="name"
                       />
                       <InfoIcon
-                        css="info-user-role-grp-icon"
+                        css="input-box-info-icon"
                         position="right"
                         message={RegexMessage.MESSAGE.userNameValidationMsg}
                       />
@@ -440,11 +440,11 @@ function UserFormComp(props) {
                   {({ input, meta }) => (
                     <Row className="form-group">
                       <Col xs={3}>
-                        <label className="form-label pull-right">
+                        <label className="form-label float-end">
                           New Password *
                         </label>
                       </Col>
-                      <Col xs={4}>
+                      <Col xs={4} className={"position-relative"}>
                         <input
                           {...input}
                           type="password"
@@ -462,7 +462,7 @@ function UserFormComp(props) {
                           data-cy="password"
                         />
                         <InfoIcon
-                          css="info-user-role-grp-icon"
+                          css="input-box-info-icon"
                           position="right"
                           message={
                             <p
@@ -490,11 +490,11 @@ function UserFormComp(props) {
                   {({ input, meta }) => (
                     <Row className="form-group">
                       <Col xs={3}>
-                        <label className="form-label pull-right">
+                        <label className="form-label float-end">
                           Password Confirm *
                         </label>
                       </Col>
-                      <Col xs={4}>
+                      <Col xs={4} className={"position-relative"}>
                         <input
                           {...input}
                           name="passwordConfirm"
@@ -514,7 +514,7 @@ function UserFormComp(props) {
                           data-cy="passwordConfirm"
                         />
                         <InfoIcon
-                          css="info-user-role-grp-icon"
+                          css="input-box-info-icon"
                           position="right"
                           message={
                             <p
@@ -540,11 +540,11 @@ function UserFormComp(props) {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         First Name *
                       </label>
                     </Col>
-                    <Col xs={4}>
+                    <Col xs={4} className={"position-relative"}>
                       <input
                         {...input}
                         name="firstName"
@@ -568,7 +568,7 @@ function UserFormComp(props) {
                         data-cy="firstName"
                       />
                       <InfoIcon
-                        css="info-user-role-grp-icon"
+                        css="input-box-info-icon"
                         position="right"
                         message={RegexMessage.MESSAGE.firstNameValidationMsg}
                       />
@@ -583,9 +583,9 @@ function UserFormComp(props) {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">Last Name</label>
+                      <label className="form-label float-end">Last Name</label>
                     </Col>
-                    <Col xs={4}>
+                    <Col xs={4} className={"position-relative"}>
                       <input
                         {...input}
                         name="lastName"
@@ -607,7 +607,7 @@ function UserFormComp(props) {
                         data-cy="lastName"
                       />
                       <InfoIcon
-                        css="info-user-role-grp-icon"
+                        css="input-box-info-icon"
                         position="right"
                         message={RegexMessage.MESSAGE.lastNameValidationMsg}
                       />
@@ -622,11 +622,11 @@ function UserFormComp(props) {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         Email Address
                       </label>
                     </Col>
-                    <Col xs={4}>
+                    <Col xs={4} className={"position-relative"}>
                       <input
                         {...input}
                         name="emailAddress"
@@ -652,7 +652,7 @@ function UserFormComp(props) {
                         data-cy="emailAddress"
                       />
                       <InfoIcon
-                        css="info-user-role-grp-icon"
+                        css="input-box-info-icon"
                         position="right"
                         message={
                           RegexMessage.MESSAGE.emailvalidationinfomessage
@@ -668,7 +668,7 @@ function UserFormComp(props) {
               </Field>
               <Row className="form-group">
                 <Col xs={3}>
-                  <label className="form-label pull-right">Select Role *</label>
+                  <label className="form-label float-end">Select Role *</label>
                 </Col>
                 <Col xs={4}>
                   <Field
@@ -690,7 +690,7 @@ function UserFormComp(props) {
 
               <Row className="form-group">
                 <Col xs={3}>
-                  <label className="form-label pull-right">Group</label>
+                  <label className="form-label float-end">Group</label>
                 </Col>
                 <Col xs={4}>
                   <Field

@@ -93,7 +93,7 @@ var Token = createReactClass({
         }
       >
         {this._makeCloseButton()}
-        <span className="typeahead-token-label ml-3 mr-1 text-uppercase font-weight-bold">
+        <span className="typeahead-token-label ms-3 me-1 text-uppercase fw-bold">
           {this.props.categoryLabel} :
         </span>
         {this.state.isEditView ? (

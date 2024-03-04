@@ -111,7 +111,7 @@ function User_Sync() {
           params["sortType"] = getTableSortType(sortBy);
         }
         try {
-          const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
+          const { fetchApi } = await import("Utils/fetchAPI");
           logsResp = await fetchApi({
             url: "assets/ugsyncAudits",
             params: params
@@ -191,7 +191,7 @@ function User_Sync() {
         Cell: (rawValue) => {
           return (
             <span className="text-center d-block">
-              <Badge variant="success">{rawValue.value}</Badge>
+              <Badge bg="success">{rawValue.value}</Badge>
             </span>
           );
         },

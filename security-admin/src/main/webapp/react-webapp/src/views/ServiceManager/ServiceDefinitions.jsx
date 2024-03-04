@@ -360,7 +360,7 @@ class ServiceDefinitions extends Component {
     return (
       <React.Fragment>
         <div>
-          <div className="text-right px-3 pt-3">
+          <div className="text-end px-3 pt-3">
             {!isKMSRole && (
               <div
                 className="body bold  pd-b-10"
@@ -421,7 +421,7 @@ class ServiceDefinitions extends Component {
                 size="sm"
                 className={`${
                   isEmpty(filterServiceDefs) ? "not-allowed" : "pe-auto"
-                } ml-2`}
+                } ms-2`}
                 onClick={this.showImportModal}
                 data-id="importBtn"
                 data-cy="importBtn"
@@ -450,7 +450,7 @@ class ServiceDefinitions extends Component {
                 size="sm"
                 className={`${
                   isEmpty(filterServiceDefs) ? "not-allowed" : "pe-auto"
-                } ml-2`}
+                } ms-2`}
                 onClick={this.showExportModal}
                 data-id="exportBtn"
                 data-cy="exportBtn"

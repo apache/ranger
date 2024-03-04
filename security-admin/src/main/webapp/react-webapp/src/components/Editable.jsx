@@ -423,7 +423,7 @@ const Editable = (props) => {
             <div
               key={property}
               className={`${
-                uiHintVal?.isMultiline ? "editable-label" : "badge badge-dark"
+                uiHintVal?.isMultiline ? "editable-label" : "badge bg-dark"
               }`}
             >
               {`${conditionObj.label}: ${
@@ -448,7 +448,7 @@ const Editable = (props) => {
                   })
                   .join(", ");
           val = (
-            <h6 className="d-inline mr-1">
+            <h6 className="d-inline me-1">
               <span
                 className="editable-edit-text badge bg-dark"
                 style={{ display: "block" }}
@@ -487,8 +487,8 @@ const Editable = (props) => {
             <>
               <span className="editable-edit-text">
                 {selectVal.map((op, index) => (
-                  <h6 className="d-inline mr-1" key={index}>
-                    <Badge variant="info">{op.label}</Badge>
+                  <h6 className="d-inline me-1" key={index}>
+                    <Badge bg="info">{op.label}</Badge>
                   </h6>
                 ))}
               </span>
@@ -526,8 +526,8 @@ const Editable = (props) => {
           selectVal && selectVal !== "" ? (
             <>
               <span className="editable-edit-text">
-                <h6 className="d-inline mr-1">
-                  <Badge variant="info">{selectVal}</Badge>
+                <h6 className="d-inline me-1">
+                  <Badge bg="info">{selectVal}</Badge>
                 </h6>
               </span>
               <Button
@@ -557,8 +557,8 @@ const Editable = (props) => {
           selectVal && selectVal?.label ? (
             <>
               <span className="editable-edit-text">
-                <h6 className="d-inline mr-1">
-                  <Badge variant="info">{selectVal.label}</Badge>
+                <h6 className="d-inline me-1">
+                  <Badge bg="info">{selectVal.label}</Badge>
                 </h6>
               </span>
               <Button
@@ -699,10 +699,10 @@ const Editable = (props) => {
         type === TYPE_CHECKBOX && "popover-maxHeight popover-minHeight"
       }`}
     >
-      <Popover.Title>
+      <Popover.Header>
         {type === TYPE_CHECKBOX ? "Select" : "Enter"}
-      </Popover.Title>
-      <Popover.Content>
+      </Popover.Header>
+      <Popover.Body>
         {type === TYPE_CHECKBOX ? (
           <CheckboxComp
             value={value}
@@ -724,13 +724,13 @@ const Editable = (props) => {
             validExpression={validExpression}
           />
         ) : null}
-      </Popover.Content>
+      </Popover.Body>
       <div className="popover-footer-buttons">
         <Button
           variant="success"
           size="sm"
           onClick={handleApply}
-          className="mr-2 btn-mini ml-2"
+          className="me-2 btn-mini ms-2"
         >
           <i className="fa fa-fw fa-check"></i>
         </Button>

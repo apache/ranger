@@ -360,7 +360,7 @@ function Roles() {
               />
             </Col>
             {isSystemAdmin() && (
-              <Col md={4} className="text-right">
+              <Col md={4} className="text-end">
                 <Button
                   variant="primary"
                   size="sm"
@@ -371,7 +371,7 @@ function Roles() {
                   Add New Role
                 </Button>
                 <Button
-                  className="ml-2"
+                  className="ms-2"
                   variant="danger"
                   size="sm"
                   title="Delete"
@@ -409,7 +409,8 @@ function Roles() {
                 Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    <b>"{selectedRows.current[0].original.name}"</b> role ?
+                    <b>&quot;{selectedRows.current[0].original.name}&quot;</b>
+                    &nbsp;role ?
                   </>
                 ) : (
                   <>

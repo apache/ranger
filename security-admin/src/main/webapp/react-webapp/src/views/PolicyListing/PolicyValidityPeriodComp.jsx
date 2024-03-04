@@ -45,9 +45,10 @@ export default function PolicyValidityPeriodComp(props) {
       <>
         <InputGroup className="mb-2">
           <FormControl {...props.dateProps} readOnly />
-          <InputGroup.Prepend>
-            <InputGroup.Text onClick={clear}> X </InputGroup.Text>
-          </InputGroup.Prepend>
+          <InputGroup.Text onClick={clear} className="cursor-pointer">
+            {" "}
+            X{" "}
+          </InputGroup.Text>
         </InputGroup>
       </>
     );
@@ -80,7 +81,7 @@ export default function PolicyValidityPeriodComp(props) {
         onClick={handleBtnClick}
         variant="primary"
         size="sm"
-        className="pull-right btn-sm"
+        className="float-end btn-sm"
         data-js="policyTimeBtn"
         data-cy="policyTimeBtn"
       >

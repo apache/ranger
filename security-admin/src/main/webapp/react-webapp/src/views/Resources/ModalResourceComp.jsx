@@ -53,7 +53,7 @@ export default function ModalResourceComp(props) {
         <Form
           onSubmit={saveResourceVal}
           initialValues={modelState.data}
-          render={({ handleSubmit, form, submitting, pristine, values }) => (
+          render={({ handleSubmit, values }) => (
             <form onSubmit={handleSubmit}>
               <Modal.Header closeButton>
                 <Modal.Title>Resource Details</Modal.Title>
