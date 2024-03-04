@@ -37,8 +37,8 @@ import org.apache.hadoop.crypto.key.UserProvider;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyACLs;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyOpType;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestKeyAuthorizationKeyProvider {
 
@@ -68,7 +68,7 @@ public class TestKeyAuthorizationKeyProvider {
               SECURE_RANDOM.nextBytes(seed);
               kpExt.createKey("foo", seed, newOptions(conf));
             } catch (IOException ioe) {
-              Assert.fail("User should be Authorized !!");
+              Assertions.fail("User should be Authorized !!");
             }
 
             // "bar" key not configured
@@ -76,7 +76,7 @@ public class TestKeyAuthorizationKeyProvider {
               byte[] seed = new byte[16];
               SECURE_RANDOM.nextBytes(seed);
               kpExt.createKey("bar", seed, newOptions(conf));
-              Assert.fail("User should NOT be Authorized !!");
+              Assertions.fail("User should NOT be Authorized !!");
             } catch (IOException ioe) {
               // Ignore
             }
@@ -94,7 +94,7 @@ public class TestKeyAuthorizationKeyProvider {
               byte[] seed = new byte[16];
               SECURE_RANDOM.nextBytes(seed);
               kpExt.createKey("foo", seed, newOptions(conf));
-              Assert.fail("User should NOT be Authorized !!");
+              Assertions.fail("User should NOT be Authorized !!");
             } catch (IOException ioe) {
               // Ignore
             }
@@ -146,7 +146,7 @@ public class TestKeyAuthorizationKeyProvider {
               kpExt.rollNewVersion(kv.getName(), seed);
               kpExt.deleteKey(kv.getName());
             } catch (IOException ioe) {
-              Assert.fail("User should be Authorized !!");
+              Assertions.fail("User should be Authorized !!");
             }
 
             KeyVersion retkv = null;
@@ -155,10 +155,10 @@ public class TestKeyAuthorizationKeyProvider {
               SECURE_RANDOM.nextBytes(seed);
               retkv = kpExt.createKey("bar", seed, opt);
               kpExt.generateEncryptedKey(retkv.getName());
-              Assert.fail("User should NOT be Authorized to generate EEK !!");
+              Assertions.fail("User should NOT be Authorized to generate EEK !!");
             } catch (IOException ioe) {
             }
-            Assert.assertNotNull(retkv);
+            Assertions.assertNotNull(retkv);
             return retkv;
           }
         }
@@ -171,7 +171,7 @@ public class TestKeyAuthorizationKeyProvider {
               public EncryptedKeyVersion run() throws Exception {
                 try {
                   kpExt.deleteKey(barKv.getName());
-                  Assert.fail("User should NOT be Authorized to "
+                  Assertions.fail("User should NOT be Authorized to "
                       + "perform any other operation !!");
                 } catch (IOException ioe) {
                 }
@@ -185,7 +185,7 @@ public class TestKeyAuthorizationKeyProvider {
           public KeyVersion run() throws Exception {
             try {
               kpExt.deleteKey(barKv.getName());
-              Assert.fail("User should NOT be Authorized to "
+              Assertions.fail("User should NOT be Authorized to "
                   + "perform any other operation !!");
             } catch (IOException ioe) {
             }
@@ -214,7 +214,7 @@ public class TestKeyAuthorizationKeyProvider {
               kpExt.decryptEncryptedKey(ekv);
               kpExt.deleteKey(kv.getName());
             } catch (IOException ioe) {
-              Assert.fail("User should be Allowed to do everything !!");
+              Assertions.fail("User should be Allowed to do everything !!");
             }
             return null;
           }
@@ -230,7 +230,7 @@ public class TestKeyAuthorizationKeyProvider {
   }
 
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testDecryptWithKeyVersionNameKeyMismatch() throws Exception {
     final Configuration conf = new Configuration();
     KeyProvider kp =
@@ -257,33 +257,35 @@ public class TestKeyAuthorizationKeyProvider {
             KeyProviderCryptoExtension.createKeyProviderCryptoExtension(kp),
             mock);
 
-    sudo.doAs(
-        new PrivilegedExceptionAction<Void>() {
-          @Override
-          public Void run() throws Exception {
-            Options opt = newOptions(conf);
-            Map<String, String> m = new HashMap<String, String>();
-            m.put("key.acl.name", "testKey");
-            opt.setAttributes(m);
-            byte[] seed = new byte[16];
-            SECURE_RANDOM.nextBytes(seed);
-            KeyVersion kv =
-                kpExt.createKey("foo", seed, opt);
-            kpExt.rollNewVersion(kv.getName());
-            seed = new byte[16];
-            SECURE_RANDOM.nextBytes(seed);
-            kpExt.rollNewVersion(kv.getName(), seed);
-            EncryptedKeyVersion ekv = kpExt.generateEncryptedKey(kv.getName());
-            ekv = EncryptedKeyVersion.createForDecryption(
-                ekv.getEncryptionKeyName() + "x",
-                ekv.getEncryptionKeyVersionName(),
-                ekv.getEncryptedKeyIv(),
-                ekv.getEncryptedKeyVersion().getMaterial());
-            kpExt.decryptEncryptedKey(ekv);
-            return null;
-          }
-        }
-    );
-  }
+    Assertions.assertThrows(IllegalArgumentException.class, () -> {
 
+      sudo.doAs(
+              new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws Exception {
+                  Options opt = newOptions(conf);
+                  Map<String, String> m = new HashMap<String, String>();
+                  m.put("key.acl.name", "testKey");
+                  opt.setAttributes(m);
+                  byte[] seed = new byte[16];
+                  SECURE_RANDOM.nextBytes(seed);
+                  KeyVersion kv =
+                          kpExt.createKey("foo", seed, opt);
+                  kpExt.rollNewVersion(kv.getName());
+                  seed = new byte[16];
+                  SECURE_RANDOM.nextBytes(seed);
+                  kpExt.rollNewVersion(kv.getName(), seed);
+                  EncryptedKeyVersion ekv = kpExt.generateEncryptedKey(kv.getName());
+                  ekv = EncryptedKeyVersion.createForDecryption(
+                          ekv.getEncryptionKeyName() + "x",
+                          ekv.getEncryptionKeyVersionName(),
+                          ekv.getEncryptedKeyIv(),
+                          ekv.getEncryptedKeyVersion().getMaterial());
+                  kpExt.decryptEncryptedKey(ekv);
+                  return null;
+                }
+              }
+      );
+    });
+  }
 }
