@@ -125,11 +125,6 @@ public class ORCFileUtil {
             logger.debug("==> ORCFileUtil.log() : EventSize: " + eventBatchSize + "ORC bufferSize:" + orcBufferSize );
         }
 
-        //increase the batch size according to event size, so it can accomodate all the events.
-        if (eventBatchSize > orcBufferSize) {
-            batch  = schema.createRowBatch(orcBufferSize);
-        }
-
         try {
             for(AuthzAuditEvent event : events) {
                 int row = batch.size++;
