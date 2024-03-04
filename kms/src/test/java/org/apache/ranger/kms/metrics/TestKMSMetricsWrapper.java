@@ -20,7 +20,8 @@ package org.apache.ranger.kms.metrics;
 
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
-import org.junit.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 
@@ -57,8 +58,8 @@ public class TestKMSMetricsWrapper {
 
         DefaultMetricsSystem.instance().publishMetricsNow();
 
-        Assert.assertEquals(1L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
-        Assert.assertEquals(100L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
+        Assertions.assertEquals(1L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
+        Assertions.assertEquals(100L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
     }
 
     @Test
@@ -76,8 +77,8 @@ public class TestKMSMetricsWrapper {
 
         DefaultMetricsSystem.instance().publishMetricsNow();
 
-        Assert.assertEquals(1L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
-        Assert.assertEquals(200L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
+        Assertions.assertEquals(1L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
+        Assertions.assertEquals(200L,  kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
     }
 
     private void setKmsMetricsCollectorThreadSafelyFlag(boolean isMetricCollectionThreadsafe) throws IllegalAccessException, NoSuchFieldException {

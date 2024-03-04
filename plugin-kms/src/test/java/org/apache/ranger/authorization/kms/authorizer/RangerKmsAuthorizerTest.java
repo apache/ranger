@@ -32,13 +32,13 @@ import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.hadoop.crypto.key.kms.server.KMSWebApp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  *
  * The user "bob" can do anything. The group "IT" can only call the "get" methods
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class RangerKmsAuthorizerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizerTest.class);
@@ -76,7 +76,7 @@ public class RangerKmsAuthorizerTest {
         UNRESTRICTED_POLICIES_INSTALLED = ok;
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void startServers() throws Exception {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
@@ -98,7 +98,7 @@ public class RangerKmsAuthorizerTest {
         kmsWebapp.contextInitialized(servletContextEvent);
     }
 
-    @AfterClass
+    @AfterAll
     public static void stopServers() throws Exception {
         DerbyTestUtils.stopDerby();
     }
@@ -126,7 +126,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.CREATE, ugi2, KMSOp.CREATE_KEY, "newkey2", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -141,7 +141,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.CREATE, ugi3, KMSOp.CREATE_KEY, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -173,7 +173,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.DELETE, ugi2, KMSOp.DELETE_KEY, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -188,7 +188,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.DELETE, ugi3, KMSOp.DELETE_KEY, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -221,7 +221,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.ROLLOVER, ugi2, KMSOp.ROLL_NEW_VERSION, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -236,7 +236,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.ROLLOVER, ugi3, KMSOp.ROLL_NEW_VERSION, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -269,7 +269,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.GET_KEYS, ugi2, KMSOp.GET_KEYS, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -311,7 +311,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.GET_METADATA, ugi2, KMSOp.GET_METADATA, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -354,7 +354,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.GENERATE_EEK, ugi2, KMSOp.GENERATE_EEK, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -369,7 +369,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.GENERATE_EEK, ugi3, KMSOp.GENERATE_EEK, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -402,7 +402,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.DECRYPT_EEK, ugi2, KMSOp.DECRYPT_EEK, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }
@@ -417,7 +417,7 @@ public class RangerKmsAuthorizerTest {
             public Void run() throws Exception {
                 try {
                     KMSWebApp.getACLs().assertAccess(Type.DECRYPT_EEK, ugi3, KMSOp.DECRYPT_EEK, "newkey1", "127.0.0.1");
-                    Assert.fail("Failure expected");
+                    Assertions.fail("Failure expected");
                 } catch (AuthorizationException ex) {
                     LOG.error("", ex);
                 }

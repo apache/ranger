@@ -28,10 +28,10 @@ import org.apache.hadoop.crypto.key.RangerKMSDB;
 import org.apache.hadoop.crypto.key.RangerKeyStoreProvider;
 import org.apache.hadoop.crypto.key.RangerMasterKey;
 import org.apache.ranger.kms.dao.DaoManager;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * A test for the RangerMasterKey.
@@ -58,7 +58,7 @@ public class RangerMasterKeyTest {
 		UNRESTRICTED_POLICIES_INSTALLED = ok;
 	}
 
-    @BeforeClass
+    @BeforeAll
     public static void startServers() throws Exception {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
@@ -66,7 +66,7 @@ public class RangerMasterKeyTest {
         DerbyTestUtils.startDerby();
     }
 
-    @AfterClass
+    @AfterAll
     public static void stopServers() throws Exception {
     	if (UNRESTRICTED_POLICIES_INSTALLED) {
     		DerbyTestUtils.stopDerby();
@@ -90,21 +90,21 @@ public class RangerMasterKeyTest {
             + "password0password0password0password0password0password0password0password0password0password0";
 
         RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
-        Assert.assertTrue(rangerMasterKey.generateMasterKey(masterKeyPassword));
-        Assert.assertNotNull(rangerMasterKey.getMasterKey(masterKeyPassword));
+        Assertions.assertTrue(rangerMasterKey.generateMasterKey(masterKeyPassword));
+        Assertions.assertNotNull(rangerMasterKey.getMasterKey(masterKeyPassword));
 
         try {
             rangerMasterKey.getMasterKey("badpass");
-            Assert.fail("Failure expected on retrieving a key with the wrong password");
+            Assertions.fail("Failure expected on retrieving a key with the wrong password");
         } catch (Exception ex) {
             // expected
         }
 
-        Assert.assertNotNull(rangerMasterKey.getMasterSecretKey(masterKeyPassword));
+        Assertions.assertNotNull(rangerMasterKey.getMasterSecretKey(masterKeyPassword));
 
         try {
             rangerMasterKey.getMasterSecretKey("badpass");
-            Assert.fail("Failure expected on retrieving a key with the wrong password");
+            Assertions.fail("Failure expected on retrieving a key with the wrong password");
         } catch (Exception ex) {
             // expected
         }
