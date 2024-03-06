@@ -165,23 +165,15 @@ public class TagDBStore extends AbstractTagStore {
 	@Override
 	public void deleteTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteTagDef(" + name + ")");
+			LOG.debug("==> TagDBStore.deleteTagDefByName(" + name + ")");
 		}
 
 		if (StringUtils.isNotBlank(name)) {
-			RangerTagDef tagDef = getTagDefByName(name);
-
-			if(tagDef != null) {
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("Deleting tag-def [name=" + name + "; id=" + tagDef.getId() + "]");
-				}
-
-				rangerTagDefService.delete(tagDef);
-			}
+			deleteTagDef(getTagDefByName(name));
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteTagDef(" + name + ")");
+			LOG.debug("<== TagDBStore.deleteTagDefByName(" + name + ")");
 		}
 	}
 
@@ -192,11 +184,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		if(id != null) {
-			RangerTagDef tagDef = rangerTagDefService.read(id);
-
-			if(tagDef != null) {
-				rangerTagDefService.delete(tagDef);
-			}
+			deleteTagDef(rangerTagDefService.read(id));
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1381,5 +1369,21 @@ public class TagDBStore extends AbstractTagStore {
 	public boolean isInPlaceTagUpdateSupported() {
 		initStatics();
 		return SUPPORTS_IN_PLACE_TAG_UPDATES;
+	}
+
+	private void deleteTagDef(RangerTagDef tagDef) throws Exception {
+		if (tagDef != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Deleting tag-def [name=" + tagDef.getName() + "; id=" + tagDef.getId() + "]");
+			}
+
+			List<RangerTag> tagsByType = rangerTagService.getTagsByType(tagDef.getName());
+
+			if (CollectionUtils.isEmpty(tagsByType)) {
+				rangerTagDefService.delete(tagDef);
+			} else {
+				throw new Exception("Cannot delete tag-def: " + tagDef.getName() + ". " + tagsByType.size() + " tag instances for this tag-def exist");
+			}
+		}
 	}
 }

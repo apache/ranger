@@ -352,8 +352,12 @@ public class RESTErrorUtil {
 
 	public WebApplicationException createRESTException(int responseCode,
 			String logMessage, boolean logError) {
+		VXResponse response = new VXResponse();
+
+		response.setMsgDesc(logMessage);
+
 		Response errorResponse = Response
-				.status(responseCode).entity(logMessage).build();
+				.status(responseCode).entity(response).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
