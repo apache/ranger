@@ -869,6 +869,11 @@ class ServiceForm extends Component {
       ? RegexValidation.NAME_VALIDATION.serviceNameValidationMessage
       : undefined;
 
+  validateDisplayName = (value) =>
+  !RegexValidation.NAME_VALIDATION.regexforNameValidation.test(value)
+  ? RegexValidation.NAME_VALIDATION.regexforNameValidationMessage
+  : undefined;
+
   composeValidators =
     (...validators) =>
     (value) =>
@@ -1078,7 +1083,7 @@ class ServiceForm extends Component {
                           <Field
                           name="displayName"
                           validate={this.composeValidators(
-                            this.validateServiceName)}>
+                            this.validateDisplayName)}>
                             {({ input, meta }) => (
                               <Row className="form-group">
                                 <Col xs={3}>
