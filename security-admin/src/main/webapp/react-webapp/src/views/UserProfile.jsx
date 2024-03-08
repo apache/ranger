@@ -55,6 +55,9 @@ class UserProfile extends Component {
         skipNavigate: true
       });
       this.setState({ blockUI: false });
+      if (has(profResp, "data")) {
+        profResp.data["configProperties"] = userProps.configProperties;
+      }
       setUserProfile(profResp.data);
       this.props.navigate("/");
       toast.success("Successfully updated user profile");
