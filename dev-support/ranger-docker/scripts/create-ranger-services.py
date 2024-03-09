@@ -46,8 +46,17 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'zookeeper.znode.parent': '/hbase'}})
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
-                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                  'provider': 'http://ranger-kms:9292'}})
+                     'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
+                                 'provider': 'http://ranger-kms:9292'}})
+
+trino = RangerService({'name': 'dev_trino',
+                       'type': 'trino',
+                       'configs': {
+                           'username': 'trino',
+                           'password': 'trino',
+                           'jdbc.driverClassName': 'io.trino.jdbc.TrinoDriver',
+                           'jdbc.url': 'jdbc:trino://ranger-trino:8080',
+                       }})
 
 if service_not_exists(hdfs):
     ranger_client.create_service(hdfs)
@@ -70,3 +79,6 @@ if service_not_exists(knox):
 if service_not_exists(kms):
     ranger_client.create_service(kms)
     print('KMS service created!')
+if service_not_exists(trino):
+    ranger_client.create_service(trino)
+    print('Trino service created!')
