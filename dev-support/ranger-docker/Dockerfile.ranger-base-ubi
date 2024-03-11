@@ -37,12 +37,14 @@ RUN microdnf install -y tar
 RUN microdnf install -y gzip
 RUN microdnf install -y procps
 RUN microdnf install -y vim
-# RUN microdnf install -y perl
+
 # for command useradd, groupadd
 RUN microdnf install -y shadow-utils
+
 # for command su
 RUN microdnf install -y util-linux-user
 RUN microdnf install -y sudo
+
 # for command service
 RUN microdnf install -y initscripts
 RUN microdnf install -y openssh-clients
