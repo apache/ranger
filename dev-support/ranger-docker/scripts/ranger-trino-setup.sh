@@ -17,18 +17,28 @@
 # limitations under the License.
 
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> /tmp/trino-setup-env.sh
+source /tmp/trino-setup-env.sh
 
-sudo /home/ranger/scripts/ranger-trino-setup.sh
+TRINO_PLUGIN_HOME=/opt/ranger/ranger-trino-plugin
 
-/usr/lib/trino/bin/run-trino
+ssh-keygen -A
+/usr/sbin/sshd
 
-TRINO_PID=$(ps -ef  | grep -v grep | grep -i "io.trino.server.TrinoServer" | awk '{print $2}')
-
-# prevent the container from exiting
-if [ -z "$TRINO_PID" ]
+if [ ! -e ${TRINO_PLUGIN_HOME}/.setupDone ]
 then
-  echo "The Trino process probably exited, no process id found!"
-else
-  tail --pid="$TRINO_PID" -f /dev/null
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" trino
+  su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" trino
+  su -c "chmod 0600 ~/.ssh/authorized_keys" trino
+
+  cat <<EOF > /etc/ssh/ssh_config
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+EOF
+
+  cd ${TRINO_PLUGIN_HOME} || exit
+  ./enable-trino-plugin.sh
+
+  touch ${TRINO_PLUGIN_HOME}/.setupDone
+  echo "Ranger Trino Plugin Installation is complete!"
 fi
