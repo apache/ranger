@@ -9,7 +9,6 @@ services:
         - TRINO_VERSION=${TRINO_VERSION}
     image: ranger-trino
     hostname: ranger-trino
-    user: root
     container_name: ranger-trino
     stdin_open: true
     tty: true
