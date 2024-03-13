@@ -58,27 +58,12 @@ trino = RangerService({'name': 'dev_trino',
                            'jdbc.url': 'jdbc:trino://ranger-trino:8080',
                        }})
 
-if service_not_exists(hdfs):
-    ranger_client.create_service(hdfs)
-    print('HDFS service created!')
-if service_not_exists(yarn):
-    ranger_client.create_service(yarn)
-    print('Yarn service created!')
-if service_not_exists(hive):
-    ranger_client.create_service(hive)
-    print('Hive service created!')
-if service_not_exists(hbase):
-    ranger_client.create_service(hbase)
-    print('HBase service created!')
-if service_not_exists(kafka):
-    ranger_client.create_service(kafka)
-    print('Kafka service created!')
-if service_not_exists(knox):
-    ranger_client.create_service(knox)
-    print('Knox service created!')
-if service_not_exists(kms):
-    ranger_client.create_service(kms)
-    print('KMS service created!')
-if service_not_exists(trino):
-    ranger_client.create_service(trino)
-    print('Trino service created!')
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino]
+for service in services:
+    try:
+        if service_not_exists(service):
+            ranger_client.create_service(service)
+            print(f" {service.name} service created!")
+    except Exception as e:
+        print(f"An exception occured: {e}")
+
