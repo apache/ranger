@@ -42,14 +42,14 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && mkdir -p /usr/share/java/
 
 FROM ranger AS ranger_postgres
-COPY ./downloads/postgresql-42.2.16.jre7.jar      /home/ranger/dist/
-RUN mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
+RUN wget -O /usr/share/java/postgresql.jar \
+    https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7/postgresql-42.2.16.jre7.jar
 
 FROM ranger AS ranger_mysql
-COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
-COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
-RUN     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar \
-     && mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
+RUN wget -O /usr/share/java/mysql-connector.jar \
+    https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar \
+&&  wget -O ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar \
+    https://repo1.maven.org/maven2/com/googlecode/log4jdbc/log4jdbc/1.2/log4jdbc-1.2.jar
 
 FROM ranger_${RANGER_DB_TYPE}
 

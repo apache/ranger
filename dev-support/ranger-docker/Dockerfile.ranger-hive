@@ -24,16 +24,19 @@ ARG RANGER_DB_TYPE
 
 COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz /home/ranger/dist/
-COPY ./downloads/apache-hive-${HIVE_VERSION}-bin.tar.gz      /home/ranger/dist/
-COPY ./downloads/hadoop-${HIVE_HADOOP_VERSION}.tar.gz        /home/ranger/dist/
-COPY ./downloads/mysql-connector-java-8.0.28.jar             /home/ranger/dist
 
-COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
-COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
-COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
-COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
+COPY ./scripts/ranger-hive-setup.sh                          /home/ranger/scripts/
+COPY ./scripts/ranger-hive.sh                                /home/ranger/scripts/
+COPY ./scripts/ranger-hive-plugin-install.properties         /home/ranger/scripts/
+COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml               /home/ranger/scripts/hive-site.xml
 
-RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --directory=/opt/ && \
+RUN wget -O /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz \
+            https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
+    wget -O /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz \
+            https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}/hadoop-${HIVE_HADOOP_VERSION}.tar.gz && \
+    wget -O /home/ranger/dist/mysql-connector-java-8.0.28.jar \
+            https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar && \
+    tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
     rm -f /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /opt/hive/lib/ && \
