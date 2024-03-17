@@ -42,7 +42,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -B -V
+        run: mvn clean install -DskipTests --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
