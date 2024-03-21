@@ -101,7 +101,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                         out.println(event);
                     }
                     return out;
-                };
+                }
             });
             // flush and check the stream for errors
             if (out.checkError()) {
@@ -126,7 +126,6 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             if (out != null) {
                 out.flush();
             }
-            //closeWriter();
         }
 
         return true;
@@ -148,7 +147,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             public Boolean run()  throws Exception {
                 boolean ret = logFileToHDFS(file);
                 return  Boolean.valueOf(ret);
-            };
+            }
         });
         ret = retVal.booleanValue();
         logger.info("Flushing HDFS audit File :" + file.getAbsolutePath() + file.getName());

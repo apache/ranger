@@ -76,7 +76,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
                     Writer out = getORCFileWrite();
                     orcFileUtil.log(out,events);
                     return out;
-                };
+                }
             });
         } catch (Exception e) {
             orcLogWriter = null;
