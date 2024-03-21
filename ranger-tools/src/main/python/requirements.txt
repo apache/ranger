@@ -1,5 +1,5 @@
 apache-ranger==0.0.6
-certifi==2022.6.15
+certifi==2023.7.22
 charset-normalizer==2.1.0
 cycler==0.11.0
 fonttools==4.34.4
