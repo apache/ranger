@@ -29,7 +29,6 @@ import { ModalLoader } from "../../../components/CommonComponents";
 import { getServiceDef } from "../../../utils/appState";
 
 export function PolicyViewDetails(props) {
-  const isMultiResources = true;
   const [access, setAccess] = useState([]);
   const [loader, SetLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});

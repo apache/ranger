@@ -29,8 +29,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.RangerCommonEnums;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

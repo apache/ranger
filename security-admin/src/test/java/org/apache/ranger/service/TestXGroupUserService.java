@@ -20,6 +20,7 @@ package org.apache.ranger.service;
 
 import java.util.Date;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
@@ -40,6 +41,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -82,6 +85,9 @@ public class TestXGroupUserService {
 	XXUserDao xXUserDao;
 
 	@Mock
+	RangerBizUtil bizUtil;
+
+	@Mock
 	AbstractBaseResourceService abstractBaseResourceService;
 
 	@Test
@@ -110,22 +116,19 @@ public class TestXGroupUserService {
 		Mockito.when(daoManager.getXXUser()).thenReturn(xXUserDao);
 		XXUser xUser = createXXUser();
 		Mockito.when(xXUserDao.getById(1L)).thenReturn(xUser);
-		xGroupUserService.getTransactionLog(vXGroupUser, "create");
-
+		xGroupUserService.createTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
 	}
 
 	@Test
 	public void test3GetTransactionLog() {
 		VXGroupUser vObj = createVXGroupUser();
-		XXGroupUser mObj = createXXGroupUser();
 		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
 		XXGroup xGroup = createXXGroup();
 		Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xXUserDao);
 		XXUser xUser = createXXUser();
 		Mockito.when(xXUserDao.getById(1L)).thenReturn(xUser);
-		xGroupUserService.getTransactionLog(vObj, mObj, "create");
-
+		xGroupUserService.createTransactionLog(vObj, null, OPERATION_CREATE_CONTEXT);
 	}
 
 	private XXGroup createXXGroup() {

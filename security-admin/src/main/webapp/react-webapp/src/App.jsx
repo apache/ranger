@@ -132,7 +132,6 @@ export default class App extends Component {
     let getServiceDefData = [];
     let resourceServiceDef = [];
     let tagServiceDef = [];
-    let serviceDefUrl = "plugins/definitions";
 
     try {
       fetchCSRFConf();

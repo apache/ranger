@@ -44,6 +44,7 @@ import org.apache.ranger.plugin.store.RolePredicateUtil;
 import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerBaseModelService;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
@@ -77,9 +78,6 @@ public class RoleDBStore implements RoleStore {
     @Autowired
 	RoleRefUpdater roleRefUpdater;
 
-    @Autowired
-    RangerBizUtil bizUtil;
-    
     @Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
@@ -133,8 +131,7 @@ public class RoleDBStore implements RoleStore {
 
         roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole);
 
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(createdRole, null, "create");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
         return createdRole;
     }
 
@@ -168,8 +165,7 @@ public class RoleDBStore implements RoleStore {
             roleService.updateRoleVersions(updatedRole.getId());
         }
 
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(updatedRole, oldRole, "update");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(updatedRole, oldRole, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
         return role;
     }
 
@@ -211,8 +207,7 @@ public class RoleDBStore implements RoleStore {
 		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
 
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(role, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     @Override
@@ -228,8 +223,7 @@ public class RoleDBStore implements RoleStore {
 		// delete role from audit filter configs
 		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(role, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     private void ensureRoleDeleteAllowed(String roleName) throws Exception {

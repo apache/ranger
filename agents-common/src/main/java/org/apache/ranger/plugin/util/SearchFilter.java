@@ -124,7 +124,6 @@ public class SearchFilter {
 	private boolean               getCount   = true;
 	private String                sortBy;
 	private String                sortType;
-	private boolean               isDistinct = true;
 
 	public SearchFilter() {
 		this((Map<String, String>) null);

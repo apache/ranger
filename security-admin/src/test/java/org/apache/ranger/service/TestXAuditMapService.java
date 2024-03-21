@@ -19,6 +19,7 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.apache.ranger.view.VXAuditMap;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_DELETE_CONTEXT;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -37,16 +40,16 @@ public class TestXAuditMapService {
 	@Mock
 	VXAuditMap vXAuditMap;
 
+	@Mock
+	RangerBizUtil bizUtil;
+
 	@Test
 	public void test1GetTransactionLog() {
-		XAuditMapService.getTransactionLog(vXAuditMap, "delete");
-
+		XAuditMapService.createTransactionLog(vXAuditMap, null, OPERATION_DELETE_CONTEXT);
 	}
 
 	@Test
 	public void test2GetTransactionLog() {
-		XAuditMapService.getTransactionLog(vXAuditMap, vXAuditMap, "delete");
-
+		XAuditMapService.createTransactionLog(vXAuditMap, vXAuditMap, OPERATION_DELETE_CONTEXT);
 	}
-
 }

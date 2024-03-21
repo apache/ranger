@@ -26,7 +26,6 @@ import javax.persistence.Query;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -47,7 +46,6 @@ import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -1592,22 +1590,6 @@ public class TestUserMgr {
 		xXUser.setDescription(userProfile.getPublicScreenName());
 		xXUser.setName(userProfile.getLoginId());
 
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		XXTrxLog xTrxLogObj = new XXTrxLog();
-		xTrxLogObj.setAction("update");
-		xTrxLogObj.setAddedByUserId(userId);
-		xTrxLogObj.setAttributeName("User Name");
-		xTrxLogObj.setCreateTime(new Date());
-		xTrxLogObj.setId(userId);
-		xTrxLogObj.setPreviousValue(userLoginId);
-		xTrxLogObj.setNewValue(newUserName);
-		xTrxLogObj.setObjectClassType(AppConstants.CLASS_TYPE_USER_PROFILE);
-		xTrxLogObj.setObjectName(xXPortalUser.getLoginId());
-		xTrxLogObj.setObjectId(userId);
-		xTrxLogObj.setParentObjectClassType(AppConstants.CLASS_TYPE_USER_PROFILE);
-		xTrxLogObj.setParentObjectId(userId);
-		xTrxLogObj.setUpdatedByUserId(xXPortalUser.getId());
-		trxLogList.add(xTrxLogObj);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(userProfile.getLoginId())).thenReturn(xXPortalUser);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xXUserDao);

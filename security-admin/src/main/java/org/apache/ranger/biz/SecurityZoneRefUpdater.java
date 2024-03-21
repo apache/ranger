@@ -47,7 +47,6 @@ import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -82,9 +81,6 @@ public class SecurityZoneRefUpdater {
 
 	@Autowired
 	RangerPolicyService policyService;
-
-	@Autowired
-	RangerBizUtil bizUtil;
 
 	public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) throws Exception {
 
@@ -304,9 +300,6 @@ public class SecurityZoneRefUpdater {
 			RangerPolicy policyToUpdate = policyService.getPopulatedViewObject(policy);
 			svcStore.updatePolicySignature(policyToUpdate);
 			policyService.update(policyToUpdate);
-			List<XXTrxLog> trxLogList = policyService.getTransactionLog(policyToUpdate, policy, policyToUpdate,
-					RangerPolicyService.OPERATION_UPDATE_CONTEXT);
-			bizUtil.createTrxLog(trxLogList);
 		}
 	}
 }

@@ -19,45 +19,17 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAuditMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
-public class XAuditMapService extends
-		XAuditMapServiceBase<XXAuditMap, VXAuditMap> {
-
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	
-	@Autowired
-	RangerBizUtil rangerBizUtil;
-	
-	@Autowired
-	XResourceService xResourceService;
-
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-//		trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Audit", false));
-//		trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Audit", false));
-		trxLogAttrs.put("auditType", new VTrxLogAttr("auditType", "Audit Type", true));
-	}
+public class XAuditMapService extends XAuditMapServiceBase<XXAuditMap, VXAuditMap> {
 
 	public XAuditMapService() {
 		searchFields.add(new SearchField("resourceId", "obj.resourceId",
@@ -78,74 +50,6 @@ public class XAuditMapService extends
 	protected void validateForUpdate(VXAuditMap vObj, XXAuditMap mObj) {
 		// TODO Auto-generated method stub
 
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXAuditMap vXAuditMap, String action){
-		return getTransactionLog(vXAuditMap, null, action);
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXAuditMap vObj, VXAuditMap mObj, String action){
-		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
-			return null;
-		}
-		
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Field[] fields = vObj.getClass().getDeclaredFields();
-		
-		try {
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-			
-				String value = null;
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXAuditMap.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-					XXUser xUser = daoManager.getXXUser().getById(Long.parseLong(value));
-					value = xUser.getName();
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					// Not Changed.
-					xTrxLog.setNewValue(value);
-					xTrxLog.setPreviousValue(value);
-				}
-				
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_AUDIT_MAP);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_RESOURCE);
-				xTrxLog.setParentObjectId(vObj.getResourceId());
-//				xTrxLog.setParentObjectName(vObj.get);
-//				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-				
-			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-		
-		return trxLogList;
 	}
 
 	@Override

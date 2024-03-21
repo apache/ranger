@@ -209,7 +209,7 @@ export default function ResourceComp(props) {
                       isSearchable={false}
                     />
                     <RenderValidateField name={`resourceName-${levelKey}`} />
-                  </div>
+                  </>
                 )
               ) : null
             }

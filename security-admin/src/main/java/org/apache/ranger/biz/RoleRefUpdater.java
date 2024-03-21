@@ -38,7 +38,6 @@ import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.apache.ranger.entity.XXRoleRefRole;
 import org.apache.ranger.entity.XXRoleRefUser;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.service.RangerAuditFields;
@@ -49,6 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 @Component
 public class RoleRefUpdater {
@@ -313,8 +314,8 @@ public class RoleRefUpdater {
 					vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
 					VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
 					if (vXGroup != null) {
-						List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, "create");
-						xaBizUtil.createTrxLog(trxLogList);
+						xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT);
+
 						ret = vXGroup.getId();
 					}
 				}

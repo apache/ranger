@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.service;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPortalUserDao;
@@ -39,6 +40,9 @@ import java.util.Date;
 
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -78,6 +82,9 @@ public class TestXGroupService {
 	StringUtil stringUtil;
 
 	@Mock
+	RangerBizUtil bizUtil;
+
+	@Mock
 	AbstractBaseResourceService abstractBaseResourceService;
 
 	@Test
@@ -114,15 +121,14 @@ public class TestXGroupService {
 	@Test
 	public void test4GetTransactionLog() {
 		VXGroup vObj = createvXGroup();
-		XGroupService.getTransactionLog(vObj, "update");
-
+		XGroupService.createTransactionLog(vObj, null, OPERATION_UPDATE_CONTEXT);
 	}
 
 	@Test
 	public void test5GetTransactionLog() {
 		VXGroup vObj = createvXGroup();
-		XXGroup mObj = createXXGroup();
-		XGroupService.getTransactionLog(vObj, mObj, "create");
+
+		XGroupService.createTransactionLog(vObj, null, OPERATION_CREATE_CONTEXT);
 	}
 
 	public VXGroup createvXGroup() {
