@@ -66,28 +66,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
+
 public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends VXDataObject> {
+	protected static final Logger logger = LoggerFactory.getLogger(AbstractBaseResourceService.class);
 
-	protected static final Logger logger = LoggerFactory
-			.getLogger(AbstractBaseResourceService.class);
+	protected static final Map<Class<?>, String> tEntityValueMap = new HashMap<>();
 
-	public static final int OPERATION_CREATE_CONTEXT = 1;
-	public static final int OPERATION_UPDATE_CONTEXT = 2;
+	protected final Class<T> tEntityClass;
+	protected final Class<V> tViewClass;
+	protected final String   className;
+	protected final String   viewClassName;
+	protected final String   countQueryStr;
+	protected final String   queryStr;
+	protected final String   distinctCountQueryStr;
+	protected final String   distinctQueryStr;
 
-	protected Class<T> tEntityClass;
-	protected Class<V> tViewClass;
+	public final List<SortField>   sortFields   = new ArrayList<>();
+	public final List<SearchField> searchFields = new ArrayList<>();
 
-	protected String className;
-	protected String viewClassName;
-	protected String countQueryStr;
-	protected String queryStr;
-	protected final String distinctCountQueryStr;
-	protected final String distinctQueryStr;
-
-	public List<SortField> sortFields = new ArrayList<SortField>();
-	public List<SearchField> searchFields = new ArrayList<SearchField>();
-
-	protected static final HashMap<Class<?>, String> tEntityValueMap = new HashMap<Class<?>, String>();
 	static {
 		tEntityValueMap.put(XXAuthSession.class, "Auth Session");
 		tEntityValueMap.put(XXDBBase.class, "Base");
@@ -188,13 +186,21 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			tEntityClass = (Class<T>) var[0].getBounds()[0];
 			tViewClass = (Class<V>) var[1].getBounds()[0];
 		} else {
+			tEntityClass = null;
+			tViewClass   = null;
+
 			logger.error("Cannot find class for template", new Throwable());
 		}
 		if (tEntityClass != null) {
 			className = tEntityClass.getName();
+		} else {
+			className = null;
 		}
+
 		if (tViewClass != null) {
 			viewClassName = tViewClass.getName();
+		} else {
+			viewClassName = null;
 		}
 
 		// Get total count of the rows which meet the search criteria

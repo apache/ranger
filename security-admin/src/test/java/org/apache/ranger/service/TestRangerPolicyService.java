@@ -22,15 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -47,7 +45,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -76,6 +73,9 @@ public class TestRangerPolicyService {
 
 	@Mock
 	XUserService xUserService;
+
+	@Mock
+	RangerBizUtil bizUtil;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -143,24 +143,6 @@ public class TestRangerPolicyService {
 		return xxPolicy;
 	}
 
-	private XXService xService() {
-		XXService xService = new XXService();
-		xService.setAddedByUserId(Id);
-		xService.setCreateTime(new Date());
-		xService.setDescription("Hdfs service");
-		xService.setGuid("serviceguid");
-		xService.setId(Id);
-		xService.setIsEnabled(true);
-		xService.setName("Hdfs");
-		xService.setPolicyUpdateTime(new Date());
-		xService.setPolicyVersion(1L);
-		xService.setType(1L);
-		xService.setUpdatedByUserId(Id);
-		xService.setUpdateTime(new Date());
-
-		return xService;
-	}
-
 	@Test
 	public void test1ValidateForCreate() {
 		RangerPolicy rangerPolicy = rangerPolicy();
@@ -179,16 +161,8 @@ public class TestRangerPolicyService {
 
 	@Test
 	public void test8getTransactionLog() {
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
-		XXService xService = xService();
 
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.findByName(rangerPolicy.getService()))
-				.thenReturn(xService);
-
-		List<XXTrxLog> dbXXTrxLogList = policyService.getTransactionLog(
-				rangerPolicy, 1);
-		Assert.assertNotNull(dbXXTrxLogList);
+		policyService.createTransactionLog(rangerPolicy, null, 1);
 	}
 }

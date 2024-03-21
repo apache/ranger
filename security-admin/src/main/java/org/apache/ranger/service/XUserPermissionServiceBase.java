@@ -50,9 +50,9 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
 		mObj.setModuleId(vObj.getModuleId());
 		mObj.setIsAllowed(vObj.getIsAllowed());
 
-		if (OPERATION_CONTEXT == OPERATION_CREATE_CONTEXT) {
+		if (OPERATION_CONTEXT == RangerBaseModelService.OPERATION_CREATE_CONTEXT) {
 			validateXUserPermForCreate(mObj);
-		} else if (OPERATION_CONTEXT == OPERATION_UPDATE_CONTEXT) {
+		} else if (OPERATION_CONTEXT == RangerBaseModelService.OPERATION_UPDATE_CONTEXT) {
 			validateXUserPermForUpdate(mObj);
 		}
 

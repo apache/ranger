@@ -18,16 +18,20 @@
 package org.apache.ranger.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 
-public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V extends RangerSecurityZone> extends RangerBaseModelService<T, V> {
+
+public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V extends RangerSecurityZone> extends RangerAuditedModelService<T, V> {
 
 	public RangerSecurityZoneServiceBase() {
-		super();
+		super(AppConstants.CLASS_TYPE_RANGER_SECURITY_ZONE);
+
         searchFields.add(new SearchField(SearchFilter.ZONE_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.ZONE_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
@@ -35,6 +39,17 @@ public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V 
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.ZONE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.ZONE_NAME, "obj.name"));
+
+		trxLogAttrs.put("name",            new VTrxLogAttr("name", "Zone Name", false, true));
+		trxLogAttrs.put("services",        new VTrxLogAttr("services", "Zone Services"));
+		trxLogAttrs.put("adminUsers",      new VTrxLogAttr("adminUsers", "Zone Admin Users"));
+		trxLogAttrs.put("adminUserGroups", new VTrxLogAttr("adminUserGroups", "Zone Admin User Groups"));
+		trxLogAttrs.put("auditUsers",      new VTrxLogAttr("auditUsers", "Zone Audit Users"));
+		trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups"));
+		trxLogAttrs.put("adminRoles",      new VTrxLogAttr("adminRoles", "Zone Admin Roles"));
+		trxLogAttrs.put("auditRoles",      new VTrxLogAttr("auditRoles", "Zone Audit Roles"));
+		trxLogAttrs.put("description",     new VTrxLogAttr("description", "Zone Description"));
+		trxLogAttrs.put("tagServices",     new VTrxLogAttr("tagServices", "Zone Tag Services"));
 	}
 
 	@Override

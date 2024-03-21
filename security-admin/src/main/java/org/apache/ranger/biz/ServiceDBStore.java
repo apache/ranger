@@ -178,7 +178,6 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
-import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
@@ -222,6 +221,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
@@ -353,13 +353,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RangerSecurityZoneServiceService securityZoneService;
 
 	@Autowired
-	RoleDBStore roleStore;
-
-	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	RangerRoleService roleService;
 
 	@Autowired
 	UserMgr userMgr;
@@ -1633,9 +1627,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService,
-				RangerServiceService.OPERATION_CREATE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		svcService.createTransactionLog(createdService, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
 		if (createDefaultPolicy) {
 			createDefaultPolicies(createdService);
@@ -1651,13 +1643,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.updateService()");
 		}
 
-		XXService existing = daoMgr.getXXService().getById(service.getId());
+		XXService xExisting = daoMgr.getXXService().getById(service.getId());
 
-		if(existing == null) {
+		if(xExisting == null) {
 			throw restErrorUtil.createRESTException(
 					"no service exists with ID=" + service.getId(),
 					MessageEnums.DATA_NOT_FOUND);
 		}
+
+		RangerService existing = svcService.getPopulatedViewObject(xExisting);
 
 		String existingName = existing.getName();
 
@@ -1695,13 +1689,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		boolean hasTagServiceValueChanged = false;
-		Long    existingTagServiceId      = existing.getTagService();
+		String  existingTagService        = existing.getTagService();
 		String  newTagServiceName         = service.getTagService(); // null for old clients; empty string to remove existing association
 		Long    newTagServiceId           = null;
 
 		if(newTagServiceName == null) { // old client; don't update existing tagService
-			if(existingTagServiceId != null) {
-				newTagServiceName = getServiceName(existingTagServiceId);
+			if(existingTagService != null) {
+				newTagServiceName = existingTagService;
 
 				service.setTagService(newTagServiceName);
 
@@ -1723,20 +1717,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if (existingTagServiceId == null) {
+		if (existingTagService == null) {
 			if (newTagServiceId != null) {
 				hasTagServiceValueChanged = true;
 			}
-		} else if (!existingTagServiceId.equals(newTagServiceId)) {
+		} else if (!existingTagService.equals(newTagServiceName)) {
 			hasTagServiceValueChanged = true;
 		}
 
-		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
+		boolean hasIsEnabledChanged = !existing.getIsEnabled().equals(service.getIsEnabled());
 
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
 		boolean hasServiceConfigForPluginChanged = hasServiceConfigForPluginChanged(dbConfigMaps, validConfigs);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+		svcService.createTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
@@ -1825,7 +1819,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
-		bizUtil.createTrxLog(trxLogList);
 
 		return updService;
 	}
@@ -1882,8 +1875,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		svcService.createTransactionLog(service, null, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
 		//During the servie deletion ,we need to clear the RangerServicePoliciesCache,RangerServiceTagsCache for the given serviceName.
 		resetPolicyCache(service.getName());
 		tagStore.resetTagCache(service.getName());
@@ -2150,9 +2143,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
-		List<XXTrxLog> trxLogList = getTransactionLogList(createdPolicy,
-				RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		createTransactionLog(createdPolicy, RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
 
 		return createdPolicy;
 	}
@@ -2302,7 +2293,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		policy.setVersion(xxExisting.getVersion());
 
-		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
+		policyService.createTransactionLog(policy, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 
 		updatePolicySignature(policy);
 
@@ -2322,8 +2313,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
-
-		bizUtil.createTrxLog(trxLogList);
 
 		return updPolicy;
 	}
@@ -2355,8 +2344,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		policy.setVersion(version);
 
-		List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT,
-				RangerPolicyService.OPERATION_DELETE_CONTEXT);
+		createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
@@ -2365,8 +2353,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 
 		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
-
-		bizUtil.createTrxLog(trxLogList);
 
 		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
 	}
@@ -2396,10 +2382,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 				policyRefUpdater.cleanupRefTables(policy);
 				deleteExistingPolicyLabel(policy);
 				policyService.delete(policy);
-				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+				createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
-				bizUtil.createTrxLog(trxLogList);
 			}
 		}
 		if(LOG.isDebugEnabled()) {
@@ -2407,16 +2392,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	List<XXTrxLog> getTransactionLogList(RangerPolicy policy, int operationImportContext, int operationContext) {
-		List<XXTrxLog> trxLogList;
+	void createTransactionLog(RangerPolicy policy, int operationImportContext, int operationContext) {
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		if (trace.length > 3 && (StringUtils.contains(trace[4].getMethodName(), "import") ||
     StringUtils.contains(trace[5].getMethodName(), "import"))) {
-      trxLogList = policyService.getTransactionLog(policy, operationImportContext);
+      policyService.createTransactionLog(policy, null, operationImportContext);
 		} else {
-			trxLogList = policyService.getTransactionLog(policy, operationContext);
+			policyService.createTransactionLog(policy, null, operationContext);
 		}
-		return trxLogList;
 	}
 
 	@Override
@@ -3596,8 +3579,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXGroup.setGroupSource(RangerCommonEnums.GROUP_INTERNAL);
 					vXGroup.setIsVisible(RangerCommonEnums.IS_VISIBLE);
 					VXGroup createdVXGrp = xGroupService.createResource(vXGroup);
-					List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(createdVXGrp, "create");
-					bizUtil.createTrxLog(trxLogList);
+					xGroupService.createTransactionLog(createdVXGrp, null, OPERATION_CREATE_CONTEXT);
 				}
 			}
 		}
@@ -5370,14 +5352,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_auth_sess that are older than " + retentionInDays + " days");
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted Auth Session records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_AUTH_SESS);
-			trxLog.setPreviousValue("Total Records : " + rowsCount);
-			trxLog.setNewValue("Deleted Records : " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			svcService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_AUTH_SESS, null, null, "Deleted Auth Session records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_LOGIN_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5399,14 +5374,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_trx_log that are older than " + retentionInDays + " days");
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted Transaction records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_TRX_LOG);
-			trxLog.setPreviousValue("Total Records : " + rowsCount);
-			trxLog.setNewValue("Deleted Records : " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			svcService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_TRX_LOG, null, null, "Deleted Transaction records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_TRX_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5428,14 +5396,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted {} records from x_policy_export_audit that are older than {} days", rowsDeleted, retentionInDays);
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted policy export audit records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT);
-			trxLog.setPreviousValue("Total Records: " + rowsCount);
-			trxLog.setNewValue("Deleted Records: " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT, null, null, "Deleted policy export audit records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS, rowsCount, rowsDeleted));
 		}

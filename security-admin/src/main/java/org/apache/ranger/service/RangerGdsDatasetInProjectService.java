@@ -59,7 +59,7 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
     XXPortalUserDao xxPortalUserDao;
 
     public RangerGdsDatasetInProjectService() {
-        super(AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT);
+        super(AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT, AppConstants.CLASS_TYPE_GDS_DATASET);
 
         searchFields.add(new SearchField(SearchFilter.DATASET_IN_PROJECT_ID, "obj.id",         SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATASET_ID,            "obj.datasetId",  SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
@@ -76,12 +76,12 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,           "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATASET_IN_PROJECT_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
 
-        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID", false));
-        trxLogAttrs.put("projectId",        new VTrxLogAttr("projectId", "Project ID", false));
+        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID"));
+        trxLogAttrs.put("projectId",        new VTrxLogAttr("projectId", "Project ID"));
         trxLogAttrs.put("status",           new VTrxLogAttr("status", "Status", true));
-        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule", false));
-        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles", false));
-        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver", false));
+        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule"));
+        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles"));
+        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver"));
     }
 
     @Override
@@ -110,6 +110,19 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
         // TODO:
 
         return ret;
+    }
+
+    @Override
+    public String getParentObjectName(RangerDatasetInProject obj, RangerDatasetInProject oldObj) {
+        Long         datasetId = obj != null ? obj.getDatasetId() : null;
+        XXGdsDataset dataset   = datasetId != null ? daoMgr.getXXGdsDataset().getById(datasetId) : null;
+
+        return dataset != null ? dataset.getName() : null;
+    }
+
+    @Override
+    public Long getParentObjectId(RangerDatasetInProject obj, RangerDatasetInProject oldObj) {
+        return obj != null ? obj.getDatasetId() : null;
     }
 
     @Override

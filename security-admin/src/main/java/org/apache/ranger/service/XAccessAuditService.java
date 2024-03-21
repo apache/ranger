@@ -45,15 +45,8 @@ import org.springframework.stereotype.Service;
 public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit>{
 
 	public static final String NAME = "XAccessAudit";
-	protected final String distinctCountQueryStr;
-	protected final String distinctQueryStr;
 
 	public XAccessAuditService() {
-		countQueryStr = "SELECT COUNT(obj) FROM XXAccessAudit  obj ";
-		queryStr = "SELECT obj FROM XXAccessAudit obj ";
-		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM XXAccessAudit obj ";
-		distinctQueryStr = "SELECT distinct obj FROM XXAccessAudit obj ";
-		
 		searchFields.add(new SearchField("accessType", "obj.accessType",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 		searchFields.add(new SearchField("aclEnforcer", "obj.aclEnforcer",

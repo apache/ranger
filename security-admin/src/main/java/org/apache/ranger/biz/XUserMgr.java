@@ -102,6 +102,9 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_USER_GROUP;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_DELETE_CONTEXT;
 
 @Component
 public class XUserMgr extends XUserMgrBase {
@@ -255,8 +258,7 @@ public class XUserMgr extends XUserMgrBase {
 		VXUser createdXUser = xUserService.createResource(vXUser);
 
 		createdXUser.setPassword(actualPassword);
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(
-				createdXUser, "create");
+		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
 
 		String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		createdXUser.setPassword(hiddenPassword);
@@ -276,8 +278,7 @@ public class XUserMgr extends XUserMgrBase {
 		createdXUser.setGroupIdList(groupIdList);
 		createdXUser.setGroupNameList(groupNamesList);
 		for (VXGroupUser vXGroupUser : vXGroupUsers) {
-			trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser,
-					"create"));
+			trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
 		}
 		//
 		xaBizUtil.createTrxLog(trxLogList);
@@ -500,8 +501,9 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
-				oldUserProfile, "update");
+		VXUser existing = xUserService.readResource(vXUser.getId());
+
+		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
@@ -538,7 +540,7 @@ public class XUserMgr extends XUserMgrBase {
 					}
 					if (!found) {
 						VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
 						groupNamesSet.add(vXGroupUser.getName());
 					}
 				}
@@ -548,14 +550,14 @@ public class XUserMgr extends XUserMgrBase {
 					boolean found = false;
 					for (Long groupId : groupIdList) {
 						if (groupId.equals(vXGroupUser.getParentGroupId())) {
-							trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "update"));
+							trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_UPDATE_CONTEXT));
 							found = true;
 							break;
 						}
 					}
 					if (!found) {
 						// TODO I've to get the transaction log from here.
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "delete"));
+						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_DELETE_CONTEXT));
 						groupUsersToRemove.add(vXGroupUser.getId());
 						// xGroupUserService.deleteResource(vXGroupUser.getId());
 						groupNamesSet.remove(vXGroupUser.getName());
@@ -565,7 +567,7 @@ public class XUserMgr extends XUserMgrBase {
 			} else {
 				for (Long groupId : groupIdList) {
 					VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-					trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+					trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
 					groupNamesSet.add(vXGroupUser.getName());
 				}
 			}
@@ -747,9 +749,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		vXGroup = xGroupService.createResource(vXGroup);
-		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
-				"create");
-		xaBizUtil.createTrxLog(trxLogList);
+		xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT);
 
 		updateUserStoreVersion("createXGroup(" + vXGroup.getName() + ")");
 
@@ -989,8 +989,8 @@ public class XUserMgr extends XUserMgrBase {
 					"group name updates are not allowed.",
 					MessageEnums.INVALID_INPUT_DATA);
 		}
-		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
-				xGroup, "update");
+		VXGroup existing = xGroup != null ? xGroupService.populateViewBean(xGroup) : null;
+		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, existing, OPERATION_UPDATE_CONTEXT);
 		xaBizUtil.createTrxLog(trxLogList);
 		vXGroup = (VXGroup) xGroupService.updateResource(vXGroup);
 		if (vXGroup != null) {
@@ -2205,9 +2205,7 @@ public class XUserMgr extends XUserMgrBase {
 			//delete XXGroup
 			xXGroupDao.remove(id);
 			//Create XXTrxLog
-			List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
-					"delete");
-			xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+			xGroupService.createTransactionLog(xGroupService.populateViewBean(xXGroup), null, OPERATION_DELETE_CONTEXT);
 		} else {
 			boolean hasReferences=false;
 
@@ -2239,9 +2237,7 @@ public class XUserMgr extends XUserMgrBase {
 				//delete XXGroup
 				xXGroupDao.remove(id);
 				//Create XXTrxLog
-				List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
-						"delete");
-				xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+				xGroupService.createTransactionLog(xGroupService.populateViewBean(xXGroup), null, OPERATION_DELETE_CONTEXT);
 			}
 		}
 	}
@@ -2461,12 +2457,9 @@ public class XUserMgr extends XUserMgrBase {
 			//delete XXPortal entry of user
 			logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
 			xXPortalUserDao.remove(xXPortalUserId);
-			List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
-			xaBizUtil.createTrxLog(trxLogList);
+			xUserService.createTransactionLog(xUserService.populateViewBean(xXUser), null, OPERATION_DELETE_CONTEXT);
 			if (xXPortalUser != null) {
-				trxLogList=xPortalUserService
-						.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
+				xPortalUserService.createTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), null, OPERATION_DELETE_CONTEXT);
 			}
 		} else {
 			boolean hasReferences=false;
@@ -2505,10 +2498,8 @@ public class XUserMgr extends XUserMgrBase {
 				//delete XXPortal entry of user
 				logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
 				xXPortalUserDao.remove(xXPortalUserId);
-				List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
-				trxLogList=xPortalUserService.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
+				xUserService.createTransactionLog(xUserService.populateViewBean(xXUser), null, OPERATION_DELETE_CONTEXT);
+				xPortalUserService.createTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), null, OPERATION_DELETE_CONTEXT);
 			}
 		}
 	}
@@ -2909,13 +2900,11 @@ public class XUserMgr extends XUserMgrBase {
 			vXUser = xUserService.populateViewBean(xUser);
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(
-				vXUser, "create");
+		 xUserService.createTransactionLog(vXUser, null, OPERATION_CREATE_CONTEXT);
 
 		if (vXPortalUser != null) {
 			assignPermissionToUser(vXPortalUser.getUserRoleList(), vXPortalUser.getId(), vXUser.getId(), true);
 		}
-		xaBizUtil.createTrxLog(trxLogList);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Done creating user: " + username);
 		}
@@ -3249,6 +3238,9 @@ public class XUserMgr extends XUserMgrBase {
 			logger.warn("Could not find corresponding xUser for username: [" + vXPortalUser.getLoginId() + "], So not updating this user");
 			return vXUser;
 		}
+
+		VXUser existing = xUserService.populateViewBean(xUser);
+
 		logger.info("xUser.getName() = " + xUser.getName() + " vXUser.getName() = " + vXUser.getName());
 		vXUser.setId(xUser.getId());
 		try {
@@ -3269,8 +3261,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
-				oldUserProfile, "update");
+		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
@@ -3384,10 +3375,9 @@ public class XUserMgr extends XUserMgrBase {
 				logger.info("User created: " + createdXUser.getName());
 				try {
 					createdXUser.setPassword(actualPassword);
-					List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, "create");
+					xUserService.createTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
 					String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 					createdXUser.setPassword(hiddenPassword);
-					xaBizUtil.createTrxLog(trxLogList);
 				} catch (Exception ex) {
 					throw new RuntimeException("Error while creating trx logs for user: " + createdXUser.getName(), ex);
 				}

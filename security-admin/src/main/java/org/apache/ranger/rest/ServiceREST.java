@@ -2139,13 +2139,7 @@ public class ServiceREST {
 			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("EXPORT EXCEL");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue(metaDataInfo);
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT EXCEL", null, metaDataInfo, null));
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -2192,13 +2186,7 @@ public class ServiceREST {
 			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("EXPORT CSV");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue(metaDataInfo);
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT CSV", null, metaDataInfo, null));
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -2254,13 +2242,7 @@ public class ServiceREST {
 				rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-				XXTrxLog xxTrxLog = new XXTrxLog();
-				xxTrxLog.setAction("EXPORT JSON");
-				xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-				xxTrxLog.setPreviousValue(metaDataInfo);
-				trxLogList.add(xxTrxLog);
-				bizUtil.createTrxLog(trxLogList);
+				policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT JSON", null, metaDataInfo, null));
 			}
 		} catch (WebApplicationException excp) {
 			throw excp;
@@ -2302,8 +2284,6 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 		String metaDataInfo = null;
-		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
-		XXTrxLog xxTrxLogError = new XXTrxLog();
 		request.setAttribute(PARAM_IMPORT_IN_PROGRESS, true);
 
 		try {
@@ -2311,13 +2291,7 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.importPoliciesFromFile()");
 			}
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("IMPORT START");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue("IMPORT START");
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT START", null, "IMPORT START", null));
 
 			if (isOverride == null){
 				isOverride = false;
@@ -2468,45 +2442,27 @@ public class ServiceREST {
 			}
 		} catch(JsonSyntaxException ex) { 
 			LOG.error("Provided json file is not valid!!", ex);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw restErrorUtil.createRESTException(ex.getMessage());
 	      }catch (WebApplicationException excp) {
 			LOG.error("Error while importing policy from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw excp;
 		} catch (Throwable excp) {
 			LOG.error("Error while importing policy from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
-			List<XXTrxLog> trxLogListEnd = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLogEnd = new XXTrxLog();
-			xxTrxLogEnd.setAction("IMPORT END");
-			xxTrxLogEnd.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogEnd.setPreviousValue(metaDataInfo);
-			}
-			trxLogListEnd.add(xxTrxLogEnd);
-			bizUtil.createTrxLog(trxLogListEnd);
+
+			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT END", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== ServiceREST.importPoliciesFromFile()");
 			}

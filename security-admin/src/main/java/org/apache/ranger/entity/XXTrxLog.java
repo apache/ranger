@@ -196,6 +196,16 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 		objectClassType = RangerConstants.CLASS_TYPE_NONE;
 	}
 
+	public XXTrxLog(int objectClassType, Long objectId, String objectName, String action, String attributeName, String previousValue, String newValue) {
+		this.objectClassType = objectClassType;
+		this.objectId        = objectId;
+		this.objectName      = objectName;
+		this.action          = action;
+		this.attributeName   = attributeName;
+		this.previousValue   = previousValue;
+		this.newValue        = newValue;
+	}
+
 	@Override
 	public int getMyClassType( ) {
 	    return AppConstants.CLASS_TYPE_TRX_LOG;

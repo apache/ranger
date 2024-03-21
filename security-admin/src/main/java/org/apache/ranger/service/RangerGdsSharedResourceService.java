@@ -54,7 +54,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
     GUIDUtil guidUtil;
 
     public RangerGdsSharedResourceService() {
-        super(AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE);
+        super(AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE, AppConstants.CLASS_TYPE_GDS_DATA_SHARE);
 
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_ID,           "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.SHARED_RESOURCE_NAME,         "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
@@ -80,16 +80,16 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         sortFields.add(new SortField(SearchFilter.SHARED_RESOURCE_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.SHARED_RESOURCE_NAME, "obj.name"));
 
-        trxLogAttrs.put("name",             new VTrxLogAttr("name", "Name", false));
-        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID", false));
-        trxLogAttrs.put("resource",         new VTrxLogAttr("resource", "Resource", false));
-        trxLogAttrs.put("subResource",      new VTrxLogAttr("subResource", "Subresource", false));
-        trxLogAttrs.put("subResourceType",  new VTrxLogAttr("subResourceType", "Subresource Type", false));
-        trxLogAttrs.put("conditionExpr",    new VTrxLogAttr("conditionExpr", "Condition expression", false));
-        trxLogAttrs.put("accessTypes",      new VTrxLogAttr("accessTypes", "Access types", false));
-        trxLogAttrs.put("rowFilter",        new VTrxLogAttr("rowFilter", "Row filter", false));
-        trxLogAttrs.put("subResourceMasks", new VTrxLogAttr("subResourceMasks", "Subresource Masks", false));
-        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles", false));
+        trxLogAttrs.put("name",             new VTrxLogAttr("name", "Name", false, true));
+        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID"));
+        trxLogAttrs.put("resource",         new VTrxLogAttr("resource", "Resource"));
+        trxLogAttrs.put("subResource",      new VTrxLogAttr("subResource", "Subresource"));
+        trxLogAttrs.put("subResourceType",  new VTrxLogAttr("subResourceType", "Subresource Type"));
+        trxLogAttrs.put("conditionExpr",    new VTrxLogAttr("conditionExpr", "Condition expression"));
+        trxLogAttrs.put("accessTypes",      new VTrxLogAttr("accessTypes", "Access types"));
+        trxLogAttrs.put("rowFilter",        new VTrxLogAttr("rowFilter", "Row filter"));
+        trxLogAttrs.put("subResourceMasks", new VTrxLogAttr("subResourceMasks", "Subresource Masks"));
+        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles"));
     }
 
     @Override
@@ -118,6 +118,19 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         // TODO:
 
         return ret;
+    }
+
+    @Override
+    public String getParentObjectName(RangerSharedResource obj, RangerSharedResource oldObj) {
+        Long           dataShareId = obj != null ? obj.getDataShareId() : null;
+        XXGdsDataShare dataShare   = dataShareId != null ? daoMgr.getXXGdsDataShare().getById(dataShareId) : null;
+
+        return dataShare != null ? dataShare.getName() : null;
+    }
+
+    @Override
+    public Long getParentObjectId(RangerSharedResource obj, RangerSharedResource oldObj) {
+        return obj != null ? obj.getDataShareId() : null;
     }
 
     @Override

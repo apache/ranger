@@ -431,18 +431,10 @@ public class RoleREST {
 		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
 
 		String metaDataInfo = null;
-		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
-		XXTrxLog xxTrxLogError = new XXTrxLog();
 		request.setAttribute(PARAM_IMPORT_IN_PROGRESS, true);
 
 		try {
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("IMPORT START");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-			xxTrxLog.setPreviousValue("IMPORT START");
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT START", null, "IMPORT START", null));
 
 			if (updateIfExists == null) {
 				updateIfExists = false;
@@ -546,44 +538,25 @@ public class RoleREST {
 			}
 		} catch (JsonSyntaxException ex) {
 			LOG.error("Provided json file is not valid!!", ex);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-			if (StringUtils.isNotEmpty(metaDataInfo)) {
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw restErrorUtil.createRESTException(ex.getMessage());
 		} catch (WebApplicationException excp) {
 			LOG.error("Error while importing role from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-			if (StringUtils.isNotEmpty(metaDataInfo)) {
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw excp;
 		} catch (Throwable excp) {
 			LOG.error("Error while importing role from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-			if (StringUtils.isNotEmpty(metaDataInfo)) {
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
-			List<XXTrxLog> trxLogListEnd = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLogEnd = new XXTrxLog();
-			xxTrxLogEnd.setAction("IMPORT END");
-			xxTrxLogEnd.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-			if (StringUtils.isNotEmpty(metaDataInfo)) {
-				xxTrxLogEnd.setPreviousValue(metaDataInfo);
-			}
-			trxLogListEnd.add(xxTrxLogEnd);
-			bizUtil.createTrxLog(trxLogListEnd);
+			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT EBD", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RoleREST.importRolesFromFile()");
 			}

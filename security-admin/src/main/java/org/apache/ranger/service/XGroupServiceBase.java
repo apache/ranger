@@ -26,7 +26,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.view.VXGroup;
@@ -35,11 +37,16 @@ import org.apache.ranger.view.VXGroupList;
 import javax.persistence.Query;
 
 public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XGroup";
 
 	public XGroupServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_GROUP);
 
+		trxLogAttrs.put("name",            new VTrxLogAttr("name", "Group Name", false, true));
+		trxLogAttrs.put("description",     new VTrxLogAttr("description", "Group Description"));
+		trxLogAttrs.put("otherAttributes", new VTrxLogAttr("otherAttributes", "Other Attributes"));
+		trxLogAttrs.put("syncSource",      new VTrxLogAttr("syncSource", "Sync Source"));
 	}
 
 	@Override
