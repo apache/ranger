@@ -141,7 +141,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.10.4</version>
+            <version>${com.fasterxml.jackson.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
