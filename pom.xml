@@ -338,7 +338,7 @@
             <activation>
                 <jdk>11</jdk>
                 <os>
-                    <name>Ubuntu</name>
+                    <name>linux</name>
                 </os>
             </activation>
             <modules>
