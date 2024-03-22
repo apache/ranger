@@ -55,4 +55,4 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Maven build JDK 11
-      run: mvn clean install -P ranger-jdk11 -pl '!unixauthnative' --no-transfer-progress -B -V
+      run: mvn clean install -P ranger-jdk11 --no-transfer-progress -B -V
