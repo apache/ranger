@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
@@ -50,6 +51,7 @@ public class VXAccessAuditList extends VList {
     /**
      * @return the vXAccessAudits
      */
+    @JsonProperty("vXAccessAudits")
     public List<VXAccessAudit> getVXAccessAudits() {
 	return vXAccessAudits;
     }
@@ -58,6 +60,7 @@ public class VXAccessAuditList extends VList {
      * @param vXAccessAudits
      *            the vXAccessAudits to set
      */
+    @JsonProperty("vXAccessAudits")
     public void setVXAccessAudits(List<VXAccessAudit> vXAccessAudits) {
 	this.vXAccessAudits = vXAccessAudits;
     }

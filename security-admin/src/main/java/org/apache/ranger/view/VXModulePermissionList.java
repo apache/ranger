@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -42,10 +43,12 @@ public class VXModulePermissionList extends VList {
 		this.vXModulePermissionList = objList;
 	}
 
+	@JsonProperty("vXModulePermissionList")
 	public List<VXModulePermission> getvXModulePermissionList() {
 		return vXModulePermissionList;
 	}
 
+	@JsonProperty("vXModulePermissionList")
 	public void setvXModulePermissionList(List<VXModulePermission> vXModulePermissionList) {
 		this.vXModulePermissionList = vXModulePermissionList;
 	}

@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
@@ -50,6 +51,7 @@ public class VXAssetList extends VList {
     /**
      * @return the vXAssets
      */
+    @JsonProperty("vXAssets")
     public List<VXAsset> getVXAssets() {
 	return vXAssets;
     }
@@ -58,6 +60,7 @@ public class VXAssetList extends VList {
      * @param vXAssets
      *            the vXAssets to set
      */
+    @JsonProperty("vXAssets")
     public void setVXAssets(List<VXAsset> vXAssets) {
 	this.vXAssets = vXAssets;
     }

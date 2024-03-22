@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
@@ -50,6 +51,7 @@ public class VXGroupUserList extends VList {
     /**
      * @return the vXGroupUsers
      */
+    @JsonProperty("vXGroupUsers")
     public List<VXGroupUser> getVXGroupUsers() {
 	return vXGroupUsers;
     }
@@ -58,6 +60,7 @@ public class VXGroupUserList extends VList {
      * @param vXGroupUsers
      *            the vXGroupUsers to set
      */
+    @JsonProperty("vXGroupUsers")
     public void setVXGroupUsers(List<VXGroupUser> vXGroupUsers) {
 	this.vXGroupUsers = vXGroupUsers;
     }

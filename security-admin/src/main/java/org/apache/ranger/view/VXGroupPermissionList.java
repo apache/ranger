@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -45,6 +46,7 @@ public class VXGroupPermissionList extends VList {
 	/**
 	 * @return the vXGroupPermission
 	 */
+	@JsonProperty("vXGroupPermission")
 	public List<VXGroupPermission> getvXGroupPermission() {
 		return vXGroupPermission;
 	}
@@ -52,6 +54,7 @@ public class VXGroupPermissionList extends VList {
 	/**
 	 * @param vXGroupPermission the vXGroupPermission to set
 	 */
+	@JsonProperty("vXGroupPermission")
 	public void setvXGroupPermission(List<VXGroupPermission> vXGroupPermission) {
 		this.vXGroupPermission = vXGroupPermission;
 	}
