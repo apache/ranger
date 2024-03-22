@@ -21,9 +21,9 @@ package org.apache.ranger.plugin.model;
 
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneResourceBase;
 

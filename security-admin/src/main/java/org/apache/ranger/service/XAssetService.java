@@ -42,7 +42,7 @@ import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAsset;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
