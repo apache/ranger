@@ -337,6 +337,9 @@
             <id>ranger-jdk11</id>
             <activation>
                 <jdk>11</jdk>
+                <os>
+                    <name>Ubuntu</name>
+                </os>
             </activation>
             <modules>
                 <!--  ranger-admin requirements  -->

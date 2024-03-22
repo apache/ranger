@@ -33,6 +33,7 @@ on:
 jobs:
   build-8:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 8
@@ -56,4 +57,4 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: build (11)
-        run: mvn -T 8 clean install -P ranger-jdk11
+        run: mvn -T 8 clean install --no-transfer-progress -B -V
