@@ -31,7 +31,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build (8):
+  build-8:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
       - name: build (8)
         run: mvn -T 8 clean install --no-transfer-progress -B -V
 
-  build (11):
+  build-11:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
