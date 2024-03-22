@@ -33,7 +33,6 @@ on:
 jobs:
   build-8:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 8
@@ -47,7 +46,6 @@ jobs:
 
   build-11:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 11
