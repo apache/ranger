@@ -24,6 +24,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPrincipal;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.slf4j.Logger;
@@ -32,9 +36,21 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JsonUtils {
     private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
+
+    private static final Type TYPE_MAP_STRING_STRING               = new TypeToken<Map<String, String>>() {}.getType();
+    private static final Type TYPE_SET_STRING                      = new TypeToken<Set<String>>() {}.getType();
+    private static final Type TYPE_LIST_STRING                     = new TypeToken<List<String>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_VALIDITY_SCHEDULE   = new TypeToken<List<RangerValiditySchedule>>() {}.getType();
+    private static final Type TYPE_LIST_AUDIT_FILTER               = new TypeToken<List<AuditFilter>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_VALIDITY_RECURRENCE = new TypeToken<List<RangerValidityRecurrence>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_PRINCIPAL           = new TypeToken<List<RangerPrincipal>>() {}.getType();
+    private static final Type TYPE_MAP_RANGER_MASK_INFO            = new TypeToken<Map<String, RangerPolicyItemDataMaskInfo>>() {}.getType();
+    private static final Type TYPE_MAP_RANGER_POLICY_RESOURCE      = new TypeToken<Map<String, RangerPolicyResource>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_TAG                 = new TypeToken<List<RangerTag>>() {}.getType();
 
     private static final ThreadLocal<Gson> gson = new ThreadLocal<Gson>() {
         @Override
@@ -137,6 +153,42 @@ public class JsonUtils {
             return gson.get().fromJson(jsonStr, listType);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static List<RangerPrincipal> jsonToRangerPrincipalList(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_PRINCIPAL);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerPrincipal> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static List<RangerTag> jsonToRangerTagList(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_TAG);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerTag> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static Map<String, RangerPolicyItemDataMaskInfo> jsonToMapMaskInfo(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_MASK_INFO);
+        } catch (Exception e) {
+            LOG.error("Cannot get Map<String, RangerPolicyItemDataMaskInfo> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static Map<String, RangerPolicyResource> jsonToMapPolicyResource(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_POLICY_RESOURCE);
+        } catch (Exception e) {
+            LOG.error("Cannot get Map<String, RangerPolicyResource> from " + jsonStr, e);
             return null;
         }
     }

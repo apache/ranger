@@ -37,6 +37,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerServiceResourceWithTags;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
@@ -46,8 +47,10 @@ import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -109,6 +112,9 @@ public class TestTagREST {
 
 	@Mock
 	RangerServiceResourceService resourceService;
+
+	@Mock
+	RangerServiceResourceWithTagsService serviceResourceWithTagsService;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -1134,34 +1140,43 @@ public class TestTagREST {
 	}
 
 	@Test
-	public void test64getServiceResources() {
-		HttpServletRequest           request               = Mockito.mock(HttpServletRequest.class);
-		SearchFilter                 searchFilter          = new SearchFilter();
-		PList<RangerServiceResource> ret                   = new PList<RangerServiceResource>();
-		List<RangerServiceResource>  serviceResourceList   = new ArrayList<RangerServiceResource>();
-		RangerServiceResource        rangerServiceResource = new RangerServiceResource();
+	public void test64getServiceResourcesWithTags() {
+		HttpServletRequest                   request               = Mockito.mock(HttpServletRequest.class);
+		SearchFilter                         searchFilter          = new SearchFilter();
+		RangerServiceResourceWithTagsList    ret                   = new RangerServiceResourceWithTagsList();
+		List<RangerServiceResourceWithTags>  serviceResourceList   = new ArrayList<RangerServiceResourceWithTags>();
+		RangerServiceResourceWithTags        rangerServiceResource = new RangerServiceResourceWithTags();
+		List<RangerTag>                      associatedTags        = new ArrayList<RangerTag>();
+		RangerTag                            rangerTag             = new RangerTag();
+
+		rangerTag.setId(id);
+		rangerTag.setGuid(gId);
+		rangerTag.setType(name);
+		associatedTags.add(rangerTag);
 
 		rangerServiceResource.setId(id);
 		rangerServiceResource.setServiceName(serviceName);
+		rangerServiceResource.setAssociatedTags(associatedTags);
 		serviceResourceList.add(rangerServiceResource);
-		ret.setList(serviceResourceList);
+		ret.setResourceList(serviceResourceList);
 
-		Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(resourceService.sortFields)))
-		       .thenReturn(searchFilter);
+		Mockito.when(searchUtil.getSearchFilter(Mockito.any(HttpServletRequest.class), eq(resourceService.sortFields))).thenReturn(searchFilter);
 
 		try {
-			Mockito.when(tagStore.getPaginatedServiceResources((SearchFilter) Mockito.any())).thenReturn(ret);
+			Mockito.when(tagStore.getPaginatedServiceResourcesWithTags(Mockito.any())).thenReturn(ret);
 		} catch (Exception e) {
 		}
 
-		PList<RangerServiceResource> result = tagREST.getServiceResources(request);
+		RangerServiceResourceWithTagsList result = tagREST.getServiceResourcesWithTags(request);
 
-		Assert.assertNotNull(result.getList().get(0).getId());
-		Assert.assertEquals(result.getList().get(0).getId(), serviceResourceList.get(0).getId());
-		Assert.assertEquals(result.getList().get(0).getServiceName(), serviceResourceList.get(0).getServiceName());
+		Assert.assertNotNull(result.getResourceList().get(0).getId());
+		Assert.assertEquals(result.getResourceList().get(0).getId(), serviceResourceList.get(0).getId());
+		Assert.assertEquals(result.getResourceList().get(0).getServiceName(), serviceResourceList.get(0).getServiceName());
+		Assert.assertEquals(result.getResourceList().get(0).getAssociatedTags().size(), 1);
+		Assert.assertEquals(result.getResourceList().get(0).getAssociatedTags().get(0).getType(), name);
 
 		try {
-			Mockito.verify(tagStore).getPaginatedServiceResources((SearchFilter) Mockito.any());
+			Mockito.verify(tagStore).getPaginatedServiceResourcesWithTags((SearchFilter) Mockito.any());
 		} catch (Exception e) {
 		}
 	}
@@ -1170,6 +1185,7 @@ public class TestTagREST {
 	public void test38createTagResourceMap() {
 		RangerTagResourceMap oldTagResourceMap = null;
 		RangerTagResourceMap newTagResourceMap = new RangerTagResourceMap();
+
 		newTagResourceMap.setTagId(id);
 		newTagResourceMap.setResourceId(id);
 		
@@ -1187,6 +1203,7 @@ public class TestTagREST {
 		}
 		
 		RangerTagResourceMap rangerTagResourceMap = tagREST.createTagResourceMap(tagGuid, resourceGuid, false);
+
 		Assert.assertEquals(rangerTagResourceMap.getTagId(), newTagResourceMap.getTagId());
 		Assert.assertEquals(rangerTagResourceMap.getResourceId(), newTagResourceMap.getResourceId());
 		
@@ -1194,10 +1211,12 @@ public class TestTagREST {
 			Mockito.verify(tagStore).getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
 		} catch (Exception e) {
 		}
+
 		try {
 			Mockito.verify(validator).preCreateTagResourceMap(tagGuid, resourceGuid);
 		} catch (Exception e) {
 		}
+
 		try {
 			Mockito.verify(tagStore).createTagResourceMap(newTagResourceMap);
 		} catch (Exception e) {
@@ -1212,7 +1231,9 @@ public class TestTagREST {
 			Mockito.when(tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid)).thenReturn(oldTagResourceMap);
 		} catch (Exception e) {
 		}
+
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(),Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
+
 		thrown.expect(WebApplicationException.class);
 		tagREST.createTagResourceMap(tagGuid, resourceGuid, false);
 		
