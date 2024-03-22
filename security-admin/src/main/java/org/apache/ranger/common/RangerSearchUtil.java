@@ -19,11 +19,7 @@
 
  package org.apache.ranger.common;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Nonnull;
 import javax.persistence.EntityManager;
@@ -106,6 +102,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.TAG_SERVICE_NAME_PARTIAL, request.getParameter(SearchFilter.TAG_SERVICE_NAME_PARTIAL));
 		ret.setParam(SearchFilter.TAG_RESOURCE_GUID, request.getParameter(SearchFilter.TAG_RESOURCE_GUID));
 		ret.setParam(SearchFilter.TAG_RESOURCE_SIGNATURE, request.getParameter(SearchFilter.TAG_RESOURCE_SIGNATURE));
+		ret.setParam(SearchFilter.TAG_RESOURCE_ELEMENTS, request.getParameter(SearchFilter.TAG_RESOURCE_ELEMENTS));
 		ret.setParam(SearchFilter.TAG_DEF_GUID, request.getParameter(SearchFilter.TAG_DEF_GUID));
 		ret.setParam(SearchFilter.TAG_DEF_ID, request.getParameter(SearchFilter.TAG_DEF_ID));
 		ret.setParam(SearchFilter.TAG_ID, request.getParameter(SearchFilter.TAG_ID));
@@ -368,6 +365,45 @@ public class RangerSearchUtil extends SearchUtil {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
 				}
+			} else if (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
+				List<String> strValueList = new ArrayList<>();
+
+				for (Object value : multiValue) {
+					strValueList.add(String.valueOf(value));
+				}
+
+				if (!strValueList.isEmpty()) {
+					if (searchField.getCustomCondition() == null) {
+						if (strValueList.size() <= minInListLength) {
+							whereClause.append(" and ");
+
+							if (strValueList.size() > 1) {
+								whereClause.append(" ( ");
+							}
+
+							for (int count = 0; count < strValueList.size(); count++) {
+								if (count > 0) {
+									whereClause.append(" or ");
+								}
+
+								whereClause.append(searchField.getFieldName()).append("= :")
+								           .append(searchField.getClientFieldName()).append("_").append(count);
+							}
+
+							if (strValueList.size() > 1) {
+								whereClause.append(" ) ");
+							}
+
+						} else {
+							whereClause.append(" and ")
+							           .append(searchField.getFieldName())
+							           .append(" in ")
+							           .append(" (:").append(searchField.getClientFieldName()).append(")");
+						}
+					} else {
+						whereClause.append(" and ").append(searchField.getCustomCondition());
+					}
+				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
 				Integer paramVal = restErrorUtil.parseInt(searchCriteria.getParam(searchField.getClientFieldName()),
 						"Invalid value for " + searchField.getClientFieldName(),
@@ -475,6 +511,22 @@ public class RangerSearchUtil extends SearchUtil {
 						}
 					} else {
 						query.setParameter(searchField.getClientFieldName(), intValueList);
+					}
+				}
+			} else if (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
+				List<String> strValueList = new ArrayList<>();
+
+				for (Object value : multiValue) {
+					strValueList.add(String.valueOf(value));
+				}
+
+				if (!strValueList.isEmpty()) {
+					if (strValueList.size() <= minInListLength) {
+						for (int idx = 0; idx < strValueList.size(); idx++) {
+							query.setParameter(searchField.getClientFieldName() + "_" + idx, strValueList.get(idx));
+						}
+					} else {
+						query.setParameter(searchField.getClientFieldName(), strValueList);
 					}
 				}
 			} else if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
@@ -597,6 +649,42 @@ public class RangerSearchUtil extends SearchUtil {
 
 			searchFilter.setMultiValueParam(paramName, intValues.toArray());
 		}
+	}
+
+	public void extractStringList(HttpServletRequest request, SearchFilter searchFilter, String paramName,
+			                      String userFriendlyParamName, String listName, String[] validValues, String regEx) {
+		String[] values = getParamMultiValues(request, paramName);
+
+		if (values != null) {
+			List<String> stringList = new ArrayList<>(values.length);
+
+			for (String value : values) {
+				if (!stringUtil.isEmpty(regEx)) {
+					restErrorUtil.validateString(value, regEx, "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+				}
+
+				stringList.add(value);
+			}
+
+			searchFilter.setMultiValueParam(paramName, stringList.toArray());
+		}
+	}
+
+	public Map<String, String[]> getMultiValueParamsWithPrefix(HttpServletRequest request, String prefix, boolean stripPrefix) {
+		Map<String, String[]> ret = new HashMap<String, String[]>();
+		for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+			String name = e.getKey();
+			String[] values = e.getValue();
+
+			if (!StringUtils.isEmpty(name) && !ArrayUtils.isEmpty(values)
+					&& name.startsWith(prefix)) {
+	            if(stripPrefix) {
+					name = name.substring(prefix.length());
+				}
+	            ret.put(name, values);
+			}
+		}
+        return ret;
 	}
 
 	/**

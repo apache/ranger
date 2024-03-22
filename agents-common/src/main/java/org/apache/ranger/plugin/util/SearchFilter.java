@@ -76,6 +76,7 @@ public class SearchFilter {
 
 	public static final String TAG_DEF_ID                = "tagDefId";            // search
 	public static final String TAG_DEF_GUID              = "tagDefGuid";          // search
+	public static final String TAG_NAMES                 = "tagNames";            // search
 	public static final String TAG_TYPE                  = "tagType";             // search
 	public static final String TAG_TYPE_PARTIAL          = "tagTypePartial";      // search
 	public static final String TAG_SOURCE                = "tagSource";           // search
@@ -88,6 +89,7 @@ public class SearchFilter {
 	public static final String TAG_RESOURCE_GUID         = "resourceGuid";        // search
 	public static final String TAG_RESOURCE_SERVICE_NAME = "resourceServiceName"; // search
 	public static final String TAG_RESOURCE_SIGNATURE    = "resourceSignature";   // search
+	public static final String TAG_RESOURCE_ELEMENTS     = "resourceElements";   // search
 	public static final String TAG_MAP_ID                = "tagResourceMapId";    // search
 	public static final String TAG_MAP_GUID              = "tagResourceMapGuid";  // search
 
