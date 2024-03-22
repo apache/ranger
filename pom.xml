@@ -339,7 +339,7 @@
         <profile>
             <id>ranger-jdk11</id>
             <activation>
-               <jdk>11</jdk>
+                <jdk>11</jdk>
             </activation>
             <modules>
                 <!--  ranger-admin requirements  -->
