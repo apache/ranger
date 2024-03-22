@@ -31,7 +31,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build (8):
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
       - name: build (8)
         run: mvn -T 8 clean install --no-transfer-progress -B -V
 
-  build-jdk11:
+  build (11):
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,4 +55,4 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: build (11)
-        run: mvn -T 8 clean install -P ranger-jdk11 --no-transfer-progress -B -V
+        run: mvn -T 8 clean install -P 'ranger-jdk11' --no-transfer-progress -B -V
