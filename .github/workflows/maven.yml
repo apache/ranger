@@ -22,7 +22,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: CI
 
 on:
   push:
@@ -31,7 +31,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-8:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,16 +41,36 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-      - name: Build with Maven
-        run: mvn clean install -DskipTests --no-transfer-progress -B -V
+      - name: build (8)
+        run: mvn -T 8 clean install --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: target
           path: target/*
+
+  build-11:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: build (11)
+        run: mvn -T 8 clean install -P ranger-jdk11,!all,!linux --no-transfer-progress -B -V
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: target
+          path: target/*trino*
+  
   docker-build:
     needs:
-      - build
+      - build-8
+      - build-11
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,4 +100,5 @@ jobs:
           -f docker-compose.ranger-hbase.yml \
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
-          -f docker-compose.ranger-knox.yml build
+          -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-trino.yml build
