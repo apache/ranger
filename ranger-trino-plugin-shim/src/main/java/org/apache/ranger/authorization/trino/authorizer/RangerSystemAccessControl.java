@@ -238,6 +238,17 @@ public class RangerSystemAccessControl
   }
 
   @Override
+  public void checkCanUpdateTableColumns(SystemSecurityContext securityContext, CatalogSchemaTableName table, Set<String> updatedColumnNames)
+  {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanUpdateTableColumns(securityContext, table, updatedColumnNames);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
   public void checkCanInsertIntoTable(SystemSecurityContext context, CatalogSchemaTableName table) {
     try {
       activatePluginClassLoader();

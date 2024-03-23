@@ -288,7 +288,8 @@
         "revoke",
         "show",
         "impersonate",
-        "execute"
+        "execute",
+        "update"
       ]
     },
     {
@@ -296,6 +297,11 @@
       "name": "execute",
       "label": "execute",
       "category": "READ"
+    },{
+      "itemId": 14,
+      "name": "update",
+      "label": "update",
+      "category": "UPDATE"
     }
   ],
   "configs": [
