@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: target
+          name: target-8
           path: target/*
 
   build-11:
@@ -64,7 +64,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: target
+          name: target-11
           path: target/*trino*
   
   docker-build:
@@ -74,10 +74,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download build artifacts
+      - name: Download build-8 artifacts
         uses: actions/download-artifact@v4
         with:
-          name: target
+          name: target-8
+      - name: Download build-11 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: target-11
       - name: Copy artifacts for docker build
         run: |
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
