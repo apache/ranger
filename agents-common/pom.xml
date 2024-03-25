@@ -155,6 +155,11 @@
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${com.fasterxml.jackson.version}</version>
+        </dependency>
         <!-- To be added for JDK15 and above
         <dependency>
             <groupId>org.graalvm.js</groupId>
