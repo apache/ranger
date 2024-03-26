@@ -21,7 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.ws.rs.WebApplicationException;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -50,6 +53,7 @@ import org.apache.ranger.plugin.model.RangerServiceResourceWithTags;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -1238,5 +1242,22 @@ public class TestTagDBStore {
         rangerServiceResourceViewList.setTotalCount(1);
 
         return rangerServiceResourceViewList;
+    }
+
+    @Test
+    public void testToRangerServiceResource() {
+        Map<String, String[]>             resourceMap      = new HashMap<>();
+        Map<String, RangerPolicyResource> resourceElements = new HashMap<>();
+
+        resourceMap.put("database",             new String[] { "db1" });
+        resourceMap.put("database.isExcludes",  new String[] { "false" });
+        resourceMap.put("database.isRecursive", new String[] { "false" });
+
+        resourceElements.put("database", new RangerPolicyResource("db1", false, false));
+
+        RangerServiceResource expectedResource = new RangerServiceResource(serviceName, resourceElements);
+        RangerServiceResource actualResource   = tagDBStore.toRangerServiceResource(serviceName, resourceMap);
+
+        Assert.assertEquals(expectedResource.getResourceElements(), actualResource.getResourceElements());
     }
 }

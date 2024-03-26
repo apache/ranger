@@ -1028,7 +1028,7 @@ public class TagREST {
         }
 
         Map<String, String[]> resourceMap     = searchUtil.getMultiValueParamsWithPrefix(request, SearchFilter.RESOURCE_PREFIX, true);
-        RangerServiceResource serviceResource = tagStore.getRangerServiceResource(serviceName, resourceMap);
+        RangerServiceResource serviceResource = tagStore.toRangerServiceResource(serviceName, resourceMap);
 
         serviceResource = getServiceResourceByServiceAndResourceSignature(serviceName, new RangerServiceResourceSignature(serviceResource).getSignature());
 
