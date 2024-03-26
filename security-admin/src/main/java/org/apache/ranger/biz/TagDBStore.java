@@ -1398,9 +1398,9 @@ public class TagDBStore extends AbstractTagStore {
 		}
 	}
 
-	public RangerServiceResource getRangerServiceResource(String serviceName, Map<String, String[]> resourceMap) {
+	public static RangerServiceResource toRangerServiceResource(String serviceName, Map<String, String[]> resourceMap) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.getRangerServiceResource(): serviceName={" + serviceName + "}");
+			LOG.debug("==> TagDBStore.toRangerServiceResource(): serviceName={" + serviceName + "}");
 		}
 
 		Map<String, RangerPolicyResource> resourceElements = new HashMap<>();
@@ -1424,11 +1424,13 @@ public class TagDBStore extends AbstractTagStore {
 			}
 
 			if (parts.length == 1) {
-				List<String> valueList = new ArrayList<>();
+				List<String> valueList = new ArrayList<>(valueArray.length);
 
 				for (String str : valueArray) {
 					valueList.add(str.trim());
 				}
+
+				policyResource.setValues(valueList);
 			} else if (parts.length == 2 && valueArray[0] != null) {
 				String subKey = parts[1];
 				String value  = valueArray[0];
@@ -1444,7 +1446,7 @@ public class TagDBStore extends AbstractTagStore {
 		RangerServiceResource ret = new RangerServiceResource(serviceName, resourceElements);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.getRangerServiceResource(): (serviceName={" + serviceName + "} RangerServiceResource={" + ret + "})");
+			LOG.debug("<== TagDBStore.toRangerServiceResource(): (serviceName={" + serviceName + "} RangerServiceResource={" + ret + "})");
 		}
 
 		return ret;
