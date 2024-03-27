@@ -19,6 +19,7 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 ARG TARGETARCH
 ARG RANGER_BASE_JAVA_VERSION
+ENV OS_NAME UBUNTU
 
 # Install tzdata, Python, Java, python-requests
 RUN apt-get update && \

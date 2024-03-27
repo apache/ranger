@@ -33,6 +33,9 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     mkdir -p /var/log/ranger/usersync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     mkdir -p /etc/ranger && \
+    mkdir /etc/init.d || true && \
+    mkdir /etc/rc2.d  || true && \
+    mkdir /etc/rc3.d  || true && \
     touch /etc/init.d/ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/S99ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/K00ranger-usersync && \
