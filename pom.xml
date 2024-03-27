@@ -184,7 +184,7 @@
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>333</presto.version>
-        <trino.version>377</trino.version>
+        <trino.version>433</trino.version>
         <poi.version>5.2.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>3.19.3</protobuf-java.version>
