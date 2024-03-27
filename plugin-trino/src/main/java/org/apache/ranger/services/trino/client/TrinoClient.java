@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.Closeable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -77,6 +79,12 @@ public class TrinoClient extends BaseClient implements Closeable {
   private void initConnection() {
     Properties prop = getConfigHolder().getRangerSection();
     String driverClassName = prop.getProperty("jdbc.driverClassName");
+    boolean kerberosEnabled = Boolean.getBoolean(prop.getProperty("kerberos.enabled", "false"));
+    String kerberosRemoteServiceName = prop.getProperty("kerberos.remote.service.name");
+    String krb5Conf = prop.getProperty("krb5.conf");
+    String kerberosPrincipal = prop.getProperty("kerberos.principal");
+    String kerberosKeytabPath = prop.getProperty("kerberos.keytab.path");
+
     String url = prop.getProperty("jdbc.url");
 
     Properties trinoProperties = new Properties();
@@ -84,11 +92,11 @@ public class TrinoClient extends BaseClient implements Closeable {
     try {
       decryptedPwd=PasswordUtils.decryptPassword(getConfigHolder().getPassword());
     } catch (Exception ex) {
-    LOG.info("Password decryption failed");
-    decryptedPwd = null;
+      LOG.info("Password decryption failed");
+      decryptedPwd = null;
     } finally {
       if (decryptedPwd == null) {
-      decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
+        decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
       }
     }
     trinoProperties.put(TRINO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
@@ -145,6 +153,28 @@ public class TrinoClient extends BaseClient implements Closeable {
           msgDesc + ERR_MSG, null, null);
         throw hdpException;
       }
+    }
+
+    if (kerberosEnabled) {
+      InetAddress localHost;
+      try {
+        localHost = InetAddress.getLocalHost();
+        String hostname = localHost.getHostName();
+        kerberosPrincipal = kerberosPrincipal.replace("_HOST", hostname);
+      } catch (UnknownHostException se) {
+        String msgDesc = "Unable to get Trino Host.";
+        HadoopException hdpException = new HadoopException(msgDesc, se);
+        hdpException.generateResponseDataMap(false, getMessage(se),
+                msgDesc + ERR_MSG, null, null);
+        throw hdpException;
+      }
+      trinoProperties.put("SSL", "true");
+      trinoProperties.put("SSLVerification", "NONE");
+      trinoProperties.put("KerberosRemoteServiceName", kerberosRemoteServiceName);
+      trinoProperties.put("KerberosUseCanonicalHostname", "false");
+      trinoProperties.put("KerberosConfigPath", krb5Conf);
+      trinoProperties.put("KerberosPrincipal", kerberosPrincipal);
+      trinoProperties.put("KerberosKeytabPath", kerberosKeytabPath);
     }
 
     try {
