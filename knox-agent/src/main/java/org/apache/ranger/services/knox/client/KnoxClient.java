@@ -18,27 +18,43 @@
 
 package org.apache.ranger.services.knox.client;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.net.ssl.SSLContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
+/**
+ * @author zhaoshuaihua
+ */
 public class KnoxClient {
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
@@ -74,6 +90,7 @@ public class KnoxClient {
 		if (topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
 			topologyNameMatching = "";
 		}
+
 		String decryptedPwd=null;
 		try {
 			decryptedPwd=PasswordUtils.decryptPassword(password);
@@ -86,47 +103,53 @@ public class KnoxClient {
 			}
 		}
 		try {
-
-			Client client = null;
-			ClientResponse response = null;
-
+			CloseableHttpClient httpClient = null;
+			HttpGet httpGet = null;
+			HttpResponse response = null;
 			try {
-				client = Client.create();
-				
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-				WebResource webResource = client.resource(knoxUrl);
-				response = webResource.accept(EXPECTED_MIME_TYPE)
-					    .get(ClientResponse.class);
+				httpClient = HttpClientUtil.buildNoSslHttpClient(userName, decryptedPwd);
+
+				httpGet = new HttpGet(knoxUrl);
+				response = httpClient.execute(httpGet);
+
 				LOG.debug("Knox topology list response: " + response);
 				if (response != null) {
 
-					if (response.getStatus() == 200) {
-						String jsonString = response.getEntity(String.class);
-						LOG.debug("Knox topology list response JSON string: "+ jsonString);
+					if (response.getStatusLine().getStatusCode() == 200) {
 
-						JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
-						JsonNode topologyNode = rootNode.findValue("topology");
-						if (topologyNode == null) {
+						String jsonString = EntityUtils.toString(response.getEntity());
+
+						LOG.debug("Knox topology list response JSON string: "+ jsonString);
+						if (StringUtils.isEmpty(jsonString)) {
 							return topologyList;
 						}
-						Iterator<JsonNode> elements = topologyNode.getElements();
-						while (elements.hasNext()) {
-							JsonNode element = elements.next();
-							JsonNode nameElement = element.get("name");
-							if (nameElement != null) {
-								String topologyName = nameElement.getValueAsText();
-								LOG.debug("Found Knox topologyName: " + topologyName);
+
+						DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+						DocumentBuilder builder = factory.newDocumentBuilder();
+						// 将XML字符串解析为Document对象
+						Document document = builder.parse(new InputSource(new StringReader(jsonString)));
+						// 获取所有topology节点
+						NodeList topologyNodes = document.getElementsByTagName("topology");
+
+						for (int i = 0; i < topologyNodes.getLength(); i++) {
+							Node topologyNode = topologyNodes.item(i);
+							if (topologyNode.getNodeType() == Node.ELEMENT_NODE) {
+								Element element = (Element) topologyNode;
+								// 获取name节点的值
+								Node nameNode = element.getElementsByTagName("name").item(0);
+								String topologyName = nameNode.getTextContent();
+								System.out.println("Found Knox topologyName: " + topologyName);
 								if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
 									continue;
 								}
-								if (topologyName != null && ( "*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
-									topologyList.add(topologyName);
-								}
-							}
 
+                    			if (topologyName != null && ("*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
+                        			topologyList.add(topologyName);
+                    			}
+							}
 						}
 					} else {
-						LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatus());
+						LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatusLine().getStatusCode());
 					}
 
 				} else {
@@ -141,11 +164,8 @@ public class KnoxClient {
 				}
 
 			} finally {
-				if (response != null) {
-					response.close();
-				}
-				if (client != null) {
-					client.destroy();
+				if (httpClient != null) {
+					httpClient.close();
 				}
 			}
 		} catch (HadoopException he) {
@@ -190,53 +210,50 @@ public class KnoxClient {
 				decryptedPwd=password;
 			}
 		}
-		try {
-
-			Client client = null;
-			ClientResponse response = null;
-
+		try{
+			CloseableHttpClient httpClient = null;
+			HttpGet httpGet = null;
+			HttpResponse response = null;
 			try {
-				client = Client.create();
-
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-
+				httpClient = HttpClientUtil.buildNoSslHttpClient(userName, decryptedPwd);
 				for (String topologyName : knoxTopologyList) {
+					httpGet = new HttpGet(knoxUrl+ "/" + topologyName);
+					response = httpClient.execute(httpGet);
 
-					WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
-
-					response = webResource.accept(EXPECTED_MIME_TYPE)
-							.get(ClientResponse.class);
 					LOG.debug("Knox service lookup response: " + response);
 					if (response != null) {
 
-						if (response.getStatus() == 200) {
-							String jsonString = response.getEntity(String.class);
+						if (response.getStatusLine().getStatusCode() == 200) {
+							String jsonString = EntityUtils.toString(response.getEntity());
 							LOG.debug("Knox service lookup response JSON string: " + jsonString);
 
-							JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
-							JsonNode topologyNode = rootNode.findValue("topology");
-							if (topologyNode != null) {
-								JsonNode servicesNode = topologyNode.get("service");
-								if (servicesNode != null) {
-									Iterator<JsonNode> services = servicesNode.getElements();
-									while (services.hasNext()) {
-										JsonNode service = services.next();
-										JsonNode serviceElement = service.get("role");
-										if (serviceElement != null) {
-											String serviceName = serviceElement.getValueAsText();
-											LOG.debug("Knox serviceName: " + serviceName);
-											if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))){
-												continue;
-											}
-											if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
-												serviceList.add(serviceName);
-											}
+							DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+							DocumentBuilder builder = factory.newDocumentBuilder();
+							// 将XML字符串解析为Document对象
+							Document document = builder.parse(new InputSource(new StringReader(jsonString)));
+							// 获取所有topology节点
+							NodeList topologyNodes = document.getElementsByTagName("topology");
+
+							if (topologyNodes != null) {
+								for (int i = 0; i < topologyNodes.getLength(); i++) {
+									Element topologyNode = (Element) topologyNodes.item(i);
+									NodeList servicesNodes = topologyNode.getElementsByTagName("service");
+
+									for (int j = 0; j < servicesNodes.getLength(); j++) {
+										Element serviceElement = (Element) servicesNodes.item(j);
+										String serviceName = serviceElement.getElementsByTagName("role").item(0).getTextContent();
+										LOG.debug("Knox serviceName: " + serviceName);
+										if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))) {
+											continue;
+										}
+										if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
+											serviceList.add(serviceName);
 										}
 									}
 								}
 							}
 						} else {
-							LOG.error("Got invalid  REST response from: " + knoxUrl + ", responsStatus: " + response.getStatus());
+							LOG.error("Got invalid  REST response from: " + knoxUrl + ", responsStatus: " + response.getStatusLine().getStatusCode());
 						}
 
 					} else {
@@ -250,12 +267,11 @@ public class KnoxClient {
 						throw hdpException;
 					}
 				}
-			} finally{
-				if (response != null) {
-					response.close();
-				}
-				if (client != null) {
-					client.destroy();
+			} catch (IOException | ParserConfigurationException | SAXException e) {
+                throw new RuntimeException(e);
+            } finally{
+				if (httpClient != null) {
+					httpClient.close();
 				}
 			}
 		} catch (HadoopException he) {
