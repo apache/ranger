@@ -323,10 +323,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		String access = _authUtils.getAccess(action);
 		User user = getActiveUser(ctx);
 		String userName = _userUtils.getUserAsString(user);
+		Map<String, Set<String>> colFamiliesForDebugLoggingOnly = new HashMap<>();
 
 		if (LOG.isDebugEnabled()) {
+			colFamiliesForDebugLoggingOnly = getColumnFamilies(familyMap);
 			LOG.debug(String.format("evaluateAccess: entered: user[%s], Operation[%s], access[%s], families[%s]",
-					userName, operation, access, getColumnFamilies(familyMap).toString()));
+					userName, operation, access, colFamiliesForDebugLoggingOnly.toString()));
 		}
 
 		byte[] tableBytes = getTableName(env);
@@ -343,8 +345,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
 			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null);
 			if (LOG.isDebugEnabled()) {
-				Map<String, Set<String>> families = getColumnFamilies(familyMap);
-				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
+				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
 				LOG.debug(message);
 			}
 			return result;
@@ -360,11 +361,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				.user(user)
 				.access(access)
 				.table(table);
-		Map<String, Set<String>> families = getColumnFamilies(familyMap);
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("evaluateAccess: families to process: " + families.toString());
+			LOG.debug("evaluateAccess: families to process: " + colFamiliesForDebugLoggingOnly.toString());
 		}
-		if (families == null || families.isEmpty()) {
+		if (familyMap == null || familyMap.isEmpty()) {
 			LOG.debug("evaluateAccess: Null or empty families collection, ok.  Table level access is desired");
 			session.buildRequest()
 				.authorize();
@@ -383,7 +383,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 						authorized ? Collections.singletonList(event) : null,
 						null, authorized ? null : event, reason, null);
 			if (LOG.isDebugEnabled()) {
-				String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
+				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
 				LOG.debug(message);
 			}
 			return result;
@@ -407,13 +407,13 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		Set<String> familesAccessDenied = new HashSet<String>();
 		Set<String> familesAccessIndeterminate = new HashSet<String>();
 
-		for (Map.Entry<String, Set<String>> anEntry : families.entrySet()) {
-			String family = anEntry.getKey();
+		for (Map.Entry<byte[], ? extends Collection<?>> anEntry : familyMap.entrySet()) {
+			String family = Bytes.toString(anEntry.getKey());
 			session.columnFamily(family);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("evaluateAccess: Processing family: " + family);
 			}
-			Set<String> columns = anEntry.getValue();
+			Collection<?> columns = anEntry.getValue();
 			if (columns == null || columns.isEmpty()) {
 				LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
 
@@ -488,8 +488,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			} else {
 				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");
 				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
- 				for (String column : columns) {
- 					if (LOG.isDebugEnabled()) {
+				Iterator<String> columnIterator = new ColumnIterator(columns);
+				while (columnIterator.hasNext()) {
+					String column = columnIterator.next();
+					 if (LOG.isDebugEnabled()) {
  						LOG.debug("evaluateAccess: Processing column: " + column);
  					}
  					session.column(column)
@@ -529,7 +531,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familesAccessAllowed, familesAccessDenied, familesAccessIndeterminate, columnsAccessAllowed);
 		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter);
 		if (LOG.isDebugEnabled()) {
-			String message = String.format(messageTemplate, userName, operation, access, families.toString(), result.toString());
+			String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
 			LOG.debug(message);
 		}
 		return result;
