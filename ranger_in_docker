@@ -166,8 +166,6 @@ then
 
     DOCKER_COMPOSE_FLAGS="-d"
 
-    chmod +x download-archives.sh && ./download-archives.sh
-
     if [ -z "${RANGER_REBUILD}" ]
     then
         noOfFiles=`ls -l ${RD_HOME}/dist/*.tar.gz 2> /dev/null| wc -l | awk '{ print $1 }'`
