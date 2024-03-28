@@ -882,18 +882,18 @@ public class RangerPolicyValidator extends RangerValidator {
 		for (Map.Entry<String, RangerPolicyResource> entry : resourceMap.entrySet()) {
 			String name = entry.getKey();
 			RangerPolicyResource policyResource = entry.getValue();
-			Set<String> resources = null;
+			Set<String> resources = new HashSet<>();
+			String duplicateValue = "";
 			if(policyResource != null) {
 				if(CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					resources = new HashSet<>(policyResource.getValues());
+					duplicateValue = populateSetAndGetDuplicate(resources, policyResource.getValues());
 					for (String aValue : resources) {
 						if (StringUtils.isBlank(aValue)) {
 							policyResource.getValues().remove(aValue);
 						}
 					}
 				}
-				if (resources!=null && resources.size() < policyResource.getValues().size()){
-					String duplicateValue = getDuplicateInList(policyResource.getValues());
+				if (!StringUtils.isBlank(duplicateValue)){
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE;
 					if (LOG.isDebugEnabled()){
 						LOG.debug(String.format("Duplicate values found for the resource name[%s] value[%s] service-def-name[%s]",name, duplicateValue,serviceDef.getName()));
@@ -951,15 +951,15 @@ public class RangerPolicyValidator extends RangerValidator {
 		return valid;
 	}
 
-	private String getDuplicateInList(List<String> values) {
-		HashSet<String> existing = new HashSet<>();
+	private String populateSetAndGetDuplicate(Set<String> set, List<String> values) {
+		String duplicate = "";
 		for (String value : values){
-			if (existing.contains(value)){
-				return value;
+			if (set.contains(value) && !StringUtils.isBlank(value)){
+				duplicate = value;
 			}
-			existing.add(value);
+			set.add(value);
 		}
-		return "";
+		return duplicate;
 	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
