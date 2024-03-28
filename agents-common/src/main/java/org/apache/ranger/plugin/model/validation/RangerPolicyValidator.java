@@ -882,16 +882,32 @@ public class RangerPolicyValidator extends RangerValidator {
 		for (Map.Entry<String, RangerPolicyResource> entry : resourceMap.entrySet()) {
 			String name = entry.getKey();
 			RangerPolicyResource policyResource = entry.getValue();
+			Set<String> resources = null;
 			if(policyResource != null) {
 				if(CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					Set<String> resources = new HashSet<>(policyResource.getValues());
+					resources = new HashSet<>(policyResource.getValues());
 					for (String aValue : resources) {
 						if (StringUtils.isBlank(aValue)) {
 							policyResource.getValues().remove(aValue);
 						}
 					}
 				}
-
+				if (resources!=null && resources.size() < policyResource.getValues().size()){
+					String duplicateValue = getDuplicateInList(policyResource.getValues());
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE;
+					if (LOG.isDebugEnabled()){
+						LOG.debug(String.format("Duplicate values found for the resource name[%s] value[%s] service-def-name[%s]",name, duplicateValue,serviceDef.getName()));
+					}
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("resource-values")
+							.subField(name)
+							.isSemanticallyIncorrect()
+							.becauseOf(error.getMessage(name, duplicateValue))
+							.errorCode(error.getErrorCode())
+							.build()
+					);
+					valid = false;
+				}
 				if(CollectionUtils.isEmpty(policyResource.getValues())){
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST;
 					if(LOG.isDebugEnabled()) {
@@ -933,6 +949,17 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceValues(%s, %s, %s): %s", resourceMap, failures, serviceDef, valid));
 		}
 		return valid;
+	}
+
+	private String getDuplicateInList(List<String> values) {
+		HashSet<String> existing = new HashSet<>();
+		for (String value : values){
+			if (existing.contains(value)){
+				return value;
+			}
+			existing.add(value);
+		}
+		return "";
 	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
