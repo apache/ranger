@@ -107,6 +107,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER(3053, "policy items user was null"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP(3054, "policy items group was null"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
+    POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE(3056, "Values for the resource={0} contained a duplicate value={1}. Ensure all values for a resource are unique"),
     POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
 
     // SECURITY_ZONE Validations
