@@ -883,15 +883,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			String name = entry.getKey();
 			RangerPolicyResource policyResource = entry.getValue();
 			if(policyResource != null) {
-				if(CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					Set<String> resources = new HashSet<>(policyResource.getValues());
-					for (String aValue : resources) {
-						if (StringUtils.isBlank(aValue)) {
-							policyResource.getValues().remove(aValue);
-						}
-					}
-				}
-
+				policyResource.getValues().removeIf(StringUtils::isBlank);
 				if(CollectionUtils.isEmpty(policyResource.getValues())){
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST;
 					if(LOG.isDebugEnabled()) {
@@ -906,23 +898,40 @@ public class RangerPolicyValidator extends RangerValidator {
 						.build());
 					valid=false;
 				}
-
-				if (validationRegExMap.containsKey(name) && CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					String regEx = validationRegExMap.get(name);
-					for (String aValue : policyResource.getValues()) {
-						if (!aValue.matches(regEx)) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug(String.format("Resource failed regex check: value[%s], resource-name[%s], regEx[%s], service-def-name[%s]", aValue, name, regEx, serviceDef.getName()));
-							}
-							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
-							failures.add(new ValidationFailureDetailsBuilder()
+				else{
+					String duplicateValue = getDuplicate(policyResource.getValues());
+					if (!StringUtils.isBlank(duplicateValue)){
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE;
+						if (LOG.isDebugEnabled()){
+							LOG.debug(String.format("Duplicate values found for the resource name[%s] value[%s] service-def-name[%s]",name, duplicateValue,serviceDef.getName()));
+						}
+						failures.add(new ValidationFailureDetailsBuilder()
 								.field("resource-values")
 								.subField(name)
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(aValue, name))
+								.becauseOf(error.getMessage(name, duplicateValue))
 								.errorCode(error.getErrorCode())
-								.build());
-							valid = false;
+								.build()
+						);
+						valid = false;
+					}
+					if (validationRegExMap.containsKey(name)) {
+						String regEx = validationRegExMap.get(name);
+						for (String aValue : policyResource.getValues()) {
+							if (!aValue.matches(regEx)) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug(String.format("Resource failed regex check: value[%s], resource-name[%s], regEx[%s], service-def-name[%s]", aValue, name, regEx, serviceDef.getName()));
+								}
+								ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
+								failures.add(new ValidationFailureDetailsBuilder()
+									.field("resource-values")
+									.subField(name)
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(aValue, name))
+									.errorCode(error.getErrorCode())
+									.build());
+								valid = false;
+							}
 						}
 					}
 				}
@@ -933,6 +942,21 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceValues(%s, %s, %s): %s", resourceMap, failures, serviceDef, valid));
 		}
 		return valid;
+	}
+
+	private String getDuplicate(List<String> values) {
+		String duplicate = "";
+		if (values!=null) {
+			HashSet<String> set = new HashSet<>();
+			for (String val:values){
+				if (set.contains(val)){
+					duplicate = val;
+					break;
+				}
+				set.add(val);
+			}
+		}
+		return duplicate;
 	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
