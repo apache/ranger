@@ -46,6 +46,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.service.RangerDefaultService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -199,13 +200,17 @@ public class ServiceMgr {
 
 				ret = generateResponseForTestConn(responseData, "");
 			} catch (Exception e) {
-				String msg = "Unable to connect repository with given config for " + svc.getServiceName();
-						
-				HashMap<String, Object> respData = new HashMap<String, Object>();
-				if (e instanceof HadoopException) {
-					respData = ((HadoopException) e).getResponseData();
+				Map<String, Object> respData = (e instanceof HadoopException) ? ((HadoopException) e).getResponseData() : new HashMap<>();
+				String              msg;
+
+				if (StringUtils.contains(e.getMessage(), RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED)) {
+					msg = RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED + " for " + svc.getServiceType();
+				} else {
+					msg = "Unable to connect repository with given config for " + svc.getServiceName();
 				}
+
 				ret = generateResponseForTestConn(respData, msg);
+
 				LOG.error("==> ServiceMgr.validateConfig Error:" + e);
 			}
 		}
