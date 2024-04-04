@@ -116,6 +116,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			LOG.info(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP + " is enabled");
 		}
 
+		LOG.info("Legacy way of authorizing sub-access requests will " + (plugin.isUseLegacySubAccessAuthorization() ? "" : "not ") + "be used");
+
 		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
 		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
 		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
@@ -220,10 +222,14 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 		class SubAccessData {
 			final INodeDirectory    dir;
 			final String            resourcePath;
+			final INode[]           inodes;
+			final INodeAttributes[] iNodeAttributes;
 
-			SubAccessData(INodeDirectory dir, String resourcePath) {
+			SubAccessData(INodeDirectory dir, String resourcePath, INode[] inodes, INodeAttributes[] iNodeAttributes) {
 				this.dir            = dir;
 				this.resourcePath   = resourcePath;
+				this.iNodeAttributes = iNodeAttributes;
+				this.inodes          = inodes;
 			}
 		}
 
@@ -430,7 +436,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					if(authzStatus == AuthzStatus.ALLOW && subAccess != null && inode != null && inode.isDirectory()) {
 						Stack<SubAccessData> directories = new Stack<>();
 
-						for(directories.push(new SubAccessData(inode.asDirectory(), resourcePath)); !directories.isEmpty(); ) {
+						for(directories.push(new SubAccessData(inode.asDirectory(), resourcePath, inodes, inodeAttrs)); !directories.isEmpty(); ) {
 							SubAccessData data = directories.pop();
 							ReadOnlyList<INode> cList = data.dir.getChildrenList(snapshotId);
 
@@ -439,7 +445,75 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 								authzStatus = isAccessAllowed(data.dir, dirAttribs, data.resourcePath, subAccess, context);
 
-								if(authzStatus != AuthzStatus.ALLOW) {
+								INodeDirectory dirINode;
+								int dirAncestorIndex;
+								INodeAttributes[] dirINodeAttrs;
+								INode[] dirINodes;
+								INode dirAncestor;
+								INode dirParent;
+								byte[][] dirComponents;
+
+								if (data.dir.equals(inode)) {
+									dirINode = inode.asDirectory();
+									dirINodeAttrs = inodeAttrs;
+									dirINodes = inodes;
+									dirAncestorIndex = ancestorIndex;
+									dirAncestor = ancestor;
+									dirParent = parent;
+									dirComponents = pathByNameArr;
+								} else {
+									INodeAttributes[] curINodeAttributes;
+									INode[] curINodes;
+
+									dirINode = data.dir;
+									curINodeAttributes = data.iNodeAttributes;
+									curINodes = data.inodes;
+									int idx;
+
+									dirINodes = new INode[curINodes.length + 1];
+									for (idx = 0; idx < curINodes.length; idx++) {
+										dirINodes[idx] = curINodes[idx];
+									}
+									dirINodes[idx] = dirINode;
+
+									dirINodeAttrs = new INodeAttributes[curINodeAttributes.length + 1];
+									for (idx = 0; idx < curINodeAttributes.length; idx++) {
+										dirINodeAttrs[idx] = curINodeAttributes[idx];
+									}
+									dirINodeAttrs[idx] = dirAttribs;
+
+									for (dirAncestorIndex = dirINodes.length - 1; dirAncestorIndex >= 0 && dirINodes[dirAncestorIndex] == null; dirAncestorIndex--)
+										;
+
+									dirAncestor = dirINodes.length > dirAncestorIndex && dirAncestorIndex >= 0 ? dirINodes[dirAncestorIndex] : null;
+									dirParent = dirINodes.length > 1 ? dirINodes[dirINodes.length - 2] : null;
+
+									dirComponents = dirINode.getPathComponents();
+								}
+
+								if (authzStatus == AuthzStatus.NOT_DETERMINED && !rangerPlugin.isUseLegacySubAccessAuthorization()) {
+									if (LOG.isDebugEnabled()) {
+										if (data.dir.equals(inode)) {
+											LOG.debug("Top level directory being processed for default authorizer call, [" + data.resourcePath + "]");
+										} else {
+											LOG.debug("Sub directory being processed for default authorizer call, [" + data.resourcePath + "]");
+										}
+										LOG.debug("Calling default authorizer for hierarchy/subaccess with the following parameters");
+										LOG.debug("fsOwner=" + fsOwner + "; superGroup=" + superGroup + ", inodesCount=" + (dirINodes != null ? dirINodes.length : 0)
+												+ ", snapshotId=" + snapshotId + ", user=" + (ugi != null ? ugi.getShortUserName() : null) + ", provided-path=" + data.resourcePath + ", ancestorIndex=" + dirAncestorIndex
+												+ ", doCheckOwner=" + doCheckOwner + ", ancestorAccess=null" + ", parentAccess=null"
+												+ ", access=null" + ", subAccess=null" + ", ignoreEmptyDir=" + ignoreEmptyDir + ", operationName=" + operationName
+												+ ", callerContext=null");
+									}
+									authzStatus = checkDefaultEnforcer(fsOwner, superGroup, ugi, dirINodeAttrs, dirINodes,
+											dirComponents, snapshotId, data.resourcePath, dirAncestorIndex, doCheckOwner,
+											null, null, null, null, ignoreEmptyDir,
+											dirAncestor, dirParent, dirINode, context);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Default authorizer call returned : [" + authzStatus + "]");
+									}
+								}
+								if (authzStatus != AuthzStatus.ALLOW) {
 									break;
 								}
 
@@ -455,9 +529,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 									for(INode child : cList) {
 										if (child.isDirectory()) {
 											if (data.resourcePath.endsWith(Path.SEPARATOR)) {
-												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + child.getLocalName()));
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + child.getLocalName(), dirINodes, dirINodeAttrs));
 											} else {
-												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + Path.SEPARATOR_CHAR + child.getLocalName(), dirINodes, dirINodeAttrs));
 											}
 										}
 									}
@@ -829,6 +903,7 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	private final String      randomizedWildcardPathName;
 	private final String      hadoopModuleName;
 	private final Set<String> excludeUsers = new HashSet<>();
+	private final boolean     useLegacySubAccessAuthorization;
 
 	public RangerHdfsPlugin(Path addlConfigFile) {
 		super("hdfs", "hdfs");
@@ -851,6 +926,9 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 		this.hadoopModuleName             = config.get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME);
 
 		String excludeUserList = config.get(RangerHadoopConstants.AUDITLOG_HDFS_EXCLUDE_LIST_PROP, RangerHadoopConstants.AUDITLOG_EMPTY_STRING);
+
+		this.useLegacySubAccessAuthorization = config.getBoolean(RangerHadoopConstants.RANGER_USE_LEGACY_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_USE_LEGACY_SUBACCESS_AUTHORIZATION_DEFAULT);
+
 
 		if (excludeUserList != null && excludeUserList.trim().length() > 0) {
 			for(String excludeUser : excludeUserList.trim().split(",")) {
@@ -900,6 +978,9 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	}
 	public String getHadoopModuleName() { return hadoopModuleName; }
 	public Set<String> getExcludedUsers() { return  excludeUsers; }
+	public boolean isUseLegacySubAccessAuthorization() {
+		return useLegacySubAccessAuthorization;
+	}
 }
 
 class RangerHdfsResource extends RangerAccessResourceImpl {
