@@ -30,19 +30,14 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
 3. Set ```dev-support/ranger-docker``` as your working directory.
 
-4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox services:
-   ~~~
-   chmod +x download-archives.sh && ./download-archives.sh
-   ~~~
-
-5. Execute following commands to set environment variables to build Apache Ranger docker containers:
+4. Execute following commands to set environment variables to build Apache Ranger docker containers:
    ~~~
    export DOCKER_BUILDKIT=1
    export COMPOSE_DOCKER_CLI_BUILD=1
    export RANGER_DB_TYPE=postgres
    ~~~
 
-6. Build Apache Ranger in containers using docker-compose
+5. Build Apache Ranger in containers using docker-compose
 
    1. Execute following command to build Apache Ranger:
       ~~~
@@ -64,16 +59,16 @@ Docker files in this folder create docker images and run them to build Apache Ra
          ~~~
          docker-compose -f docker-compose.ranger-base.yml build --no-cache
          ~~~
-7. To enable file based sync source for usersync execute: ```export ENABLE_FILE_SYNC_SOURCE=true```
+6. To enable file based sync source for usersync execute: ```export ENABLE_FILE_SYNC_SOURCE=true```
 
-8. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
+7. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
    ~~~
    docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d
    ~~~
 
 	- valid values for RANGER_DB_TYPE: mysql or postgres
 
-9. To rebuild specific images and start containers with the new image, use following command:
+8. To rebuild specific images and start containers with the new image, use following command:
    ~~~
    docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
    ~~~
