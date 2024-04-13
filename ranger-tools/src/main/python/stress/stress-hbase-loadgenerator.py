@@ -13,9 +13,9 @@ def increase_memory_for_loadgenerator():
     except subprocess.CalledProcessError as e:
         print("Error in setting HBASE_HEAPSIZE:", e)
         exit(1)
-def login():
+def login(keytab_path, user_name):
     try:
-        cmd = "kinit -kt <systest.keytab> systest"
+        cmd = f"kinit -kt {keytab_path} {user_name}"
         print(cmd)
         login_op = subprocess.call(cmd, shell=True)
         print("Login output:", login_op)
@@ -44,14 +44,14 @@ def create_pe_command_multiget(multiget_batchsize=500, num_threads=10, num_keys=
 
 
 
-def generate_hbase_load(op_type, multiget_batchsize, num_cf, num_rows_list, num_cols_per_cf, num_threads_list, metadata, csv_outfile="/root/ltt_output.csv", ):
+def generate_hbase_load(op_type, multiget_batchsize, num_cf, num_keys_list, num_cols_per_cf, num_threads_list, metadata, csv_outfile="/root/ltt_output.csv", ):
     #if  output file does not exist only then write the header
     if(not os.path.exists(csv_outfile)):
         with open(csv_outfile, "w") as f:
             f.write("op,num_cf,num_keys,num_cols_per_cf,num_threads,time_taken,command,metadata,date_start,time_start,date_end,time_end\n")
     assert type(num_threads_list) == list
-    assert type(num_rows_list) == list
-    for num_keys in num_rows_list:
+    assert type(num_keys_list) == list
+    for num_keys in num_keys_list:
         for num_threads in num_threads_list:
             if op_type == "multiput":
                 cmd = create_ltt_command_multiput(num_cols_per_cf=num_cols_per_cf,
@@ -94,13 +94,27 @@ if __name__ == '__main__':
     argparser.add_argument('-csv_output', '--csv_output', help='Full path to the csv output file', default="/root/ltt_output.csv", required=False)
     argparser.add_argument('-metadata', '--metadata', help='Metadata to be added to the output file', default="no_cmd_line_metadata", required=False)
     argparser.add_argument('-op_type', '--op_type', help='Type of operation to perform (multiget/multiput)', default="multiput", required=False)
+    argparser.add_argument('-num_cf', '--num_cf', help='Number of column families (multiget/multiput)',
+                           default=3, required=False)
+    argparser.add_argument('-num_keys_list', '--num_keys_list', help='List of number of keys (multiget/multiput)',
+                           nargs='*', default=[10,100,1000], required=False)
+    argparser.add_argument('-multiget_batchsize', '--multiget_batchsize', help='Batch size(multiget)',
+                           default=10, required=False)
+    argparser.add_argument('-num_cols_per_cf', '--num_cols_per_cf', help='Number of columns per column family (multiput)',
+                           default=10000, required=False)
+    argparser.add_argument('-num_threads_list', '--num_threads_list', help='List of number of threads (multiget/multiput)',
+                           nargs='*', default=[5], required=False)
+    argparser.add_argument('-keytab_path', '--keytab_path', help='Path to keytab file', default="<user>.keytab", required=False)
+    argparser.add_argument('-user_name', '--user_name', help='User name', default="<user>", required=False)
+
     args = argparser.parse_args()
     increase_memory_for_loadgenerator()
-    login()
-    num_cf = 3
-    num_rows_list = [10,100,1000]
-    multiget_batchsize = 10
-    num_cols_per_cf = 10000
-    num_threads_list = [5]
-    generate_hbase_load(args.op_type, multiget_batchsize, num_cf, num_rows_list, num_cols_per_cf, num_threads_list, args.metadata, args.csv_output)
+    login(args.keytab_path,args.user_name)
+    num_cf = args.num_cf
+    num_keys_list = args.num_keys_list
+    multiget_batchsize = args.multiget_batchsize
+    num_cols_per_cf = args.num_cols_per_cf
+    num_threads_list = args.num_threads_list
+    generate_hbase_load(args.op_type, multiget_batchsize, num_cf, num_keys_list, num_cols_per_cf, num_threads_list, args.metadata, args.csv_output)
     print("Done")
+    print(f"Written results to {args.csv_output}")
