@@ -8,7 +8,7 @@ def increase_memory_for_loadgenerator():
     try:
         cmd = "export HBASE_OPTS='-Xmx10g'"
         print(cmd)
-        op = subprocess.call(cmd, shell=True)
+        op = subprocess.run(cmd, shell=True)
         print("Output:", op)
     except subprocess.CalledProcessError as e:
         print("Error in setting HBASE_HEAPSIZE:", e)
@@ -17,7 +17,7 @@ def login(keytab_path, user_name):
     try:
         cmd = f"kinit -kt {keytab_path} {user_name}"
         print(cmd)
-        login_op = subprocess.call(cmd, shell=True)
+        login_op = subprocess.run(cmd, shell=True)
         print("Login output:", login_op)
     except subprocess.CalledProcessError as e:
         print("Error in login:", e)
@@ -71,7 +71,12 @@ def generate_hbase_load(op_type, multiget_batchsize, num_cf, num_keys_list, num_
             date_start_str = datetime_start.date()
             time_start_str = str(datetime_start.time()).split(".")[0]
             time_start = time.time()
-            ltt_out = subprocess.call(cmd, shell=True)
+            try:
+                ltt_output = subprocess.run(cmd, shell=True)
+                ltt_out = ltt_output.returncode
+            except subprocess.CalledProcessError as e:
+                ltt_out = 1
+                print(f"Error in running command {cmd}, Error: {e}")
             time_end = time.time()
             datetime_end = datetime.now()
             date_end_str = datetime_end.date()
