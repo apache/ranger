@@ -204,6 +204,12 @@ const DatashareDetailLayout = () => {
       label: "User",
       urlLabel: "owner",
       type: "text"
+    },
+    {
+      category: "startDate",
+      label: "Start Date",
+      urlLabel: "startDate",
+      type: "date"
     }
   ];
 
@@ -764,16 +770,11 @@ const DatashareDetailLayout = () => {
   };
 
   const fetchHistoryList = useCallback(
-    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
+    async ({ pageSize, pageIndex, sortBy }) => {
       setHistoryLoader(true);
       let resp = [];
       let historyList = [];
       let totalCount = 0;
-      let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
-          : pageIndex;
-      let totalPageCount = 0;
       const fetchId = ++fetchIdRef.current;
       let params = { ...searchHistoryFilterParams };
       if (fetchId === fetchIdRef.current) {
@@ -805,7 +806,6 @@ const DatashareDetailLayout = () => {
         setHistoryListData(historyList);
         setHistoryEntries(resp.data);
         setPageCount(Math.ceil(totalCount / pageSize));
-        //setResetpage({ page: gotoPage });
         setHistoryLoader(false);
       }
     },
@@ -1480,6 +1480,7 @@ const DatashareDetailLayout = () => {
                                 placeholder="Search resources..."
                                 options={resourceSearchFilterOptions}
                                 onChange={updateResourceSearchFilter}
+                                defaultSelected={[]}
                               />
                               {(isSystemAdmin() || userAclPerm == "ADMIN") && (
                                 <>

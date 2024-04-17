@@ -319,6 +319,12 @@ const DatasetDetailLayout = () => {
       label: "User",
       urlLabel: "owner",
       type: "text"
+    },
+    {
+      category: "startDate",
+      label: "Start Date",
+      urlLabel: "startDate",
+      type: "date"
     }
   ];
 
@@ -331,16 +337,11 @@ const DatasetDetailLayout = () => {
   };
 
   const fetchHistoryList = useCallback(
-    async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
+    async ({ pageSize, pageIndex, sortBy }) => {
       setHistoryLoader(true);
       let resp = [];
       let historyList = [];
       let totalCount = 0;
-      let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
-          : pageIndex;
-      let totalPageCount = 0;
       const fetchId = ++fetchIdRef.current;
       let params = { ...searchHistoryFilterParams };
       if (fetchId === fetchIdRef.current) {
@@ -371,7 +372,6 @@ const DatasetDetailLayout = () => {
         setHistoryListData(historyList);
         setEntries(resp.data);
         setPageCount(Math.ceil(totalCount / pageSize));
-        //setResetpage({ page: gotoPage });
         setHistoryLoader(false);
       }
     },
@@ -2061,6 +2061,7 @@ const DatasetDetailLayout = () => {
                               placeholder="Search..."
                               onChange={updateHistorySearchFilter}
                               options={historySearchFilterOptions}
+                              defaultSelected={[]}
                             />
                           </div>
                           <div className="gds-header-btn-grp"></div>
