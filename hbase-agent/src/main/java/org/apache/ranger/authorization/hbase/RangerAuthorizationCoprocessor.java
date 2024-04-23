@@ -323,12 +323,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		String access = _authUtils.getAccess(action);
 		User user = getActiveUser(ctx);
 		String userName = _userUtils.getUserAsString(user);
-		Map<String, Set<String>> colFamiliesForDebugLoggingOnly = new HashMap<>();
+		final Map<String, Set<String>> colFamiliesForDebugLoggingOnly;
 
 		if (LOG.isDebugEnabled()) {
 			colFamiliesForDebugLoggingOnly = getColumnFamilies(familyMap);
 			LOG.debug(String.format("evaluateAccess: entered: user[%s], Operation[%s], access[%s], families[%s]",
-					userName, operation, access, colFamiliesForDebugLoggingOnly.toString()));
+					userName, operation, access, colFamiliesForDebugLoggingOnly));
+		}
+		else{
+			colFamiliesForDebugLoggingOnly = Collections.emptyMap();
 		}
 
 		byte[] tableBytes = getTableName(env);
@@ -345,7 +348,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
 			result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null);
 			if (LOG.isDebugEnabled()) {
-				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
+				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
 				LOG.debug(message);
 			}
 			return result;
@@ -362,7 +365,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				.access(access)
 				.table(table);
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("evaluateAccess: families to process: " + colFamiliesForDebugLoggingOnly.toString());
+			LOG.debug("evaluateAccess: families to process: " + colFamiliesForDebugLoggingOnly);
 		}
 		if (familyMap == null || familyMap.isEmpty()) {
 			LOG.debug("evaluateAccess: Null or empty families collection, ok.  Table level access is desired");
@@ -383,7 +386,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 						authorized ? Collections.singletonList(event) : null,
 						null, authorized ? null : event, reason, null);
 			if (LOG.isDebugEnabled()) {
-				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
+				String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
 				LOG.debug(message);
 			}
 			return result;
@@ -531,7 +534,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familesAccessAllowed, familesAccessDenied, familesAccessIndeterminate, columnsAccessAllowed);
 		result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter);
 		if (LOG.isDebugEnabled()) {
-			String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly.toString(), result.toString());
+			String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
 			LOG.debug(message);
 		}
 		return result;
