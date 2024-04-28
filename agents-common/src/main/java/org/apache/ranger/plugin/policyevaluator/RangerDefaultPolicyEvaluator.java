@@ -53,6 +53,7 @@ import org.apache.ranger.plugin.policyengine.RangerTagAccessRequest;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -687,88 +688,114 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		ret.setGuid(policy.getGuid());
 		ret.setVersion(policy.getVersion());
 
-		List<RangerPolicyItem> policyItems = new ArrayList<>();
-		List<RangerPolicyItem> denyPolicyItems = new ArrayList<>();
-		List<RangerPolicyItem> allowExceptions = new ArrayList<>();
-		List<RangerPolicyItem> denyExceptions = new ArrayList<>();
-		List<RangerDataMaskPolicyItem> dataMaskPolicyItems = new ArrayList<>();
-		List<RangerRowFilterPolicyItem> rowFilterPolicyItems = new ArrayList<>();
+		if (CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
+			List<RangerPolicyItem> policyItems = new ArrayList<>();
 
-		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
-			RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+			for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+				RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
 
-			policyItems.add(newPolicyItem);
+				policyItems.add(newPolicyItem);
+			}
+
+			ret.setPolicyItems(policyItems);
 		}
-		ret.setPolicyItems(policyItems);
 
-		for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
-			RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+		if (CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
+			List<RangerPolicyItem> denyPolicyItems = new ArrayList<>();
 
-			denyPolicyItems.add(newPolicyItem);
+			for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
+				RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+
+				denyPolicyItems.add(newPolicyItem);
+			}
+
+			ret.setDenyPolicyItems(denyPolicyItems);
 		}
-		ret.setDenyPolicyItems(denyPolicyItems);
 
-		for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
-			RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+		if (CollectionUtils.isNotEmpty(policy.getAllowExceptions())) {
+			List<RangerPolicyItem> allowExceptions = new ArrayList<>();
 
-			allowExceptions.add(newPolicyItem);
+			for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
+				RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+
+				allowExceptions.add(newPolicyItem);
+			}
+
+			ret.setAllowExceptions(allowExceptions);
 		}
-		ret.setAllowExceptions(allowExceptions);
 
-		for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
-			RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+		if (CollectionUtils.isNotEmpty(policy.getDenyExceptions())) {
+			List<RangerPolicyItem> denyExceptions = new ArrayList<>();
 
-			denyExceptions.add(newPolicyItem);
+			for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
+				RangerPolicyItem newPolicyItem = new RangerPolicyItem(policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+
+				denyExceptions.add(newPolicyItem);
+			}
+
+			ret.setDenyExceptions(denyExceptions);
 		}
-		ret.setDenyExceptions(denyExceptions);
 
-		for (RangerDataMaskPolicyItem policyItem : policy.getDataMaskPolicyItems()) {
-			RangerDataMaskPolicyItem newPolicyItem = new RangerDataMaskPolicyItem(policyItem.getAccesses(), policyItem.getDataMaskInfo(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+		if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems())) {
+			List<RangerDataMaskPolicyItem> dataMaskPolicyItems = new ArrayList<>();
 
-			dataMaskPolicyItems.add(newPolicyItem);
+			for (RangerDataMaskPolicyItem policyItem : policy.getDataMaskPolicyItems()) {
+				RangerDataMaskPolicyItem newPolicyItem = new RangerDataMaskPolicyItem(policyItem.getAccesses(), policyItem.getDataMaskInfo(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+
+				dataMaskPolicyItems.add(newPolicyItem);
+			}
+
+			ret.setDataMaskPolicyItems(dataMaskPolicyItems);
 		}
-		ret.setDataMaskPolicyItems(dataMaskPolicyItems);
 
-		for (RangerRowFilterPolicyItem policyItem : policy.getRowFilterPolicyItems()) {
-			RangerRowFilterPolicyItem newPolicyItem = new RangerRowFilterPolicyItem(policyItem.getRowFilterInfo(), policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
-			getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+		if (CollectionUtils.isNotEmpty(policy.getRowFilterPolicyItems())) {
+			List<RangerRowFilterPolicyItem> rowFilterPolicyItems = new ArrayList<>();
 
-			rowFilterPolicyItems.add(newPolicyItem);
+			for (RangerRowFilterPolicyItem policyItem : policy.getRowFilterPolicyItems()) {
+				RangerRowFilterPolicyItem newPolicyItem = new RangerRowFilterPolicyItem(policyItem.getRowFilterInfo(), policyItem.getAccesses(), policyItem.getUsers(), policyItem.getGroups(), policyItem.getRoles(), policyItem.getConditions(), policyItem.getDelegateAdmin());
+				getPolicyItemWithRolesResolved(newPolicyItem, policyItem);
+
+				rowFilterPolicyItems.add(newPolicyItem);
+			}
+
+			ret.setRowFilterPolicyItems(rowFilterPolicyItems);
 		}
-		ret.setRowFilterPolicyItems(rowFilterPolicyItems);
 
 		return ret;
 	}
 
 	private void getPolicyItemWithRolesResolved(RangerPolicyItem newPolicyItem, final RangerPolicyItem policyItem) {
-		Set<String> usersFromRoles = new HashSet<>();
-		Set<String> groupsFromRoles = new HashSet<>();
+		RangerRolesUtil rolesUtil       = getPluginContext().getAuthContext().getRangerRolesUtil();;
+		Set<String>     usersFromRoles  = new HashSet<>();
+		Set<String>     groupsFromRoles = new HashSet<>();
 
-		List<String> roles = policyItem.getRoles();
+		for (String role : policyItem.getRoles()) {
+			Set<String> users  = rolesUtil.getRoleToUserMapping().get(role);
+			Set<String> groups = rolesUtil.getRoleToGroupMapping().get(role);
 
-		for (String role : roles) {
-			Set<String> users = getPluginContext().getAuthContext().getRangerRolesUtil().getRoleToUserMapping().get(role);
-			Set<String> groups = getPluginContext().getAuthContext().getRangerRolesUtil().getRoleToGroupMapping().get(role);
 			if (CollectionUtils.isNotEmpty(users)) {
 				usersFromRoles.addAll(users);
 			}
+
 			if (CollectionUtils.isNotEmpty(groups)) {
 				groupsFromRoles.addAll(groups);
 			}
-			if (CollectionUtils.isNotEmpty(usersFromRoles) || CollectionUtils.isNotEmpty(groupsFromRoles)) {
-				usersFromRoles.addAll(policyItem.getUsers());
-				groupsFromRoles.addAll(policyItem.getGroups());
-
-				newPolicyItem.setUsers(new ArrayList<>(usersFromRoles));
-				newPolicyItem.setGroups(new ArrayList<>(groupsFromRoles));
-				newPolicyItem.setRoles(null);
-			}
 		}
+
+		if (CollectionUtils.isNotEmpty(usersFromRoles) || CollectionUtils.isNotEmpty(groupsFromRoles)) {
+			usersFromRoles.addAll(policyItem.getUsers());
+			groupsFromRoles.addAll(policyItem.getGroups());
+
+			newPolicyItem.setUsers(new ArrayList<>(usersFromRoles));
+			newPolicyItem.setGroups(new ArrayList<>(groupsFromRoles));
+		}
+
+		newPolicyItem.setRoles(null);
 	}
 
 	private boolean hasPublicGroupAndUserInException(List<RangerPolicyItem> grants, List<RangerPolicyItem> exceptionItems) {
@@ -1240,7 +1267,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					if(impliedAccess == null) {
 						impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
 
-						policyItem.getAccesses().add(impliedAccess);
+						policyItem.addAccess(impliedAccess);
 					} else {
 						if(! impliedAccess.getIsAllowed()) {
 							impliedAccess.setIsAllowed(access.getIsAllowed());

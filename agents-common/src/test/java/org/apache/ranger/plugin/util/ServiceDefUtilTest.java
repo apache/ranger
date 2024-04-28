@@ -97,7 +97,7 @@ public class ServiceDefUtilTest {
 		svcPolicies.getPolicies().add(policy);
 		assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
 
-		policy.getResources().put("database", new RangerPolicyResource("/departments/USER.dept/")); // expressions must be within ${{}}
+		policy.setResource("database", new RangerPolicyResource("/departments/USER.dept/")); // expressions must be within ${{}}
 		assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
 
 		policy.getRowFilterPolicyItems().get(0).getRowFilterInfo().setFilterExpr("dept in USER.dept"); // expressions must be within ${{}}
@@ -111,7 +111,7 @@ public class ServiceDefUtilTest {
 			ServicePolicies svcPolicies = getServicePolicies();
 			RangerPolicy    policy      = getPolicy(svcPolicies);
 
-			policy.getResources().put("database", new RangerPolicyResource(resource));
+			policy.setResource("database", new RangerPolicyResource(resource));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policy resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -141,7 +141,7 @@ public class ServiceDefUtilTest {
 			ServicePolicies svcPolicies = getServicePolicies();
 			RangerPolicy    policy      = getPolicy(svcPolicies);
 
-			policy.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
+			policy.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policy condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -212,7 +212,7 @@ public class ServiceDefUtilTest {
 				break;
 			}
 
-			policyItems.get(0).getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
+			policyItems.get(0).addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policyItem condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -471,14 +471,14 @@ public class ServiceDefUtilTest {
 
 		ret.setService(svcPolicies.getServiceName());
 		ret.setServiceType(svcPolicies.getServiceDef().getName());
-		ret.getResources().put("database", new RangerPolicyResource("testdb"));
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
-		ret.getPolicyItems().add(getPolicyItem());
-		ret.getAllowExceptions().add(getPolicyItem());
-		ret.getDenyPolicyItems().add(getPolicyItem());
-		ret.getDenyExceptions().add(getPolicyItem());
-		ret.getDataMaskPolicyItems().add(getDataMaskPolicyItem());
-		ret.getRowFilterPolicyItems().add(getRowFilterPolicyItem());
+		ret.setResource("database", new RangerPolicyResource("testdb"));
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addPolicyItem(getPolicyItem());
+		ret.addAllowException(getPolicyItem());
+		ret.addDenyPolicyItem(getPolicyItem());
+		ret.addDenyException(getPolicyItem());
+		ret.addDataMaskPolicyItem(getDataMaskPolicyItem());
+		ret.addRowFilterPolicyItem(getRowFilterPolicyItem());
 
 		return ret;
 	}
@@ -486,10 +486,10 @@ public class ServiceDefUtilTest {
 	private RangerPolicyItem getPolicyItem() {
 		RangerPolicyItem ret = new RangerPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 
 		return ret;
 	}
@@ -497,10 +497,10 @@ public class ServiceDefUtilTest {
 	private RangerDataMaskPolicyItem getDataMaskPolicyItem() {
 		RangerDataMaskPolicyItem ret = new RangerDataMaskPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 		ret.setDataMaskInfo(new RangerPolicyItemDataMaskInfo("MASK_NULL", null, null));
 
 		return ret;
@@ -509,10 +509,10 @@ public class ServiceDefUtilTest {
 	private RangerRowFilterPolicyItem getRowFilterPolicyItem() {
 		RangerRowFilterPolicyItem ret = new RangerRowFilterPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 		ret.setRowFilterInfo(new RangerPolicyItemRowFilterInfo("dept in ('dept1','dept2')"));
 
 		return ret;

@@ -1306,15 +1306,15 @@ public class ServiceREST {
 						RangerPolicyItem policyItem = new RangerPolicyItem();
 	
 						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-						policyItem.getUsers().addAll(grantRequest.getUsers());
-						policyItem.getGroups().addAll(grantRequest.getGroups());
-						policyItem.getRoles().addAll(grantRequest.getRoles());
+						policyItem.addUsers(grantRequest.getUsers());
+						policyItem.addGroups(grantRequest.getGroups());
+						policyItem.addRoles(grantRequest.getRoles());
 	
 						for(String accessType : grantRequest.getAccessTypes()) {
-							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+							policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 						}
 	
-						policy.getPolicyItems().add(policyItem);
+						policy.addPolicyItem(policyItem);
 						policy.setZoneName(zoneName);
 
 						svcStore.createPolicy(policy);
@@ -1420,15 +1420,15 @@ public class ServiceREST {
 							RangerPolicyItem policyItem = new RangerPolicyItem();
 
 							policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-							policyItem.getUsers().addAll(grantRequest.getUsers());
-							policyItem.getGroups().addAll(grantRequest.getGroups());
-							policyItem.getRoles().addAll(grantRequest.getRoles());
+							policyItem.addUsers(grantRequest.getUsers());
+							policyItem.addGroups(grantRequest.getGroups());
+							policyItem.addRoles(grantRequest.getRoles());
 
 							for(String accessType : grantRequest.getAccessTypes()) {
-								policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+								policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 							}
 
-							policy.getPolicyItems().add(policyItem);
+							policy.addPolicyItem(policyItem);
 							policy.setZoneName(zoneName);
 
 							svcStore.createPolicy(policy);

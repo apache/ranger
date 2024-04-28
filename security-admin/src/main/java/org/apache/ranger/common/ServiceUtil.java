@@ -245,15 +245,15 @@ public class ServiceUtil {
 		Boolean isTableExcludes  = resource.getTableType() == RangerCommonEnums.POLICY_EXCLUSION;
 		Boolean isColumnExcludes = resource.getColumnType() == RangerCommonEnums.POLICY_EXCLUSION;
 
-		toRangerResourceList(resource.getName(), "path", Boolean.FALSE, isPathRecursive, ret.getResources());
-		toRangerResourceList(resource.getTables(), "table", isTableExcludes, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getColumnFamilies(), "column-family", Boolean.FALSE, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getColumns(), "column", isColumnExcludes, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getDatabases(), "database", Boolean.FALSE, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getUdfs(), "udf", Boolean.FALSE, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, Boolean.FALSE, ret.getResources());
-		toRangerResourceList(resource.getHiveServices(), "hiveservice", Boolean.FALSE, Boolean.FALSE, ret.getResources());
+		toRangerResourceList(resource.getName(), "path", Boolean.FALSE, isPathRecursive, ret);
+		toRangerResourceList(resource.getTables(), "table", isTableExcludes, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getColumnFamilies(), "column-family", Boolean.FALSE, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getColumns(), "column", isColumnExcludes, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getDatabases(), "database", Boolean.FALSE, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getUdfs(), "udf", Boolean.FALSE, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, Boolean.FALSE, ret);
+		toRangerResourceList(resource.getHiveServices(), "hiveservice", Boolean.FALSE, Boolean.FALSE, ret);
 
 		HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<String, List<VXPermMap>>();
 		
@@ -318,10 +318,10 @@ public class ServiceUtil {
 			if(ipAddress != null && !ipAddress.isEmpty()) {
 				RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
 
-				policyItem.getConditions().add(ipCondition);
+				policyItem.addCondition(ipCondition);
 			}
 			
-			ret.getPolicyItems().add(policyItem);
+			ret.addPolicyItem(policyItem);
 		}
 
 		return ret;
@@ -421,24 +421,22 @@ public class ServiceUtil {
 		return ret;
 	}
 
-	private Map<String, RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, Map<String, RangerPolicy.RangerPolicyResource> resources) {
-		Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resources;
-
+	private void toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, RangerPolicy policy) {
 		if(StringUtils.isNotBlank(resourceString)) {
-			RangerPolicy.RangerPolicyResource resource = ret.get(resourceType);
+			RangerPolicy.RangerPolicyResource resource = policy.getResources().get(resourceType);
 
 			if(resource == null) {
 				resource = new RangerPolicy.RangerPolicyResource();
 				resource.setIsExcludes(isExcludes);
 				resource.setIsRecursive(isRecursive);
 
-				ret.put(resourceType, resource);
+				policy.setResource(resourceType, resource);
 			}
 
-			Collections.addAll(resource.getValues(), resourceString.split(","));
+			for (String val : resourceString.split(",")) {
+				resource.addValue(val);
+			}
 		}
-
-		return ret;
 	}
 
 	private static String toServiceType(int assetType) {
@@ -1040,39 +1038,39 @@ public class ServiceUtil {
 		}
 		
 		if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getResourceName() != null ) {
-			toRangerResourceList(vXPolicy.getResourceName(), "path", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getResourceName(), "path", Boolean.FALSE, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getTables() != null) {
-			toRangerResourceList(vXPolicy.getTables(), "table", isTableExcludes, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getTables(), "table", isTableExcludes, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getColumnFamilies() != null) {
-			toRangerResourceList(vXPolicy.getColumnFamilies(), "column-family", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getColumnFamilies(), "column-family", Boolean.FALSE, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getColumns() != null) {
-			toRangerResourceList(vXPolicy.getColumns(), "column", isColumnExcludes, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getColumns(), "column", isColumnExcludes, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getDatabases() != null) {
-			toRangerResourceList(vXPolicy.getDatabases(), "database", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getDatabases(), "database", Boolean.FALSE, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getUdfs() != null) {
-			toRangerResourceList(vXPolicy.getUdfs(), "udf", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getUdfs(), "udf", Boolean.FALSE, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getTopologies() != null) {
-			toRangerResourceList(vXPolicy.getTopologies(), "topology", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getTopologies(), "topology", Boolean.FALSE, isRecursive, ret);
 		}
 		
 		if (vXPolicy.getServices() != null) {
-			toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret);
 		}
 
 		if (vXPolicy.getHiveServices() != null) {
-			toRangerResourceList(vXPolicy.getHiveServices(), "hiveservice", Boolean.FALSE, isRecursive, ret.getResources());
+			toRangerResourceList(vXPolicy.getHiveServices(), "hiveservice", Boolean.FALSE, isRecursive, ret);
 		}
 
 		if ( vXPolicy.getPermMapList() != null) {
@@ -1134,10 +1132,10 @@ public class ServiceUtil {
 				if(ipAddress != null && !ipAddress.isEmpty()) {
 					RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
 	
-					policyItem.getConditions().add(ipCondition);
+					policyItem.addCondition(ipCondition);
 				}
 				
-				ret.getPolicyItems().add(policyItem);
+				ret.addPolicyItem(policyItem);
 			}
 		}
 

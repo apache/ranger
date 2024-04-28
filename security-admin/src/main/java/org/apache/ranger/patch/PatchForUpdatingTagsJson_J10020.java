@@ -551,7 +551,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                             XXServiceResourceElementValue xServiceResourceElementValue = iterServiceResourceElementValue.next();
 
                             if (xServiceResourceElementValue.getResElementId().equals(xServiceResourceElement.getId())) {
-                                resource.getValues().add(xServiceResourceElementValue.getValue());
+                                resource.addValue(xServiceResourceElementValue.getValue());
                             } else {
                                 if (iterServiceResourceElementValue.hasPrevious()) {
                                     iterServiceResourceElementValue.previous();

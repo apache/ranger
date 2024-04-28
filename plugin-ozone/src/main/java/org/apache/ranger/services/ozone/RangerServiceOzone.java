@@ -122,7 +122,7 @@ public class RangerServiceOzone extends RangerBaseService {
                 		policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
                 		policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
                 		policyItemOwner.setDelegateAdmin(true);
-                		defaultPolicy.getPolicyItems().add(policyItemOwner);
+                		defaultPolicy.addPolicyItem(policyItemOwner);
 
                 		if (StringUtils.isNotBlank(lookUpUser)) {
 					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
@@ -138,7 +138,7 @@ public class RangerServiceOzone extends RangerBaseService {
 					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 					policyItemForLookupUser.setAccesses(accessListForLookupUser);
 					policyItemForLookupUser.setDelegateAdmin(false);
-					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+					defaultPolicy.addPolicyItem(policyItemForLookupUser);
 				}
 			}
 		}	

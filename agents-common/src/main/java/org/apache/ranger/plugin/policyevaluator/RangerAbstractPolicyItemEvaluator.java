@@ -140,7 +140,7 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 							if (impliedAccess == null) {
 								impliedAccess = new RangerPolicy.RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
 
-								ret.getAccesses().add(impliedAccess);
+								ret.addAccess(impliedAccess);
 							} else {
 								if (!impliedAccess.getIsAllowed()) {
 									impliedAccess.setIsAllowed(access.getIsAllowed());

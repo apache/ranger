@@ -119,7 +119,7 @@ public class RangerServiceKafka extends RangerBaseService {
 			for (RangerPolicy defaultPolicy : ret) {
 				if(defaultPolicy.getName().contains("all")){
 					for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-						defaultPolicyItem.getGroups().add(GROUP_PUBLIC);
+						defaultPolicyItem.addGroup(GROUP_PUBLIC);
 					}
 				}
 			}
@@ -131,7 +131,7 @@ public class RangerServiceKafka extends RangerBaseService {
 				policyItemForLookupUser.setAccesses(Collections.singletonList(
 						new RangerPolicyItemAccess(ACCESS_TYPE_DESCRIBE)));
 				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				defaultPolicy.addPolicyItem(policyItemForLookupUser);
 			}
 		}
 

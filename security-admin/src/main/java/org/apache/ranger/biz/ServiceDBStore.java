@@ -72,6 +72,7 @@ import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXTrxLogDao;
 import org.apache.ranger.entity.XXTagChangeLog;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -266,6 +267,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
 	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
 
+
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -396,6 +398,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		config = RangerAdminConfig.getInstance();
+
+		String nullSafeSupplier = config.get("ranger.admin.null_safe.supplier", RangerBaseModelObject.NULL_SAFE_SUPPLIER_V2);
+
+		LOG.info("ranger.admin.null_safe.supplier=" + nullSafeSupplier);
+
+		RangerBaseModelObject.setNullSafeSupplier(nullSafeSupplier);
 
 		if(! legacyServiceDefsInitDone) {
 			synchronized(ServiceDBStore.class) {
@@ -3489,7 +3497,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							policyItem.setAccesses(defaultAllowPolicyItem.getAccesses());
 							policyItem.setDelegateAdmin(true);
 
-							defaultPolicy.getPolicyItems().add(policyItem);
+							defaultPolicy.addPolicyItem(policyItem);
 						}
 					}
 

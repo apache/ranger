@@ -279,11 +279,11 @@ public abstract class RangerBaseService {
 				for (String accessType : Arrays.asList(policyItemAccessTypes.split(","))) {
 					RangerPolicyItemAccess polAccess = new RangerPolicyItemAccess(accessType, true);
 
-					policyItem.getAccesses().add(polAccess);
+					policyItem.addAccess(polAccess);
 				}
 			}
 
-			policy.getPolicyItems().add(policyItem);
+			policy.addPolicyItem(policyItem);
 		}
 
 		LOG.info(getServiceName() + ": adding default policy: name=" +  policy.getName());
@@ -332,8 +332,7 @@ public abstract class RangerBaseService {
 
 		policyItem.setUsers(getUserList());
 		policyItem.setGroups(getGroupList());
-		List<RangerPolicy.RangerPolicyItemAccess> accesses = getAllowedAccesses(policyResources);
-		policyItem.setAccesses(accesses);
+		policyItem.setAccesses(getAllowedAccesses(policyResources));
 
 		policyItem.setDelegateAdmin(true);
 
