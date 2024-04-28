@@ -84,7 +84,7 @@ public class RangerServiceKnox extends RangerBaseService {
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALLOW)));
 				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				defaultPolicy.addPolicyItem(policyItemForLookupUser);
 			}
 		}
 

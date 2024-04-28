@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
@@ -91,7 +92,12 @@ public class RangerBasePlugin {
 
 		boolean usePerfDataRecorder  = pluginConfig.getBoolean("ranger.perf.aggregate.data", false);
 		int     perfDataDumpInterval = pluginConfig.getInt("ranger.perf.aggregate.data.dump.interval", 0);
-		boolean usePerfDataLock  = pluginConfig.getBoolean("ranger.perf.aggregate.data.lock.enabled", false);
+		boolean usePerfDataLock      = pluginConfig.getBoolean("ranger.perf.aggregate.data.lock.enabled", false);
+		String  nullSafeSupplier     = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".null_safe.supplier", RangerBaseModelObject.NULL_SAFE_SUPPLIER_V2);
+
+		LOG.info(pluginConfig.getPropertyPrefix() + ".null_safe.supplier=" + nullSafeSupplier);
+
+		RangerBaseModelObject.setNullSafeSupplier(nullSafeSupplier);
 
 		PerfDataRecorder.initialize(usePerfDataRecorder, perfDataDumpInterval, usePerfDataLock, null);
 

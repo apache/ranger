@@ -2602,10 +2602,10 @@ public class XUserMgr extends XUserMgrBase {
 		List<T> itemsToRemove = null;
 		for(T policyItem : policyItems) {
 			if(StringUtils.isNotEmpty(user)) {
-				policyItem.getUsers().remove(user);
+				policyItem.removeUser(user);
 			}
 			if(StringUtils.isNotEmpty(group)) {
-				policyItem.getGroups().remove(group);
+				policyItem.removeGroup(group);
 			}
 			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty() && policyItem.getRoles().isEmpty()) {
 				if(itemsToRemove == null) {

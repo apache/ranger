@@ -265,11 +265,9 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 				List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
 				if (CollectionUtils.isNotEmpty(policyItems)) {
 					for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-						List<RangerPolicy.RangerPolicyItemAccess> policyItemAccesses = policyItem.getAccesses();
 						// Add new access types
-						policyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
-						policyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
-						policyItem.setAccesses(policyItemAccesses);
+						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
+						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
 					}
 				}
 				Map<String, RangerPolicy.RangerPolicyResource> policyResources = policy.getResources();

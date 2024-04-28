@@ -134,7 +134,7 @@ public class RangerServiceHive extends RangerBaseService {
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(accessListForLookupUser);
 				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				defaultPolicy.addPolicyItem(policyItemForLookupUser);
 			}
 
 			if (policyResources.size() == 1 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE)) { // policy for all databases
@@ -149,8 +149,8 @@ public class RangerServiceHive extends RangerBaseService {
 				policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
 				policyItemOwner.setDelegateAdmin(true);
 
-				defaultPolicy.getPolicyItems().add(policyItemPublic);
-				defaultPolicy.getPolicyItems().add(policyItemOwner);
+				defaultPolicy.addPolicyItem(policyItemPublic);
+				defaultPolicy.addPolicyItem(policyItemOwner);
 			} else if ((policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE)) ||                  // policy for all tables
 					(policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_UDF))   ||                  // policy for all UDFs
 					(policyResources.size() == 3 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE, RESOURCE_COLUMN))) { // policy for all columns
@@ -160,7 +160,7 @@ public class RangerServiceHive extends RangerBaseService {
 				policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
 				policyItemOwner.setDelegateAdmin(true);
 
-				defaultPolicy.getPolicyItems().add(policyItemOwner);
+				defaultPolicy.addPolicyItem(policyItemOwner);
 			}
 		}
 

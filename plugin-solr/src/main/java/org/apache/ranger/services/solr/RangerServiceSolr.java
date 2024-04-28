@@ -64,7 +64,7 @@ public class RangerServiceSolr extends RangerBaseService {
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_QUERY)));
 				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				defaultPolicy.addPolicyItem(policyItemForLookupUser);
 			}
 		}
 
