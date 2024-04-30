@@ -48,6 +48,9 @@
       "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
       "policyItems":[
         {"accesses":[{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ],
+      "allowExceptions":[
+        {"accesses":[{"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
       ]
     }
   ,
@@ -56,10 +59,65 @@
       "policyItems":[
         {"accesses":[{"type":"read","isAllowed":true}],"users":["finance"],"groups":[],"delegateAdmin":false}
       ]
+    },
+    {"id":4,"name":"deny-all-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}, {"type":"write","isAllowed":true}, {"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":5,"name":"allow-read-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true, "policyPriority": 1,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":6,"name":"allow-execute-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true, "policyPriority": 1,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
 
   "tests":[
+    {"name":"ALLOW 'read_execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"guest","userGroups":[],"requestData":"read_execute /public/finance",
+        "context": {"ACCESSTYPES": [ "read",  "execute" ]}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":6}
+    },
+    {"name":"ALLOW 'read /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"guest","userGroups":[],"requestData":"read /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+    },
+    {"name":"ALLOW 'execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"execute","user":"guest","userGroups":[],"requestData":"execute /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":6}
+    },
+    {"name":"DENY 'write /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"write","user":"guest","userGroups":[],"requestData":"write /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
+    {"name":"DENY 'write_execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"write","user":"guest","userGroups":[],"requestData":"write_execute /public/finance",
+        "context": {"ACCESSTYPES": [ "write",  "execute" ]}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
     {"name":"ALLOW 'read_execute /public/finance' for user finance",
       "request":{
         "resource":{"elements":{"path":"/public/finance"}},

@@ -832,13 +832,22 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 								if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
 									if (matchType != RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
 										RangerAccessResult oneResult = new RangerAccessResult(result.getPolicyType(), result.getServiceName(), result.getServiceDef(), result.getAccessRequest());
-										oneResult.setIsAllowed(true);
 										oneResult.setPolicyPriority(getPolicyPriority());
 										oneResult.setPolicyId(getPolicyId());
 										oneResult.setPolicyVersion(getPolicy().getVersion());
+										if (!oneResult.getIsAuditedDetermined()) {
+											oneResult.setAuditResultFrom(result);
+										}
 
 										RangerAccessRequestUtil.setAccessTypeResult(request.getContext(), accessType, oneResult);
 									}
+								}
+								Map<String, RangerAccessResult> savedAccessResults = RangerAccessRequestUtil.getAccessTypeResults(request.getContext());
+								int allowedAccessesCount = savedAccessResults == null ? 0 : savedAccessResults.size();
+								if (allRequestedAccesses.size() == allowedAccessesCount) {
+									RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
+									result.setIsAllowed(true);
+									break;
 								}
 							}
 						}
@@ -909,6 +918,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 							break;
 						} else if (oneResult.getIsAllowed()) {
 							RangerAccessRequestUtil.setAccessTypeResult(request.getContext(), accessType, oneResult);
+
+							// Check if all access requests are satisfied, if so, access is allowed
+							if (allRequestedAccesses.size() == RangerAccessRequestUtil.getAccessTypeResults(request.getContext()).size()) {
+								allowResult = oneResult;
+								RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
+								break;
+							}
 						}
 					}
 				}
