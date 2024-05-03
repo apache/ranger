@@ -383,6 +383,13 @@ public class RangerBasePlugin {
 						if (policies.getPolicies() == null) {
 							policies.setPolicies(new ArrayList<>());
 						}
+						if (MapUtils.isNotEmpty(policies.getSecurityZones())) {
+							for (ServicePolicies.SecurityZoneInfo element : policies.getSecurityZones().values()) {
+								if (element.getPolicies() == null) {
+									element.setPolicies(new ArrayList<>());
+								}
+							}
+						}
 					}
 				}
 			}

@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPrincipal;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
@@ -51,6 +52,7 @@ public class JsonUtils {
     private static final Type TYPE_LIST_RANGER_TAG_MASK_INFO       = new TypeToken<List<RangerTagDataMaskInfo>>() {}.getType();
     private static final Type TYPE_MAP_RANGER_MASK_INFO            = new TypeToken<Map<String, RangerPolicyItemDataMaskInfo>>() {}.getType();
     private static final Type TYPE_MAP_RANGER_POLICY_RESOURCE      = new TypeToken<Map<String, RangerPolicyResource>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_TAG                 = new TypeToken<List<RangerTag>>() {}.getType();
 
     private static final ThreadLocal<Gson> gson = new ThreadLocal<Gson>() {
         @Override
@@ -185,6 +187,15 @@ public class JsonUtils {
             return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_PRINCIPAL);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerPrincipal> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static List<RangerTag> jsonToRangerTagList(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_TAG);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerTag> from " + jsonStr, e);
             return null;
         }
     }
