@@ -21,6 +21,7 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.*;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
@@ -59,7 +61,9 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +92,9 @@ public class TagDBStore extends AbstractTagStore {
 
 	@Autowired
 	RangerServiceResourceService rangerServiceResourceService;
+
+	@Autowired
+	RangerServiceResourceWithTagsService rangerServiceResourceWithTagsService;
 
 	@Autowired
 	RangerTagResourceMapService rangerTagResourceMapService;
@@ -712,6 +719,10 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		return ret;
+	}
+
+	public RangerServiceResourceWithTagsList getPaginatedServiceResourcesWithTags(SearchFilter filter) throws Exception {
+		return rangerServiceResourceWithTagsService.searchServiceResourcesWithTags(filter);
 	}
 
 
@@ -1385,5 +1396,59 @@ public class TagDBStore extends AbstractTagStore {
 				throw new Exception("Cannot delete tag-def: " + tagDef.getName() + ". " + tagsByType.size() + " tag instances for this tag-def exist");
 			}
 		}
+	}
+
+	public static RangerServiceResource toRangerServiceResource(String serviceName, Map<String, String[]> resourceMap) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.toRangerServiceResource(): serviceName={" + serviceName + "}");
+		}
+
+		Map<String, RangerPolicyResource> resourceElements = new HashMap<>();
+
+		for (Map.Entry<String, String[]> entry : resourceMap.entrySet()) {
+			String[] parts      = entry.getKey().split("\\.");
+			String[] valueArray = entry.getValue();
+
+			if (parts.length < 1 || valueArray == null) {
+				continue;
+			}
+
+			String key = parts[0];
+
+			RangerPolicyResource policyResource = resourceElements.get(key);
+
+			if (policyResource == null) {
+				policyResource = new RangerPolicyResource();
+
+				resourceElements.put(key, policyResource);
+			}
+
+			if (parts.length == 1) {
+				List<String> valueList = new ArrayList<>(valueArray.length);
+
+				for (String str : valueArray) {
+					valueList.add(str.trim());
+				}
+
+				policyResource.setValues(valueList);
+			} else if (parts.length == 2 && valueArray[0] != null) {
+				String subKey = parts[1];
+				String value  = valueArray[0];
+
+				if (subKey.equalsIgnoreCase("isExcludes")) {
+					policyResource.setIsExcludes(Boolean.parseBoolean(value.trim()));
+				} else if (subKey.equalsIgnoreCase("isRecursive")) {
+					policyResource.setIsRecursive(Boolean.parseBoolean(value.trim()));
+				}
+			}
+		}
+
+		RangerServiceResource ret = new RangerServiceResource(serviceName, resourceElements);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.toRangerServiceResource(): (serviceName={" + serviceName + "} RangerServiceResource={" + ret + "})");
+		}
+
+		return ret;
 	}
 }

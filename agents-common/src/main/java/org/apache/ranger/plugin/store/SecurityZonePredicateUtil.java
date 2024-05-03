@@ -190,7 +190,7 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
 				if (object instanceof RangerSecurityZone) {
 					RangerSecurityZone securityZone = (RangerSecurityZone) object;
 
-					if (StringUtils.contains(securityZone.getName(), zoneName)) {
+					if (StringUtils.containsIgnoreCase(securityZone.getName(), zoneName)) {
 						ret = true;
 					}
 				}

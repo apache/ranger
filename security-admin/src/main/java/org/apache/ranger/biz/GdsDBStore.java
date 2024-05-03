@@ -67,6 +67,7 @@ public class GdsDBStore extends AbstractGdsStore {
     public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES = "User is not authorized to view policies for this dataset";
     public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
     public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
+    public static final String GDS_POLICY_NAME_TIMESTAMP_SEP           = "@";
 
     private static final Set<Integer> SHARE_STATUS_AGR = new HashSet<>(Arrays.asList(GdsShareStatus.ACTIVE.ordinal(), GdsShareStatus.GRANTED.ordinal(), GdsShareStatus.REQUESTED.ordinal()));
 
@@ -159,7 +160,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataset updateDataset(RangerDataset dataset) {
+    public RangerDataset updateDataset(RangerDataset dataset) throws Exception {
         LOG.debug("==> updateDataset({})", dataset);
 
         RangerDataset existing = null;
@@ -179,6 +180,16 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerDataset ret = datasetService.update(dataset);
 
         datasetService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+
+        if (existing != null && !StringUtils.equals(dataset.getName(), existing.getName())) {
+            List<RangerPolicy> policyList = getDatasetPolicies(dataset.getId());
+
+            for (RangerPolicy policy : policyList) {
+                updateDatasetNameInPolicy(dataset, policy);
+
+                svcStore.updatePolicy(policy);
+            }
+        }
 
         updateGdsVersionForDataset(ret.getId());
 
@@ -456,7 +467,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerProject updateProject(RangerProject project) {
+    public RangerProject updateProject(RangerProject project) throws Exception {
         LOG.debug("==> updateProject({})", project);
 
         RangerProject existing = null;
@@ -476,6 +487,16 @@ public class GdsDBStore extends AbstractGdsStore {
         RangerProject ret = projectService.update(project);
 
         projectService.onObjectChange(ret, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+
+        if (existing != null && !StringUtils.equals(project.getName(), existing.getName())) {
+            List<RangerPolicy> policyList = getProjectPolicies(project.getId());
+
+            for (RangerPolicy policy : policyList) {
+                updateProjectNameInPolicy(project, policy);
+
+                svcStore.updatePolicy(policy);
+            }
+        }
 
         updateGdsVersionForProject(ret.getId());
 
@@ -1795,7 +1816,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void prepareDatasetPolicy(RangerDataset dataset, RangerPolicy policy) {
-        policy.setName("DATASET: " + dataset.getName() + "@" + System.currentTimeMillis());
+        policy.setName("DATASET: " + dataset.getName() + GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
         policy.setDescription("Policy for dataset: " + dataset.getName());
         policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
         policy.setService(ServiceDBStore.GDS_SERVICE_NAME);
@@ -1812,7 +1833,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void prepareProjectPolicy(RangerProject project, RangerPolicy policy) {
-        policy.setName("PROJECT: " + project.getName() + "@" + System.currentTimeMillis());
+        policy.setName("PROJECT: " + project.getName() + GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
         policy.setDescription("Policy for project: " + project.getName());
         policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);
         policy.setService(ServiceDBStore.GDS_SERVICE_NAME);
@@ -1826,6 +1847,22 @@ public class GdsDBStore extends AbstractGdsStore {
         policy.setDataMaskPolicyItems(Collections.emptyList());
         policy.setRowFilterPolicyItems(Collections.emptyList());
         policy.setIsDenyAllElse(Boolean.FALSE);
+    }
+
+    private void updateDatasetNameInPolicy(RangerDataset dataset, RangerPolicy policy) {
+        int    sepPos = StringUtils.indexOf(policy.getName(), GDS_POLICY_NAME_TIMESTAMP_SEP);
+        String suffix = sepPos != -1 ? policy.getName().substring(sepPos) : (GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
+
+        policy.setName("DATASET: " + dataset.getName() + suffix);
+        policy.setDescription("Policy for dataset: " + dataset.getName());
+    }
+
+    private void updateProjectNameInPolicy(RangerProject project, RangerPolicy policy) {
+        int    sepPos = StringUtils.indexOf(policy.getName(), GDS_POLICY_NAME_TIMESTAMP_SEP);
+        String suffix = sepPos != -1 ? policy.getName().substring(sepPos) : (GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
+
+        policy.setName("PROJECT: " + project.getName() + suffix);
+        policy.setDescription("Policy for project: " + project.getName());
     }
 
     private void deleteDatasetPolicies(RangerDataset dataset) throws Exception {

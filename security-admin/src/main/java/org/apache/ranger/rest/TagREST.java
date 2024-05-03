@@ -40,6 +40,7 @@ import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -47,9 +48,11 @@ import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +78,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.List;
+import java.util.Map;
 
 @Path(TagRESTConstants.TAGDEF_NAME_AND_VERSION)
 @Component
@@ -117,6 +121,9 @@ public class TagREST {
 
     @Autowired
     RangerServiceResourceService rangerServiceResourceService;
+
+    @Autowired
+    RangerServiceResourceWithTagsService rangerServiceResourceWithTagsService;
 
     @Autowired
     RangerTagResourceMapService rangerTagResourceMapService;
@@ -1012,6 +1019,27 @@ public class TagREST {
     }
 
     @GET
+    @Path(TagRESTConstants.RESOURCE_RESOURCE + "service/{serviceName}/resource")
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public RangerServiceResource getServiceResourceByResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getServiceResourceByResource(" + serviceName + ")");
+        }
+
+        Map<String, String[]> resourceMap     = searchUtil.getMultiValueParamsWithPrefix(request, SearchFilter.RESOURCE_PREFIX, true);
+        RangerServiceResource serviceResource = tagStore.toRangerServiceResource(serviceName, resourceMap);
+
+        serviceResource = getServiceResourceByServiceAndResourceSignature(serviceName, new RangerServiceResourceSignature(serviceResource).getSignature());
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getServiceResourceByResource(serviceName={" + serviceName + "} RangerServiceResource={" + serviceResource + "})");
+        }
+
+        return serviceResource;
+    }
+
+    @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
@@ -1041,18 +1069,18 @@ public class TagREST {
     @Path(TagRESTConstants.RESOURCES_RESOURCE_PAGINATED)
     @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public PList<RangerServiceResource> getServiceResources(@Context HttpServletRequest request) {
+    public RangerServiceResourceWithTagsList getServiceResourcesWithTags(@Context HttpServletRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getServiceResources()");
         }
 
-        final PList<RangerServiceResource> ret;
+        RangerServiceResourceWithTagsList ret;
 
         try {
-            SearchFilter filter = searchUtil.getSearchFilter(request, rangerServiceResourceService.sortFields);
+            SearchFilter filter = searchUtil.getSearchFilter(request, rangerServiceResourceWithTagsService.sortFields);
             searchUtil.extractIntList(request, filter, SearchFilter.TAG_RESOURCE_IDS, "Tag resource list");
-
-            ret = tagStore.getPaginatedServiceResources(filter);
+            searchUtil.extractStringList(request, filter, SearchFilter.TAG_NAMES, "Tag type List", "tagTypes", null, null);
+            ret = tagStore.getPaginatedServiceResourcesWithTags(filter);
         } catch (Exception excp) {
             LOG.error("getServiceResources() failed", excp);
 
