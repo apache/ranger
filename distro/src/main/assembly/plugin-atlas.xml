@@ -56,10 +56,6 @@
         <includes>
           <include>com.sun.jersey:jersey-bundle</include>
           <include>com.google.guava:guava:jar:${google.guava.version}</include>
-          <!--<include>org.codehaus.jackson:jackson-jaxrs</include>
-          <include>org.codehaus.jackson:jackson-core-asl</include>
-          <include>org.codehaus.jackson:jackson-mapper-asl</include>
-          <include>org.codehaus.jackson:jackson-xc</include>-->
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
           <include>com.fasterxml.jackson.core:jackson-core</include>
           <include>com.fasterxml.jackson.core:jackson-databind</include>
