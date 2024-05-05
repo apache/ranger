@@ -958,21 +958,12 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 		return duplicate;
 	}
-	private void removeDuplicates(List<String> values){
+	private static void removeDuplicates(List<String> values){
 		if (values==null || values.isEmpty()){
 			return;
 		}
-		Iterator<String> itr = values.iterator();
 		HashSet<String> uniqueElements = new HashSet<>();
-		while (itr.hasNext()){
-			String ele = itr.next();
-			if (uniqueElements.contains(ele)){
-				itr.remove();
-			}
-			else{
-				uniqueElements.add(ele);
-			}
-		}
+		values.removeIf(e -> !uniqueElements.add(e));
 	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
