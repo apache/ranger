@@ -958,6 +958,13 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 		return duplicate;
 	}
+	private static void removeDuplicates(List<String> values){
+		if (values==null || values.isEmpty()){
+			return;
+		}
+		HashSet<String> uniqueElements = new HashSet<>();
+		values.removeIf(e -> !uniqueElements.add(e));
+	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
@@ -1030,6 +1037,9 @@ public class RangerPolicyValidator extends RangerValidator {
 						.build());
 				valid = false;
 			} else {
+				removeDuplicates(policyItem.getUsers());
+				removeDuplicates(policyItem.getGroups());
+				removeDuplicates(policyItem.getRoles());
 				if (CollectionUtils.isNotEmpty(policyItem.getUsers()) && CollectionUtils.containsAny(policyItem.getUsers(), invalidItems)) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER;
 					failures.add(new ValidationFailureDetailsBuilder()
