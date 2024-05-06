@@ -197,10 +197,15 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         RangerSecurityZone ret = super.postCreate(xObj);
         Set<String> serviceNames = ret.getServices().keySet();
 
+        List<String> tagServiceNames = ret.getTagServices();
+
         // Create default zone policies
         try {
             serviceDBStore.createZoneDefaultPolicies(serviceNames, ret);
             updateServiceInfos(serviceNames);
+
+            serviceDBStore.createZoneDefaultPolicies(tagServiceNames, ret);
+            updateServiceInfos(tagServiceNames);
         } catch (Exception exception) {
             logger.error("postCreate processing failed for security-zone:[" + ret + "]", exception);
             ret = null;
