@@ -66,9 +66,6 @@ const PrinciplePermissionComp = ({
   const [filteredRoleList, setFilteredRoleList] = useState(roleList);
   const [selectedACLFilter, setSelectedACLFilter] = useState({});
   const [searchPrinciple, setSearchPrinciple] = useState();
-  const [userAccordion, setUserAccordion] = useState(false);
-  const [groupAccordion, setGroupAccordion] = useState(false);
-  const [roleAccordion, setRoleAccordion] = useState(false);
   const [principleDetails, dispatch] = useReducer(
     principleFormReducer,
     initialState
@@ -195,7 +192,6 @@ const PrinciplePermissionComp = ({
     }
 
     onDataChange(tempUserList, tempGroupList, tempRoleList);
-    //setSelectedAccess({ value: "LIST", label: "LIST" });
 
     dispatch({
       type: "SET_SELECTED_PRINCIPLE",
@@ -204,18 +200,6 @@ const PrinciplePermissionComp = ({
     if (selectVisibilityLevelRef.current) {
       selectVisibilityLevelRef.current.clearValue();
     }
-  };
-
-  const changeUserAccordion = () => {
-    setUserAccordion(!userAccordion);
-  };
-
-  const changeGroupAccordion = () => {
-    setGroupAccordion(!groupAccordion);
-  };
-
-  const changeRoleAccordion = () => {
-    setRoleAccordion(!roleAccordion);
   };
 
   const serviceSelectTheme = (theme) => {
@@ -515,212 +499,156 @@ const PrinciplePermissionComp = ({
           </div>
 
           <Accordion className="mg-b-10" defaultActiveKey="0">
-            <Card>
-              <div className="border-bottom">
-                <Accordion.Toggle
-                  as={Card.Header}
-                  eventKey="1"
-                  onClick={changeUserAccordion}
-                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                  data-id="panel"
-                  data-cy="panel"
-                >
-                  <div className="d-flex align-items-center gap-half">
-                    <img src={userColourIcon} height="30px" width="30px" />
-                    Users (
-                    {filteredUserList == undefined
-                      ? 0
-                      : filteredUserList.length}
-                    )
-                  </div>
+            <Accordion.Item>
+              <Accordion.Header eventKey="1" data-id="panel" data-cy="panel">
+                <div className="d-flex align-items-center gap-half m-t-10 m-b-10">
+                  <img src={userColourIcon} height="30px" width="30px" />
+                  Users (
+                  {filteredUserList == undefined ? 0 : filteredUserList.length})
+                </div>
+              </Accordion.Header>
+              <Accordion.Body eventKey="1">
+                {filteredUserList != undefined &&
+                filteredUserList.length > 0 ? (
+                  filteredUserList.map((obj, index) => {
+                    return (
+                      <div className="gds-principle-listing" key={obj.name}>
+                        <span title={obj.name}>{obj.name}</span>
 
-                  {userAccordion ? (
-                    <i className="fa fa-angle-up  fa-lg font-weight-bold"></i>
-                  ) : (
-                    <i className="fa fa-angle-down  fa-lg font-weight-bold"></i>
-                  )}
-                </Accordion.Toggle>
-              </div>
-              <Accordion.Collapse eventKey="1">
-                <Card.Body>
-                  {filteredUserList != undefined &&
-                  filteredUserList.length > 0 ? (
-                    filteredUserList.map((obj, index) => {
-                      return (
-                        <div className="gds-principle-listing" key={obj.name}>
-                          <span title={obj.name}>{obj.name}</span>
-
-                          <Field
-                            name="aclPerms"
-                            render={({ input, meta }) => (
-                              <Select
-                                // {...input.value}
-                                theme={serviceSelectTheme}
-                                options={accessOptionsWithRemove}
-                                menuPortalTarget={document.body}
-                                onChange={(e) =>
-                                  handleTableSelectedValue(
-                                    e,
-                                    input,
-                                    index,
-                                    obj.name,
-                                    "USER"
-                                  )
-                                }
-                                menuPlacement="auto"
-                                defaultValue={[
-                                  { label: obj.perm, value: obj.perm }
-                                ]}
-                                isDisabled={isDetailView && !isAdmin}
-                              />
-                            )}
-                          />
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="mt-1">--</p>
-                  )}
-                </Card.Body>
-              </Accordion.Collapse>
-            </Card>
+                        <Field
+                          name="aclPerms"
+                          render={({ input, meta }) => (
+                            <Select
+                              theme={serviceSelectTheme}
+                              options={accessOptionsWithRemove}
+                              menuPortalTarget={document.body}
+                              onChange={(e) =>
+                                handleTableSelectedValue(
+                                  e,
+                                  input,
+                                  index,
+                                  obj.name,
+                                  "USER"
+                                )
+                              }
+                              menuPlacement="auto"
+                              defaultValue={[
+                                { label: obj.perm, value: obj.perm }
+                              ]}
+                              isDisabled={isDetailView && !isAdmin}
+                            />
+                          )}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="mt-1">--</p>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
           </Accordion>
 
           <Accordion className="mg-b-10" defaultActiveKey="0">
-            <Card>
-              <div className="border-bottom">
-                <Accordion.Toggle
-                  as={Card.Header}
-                  eventKey="1"
-                  onClick={changeGroupAccordion}
-                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                  data-id="panel"
-                  data-cy="panel"
-                >
-                  <div className="d-flex align-items-center gap-half">
-                    <img src={groupColourIcon} height="30px" width="30px" />
-                    Groups (
-                    {filteredGroupList == undefined
-                      ? 0
-                      : filteredGroupList.length}
-                    )
-                  </div>
-                  {groupAccordion ? (
-                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                  ) : (
-                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                  )}
-                </Accordion.Toggle>
-              </div>
-              <Accordion.Collapse eventKey="1">
-                <Card.Body>
-                  {filteredGroupList != undefined &&
-                  filteredGroupList.length > 0 ? (
-                    filteredGroupList.map((obj, index) => {
-                      return (
-                        <div className="gds-principle-listing" key={obj.name}>
-                          <span title={obj.name}>{obj.name}</span>
-                          <Field
-                            name="aclPerms"
-                            render={({ input, meta }) => (
-                              <Select
-                                theme={serviceSelectTheme}
-                                options={accessOptionsWithRemove}
-                                menuPortalTarget={document.body}
-                                onChange={(e) =>
-                                  handleTableSelectedValue(
-                                    e,
-                                    input,
-                                    index,
-                                    obj.name,
-                                    "GROUP"
-                                  )
-                                }
-                                menuPlacement="auto"
-                                defaultValue={[
-                                  { label: obj.perm, value: obj.perm }
-                                ]}
-                                isDisabled={isDetailView && !isAdmin}
-                              />
-                            )}
-                          />
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="mt-1">--</p>
-                  )}
-                </Card.Body>
-              </Accordion.Collapse>
-            </Card>
+            <Accordion.Item>
+              <Accordion.Header eventKey="1" data-id="panel" data-cy="panel">
+                <div className="d-flex align-items-center gap-half">
+                  <img src={groupColourIcon} height="30px" width="30px" />
+                  Groups (
+                  {filteredGroupList == undefined
+                    ? 0
+                    : filteredGroupList.length}
+                  )
+                </div>
+              </Accordion.Header>
+              <Accordion.Body eventKey="1">
+                {filteredGroupList != undefined &&
+                filteredGroupList.length > 0 ? (
+                  filteredGroupList.map((obj, index) => {
+                    return (
+                      <div className="gds-principle-listing" key={obj.name}>
+                        <span title={obj.name}>{obj.name}</span>
+                        <Field
+                          name="aclPerms"
+                          render={({ input, meta }) => (
+                            <Select
+                              theme={serviceSelectTheme}
+                              options={accessOptionsWithRemove}
+                              menuPortalTarget={document.body}
+                              onChange={(e) =>
+                                handleTableSelectedValue(
+                                  e,
+                                  input,
+                                  index,
+                                  obj.name,
+                                  "GROUP"
+                                )
+                              }
+                              menuPlacement="auto"
+                              defaultValue={[
+                                { label: obj.perm, value: obj.perm }
+                              ]}
+                              isDisabled={isDetailView && !isAdmin}
+                            />
+                          )}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="mt-1">--</p>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
           </Accordion>
 
           <Accordion className="mg-b-10" defaultActiveKey="0">
-            <Card>
-              <div className="border-bottom">
-                <Accordion.Toggle
-                  as={Card.Header}
-                  eventKey="1"
-                  onClick={changeRoleAccordion}
-                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                  data-id="panel"
-                  data-cy="panel"
-                >
-                  <div className="d-flex align-items-center gap-half">
-                    <img src={roleColourIcon} height="30px" width="30px" />
-                    Roles (
-                    {filteredRoleList == undefined
-                      ? 0
-                      : filteredRoleList.length}
-                    )
-                  </div>
-                  {roleAccordion ? (
-                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                  ) : (
-                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                  )}
-                </Accordion.Toggle>
-              </div>
-              <Accordion.Collapse eventKey="1">
-                <Card.Body>
-                  {filteredRoleList?.length > 0 ? (
-                    filteredRoleList.map((obj, index) => {
-                      return (
-                        <div className="gds-principle-listing" key={obj.name}>
-                          <span title={obj.name}>{obj.name}</span>
-                          <Field
-                            name="aclPerms"
-                            render={({ input, meta }) => (
-                              <Select
-                                theme={serviceSelectTheme}
-                                options={accessOptionsWithRemove}
-                                menuPortalTarget={document.body}
-                                onChange={(e) =>
-                                  handleTableSelectedValue(
-                                    e,
-                                    input,
-                                    index,
-                                    obj.name,
-                                    "ROLE"
-                                  )
-                                }
-                                isDisabled={isDetailView && !isAdmin}
-                                menuPlacement="auto"
-                                defaultValue={[
-                                  { label: obj.perm, value: obj.perm }
-                                ]}
-                              />
-                            )}
-                          />
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="mt-1">--</p>
-                  )}
-                </Card.Body>
-              </Accordion.Collapse>
-            </Card>
+            <Accordion.Item>
+              <Accordion.Header eventKey="1" data-id="panel" data-cy="panel">
+                <div className="d-flex align-items-center gap-half">
+                  <img src={roleColourIcon} height="30px" width="30px" />
+                  Roles (
+                  {filteredRoleList == undefined ? 0 : filteredRoleList.length})
+                </div>
+              </Accordion.Header>
+              <Accordion.Body eventKey="1">
+                {filteredRoleList?.length > 0 ? (
+                  filteredRoleList.map((obj, index) => {
+                    return (
+                      <div className="gds-principle-listing" key={obj.name}>
+                        <span title={obj.name}>{obj.name}</span>
+                        <Field
+                          name="aclPerms"
+                          render={({ input, meta }) => (
+                            <Select
+                              theme={serviceSelectTheme}
+                              options={accessOptionsWithRemove}
+                              menuPortalTarget={document.body}
+                              onChange={(e) =>
+                                handleTableSelectedValue(
+                                  e,
+                                  input,
+                                  index,
+                                  obj.name,
+                                  "ROLE"
+                                )
+                              }
+                              isDisabled={isDetailView && !isAdmin}
+                              menuPlacement="auto"
+                              defaultValue={[
+                                { label: obj.perm, value: obj.perm }
+                              ]}
+                            />
+                          )}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="mt-1">--</p>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
           </Accordion>
         </Card>
       </div>

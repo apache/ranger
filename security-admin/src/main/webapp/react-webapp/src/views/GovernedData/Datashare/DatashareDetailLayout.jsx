@@ -553,8 +553,7 @@ const DatashareDetailLayout = () => {
     datashareInfo.conditionExpr = datashareConditionExpr;
     datashareInfo.defaultAccessTypes = [];
 
-    if(datashareName.length>512)
-    {
+    if (datashareName.length > 512) {
       toast.error("Datashare name must be 512 characters or less!");
       return;
     }
@@ -918,7 +917,7 @@ const DatashareDetailLayout = () => {
               <div className="gds-chips gap-one-fourth">
                 {original.accessTypes?.map((accessObj) => (
                   <span
-                    className="badge badge-light badge-sm"
+                    className="badge text-bg-light badge-sm"
                     title={accessObj}
                     key={accessObj}
                   >
@@ -1095,7 +1094,7 @@ const DatashareDetailLayout = () => {
               </Button>
               <h3 className="gds-header bold">
                 <div className="d-flex align-items-center">
-                  <span className="mr-1">Datashare: </span>
+                  <span className="me-1">Datashare: </span>
                   {!datashareNameEditable ? (
                     <div>
                       <span
@@ -1473,7 +1472,7 @@ const DatashareDetailLayout = () => {
                     </Tab>
                     <Tab eventKey="resources" title="RESOURCES">
                       {activeKey == "resources" ? (
-                        <div className="gds-request-content">
+                        <div className="gds-content-border gds-request-content">
                           <div className="mb-3">
                             <div className="w-100 d-flex gap-1 mb-3 mg-t-20">
                               <StructuredFilter
@@ -1662,7 +1661,7 @@ const DatashareDetailLayout = () => {
                       userAclPerm == "AUDIT") && (
                       <Tab eventKey="history" title="HISTORY">
                         {activeKey == "history" && (
-                          <div className="gds-request-content">
+                          <div className="gds-content-border gds-request-content">
                             <div className="mb-3">
                               <div className="usr-grp-role-search-width mb-3 mg-t-20">
                                 <StructuredFilter

@@ -47,7 +47,7 @@ export const ProjectLogs = ({ data, reportdata }) => {
                 {val && val.previousValue && !isEmpty(val.previousValue) ? (
                   isEmpty(val.newValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="danger">
+                      <Badge className="d-inline me-1" bg="danger">
                         {getfilteredoldval(val.previousValue)}
                       </Badge>
                     </h6>
@@ -66,7 +66,7 @@ export const ProjectLogs = ({ data, reportdata }) => {
                 {val && val.newValue && !isEmpty(val.newValue) ? (
                   isEmpty(val.previousValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="success">
+                      <Badge className="d-inline me-1" bg="success">
                         {getfilterednewval(val.newValue)}
                       </Badge>
                     </h6>
@@ -141,7 +141,7 @@ export const ProjectLogs = ({ data, reportdata }) => {
                 </div>
                 <div className="font-weight-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -189,7 +189,9 @@ export const ProjectLogs = ({ data, reportdata }) => {
                     <tr>
                       <td className="table-warning">{project.attributeName}</td>
                       <td className="table-warning">
-                        {!isEmpty(project.previousValue) ? project.previousValue : "--"}
+                        {!isEmpty(project.previousValue)
+                          ? project.previousValue
+                          : "--"}
                       </td>
                     </tr>
                   </tbody>

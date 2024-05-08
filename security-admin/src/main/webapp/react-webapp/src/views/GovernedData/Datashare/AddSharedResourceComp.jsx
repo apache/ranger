@@ -58,7 +58,6 @@ const AddSharedResourceComp = ({
     showModal ? true : false
   );
   let closeModalFag = false;
-  const [openConfigAccordion, setOpenConfigAccordion] = useState(false);
   const [formData, setFormData] = useState();
   const [selectedResShareMask, setSelectedResShareMask] = useState({});
   const { allServiceDefs } = getServiceDef();
@@ -128,10 +127,6 @@ const AddSharedResourceComp = ({
     }
     data.booleanExpression = obj?.conditionExpr;
     return data;
-  };
-
-  const onAccessConfigAccordianChange = () => {
-    setOpenConfigAccordion(!openConfigAccordion);
   };
 
   const noneOptions = {
@@ -304,14 +299,14 @@ const AddSharedResourceComp = ({
               <div className="mb-2 gds-chips flex-wrap">
                 <span
                   title={datashareInfo?.name}
-                  className="badge badge-light text-truncate"
+                  className="badge text-bg-light text-truncate"
                   style={{ maxWidth: "250px", display: "inline-block" }}
                 >
                   Datashare: {datashareInfo?.name}
                 </span>
                 <span
                   title={datashareInfo?.service}
-                  className="badge badge-light text-truncate"
+                  className="badge text-bg-light text-truncate"
                   style={{ maxWidth: "250px", display: "inline-block" }}
                 >
                   Service: {datashareInfo?.service}
@@ -319,7 +314,7 @@ const AddSharedResourceComp = ({
                 {datashareInfo?.zone != undefined ? (
                   <span
                     title={datashareInfo.zone}
-                    className="badge badge-light text-truncate"
+                    className="badge text-bg-light text-truncate"
                     style={{ maxWidth: "250px", display: "inline-block" }}
                   >
                     Security Zone: {datashareInfo.zone}
@@ -374,10 +369,9 @@ const AddSharedResourceComp = ({
                         </div>
                         <div className="mb-3 form-group row">
                           <Col sm={3}>
-                            <label className="form-label pull-right fnt-14">
-                              Shared Resource Name
+                            <label className="form-label float-end fnt-14">
+                              Shared Resource Name *
                             </label>
-                            <span className="compulsory-resource top-0">*</span>
                           </Col>
                           <Col sm={9}>
                             <Field
@@ -409,177 +403,164 @@ const AddSharedResourceComp = ({
                         </div>
 
                         <Accordion className="mb-3" defaultActiveKey="0">
-                          <Card className="border-0 gds-resource-options">
-                            <div>
-                              <Accordion.Toggle
-                                as={Card.Header}
-                                eventKey="1"
-                                onClick={onAccessConfigAccordianChange}
-                                className="d-flex align-items-center gds-res-acc-header gap-half"
-                                data-id="panel"
-                                data-cy="panel"
-                              >
-                                {openConfigAccordion ? (
-                                  <i className="fa fa-angle-up pull-up fa-lg font-weight-bold"></i>
-                                ) : (
-                                  <i className="fa fa-angle-down pull-down fa-lg font-weight-bold"></i>
-                                )}
-                                <Link to="">
-                                  Add permission and conditions (Optional)
-                                </Link>
-                              </Accordion.Toggle>
-                            </div>
-                            <Accordion.Collapse eventKey="1">
-                              <Card.Body className="gds-res-card-body">
+                          <Accordion.Item>
+                            <Accordion.Header
+                              className="border-0"
+                              eventKey="1"
+                              data-id="panel"
+                              data-cy="panel"
+                            >
+                              Add permission and conditions (Optional)
+                            </Accordion.Header>
+                            <Accordion.Body eventKey="1">
+                              <div className="mb-3 form-group row">
+                                <Col sm={3}>
+                                  <label className="form-label float-end fnt-14">
+                                    Permission
+                                  </label>
+                                </Col>
+                                <Field
+                                  name="permission"
+                                  render={({ input, meta }) => (
+                                    <Col sm={9}>
+                                      <Select
+                                        {...input}
+                                        options={getAccessTypeOptions(values)}
+                                        onChange={(e) =>
+                                          onAccessTypeChange(e, input)
+                                        }
+                                        menuPlacement="auto"
+                                        isClearable
+                                        isMulti
+                                      />
+                                    </Col>
+                                  )}
+                                />
+                              </div>
+                              {false && showRowFilterInput ? (
                                 <div className="mb-3 form-group row">
                                   <Col sm={3}>
-                                    <label className="form-label pull-right fnt-14">
-                                      Permission
+                                    <label className="form-label float-end fnt-14">
+                                      Row Filter
                                     </label>
                                   </Col>
+
                                   <Field
-                                    name="permission"
+                                    name={`rowFilter`}
                                     render={({ input, meta }) => (
                                       <Col sm={9}>
-                                        <Select
+                                        <input
                                           {...input}
-                                          options={getAccessTypeOptions(values)}
-                                          onChange={(e) =>
-                                            onAccessTypeChange(e, input)
-                                          }
-                                          menuPlacement="auto"
-                                          isClearable
-                                          isMulti
+                                          type="text"
+                                          name="rowFilter"
+                                          className="form-control gds-placeholder"
+                                          data-cy="rowFilter"
                                         />
                                       </Col>
                                     )}
                                   />
                                 </div>
-                                {false && showRowFilterInput ? (
-                                  <div className="mb-3 form-group row">
-                                    <Col sm={3}>
-                                      <label className="form-label pull-right fnt-14">
-                                        Row Filter
-                                      </label>
-                                    </Col>
+                              ) : (
+                                <div></div>
+                              )}
 
-                                    <Field
-                                      name={`rowFilter`}
-                                      render={({ input, meta }) => (
-                                        <Col sm={9}>
-                                          <input
-                                            {...input}
-                                            type="text"
-                                            name="rowFilter"
-                                            className="form-control gds-placeholder"
-                                            data-cy="rowFilter"
-                                          />
-                                        </Col>
-                                      )}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div></div>
-                                )}
+                              {false && showMaskInput ? (
+                                <div className="mb-3 form-group row">
+                                  <Col sm={3}>
+                                    <label className="form-label float-end fnt-14">
+                                      Mask
+                                    </label>
+                                  </Col>
 
-                                {false && showMaskInput ? (
-                                  <div className="mb-3 form-group row">
-                                    <Col sm={3}>
-                                      <label className="form-label pull-right fnt-14">
-                                        Mask
-                                      </label>
-                                    </Col>
-
-                                    <Field
-                                      name={`maskType`}
-                                      render={({ input, meta }) => (
-                                        <Col sm={9}>
-                                          <Field
-                                            name="masking"
-                                            render={({ input, meta }) => (
-                                              <div className="d-flex ">
-                                                <div className="w-50">
-                                                  <Select
-                                                    {...input}
-                                                    options={
-                                                      serviceDef.dataMaskDef
-                                                        .maskTypes
-                                                    }
-                                                    onChange={(e) =>
-                                                      onResShareMaskChange(
-                                                        e,
-                                                        input
-                                                      )
-                                                    }
-                                                    menuPlacement="auto"
-                                                    isClearable
+                                  <Field
+                                    name={`maskType`}
+                                    render={({ input, meta }) => (
+                                      <Col sm={9}>
+                                        <Field
+                                          name="masking"
+                                          render={({ input, meta }) => (
+                                            <div className="d-flex ">
+                                              <div className="w-50">
+                                                <Select
+                                                  {...input}
+                                                  options={
+                                                    serviceDef.dataMaskDef
+                                                      .maskTypes
+                                                  }
+                                                  onChange={(e) =>
+                                                    onResShareMaskChange(
+                                                      e,
+                                                      input
+                                                    )
+                                                  }
+                                                  menuPlacement="auto"
+                                                  isClearable
+                                                />
+                                              </div>
+                                              {selectedResShareMask?.label ==
+                                                "Custom" && (
+                                                <div className="pl-2 w-50">
+                                                  <Field
+                                                    className="form-control"
+                                                    name={`resShareDataMaskInfo.valueExpr`}
+                                                    validate={required}
+                                                    render={({
+                                                      input,
+                                                      meta
+                                                    }) => (
+                                                      <>
+                                                        <FormB.Control
+                                                          type="text"
+                                                          className="gds-input"
+                                                          {...input}
+                                                          placeholder="Enter masked value or expression..."
+                                                        />
+                                                        {meta.error &&
+                                                          meta.touched && (
+                                                            <span className="invalid-field">
+                                                              {meta.error}
+                                                            </span>
+                                                          )}
+                                                      </>
+                                                    )}
                                                   />
                                                 </div>
-                                                {selectedResShareMask?.label ==
-                                                  "Custom" && (
-                                                  <div className="pl-2 w-50">
-                                                    <Field
-                                                      className="form-control"
-                                                      name={`resShareDataMaskInfo.valueExpr`}
-                                                      validate={required}
-                                                      render={({
-                                                        input,
-                                                        meta
-                                                      }) => (
-                                                        <>
-                                                          <FormB.Control
-                                                            type="text"
-                                                            className="gds-input"
-                                                            {...input}
-                                                            placeholder="Enter masked value or expression..."
-                                                          />
-                                                          {meta.error &&
-                                                            meta.touched && (
-                                                              <span className="invalid-field">
-                                                                {meta.error}
-                                                              </span>
-                                                            )}
-                                                        </>
-                                                      )}
-                                                    />
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )}
-                                          />
-                                        </Col>
-                                      )}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div></div>
-                                )}
-
-                                <div className="mb-0 form-group row">
-                                  <Col sm={3}>
-                                    <label className="form-label pull-right fnt-14">
-                                      Condition
-                                    </label>
-                                  </Col>
-                                  <Field
-                                    name={`booleanExpression`}
-                                    render={({ input, meta }) => (
-                                      <Col sm={9}>
-                                        <textarea
-                                          {...input}
-                                          placeholder="Enter Boolean Expression"
-                                          className="form-control gds-placeholder"
-                                          id="booleanExpression"
-                                          data-cy="booleanExpression"
-                                          rows={4}
+                                              )}
+                                            </div>
+                                          )}
                                         />
                                       </Col>
                                     )}
                                   />
                                 </div>
-                              </Card.Body>
-                            </Accordion.Collapse>
-                          </Card>
+                              ) : (
+                                <div></div>
+                              )}
+
+                              <div className="mb-0 form-group row">
+                                <Col sm={3}>
+                                  <label className="form-label float-end fnt-14">
+                                    Condition
+                                  </label>
+                                </Col>
+                                <Field
+                                  name={`booleanExpression`}
+                                  render={({ input, meta }) => (
+                                    <Col sm={9}>
+                                      <textarea
+                                        {...input}
+                                        placeholder="Enter Boolean Expression"
+                                        className="form-control gds-placeholder"
+                                        id="booleanExpression"
+                                        data-cy="booleanExpression"
+                                        rows={4}
+                                      />
+                                    </Col>
+                                  )}
+                                />
+                              </div>
+                            </Accordion.Body>
+                          </Accordion.Item>
                         </Accordion>
                       </Modal.Body>
                       <Modal.Footer>

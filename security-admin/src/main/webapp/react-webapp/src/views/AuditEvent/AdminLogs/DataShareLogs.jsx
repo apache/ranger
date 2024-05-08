@@ -47,7 +47,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
                 {val && val.previousValue && !isEmpty(val.previousValue) ? (
                   isEmpty(val.newValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="danger">
+                      <Badge className="d-inline me-1" bg="danger">
                         {getfilteredoldval(val.previousValue)}
                       </Badge>
                     </h6>
@@ -66,7 +66,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
                 {val && val.newValue && !isEmpty(val.newValue) ? (
                   isEmpty(val.previousValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="success">
+                      <Badge className="d-inline me-1" bg="success">
                         {getfilterednewval(val.newValue)}
                       </Badge>
                     </h6>
@@ -101,7 +101,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
             <div className="font-weight-bolder">Created By: {owner}</div>
             <h5 className="bold wrap-header m-t-sm">DataShare Detail:</h5>
 
-            <Table className="table table-striped table-bordered w-50">
+            <Table className="table table-bordered w-50">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -114,10 +114,14 @@ export const DataShareLogs = ({ data, reportdata }) => {
                 return (
                   <tbody>
                     <tr key={dataShare.id}>
-                      <td className="table-warning">{dataShare.attributeName}</td>
+                      <td className="table-warning">
+                        {dataShare.attributeName}
+                      </td>
 
                       <td className="table-warning">
-                        {!isEmpty(dataShare.newValue) ? dataShare.newValue : "--"}
+                        {!isEmpty(dataShare.newValue)
+                          ? dataShare.newValue
+                          : "--"}
                       </td>
                     </tr>
                   </tbody>
@@ -141,7 +145,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
                 </div>
                 <div className="font-weight-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -149,7 +153,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
             <br />
             <h5 className="bold wrap-header m-t-sm">DataShare Detail:</h5>
 
-            <Table className="table  table-bordered table-striped w-75 ">
+            <Table className="table  table-bordered w-75 ">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -176,7 +180,7 @@ export const DataShareLogs = ({ data, reportdata }) => {
             <br />
             <h5 className="bold wrap-header m-t-sm">DataShare Details:</h5>
 
-            <Table className="table table-striped table-bordered w-50">
+            <Table className="table table-bordered w-50">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -187,9 +191,13 @@ export const DataShareLogs = ({ data, reportdata }) => {
                 return (
                   <tbody>
                     <tr>
-                      <td className="table-warning">{dataShare.attributeName}</td>
                       <td className="table-warning">
-                        {!isEmpty(dataShare.previousValue) ? dataShare.previousValue : "--"}
+                        {dataShare.attributeName}
+                      </td>
+                      <td className="table-warning">
+                        {!isEmpty(dataShare.previousValue)
+                          ? dataShare.previousValue
+                          : "--"}
                       </td>
                     </tr>
                   </tbody>

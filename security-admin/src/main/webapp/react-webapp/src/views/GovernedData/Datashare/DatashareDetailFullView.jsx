@@ -28,6 +28,7 @@ import dateFormat from "dateformat";
 import PrinciplePermissionComp from "../Dataset/PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
 import { isSystemAdmin } from "../../../utils/XAUtils";
+import { statusClassMap } from "../../../utils/XAEnums";
 
 const DatashareDetailFullView = () => {
   let { datashareId } = useParams();
@@ -357,9 +358,8 @@ const DatashareDetailFullView = () => {
                         // <ResourceAccordian item={obj} />
                         <div>
                           <Accordion className="mg-b-10" defaultActiveKey="0">
-                            <div className="border-bottom">
-                              <Accordion.Toggle
-                                as={Card.Header}
+                            <Accordion.Item className="border-bottom">
+                              <Accordion.Header
                                 eventKey={obj.id}
                                 onClick={() =>
                                   onSharedResourceAccordionChange(obj.id)
@@ -380,8 +380,8 @@ const DatashareDetailFullView = () => {
                                     </div>
                                   </div>
                                 </div>
-                              </Accordion.Toggle>
-                              <Accordion.Collapse eventKey={obj.id}>
+                              </Accordion.Header>
+                              <Accordion.Body eventKey={obj.id}>
                                 <Card.Body>
                                   <div className="gds-added-res-listing">
                                     {Object.entries(obj.resource).map(
@@ -422,8 +422,8 @@ const DatashareDetailFullView = () => {
                                     </div>
                                   </div>
                                 </Card.Body>
-                              </Accordion.Collapse>
-                            </div>
+                              </Accordion.Body>
+                            </Accordion.Item>
                           </Accordion>
                         </div>
                       );
@@ -460,12 +460,12 @@ const DatashareDetailFullView = () => {
                     {dataShareRequestsList != undefined &&
                     dataShareRequestsList.length > 0 ? (
                       dataShareRequestsList.map((obj, index) => {
+                        let statusVal = obj["status"] || "DENIED";
                         return (
                           <div>
                             <Accordion className="mg-b-10" defaultActiveKey="0">
-                              <div className="border-bottom">
-                                <Accordion.Toggle
-                                  as={Card.Header}
+                              <Accordion.Item className="border-bottom">
+                                <Accordion.Header
                                   eventKey="1"
                                   onClick={() =>
                                     onRequestAccordionChange(obj.id)
@@ -487,15 +487,7 @@ const DatashareDetailFullView = () => {
                                     </div>
                                     <div className="d-flex align-items-center gap-half">
                                       <span
-                                        className={
-                                          obj["status"] === "REQUESTED"
-                                            ? "badge badge-light gds-requested-status"
-                                            : obj["status"] === "GRANTED"
-                                            ? "badge badge-light gds-granted-status"
-                                            : obj["status"] === "ACTIVE"
-                                            ? "badge badge-light gds-active-status"
-                                            : "badge badge-light gds-denied-status"
-                                        }
+                                        className={`${statusClassMap[statusVal]}`}
                                       >
                                         {obj["status"]}
                                       </span>
@@ -515,8 +507,8 @@ const DatashareDetailFullView = () => {
                                       </Button>
                                     </div>
                                   </div>
-                                </Accordion.Toggle>
-                                <Accordion.Collapse eventKey="1">
+                                </Accordion.Header>
+                                <Accordion.Body eventKey="1">
                                   <Card.Body>
                                     <div className="d-flex justify-content-between">
                                       {false && (
@@ -594,7 +586,7 @@ const DatashareDetailFullView = () => {
                                             )}
                                           </div>
                                         </div>
-                                        <div className="w-100 text-right">
+                                        <div className="w-100 text-end">
                                           <div>
                                             <Link
                                               to={`/gds/request/detail/${obj.id}`}
@@ -606,8 +598,8 @@ const DatashareDetailFullView = () => {
                                       </div>
                                     </div>
                                   </Card.Body>
-                                </Accordion.Collapse>
-                              </div>
+                                </Accordion.Body>
+                              </Accordion.Item>
                             </Accordion>
                           </div>
                         );

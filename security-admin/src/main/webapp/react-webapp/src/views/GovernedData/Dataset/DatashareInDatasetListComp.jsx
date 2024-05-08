@@ -34,6 +34,7 @@ import {
   isSystemAdmin
 } from "../../../utils/XAUtils";
 import { Button, Modal } from "react-bootstrap";
+import { statusClassMap } from "../../../utils/XAEnums";
 
 const DatashareInDatasetListComp = ({
   id,
@@ -273,20 +274,9 @@ const DatashareInDatasetListComp = ({
         width: 108,
         disableSortBy: true,
         Cell: (val) => {
+          let statusVal = val.value || "DENIED";
           return (
-            <span
-              className={
-                val.value === "REQUESTED"
-                  ? "badge badge-light gds-requested-status"
-                  : val.value === "GRANTED"
-                  ? "badge badge-light gds-granted-status"
-                  : val.value === "ACTIVE"
-                  ? "badge badge-light gds-active-status"
-                  : "badge badge-light gds-denied-status"
-              }
-            >
-              {val.value}
-            </span>
+            <span className={`${statusClassMap[statusVal]}`}>{val.value}</span>
           );
         }
       },
@@ -323,7 +313,7 @@ const DatashareInDatasetListComp = ({
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 style={{ height: "31px" }}
                 title="View Request"
                 onClick={() =>
@@ -337,7 +327,7 @@ const DatashareInDatasetListComp = ({
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 title="View Dataset"
                 onClick={() => navigate(`/gds/dataset/${original.id}/detail`)}
                 data-name="viewDataset"
@@ -449,20 +439,9 @@ const DatashareInDatasetListComp = ({
         width: 108,
         disableSortBy: true,
         Cell: (val) => {
+          let statusVal = val.value || "DENIED";
           return (
-            <span
-              className={
-                val.value === "REQUESTED"
-                  ? "badge badge-light gds-requested-status"
-                  : val.value === "GRANTED"
-                  ? "badge badge-light gds-granted-status"
-                  : val.value === "ACTIVE"
-                  ? "badge badge-light gds-active-status"
-                  : "badge badge-light gds-denied-status"
-              }
-            >
-              {val.value}
-            </span>
+            <span className={`${statusClassMap[statusVal]}`}>{val.value}</span>
           );
         }
       },
@@ -485,7 +464,7 @@ const DatashareInDatasetListComp = ({
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 style={{ height: "31px" }}
                 title="View Request"
                 onClick={() =>
@@ -499,7 +478,7 @@ const DatashareInDatasetListComp = ({
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 title="View Datashare"
                 onClick={() => navigate(`/gds/datashare/${original.id}/detail`)}
                 data-name="viewDatashare"
@@ -576,14 +555,6 @@ const DatashareInDatasetListComp = ({
       toast.success(successMsg);
       setUpdateTable(moment.now());
       fetchShareStatusMetrics();
-
-      //   fetchDatashareRequestList(
-      //     undefined,
-      //     dataShareRequestsList.length == 1
-      //       ? requestCurrentPage - 1
-      //       : requestCurrentPage,
-      //     false
-      //   );
       setLoader(false);
     } catch (error) {
       let errorMsg = "";

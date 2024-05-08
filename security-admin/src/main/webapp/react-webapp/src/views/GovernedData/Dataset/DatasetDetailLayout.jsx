@@ -121,10 +121,6 @@ const DatasetDetailLayout = () => {
   );
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [dataShareRequestsList, setDatashareRequestsList] = useState([]);
-  const [userSharedWithAccordion, setUserSharedWithAccordion] = useState(false);
-  const [groupSharedWithAccordion, setGroupSharedWithAccordion] =
-    useState(false);
-  const [roleSharedWithAccordion, setRoleSharedWithAccordion] = useState(false);
   const [userList, setUserList] = useState([]);
   const [groupList, setGroupList] = useState([]);
   const [roleList, setRoleList] = useState([]);
@@ -799,18 +795,6 @@ const DatasetDetailLayout = () => {
 
   const handleSubmit = async (formData) => {};
 
-  const onUserSharedWithAccordianChange = () => {
-    setUserSharedWithAccordion(!userSharedWithAccordion);
-  };
-
-  const onGroupSharedWithAccordianChange = () => {
-    setGroupSharedWithAccordion(!groupSharedWithAccordion);
-  };
-
-  const onRoleSharedWithAccordianChange = () => {
-    setRoleSharedWithAccordion(!roleSharedWithAccordion);
-  };
-
   const serviceSelectTheme = (theme) => {
     return {
       ...theme,
@@ -1454,7 +1438,7 @@ const DatasetDetailLayout = () => {
           </Button>
           <h3 className="gds-header bold">
             <div className="d-flex align-items-center">
-              <span className="mr-1">Dataset: </span>
+              <span className="me-1">Dataset: </span>
               {!datasetNameEditable ? (
                 <span
                   title={datasetName}
@@ -1502,19 +1486,18 @@ const DatasetDetailLayout = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  if(datasetName.length > 512) {
-                    toast.error('Dataset name must be 512 characters or less');
-                  }
-                  else {
+                  if (datasetName.length > 512) {
+                    toast.error("Dataset name must be 512 characters or less");
+                  } else {
                     if (
-                      activeKey === 'accessGrants' &&
+                      activeKey === "accessGrants" &&
                       accessGrantFormValues !== undefined &&
                       datasetNameEditable
                     ) {
                       updateDatasetAndAccessGrant();
                     } else if (
-                      activeKey !== 'accessGrants' ||
-                      (activeKey === 'accessGrants' && datasetNameEditable)
+                      activeKey !== "accessGrants" ||
+                      (activeKey === "accessGrants" && datasetNameEditable)
                     ) {
                       updateDatasetDetails();
                     } else {
@@ -1702,7 +1685,7 @@ const DatasetDetailLayout = () => {
                 </Tab>
                 <Tab eventKey="datashares" title="DATASHARES">
                   {activeKey == "datashares" ? (
-                    <div className="gds-request-content">
+                    <div className="gds-content-border gds-request-content">
                       <div className="mb-3">
                         <div className="usr-grp-role-search-width mb-3">
                           <StructuredFilter
@@ -1885,192 +1868,154 @@ const DatasetDetailLayout = () => {
                           </div>
 
                           <Accordion className="mg-b-10" defaultActiveKey="0">
-                            <Card>
-                              <div className="border-bottom">
-                                <Accordion.Toggle
-                                  as={Card.Header}
-                                  eventKey="1"
-                                  onClick={onUserSharedWithAccordianChange}
-                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                  data-id="panel"
-                                  data-cy="panel"
-                                >
-                                  <div className="d-flex align-items-center gap-half">
-                                    <img
-                                      src={userColourIcon}
-                                      height="30px"
-                                      width="30px"
-                                    />
-                                    Users (
-                                    {filteredUserSharedWithMap == undefined
-                                      ? 0
-                                      : filteredUserSharedWithMap.size}
-                                    )
-                                  </div>
-                                  {userSharedWithAccordion ? (
-                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                  ) : (
-                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                  )}
-                                </Accordion.Toggle>
-                              </div>
-                              <Accordion.Collapse eventKey="1">
-                                <Card.Body>
-                                  {filteredUserSharedWithMap != undefined &&
-                                  filteredUserSharedWithMap.size > 0 ? (
-                                    Array.from(filteredUserSharedWithMap).map(
-                                      ([key, value]) => (
-                                        <div
-                                          className="gds-principle-listing"
-                                          key={key}
-                                        >
-                                          <span title={key}>{key}</span>
-                                          <div className="gds-chips gap-one-fourth">
-                                            {value.map((accessObj) => (
-                                              <span
-                                                className="badge badge-light badge-sm"
-                                                title={accessObj.type}
-                                                key={accessObj.type}
-                                              >
-                                                {accessObj.type}
-                                              </span>
-                                            ))}
-                                          </div>
+                            <Accordion.Item>
+                              <Accordion.Header
+                                eventKey="1"
+                                data-id="panel"
+                                data-cy="panel"
+                              >
+                                <div className="d-flex align-items-center gap-half">
+                                  <img
+                                    src={userColourIcon}
+                                    height="30px"
+                                    width="30px"
+                                  />
+                                  Users (
+                                  {filteredUserSharedWithMap == undefined
+                                    ? 0
+                                    : filteredUserSharedWithMap.size}
+                                  )
+                                </div>
+                              </Accordion.Header>
+                              <Accordion.Body eventKey="1">
+                                {filteredUserSharedWithMap != undefined &&
+                                filteredUserSharedWithMap.size > 0 ? (
+                                  Array.from(filteredUserSharedWithMap).map(
+                                    ([key, value]) => (
+                                      <div
+                                        className="gds-principle-listing"
+                                        key={key}
+                                      >
+                                        <span title={key}>{key}</span>
+                                        <div className="gds-chips gap-one-fourth">
+                                          {value.map((accessObj) => (
+                                            <span
+                                              className="badge text-bg-light badge-sm"
+                                              title={accessObj.type}
+                                              key={accessObj.type}
+                                            >
+                                              {accessObj.type}
+                                            </span>
+                                          ))}
                                         </div>
-                                      )
+                                      </div>
                                     )
-                                  ) : (
-                                    <p className="mt-1">--</p>
-                                  )}
-                                </Card.Body>
-                              </Accordion.Collapse>
-                            </Card>
+                                  )
+                                ) : (
+                                  <p className="mt-1">--</p>
+                                )}
+                              </Accordion.Body>
+                            </Accordion.Item>
                           </Accordion>
-
                           <Accordion className="mg-b-10" defaultActiveKey="0">
-                            <Card>
-                              <div className="border-bottom">
-                                <Accordion.Toggle
-                                  as={Card.Header}
-                                  eventKey="1"
-                                  onClick={onGroupSharedWithAccordianChange}
-                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                  data-id="panel"
-                                  data-cy="panel"
-                                >
-                                  <div className="d-flex align-items-center gap-half">
-                                    <img
-                                      src={groupColourIcon}
-                                      height="30px"
-                                      width="30px"
-                                    />
-                                    Groups (
-                                    {filteredGroupSharedWithMap == undefined
-                                      ? 0
-                                      : filteredGroupSharedWithMap.size}
-                                    )
-                                  </div>
-                                  {groupSharedWithAccordion ? (
-                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                  ) : (
-                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                  )}
-                                </Accordion.Toggle>
-                              </div>
-                              <Accordion.Collapse eventKey="1">
-                                <Card.Body>
-                                  {filteredGroupSharedWithMap != undefined &&
-                                  filteredGroupSharedWithMap.size > 0 ? (
-                                    Array.from(filteredGroupSharedWithMap).map(
-                                      ([key, value]) => (
-                                        <div
-                                          className="gds-principle-listing"
-                                          key={key}
-                                        >
-                                          <span title={key}>{key}</span>
-                                          <div className="gds-chips gap-one-fourth">
-                                            {value.map((accessObj) => (
-                                              <span
-                                                className="badge badge-light badge-sm"
-                                                title={accessObj.type}
-                                                key={accessObj.type}
-                                              >
-                                                {accessObj.type}
-                                              </span>
-                                            ))}
-                                          </div>
+                            <Accordion.Item>
+                              <Accordion.Header
+                                eventKey="1"
+                                data-id="panel"
+                                data-cy="panel"
+                              >
+                                <div className="d-flex align-items-center gap-half">
+                                  <img
+                                    src={groupColourIcon}
+                                    height="30px"
+                                    width="30px"
+                                  />
+                                  Groups (
+                                  {filteredGroupSharedWithMap == undefined
+                                    ? 0
+                                    : filteredGroupSharedWithMap.size}
+                                  )
+                                </div>
+                              </Accordion.Header>
+                              <Accordion.Body eventKey="1">
+                                {filteredGroupSharedWithMap != undefined &&
+                                filteredGroupSharedWithMap.size > 0 ? (
+                                  Array.from(filteredGroupSharedWithMap).map(
+                                    ([key, value]) => (
+                                      <div
+                                        className="gds-principle-listing"
+                                        key={key}
+                                      >
+                                        <span title={key}>{key}</span>
+                                        <div className="gds-chips gap-one-fourth">
+                                          {value.map((accessObj) => (
+                                            <span
+                                              className="badge text-bg-light badge-sm"
+                                              title={accessObj.type}
+                                              key={accessObj.type}
+                                            >
+                                              {accessObj.type}
+                                            </span>
+                                          ))}
                                         </div>
-                                      )
+                                      </div>
                                     )
-                                  ) : (
-                                    <p className="mt-1">--</p>
-                                  )}
-                                </Card.Body>
-                              </Accordion.Collapse>
-                            </Card>
+                                  )
+                                ) : (
+                                  <p className="mt-1">--</p>
+                                )}
+                              </Accordion.Body>
+                            </Accordion.Item>
                           </Accordion>
-
                           <Accordion className="mg-b-10" defaultActiveKey="0">
-                            <Card>
-                              <div className="border-bottom">
-                                <Accordion.Toggle
-                                  as={Card.Header}
-                                  eventKey="1"
-                                  onClick={onRoleSharedWithAccordianChange}
-                                  className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                                  data-id="panel"
-                                  data-cy="panel"
-                                >
-                                  <div className="d-flex align-items-center gap-half">
-                                    <img
-                                      src={roleColourIcon}
-                                      height="30px"
-                                      width="30px"
-                                    />
-                                    Roles (
-                                    {filteredRoleSharedWithMap == undefined
-                                      ? 0
-                                      : filteredRoleSharedWithMap.size}
-                                    )
-                                  </div>
-                                  {roleSharedWithAccordion ? (
-                                    <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                  ) : (
-                                    <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                  )}
-                                </Accordion.Toggle>
-                              </div>
-                              <Accordion.Collapse eventKey="1">
-                                <Card.Body>
-                                  {filteredRoleSharedWithMap != undefined &&
-                                  filteredRoleSharedWithMap.size > 0 ? (
-                                    Array.from(filteredRoleSharedWithMap).map(
-                                      ([key, value]) => (
-                                        <div
-                                          className="gds-principle-listing"
-                                          key={key}
-                                        >
-                                          <span title={key}>{key}</span>
-                                          <div className="gds-chips gap-one-fourth">
-                                            {value.map((accessObj) => (
-                                              <span
-                                                className="badge badge-light badge-sm"
-                                                title={accessObj.type}
-                                                key={accessObj.type}
-                                              >
-                                                {accessObj.type}
-                                              </span>
-                                            ))}
-                                          </div>
+                            <Accordion.Item>
+                              <Accordion.Header
+                                eventKey="1"
+                                data-id="panel"
+                                data-cy="panel"
+                              >
+                                <div className="d-flex align-items-center gap-half">
+                                  <img
+                                    src={roleColourIcon}
+                                    height="30px"
+                                    width="30px"
+                                  />
+                                  Roles (
+                                  {filteredRoleSharedWithMap == undefined
+                                    ? 0
+                                    : filteredRoleSharedWithMap.size}
+                                  )
+                                </div>
+                              </Accordion.Header>
+                              <Accordion.Body eventKey="1">
+                                {filteredRoleSharedWithMap != undefined &&
+                                filteredRoleSharedWithMap.size > 0 ? (
+                                  Array.from(filteredRoleSharedWithMap).map(
+                                    ([key, value]) => (
+                                      <div
+                                        className="gds-principle-listing"
+                                        key={key}
+                                      >
+                                        <span title={key}>{key}</span>
+                                        <div className="gds-chips gap-one-fourth">
+                                          {value.map((accessObj) => (
+                                            <span
+                                              className="badge text-bg-light badge-sm"
+                                              title={accessObj.type}
+                                              key={accessObj.type}
+                                            >
+                                              {accessObj.type}
+                                            </span>
+                                          ))}
                                         </div>
-                                      )
+                                      </div>
                                     )
-                                  ) : (
-                                    <p className="mt-1">--</p>
-                                  )}
-                                </Card.Body>
-                              </Accordion.Collapse>
-                            </Card>
+                                  )
+                                ) : (
+                                  <p className="mt-1">--</p>
+                                )}
+                              </Accordion.Body>
+                            </Accordion.Item>
                           </Accordion>
                         </div>
                       </div>
@@ -2108,7 +2053,7 @@ const DatasetDetailLayout = () => {
                   userAclPerm === "AUDIT") && (
                   <Tab eventKey="history" title="HISTORY">
                     {activeKey == "history" && (
-                      <div className="gds-request-content">
+                      <div className="gds-content-border gds-request-content">
                         <div className="mb-3">
                           <div className="usr-grp-role-search-width mb-3 mg-t-20">
                             <StructuredFilter
@@ -2130,7 +2075,6 @@ const DatasetDetailLayout = () => {
                           getRowProps={(row) => ({
                             onClick: (e) => {
                               e.stopPropagation();
-                              // rowModal(row);
                             }
                           })}
                           columnHide={false}

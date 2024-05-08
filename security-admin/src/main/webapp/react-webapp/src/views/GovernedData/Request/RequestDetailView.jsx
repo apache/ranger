@@ -31,6 +31,7 @@ import moment from "moment-timezone";
 import { isEmpty } from "lodash";
 import { toast } from "react-toastify";
 import { getAllTimeZoneList } from "../../../utils/XAUtils";
+import { statusClassMap } from "../../../utils/XAEnums";
 
 const RequestDetailView = () => {
   let { requestId } = useParams();
@@ -155,6 +156,8 @@ const RequestDetailView = () => {
     }
   };
 
+  const statusVal = requestInfo.status || "DENIED";
+
   return (
     <>
       <Form
@@ -222,24 +225,14 @@ const RequestDetailView = () => {
             {loader ? (
               <Loader />
             ) : (
-              <div className="gds-request-content pt-5">
+              <div className="gds-content-border gds-request-content pt-5">
                 <div className="d-flex justify-content-between">
                   <div className="gds-inline-field-grp">
                     <div className="wrapper">
                       <div className="gds-left-inline-field" height="30px">
                         <span className="gds-label-color">Status</span>
                       </div>
-                      <span
-                        className={
-                          requestInfo.status === "REQUESTED"
-                            ? "badge badge-light gds-requested-status"
-                            : requestInfo.status === "GRANTED"
-                            ? "badge badge-light gds-granted-status"
-                            : requestInfo.status === "ACTIVE"
-                            ? "badge badge-light gds-active-status"
-                            : "badge badge-light gds-denied-status"
-                        }
-                      >
+                      <span className={`${statusClassMap[statusVal]}`}>
                         {requestInfo.status}
                       </span>
                     </div>

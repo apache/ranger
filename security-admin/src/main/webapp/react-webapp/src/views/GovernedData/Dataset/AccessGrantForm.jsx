@@ -467,7 +467,7 @@ function AccessGrantForm({
               initialValues
             }) => {
               return (
-                <div className="gds-access-content">
+                <div className="gds-access-content gds-content-border">
                   <FormChange
                     isDirtyField={
                       dirty == true || !isEqual(initialValues, values)

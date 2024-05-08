@@ -2669,13 +2669,15 @@ li.list-group-item:hover {
 }
 
 .gds-request-content {
-  width: 920px;
-  margin: 0 auto;
+  width: 1020px;
+  margin-left: 120px;
+  margin-top: 40px;
 }
 
 .gds-access-content {
   max-width: 1140px;
-  margin: 0 auto;
+  margin-left: 120px;
+  margin-top: 40px;
 }
 
 .gds-content-margin {
@@ -2921,25 +2923,6 @@ textarea.gds-placeholder::placeholder,
 
 .hide-arrow .dropdown-toggle::after {
   display: none; /* Hide the down arrow */
-}
-
-.gds-requested-status {
-  background: #ffc107;
-}
-
-.gds-granted-status {
-  background: #28a745;
-  color: #ffffff;
-}
-
-.gds-active-status {
-  background: #007bff;
-  color: #ffffff;
-}
-
-.gds-denied-status {
-  background: #dc3545;
-  color: #ffffff;
 }
 
 .w-50 {

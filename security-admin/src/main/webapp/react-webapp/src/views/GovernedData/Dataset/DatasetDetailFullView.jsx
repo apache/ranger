@@ -32,6 +32,7 @@ import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
 import roleColourIcon from "../../../images/role-colour.svg";
 import Select from "react-select";
+import { statusClassMap } from "../../../utils/XAEnums";
 
 const DatasetDetailFullView = () => {
   let { datasetId } = useParams();
@@ -57,10 +58,6 @@ const DatasetDetailFullView = () => {
     useState();
   const [filteredRoleSharedWithMap, setFilteredRoleSharedWithMap] = useState();
   const [sharedWithAccessFilter, setSharedWithAccessFilter] = useState();
-  const [userSharedWithAccordion, setUserSharedWithAccordion] = useState(false);
-  const [groupSharedWithAccordion, setGroupSharedWithAccordion] =
-    useState(false);
-  const [roleSharedWithAccordion, setRoleSharedWithAccordion] = useState(false);
   const [completeDatashareRequestsList, setCompleteDatashareRequestsList] =
     useState([]);
   const [datashareRequestTotalCount, setDatashareRequestTotalCount] =
@@ -371,18 +368,6 @@ const DatasetDetailFullView = () => {
     })
   };
 
-  const onUserSharedWithAccordianChange = () => {
-    setUserSharedWithAccordion(!userSharedWithAccordion);
-  };
-
-  const onGroupSharedWithAccordianChange = () => {
-    setGroupSharedWithAccordion(!groupSharedWithAccordion);
-  };
-
-  const onRoleSharedWithAccordianChange = () => {
-    setRoleSharedWithAccordion(!roleSharedWithAccordion);
-  };
-
   const onSharedWithAccessFilterChange = (e) => {
     setSharedWithAccessFilter(e);
     filterSharedWithPrincipleList(
@@ -536,7 +521,6 @@ const DatasetDetailFullView = () => {
                         className="form-control gds-description"
                         id="description"
                         data-cy="description"
-                        //onChange={datasetDescriptionChange}
                         value={datasetInfo.description}
                         rows={5}
                       />
@@ -553,7 +537,6 @@ const DatasetDetailFullView = () => {
                     roleList={roleList}
                     isEditable={false}
                     type="dataset"
-                    //onDataChange={handleDataChange}
                   />
                 )}
 
@@ -564,170 +547,120 @@ const DatasetDetailFullView = () => {
                   <div>
                     {dataShareRequestsList.length > 0 ? (
                       dataShareRequestsList.map((obj, index) => {
+                        const status = obj["status"] || "DENIED";
                         return (
-                          <div>
-                            <Accordion className="mg-b-10" defaultActiveKey="0">
-                              <div className="border-bottom">
-                                <Accordion.Toggle
-                                  as={Card.Header}
-                                  eventKey="1"
-                                  onClick={() =>
-                                    onRequestAccordionChange(obj.id)
-                                  }
-                                  className="border-bottom-0"
-                                  data-id="panel"
-                                  data-cy="panel"
-                                >
-                                  {/* {obj["status"] == "GRANTED" ? (
-                                    <div>
-                                      <span>Data access granted.</span>
-                                      <Link
-                                        className="mb-3"
-                                        to=""
-                                        onClick={() =>
-                                          showActiveateRequestModal(obj)
-                                        }
-                                      >
-                                        Activate Datashare
-                                      </Link>
-                                    </div>
-                                  ) : (
-                                    <div></div>
-                                  )} */}
-                                  <div className="d-flex justify-content-between align-items-center">
-                                    <div className="d-flex align-items-center gap-1">
-                                      {requestAccordionState[obj.id] ? (
-                                        <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                                      ) : (
-                                        <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                                      )}
-                                      <h5 className="gds-heading-5 m-0">
-                                        {/* {obj.name} */} Datashare{" "}
-                                        {obj.dataShareId}
-                                      </h5>
-                                    </div>
-                                    <div className="d-flex align-items-center gap-1">
-                                      <span
-                                        //className="badge badge-light gds-requested-status"
-                                        className={
-                                          obj["status"] === "REQUESTED"
-                                            ? "badge badge-light gds-requested-status"
-                                            : obj["status"] === "GRANTED"
-                                            ? "badge badge-light gds-granted-status"
-                                            : obj["status"] === "ACTIVE"
-                                            ? "badge badge-light gds-active-status"
-                                            : "badge badge-light gds-denied-status"
-                                        }
-                                      >
-                                        {obj["status"]}
-                                      </span>
-                                      <Button
-                                        variant="outline-dark"
-                                        size="sm"
-                                        className="mr-2"
-                                        title="View"
-                                        data-name="viewDatashare"
-                                        onClick={() =>
-                                          viewDatashareDetail(obj.dataShareId)
-                                        }
-                                        data-id={obj.id}
-                                      >
-                                        <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
-                                      </Button>
-                                      {/* {(isSystemAdmin() ||
-                                        userAclPerm == "ADMIN") && (
-                                        <Button
-                                          variant="danger"
-                                          size="sm"
-                                          title="Delete"
-                                          onClick={() =>
-                                            toggleConfirmModalForDelete(
-                                              obj.id,
-                                              obj.name,
-                                              obj.status
-                                            )
-                                          }
-                                          data-name="deleteDatashareRequest"
-                                          data-id={obj["id"]}
-                                          data-cy={obj["id"]}
+                          <Accordion className="mg-b-10" defaultActiveKey="0">
+                            <div className="border-bottom">
+                              <Accordion.Header
+                                eventKey="1"
+                                onClick={() => onRequestAccordionChange(obj.id)}
+                                className="border-bottom-0"
+                                data-id="panel"
+                                data-cy="panel"
+                              >
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div className="d-flex align-items-center gap-1">
+                                    {requestAccordionState[obj.id] ? (
+                                      <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
+                                    ) : (
+                                      <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
+                                    )}
+                                    <h5 className="gds-heading-5 m-0">
+                                      Datashare {obj.dataShareId}
+                                    </h5>
+                                  </div>
+                                  <div className="d-flex align-items-center gap-1">
+                                    <span
+                                      className={`${statusClassMap[status]}`}
+                                    >
+                                      {obj["status"]}
+                                    </span>
+                                    <Button
+                                      variant="outline-dark"
+                                      size="sm"
+                                      className="me-2"
+                                      title="View"
+                                      data-name="viewDatashare"
+                                      onClick={() =>
+                                        viewDatashareDetail(obj.dataShareId)
+                                      }
+                                      data-id={obj.id}
+                                    >
+                                      <i className="fa-fw fa fa-eye fa-fw fa fa-large" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Accordion.Header>
+                              <Accordion.Body eventKey="1">
+                                <Card.Body>
+                                  <div className="d-flex justify-content-between">
+                                    <div className="gds-inline-field-grp">
+                                      <div className="wrapper">
+                                        <div
+                                          className="gds-left-inline-field"
+                                          height="30px"
                                         >
-                                          <i className="fa-fw fa fa-trash fa-fw fa fa-large" />
-                                        </Button>
-                                      )} */}
+                                          Service
+                                        </div>
+                                        <div line-height="30px">
+                                          {obj["service"]}
+                                        </div>
+                                      </div>
+                                      <div className="wrapper">
+                                        <div
+                                          className="gds-left-inline-field"
+                                          height="30px"
+                                        >
+                                          Zone
+                                        </div>
+                                        <div line-height="30px">
+                                          {obj["zone"]}
+                                        </div>
+                                      </div>
+                                      <div className="wrapper">
+                                        <div
+                                          className="gds-left-inline-field"
+                                          height="30px"
+                                        >
+                                          Resource Count
+                                        </div>
+                                        <div line-height="30px">
+                                          {obj["resourceCount"]}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="gds-right-inline-field-grp">
+                                      <div className="wrapper">
+                                        <div>Added</div>
+                                        <div className="gds-right-inline-field">
+                                          {dateFormat(
+                                            obj["createTime"],
+                                            "mm/dd/yyyy hh:MM:ss TT"
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="wrapper">
+                                        <div>Updated</div>
+                                        <div className="gds-right-inline-field">
+                                          {dateFormat(
+                                            obj["updateTime"],
+                                            "mm/dd/yyyy hh:MM:ss TT"
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="w-100 text-end">
+                                        <Link
+                                          to={`/gds/request/detail/${obj.id}`}
+                                        >
+                                          View Request
+                                        </Link>
+                                      </div>
                                     </div>
                                   </div>
-                                </Accordion.Toggle>
-                                <Accordion.Collapse eventKey="1">
-                                  <Card.Body>
-                                    <div className="d-flex justify-content-between">
-                                      <div className="gds-inline-field-grp">
-                                        <div className="wrapper">
-                                          <div
-                                            className="gds-left-inline-field"
-                                            height="30px"
-                                          >
-                                            Service
-                                          </div>
-                                          <div line-height="30px">
-                                            {obj["service"]}
-                                          </div>
-                                        </div>
-                                        <div className="wrapper">
-                                          <div
-                                            className="gds-left-inline-field"
-                                            height="30px"
-                                          >
-                                            Zone
-                                          </div>
-                                          <div line-height="30px">
-                                            {obj["zone"]}
-                                          </div>
-                                        </div>
-                                        <div className="wrapper">
-                                          <div
-                                            className="gds-left-inline-field"
-                                            height="30px"
-                                          >
-                                            Resource Count
-                                          </div>
-                                          <div line-height="30px">
-                                            {obj["resourceCount"]}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="gds-right-inline-field-grp">
-                                        <div className="wrapper">
-                                          <div>Added</div>
-                                          <div className="gds-right-inline-field">
-                                            {dateFormat(
-                                              obj["createTime"],
-                                              "mm/dd/yyyy hh:MM:ss TT"
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="wrapper">
-                                          <div>Updated</div>
-                                          <div className="gds-right-inline-field">
-                                            {dateFormat(
-                                              obj["updateTime"],
-                                              "mm/dd/yyyy hh:MM:ss TT"
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="w-100 text-right">
-                                          <Link
-                                            to={`/gds/request/detail/${obj.id}`}
-                                          >
-                                            View Request
-                                          </Link>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </Card.Body>
-                                </Accordion.Collapse>
-                              </div>
-                            </Accordion>
-                          </div>
+                                </Card.Body>
+                              </Accordion.Body>
+                            </div>
+                          </Accordion>
                         );
                       })
                     ) : (
@@ -782,192 +715,156 @@ const DatasetDetailFullView = () => {
                     </div>
 
                     <Accordion className="mg-b-10" defaultActiveKey="0">
-                      <Card>
-                        <div className="border-bottom">
-                          <Accordion.Toggle
-                            as={Card.Header}
-                            eventKey="1"
-                            onClick={onUserSharedWithAccordianChange}
-                            className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                            data-id="panel"
-                            data-cy="panel"
-                          >
-                            <div className="d-flex align-items-center gap-half">
-                              <img
-                                src={userColourIcon}
-                                height="30px"
-                                width="30px"
-                              />
-                              Users (
-                              {filteredUserSharedWithMap == undefined
-                                ? 0
-                                : filteredUserSharedWithMap.size}
-                              )
-                            </div>
-                            {userSharedWithAccordion ? (
-                              <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                            ) : (
-                              <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                            )}
-                          </Accordion.Toggle>
-                        </div>
-                        <Accordion.Collapse eventKey="1">
-                          <Card.Body>
-                            {filteredUserSharedWithMap != undefined &&
-                            filteredUserSharedWithMap.size > 0 ? (
-                              Array.from(filteredUserSharedWithMap).map(
-                                ([key, value]) => (
-                                  <div
-                                    className="gds-principle-listing"
-                                    key={key}
-                                  >
-                                    <span title={key}>{key}</span>
-                                    <div className="gds-chips gap-one-fourth">
-                                      {value.map((accessObj) => (
-                                        <span
-                                          className="badge badge-light badge-sm"
-                                          title={accessObj.type}
-                                          key={accessObj.type}
-                                        >
-                                          {accessObj.type}
-                                        </span>
-                                      ))}
-                                    </div>
+                      <Accordion.Item>
+                        <Accordion.Header
+                          eventKey="1"
+                          data-id="panel"
+                          data-cy="panel"
+                        >
+                          <div className="d-flex align-items-center gap-half">
+                            <img
+                              src={userColourIcon}
+                              height="30px"
+                              width="30px"
+                            />
+                            Users (
+                            {filteredUserSharedWithMap == undefined
+                              ? 0
+                              : filteredUserSharedWithMap.size}
+                            )
+                          </div>
+                        </Accordion.Header>
+                        <Accordion.Body eventKey="1">
+                          {filteredUserSharedWithMap != undefined &&
+                          filteredUserSharedWithMap.size > 0 ? (
+                            Array.from(filteredUserSharedWithMap).map(
+                              ([key, value]) => (
+                                <div
+                                  className="gds-principle-listing"
+                                  key={key}
+                                >
+                                  <span title={key}>{key}</span>
+                                  <div className="gds-chips gap-one-fourth">
+                                    {value.map((accessObj) => (
+                                      <span
+                                        className="badge text-bg-light badge-sm"
+                                        title={accessObj.type}
+                                        key={accessObj.type}
+                                      >
+                                        {accessObj.type}
+                                      </span>
+                                    ))}
                                   </div>
-                                )
+                                </div>
                               )
-                            ) : (
-                              <p className="mt-1">--</p>
-                            )}
-                          </Card.Body>
-                        </Accordion.Collapse>
-                      </Card>
+                            )
+                          ) : (
+                            <p className="mt-1">--</p>
+                          )}
+                        </Accordion.Body>
+                      </Accordion.Item>
                     </Accordion>
 
                     <Accordion className="mg-b-10" defaultActiveKey="0">
-                      <Card>
-                        <div className="border-bottom">
-                          <Accordion.Toggle
-                            as={Card.Header}
-                            eventKey="1"
-                            onClick={onGroupSharedWithAccordianChange}
-                            className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                            data-id="panel"
-                            data-cy="panel"
-                          >
-                            <div className="d-flex align-items-center gap-half">
-                              <img
-                                src={groupColourIcon}
-                                height="30px"
-                                width="30px"
-                              />
-                              Groups (
-                              {filteredGroupSharedWithMap == undefined
-                                ? 0
-                                : filteredGroupSharedWithMap.size}
-                              )
-                            </div>
-                            {groupSharedWithAccordion ? (
-                              <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                            ) : (
-                              <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                            )}
-                          </Accordion.Toggle>
-                        </div>
-                        <Accordion.Collapse eventKey="1">
-                          <Card.Body>
-                            {filteredGroupSharedWithMap != undefined &&
-                            filteredGroupSharedWithMap.size > 0 ? (
-                              Array.from(filteredGroupSharedWithMap).map(
-                                ([key, value]) => (
-                                  <div
-                                    className="gds-principle-listing"
-                                    key={key}
-                                  >
-                                    <span title={key}>{key}</span>
-                                    <div className="gds-chips gap-one-fourth">
-                                      {value.map((accessObj) => (
-                                        <span
-                                          className="badge badge-light badge-sm"
-                                          title={accessObj.type}
-                                          key={accessObj.type}
-                                        >
-                                          {accessObj.type}
-                                        </span>
-                                      ))}
-                                    </div>
+                      <Accordion.Item>
+                        <Accordion.Header
+                          eventKey="1"
+                          data-id="panel"
+                          data-cy="panel"
+                        >
+                          <div className="d-flex align-items-center gap-half">
+                            <img
+                              src={groupColourIcon}
+                              height="30px"
+                              width="30px"
+                            />
+                            Groups (
+                            {filteredGroupSharedWithMap == undefined
+                              ? 0
+                              : filteredGroupSharedWithMap.size}
+                            )
+                          </div>
+                        </Accordion.Header>
+                        <Accordion.Body eventKey="1">
+                          {filteredGroupSharedWithMap != undefined &&
+                          filteredGroupSharedWithMap.size > 0 ? (
+                            Array.from(filteredGroupSharedWithMap).map(
+                              ([key, value]) => (
+                                <div
+                                  className="gds-principle-listing"
+                                  key={key}
+                                >
+                                  <span title={key}>{key}</span>
+                                  <div className="gds-chips gap-one-fourth">
+                                    {value.map((accessObj) => (
+                                      <span
+                                        className="badge text-bg-light badge-sm"
+                                        title={accessObj.type}
+                                        key={accessObj.type}
+                                      >
+                                        {accessObj.type}
+                                      </span>
+                                    ))}
                                   </div>
-                                )
+                                </div>
                               )
-                            ) : (
-                              <p className="mt-1">--</p>
-                            )}
-                          </Card.Body>
-                        </Accordion.Collapse>
-                      </Card>
+                            )
+                          ) : (
+                            <p className="mt-1">--</p>
+                          )}
+                        </Accordion.Body>
+                      </Accordion.Item>
                     </Accordion>
 
                     <Accordion className="mg-b-10" defaultActiveKey="0">
-                      <Card>
-                        <div className="border-bottom">
-                          <Accordion.Toggle
-                            as={Card.Header}
-                            eventKey="1"
-                            onClick={onRoleSharedWithAccordianChange}
-                            className="border-bottom-0 d-flex align-items-center justify-content-between gds-acc-card-header"
-                            data-id="panel"
-                            data-cy="panel"
-                          >
-                            <div className="d-flex align-items-center gap-half">
-                              <img
-                                src={roleColourIcon}
-                                height="30px"
-                                width="30px"
-                              />
-                              Roles (
-                              {filteredRoleSharedWithMap == undefined
-                                ? 0
-                                : filteredRoleSharedWithMap.size}
-                              )
-                            </div>
-                            {roleSharedWithAccordion ? (
-                              <i className="fa fa-angle-up fa-lg font-weight-bold"></i>
-                            ) : (
-                              <i className="fa fa-angle-down fa-lg font-weight-bold"></i>
-                            )}
-                          </Accordion.Toggle>
-                        </div>
-                        <Accordion.Collapse eventKey="1">
-                          <Card.Body>
-                            {filteredRoleSharedWithMap != undefined &&
-                            filteredRoleSharedWithMap.size > 0 ? (
-                              Array.from(filteredRoleSharedWithMap).map(
-                                ([key, value]) => (
-                                  <div
-                                    className="gds-principle-listing"
-                                    key={key}
-                                  >
-                                    <span title={key}>{key}</span>
-                                    <div className="gds-chips gap-one-fourth">
-                                      {value.map((accessObj) => (
-                                        <span
-                                          className="badge badge-light badge-sm"
-                                          title={accessObj.type}
-                                          key={accessObj.type}
-                                        >
-                                          {accessObj.type}
-                                        </span>
-                                      ))}
-                                    </div>
+                      <Accordion.Item>
+                        <Accordion.Header
+                          eventKey="1"
+                          data-id="panel"
+                          data-cy="panel"
+                        >
+                          <div className="d-flex align-items-center gap-half">
+                            <img
+                              src={roleColourIcon}
+                              height="30px"
+                              width="30px"
+                            />
+                            Roles (
+                            {filteredRoleSharedWithMap == undefined
+                              ? 0
+                              : filteredRoleSharedWithMap.size}
+                            )
+                          </div>
+                        </Accordion.Header>
+                        <Accordion.Body eventKey="1">
+                          {filteredRoleSharedWithMap != undefined &&
+                          filteredRoleSharedWithMap.size > 0 ? (
+                            Array.from(filteredRoleSharedWithMap).map(
+                              ([key, value]) => (
+                                <div
+                                  className="gds-principle-listing"
+                                  key={key}
+                                >
+                                  <span title={key}>{key}</span>
+                                  <div className="gds-chips gap-one-fourth">
+                                    {value.map((accessObj) => (
+                                      <span
+                                        className="badge text-bg-light badge-sm"
+                                        title={accessObj.type}
+                                        key={accessObj.type}
+                                      >
+                                        {accessObj.type}
+                                      </span>
+                                    ))}
                                   </div>
-                                )
+                                </div>
                               )
-                            ) : (
-                              <p className="mt-1">--</p>
-                            )}
-                          </Card.Body>
-                        </Accordion.Collapse>
-                      </Card>
+                            )
+                          ) : (
+                            <p className="mt-1">--</p>
+                          )}
+                        </Accordion.Body>
+                      </Accordion.Item>
                     </Accordion>
                   </div>
                 </div>
@@ -984,7 +881,6 @@ const DatasetDetailFullView = () => {
                         className="form-control"
                         id="termsAndConditions"
                         data-cy="termsAndConditions"
-                        //onChange={datasetTermsAndConditionsChange}
                         value={datasetInfo.termsOfUse}
                         rows={16}
                       />

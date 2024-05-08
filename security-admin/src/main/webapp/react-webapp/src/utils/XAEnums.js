@@ -899,7 +899,8 @@ export const pluginStatusColumnInfoMsg = {
     title: "Policy (Time details)",
     lastUpdated: "Last update time of policies",
     downloadTime: "Last policies download time (sync-up with Ranger).",
-    activeTime: "Last time the downloaded policies became active for enforcement.",
+    activeTime:
+      "Last time the downloaded policies became active for enforcement.",
     downloadTimeDelayMsg:
       "Latest update in policies are not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
@@ -918,9 +919,9 @@ export const pluginStatusColumnInfoMsg = {
   GDS: {
     title: "GDS (Time details)",
     lastUpdated: "Last update time of GDS info.",
-    downloadTime:
-      "Last GDS info download time (sync-up with Ranger).",
-    activeTime: "Last time the downloaded GDS info became active for enforcement.",
+    downloadTime: "Last GDS info download time (sync-up with Ranger).",
+    activeTime:
+      "Last time the downloaded GDS info became active for enforcement.",
     downloadTimeDelayMsg:
       "Latest update in GDS info is not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
@@ -929,12 +930,18 @@ export const pluginStatusColumnInfoMsg = {
   Role: {
     title: "Role (Time details)",
     lastUpdated: "Last updated time of roles.",
-    downloadTime:
-      "Last roles download time (sync-up with Ranger).",
+    downloadTime: "Last roles download time (sync-up with Ranger).",
     activeTime: "Last time the downloaded roles became active for enforcement.",
     downloadTimeDelayMsg:
       "Latest update in roles are not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
       "Latest update in roles are not yet active for enforcement."
   }
+};
+
+export const statusClassMap = {
+  REQUESTED: "badge bg-warning",
+  GRANTED: "badge bg-success",
+  ACTIVE: "badge bg-primary",
+  DENIED: "badge bg-danger"
 };

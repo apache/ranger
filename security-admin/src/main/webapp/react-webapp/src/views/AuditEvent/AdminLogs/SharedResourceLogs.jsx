@@ -47,7 +47,7 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
                 {val && val.previousValue && !isEmpty(val.previousValue) ? (
                   isEmpty(val.newValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="danger">
+                      <Badge className="d-inline me-1" bg="danger">
                         {getfilteredoldval(val.previousValue)}
                       </Badge>
                     </h6>
@@ -66,7 +66,7 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
                 {val && val.newValue && !isEmpty(val.newValue) ? (
                   isEmpty(val.previousValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="success">
+                      <Badge className="d-inline me-1" bg="success">
                         {getfilterednewval(val.newValue)}
                       </Badge>
                     </h6>
@@ -91,7 +91,8 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
     <div>
       {/* CREATE  */}
       {action == "create" &&
-        objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+        objectClassType ==
+          ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
           <div>
             <div className="font-weight-bolder">Name : {objectName}</div>
             <div className="font-weight-bolder">
@@ -114,10 +115,14 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
                 return (
                   <tbody>
                     <tr key={sharedResource.id}>
-                      <td className="table-warning">{sharedResource.attributeName}</td>
+                      <td className="table-warning">
+                        {sharedResource.attributeName}
+                      </td>
 
                       <td className="table-warning">
-                        {!isEmpty(sharedResource.newValue) ? sharedResource.newValue : "--"}
+                        {!isEmpty(sharedResource.newValue)
+                          ? sharedResource.newValue
+                          : "--"}
                       </td>
                     </tr>
                   </tbody>
@@ -130,7 +135,8 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
       {/* UPDATE */}
 
       {action == "update" &&
-        objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+        objectClassType ==
+          ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
           <div>
             <div className="row">
               <div className="col-md-6">
@@ -141,7 +147,7 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
                 </div>
                 <div className="font-weight-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -164,7 +170,8 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
         )}
       {/* DELETE  */}
       {action == "delete" &&
-        objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+        objectClassType ==
+          ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
           <div>
             <div className="font-weight-bolder">Name : {objectName}</div>
             <div className="font-weight-bolder">
@@ -187,9 +194,13 @@ export const SharedResourceLogs = ({ data, reportdata }) => {
                 return (
                   <tbody>
                     <tr>
-                      <td className="table-warning">{sharedResource.attributeName}</td>
                       <td className="table-warning">
-                        {!isEmpty(sharedResource.previousValue) ? sharedResource.previousValue : "--"}
+                        {sharedResource.attributeName}
+                      </td>
+                      <td className="table-warning">
+                        {!isEmpty(sharedResource.previousValue)
+                          ? sharedResource.previousValue
+                          : "--"}
                       </td>
                     </tr>
                   </tbody>
