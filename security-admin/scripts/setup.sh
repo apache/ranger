@@ -76,6 +76,7 @@ javax_net_ssl_trustStore=$(get_prop 'javax_net_ssl_trustStore' $PROPFILE)
 javax_net_ssl_trustStorePassword=$(get_prop 'javax_net_ssl_trustStorePassword' $PROPFILE)
 audit_store=$(get_prop 'audit_store' $PROPFILE)
 audit_elasticsearch_urls=$(get_prop 'audit_elasticsearch_urls' $PROPFILE)
+audit_elasticsearch_protocol=$(get_prop 'audit_elasticsearch_protocol' $PROPFILE)
 audit_elasticsearch_port=$(get_prop 'audit_elasticsearch_port' $PROPFILE)
 audit_elasticsearch_user=$(get_prop 'audit_elasticsearch_user' $PROPFILE)
 audit_elasticsearch_password=$(get_prop 'audit_elasticsearch_password' $PROPFILE)
@@ -791,7 +792,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.protocol
-		newPropertyValue=${audit_elasticsearch_urls}
+		newPropertyValue=${audit_elasticsearch_protocol}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.port
