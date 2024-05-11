@@ -790,6 +790,10 @@ update_properties() {
 		newPropertyValue=${audit_elasticsearch_urls}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
+		propertyName=ranger.audit.elasticsearch.protocol
+		newPropertyValue=${audit_elasticsearch_urls}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
 		propertyName=ranger.audit.elasticsearch.port
 		newPropertyValue=${audit_elasticsearch_port}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
