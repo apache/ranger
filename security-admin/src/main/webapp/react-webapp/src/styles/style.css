@@ -866,7 +866,7 @@ header {
 }
 
 /* Users / Groups / Roles CSS */
-.row-inactive td{
+.row-inactive td {
   background-color: #f6f7f8 !important;
 }
 
@@ -1023,6 +1023,7 @@ header {
 
 .updateInfo {
   margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #ccc;
 }
 
@@ -2570,12 +2571,13 @@ table a {
 }
 .resource-drop-down {
   display: flex;
-  justify-content:flex-end;
+  justify-content: flex-end;
   gap: 1px;
 }
-.form-check-input[type=checkbox], .form-check-input[type=radio] {
+.form-check-input[type="checkbox"],
+.form-check-input[type="radio"] {
   border-color: #6c757d;
 }
-.switch[class*="btn-outline"] .switch-handle{
-  background-color:#6c757d !important;
+.switch[class*="btn-outline"] .switch-handle {
+  background-color: #6c757d !important;
 }
