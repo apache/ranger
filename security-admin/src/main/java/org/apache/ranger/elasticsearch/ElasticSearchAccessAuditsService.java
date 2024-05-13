@@ -257,7 +257,7 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		}
 		value = source.get("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(MiscUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toLocalDate(value));
 		}
 		value = source.get("seq_num");
 		if (value != null) {
