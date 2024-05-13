@@ -29,12 +29,12 @@ import { ModalLoader } from "../../../components/CommonComponents";
 import { getServiceDef } from "../../../utils/appState";
 
 export function PolicyViewDetails(props) {
+  const isMultiResources = true;
   const [access, setAccess] = useState([]);
   const [loader, SetLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});
   const { updateServices } = props;
   let { allServiceDefs, gdsServiceDef } = cloneDeep(getServiceDef());
-  const isMultiResources = true;
 
   useEffect(() => {
     if (props.paramsData.isRevert) {
@@ -51,6 +51,7 @@ export function PolicyViewDetails(props) {
       ? props.paramsData.isRevert
       : props.paramsData.version || props.paramsData.policyVersion
   ]);
+
   const fetchInitialData = async () => {
     await fetchByEventTime();
   };
@@ -547,13 +548,10 @@ export function PolicyViewDetails(props) {
   };
 
   const getPolicyConditions = (conditions, serviceDef) => {
-    let filterServiceDef = serviceDef;
     const getConditionLabel = (label) => {
-      let filterLabel = "";
-      filterServiceDef.policyConditions.map((obj) =>
-        obj.name == label ? (filterLabel = obj.label) : ""
-      );
-      return filterLabel;
+      let filterLabel = find(serviceDef.policyConditions, { name: label });
+
+      return filterLabel && filterLabel?.label ? filterLabel.label : "";
     };
     return (
       !isEmpty(conditions) && (
@@ -647,7 +645,6 @@ export function PolicyViewDetails(props) {
           </p>
         </div>
       </div>
-
       <p className="form-header">Policy Details :</p>
       <div className="overflow-auto">
         <Table bordered size="sm" className="table-audit-filter-ready-only">
@@ -683,14 +680,8 @@ export function PolicyViewDetails(props) {
         RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value) &&
         !isEmpty(validitySchedules) &&
         getValidityPeriod(validitySchedules)}
-      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
-        <>{getPolicyConditions(conditions, serviceDef)}</>
-      )}
-      {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value &&
-        serviceType == "tag" && (
-          <>{getPolicyConditions(conditions, serviceDef)}</>
-        )}
-
+      {/* Get Policy Condition */}
+      {getPolicyConditions(conditions, serviceDef)}
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
         <>
           <p className="form-header">Allow Conditions :</p>
@@ -708,7 +699,6 @@ export function PolicyViewDetails(props) {
           <br />
         </>
       )}
-
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
@@ -793,7 +783,6 @@ export function PolicyViewDetails(props) {
             </div>
           </>
         )}
-
       {policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value && (
         <>
           <p className="form-header">Row Level Conditions :</p>
@@ -809,7 +798,6 @@ export function PolicyViewDetails(props) {
           </div>
         </>
       )}
-
       {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value && (
         <>
           <p className="form-header">Masking Conditions :</p>
@@ -825,8 +813,8 @@ export function PolicyViewDetails(props) {
           </div>
         </>
       )}
-      <div className="updateInfo">
-        <div className="pull-left">
+      <div className="updateInfo clearfix">
+        <div className="float-start">
           <p>
             <strong>Updated By : </strong> {updatedBy}
           </p>
