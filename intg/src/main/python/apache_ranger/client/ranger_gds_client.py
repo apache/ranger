@@ -54,8 +54,8 @@ class RangerGdsClient:
 
       return type_coerce(resp, RangerDataset)
 
-    def delete_dataset(self, dataset_id):
-      resp = self.client_http.call_api(RangerGdsClient.DELETE_DATASET_BY_ID.format_path({ 'id': dataset_id }))
+    def delete_dataset(self, dataset_id, is_force_delete=False):
+      resp = self.client_http.call_api(RangerGdsClient.DELETE_DATASET_BY_ID.format_path({ 'id': dataset_id }), { 'forceDelete': is_force_delete })
 
     def get_dataset(self, dataset_id):
       resp = self.client_http.call_api(RangerGdsClient.GET_DATASET_BY_ID.format_path({ 'id': dataset_id }))
@@ -104,25 +104,25 @@ class RangerGdsClient:
     def create_project(self, project):
       resp = self.client_http.call_api(RangerGdsClient.CREATE_PROJECT, request_data=project)
 
-      return type_coerce(resp, RangerDataset)
+      return type_coerce(resp, RangerProject)
 
     def update_project(self, project_id, project):
       resp = self.client_http.call_api(RangerGdsClient.UPDATE_PROJECT_BY_ID.format_path({ 'id': project_id }), request_data=project)
 
-      return type_coerce(resp, RangerDataset)
+      return type_coerce(resp, RangerProject)
 
-    def delete_project(self, project_id):
-      resp = self.client_http.call_api(RangerGdsClient.DELETE_PROJECT_BY_ID.format_path({ 'id': project_id }))
+    def delete_project(self, project_id, is_force_delete=False):
+      resp = self.client_http.call_api(RangerGdsClient.DELETE_PROJECT_BY_ID.format_path({ 'id': project_id }), { 'forceDelete': is_force_delete })
 
     def get_project(self, project_id):
       resp = self.client_http.call_api(RangerGdsClient.GET_PROJECT_BY_ID.format_path({ 'id': project_id }))
 
-      return type_coerce(resp, RangerDataset)
+      return type_coerce(resp, RangerProject)
 
     def find_projects(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.FIND_PROJECTS, filter)
 
-        return PList(resp).type_coerce_list(RangerDataset)
+        return PList(resp).type_coerce_list(RangerProject)
 
     def get_project_names(self, filter=None):
         resp = self.client_http.call_api(RangerGdsClient.GET_PROJECT_NAMES, filter)
@@ -163,8 +163,8 @@ class RangerGdsClient:
 
       return type_coerce(resp, RangerDataShare)
 
-    def delete_data_share(self, dsh_id):
-      resp = self.client_http.call_api(RangerGdsClient.DELETE_DATA_SHARE_BY_ID.format_path({ 'id': dsh_id }))
+    def delete_data_share(self, dsh_id, is_force_delete=False):
+      resp = self.client_http.call_api(RangerGdsClient.DELETE_DATA_SHARE_BY_ID.format_path({ 'id': dsh_id }), { 'forceDelete': is_force_delete })
 
     def get_data_share(self, dsh_id):
       resp = self.client_http.call_api(RangerGdsClient.GET_DATA_SHARE_BY_ID.format_path({ 'id': dsh_id }))

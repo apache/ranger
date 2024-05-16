@@ -360,78 +360,54 @@ policy = gds.add_project_policy(project_2.id, RangerPolicy({ 'name': project_2.n
 print(f'  added policy for project {project_2.name}: {policy}')
 
 
-print(f'Removing dataset_in_project: id={d1_in_p1.id}')
-gds.remove_dataset_in_project(d1_in_p1.id)
-print(f'  deleted dataset_in_project: id={d1_in_p1.id}')
-
-print(f'Removing dataset_in_project: id={d2_in_p1.id}')
-gds.remove_dataset_in_project(d2_in_p1.id)
-print(f'  deleted dataset_in_project: id={d2_in_p1.id}')
-
-print(f'Removing dataset_in_project: id={d3_in_p2.id}')
-gds.remove_dataset_in_project(d3_in_p2.id)
-print(f'  deleted dataset_in_project: id={d3_in_p2.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_1.id}')
-gds.remove_data_share_in_dataset(dshid_1.id)
-print(f'  deleted data_share_in_dataset: id={dshid_1.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_2.id}')
-gds.remove_data_share_in_dataset(dshid_2.id)
-print(f'  deleted data_share_in_dataset: id={dshid_2.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_3.id}')
-gds.remove_data_share_in_dataset(dshid_3.id)
-print(f'  deleted data_share_in_dataset: id={dshid_3.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_4.id}')
-gds.remove_data_share_in_dataset(dshid_4.id)
-print(f'  deleted data_share_in_dataset: id={dshid_4.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_5.id}')
-gds.remove_data_share_in_dataset(dshid_5.id)
-print(f'  deleted data_share_in_dataset: id={dshid_5.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_6.id}')
-gds.remove_data_share_in_dataset(dshid_6.id)
-print(f'  deleted data_share_in_dataset: id={dshid_6.id}')
-
-print(f'Removing data_share_in_dataset: id={dshid_7.id}')
-gds.remove_data_share_in_dataset(dshid_7.id)
-print(f'  deleted data_share_in_dataset: id={dshid_7.id}')
-
-print(f'Removing shared_resource: id={hive_resource_1.id}')
-gds.remove_shared_resource(hive_resource_1.id)
-print(f'  removed shared_resource: id={hive_resource_1.id}')
-
-print(f'Removing shared_resource: id={hive_resource_2.id}')
-gds.remove_shared_resource(hive_resource_2.id)
-print(f'  removed shared_resource: id={hive_resource_2.id}')
-
-print(f'Removing shared_resource: id={hdfs_resource_1.id}')
-gds.remove_shared_resource(hdfs_resource_1.id)
-print(f'  removed shared_resource: id={hdfs_resource_1.id}')
-
-print(f'Deleting data_share: id={hive_share_1.id}')
-gds.delete_data_share(hive_share_1.id)
-print(f'  deleted data_share: id={hive_share_1.id}')
-
-print(f'Deleting data_share: id={hdfs_share_1.id}')
-gds.delete_data_share(hdfs_share_1.id)
-print(f'  deleted data_share: id={hdfs_share_1.id}')
-
 print(f'Deleting project: id={project_1.id}')
-gds.delete_project(project_1.id)
-print(f'  deleted project: id={project_1.id}')
+gds.delete_project(project_1.id, True)
+print(f'  deleted project: id={project_1.id}, name={project_1.name}')
 
 print(f'Deleting project: id={project_2.id}')
-gds.delete_project(project_2.id)
-print(f'  deleted project: id={project_2.id}')
+gds.delete_project(project_2.id, True)
+print(f'  deleted project: id={project_2.id}, name={project_2.name}')
 
 print(f'Deleting dataset: id={dataset_1.id}')
-gds.delete_dataset(dataset_1.id)
-print(f'  deleted dataset: id={dataset_1.id}')
+gds.delete_dataset(dataset_1.id, True)
+print(f'  deleted dataset: id={dataset_1.id}, name={dataset_1.name}')
 
 print(f'Deleting dataset: id={dataset_2.id}')
-gds.delete_dataset(dataset_2.id)
-print(f'  deleted dataset: id={dataset_2.id}')
+gds.delete_dataset(dataset_2.id, True)
+print(f'  deleted dataset: id={dataset_2.id}, name={dataset_2.name}')
+
+print(f'Deleting dataset: id={dataset_3.id}')
+gds.delete_dataset(dataset_3.id, True)
+print(f'  deleted dataset: id={dataset_3.id}, name={dataset_3.name}')
+
+print(f'Deleting dataset: id={dataset_4.id}')
+gds.delete_dataset(dataset_4.id, True)
+print(f'  deleted dataset: id={dataset_4.id}, name={dataset_4.name}')
+
+print(f'Deleting data_share: id={hive_share_1.id}')
+gds.delete_data_share(hive_share_1.id, True)
+print(f'  deleted data_share: id={hive_share_1.id}, name={hive_share_1.name}')
+
+print(f'Deleting data_share: id={hive_share_2.id}')
+gds.delete_data_share(hive_share_2.id, True)
+print(f'  deleted data_share: id={hive_share_2.id}, name={hive_share_2.name}')
+
+print(f'Deleting data_share: id={hive_share_3.id}')
+gds.delete_data_share(hive_share_3.id, True)
+print(f'  deleted data_share: id={hive_share_3.id}, name={hive_share_3.name}')
+
+print(f'Deleting data_share: id={hive_share_4.id}')
+gds.delete_data_share(hive_share_4.id, True)
+print(f'  deleted data_share: id={hive_share_4.id}, name={hive_share_4.name}')
+
+print(f'Deleting data_share: id={hive_share_5.id}')
+gds.delete_data_share(hive_share_5.id, True)
+print(f'  deleted data_share: id={hive_share_5.id}, name={hive_share_5.name}')
+
+print(f'Deleting data_share: id={hdfs_share_1.id}')
+gds.delete_data_share(hdfs_share_1.id, True)
+print(f'  deleted data_share: id={hdfs_share_1.id}, name={hdfs_share_1.name}')
+
+print(f'Deleting data_share: id={hdfs_share_2.id}')
+gds.delete_data_share(hdfs_share_2.id, True)
+print(f'  deleted data_share: id={hdfs_share_2.id}, name={hdfs_share_2.name}')
