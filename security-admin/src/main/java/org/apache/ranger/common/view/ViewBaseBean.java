@@ -21,7 +21,7 @@
 
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXDBBase;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;

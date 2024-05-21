@@ -30,7 +30,7 @@ import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,12 +109,12 @@ public class KnoxClient {
 						if (topologyNode == null) {
 							return topologyList;
 						}
-						Iterator<JsonNode> elements = topologyNode.getElements();
+						Iterator<JsonNode> elements = topologyNode.elements();
 						while (elements.hasNext()) {
 							JsonNode element = elements.next();
 							JsonNode nameElement = element.get("name");
 							if (nameElement != null) {
-								String topologyName = nameElement.getValueAsText();
+								String topologyName = nameElement.asText();
 								LOG.debug("Found Knox topologyName: " + topologyName);
 								if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
 									continue;
@@ -218,12 +218,12 @@ public class KnoxClient {
 							if (topologyNode != null) {
 								JsonNode servicesNode = topologyNode.get("service");
 								if (servicesNode != null) {
-									Iterator<JsonNode> services = servicesNode.getElements();
+									Iterator<JsonNode> services = servicesNode.elements();
 									while (services.hasNext()) {
 										JsonNode service = services.next();
 										JsonNode serviceElement = service.get("role");
 										if (serviceElement != null) {
-											String serviceName = serviceElement.getValueAsText();
+											String serviceName = serviceElement.asText();
 											LOG.debug("Knox serviceName: " + serviceName);
 											if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))){
 												continue;

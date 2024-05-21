@@ -125,8 +125,8 @@
         <includes>
             <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
             <include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
-            <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
-            <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+            <include>com.fasterxml.jackson.core:jackson-core:jar:${com.fasterxml.jackson.version}</include>
+            <include>com.fasterxml.jackson.core:jackson-databind:jar:${com.fasterxml.jackson.version}</include>
         </includes>
       </binaries>
     </moduleSet>

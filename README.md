@@ -126,4 +126,3 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
 5. - If the module has setup.sh, execute ./setup.sh
    - If the install.sh file does not exists, execute ./enable-<component>-plugin.sh
-

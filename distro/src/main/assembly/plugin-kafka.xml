@@ -67,10 +67,10 @@
 					<include>com.google.guava:guava:jar:${google.guava.version}</include>
 					<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 					<include>org.noggit:noggit:jar:${noggit.version}</include>
-					<include>org.codehaus.jackson:jackson-core-asl</include>
-					<include>org.codehaus.jackson:jackson-jaxrs</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl</include>
-					<include>org.codehaus.jackson:jackson-xc</include>
+					<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+					<include>com.fasterxml.jackson.core:jackson-databind</include>
+					<include>com.fasterxml.jackson.core:jackson-core</include>
 					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>

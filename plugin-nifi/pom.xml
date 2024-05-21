@@ -46,6 +46,11 @@
             <artifactId>credentialbuilder</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${com.fasterxml.jackson.version}</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>
