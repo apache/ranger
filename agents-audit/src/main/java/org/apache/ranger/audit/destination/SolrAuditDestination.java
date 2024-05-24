@@ -20,6 +20,12 @@
 package org.apache.ranger.audit.destination;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -44,7 +50,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -55,7 +60,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -131,9 +135,7 @@ public class SolrAuditDestination extends AuditDestination {
 					KeyManager[]   kmList     = getKeyManagers();
 					TrustManager[] tmList     = getTrustManagers();
 					SSLContext     sslContext = getSSLContext(kmList, tmList);
-					if(sslContext != null) {
-						SSLContext.setDefault(sslContext);
-					}
+
 					String urls = MiscUtil.getStringProperty(props, propPrefix
 							+ "." + PROP_SOLR_URLS);
 					if (urls != null) {
@@ -168,6 +170,7 @@ public class SolrAuditDestination extends AuditDestination {
 							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
 							SolrHttpClientBuilder kb = krbBuild.getBuilder();
 							HttpClientUtil.setHttpClientBuilder(kb);
+							HttpClientUtil.setSocketFactoryRegistryProvider(new SolrSocketFactoryRegistryProvider(sslContext));
 
 							final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
 							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
@@ -190,6 +193,8 @@ public class SolrAuditDestination extends AuditDestination {
 							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
 							SolrHttpClientBuilder kb = krbBuild.getBuilder();
 							HttpClientUtil.setHttpClientBuilder(kb);
+							HttpClientUtil.setSocketFactoryRegistryProvider(new SolrSocketFactoryRegistryProvider(sslContext));
+
 							final List<String> solrUrls = solrURLs;
 							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
 								@Override
@@ -492,4 +497,61 @@ public class SolrAuditDestination extends AuditDestination {
 			}
 		}
 	}
+
+	/**
+	 * Same as {@link org.apache.solr.client.solrj.impl.HttpClientUtil.DefaultSocketFactoryRegistryProvider}
+	 * except using the specified SSLContext instead of the default one.
+	 */
+	static final class SolrSocketFactoryRegistryProvider extends HttpClientUtil.SocketFactoryRegistryProvider {
+
+		private final SSLContext sslContext;
+
+		SolrSocketFactoryRegistryProvider(SSLContext sslContext) {
+			this.sslContext = sslContext;
+		}
+
+		@Override
+		public Registry<ConnectionSocketFactory> getSocketFactoryRegistry() {
+			RegistryBuilder<ConnectionSocketFactory> builder = RegistryBuilder.<ConnectionSocketFactory> create();
+			builder.register("http", PlainConnectionSocketFactory.getSocketFactory());
+
+			SSLConnectionSocketFactory sslConnectionSocketFactory = null;
+			boolean sslCheckPeerName = toBooleanDefaultIfNull(
+					toBooleanObject(System.getProperty(HttpClientUtil.SYS_PROP_CHECK_PEER_NAME)), true);
+			if (sslCheckPeerName) {
+				sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext);
+			} else {
+				sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext,
+																			NoopHostnameVerifier.INSTANCE);
+				LOG.debug("{} is false, hostname checks disabled.", HttpClientUtil.SYS_PROP_CHECK_PEER_NAME);
+			}
+			builder.register("https", sslConnectionSocketFactory);
+
+			return builder.build();
+		}
+
+		/**
+		 * Same as {@link org.apache.solr.client.solrj.impl.HttpClientUtil#toBooleanDefaultIfNull(Boolean, boolean)}
+		 */
+		private static boolean toBooleanDefaultIfNull(Boolean bool, boolean valueIfNull) {
+			if (bool == null) {
+				return valueIfNull;
+			}
+			return bool.booleanValue() ? true : false;
+		}
+
+		/**
+		 * Same as {@link org.apache.solr.client.solrj.impl.HttpClientUtil#toBooleanObject(String)}
+		 */
+		private static Boolean toBooleanObject(String str) {
+			if ("true".equalsIgnoreCase(str)) {
+				return Boolean.TRUE;
+			} else if ("false".equalsIgnoreCase(str)) {
+				return Boolean.FALSE;
+			}
+			// no match
+			return null;
+		}
+	}
+
 }
