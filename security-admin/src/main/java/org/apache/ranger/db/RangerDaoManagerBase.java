@@ -88,8 +88,8 @@ public abstract class RangerDaoManagerBase {
 		return new XXPolicyExportAuditDao(this);
 	}
 
-	public XXTrxLogDao getXXTrxLog() {
-		return new XXTrxLogDao(this);
+	public XXTrxLogV2Dao getXXTrxLogV2() {
+		return new XXTrxLogV2Dao(this);
 	}
 
 	public XXAccessAuditDao getXXAccessAudit() {

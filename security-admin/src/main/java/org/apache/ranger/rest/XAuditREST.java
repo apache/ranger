@@ -37,7 +37,7 @@ import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXTrxLog;
@@ -65,7 +65,7 @@ public class XAuditREST {
 	XAuditMgr xAuditMgr;
 
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
@@ -123,7 +123,7 @@ public class XAuditREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
 	public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.sortFields);
+		 request, xTrxLogService.getSortFields());
 		 return xAuditMgr.searchXTrxLogs(searchCriteria);
 	}
 
@@ -133,7 +133,7 @@ public class XAuditREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_TRX_LOGS + "\")")
 	public VXLong countXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.sortFields);
+		 request, xTrxLogService.getSortFields());
 
 		 return xAuditMgr.getXTrxLogSearchCount(searchCriteria);
 	}

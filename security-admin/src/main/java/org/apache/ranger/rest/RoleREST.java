@@ -57,7 +57,7 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
@@ -434,7 +434,7 @@ public class RoleREST {
 		request.setAttribute(PARAM_IMPORT_IN_PROGRESS, true);
 
 		try {
-			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT START", null, "IMPORT START", null));
+			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT START"), "Import", "IMPORT START", null);
 
 			if (updateIfExists == null) {
 				updateIfExists = false;
@@ -539,23 +539,23 @@ public class RoleREST {
 		} catch (JsonSyntaxException ex) {
 			LOG.error("Provided json file is not valid!!", ex);
 
-			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
 
 			throw restErrorUtil.createRESTException(ex.getMessage());
 		} catch (WebApplicationException excp) {
 			LOG.error("Error while importing role from file!!", excp);
 
-			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
 
 			throw excp;
 		} catch (Throwable excp) {
 			LOG.error("Error while importing role from file!!", excp);
 
-			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
 
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
-			roleService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT EBD", null, StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null));
+			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT END"), "IMPORT END", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RoleREST.importRolesFromFile()");

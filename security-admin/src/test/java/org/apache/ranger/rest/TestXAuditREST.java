@@ -24,8 +24,8 @@ import org.apache.ranger.biz.XAuditMgr;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXTrxLog;
@@ -54,13 +54,13 @@ public class TestXAuditREST {
 	SearchUtil searchUtil;
 
 	@Mock
-	XTrxLogService xLog;
-
-	@Mock
 	XAccessAuditService xAccessAuditSrv;
 
 	@Mock
-	VXTrxLogList vxExpList;
+	VXTrxLogList          vxExpList;
+
+	@Mock
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Mock
 	HttpServletRequest request;

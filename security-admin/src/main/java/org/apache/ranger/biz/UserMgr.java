@@ -50,7 +50,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.service.XGroupPermissionService;
@@ -262,7 +262,7 @@ public class UserMgr {
 		// userRoleList
 		updateRoles(userProfile.getId(), userProfile.getUserRoleList());
 
-		List<XXTrxLog> trxLogList = xPortalUserService.getTransactionLog(userProfile, existing, OPERATION_UPDATE_CONTEXT);
+		List<XXTrxLogV2> trxLogList = xPortalUserService.getTransactionLog(userProfile, existing, OPERATION_UPDATE_CONTEXT);
 		userProfile.setPassword(gjUser.getPassword());
 		xPortalUserService.updateResource(userProfile);
 		sessionMgr.resetUserSessionForProfiles(ContextUtil.getCurrentUserSession());
@@ -408,7 +408,7 @@ public class UserMgr {
 			}
 		}
 			if (isNewPasswordDifferent) {
-				xPortalUserService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, pwdChange.getId(), pwdChange.getLoginId(), "password change", "Password", currentPassword, encryptedNewPwd));
+				xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, pwdChange.getId(), pwdChange.getLoginId(), "password change"), "Password", currentPassword, encryptedNewPwd);
 
 				gjUser.setPassword(encryptedNewPwd);
 				updateOldPasswords(gjUser, oldPasswords);
@@ -1327,7 +1327,7 @@ public class UserMgr {
                 if(xXPortalUser!=null && logAudits){
                         String dbNewPwd=xXPortalUser.getPassword();
                         if (!dbOldPwd.equals(dbNewPwd)) {
-							xPortalUserService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "password change", "Password", dbOldPwd, dbNewPwd));
+							xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "password change"), "Password", dbOldPwd, dbNewPwd);
                         }
                 }
 
@@ -1395,7 +1395,7 @@ public class UserMgr {
                 }
                 xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
 
-				xPortalUserService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_USER_PROFILE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "update", "User Name", userLoginId, newUserName));
+				xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_USER_PROFILE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "update"), "User Name", userLoginId, newUserName);
 
                 return xXPortalUser;
         }

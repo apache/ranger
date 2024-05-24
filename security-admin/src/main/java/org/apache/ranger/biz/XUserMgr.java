@@ -82,7 +82,7 @@ import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -258,7 +258,7 @@ public class XUserMgr extends XUserMgrBase {
 		VXUser createdXUser = xUserService.createResource(vXUser);
 
 		createdXUser.setPassword(actualPassword);
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
 
 		String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		createdXUser.setPassword(hiddenPassword);
@@ -503,7 +503,7 @@ public class XUserMgr extends XUserMgrBase {
 
 		VXUser existing = xUserService.readResource(vXUser.getId());
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
@@ -515,9 +515,9 @@ public class XUserMgr extends XUserMgrBase {
 
 		return vXUser;
 	}
-	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
+	private List<XXTrxLogV2> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
 		Collection<String> groupNamesSet = new HashSet<String>();
-		List<XXTrxLog> trxLogList = new ArrayList<>();
+		List<XXTrxLogV2> trxLogList = new ArrayList<>();
 		if (groupIdList != null) {
 			SearchCriteria searchCriteria = new SearchCriteria();
 			searchCriteria.addParam("xUserId", userId);
@@ -990,7 +990,7 @@ public class XUserMgr extends XUserMgrBase {
 					MessageEnums.INVALID_INPUT_DATA);
 		}
 		VXGroup existing = xGroup != null ? xGroupService.populateViewBean(xGroup) : null;
-		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, existing, OPERATION_UPDATE_CONTEXT);
+		List<XXTrxLogV2> trxLogList = xGroupService.getTransactionLog(vXGroup, existing, OPERATION_UPDATE_CONTEXT);
 		xaBizUtil.createTrxLog(trxLogList);
 		vXGroup = (VXGroup) xGroupService.updateResource(vXGroup);
 		if (vXGroup != null) {
@@ -3261,7 +3261,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
