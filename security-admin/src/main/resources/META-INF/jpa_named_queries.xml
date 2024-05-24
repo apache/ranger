@@ -190,6 +190,7 @@
 			    WHERE p.principalName LIKE :principalName
 			      AND p.isVisible = 1
 			    ORDER BY p.principalName</query>
+	</named-query>
 	<named-query name="XXUser.getAllUsersInfo">
 		<query>SELECT user.name, user.description, user.otherAttributes, user.syncSource, pUser.userSource, pUser.emailAddress
 		         FROM XXUser user LEFT OUTER JOIN XXPortalUser pUser ON pUser.loginId = user.name
@@ -331,6 +332,14 @@
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId order by obj.id
 		</query>
+	</named-query>
+
+	<named-query name="XXTrxLogV2.findByTrxId">
+		<query>SELECT obj FROM XXTrxLogV2 obj WHERE obj.transactionId = :transactionId order by obj.id</query>
+	</named-query>
+
+	<named-query name="XXTrxLogV2.deleteOlderThan">
+		<query>delete from XXTrxLogV2 obj where obj.createTime &lt; :olderThan</query>
 	</named-query>
 
 	<named-query name="XXUser.findByPortalUserId">

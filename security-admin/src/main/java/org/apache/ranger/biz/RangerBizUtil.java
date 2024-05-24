@@ -48,6 +48,7 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXDBBaseDao;
+import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXGroup;
@@ -56,7 +57,7 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
@@ -1151,43 +1152,33 @@ public class RangerBizUtil {
 		return true;
 	}
 
-	public void createTrxLog(List<XXTrxLog> trxLogList) {
+	public void createTrxLog(List<XXTrxLogV2> trxLogList) {
 		if (trxLogList == null) {
 			return;
 		}
 
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		Long authSessionId = null;
-		if (usb != null) {
-			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
+		if (guidUtil == null) {
+			// log a warning
+			return;
 		}
-		if(guidUtil != null){
-		Long trxId = guidUtil.genLong();
-		for (XXTrxLog xTrxLog : trxLogList) {
-			if (xTrxLog != null) {
-				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
-					if (xTrxLog.getPreviousValue() != null
-							&& !xTrxLog.getPreviousValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog
-									.getPreviousValue().trim())) {
-						xTrxLog.setPreviousValue(AppConstants.Masked_String);
-					}
-					if (xTrxLog.getNewValue() != null
-							&& !xTrxLog.getNewValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog.getNewValue()
-									.trim())) {
-						xTrxLog.setNewValue(AppConstants.Masked_String);
-					}
-				}
-				xTrxLog.setTransactionId(trxId.toString());
-				if (authSessionId != null) {
-					xTrxLog.setSessionId("" + authSessionId);
-				}
-				xTrxLog.setSessionType("Spring Authenticated Session");
-				xTrxLog.setRequestId(trxId.toString());
-				daoManager.getXXTrxLog().create(xTrxLog);
+
+		XXTrxLogV2Dao   dao       = daoManager.getXXTrxLogV2();
+		String          trxId     = Long.toString(guidUtil.genLong());
+		UserSessionBase usb       = ContextUtil.getCurrentUserSession();
+		String          sessionId = usb != null && usb.getSessionId() != null ? usb.getSessionId().toString() : null;
+		Long            userId    = usb != null ? usb.getUserId() : null;
+
+		for (XXTrxLogV2 xTrxLog : trxLogList) {
+			xTrxLog.setTransactionId(trxId);
+			xTrxLog.setSessionId(sessionId);
+			xTrxLog.setSessionType("Spring Authenticated Session");
+			xTrxLog.setRequestId(trxId);
+
+			if (xTrxLog.getAddedByUserId() == null) {
+				xTrxLog.setAddedByUserId(userId);
 			}
-		}
+
+			dao.create(xTrxLog);
 		}
 	}
 

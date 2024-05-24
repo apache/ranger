@@ -24,9 +24,11 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXDBBase;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXDataObject;
+import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,17 +78,30 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 		}
 	}
 
-	public void createTransactionLog(XXTrxLog trxLog) {
+	public void createTransactionLog(XXTrxLogV2 trxLog) {
+		bizUtil.createTrxLog(Collections.singletonList(trxLog));
+	}
+
+	public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
+		try {
+			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+
+			objChangeInfo.addAttribute(attrName, oldValue, newValue);
+
+			trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
+		} catch (Exception excp) {
+			logger.warn("failed to convert attribute change info to json");
+		}
+
 		bizUtil.createTrxLog(Collections.singletonList(trxLog));
 	}
 
 	public void createTransactionLog(V obj, V oldObj, int action, Long userId) {
-		List<XXTrxLog> trxLogList = getTransactionLog(obj, oldObj, action);
+		List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
 
 		if (trxLogList != null) {
-			for (XXTrxLog trxLog : trxLogList) {
+			for (XXTrxLogV2 trxLog : trxLogList) {
 				trxLog.setAddedByUserId(userId);
-				trxLog.setUpdatedByUserId(userId);
 			}
 
 			bizUtil.createTrxLog(trxLogList);
@@ -96,33 +111,28 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 	}
 
 	public void createTransactionLog(V obj, V oldObj, int action) {
-		List<XXTrxLog> trxLogList = getTransactionLog(obj, oldObj, action);
+		List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
 
 		if (trxLogList != null) {
 			bizUtil.createTrxLog(trxLogList);
 		}
 	}
 
-	public List<XXTrxLog> getTransactionLog(V obj, V oldObj, int action) {
+	public List<XXTrxLogV2> getTransactionLog(V obj, V oldObj, int action) {
 		if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
 			return null;
 		}
 
-		List<XXTrxLog> trxLogList = new ArrayList<>();
+		List<XXTrxLogV2> trxLogList = new ArrayList<>();
 
 		try {
-			String objName         = getObjectName(obj);
-			int    parentClassType = getParentObjectType(obj, oldObj);
-			String parentObjName   = getParentObjectName(obj, oldObj);
-			Long   parentObjId     = getParentObjectId(obj, oldObj);
+			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
 
 			for (VTrxLogAttr trxLog : trxLogAttrs.values()) {
-				XXTrxLog xTrxLog = processFieldToCreateTrxLog(trxLog, objName, parentClassType, parentObjId, parentObjName, obj, oldObj, action);
-
-				if (xTrxLog != null) {
-					trxLogList.add(xTrxLog);
-				}
+				processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
 			}
+
+			trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
 		} catch (Exception e) {
 			logger.warn("failed to get transaction log for object: type=" + obj.getClass().getName() + ", id=" + obj.getId(), e);
 		}
@@ -164,40 +174,51 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 		return trxLogAttr.getAttrValue(obj, xaEnumUtil);
 	}
 
-	private XXTrxLog processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, String objName, int parentClassType, Long parentObjId, String parentObjName, V obj, V oldObj, int action) {
-		String actionString = "";
-		String prevValue    = null;
-		String newValue     = null;
-		String value        = getTrxLogAttrValue(obj, trxLogAttr);
-
-		if (action == OPERATION_CREATE_CONTEXT) {
-			actionString = "create";
-			newValue     = value;
-		} else if (action == OPERATION_DELETE_CONTEXT) {
-			actionString = "delete";
-			prevValue    = value;
-		} else if (action == OPERATION_UPDATE_CONTEXT) {
-			actionString = "update";
-			prevValue    = getTrxLogAttrValue(oldObj, trxLogAttr);
-			newValue     = value;
+	private void processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo) {
+		if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
+			return;
 		}
 
-		final XXTrxLog ret;
+		String value = getTrxLogAttrValue(obj, trxLogAttr);
 
 		if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
-			return null;
-		} else if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
-			ret = null;
-		} else if (StringUtils.equals(prevValue, newValue)) {
-			ret = null;
-		} else {
-			ret = new XXTrxLog(classType, obj.getId(), objName, actionString, trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
-
-			ret.setParentObjectClassType(parentClassType);
-			ret.setParentObjectId(parentObjId);
-			ret.setParentObjectName(parentObjName);
+			return;
 		}
 
-		return ret;
+		final String prevValue;
+		final String newValue;
+
+		if (action == OPERATION_CREATE_CONTEXT) {
+			prevValue = null;
+			newValue  = value;
+		} else if (action == OPERATION_DELETE_CONTEXT) {
+			prevValue = value;
+			newValue  = null;
+		} else if (action == OPERATION_UPDATE_CONTEXT) {
+			prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
+			newValue  = value;
+		} else {
+			prevValue = null;
+			newValue  = null;
+		}
+
+		if (StringUtils.equals(prevValue, newValue) || (StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue))) {
+			return;
+		}
+
+		objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
+	}
+
+	private String toActionString(int action) {
+		switch (action) {
+			case OPERATION_CREATE_CONTEXT:
+				return "create";
+			case OPERATION_UPDATE_CONTEXT:
+				return "update";
+			case OPERATION_DELETE_CONTEXT:
+				return "delete";
+		}
+
+		return "unknown";
 	}
 }

@@ -75,7 +75,7 @@ DROP TABLE IF EXISTS x_service CASCADE;
 DROP TABLE IF EXISTS x_service_def CASCADE;
 DROP TABLE IF EXISTS x_audit_map CASCADE;
 DROP TABLE IF EXISTS x_perm_map CASCADE;
-DROP TABLE IF EXISTS x_trx_log CASCADE;
+DROP TABLE IF EXISTS x_trx_log_v2 CASCADE;
 DROP TABLE IF EXISTS x_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
 DROP TABLE IF EXISTS x_group_users CASCADE;
@@ -143,7 +143,7 @@ DROP SEQUENCE IF EXISTS x_service_seq;
 DROP SEQUENCE IF EXISTS x_service_def_seq;
 DROP SEQUENCE IF EXISTS x_audit_map_seq;
 DROP SEQUENCE IF EXISTS x_perm_map_seq;
-DROP SEQUENCE IF EXISTS x_trx_log_seq;
+DROP SEQUENCE IF EXISTS x_trx_log_v2_seq;
 DROP SEQUENCE IF EXISTS x_resource_seq;
 DROP SEQUENCE IF EXISTS x_policy_export_seq;
 DROP SEQUENCE IF EXISTS x_group_users_seq;
@@ -451,30 +451,24 @@ CONSTRAINT x_resource_FK_parent_id FOREIGN KEY(parent_id) REFERENCES x_resource(
 CONSTRAINT x_resource_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
-CREATE SEQUENCE x_trx_log_seq;
-CREATE TABLE x_trx_log(
-id BIGINT DEFAULT nextval('x_trx_log_seq'::regclass),
+CREATE SEQUENCE x_trx_log_v2_seq;
+CREATE TABLE x_trx_log_v2(
+id BIGINT DEFAULT nextval('x_trx_log_v2_seq'::regclass),
 create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 class_type INT DEFAULT '0' NOT NULL,
 object_id BIGINT DEFAULT NULL NULL,
 parent_object_id BIGINT DEFAULT NULL NULL,
 parent_object_class_type INT DEFAULT '0' NOT NULL,
 parent_object_name VARCHAR(1024) DEFAULT NULL NULL,
 object_name VARCHAR(1024) DEFAULT NULL NULL,
-attr_name VARCHAR(255) DEFAULT NULL NULL,
-prev_val TEXT NULL DEFAULT NULL,
-new_val TEXT NULL DEFAULT NULL,
+change_info TEXT NULL DEFAULT NULL,
 trx_id VARCHAR(1024) DEFAULT NULL NULL,
 action VARCHAR(255) DEFAULT NULL NULL,
 sess_id VARCHAR(512) DEFAULT NULL NULL,
 req_id VARCHAR(30) DEFAULT NULL NULL,
 sess_type VARCHAR(30) DEFAULT NULL NULL,
-PRIMARY KEY(id),
-CONSTRAINT x_trx_log_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_trx_log_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+PRIMARY KEY(id)
 );
 
 CREATE SEQUENCE x_perm_map_seq;
@@ -1756,10 +1750,9 @@ CREATE INDEX x_resource_FK_asset_id ON x_resource(asset_id);
 CREATE INDEX x_resource_FK_parent_id ON x_resource(parent_id);
 CREATE INDEX x_resource_cr_time ON x_resource(create_time);
 CREATE INDEX x_resource_up_time ON x_resource(update_time);
-CREATE INDEX x_trx_log_FK_added_by_id ON x_trx_log(added_by_id);
-CREATE INDEX x_trx_log_FK_upd_by_id ON x_trx_log(upd_by_id);
-CREATE INDEX x_trx_log_cr_time ON x_trx_log(create_time);
-CREATE INDEX x_trx_log_up_time ON x_trx_log(update_time);
+CREATE INDEX x_trx_log_v2_FK_added_by_id ON x_trx_log_v2(added_by_id);
+CREATE INDEX x_trx_log_v2_cr_time ON x_trx_log_v2(create_time);
+CREATE INDEX x_trx_log_v2_trx_id ON x_trx_log_v2(trx_id);
 CREATE INDEX x_user_FK_added_by_id ON x_user(added_by_id);
 CREATE INDEX x_user_FK_upd_by_id ON x_user(upd_by_id);
 CREATE INDEX x_user_FK_cred_store_id ON x_user(cred_store_id);
@@ -2018,9 +2011,6 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10056',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10060',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
-
-DROP VIEW IF EXISTS vx_trx_log;
-CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 
 DROP VIEW IF EXISTS vx_principal;
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);

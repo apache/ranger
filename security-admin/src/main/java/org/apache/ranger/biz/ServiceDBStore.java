@@ -70,7 +70,7 @@ import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.XXAuthSessionDao;
 import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXPolicyDao;
-import org.apache.ranger.db.XXTrxLogDao;
+import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -138,7 +138,7 @@ import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
@@ -5336,7 +5336,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_auth_sess that are older than " + retentionInDays + " days");
 
-			svcService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_AUTH_SESS, null, null, "Deleted Auth Session records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
+			svcService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_AUTH_SESS, null, null, "Deleted Auth Session records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_LOGIN_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5352,13 +5352,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (retentionInDays > 0) {
-			XXTrxLogDao dao         = daoMgr.getXXTrxLog();
-			long        rowsCount   = dao.getAllCount();
-			long        rowsDeleted = dao.deleteOlderThan(retentionInDays);
+			XXTrxLogV2Dao dao         = daoMgr.getXXTrxLogV2();
+			long          rowsCount   = dao.getAllCount();
+			long          rowsDeleted = dao.deleteOlderThan(retentionInDays);
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_trx_log that are older than " + retentionInDays + " days");
 
-			svcService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_TRX_LOG, null, null, "Deleted Transaction records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
+			svcService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_TRX_LOG, null, null, "Deleted Transaction records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_TRX_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5380,7 +5380,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted {} records from x_policy_export_audit that are older than {} days", rowsDeleted, retentionInDays);
 
-			policyService.createTransactionLog(new XXTrxLog(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT, null, null, "Deleted policy export audit records", null, "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted));
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT, null, null, "Deleted policy export audit records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS, rowsCount, rowsDeleted));
 		}

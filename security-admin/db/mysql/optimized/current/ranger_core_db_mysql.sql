@@ -13,7 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP VIEW IF EXISTS `vx_trx_log`;
 DROP VIEW IF EXISTS `vx_principal`;
 DROP TABLE IF EXISTS `x_rms_mapping_provider`;
 DROP TABLE IF EXISTS `x_rms_resource_mapping`;
@@ -77,7 +76,7 @@ DROP TABLE IF EXISTS `x_service`;
 DROP TABLE IF EXISTS `x_service_def`;
 DROP TABLE IF EXISTS `x_audit_map`;
 DROP TABLE IF EXISTS `x_perm_map`;
-DROP TABLE IF EXISTS `x_trx_log`;
+DROP TABLE IF EXISTS `x_trx_log_v2`;
 DROP TABLE IF EXISTS `x_resource`;
 DROP TABLE IF EXISTS `x_policy_export_audit`;
 DROP TABLE IF EXISTS `x_group_users`;
@@ -429,33 +428,26 @@ CREATE TABLE `x_resource` (
   CONSTRAINT `x_resource_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `x_trx_log` (
+CREATE TABLE `x_trx_log_v2` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `create_time` datetime DEFAULT NULL,
-  `update_time` datetime DEFAULT NULL,
   `added_by_id` bigint(20) DEFAULT NULL,
-  `upd_by_id` bigint(20) DEFAULT NULL,
   `class_type` int(11) NOT NULL DEFAULT '0',
   `object_id` bigint(20) DEFAULT NULL,
   `parent_object_id` bigint(20) DEFAULT NULL,
   `parent_object_class_type` int(11) NOT NULL DEFAULT '0',
   `parent_object_name` varchar(1024) DEFAULT NULL,
   `object_name` varchar(1024) DEFAULT NULL,
-  `attr_name` varchar(255) DEFAULT NULL,
-  `prev_val` MEDIUMTEXT NULL DEFAULT NULL,
-  `new_val` MEDIUMTEXT NULL DEFAULT NULL,
+  `change_info` MEDIUMTEXT NULL DEFAULT NULL,
   `trx_id` varchar(1024) DEFAULT NULL,
   `action` varchar(255) DEFAULT NULL,
   `sess_id` varchar(512) DEFAULT NULL,
   `req_id` varchar(30) DEFAULT NULL,
   `sess_type` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `x_trx_log_FK_added_by_id` (`added_by_id`),
-  KEY `x_trx_log_FK_upd_by_id` (`upd_by_id`),
-  KEY `x_trx_log_cr_time` (`create_time`),
-  KEY `x_trx_log_up_time` (`update_time`),
-  CONSTRAINT `x_trx_log_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
-  CONSTRAINT `x_trx_log_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+  KEY `x_trx_log_v2_FK_added_by_id` (`added_by_id`),
+  KEY `x_trx_log_v2_cr_time` (`create_time`),
+  KEY `x_trx_log_v2_trx_id` (`trx_id`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `x_perm_map` (
@@ -1608,8 +1600,6 @@ CREATE INDEX x_service_version_info_IDX_service_id ON x_service_version_info(ser
 CREATE INDEX x_policy_label_label_id ON x_policy_label(id);
 CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
 CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
-
-CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);
 

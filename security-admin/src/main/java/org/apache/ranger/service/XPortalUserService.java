@@ -66,8 +66,6 @@ public class XPortalUserService extends
 		daoManager.getXXPortalUserRole().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXResource().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXResource().updateUserIDReference("upd_by_id", xXPortalUserId);
-		daoManager.getXXTrxLog().updateUserIDReference("added_by_id", xXPortalUserId);
-		daoManager.getXXTrxLog().updateUserIDReference("upd_by_id", xXPortalUserId);
 		daoManager.getXXUser().updateUserIDReference("added_by_id", xXPortalUserId);
 		daoManager.getXXUser().updateUserIDReference("upd_by_id", xXPortalUserId);
 		//0.5
