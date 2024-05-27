@@ -17,12 +17,12 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React from "react";
 import { Table } from "react-bootstrap";
-import { UsersyncDetailsKeyDisplayMap } from "../../utils/XAEnums"
+import { UsersyncDetailsKeyDisplayMap } from "../../utils/XAEnums";
+import dateFormat from "dateformat";
 
 export function SyncSourceDetails(props) {
-  const { syncDetails } = props;
   return Object.keys(props.syncDetails).length == 0 ? (
     <>
       <Table bordered size="sm">
@@ -53,8 +53,18 @@ export function SyncSourceDetails(props) {
         <tbody>
           {Object.entries(props.syncDetails).map(([key, value]) => (
             <tr key={key}>
-              <td>{UsersyncDetailsKeyDisplayMap[key]? UsersyncDetailsKeyDisplayMap[key]: key}</td>
-              <td>{value}</td>
+              <td>
+                {UsersyncDetailsKeyDisplayMap[key]
+                  ? UsersyncDetailsKeyDisplayMap[key]
+                  : key}
+              </td>
+              <td>
+                {value
+                  ? key == "syncTime" || key == "lastModified"
+                    ? dateFormat(value, "mm/dd/yyyy hh:MM:ss TT")
+                    : value
+                  : "--"}
+              </td>
             </tr>
           ))}
         </tbody>

@@ -34,7 +34,8 @@ import {
   getTableSortType,
   fetchSearchFilterParams,
   parseSearchFilter,
-  serverError
+  serverError,
+  currentTimeZone
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
 
@@ -177,7 +178,9 @@ function LoginSessions() {
         Cell: (rawValue) => {
           if (rawValue.value) {
             return (
-              <span className="text-center d-block text-truncate">{rawValue.value}</span>
+              <span className="text-center d-block text-truncate">
+                {rawValue.value}
+              </span>
             );
           } else {
             return <span className="text-center d-block">--</span>;
@@ -271,7 +274,7 @@ function LoginSessions() {
         disableSortBy: true
       },
       {
-        Header: "Login Time ( India Standard Time )",
+        Header: `Login Time ( ${currentTimeZone()} )`,
         accessor: "authTime",
         Cell: (rawValue) => {
           let formatDateTime = dateFormat(
