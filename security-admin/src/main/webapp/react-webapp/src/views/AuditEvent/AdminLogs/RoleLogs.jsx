@@ -19,9 +19,9 @@
 
 import React from "react";
 import { Table, Badge } from "react-bootstrap";
-import dateFormat from "dateformat";
 import { ClassTypes } from "../../../utils/XAEnums";
 import { isEmpty } from "lodash";
+import { currentTimeZone } from "../../../utils/XAUtils";
 
 export const RoleLogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;
@@ -73,10 +73,7 @@ export const RoleLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
           <div>
             <div className="fw-bolder">Name: {objectName}</div>
-            <div className="fw-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-              Standard Time
-            </div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Created By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Role Detail:</h5>
@@ -208,8 +205,7 @@ export const RoleLogs = ({ data, reportdata }) => {
               <div className="col-md-6">
                 <div className="fw-bolder">Name: {objectName}</div>
                 <div className="fw-bolder">
-                  Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                  India Standard Time
+                  Date: {currentTimeZone(createDate)}
                 </div>
                 <div className="fw-bolder">Updated By: {owner}</div>
               </div>
@@ -512,10 +508,7 @@ export const RoleLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
           <div>
             <div className="fw-bolder">Name: {objectName}</div>
-            <div className="fw-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-              Standard Time
-            </div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Created By: {owner} </div>
             <div className="fw-bolder">Deleted By: {owner} </div>
             <br />

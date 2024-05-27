@@ -35,7 +35,8 @@ import {
   getTableSortType,
   fetchSearchFilterParams,
   parseSearchFilter,
-  serverError
+  serverError,
+  currentTimeZone
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
 
@@ -286,7 +287,7 @@ function Admin() {
         disableSortBy: true
       },
       {
-        Header: "Date ( India Standard Time )",
+        Header: `Date ( ${currentTimeZone()} )`,
         accessor: "createDate",
         Cell: (rawValue) => {
           const date = rawValue.value;

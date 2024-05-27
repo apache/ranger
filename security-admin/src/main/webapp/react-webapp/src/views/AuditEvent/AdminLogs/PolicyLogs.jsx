@@ -34,6 +34,7 @@ import {
   includes,
   split
 } from "lodash";
+import { currentTimeZone } from "../../../utils/XAUtils";
 
 export const PolicyLogs = ({ data, reportdata }) => {
   const {
@@ -1866,8 +1867,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">Service Name: {parentObjectName}</div>
             <div className="fw-bolder">
-              Created Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
+              Created Date: {currentTimeZone(createDate)}
             </div>
             <div className="fw-bolder">Created By: {owner}</div>
             <h5 className="bold wrap-header mt-3">Policy Details:</h5>
@@ -2562,9 +2562,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   Service Name: {parentObjectName}
                 </div>
                 <div className="fw-bolder">
-                  Updated Date:{" "}
-                  {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-                  Standard Time
+                  Updated Date: {currentTimeZone(createDate)}
                 </div>
                 <div className="fw-bolder">Updated By: {owner} </div>
               </div>
@@ -2905,8 +2903,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">Service Name: {parentObjectName}</div>
             <div className="fw-bolder">
-              Deleted Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}{" "}
-              India Standard Time
+              Deleted Date:{currentTimeZone(createDate)}
             </div>
             <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
@@ -3664,8 +3661,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             </div>
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">
-              Deleted Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}{" "}
-              India Standard Time
+              Deleted Date: {currentTimeZone(createDate)}
             </div>
             <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
