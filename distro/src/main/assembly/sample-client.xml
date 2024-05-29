@@ -58,10 +58,10 @@
                     <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
-                    <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind</include>
+                    <include>com.fasterxml.jackson.core:jackson-core</include>
                     <include>org.apache.ranger:ranger-plugins-audit</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>

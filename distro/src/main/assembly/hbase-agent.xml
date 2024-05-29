@@ -55,7 +55,7 @@
         <includes>
           <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
           <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
-          <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${com.fasterxml.jackson.version}</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>

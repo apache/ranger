@@ -91,7 +91,7 @@
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
         <checkstyle.version>8.29</checkstyle.version>
-        <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
+        <com.fasterxml.jackson.version>2.17.0</com.fasterxml.jackson.version> <!--here-->
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
         <commons.codec.version>1.15</commons.codec.version>
