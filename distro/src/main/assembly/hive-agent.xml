@@ -74,6 +74,7 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -104,6 +105,7 @@
           <include>org.apache.htrace:htrace-core4</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

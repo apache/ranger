@@ -87,6 +87,7 @@
           <include>org.apache.orc:orc-core:jar:${orc.version}</include>
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -117,6 +118,7 @@
           <include>com.fasterxml.woodstox:woodstox-core</include>
           <include>org.apache.htrace:htrace-core4</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
