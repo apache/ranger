@@ -68,6 +68,7 @@
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

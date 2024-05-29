@@ -95,6 +95,7 @@
 					<include>org.apache.orc:orc-core:jar:${orc.version}</include>
 					<include>org.apache.orc:orc-shims:jar:${orc.version}</include>
 					<include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                                        <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 				</includes>
 			</binaries>
 		</moduleSet>
@@ -128,6 +129,7 @@
 					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
+                                        <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 				</includes>
 			</binaries>
 		</moduleSet>

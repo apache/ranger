@@ -102,6 +102,7 @@
 							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+                                                        <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 						</includes>
 					</dependencySet>
 				</dependencySets>

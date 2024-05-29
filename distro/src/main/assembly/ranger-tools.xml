@@ -72,6 +72,7 @@
               <include>net.java.dev.jna:jna:jar:${jna.version}</include>
               <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
               <include>org.slf4j:slf4j-api</include>
+              <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
             </includes>
           </dependencySet>
         </dependencySets>
