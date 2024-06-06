@@ -49,7 +49,9 @@ function TestConnection(props) {
   };
 
   const validateConfig = async () => {
-    let testConnResp;
+    let testConnResp = {},
+      msgModal = "",
+      msgListModal = [];
 
     try {
       testConnResp = await fetchApi({
@@ -61,8 +63,6 @@ function TestConnection(props) {
       let respMsg = testConnResp.data.msgDesc;
       let respStatusCode = testConnResp.data.statusCode;
       let respMsgList = testConnResp.data.messageList;
-      let msgModal,
-        msgListModal = [];
 
       if (respStatusCode !== undefined && respStatusCode === 1) {
         msgModal = [
@@ -100,6 +100,17 @@ function TestConnection(props) {
         showMoreModalContent: msgListModal
       });
     } catch (error) {
+      if (error?.response?.data?.msgDesc) {
+        msgModal = error.response.data.msgDesc;
+      }
+      setModalState({
+        showTestConnModal: true,
+        showMore: true
+      });
+      setModalContent({
+        testConnModalContent: msgModal,
+        showMoreModalContent: msgListModal
+      });
       console.error(`Error occurred while validating the configs!  ${error}`);
     }
   };
