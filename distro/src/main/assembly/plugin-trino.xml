@@ -26,8 +26,10 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-trino-plugin-shim</include>
-                <include>org.apache.ranger:ranger-plugin-classloader</include>
+                <include>org.apache.ranger:ranger-plugins-audit</include>
+                <include>org.apache.ranger:ranger-plugins-cred</include>
+                <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ranger-trino-plugin</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
@@ -49,25 +51,7 @@
                     <include>org.slf4j:slf4j-simple:jar:${slf4j.version}</include>
                     <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-                </includes>
-            </binaries>
-        </moduleSet>
 
-        <moduleSet>
-            <useAllReactorProjects>true</useAllReactorProjects>
-            <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-trino-plugin</include>
-            </includes>
-            <binaries>
-                <outputDirectory>lib/ranger-trino-plugin-impl</outputDirectory>
-                <includeDependencies>true</includeDependencies>
-                <unpack>false</unpack>
-                <directoryMode>755</directoryMode>
-                <fileMode>644</fileMode>
-                <includes>
                     <include>com.google.code.gson:gson*</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
@@ -201,13 +185,13 @@
     <!-- enable/disable script for Plugin -->
     <files>
         <file>
-            <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
+            <source>${project.parent.basedir}/plugin-trino/scripts/enable-trino-plugin.sh</source>
             <outputDirectory></outputDirectory>
             <destName>enable-trino-plugin.sh</destName>
             <fileMode>755</fileMode>
         </file>
         <file>
-            <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
+            <source>${project.parent.basedir}/plugin-trino/scripts/enable-trino-plugin.sh</source>
             <outputDirectory></outputDirectory>
             <destName>disable-trino-plugin.sh</destName>
             <fileMode>755</fileMode>

@@ -29,7 +29,6 @@ import org.junit.Test;
 
 import javax.security.auth.kerberos.KerberosPrincipal;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,8 +67,7 @@ public class RangerSystemAccessControlTest
     public static void setUpBeforeClass()
             throws Exception
     {
-        Map<String, String> config = new HashMap<>();
-        accessControlManager = new RangerSystemAccessControl(config);
+        accessControlManager = new RangerSystemAccessControl(new RangerConfig());
     }
 
     @Test
