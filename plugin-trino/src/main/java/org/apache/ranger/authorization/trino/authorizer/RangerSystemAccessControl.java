@@ -14,6 +14,7 @@
 package org.apache.ranger.authorization.trino.authorizer;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import io.trino.spi.connector.CatalogSchemaName;
 import io.trino.spi.connector.CatalogSchemaRoutineName;
 import io.trino.spi.connector.CatalogSchemaTableName;
@@ -57,10 +58,6 @@ public class RangerSystemAccessControl
 {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSystemAccessControl.class);
 
-    public static final String RANGER_CONFIG_KEYTAB = "ranger.keytab";
-    public static final String RANGER_CONFIG_PRINCIPAL = "ranger.principal";
-    public static final String RANGER_CONFIG_USE_UGI = "ranger.use_ugi";
-    public static final String RANGER_CONFIG_HADOOP_CONFIG = "ranger.hadoop_config";
     public static final String RANGER_TRINO_DEFAULT_HADOOP_CONF = "trino-ranger-site.xml";
     public static final String RANGER_TRINO_SERVICETYPE = "trino";
     public static final String RANGER_TRINO_APPID = "trino";
@@ -68,17 +65,18 @@ public class RangerSystemAccessControl
     private final RangerBasePlugin rangerPlugin;
     private final boolean useUgi;
 
-    public RangerSystemAccessControl(Map<String, String> config)
+    @Inject
+    public RangerSystemAccessControl(RangerConfig config)
     {
         super();
 
         Configuration hadoopConf = new Configuration();
 
-        if (config.get(RANGER_CONFIG_HADOOP_CONFIG) != null) {
-            URL url = hadoopConf.getResource(config.get(RANGER_CONFIG_HADOOP_CONFIG));
+        if (config.getHadoopConfigPath() != null) {
+            URL url = hadoopConf.getResource(config.getHadoopConfigPath());
 
             if (url == null) {
-                LOG.warn("Hadoop config " + config.get(RANGER_CONFIG_HADOOP_CONFIG) + " not found");
+                LOG.warn("Hadoop config " + config.getHadoopConfigPath() + " not found");
             }
             else {
                 hadoopConf.addResource(url);
@@ -98,9 +96,9 @@ public class RangerSystemAccessControl
 
         UserGroupInformation.setConfiguration(hadoopConf);
 
-        if (config.get(RANGER_CONFIG_KEYTAB) != null && config.get(RANGER_CONFIG_PRINCIPAL) != null) {
-            String keytab = config.get(RANGER_CONFIG_KEYTAB);
-            String principal = config.get(RANGER_CONFIG_PRINCIPAL);
+        if (config.getKeytab() != null && config.getPrincipal() != null) {
+            String keytab = config.getKeytab();
+            String principal = config.getPrincipal();
 
             LOG.info("Performing kerberos login with principal " + principal + " and keytab " + keytab);
 
@@ -114,7 +112,7 @@ public class RangerSystemAccessControl
             }
         }
 
-        useUgi = config.getOrDefault(RANGER_CONFIG_USE_UGI, "false").equalsIgnoreCase("true");
+        useUgi = config.isUseUgi();
         rangerPlugin = new RangerBasePlugin(RANGER_TRINO_SERVICETYPE, RANGER_TRINO_APPID);
 
         rangerPlugin.init();
