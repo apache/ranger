@@ -629,7 +629,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		ugRoleAssignments.setWhiteListUserRoleAssignments(whiteListUserMap);
 		ugRoleAssignments.setWhiteListGroupRoleAssignments(whiteListGroupMap);
 		ugRoleAssignments.setReset(isStartupFlag);
-		if (updateRoles(ugRoleAssignments) == null) {
+		List<String> updatedUsers = updateRoles(ugRoleAssignments);
+		if (updatedUsers == null || updatedUsers.isEmpty()) {
 			String msg = "Unable to update roles for " + allUsers;
 			LOG.error(msg);
 			throw new Exception(msg);
@@ -1279,7 +1280,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.updateUserRoles(" + ugRoleAssignments.getUsers() + ")");
 		}
-		List<String> ret = null;
+		List<String> ret = new ArrayList<>();
 		try {
 			int totalCount = ugRoleAssignments.getUsers().size();
 			int uploadedCount = 0;
@@ -1300,6 +1301,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				Gson gson = new GsonBuilder().create();
 				String jsonString = gson.toJson(pagedUgRoleAssignmentsList);
 				String url = PM_UPDATE_USERS_ROLES_URI;
+				if ((uploadedCount + pageSize) >= totalCount) { // this is the last iteration of the loop
+					pagedUgRoleAssignmentsList.setLastPage(true);
+				}
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("USER role MAPPING" + jsonString);
@@ -1319,9 +1323,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RESPONSE: [" + response + "]");
 				}
-				Type listType = new TypeToken<ArrayList<String>>() {
-				}.getType();
-				ret = new Gson().fromJson(response, listType);
+				Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+				List<String> resp = new Gson().fromJson(response, listType);
+				if (resp != null)
+					ret.addAll(resp);
 				uploadedCount += pageSize;
 			}
 
