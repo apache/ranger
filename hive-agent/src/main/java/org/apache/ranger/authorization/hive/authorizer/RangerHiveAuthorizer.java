@@ -2008,7 +2008,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ADD:
 			case DELETE:
 			case QUERY:
-				ret = FsAction.ALL;
+				ret = FsAction.READ_WRITE;
 				break;
 
 			case EXPLAIN:
