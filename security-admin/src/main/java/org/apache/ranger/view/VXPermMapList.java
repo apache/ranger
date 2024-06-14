@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXPermMapList extends VList {
     /**
      * @return the vXPermMaps
      */
+    @JsonProperty("vXPermMaps")
     public List<VXPermMap> getVXPermMaps() {
 	return vXPermMaps;
     }
@@ -58,6 +60,7 @@ public class VXPermMapList extends VList {
      * @param vXPermMaps
      *            the vXPermMaps to set
      */
+    @JsonProperty("vXPermMaps")
     public void setVXPermMaps(List<VXPermMap> vXPermMaps) {
 	this.vXPermMaps = vXPermMaps;
     }

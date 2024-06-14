@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXKmsKeyList extends VList {
     /**
      * @return the vXKeys
      */
+    @JsonProperty("vXKeys")
     public List<VXKmsKey> getVXKeys() {
 	return vXKeys;
     }
@@ -58,6 +60,7 @@ public class VXKmsKeyList extends VList {
      * @param vXKeys
      *            the vXKeys to set
      */
+    @JsonProperty("vXKeys")
     public void setVXKeys(List<VXKmsKey> vXKeys) {
 	this.vXKeys = vXKeys;
     }

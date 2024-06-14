@@ -24,6 +24,7 @@ import java.util.List;
 
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -46,6 +47,7 @@ public class VXTrxLogList extends VList {
     /**
      * @return the vXTrxLogs
      */
+    @JsonProperty("vXTrxLogs")
     public List<VXTrxLog> getVXTrxLogs() {
 	return vXTrxLogs;
     }
@@ -54,6 +56,7 @@ public class VXTrxLogList extends VList {
      * @param vXTrxLogs
      *            the vXTrxLogs to set
      */
+    @JsonProperty("vXTrxLogs")
     public void setVXTrxLogs(List<VXTrxLog> vXTrxLogs) {
 	this.vXTrxLogs = vXTrxLogs;
     }

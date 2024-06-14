@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXRepositoryList extends VList {
 	/**
 	 * @return the vXRepositories
 	 */
+	@JsonProperty("vXRepositories")
 	public List<VXRepository> getVXRepositories() {
 		return vXRepositories;
 	}
@@ -58,6 +60,7 @@ public class VXRepositoryList extends VList {
 	 * @param vXRepositories
 	 *            the vXRepositories to set
 	 */
+	@JsonProperty("vXRepositories")
 	public void setVXRepositories(List<VXRepository> vXRepositories) {
 		this.vXRepositories = vXRepositories;
 	}

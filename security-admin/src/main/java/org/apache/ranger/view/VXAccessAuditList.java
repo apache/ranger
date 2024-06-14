@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXAccessAuditList extends VList {
     /**
      * @return the vXAccessAudits
      */
+    @JsonProperty("vXAccessAudits")
     public List<VXAccessAudit> getVXAccessAudits() {
 	return vXAccessAudits;
     }
@@ -58,6 +60,7 @@ public class VXAccessAuditList extends VList {
      * @param vXAccessAudits
      *            the vXAccessAudits to set
      */
+    @JsonProperty("vXAccessAudits")
     public void setVXAccessAudits(List<VXAccessAudit> vXAccessAudits) {
 	this.vXAccessAudits = vXAccessAudits;
     }

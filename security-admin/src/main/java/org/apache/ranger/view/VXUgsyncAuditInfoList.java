@@ -25,6 +25,8 @@
  */
 
 import org.apache.ranger.common.view.VList;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +52,7 @@ public class VXUgsyncAuditInfoList extends VList {
     /**
      * @return the vXAccessAudits
      */
+    @JsonProperty("vxUgsyncAuditInfoList")
     public List<VXUgsyncAuditInfo> getVxUgsyncAuditInfoList() {
 	return vxUgsyncAuditInfoList;
     }
@@ -58,6 +61,7 @@ public class VXUgsyncAuditInfoList extends VList {
      * @param vxUgsyncAuditInfoList
      *            the vXAccessAudits to set
      */
+    @JsonProperty("vxUgsyncAuditInfoList")
     public void setVxUgsyncAuditInfoList(List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList) {
 	this.vxUgsyncAuditInfoList = vxUgsyncAuditInfoList;
     }

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXCredentialStoreList extends VList {
     /**
      * @return the vXCredentialStores
      */
+    @JsonProperty("vXCredentialStores")
     public List<VXCredentialStore> getVXCredentialStores() {
 	return vXCredentialStores;
     }
@@ -58,6 +60,7 @@ public class VXCredentialStoreList extends VList {
      * @param vXCredentialStores
      *            the vXCredentialStores to set
      */
+    @JsonProperty("vXCredentialStores")
     public void setVXCredentialStores(List<VXCredentialStore> vXCredentialStores) {
 	this.vXCredentialStores = vXCredentialStores;
     }

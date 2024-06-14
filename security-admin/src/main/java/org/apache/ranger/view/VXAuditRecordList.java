@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -37,10 +38,12 @@ public class VXAuditRecordList extends VList {
 	private static final long serialVersionUID = 1L;
 	List<VXAuditRecord> vXAuditRecords = new ArrayList<VXAuditRecord>();
 
+	@JsonProperty("vXAuditRecords")
 	public List<VXAuditRecord> getvAudits() {
 		return vXAuditRecords;
 	}
 
+	@JsonProperty("vXAuditRecords")
 	public void setvAudits(List<VXAuditRecord> vXAuditRecords) {
 		this.vXAuditRecords = vXAuditRecords;
 	}

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,6 +51,7 @@ public class VXAuthSessionList extends VList {
     /**
      * @return the vXAuthSessions
      */
+    @JsonProperty("vXAuthSessions")
     public List<VXAuthSession> getVXAuthSessions() {
 	return vXAuthSessions;
     }
@@ -58,6 +60,7 @@ public class VXAuthSessionList extends VList {
      * @param vXAuthSessions
      *            the vXAuthSessions to set
      */
+    @JsonProperty("vXAuthSessions")
     public void setVXAuthSessions(List<VXAuthSession> vXAuthSessions) {
 	this.vXAuthSessions = vXAuthSessions;
     }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -45,6 +46,7 @@ public class VXUserPermissionList extends VList {
 	/**
 	 * @return the vXModuleDef
 	 */
+	@JsonProperty("vXUserPermission")
 	public List<VXUserPermission> getvXModuleDef() {
 		return vXUserPermission;
 	}
@@ -52,6 +54,7 @@ public class VXUserPermissionList extends VList {
 	/**
 	 * @param vXModuleDef the vXModuleDef to set
 	 */
+	@JsonProperty("vXUserPermission")
 	public void setvXModuleDef(List<VXUserPermission> vXModuleDef) {
 		this.vXUserPermission = vXModuleDef;
 	}

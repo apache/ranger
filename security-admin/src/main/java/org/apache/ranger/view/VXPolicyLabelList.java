@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -50,13 +51,15 @@ public class VXPolicyLabelList extends VList {
         /**
          * @return the VXPolicyLabels
          */
+        @JsonProperty("vxPolicyLabels")
         public List<VXPolicyLabel> getVXPolicyLabels() {
                         return vxPolicyLabels;
                 }
 
-                public void setVXPolicyLabels(List<VXPolicyLabel> vxPolicyLabels) {
-                        this.vxPolicyLabels = vxPolicyLabels;
-                }
+        @JsonProperty("vxPolicyLabels")
+        public void setVXPolicyLabels(List<VXPolicyLabel> vxPolicyLabels) {
+                this.vxPolicyLabels = vxPolicyLabels;
+        }
 
         @Override
         public int getListSize() {
