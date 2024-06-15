@@ -1,0 +1,83 @@
+name: Publish Docker Image
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-publish-ranger-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      input_token: ${{ github.event.inputs.token }}
+      secrets_token: ${{ secrets.PUBLISH_DOCKER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Check groups of runner
+        run: |
+          groups runner
+      - name: Create user and set permissions
+        run: |
+          sudo useradd ranger
+          sudo usermod -aG docker ranger
+          sudo usermod -aG adm ranger
+      - name: Verify user creation
+        run: |
+          id ranger
+      - name: Build and run Docker Compose
+        run: |
+          cd dev-support/ranger-docker
+
+          # peek users
+          cat /etc/passwd
+
+          pwd
+
+          # set some env
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
+          export RANGER_DB_TYPE=mysql
+
+          # Prevent buildx to pull remote image
+          # https://github.com/moby/buildkit/issues/2343#issuecomment-1311890308
+          docker buildx prune -f
+          docker buildx use default
+          
+          docker compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up --pull never
+
+          mkdir -p ./dist
+
+          # copy package from volume to host
+          docker compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml cp ranger-build:/home/ranger/dist .
+      - name: List dist directory
+        run: ls -R dev-support/ranger-docker/dist
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: "Release ${{ github.ref_name }}"
+          body: "Automated release for commit ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: ./dev-support/ranger-docker/dist/*
+          tag: ${{ github.ref }}

@@ -6,17 +6,23 @@ services:
       dockerfile: Dockerfile.ranger-build
       args:
         - RANGER_BUILD_JAVA_VERSION=${RANGER_BUILD_JAVA_VERSION}
+    #user: "${_UID}:${_GID}"
     image: ranger-build
     container_name: ranger-build
     hostname: ranger-build.example.com
+    privileged: true
     networks:
       - ranger
     volumes:
-      - ${HOME:-~}/.m2:/home/ranger/.m2:delegated
+      # SELinux
+      # https://github.com/moby/moby/issues/41202#issuecomment-657422171
+      # - ${HOME:-~}/.m2:/home/ranger/.m2:Z
+      - m2:/home/ranger/.m2:Z
       - ./scripts:/home/ranger/scripts
       - ./patches:/home/ranger/patches
-      - ./dist:/home/ranger/dist:delegated
-      - ${RANGER_HOME:-./../../}:/home/ranger/src:delegated
+      - dist:/home/ranger/dist:Z
+      # - ./dist:/home/ranger/dist:Z
+      - ${RANGER_HOME:-./../../}:/home/ranger/src:Z
     depends_on:
       - ranger-base
     environment:
@@ -31,3 +37,8 @@ services:
 networks:
   ranger:
     name: rangernw
+
+volumes:
+  m2:
+  dist:
+  
