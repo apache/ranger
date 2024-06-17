@@ -78,7 +78,8 @@ public class GdsPolicyEngine {
 
         try {
             if (isAnyAccess) {
-                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allAccessTypes, Boolean.TRUE);
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allAccessTypes);
+                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
             }
 
             List<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
@@ -108,7 +109,9 @@ public class GdsPolicyEngine {
             }
         } finally {
             if (isAnyAccess) {
-                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), null, Boolean.FALSE);
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), null);
+                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.FALSE);
+
             }
         }
 

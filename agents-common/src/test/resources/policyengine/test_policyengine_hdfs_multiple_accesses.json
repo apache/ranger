@@ -48,9 +48,6 @@
       "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
       "policyItems":[
         {"accesses":[{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
-      ],
-      "allowExceptions":[
-        {"accesses":[{"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
       ]
     }
   ,
@@ -85,7 +82,7 @@
       "request":{
         "resource":{"elements":{"path":"/public/finance"}},
         "accessType":"read","user":"guest","userGroups":[],"requestData":"read_execute /public/finance",
-        "context": {"ACCESSTYPES": [ "read",  "execute" ]}
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":6}
     },
@@ -114,7 +111,7 @@
       "request":{
         "resource":{"elements":{"path":"/public/finance"}},
         "accessType":"write","user":"guest","userGroups":[],"requestData":"write_execute /public/finance",
-        "context": {"ACCESSTYPES": [ "write",  "execute" ]}
+        "context": {"ALLACCESSTYPEGROUPS": [ ["write"],  ["execute"] ], "ALLACCESSTYPES": [ "write", "execute"]}
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":4}
     },
@@ -122,7 +119,7 @@
       "request":{
         "resource":{"elements":{"path":"/public/finance"}},
         "accessType":"read","user":"finance","userGroups":[],"requestData":"read_execute /public/finance",
-        "context": {"ACCESSTYPES": [ "read",  "execute" ]}
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
 
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":3}
@@ -132,7 +129,7 @@
       "request":{
         "resource":{"elements":{"path":"/public/finance"}},
         "accessType":"read","user":"hr","userGroups":[],"requestData":"read_execute /public/finance",
-        "context": {"ACCESSTYPES": [ "read",  "execute" ]}
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
 
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
