@@ -49,6 +49,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -58,9 +59,9 @@ import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.core.JsonParser;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 public class MiscUtil {
@@ -80,7 +81,21 @@ public class MiscUtil {
 
 	public static String LINE_SEPARATOR = System.getProperty("line.separator");
 
-	private static Gson sGsonBuilder = null;
+	static private final ThreadLocal<ObjectMapper> MAPPER = new ThreadLocal<ObjectMapper>() {
+		@Override
+		protected ObjectMapper initialValue() {
+			ObjectMapper      objectMapper = new ObjectMapper();
+			SimpleDateFormat dateFormat     = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			objectMapper.setDateFormat(dateFormat);
+			objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+			objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+			return objectMapper;
+		}
+	} ;
+
+	static public ObjectMapper getMapper() {
+		return MAPPER.get();
+	}
 	private static String sApplicationType = null;
 	private static UserGroupInformation ugiLoginUser = null;
 	private static Subject subjectLoginUser = null;
@@ -90,15 +105,6 @@ public class MiscUtil {
 	private static int logInterval = 30000; // 30 seconds
 
 	static {
-		try {
-			sGsonBuilder = new GsonBuilder().setDateFormat(
-					"yyyy-MM-dd HH:mm:ss.SSS").create();
-		} catch (Throwable excp) {
-			logger.warn(
-					"failed to create GsonBuilder object. stringify() will return obj.toString(), instead of Json",
-					excp);
-		}
-
 		initLocalHost();
 	}
 
@@ -314,8 +320,13 @@ public class MiscUtil {
 		if (log != null) {
 			if (log instanceof String) {
 				ret = (String) log;
-			} else if (MiscUtil.sGsonBuilder != null) {
-				ret = MiscUtil.sGsonBuilder.toJson(log);
+            } else if (getMapper() != null) {
+                try {
+                    ret = getMapper().writeValueAsString(log);
+                } catch (Exception e) {
+                    logger.error("Error occurred while processing JSOn object  " + log, e);
+                    ret = log.toString(); // Fallback to default toString() method
+                }
 			} else {
 				ret = log.toString();
 			}
@@ -325,7 +336,12 @@ public class MiscUtil {
 	}
 
 	static public <T> T fromJson(String jsonStr, Class<T> clazz) {
-		return sGsonBuilder.fromJson(jsonStr, clazz);
+        try {
+            return getMapper().readValue(jsonStr, clazz);
+        } catch (Exception exception) {
+            logger.error("Error occurred while processing JSOn object  " + jsonStr, exception);
+        }
+        return null;
 	}
 
 	public static String getStringProperty(Properties props, String propName) {

@@ -84,7 +84,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.gson.JsonSyntaxException;
 import com.sun.jersey.multipart.FormDataParam;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
@@ -536,12 +535,6 @@ public class RoleREST {
 				LOG.error("Provided file format is not supported!!");
 				throw restErrorUtil.createRESTException("Provided file format is not supported!!");
 			}
-		} catch (JsonSyntaxException ex) {
-			LOG.error("Provided json file is not valid!!", ex);
-
-			roleService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_ROLE, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
-
-			throw restErrorUtil.createRESTException(ex.getMessage());
 		} catch (WebApplicationException excp) {
 			LOG.error("Error while importing role from file!!", excp);
 

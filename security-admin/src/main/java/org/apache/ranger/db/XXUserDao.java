@@ -22,13 +22,12 @@ package org.apache.ranger.db;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPrincipal;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +46,6 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
 	private static final Logger logger = LoggerFactory.getLogger(XXUserDao.class);
-
-	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XXUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -200,11 +197,7 @@ public class XXUserDao extends BaseDao<XXUser> {
 		Map<String, String> attrMap      = null;
 
 		if (StringUtils.isNotBlank(attributes)) {
-			try {
-				attrMap = gsonBuilder.fromJson(attributes, Map.class);
-			} catch (Exception excp) {
-				// ignore
-			}
+			attrMap = JsonUtils.jsonToMapStringString(attributes);
 		}
 
 		if (attrMap == null) {

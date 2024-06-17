@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -36,14 +37,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 
 public class PolicyRefresher extends Thread {
 	private static final Logger LOG = LoggerFactory.getLogger(PolicyRefresher.class);
@@ -58,7 +56,6 @@ public class PolicyRefresher extends Thread {
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
-	private final Gson                           gson;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -88,17 +85,9 @@ public class PolicyRefresher extends Thread {
 
 		this.cacheFileName = cacheFilename;
 
-		Gson gson = null;
-		try {
-			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch(Throwable excp) {
-			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
-		}
-
 		RangerPluginContext pluginContext  = plugIn.getPluginContext();
 		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
 		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
-		this.gson                          = gson;
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 
@@ -370,7 +359,7 @@ public class PolicyRefresher extends Thread {
     		try {
 	        	reader = new FileReader(cacheFile);
 
-		        policies = gson.fromJson(reader, ServicePolicies.class);
+				policies = JsonUtils.jsonToObject(reader, ServicePolicies.class);
 
 		        if(policies != null) {
 		        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
@@ -448,8 +437,7 @@ public class PolicyRefresher extends Thread {
 	
 				try {
 					writer = new FileWriter(cacheFile);
-	
-			        gson.toJson(policies, writer);
+					JsonUtils.objectToWriter(writer, policies);
 		        } catch (Exception excp) {
 		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 		        } finally {
@@ -477,7 +465,7 @@ public class PolicyRefresher extends Thread {
 					}
 
 					try (Writer writer = new FileWriter(backupCacheFile)) {
-						gson.toJson(policies, writer);
+						JsonUtils.objectToWriter(writer, policies);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
 					}

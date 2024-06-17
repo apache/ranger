@@ -25,9 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
@@ -44,8 +43,6 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__
 @Service
 public class XXGroupDao extends BaseDao<XXGroup> {
 	private static final Logger logger = LoggerFactory.getLogger(XXGroupDao.class);
-
-	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XXGroupDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -131,7 +128,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 
 		if (StringUtils.isNotBlank(attributes)) {
 			try {
-				attrMap = gsonBuilder.fromJson(attributes, Map.class);
+                attrMap = JsonUtils.jsonToMapStringString(attributes);
 			} catch (Exception excp) {
 				// ignore
 			}

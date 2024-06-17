@@ -23,9 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.biz.RangerTagDBRetriever;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
@@ -103,13 +104,17 @@ public class RangerServiceResourceWithTagsService extends RangerServiceResourceW
 		RangerServiceResourceWithTags ret = super.mapEntityToViewBean(serviceResourceWithTags, xxServiceResource);
 
         if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
-            Map<String, RangerPolicyResource> serviceResourceElements = RangerTagDBRetriever.gsonBuilder.fromJson(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+			try {
+				Map<String, RangerPolicyResource> serviceResourceElements = (Map<String, RangerPolicyResource>) JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
 
-            if (MapUtils.isNotEmpty(serviceResourceElements)) {
-                ret.setResourceElements(serviceResourceElements);
-            } else {
-                LOG.info("Empty serviceResourceElement in [" + ret + "]!!");
-            }
+				if (MapUtils.isNotEmpty(serviceResourceElements)) {
+					ret.setResourceElements(serviceResourceElements);
+				} else {
+					LOG.info("Empty serviceResourceElement in [" + ret + "]!!");
+				}
+			} catch (JsonProcessingException e) {
+				LOG.error("Error occurred while processing json", e);
+			}
         } else {
             LOG.info("Empty string representing serviceResourceElements in [" + xxServiceResource + "]!!");
         }

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Date;
 
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -59,9 +60,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 @Component
 public class MetricUtil extends BaseLoader  {
 	
@@ -83,7 +81,7 @@ public class MetricUtil extends BaseLoader  {
 	
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-	
+
 	public static void main(String[] args) {
 		/* LOG4J2: TODO
 		logger.getRootLogger().setLevel(Level.OFF);
@@ -177,8 +175,7 @@ public class MetricUtil extends BaseLoader  {
                                                 metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
 						metricUserGroupCount.setUserTotalCount(userTotalCount);
 						metricUserGroupCount.setGroupCount(groupCount);
-						Gson gson = new GsonBuilder().create();
-						final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
+						final String jsonUserGroupCount = JsonUtils.objectToJson(metricUserGroupCount);
 						System.out.println(jsonUserGroupCount);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for usergroup : " + e.getMessage());
@@ -234,8 +231,7 @@ public class MetricUtil extends BaseLoader  {
 						long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();	
 						auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
 						
-						Gson gson = new GsonBuilder().create();
-						final String jsonAudit = gson.toJson(auditObj);
+						final String jsonAudit = JsonUtils.objectToJson(auditObj);
 						System.out.println(jsonAudit);
 					}catch (Exception e) {
 						logger.error("Error calculating Metric for audits : "+e.getMessage());
@@ -265,8 +261,7 @@ public class MetricUtil extends BaseLoader  {
 						}
 						vXMetricServiceCount.setServiceBasedCountList(services);
 						vXMetricServiceCount.setTotalCount(totalServiceCount);
-						Gson gson = new GsonBuilder().create();
-						final String jsonServices = gson.toJson(vXMetricServiceCount);
+						final String jsonServices = JsonUtils.objectToJson(vXMetricServiceCount);
 						System.out.println(jsonServices);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for services : " + e.getMessage());
@@ -308,8 +303,7 @@ public class MetricUtil extends BaseLoader  {
 							tagFlag = true;
 						}
 						vXMetricPolicyCount.setPolicyCountList(servicesWithPolicy);
-						Gson gson = new GsonBuilder().create();
-						final String jsonPolicies = gson.toJson(vXMetricPolicyCount);
+						final String jsonPolicies = JsonUtils.objectToJson(vXMetricPolicyCount);
 						System.out.println(jsonPolicies);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for policies : " + e.getMessage());
@@ -332,8 +326,7 @@ public class MetricUtil extends BaseLoader  {
 						}
 
 						String dbDetail = dbFlavourType + xaBizUtil.getDBVersion();
-						Gson gson = new GsonBuilder().create();
-						final String jsonDBDetail = gson.toJson(dbDetail);
+						final String jsonDBDetail = JsonUtils.objectToJson(dbDetail);
 						logger.info("jsonDBDetail:" + jsonDBDetail);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for database : " + e.getMessage());
@@ -357,8 +350,7 @@ public class MetricUtil extends BaseLoader  {
 								}
 							}
 						}
-						Gson gson = new GsonBuilder().create();
-						final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
+						final String jsonContextEnrichers = JsonUtils.objectToJson(serviceWithContextEnrichers);
 						System.out.println(jsonContextEnrichers);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for contextenrichers : " + e.getMessage());
@@ -420,8 +412,7 @@ public class MetricUtil extends BaseLoader  {
 								}
 							}
 						}
-						Gson gson = new GsonBuilder().create();
-						String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
+						String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
 						System.out.println(jsonContextDenyCondtionOn);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for denyconditions : " + e.getMessage());

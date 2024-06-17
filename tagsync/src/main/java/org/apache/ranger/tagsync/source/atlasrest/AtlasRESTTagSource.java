@@ -19,8 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlasrest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.atlas.exception.AtlasBaseException;
@@ -43,6 +41,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
@@ -235,12 +234,12 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 			if (MapUtils.isNotEmpty(serviceTagsMap)) {
 				for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
 					if (LOG.isDebugEnabled()) {
-						Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-								.setPrettyPrinting()
-								.create();
-						String serviceTagsString = gsonBuilder.toJson(entry.getValue());
-
-						LOG.debug("serviceTags=" + serviceTagsString);
+                        try {
+                            String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
+                            LOG.debug("serviceTags=" + serviceTagsString);
+                        }catch (Exception e) {
+                            LOG.error("An error occurred while conveting serviceTags to string", e);
+                        }
 					}
 					updateSink(entry.getValue());
 				}

@@ -23,9 +23,6 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.GsonBuilder;
-
-//import java.io.File;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -133,14 +130,6 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			}
 		}
 		LOG.info("providerName=" + getName());
-
-		try {
-			new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch (Throwable excp) {
-			LOG.warn(
-					"Log4jAuditProvider.init(): failed to create GsonBuilder object. events will be formated using toString(), instead of Json",
-					excp);
-		}
 
 		mLogFailureReportMinIntervalInMs = MiscUtil.getIntProperty(props,
 				AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);

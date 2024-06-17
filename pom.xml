@@ -359,8 +359,6 @@
                 <!-- trino-plugin requirements -->
                 <module>agents-installer</module>
                 <module>plugin-trino</module>
-                <!-- nested-structure-plugin requirements -->
-                <module>plugin-nestedstructure</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    plugin-nestedstructure, make sure to update dependency in distro/pom.xml

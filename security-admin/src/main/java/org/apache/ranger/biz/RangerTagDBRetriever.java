@@ -19,22 +19,26 @@
 
 package org.apache.ranger.biz;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.*;
-import org.apache.ranger.plugin.model.*;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceResource;
+import org.apache.ranger.entity.XXTagDef;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.service.RangerServiceResourceService;
@@ -49,10 +53,7 @@ public class RangerTagDBRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerTagDBRetriever.class);
 	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
 
-	public static final Type subsumedDataType = new TypeToken<List<RangerTagDef.RangerTagAttributeDef>>() {}.getType();
-
-	public static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-			.create();
+	public static final TypeReference subsumedDataType = new TypeReference<List<RangerTagDef.RangerTagAttributeDef>>() {};
 
 	private final RangerDaoManager daoMgr;
 	private final LookupCache lookupCache;
@@ -292,22 +293,27 @@ public class RangerTagDBRetriever {
 					ret.setUpdateTime(xServiceResource.getUpdateTime());
 					ret.setVersion(xServiceResource.getVersion());
 					ret.setResourceSignature(xServiceResource.getResourceSignature());
-
-					Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = gsonBuilder.fromJson(xServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
-					ret.setResourceElements(serviceResourceElements);
-
-					List<RangerTag> tags = gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
-
-					if (CollectionUtils.isNotEmpty(tags)) {
-						for (RangerTag tag : tags) {
-							RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+					if (StringUtils.isNotEmpty(xServiceResource.getServiceResourceElements())) {
+						try {
+							Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = (Map<String, RangerPolicy.RangerPolicyResource>) JsonUtils.jsonToObject(xServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+							ret.setResourceElements(serviceResourceElements);
+						} catch (JsonProcessingException e) {
+							LOG.error("Error occurred while processing JSON  ", e);
 						}
 					}
-
-					lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
+					try {
+						List<RangerTag> tags = (List<RangerTag>) JsonUtils.jsonToObject(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+						if (CollectionUtils.isNotEmpty(tags)) {
+							for (RangerTag tag : tags) {
+								RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+							}
+						}
+						lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
+					} catch (JsonProcessingException e) {
+						LOG.error("Error occurred while processing JSON  ", e);
+					}
 				}
 			}
-
 			return ret;
 		}
 	}
@@ -360,8 +366,14 @@ public class RangerTagDBRetriever {
 					ret.setVersion(xTagDef.getVersion());
 					ret.setName(xTagDef.getName());
 					ret.setSource(xTagDef.getSource());
-					List<RangerTagDef.RangerTagAttributeDef> attributeDefs = gsonBuilder.fromJson(xTagDef.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
-					ret.setAttributeDefs(attributeDefs);
+					if(StringUtils.isNotEmpty(xTagDef.getTagAttrDefs())) {
+						try {
+							List<RangerTagDef.RangerTagAttributeDef> attributeDefs = (List<RangerTagDef.RangerTagAttributeDef>) JsonUtils.jsonToObject(xTagDef.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
+							ret.setAttributeDefs(attributeDefs);
+						} catch (JsonProcessingException e) {
+							LOG.error("Error occurred while processing JSON  ", e);
+						}
+					}
 				}
 			}
 

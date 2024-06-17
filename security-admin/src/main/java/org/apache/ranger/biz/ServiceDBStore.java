@@ -217,8 +217,6 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
@@ -267,7 +265,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
 	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
-
 
 	static {
 		try {
@@ -4532,7 +4529,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
 		ServletOutputStream out = null;
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String json = null;
 
 		switch(type) {
@@ -4540,7 +4536,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 			rangerExportPolicyList.setGenericPolicies(objList);
 			rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
-			json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
+			json = JsonUtils.objectToJson(rangerExportPolicyList);
 			break;
 		case ROLE :
 			RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
@@ -4548,7 +4544,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			Map<String, Object> metaDataInfo = getMetaDataInfo();
 			metaDataInfo.put(EXPORT_COUNT,rangerExportRoleList.getListSize());
 			rangerExportRoleList.setMetaDataInfo(metaDataInfo);
-			json = gson.toJson(rangerExportRoleList, RangerExportRoleList.class);
+			json = JsonUtils.objectToJson(rangerExportRoleList);
 			break;
 		default :
 			throw restErrorUtil.createRESTException("Invalid type "+type);
@@ -5534,8 +5530,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
             metricUserGroupCount.setUserTotalCount(userTotalCount);
             metricUserGroupCount.setGroupCount(groupCount);
-            Gson         gson               = new GsonBuilder().create();
-            final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
+            final String jsonUserGroupCount = JsonUtils.objectToJson(metricUserGroupCount);
             ret = jsonUserGroupCount;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(usergroup): Error calculating Metric for usergroup : " + e.getMessage());
@@ -5589,8 +5584,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();
             auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
 
-            Gson         gson      = new GsonBuilder().create();
-            final String jsonAudit = gson.toJson(auditObj);
+            final String jsonAudit = JsonUtils.objectToJson(auditObj);
             ret = jsonAudit;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(audits): Error calculating Metric for audits : " + e.getMessage());
@@ -5624,8 +5618,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
             vXMetricServiceCount.setServiceBasedCountList(services);
             vXMetricServiceCount.setTotalCount(totalServiceCount);
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonServices = gson.toJson(vXMetricServiceCount);
+            final String jsonServices = JsonUtils.objectToJson(vXMetricServiceCount);
             ret = jsonServices;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(services): Error calculating Metric for services : " + e.getMessage());
@@ -5681,8 +5674,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 tagFlag = true;
             }
             vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonPolicies = gson.toJson(vXMetricPolicyWithServiceNameCount);
+            final String jsonPolicies = JsonUtils.objectToJson(vXMetricPolicyWithServiceNameCount);
             ret = jsonPolicies;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(policies): Error calculating Metric for policies : " + e.getMessage());
@@ -5707,8 +5699,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 dbFlavourType = "SQLSERVER ";
             }
             String       dbDetail     = dbFlavourType + bizUtil.getDBVersion();
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonDBDetail = gson.toJson(dbDetail);
+            final String jsonDBDetail = JsonUtils.objectToJson(dbDetail);
             ret = jsonDBDetail;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(database): Error calculating Metric for database : " + e.getMessage());
@@ -5735,8 +5726,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
-            Gson         gson                 = new GsonBuilder().create();
-            final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
+            final String jsonContextEnrichers = JsonUtils.objectToJson(serviceWithContextEnrichers);
             ret = jsonContextEnrichers;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(contextenrichers): Error calculating Metric for contextenrichers : " + e.getMessage());
@@ -5800,8 +5790,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
-            Gson   gson                      = new GsonBuilder().create();
-            String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
+            String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
             ret = jsonContextDenyCondtionOn;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(denyconditions): Error calculating Metric for denyconditions : " + e.getMessage());

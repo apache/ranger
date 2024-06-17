@@ -32,6 +32,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
@@ -47,9 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import javax.annotation.PostConstruct;
 
 @Service
@@ -61,7 +59,6 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     boolean compressJsonData = false;
 
     private static final Logger logger = LoggerFactory.getLogger(RangerSecurityZoneServiceService.class);
-    private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 
     private Map<Long, Set<String>> serviceNamesInZones = new HashMap<>();
     private Map<Long, Set<String>> tagServiceNamesInZones = new HashMap<>();
@@ -105,14 +102,14 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     protected XXSecurityZone mapViewToEntityBean(RangerSecurityZone securityZone, XXSecurityZone xxSecurityZone, int OPERATION_CONTEXT) {
         XXSecurityZone ret = super.mapViewToEntityBean(securityZone, xxSecurityZone, OPERATION_CONTEXT);
 
-        String json = gsonBuilder.toJson(securityZone);
+        String json = JsonUtils.objectToJson(securityZone);
 
         if (StringUtils.isNotEmpty(json) && compressJsonData) {
             try {
                 ret.setJsonData(null);
                 ret.setGzJsonData(StringUtil.gzipCompress(json));
             } catch (IOException excp) {
-                logger.error("mapViewToEntityBean(): json compression failed (length={}). Will save uncompressed json", json.length(), excp);
+                logger.error("mapViewToEntityBean(): json compression failed (length="+json.length()+"). Will save uncompressed json", excp);
 
                 ret.setJsonData(json);
                 ret.setGzJsonData(null);
@@ -143,11 +140,9 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         }
 
         if (StringUtils.isNotEmpty(json)) {
-            RangerSecurityZone zoneFromJsonData = gsonBuilder.fromJson(json, RangerSecurityZone.class);
+            RangerSecurityZone zoneFromJsonData = JsonUtils.jsonToObject(json, RangerSecurityZone.class);
 
-            if (zoneFromJsonData == null) {
-                logger.info("Cannot read jsonData into RangerSecurityZone object in [" + json + "]!!");
-            } else {
+            if (zoneFromJsonData != null) {
                 ret.setName(zoneFromJsonData.getName());
                 ret.setServices(zoneFromJsonData.getServices());
                 ret.setAdminUsers(zoneFromJsonData.getAdminUsers());

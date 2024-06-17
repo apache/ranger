@@ -18,13 +18,12 @@
  */
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.RangerRESTClient;
@@ -57,8 +56,7 @@ public class RangerUserStoreRefresher extends Thread {
     private long lastActivationTimeInMillis;
 
     private final String cacheFile;
-    private boolean hasProvidedUserStoreToReceiver;
-    private Gson gson;
+    private boolean          hasProvidedUserStoreToReceiver;
     private RangerRESTClient rangerRESTClient;
 
     public RangerUserStoreRefresher(RangerUserStoreRetriever userStoreRetriever, RangerUserStoreEnricher userStoreEnricher,
@@ -70,11 +68,6 @@ public class RangerUserStoreRefresher extends Thread {
         this.lastKnownVersion = lastKnownVersion;
         this.userStoreDownloadQueue = userStoreDownloadQueue;
         this.cacheFile = cacheFile;
-        try {
-            gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        } catch(Throwable excp) {
-            LOG.error("failed to create GsonBuilder object", excp);
-        }
         setName("RangerUserStoreRefresher(serviceName=" + userStoreRetriever.getServiceName() + ")-" + getId());
     }
 
@@ -265,7 +258,7 @@ public class RangerUserStoreRefresher extends Thread {
             try {
                 reader = new FileReader(cacheFile);
 
-                rangerUserStore = gson.fromJson(reader, RangerUserStore.class);
+                rangerUserStore = JsonUtils.jsonToObject(reader, RangerUserStore.class);
 
             } catch (Exception excp) {
                 LOG.error("failed to load userstore information from cache file " + cacheFile.getAbsolutePath(), excp);
@@ -303,7 +296,7 @@ public class RangerUserStoreRefresher extends Thread {
                 try {
                     writer = new FileWriter(cacheFile);
 
-                    gson.toJson(rangerUserStore, writer);
+                    JsonUtils.objectToWriter(writer, rangerUserStore);
                 } catch (Exception excp) {
                     LOG.error("failed to save userstore information to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
                 } finally {

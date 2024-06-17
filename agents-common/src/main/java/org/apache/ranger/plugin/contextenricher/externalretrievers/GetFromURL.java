@@ -19,8 +19,8 @@
 
 package org.apache.ranger.plugin.contextenricher.externalretrievers;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -35,6 +35,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +51,6 @@ import java.util.Map;
 
 public class GetFromURL {
     private static final Logger LOG = LoggerFactory.getLogger(GetFromURL.class);
-
-    private final Gson gson = new Gson();
 
     public Map<String, Map<String, String>> getFromURL(String url, String configFile) throws Exception {
         if (LOG.isDebugEnabled()) {
@@ -79,7 +78,7 @@ public class GetFromURL {
 
             HttpEntity                             httpEntity     = response.getEntity();
             String                                 stringResult   = EntityUtils.toString(httpEntity);
-            Map                                    resultMap      = gson.fromJson(stringResult, Map.class);
+            Map                                    resultMap      = JsonUtils.jsonToObject(stringResult, Map.class);
             Map<String, Map<String, List<String>>> userAttrValues = (Map<String, Map<String, List<String>>>) resultMap.get("body");
 
             ret = toUserAttributes(userAttrValues);
@@ -96,11 +95,12 @@ public class GetFromURL {
     }
 
     private String getBearerToken(String configFile) throws Exception {
-        String                    secrets    = getSecretsFromFile(configFile);
-        JsonObject                jsonObject = gson.fromJson(secrets, JsonObject.class);
-        String                    tokenURL   = jsonObject.get("tokenUrl").getAsString(); // retrieve tokenURL and create a new HttpPost object with it:
-        List<Map<String, String>> headers    = gson.fromJson(jsonObject.getAsJsonArray("headers"), List.class);
-        List<Map<String, String>> params     = gson.fromJson(jsonObject.getAsJsonArray("params"), List.class);
+        String   secrets    = getSecretsFromFile(configFile);
+        JsonNode jsonObject = JsonUtils.getMapper().readTree(secrets);
+        String   tokenURL   = jsonObject.get("tokenUrl").asText();
+        List<Map<String, String>> headers = JsonUtils.getMapper().convertValue(jsonObject.get("headers"), new TypeReference<List<Map<String, String>>>(){});
+        List<Map<String, String>> params = JsonUtils.getMapper().convertValue(jsonObject.get("params"), new TypeReference<List<Map<String, String>>>(){});
+
         List<NameValuePair>       nvPairs    = new ArrayList<>();
         HttpPost                  httpPost   = new HttpPost(tokenURL);
 
@@ -137,7 +137,7 @@ public class GetFromURL {
 
             HttpEntity          httpEntity   = response.getEntity();
             String              stringResult = EntityUtils.toString(httpEntity);
-            Map<String, Object> resultMap    = gson.fromJson(stringResult, Map.class);
+            Map<String, Object> resultMap    = JsonUtils.jsonToObject(stringResult, Map.class);
             String              token        = resultMap.get("access_token").toString();
 
             ret = "Bearer " + token;
@@ -192,7 +192,7 @@ public class GetFromURL {
 
     private void verifyToken(String secrets) throws IOException {
         String     errorMessage = "";
-        JsonObject jsonObject   = gson.fromJson(secrets, JsonObject.class);
+        JsonNode jsonObject = JsonUtils.getMapper().readTree(secrets);
 
         // verify all necessary items are there
         if (jsonObject.get("tokenUrl") == null) {
@@ -202,10 +202,10 @@ public class GetFromURL {
         if (jsonObject.get("headers") == null) {
             errorMessage += "headers must be specified in the config file; ";
         } else { // verify that Content-type, if included, is application/x-www-form-urlencoded
-            List<Map<String, String>> headers = gson.fromJson(jsonObject.getAsJsonArray("headers"), List.class);
+            JsonNode headers = jsonObject.get("headers");
 
-            for (Map<String, String> header : headers) {
-                if (header.containsKey("Content-Type") && !StringUtils.equalsIgnoreCase(header.get("Content-Type"), "application/x-www-form-urlencoded")) {
+            for (JsonNode header : headers) {
+                if (header.has("Content-Type") && !StringUtils.equalsIgnoreCase(header.get("Content-Type").textValue(), "application/x-www-form-urlencoded")) {
                     errorMessage += "Content-Type, if specified, must be \"application/x-www-form-urlencoded\"; ";
                 }
             }

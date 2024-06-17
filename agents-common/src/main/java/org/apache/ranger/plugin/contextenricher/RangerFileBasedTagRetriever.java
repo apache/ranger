@@ -19,9 +19,8 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,6 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 	private URL serviceTagsFileURL;
 	private String serviceTagsFileName;
-	private Gson gsonBuilder;
 	private boolean deDupTags;
 	int            tagFilesCount = 0;
 	int            currentTagFileIndex = 0;
@@ -49,10 +47,6 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> init()" );
 		}
-
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				.setPrettyPrinting()
-				.create();
 
 		String serviceTagsFileNameProperty = "serviceTagsFileName";
 		String serviceTagsDefaultFileName = "/testdata/test_servicetags_hive.json";
@@ -184,7 +178,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 						Reader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)
 				) {
 
-					ret = gsonBuilder.fromJson(reader, ServiceTags.class);
+					ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
 					if (deDupTags) {
 						final int countOfDuplicateTags = ret.dedupTags();
 						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
@@ -208,7 +202,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 						Reader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)
 				) {
 
-					ret = gsonBuilder.fromJson(reader, ServiceTags.class);
+					ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
 					currentTagFileIndex++;
 					if (deDupTags) {
 						final int countOfDuplicateTags = ret.dedupTags();
