@@ -675,7 +675,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				String requestedAccess = accessTypeDef.getName();
 				allRequestedAccesses.add(requestedAccess);
 			}
-			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses, Boolean.TRUE);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
+			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
@@ -765,22 +766,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 
-			if (!request.isAccessTypeAny()) {
-				Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
-				if (CollectionUtils.size(allRequestedAccesses) > 1 && !RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) {
-					Map<String, RangerAccessResult> accessTypeResults = RangerAccessRequestUtil.getAccessTypeResults(request.getContext());
-					if (accessTypeResults != null) {
-						if (accessTypeResults.keySet().containsAll(allRequestedAccesses)) {
-							// Allow
-							RangerAccessResult result = accessTypeResults.values().iterator().next(); // Pick one result randomly
-							ret.setAccessResultFrom(result);
-							ret.setIsAccessDetermined(true);
-						}
-						RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
-					}
-				}
-			}
-
 			if (!ret.getIsAccessDetermined()) {
 				if (isDeniedByTags) {
 					ret.setIsAllowed(false);
@@ -796,6 +781,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			if (ret.getIsAllowed()) {
 				ret.setIsAccessDetermined(true);
 			}
+			RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
+			RangerAccessRequestUtil.setAccessTypeACLResults(request.getContext(), null);
+			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), null);
 
 			if (findAuditByResource && !foundInCache) {
 				policyRepository.storeAuditEnabledInCache(request, ret);

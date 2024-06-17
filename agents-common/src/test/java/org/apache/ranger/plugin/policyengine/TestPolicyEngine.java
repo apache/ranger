@@ -67,17 +67,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -961,11 +951,25 @@ public class TestPolicyEngine {
 				ret.setAccessTime(new Date());
 			}
 			Map<String, Object> reqContext = ret.getContext();
-			Object accessTypes = reqContext.get("ACCESSTYPES");
+			Object accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
 			if (accessTypes != null) {
 				Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
-				Set<String> requestedAccesses = new HashSet<>(accessTypesCollection);
-				ret.getContext().put("ACCESSTYPES", requestedAccesses);
+				Set<String> requestedAccesses = new TreeSet<>(accessTypesCollection);
+				ret.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES, requestedAccesses);
+			}
+
+			Object accessTypeGroups = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
+			if (accessTypeGroups != null) {
+				Set<Set<String>> setOfAccessTypeGroups = new HashSet<>();
+
+				List<Object> listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
+				for (Object accessTypeGroup : listOfAccessTypeGroups) {
+					List<String> accesses = (List<String>) accessTypeGroup;
+					Set<String> setOfAccesses = new TreeSet<>(accesses);
+					setOfAccessTypeGroups.add(setOfAccesses);
+				}
+
+				reqContext.put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, setOfAccessTypeGroups);
 			}
 
 			return ret;

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hadoop;
 
+import static java.util.stream.Collectors.toSet;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.EXECUTE_ACCCESS_TYPE;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.READ_ACCCESS_TYPE;
@@ -32,13 +33,17 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 
 import java.net.InetAddress;
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -143,14 +148,22 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 		LOG.info("Legacy way of authorizing sub-access requests will " + (plugin.isUseLegacySubAccessAuthorization() ? "" : "not ") + "be used");
 
-		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
-		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_WRITE,    Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_EXECUTE,  Sets.newHashSet(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE,         Sets.newHashSet(WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, Sets.newHashSet(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
+		access2ActionListMapper.put(FsAction.NONE,
+									new TreeSet<String>());
+		access2ActionListMapper.put(FsAction.ALL,
+									Stream.of(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ,
+									Stream.of(READ_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ_WRITE,
+									Stream.of(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ_EXECUTE,
+									Stream.of(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.WRITE,
+									Stream.of(WRITE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.WRITE_EXECUTE,
+									Stream.of(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.EXECUTE,
+									Stream.of(EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
 
 		rangerPlugin = plugin;
 
@@ -883,6 +896,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
 				if (accessTypes.size() > 1) {
+					Set<Set<String>> allAccessTypeGroups = accessTypes.stream().map(Collections::singleton).collect(toSet());
+
+					RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 					RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
 				}
 
@@ -960,6 +976,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(null, subDirPath, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
 					if (accessTypes.size() > 1) {
+						Set<Set<String>> allAccessTypeGroups = accessTypes.stream().map(Collections::singleton).collect(toSet());
+
+						RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 						RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
 					}
 
