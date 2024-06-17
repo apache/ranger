@@ -20,7 +20,6 @@
 package org.apache.ranger.unixusersync.process;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
 import java.util.Collections;
@@ -39,24 +38,28 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
+import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
+import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
+import org.apache.ranger.ugsyncutil.model.XGroupInfo;
+import org.apache.ranger.ugsyncutil.model.XUserInfo;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
 import org.apache.ranger.unixusersync.model.GetXUserListResponse;
-import org.apache.ranger.ugsyncutil.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
+
 
 public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implements UserGroupSink {
 
@@ -454,7 +457,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			queryParams.put("pageSize", recordsToPullPerCall);
 			queryParams.put("startIndex", String.valueOf(retrievedCount));
 
-			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
 				response = cookieBasedGetEntity(PM_GROUP_LIST_URI, retrievedCount);
 			} else {
@@ -471,7 +473,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RESPONSE: [" + response + "]");
 			}
-			GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class);
+			GetXGroupListResponse groupList = JsonUtils.jsonToObject(response, GetXGroupListResponse.class);
 
 			totalCount = groupList.getTotalCount();
 
@@ -481,7 +483,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 						LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: "
 								+ g.getDescription());
 					}
-					g.setOtherAttrsMap(gson.fromJson(g.getOtherAttributes(), Map.class));
+					if(null != g.getOtherAttributes()) {
+						g.setOtherAttrsMap(JsonUtils.jsonToObject(g.getOtherAttributes(), Map.class));
+					}
 					groupCache.put(g.getName(), g);
 				}
 				retrievedCount = groupCache.size();
@@ -508,7 +512,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			queryParams.put("pageSize", recordsToPullPerCall);
 			queryParams.put("startIndex", String.valueOf(retrievedCount));
 
-			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
 				response = cookieBasedGetEntity(PM_USER_LIST_URI, retrievedCount);
 			} else {
@@ -525,7 +528,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RESPONSE: [" + response + "]");
 			}
-			GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class);
+			GetXUserListResponse userList = JsonUtils.jsonToObject(response, GetXUserListResponse.class);
 			totalCount = userList.getTotalCount();
 
 			if (userList.getXuserInfoList() != null) {
@@ -534,7 +537,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 						LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: "
 								+ u.getDescription());
 					}
-					u.setOtherAttrsMap(gson.fromJson(u.getOtherAttributes(), Map.class));
+					if(null != u.getOtherAttributes()) {
+						u.setOtherAttrsMap(JsonUtils.jsonToObject(u.getOtherAttributes(), Map.class));
+					}
 					userCache.put(u.getName(), u);
 				}
 				retrievedCount = userCache.size();
@@ -554,7 +559,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		String response = null;
 		ClientResponse clientResp = null;
 
-		Gson gson = new GsonBuilder().create();
 		if (isRangerCookieEnabled) {
 			response = cookieBasedGetEntity(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, 0);
 		} else {
@@ -572,7 +576,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			LOG.debug("RESPONSE: [" + response + "]");
 		}
 
-		groupUsersCache = gson.fromJson(response, Map.class);
+		groupUsersCache = JsonUtils.jsonToObject(response, Map.class);
 		if (MapUtils.isEmpty(groupUsersCache)) {
 			groupUsersCache = new HashMap<>();
 		}
@@ -662,10 +666,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		deltaGroups = new HashMap<>();
 		// Check if the group exists in cache. If not, mark as new group.
 		// else check if other attributes are updated and mark as updated group
-		Gson gson = new Gson();
 		for (String groupDN : sourceGroups.keySet()) {
 			Map<String, String> newGroupAttrs = sourceGroups.get(groupDN);
-			String newGroupAttrsStr           = gson.toJson(newGroupAttrs);
+			String newGroupAttrsStr = JsonUtils.objectToJson(newGroupAttrs);
 			String groupName                  = groupNameMap.get(groupDN);
 			if (StringUtils.isEmpty(groupName)) {
 				groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
@@ -749,10 +752,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		deltaUsers = new HashMap<>();
 		// Check if the user exists in cache. If not, mark as new user.
 		// else check if other attributes are updated and mark as updated user
-		Gson gson = new Gson();
 		for (String userDN : sourceUsers.keySet()) {
 			Map<String, String> newUserAttrs = sourceUsers.get(userDN);
-			String newUserAttrsStr           = gson.toJson(newUserAttrs);
+			String newUserAttrsStr = JsonUtils.objectToJson(newUserAttrs);
 			String userName                  = userNameMap.get(userDN);
 			if (StringUtils.isEmpty(userName)) {
 				userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
@@ -1297,8 +1299,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				pagedUgRoleAssignmentsList.setReset(ugRoleAssignments.isReset());
 				String response = null;
 				ClientResponse clientRes = null;
-				Gson gson = new GsonBuilder().create();
-				String jsonString = gson.toJson(pagedUgRoleAssignmentsList);
+				String jsonString = JsonUtils.objectToJson(pagedUgRoleAssignmentsList);
 				String url = PM_UPDATE_USERS_ROLES_URI;
 
 				if (LOG.isDebugEnabled()) {
@@ -1319,9 +1320,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RESPONSE: [" + response + "]");
 				}
-				Type listType = new TypeToken<ArrayList<String>>() {
-				}.getType();
-				ret = new Gson().fromJson(response, listType);
+				ret = JsonUtils.jsonToObject(response, new TypeReference<ArrayList<String>>() {});
 				uploadedCount += pageSize;
 			}
 
@@ -1379,7 +1378,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		checkStatus();
 		String response = null;
 		ClientResponse clientRes = null;
-		Gson gson = new GsonBuilder().create();
 
 		if(isRangerCookieEnabled){
 			response = cookieBasedUploadEntity(userInfo, PM_AUDIT_INFO_URI);
@@ -1398,7 +1396,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("RESPONSE[" + response + "]");
 		}
-		gson.fromJson(response, UgsyncAuditInfo.class);
+		JsonUtils.jsonToObject(response, UgsyncAuditInfo.class);
 
 		if(LOG.isDebugEnabled()){
 			LOG.debug("AuditInfo Creation successful ");
@@ -1495,8 +1493,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		String response = null;
 		ClientResponse clientResp = null;
 
-		Gson gson = new GsonBuilder().create();
-		String jsonString = gson.toJson(obj);
+		String jsonString = JsonUtils.objectToJson(obj);
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug("USER GROUP MAPPING" + jsonString);

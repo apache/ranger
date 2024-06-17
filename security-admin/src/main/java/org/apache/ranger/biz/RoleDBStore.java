@@ -28,6 +28,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -54,8 +55,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_ROLE;
 
@@ -148,9 +147,11 @@ public class RoleDBStore implements RoleStore {
 		if (!role.getName().equals(xxRole.getName())) { // ensure only if role name is changed
 			ensureRoleNameUpdateAllowed(xxRole.getName());
 		}
+        RangerRole oldRole = null;
+        if(StringUtils.isNotEmpty(xxRole.getRoleText())) {
+            oldRole = JsonUtils.jsonToObject(xxRole.getRoleText(), RangerRole.class);
+        }
 
-        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        RangerRole oldRole = gsonBuilder.fromJson(xxRole.getRoleText(), RangerRole.class);
 
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);

@@ -19,12 +19,11 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
@@ -880,8 +879,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private long lastActivationTimeInMillis;
 
 		private final String cacheFile;
-		private boolean hasProvidedTagsToReceiver;
-		private Gson gson;
+		private boolean      hasProvidedTagsToReceiver;
 
 		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, String cacheFile) {
 			this.tagRetriever = tagRetriever;
@@ -889,11 +887,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			this.lastKnownVersion = lastKnownVersion;
 			this.tagDownloadQueue = tagDownloadQueue;
 			this.cacheFile = cacheFile;
-			try {
-				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-			} catch(Throwable excp) {
-				LOG.error("failed to create GsonBuilder object", excp);
-			}
 			setName("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ")-" + getId());
 		}
 
@@ -1056,7 +1049,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				try {
 					reader = new FileReader(cacheFile);
 
-					serviceTags = gson.fromJson(reader, ServiceTags.class);
+						serviceTags = JsonUtils.jsonToObject(reader, ServiceTags.class);
 
 					if (serviceTags != null && !StringUtils.equals(tagEnricher.getServiceName(), serviceTags.getServiceName())) {
 						LOG.warn("ignoring unexpected serviceName '" + serviceTags.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
@@ -1099,7 +1092,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					try {
 						writer = new FileWriter(cacheFile);
 
-						gson.toJson(serviceTags, writer);
+						JsonUtils.objectToWriter(writer, serviceTags);
 					} catch (Exception excp) {
 						LOG.error("failed to save service-tags to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 					} finally {

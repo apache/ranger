@@ -19,7 +19,7 @@ package org.apache.ranger.audit.utils;
  * under the License.
  */
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -311,7 +311,7 @@ public class ORCFileUtil {
 
         Class auditEventClass = AuthzAuditEvent.class;
         for(Field fld: auditEventClass.getDeclaredFields()) {
-            if (fld.isAnnotationPresent(SerializedName.class)) {
+            if (fld.isAnnotationPresent(JsonProperty.class)) {
                 String field     = fld.getName();
                 String fieldType = getShortFieldType(fld.getType().getName());
                 if (fieldType == null) {

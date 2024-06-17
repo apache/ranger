@@ -22,7 +22,11 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
@@ -36,6 +40,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, RangerTagDef> {
+
+	private static final Log logger = LogFactory.getLog(RangerTagDefService.class);
 
 	public RangerTagDefService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
@@ -108,10 +114,14 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
     @Override
     protected RangerTagDef mapEntityToViewBean(RangerTagDef vObj, XXTagDef xObj) {
         RangerTagDef ret = super.mapEntityToViewBean(vObj, xObj);
-
-        List<RangerTagDef.RangerTagAttributeDef> attributeDefs = RangerTagDBRetriever.gsonBuilder.fromJson(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
-        ret.setAttributeDefs(attributeDefs);
-
+		if (StringUtils.isNotEmpty(xObj.getTagAttrDefs())) {
+			try {
+				List<RangerTagDef.RangerTagAttributeDef> attributeDefs = (List<RangerTagDef.RangerTagAttributeDef>) JsonUtils.jsonToObject(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
+				ret.setAttributeDefs(attributeDefs);
+			} catch (JsonProcessingException e) {
+				logger.error("Error occurred while processing json", e);
+			}
+		}
         return ret;
     }
 

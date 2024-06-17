@@ -50,7 +50,8 @@
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.slf4j:slf4j-simple:jar:${slf4j.version}</include>
                     <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api}</include>
-                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind</include>
 
                     <include>com.google.code.gson:gson*</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>

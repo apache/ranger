@@ -17,35 +17,8 @@
  * under the License.
  */
 
- package org.apache.ranger.unixusersync.model;
+package org.apache.ranger.audit.model;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.ranger.ugsyncutil.model.XGroupInfo;
-
-@JsonSerialize
-public class GetXGroupListResponse {
-	private int totalCount;
-
-	@JsonProperty("vXGroups")
-	List<XGroupInfo> xgroupInfoList;
-
-	public int getTotalCount() {
-		return totalCount;
-	}
-
-	public void setTotalCount(int totalCount) {
-		this.totalCount = totalCount;
-	}
-
-	public List<XGroupInfo> getXgroupInfoList() {
-		return xgroupInfoList;
-	}
-
-	public void setXgroupInfoList(List<XGroupInfo> xgroupInfoList) {
-		this.xgroupInfoList = xgroupInfoList;
-	}
-
+public enum SPOOL_FILE_STATUS {
+	pending, write_inprogress, read_inprogress, done
 }
