@@ -231,22 +231,22 @@ public class HBaseClient extends BaseClient {
 						LOG.info("getTableList: setting config values from client");
 						setClientConfigValues(conf);
 						LOG.info("getTableList: checking HbaseAvailability with the new config");
-						Connection conn = ConnectionFactory.createConnection(conf);
-						//HBaseAdmin.checkHBaseAvailable(conf);
-						LOG.info("getTableList: no exception: HbaseAvailability true");
-						admin = conn.getAdmin();
-						List<TableDescriptor> htds = admin.listTableDescriptors(Pattern.compile(tableNameMatching));
-						if (htds != null) {
-							for (TableDescriptor htd : htds) {
-								String tableName = htd.getTableName().getNameAsString();
-								if (existingTableList != null && existingTableList.contains(tableName)) {
-									continue;
-								} else {
-									tableList.add(htd.getTableName().getNameAsString());
+						try (Connection conn = ConnectionFactory.createConnection(conf)) {
+							LOG.info("getTableList: no exception: HbaseAvailability true");
+							admin = conn.getAdmin();
+							List<TableDescriptor> htds = admin.listTableDescriptors(Pattern.compile(tableNameMatching));
+							if (htds != null) {
+								for (TableDescriptor htd : htds) {
+									String tableName = htd.getTableName().getNameAsString();
+									if (existingTableList != null && existingTableList.contains(tableName)) {
+										continue;
+									} else {
+										tableList.add(htd.getTableName().getNameAsString());
+									}
 								}
+							} else {
+								LOG.error("getTableList: null HTableDescription received from HBaseAdmin.listTables");
 							}
-						} else {
-							LOG.error("getTableList: null HTableDescription received from HBaseAdmin.listTables");
 						}
 					} catch (ZooKeeperConnectionException zce) {
 						String msgDesc = "getTableList: Unable to connect to `ZooKeeper` "
@@ -332,24 +332,24 @@ public class HBaseClient extends BaseClient {
 							LOG.info("getColumnFamilyList: setting config values from client");
 							setClientConfigValues(conf);
 							LOG.info("getColumnFamilyList: checking HbaseAvailability with the new config");
-							Connection conn = ConnectionFactory.createConnection(conf);
-							//HBaseAdmin.checkHBaseAvailable(conf);
-							LOG.info("getColumnFamilyList: no exception: HbaseAvailability true");
-							admin = conn.getAdmin();
-							if (tableList != null) {
-								for (String tableName: tableList) {
-									tblName = tableName;
-									TableDescriptor htd = admin.getDescriptor(TableName.valueOf(tableName));
-									if (htd != null) {
-										for (ColumnFamilyDescriptor hcd : htd.getColumnFamilies()) {
-											String colf = hcd.getNameAsString();
-											if (colf.matches(columnFamilyMatching)) {
-												if (existingColumnFamilies != null && existingColumnFamilies.contains(colf)) {
-													continue;
-												} else {
-													colfList.add(colf);
-												}
+							try (Connection conn = ConnectionFactory.createConnection(conf)) {
+								LOG.info("getColumnFamilyList: no exception: HbaseAvailability true");
+								admin = conn.getAdmin();
+								if (tableList != null) {
+									for (String tableName : tableList) {
+										tblName = tableName;
+										TableDescriptor htd = admin.getDescriptor(TableName.valueOf(tableName));
+										if (htd != null) {
+											for (ColumnFamilyDescriptor hcd : htd.getColumnFamilies()) {
+												String colf = hcd.getNameAsString();
+												if (colf.matches(columnFamilyMatching)) {
+													if (existingColumnFamilies != null && existingColumnFamilies.contains(colf)) {
+														continue;
+													} else {
+														colfList.add(colf);
+													}
 
+												}
 											}
 										}
 									}

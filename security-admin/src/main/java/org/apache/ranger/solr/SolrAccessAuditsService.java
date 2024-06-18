@@ -27,9 +27,7 @@ import org.apache.ranger.AccessAuditsService;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
@@ -55,13 +53,6 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 
 	@Autowired
 	SolrUtil solrUtil;
-
-	@Autowired
-	RESTErrorUtil restErrorUtil;
-
-	@Autowired
-	RangerDaoManager daoManager;
-
 
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 

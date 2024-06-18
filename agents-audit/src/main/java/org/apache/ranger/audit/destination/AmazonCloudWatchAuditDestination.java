@@ -34,10 +34,10 @@ import com.amazonaws.services.logs.model.PutLogEventsResult;
 import com.amazonaws.services.logs.model.ResourceNotFoundException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -59,7 +59,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class AmazonCloudWatchAuditDestination extends AuditDestination {
 
-    private static Log LOG = LogFactory.getLog(AmazonCloudWatchAuditDestination.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AmazonCloudWatchAuditDestination.class);
 
     public static final String PROP_LOG_GROUP_NAME = "log_group";
     public static final String PROP_LOG_STREAM_PREFIX = "log_stream_prefix";
@@ -92,7 +92,7 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
     }
 
     @Override
-    synchronized public boolean log(Collection<AuditEventBase> collection) {
+    public synchronized boolean log(Collection<AuditEventBase> collection) {
         boolean ret = false;
         AWSLogs client = getClient();
 

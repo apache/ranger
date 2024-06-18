@@ -276,31 +276,31 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 		
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter.charAt(0));
 		
-		CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat);
+		try(CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat)) {
 		
-		List<CSVRecord> csvRecordList = csvParser.getRecords();
-		
-		if ( csvRecordList != null) {
-			for(CSVRecord csvRecord : csvRecordList) {
-				List<String> groups = new ArrayList<String>();
-				String user = csvRecord.get(0);
-				
-				user = user.replaceAll("^\"|\"$", "");
-					
-				int i = csvRecord.size();
-				
-				for (int j = 1; j < i; j ++) {
-					String group = csvRecord.get(j);
-					if ( group != null && !group.isEmpty()) {
-						 group = group.replaceAll("^\"|\"$", "");
-						 groups.add(group);
-					}
-				}
-				ret.put(user,groups);
-			 }
-		}
+			List<CSVRecord> csvRecordList = csvParser.getRecords();
 
-		csvParser.close();
+			if ( csvRecordList != null) {
+				for(CSVRecord csvRecord : csvRecordList) {
+					List<String> groups = new ArrayList<String>();
+					String user = csvRecord.get(0);
+
+					user = user.replaceAll("^\"|\"$", "");
+
+					int i = csvRecord.size();
+
+					for (int j = 1; j < i; j ++) {
+						String group = csvRecord.get(j);
+						if ( group != null && !group.isEmpty()) {
+							 group = group.replaceAll("^\"|\"$", "");
+							 groups.add(group);
+						}
+					}
+					ret.put(user,groups);
+				 }
+			}
+
+		}
 
 		return ret;
 	}

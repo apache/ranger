@@ -31,20 +31,15 @@ import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.view.VXAsset;
 import org.codehaus.jackson.type.TypeReference;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
 public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
-
-	@Autowired
-	StringUtil stringUtil;
 
 	public XAssetService(){
 		super();

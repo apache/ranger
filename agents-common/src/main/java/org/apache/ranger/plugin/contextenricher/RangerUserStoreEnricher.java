@@ -59,7 +59,7 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         String propertyPrefix              = getPropertyPrefix();
         String userStoreRetrieverClassName = getOption(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
-        long   pollingIntervalMs           = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
+        long   pollingIntervalMs           = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000L);
 
         dedupStrings = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 

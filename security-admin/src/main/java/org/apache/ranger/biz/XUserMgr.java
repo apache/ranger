@@ -113,12 +113,6 @@ public class XUserMgr extends XUserMgrBase {
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
 
 	@Autowired
-	XUserService xUserService;
-
-	@Autowired
-	XGroupService xGroupService;
-
-	@Autowired
 	RangerBizUtil msBizUtil;
 
 	@Autowired
@@ -129,15 +123,6 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	RangerBizUtil xaBizUtil;
-
-	@Autowired
-	XModuleDefService xModuleDefService;
-
-	@Autowired
-	XUserPermissionService xUserPermissionService;
-
-	@Autowired
-	XGroupPermissionService xGroupPermissionService;
 
 	@Autowired
 	XPortalUserService xPortalUserService;
@@ -159,9 +144,6 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	XUgsyncAuditInfoService xUgsyncAuditInfoService;
-
-	@Autowired
-	XGroupUserService xGroupUserService;
 
 	@Autowired
 	StringUtil stringUtil;

@@ -18,7 +18,6 @@
 package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXDBBase;
@@ -42,10 +41,6 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
-
-	@Autowired
-	RangerBizUtil bizUtil;
-
 	private final int               classType;
 	private final int               parentClassType;
 	private final List<VTrxLogAttr> objNameAttrs = new ArrayList<>();

@@ -140,47 +140,46 @@ public class RangerPluginPerfTester {
 
 			FSDataOutputStream outStream = fs.create(filePath, true);
 
-			OutputStreamWriter writer = new OutputStreamWriter(outStream);
+			try (OutputStreamWriter writer = new OutputStreamWriter(outStream)) {
+				writer.write("<configuration>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policy.pollIntervalMs</name>\n" +
+									 "                <value>" + pollingInterval + "</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policy.cache.dir</name>\n" +
+									 "                <value>" + policyCacheDir + "</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policy.rest.url</name>\n" +
+									 "                <value>" + rangerHostName + ":6080" + "</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policy.source.impl</name>\n" +
+									 "                <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policy.rest.client.read.timeoutMs</name>\n" +
+									 "                <value>" + socketReadTimeout + "</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".policyengine.option.evaluator.type</name>\n" +
+									 "                <value>" + policyEvaluatorType + "</value>\n" +
+									 "        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>" + propertyPrefix + ".service.name</name>\n" +
+									 "                <value>" + serviceName + "</value>\n" +
+									 "        </property>\n" +
 
-			writer.write("<configuration>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policy.pollIntervalMs</name>\n" +
-					"                <value>" + pollingInterval + "</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policy.cache.dir</name>\n" +
-					"                <value>" + policyCacheDir + "</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policy.rest.url</name>\n" +
-					"                <value>" + rangerHostName + ":6080" + "</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policy.source.impl</name>\n" +
-					"                <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policy.rest.client.read.timeoutMs</name>\n" +
-					"                <value>" + socketReadTimeout + "</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".policyengine.option.evaluator.type</name>\n" +
-					"                <value>" + policyEvaluatorType + "</value>\n" +
-					"        </property>\n" +
-					"        <property>\n" +
-					"                <name>" + propertyPrefix + ".service.name</name>\n" +
-					"                <value>" + serviceName + "</value>\n" +
-					"        </property>\n" +
+									 "        <property>\n" +
+									 "                <name>xasecure.audit.is.enabled</name>\n" +
+									 "                <value>false</value>\n" +
+									 "        </property>\n" +
+									 "</configuration>\n");
 
-					"        <property>\n" +
-					"                <name>xasecure.audit.is.enabled</name>\n" +
-					"                <value>false</value>\n" +
-					"        </property>\n" +
-					"</configuration>\n");
+				ret = filePath;
 
-			writer.close();
-			ret = filePath;
-
+			}
 		} catch (IOException exception) {
 			//Ignore
 		}

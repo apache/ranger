@@ -42,7 +42,7 @@ public class ServiceState {
 
 	private Configuration configuration;
 	private volatile ServiceStateValue state;
-	private static ServiceState instance;
+	private static volatile ServiceState instance;
 
 	private ServiceState() throws Exception {}
 

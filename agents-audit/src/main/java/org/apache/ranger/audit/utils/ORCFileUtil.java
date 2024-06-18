@@ -275,7 +275,7 @@ public class ORCFileUtil {
         Long ret = 0l;
         try {
             if (object instanceof Long)
-                ret = ((Long) object).longValue();
+                ret = ((Long) object);
             else if (object instanceof Integer) {
                 ret = ((Integer) object).longValue();
             } else if (object instanceof String) {

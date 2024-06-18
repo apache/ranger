@@ -67,7 +67,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("UGI=" + MiscUtil.getUGILoginUser()
-                        + ". Will write to HDFS file=" + currentFileName);
+                                     + ". Will write to HDFS file=" + currentFileName);
             }
 
             out = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<Writer>() {
@@ -76,7 +76,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
                     Writer out = getORCFileWrite();
                     orcFileUtil.log(out,events);
                     return out;
-                };
+                }
             });
         } catch (Exception e) {
             orcLogWriter = null;
@@ -118,13 +118,13 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
     }
 
     @Override
-    synchronized public void stop() {
+    public synchronized void stop() {
         if (orcLogWriter != null) {
             try {
                 orcFileUtil.close(orcLogWriter);
             } catch (Throwable t) {
                 logger.error("Error on closing log ORC Writer. Exception will be ignored. name="
-                        + auditProviderName + ", fileName=" + currentFileName);
+                                     + auditProviderName + ", fileName=" + currentFileName);
             }
             orcLogWriter = null;
         }
@@ -136,7 +136,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
     }
 
     // Creates ORC Write file
-    synchronized protected Writer getORCFileWrite() throws Exception {
+    protected synchronized Writer getORCFileWrite() throws Exception {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerORCAuditWriter.getORCFileWrite()");
         }

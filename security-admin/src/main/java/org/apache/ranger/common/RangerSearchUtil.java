@@ -39,10 +39,10 @@ import org.springframework.stereotype.Component;
 public class RangerSearchUtil extends SearchUtil {
 	final static Logger logger = LoggerFactory.getLogger(RangerSearchUtil.class);
 
-	int minInListLength = 20;
+	int dbMinInListLength = 20;
 
 	public RangerSearchUtil() {
-		minInListLength = PropertiesUtil.getIntProperty("ranger.db.min_inlist", minInListLength);
+		dbMinInListLength = PropertiesUtil.getIntProperty("ranger.db.min_inlist", dbMinInListLength);
 	}
 
 	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
@@ -305,7 +305,7 @@ public class RangerSearchUtil extends SearchUtil {
 
 				if (!intValueList.isEmpty()) {
 					if (searchField.getCustomCondition() == null) {
-						if (intValueList.size() <= minInListLength) {
+						if (intValueList.size() <= dbMinInListLength) {
 							whereClause.append(" and ");
 
 							if (intValueList.size() > 1) {
@@ -344,7 +344,7 @@ public class RangerSearchUtil extends SearchUtil {
 
 				if (!strValueList.isEmpty()) {
 					if (searchField.getCustomCondition() == null) {
-						if (strValueList.size() <= minInListLength) {
+						if (strValueList.size() <= dbMinInListLength) {
 							whereClause.append(" and ");
 
 							if (strValueList.size() > 1) {
@@ -475,7 +475,7 @@ public class RangerSearchUtil extends SearchUtil {
 				}
 
 				if (!intValueList.isEmpty()) {
-					if (intValueList.size() <= minInListLength) {
+					if (intValueList.size() <= dbMinInListLength) {
 						for (int idx = 0; idx < intValueList.size(); idx++) {
 							query.setParameter(searchField.getClientFieldName() + "_" + idx, intValueList.get(idx));
 						}
@@ -491,7 +491,7 @@ public class RangerSearchUtil extends SearchUtil {
 				}
 
 				if (!strValueList.isEmpty()) {
-					if (strValueList.size() <= minInListLength) {
+					if (strValueList.size() <= dbMinInListLength) {
 						for (int idx = 0; idx < strValueList.size(); idx++) {
 							query.setParameter(searchField.getClientFieldName() + "_" + idx, strValueList.get(idx));
 						}

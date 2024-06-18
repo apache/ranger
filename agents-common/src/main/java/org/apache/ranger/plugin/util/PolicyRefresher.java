@@ -89,7 +89,7 @@ public class PolicyRefresher extends Thread {
 		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
 		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
-		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000L);
 
 		setName("PolicyRefresher(serviceName=" + serviceName + ")-" + getId());
 
@@ -520,7 +520,7 @@ public class PolicyRefresher extends Thread {
 			if (toDelete.exists()) {
 				boolean isDeleted = toDelete.delete();
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("file :[" + pathName + "] is deleted");
+					LOG.debug("file :[" + pathName + "] is deleted" + isDeleted);
 				}
 			} else {
 				LOG.info("File: " + pathName + " does not exist!");

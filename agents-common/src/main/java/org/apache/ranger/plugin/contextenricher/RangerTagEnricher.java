@@ -104,7 +104,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		String propertyPrefix        = getPropertyPrefix();
 		String tagRetrieverClassName = getOption(TAG_RETRIEVER_CLASSNAME_OPTION);
-		long   pollingIntervalMs     = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
+		long   pollingIntervalMs     = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000L);
 
 		dedupStrings               = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);

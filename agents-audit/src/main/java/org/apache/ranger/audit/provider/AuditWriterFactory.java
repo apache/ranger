@@ -68,10 +68,9 @@ public class AuditWriterFactory {
 
         if (auditWriter != null) {
             auditWriter.init(props, propPrefix, auditProviderName, auditConfigs);
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AuditWriterFactory.init() :" + auditWriter.getClass().getName());
+            if (logger.isDebugEnabled()) {
+                logger.debug("<== AuditWriterFactory.init() :" + auditWriter.getClass().getName());
+            }
         }
     }
 
