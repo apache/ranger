@@ -58,6 +58,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 	private TagPolicies        tagPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 	private List<RangerPolicyDelta> policyDeltas;
 	private Map<String, String> serviceConfig;
 
@@ -362,6 +363,7 @@ public class ServicePolicies implements java.io.Serializable {
 		private String                          zoneName;
 		private List<HashMap<String, List<String>>> resources;
 		private List<RangerPolicy>              policies;
+		@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 		private List<RangerPolicyDelta>         policyDeltas;
 		private Boolean                         containsAssociatedTagService;
 
