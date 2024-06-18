@@ -37,6 +37,7 @@ public class RangerPolicyEngineOptions {
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
 	public boolean enableUserStoreEnricherWithLocalRefresher = false;
+	@Deprecated
 	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
 	public boolean optimizeTrieForRetrieval = false;
 	public boolean disableRoleResolution = true;
@@ -62,7 +63,6 @@ public class RangerPolicyEngineOptions {
 		this.evaluateDelegateAdminOnly = other.evaluateDelegateAdminOnly;
 		this.enableTagEnricherWithLocalRefresher = other.enableTagEnricherWithLocalRefresher;
 		this.enableUserStoreEnricherWithLocalRefresher = other.enableUserStoreEnricherWithLocalRefresher;
-		this.disableAccessEvaluationWithPolicyACLSummary = other.disableAccessEvaluationWithPolicyACLSummary;
 		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
 		this.disableRoleResolution = other.disableRoleResolution;
 		this.serviceDefHelper = null;
@@ -95,7 +95,6 @@ public class RangerPolicyEngineOptions {
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
 		enableUserStoreEnricherWithLocalRefresher = false;
-		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
 		optimizeTrieForSpace = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.space", false);
@@ -118,7 +117,6 @@ public class RangerPolicyEngineOptions {
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
 		enableUserStoreEnricherWithLocalRefresher = false;
-		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
 	}
