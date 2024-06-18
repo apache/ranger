@@ -244,16 +244,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 				if(ostream != null) {
 					mWriter = createWriter(ostream);
-
-					if(mWriter != null) {
-						mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
-
-						mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
-					} else {
-						mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
-
-						mBufferFilename = null;
-					}
+					mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+					mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
+				}  else {
+					mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
+					mBufferFilename = null;
 				}
 			} finally {
 				if(mWriter == null) {
@@ -387,7 +382,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		if(filename != null) {
 			synchronized(mCompletedLogfiles) {
 				mCompletedLogfiles.add(filename);
-				mCompletedLogfiles.notify();
+				mCompletedLogfiles.notifyAll();
 			}
 		}
 

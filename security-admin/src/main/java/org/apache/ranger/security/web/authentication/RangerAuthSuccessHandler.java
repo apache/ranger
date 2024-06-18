@@ -47,7 +47,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
  */
 public class RangerAuthSuccessHandler extends
 SavedRequestAwareAuthenticationSuccessHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RangerAuthSuccessHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuthSuccessHandler.class);
 
     String ajaxLoginSuccessPage = null;
 
@@ -116,14 +116,14 @@ SavedRequestAwareAuthenticationSuccessHandler {
 			response.getWriter().write(jsonUtil.writeObjectAsString(vXResponse));
 
 			// response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
-			logger.info("Auth Succeeded but user is not synced yet for "
+			LOG.info("Auth Succeeded but user is not synced yet for "
 					+ authentication.getName());
 
     	} else {
 
 			String ajaxRequestHeader = request.getHeader("X-Requested-With");
-			if (logger.isDebugEnabled()) {
-			    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
+			if (LOG.isDebugEnabled()) {
+			    LOG.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 			}
 			if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
 				// if (logger.isDebugEnabled()) {
@@ -143,10 +143,10 @@ SavedRequestAwareAuthenticationSuccessHandler {
 					jsonResp = jsonUtil.writeObjectAsString(vXResponse);
 					response.getWriter().write(jsonResp);
 				} catch (IOException e) {
-					logger.info("Error while writing JSON in HttpServletResponse");
+					LOG.info("Error while writing JSON in HttpServletResponse");
 				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Sending login success response : " + jsonResp);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Sending login success response : " + jsonResp);
 				}
 			    clearAuthenticationAttributes(request);
 			} else {
@@ -159,13 +159,11 @@ SavedRequestAwareAuthenticationSuccessHandler {
 					jsonResp = jsonUtil.writeObjectAsString(vXResponse);
 					response.getWriter().write(jsonResp);
 				} catch (IOException e) {
-					logger.info("Error while writing JSON in HttpServletResponse");
+					LOG.info("Error while writing JSON in HttpServletResponse");
 				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Sending login success response : " + jsonResp);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Sending login success response : " + jsonResp);
 				}
-				// super.onAuthenticationSuccess(request, response,
-				// authentication);
 			}
     	}
     }

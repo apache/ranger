@@ -32,14 +32,12 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -49,10 +47,7 @@ import org.springframework.util.CollectionUtils;
 public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	private final Long createdByUserId;
 
-	@Autowired
-	StringUtil stringUtil;
-
-	String hiddenPasswordString;
+	String hiddenPassword;
 
 	public XUserService() {
 		searchFields.add(new SearchField("name", "obj.name",
@@ -90,7 +85,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
-		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden","*****");
+		hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 
 		sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 		

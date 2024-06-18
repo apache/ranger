@@ -242,7 +242,7 @@ public class RangerRESTClient {
 	}
 
 	private void init(Configuration config) {
-		mIsSSL = isSsl(mUrl);
+		mIsSSL = isSslEnabled(mUrl);
 
 		if (mIsSSL) {
 
@@ -273,7 +273,7 @@ public class RangerRESTClient {
 		}
 	}
 
-	private boolean isSsl(String url) {
+	private boolean isSslEnabled(String url) {
 		return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
 	}
 

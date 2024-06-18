@@ -50,7 +50,7 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 		super(authenticationManager, rememberMeServices);
 	}
 
-    private static final Logger logger = LoggerFactory.getLogger(MyRememberMeFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MyRememberMeFilter.class);
 
     /*
      * (non-Javadoc)
@@ -81,9 +81,7 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 	    HttpServletResponse response, Authentication authResult) {
     	response.setHeader("X-Frame-Options", "DENY" );
 	super.onSuccessfulAuthentication(request, response, authResult);
-	// if (logger.isDebugEnabled()) {
-	logger.info("onSuccessfulAuthentication() authResult=" + authResult);
-	// }
+	LOG.info("onSuccessfulAuthentication() authResult=" + authResult);
     }
 
     /*
@@ -98,8 +96,8 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
     @Override
     protected void onUnsuccessfulAuthentication(HttpServletRequest request,
 	    HttpServletResponse response, AuthenticationException failed) {
-	logger.error("Authentication failure. failed=" + failed,
-		new Throwable());
+	LOG.error("Authentication failure. failed=" + failed,
+			  new Throwable());
 	response.setHeader("X-Frame-Options", "DENY" );
 	super.onUnsuccessfulAuthentication(request, response, failed);
     }

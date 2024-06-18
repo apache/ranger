@@ -22,8 +22,8 @@ package org.apache.ranger.plugin.contextenricher;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
@@ -292,17 +292,15 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	public Properties readProperties(String fileName) {
 		Properties  ret     = null;
-		InputStream inStr   = null;
 		URL         fileURL = null;
 		File        f       = new File(fileName);
 
 		if (f.exists() && f.isFile() && f.canRead()) {
-			try {
-				inStr   = new FileInputStream(f);
+			try (InputStream inStr   = new FileInputStream(f);) {
 				fileURL = f.toURI().toURL();
 			} catch (FileNotFoundException exception) {
 				LOG.error("Error processing input file:" + fileName + " or no privilege for reading file " + fileName, exception);
-			} catch (MalformedURLException malformedException) {
+			} catch (IOException malformedException) {
 				LOG.error("Error processing input file:" + fileName + " cannot be converted to URL " + fileName, malformedException);
 			}
 		} else {
@@ -322,8 +320,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		}
 
 		if (fileURL != null) {
-			try {
-				inStr = fileURL.openStream();
+			try(InputStream inStr = fileURL.openStream()) {
 
 				Properties prop = new Properties();
 
@@ -332,14 +329,6 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 				ret = prop;
 			} catch (Exception excp) {
 				LOG.error("failed to load properties from file '" + fileName + "'", excp);
-			} finally {
-				if (inStr != null) {
-					try {
-						inStr.close();
-					} catch (Exception excp) {
-						// ignore
-					}
-				}
 			}
 		}
 

@@ -21,6 +21,10 @@ package org.apache.ranger.plugin.util;
 
 public class RangerCommonConstants {
 
+	private RangerCommonConstants() {
+
+	}
+
 	public static final String PROP_COOKIE_NAME                             = "ranger.admin.cookie.name";
 	public static final String DEFAULT_COOKIE_NAME                          = "RANGERADMINSESSIONID";
 

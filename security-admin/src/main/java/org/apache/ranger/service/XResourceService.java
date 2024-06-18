@@ -31,7 +31,6 @@ import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXAuditMap;
@@ -57,9 +56,6 @@ public class XResourceService extends
 	@Autowired
 	XAuditMapService xAuditMapService;
 
-	@Autowired
-	StringUtil stringUtil;
-	
 	@Autowired
 	RangerBizUtil xaBizUtil;
 

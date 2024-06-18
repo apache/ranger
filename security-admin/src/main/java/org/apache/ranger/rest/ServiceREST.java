@@ -2547,7 +2547,7 @@ public class ServiceREST {
 						}
 					}
 				}
-				if(totalPolicyCreate % RangerBizUtil.policyBatchSize == 0) {
+				if(totalPolicyCreate % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 					bizUtil.bulkModeOnlyFlushAndClear();
 				}
 			}
@@ -2819,7 +2819,7 @@ public class ServiceREST {
 									bizUtil.blockAuditorRoleUser();
 									svcStore.deletePolicy(rangerPolicy, service);
 									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 										bizUtil.bulkModeOnlyFlushAndClear();
 									}
 									if (LOG.isDebugEnabled()) {
@@ -2892,7 +2892,7 @@ public class ServiceREST {
 										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
 									}
 									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 										bizUtil.bulkModeOnlyFlushAndClear();
 									}
 								}
@@ -4424,7 +4424,7 @@ public class ServiceREST {
 				if (existingPolicy != null) {
 					svcStore.deletePolicy(existingPolicy, null);
 					totalDeletedPolicies = totalDeletedPolicies + 1;
-					if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+					if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 						bizUtil.bulkModeOnlyFlushAndClear();
 					}
 					if (LOG.isDebugEnabled()) {
