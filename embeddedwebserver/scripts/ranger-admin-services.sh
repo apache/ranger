@@ -61,10 +61,7 @@ if [ ! -d "$LOG_GC_DIR" ]; then
     mkdir -p "$LOG_GC_DIR"
     if [ $? -ne 0 ]; then
         echo "Error creating log directory for GC. Make sure you have the proper permissions."
-        exit 1
     fi
-else
-    echo "The log directory already exists."
 fi
 
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_admin_max_heap_size} -Xms1g -Xloggc:${RANGER_ADMIN_LOG_DIR}/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
