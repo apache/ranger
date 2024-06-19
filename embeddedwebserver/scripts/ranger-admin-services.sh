@@ -54,11 +54,9 @@ then
 	RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_EWS_DIR}/logs
 fi
 
-LOG_GC_DIR=${XAPOLICYMGR_EWS_DIR}/logs/
-
 # Checks if the GC log directory exists, if not, create it
-if [ ! -d "$LOG_GC_DIR" ]; then
-    mkdir -p "$LOG_GC_DIR"
+if [ ! -d "$RANGER_ADMIN_LOG_DIR" ]; then
+    mkdir -p "$RANGER_ADMIN_LOG_DIR"
     if [ $? -ne 0 ]; then
         echo "Error creating log directory for GC. Make sure you have the proper permissions."
     fi
