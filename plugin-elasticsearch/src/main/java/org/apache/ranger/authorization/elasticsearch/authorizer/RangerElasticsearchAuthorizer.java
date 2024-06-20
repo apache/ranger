@@ -99,6 +99,12 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
 			if (result != null && result.getIsAllowed()) {
 				ret = true;
 			}
+
+			RangerElasticsearchAuditHandler auditHandler = (RangerElasticsearchAuditHandler) elasticsearchPlugin.getResultProcessor();
+			if (auditHandler != null) {
+				auditHandler.flushAudit();
+			}
+
 		}
 
 		if (LOG.isDebugEnabled()) {
