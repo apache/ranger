@@ -490,12 +490,12 @@ public class RangerSystemAccessControl
   }
 
   /**
-   * This check equals the check for checkCanCreateView
+   * This check equals the check for checkCanSelectFromColumns with create view
    */
   @Override
   public void checkCanCreateViewWithSelectFromColumns(SystemSecurityContext context, CatalogSchemaTableName table, Set<String> columns) {
     try {
-      checkCanCreateView(context, table);
+      checkCanSelectFromColumns(context, table, columns);
     } catch (AccessDeniedException ade) {
       LOG.debug("RangerSystemAccessControl.checkCanCreateViewWithSelectFromColumns(" + table.getSchemaTableName().getTableName() + ") denied");
       AccessDeniedException.denyCreateViewWithSelect(table.getSchemaTableName().getTableName(), context.getIdentity());
