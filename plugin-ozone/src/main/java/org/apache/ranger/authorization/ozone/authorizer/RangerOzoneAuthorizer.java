@@ -59,12 +59,16 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	private static volatile RangerBasePlugin rangerPlugin = null;
 	RangerDefaultAuditHandler auditHandler = null;
 
-	public RangerOzoneAuthorizer() {
-		rangerPlugin = new RangerBasePlugin("ozone", "ozone");
+	public RangerOzoneAuthorizer(String serviceName) {
+		rangerPlugin = new RangerBasePlugin("ozone", serviceName, "ozone");
 
 		rangerPlugin.init(); // this will initialize policy engine and policy refresher
 		auditHandler = new RangerDefaultAuditHandler();
 		rangerPlugin.setResultProcessor(auditHandler);
+	}
+
+	public RangerOzoneAuthorizer() {
+		this(null);
 	}
 
 	@Override
@@ -74,10 +78,15 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 			LOG.error("Ozone object is null!!");
 			return returnValue;
 		}
+		if (context == null) {
+			LOG.error("Context object is null!!");
+			return returnValue;
+		}
 		OzoneObj ozoneObj = (OzoneObj) ozoneObject;
 		UserGroupInformation ugi = context.getClientUgi();
 		ACLType operation = context.getAclRights();
 		String resource = ozoneObj.getPath();
+		String snapShotName = context.getSnapshotName();
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = " + operation + ", resource = " +
@@ -153,6 +162,18 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		}
 
 		try {
+			if (snapShotName != null && ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
+				rangerResource.setValue(KEY_RESOURCE_KEY,".snapshot/" + snapShotName + "/" + ozoneObj.getKeyName());
+				RangerAccessResult result = rangerPlugin
+						.isAccessAllowed(rangerRequest);
+				if (result == null) {
+					LOG.error("Ranger Plugin returned null. Returning false");
+					return false;
+				}
+				if (result.getPolicyId() >= 0)
+					return result.getIsAllowed();
+				rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
+			}
 			RangerAccessResult result = rangerPlugin
 					.isAccessAllowed(rangerRequest);
 			if (result == null) {
