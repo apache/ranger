@@ -1,0 +1,194 @@
+{
+  "policiesFilename":  "/plugin/hive_policies.json",
+  "tagsFilename":      "/plugin/hive_tags.json",
+  "rolesFilename":     "/plugin/hive_roles.json",
+  "userStoreFilename": "/plugin/hive_user_store.json",
+  "tests": [
+    {
+      "name": "table: sales.prospects, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 100 }
+    },
+    {
+      "name": "table: sales.prospects, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 200 }
+    },
+    {
+      "name": "table: sales.prospects, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "sales", "table": "prospects" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
+    {
+      "name": "table: finance.invoices, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 110 }
+    },
+    {
+      "name": "table: finance.invoices, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 201 }
+    },
+    {
+      "name": "table: finance.invoices, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "finance", "table": "invoices" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
+    {
+      "name": "table: shipping.shipments, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 121 }
+    },
+    {
+      "name": "table: shipping.shipments, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 202 }
+    },
+    {
+      "name": "table: shipping.shipments, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "shipping", "table": "shipments" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
+
+    {
+      "name": "table: customers.contact_info, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 131 }
+    },
+    {
+      "name": "table: customers.contact_info, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 203 }
+    },
+    {
+      "name": "table: customers.contact_info, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    
+    {
+      "name": "table: operations.facilities, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 141 }
+    },
+    {
+      "name": "table: operations.facilities, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 204 }
+    },
+    {
+      "name": "table: operations.facilities, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "operations", "table": "facilities" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
+    {
+      "name": "ACLs: table: sales.prospects",
+      "request": {
+        "resource": { "elements": { "database": "sales", "table": "prospects" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } }
+        }
+      }
+    },
+    {
+      "name": "ACLs: table: finance.invoices",
+      "request": {
+        "resource": { "elements": { "database": "finance", "table": "invoices" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } }
+        }
+      }
+    },
+    {
+      "name": "ACLs: table: shipping.shipments",
+      "request": {
+        "resource": { "elements": { "database": "shipping", "table": "shipments" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } }
+        }
+      }
+    },
+    {
+      "name": "ACLs: table: customers.contact_info",
+      "request": {
+        "resource": { "elements": { "database": "customers", "table": "contact_info" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 131 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 203 } } }
+        }
+      }
+    },
+    {
+      "name": "ACLs: table: operations.facilities",
+      "request": {
+        "resource": { "elements": { "database": "operations", "table": "facilities" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 141 } } },
+          "tag-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 204 } } }
+        }
+      }
+    }
+  ]
+}

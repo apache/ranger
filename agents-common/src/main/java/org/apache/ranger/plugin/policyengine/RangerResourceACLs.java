@@ -163,6 +163,28 @@ public class RangerResourceACLs {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hash(userACLs, groupACLs, roleACLs, rowFilters, dataMasks);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		} else {
+			RangerResourceACLs other = (RangerResourceACLs) obj;
+
+			return Objects.equals(userACLs, other.userACLs) &&
+					Objects.equals(groupACLs, other.groupACLs) &&
+					Objects.equals(roleACLs, other.roleACLs) &&
+					Objects.equals(rowFilters, other.rowFilters) &&
+					Objects.equals(dataMasks, other.dataMasks);
+		}
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
