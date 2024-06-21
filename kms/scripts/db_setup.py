@@ -107,9 +107,10 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_OPTS,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_OPTS = JAVA_OPTS
 		self.JAVA_BIN = JAVA_BIN
 		self.db_ssl_enabled=db_ssl_enabled.lower()
 		self.db_ssl_required=db_ssl_required.lower()
@@ -208,9 +209,10 @@ class MysqlConf(BaseDB):
 
 class OracleConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host 
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_OPTS = JAVA_OPTS
 		self.JAVA_BIN = JAVA_BIN
 		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
 		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
@@ -315,9 +317,10 @@ class OracleConf(BaseDB):
 
 class PostgresConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_OPTS,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_OPTS = JAVA_OPTS
 		self.JAVA_BIN = JAVA_BIN
 		self.db_ssl_enabled=db_ssl_enabled.lower()
 		self.db_ssl_required=db_ssl_required.lower()
@@ -420,9 +423,10 @@ class PostgresConf(BaseDB):
 
 class SqlServerConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_OPTS = JAVA_OPTS
 		self.JAVA_BIN = JAVA_BIN
 		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
 		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
@@ -498,9 +502,10 @@ class SqlServerConf(BaseDB):
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
+		self.JAVA_OPTS = JAVA_OPTS
 		self.JAVA_BIN = JAVA_BIN
 		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
 		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
@@ -710,22 +715,22 @@ def main(argv):
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR,JAVA_OPTS,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , mysql_core_file)
 		
 	elif XA_DB_FLAVOR == "ORACLE":
 		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME ,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_override_db_connection_string,db_override_jdbc_connection_string)
+		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR,JAVA_OPTS,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , postgres_core_file)
 
 	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN,is_override_db_connection_string,db_override_jdbc_connection_string)
+		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlserver_core_file)
 
 	elif XA_DB_FLAVOR == "SQLA":
@@ -734,7 +739,7 @@ def main(argv):
 				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
 				sys.exit(1)
 		SQLANYWHERE_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN,is_override_db_connection_string,db_override_jdbc_connection_string)
+		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , sqlanywhere_core_file)
 
 	else:
