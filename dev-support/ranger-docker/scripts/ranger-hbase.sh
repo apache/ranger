@@ -16,14 +16,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-service ssh start
+if [ "${OS_NAME}" = "UBUNTU" ]; then
+  service ssh start
+fi
 
 if [ ! -e ${HBASE_HOME}/.setupDone ]
 then
+  if [ "${OS_NAME}" = "RHEL" ]; then
+      ssh-keygen -A
+      /usr/sbin/sshd
+  fi
+
   su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hbase
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hbase
   su -c "chmod 0600 ~/.ssh/authorized_keys" hbase
 
+  # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
 
