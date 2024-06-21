@@ -489,53 +489,6 @@ function Plugin_Status() {
             minWidth: 190
           }
         ]
-      },
-      {
-        Header: infoIcon("Role"),
-        id: "Role (Time)",
-        columns: [
-          {
-            Header: "Last Update",
-            accessor: "lastRoleUpdateTime",
-            sortType: (rowA, rowB, colAccessor) => {
-              return dateTimeSorting(rowA, rowB, colAccessor);
-            },
-            Cell: ({ row: { original } }) => {
-              return getLastUpdateTime(original.info.lastRoleUpdateTime);
-            },
-            minWidth: 190
-          },
-          {
-            Header: "Download",
-            accessor: "roleDownloadTime",
-            sortType: (rowA, rowB, colAccessor) => {
-              return dateTimeSorting(rowA, rowB, colAccessor);
-            },
-            Cell: ({ row: { original } }) => {
-              return getDownloadTime(
-                original.info.roleDownloadTime,
-                original.info.lastRoleUpdateTime,
-                "Role"
-              );
-            },
-            minWidth: 190
-          },
-          {
-            Header: "Active",
-            accessor: "roleActivationTime",
-            sortType: (rowA, rowB, colAccessor) => {
-              return dateTimeSorting(rowA, rowB, colAccessor);
-            },
-            Cell: ({ row: { original } }) => {
-              return getActivationTime(
-                original.info.roleActivationTime,
-                original.info.lastRoleUpdateTime,
-                "Role"
-              );
-            },
-            minWidth: 190
-          }
-        ]
       }
     ],
     []
