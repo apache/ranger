@@ -756,7 +756,7 @@ public class TestAssetREST {
 		Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
 		Mockito.verify(searchUtil, Mockito.times(4)).extractString((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-		Mockito.verify(searchUtil).extractInt((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(2)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -1032,7 +1032,7 @@ public class TestAssetREST {
                 Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
                 Mockito.verify(searchUtil, Mockito.times(4)).extractString((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-                Mockito.verify(searchUtil).extractInt((HttpServletRequest) Mockito.any(),
+                Mockito.verify(searchUtil, Mockito.times(2)).extractInt((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
                 Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -1062,7 +1062,7 @@ public class TestAssetREST {
                 Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
                 Mockito.verify(searchUtil, Mockito.times(4)).extractString((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-                Mockito.verify(searchUtil).extractInt((HttpServletRequest) Mockito.any(),
+                Mockito.verify(searchUtil, Mockito.times(2)).extractInt((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
                 Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
                                 (SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
