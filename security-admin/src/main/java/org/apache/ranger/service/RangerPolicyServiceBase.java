@@ -17,6 +17,7 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.*;
@@ -199,13 +200,10 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		String              validitySchedules = JsonUtils.listToJson(vObj.getValiditySchedules());
 		Map<String, Object> options           = vObj.getOptions();
 
-		if (options == null) {
-			options = new HashMap<>();
-		}
-
 		if (StringUtils.isNotBlank(validitySchedules)) {
+			options = vObj.getUpdatableMap(options);
 			options.put(OPTION_POLICY_VALIDITY_SCHEDULES, validitySchedules);
-		} else {
+		} else if (MapUtils.isNotEmpty(options)) {
 			options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
 		}
 
