@@ -20,7 +20,7 @@ package org.apache.ranger.services.yarn.client.json.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
 
 
 @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class YarnSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
@@ -50,7 +50,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
 
 
     @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class YarnScheduler implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -67,7 +67,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     }
 
     @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class YarnSchedulerInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -93,7 +93,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     }
 
     @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class YarnQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;

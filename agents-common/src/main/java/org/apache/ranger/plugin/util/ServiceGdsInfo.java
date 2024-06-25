@@ -29,13 +29,13 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.*;
 
 
 @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ServiceGdsInfo implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
@@ -274,7 +274,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class DataShareInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -373,7 +373,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class SharedResourceInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -532,7 +532,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class DatasetInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -593,7 +593,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class ProjectInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -654,7 +654,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class DataShareInDatasetInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -735,7 +735,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class DatasetInProjectInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -816,7 +816,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class ObjectChangeLog {
         public static final Integer CHANGE_TYPE_CREATE = 1;

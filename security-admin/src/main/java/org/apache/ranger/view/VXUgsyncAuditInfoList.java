@@ -29,13 +29,13 @@ import org.apache.ranger.common.view.VList;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VXUgsyncAuditInfoList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
