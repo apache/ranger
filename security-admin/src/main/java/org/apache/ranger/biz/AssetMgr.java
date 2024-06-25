@@ -1202,16 +1202,22 @@ public class AssetMgr extends AssetMgrBase {
 	public VXTrxLogList getTransactionReport(String transactionId) {
 		List<VXTrxLogV2> trxLogsV2 = xTrxLogService.findByTransactionId(transactionId);
 		List<VXTrxLog>   trxLogs   = new ArrayList<>();
+		long             nextLogId = 1;
 
 		for (VXTrxLogV2 trxLogV2 : trxLogsV2) {
 			ObjectChangeInfo objChangeInfo = trxLogV2.getChangeInfo();
 
 			if (objChangeInfo == null || CollectionUtils.isEmpty(objChangeInfo.getAttributes())) {
-				trxLogs.add(VXTrxLogV2.toVXTrxLog(trxLogV2));
+				VXTrxLog trxLog = VXTrxLogV2.toVXTrxLog(trxLogV2);
+
+				trxLog.setId(nextLogId++);
+
+				trxLogs.add(trxLog);
 			} else {
 				for (AttributeChangeInfo attrChangeInfo : objChangeInfo.getAttributes()) {
 					VXTrxLog trxLog = VXTrxLogV2.toVXTrxLog(trxLogV2);
 
+					trxLog.setId(nextLogId++);
 					trxLog.setAttributeName(attrChangeInfo.getAttributeName());
 					trxLog.setPreviousValue(attrChangeInfo.getOldValue());
 					trxLog.setNewValue(attrChangeInfo.getNewValue());
@@ -1225,8 +1231,8 @@ public class AssetMgr extends AssetMgrBase {
 	}
 
 	public List<VXTrxLog> validateXXTrxLogList(List<VXTrxLog> xTrxLogList) {
-		
 		List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
+
 		for (VXTrxLog vXTrxLog : xTrxLogList) {
 			if(vXTrxLog.getPreviousValue() == null || "null".equalsIgnoreCase(vXTrxLog.getPreviousValue())) {
 				vXTrxLog.setPreviousValue("");
@@ -1277,8 +1283,9 @@ public class AssetMgr extends AssetMgrBase {
 						}
 					}	
 				}
-			}			
-                        vXTrxLogs.add(vXTrxLog);
+			}
+
+			vXTrxLogs.add(vXTrxLog);
 		}
 		return vXTrxLogs;
 	}
