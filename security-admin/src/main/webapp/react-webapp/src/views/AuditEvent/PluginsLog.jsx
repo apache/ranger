@@ -34,7 +34,8 @@ import {
   parseSearchFilter,
   serverError,
   isKeyAdmin,
-  isKMSAuditor
+  isKMSAuditor,
+  currentTimeZone
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
 
@@ -135,7 +136,7 @@ function Plugins() {
   const columns = React.useMemo(
     () => [
       {
-        Header: "Export Date ( India Standard Time )",
+        Header: `Export Date  ( ${currentTimeZone()} )`,
         accessor: "createDate",
         Cell: (rawValue) => {
           const formatDateTime = dateFormat(

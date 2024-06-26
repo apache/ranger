@@ -23,9 +23,6 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.GsonBuilder;
-
-//import java.io.File;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,7 +38,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	static final String  AUDIT_LOG_STATUS_LOG_ENABLED              = "xasecure.audit.log.status.log.enabled";
 	static final String  AUDIT_LOG_STATUS_LOG_INTERVAL_SEC         = "xasecure.audit.log.status.log.interval.sec";
 	static final boolean DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED      = false;
-	static final long    DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC = 5 * 60; // 5 minutes
+	static final long    DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC = 5L * 60; // 5 minutes
 
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
@@ -60,8 +57,8 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "TLSv1.2";
 
 	public static final String PROP_CONFIG = "config";
-
-	private int mLogFailureReportMinIntervalInMs = 60 * 1000;
+	public static final String FAILED_TO_LOG_AUDIT_EVENT        = "failed to log audit event: {}";
+	private int                mLogFailureReportMinIntervalInMs = 60 * 1000;
 
 	private AtomicLong mFailedLogLastReportTime = new AtomicLong(0);
 	private AtomicLong mFailedLogCountSinceLastReport = new AtomicLong(0);
@@ -101,7 +98,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	long    nextStatusLogTime   = lastStatusLogTime + statusLogIntervalMS;
 
 	protected Properties props = null;
-	protected Map<String, String> configProps = new HashMap<String, String>();
+	protected Map<String, String> configProps = new HashMap<>();
 
 	@Override
 	public void init(Properties props) {
@@ -133,14 +130,6 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			}
 		}
 		LOG.info("providerName=" + getName());
-
-		try {
-			new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch (Throwable excp) {
-			LOG.warn(
-					"Log4jAuditProvider.init(): failed to create GsonBuilder object. events will be formated using toString(), instead of Json",
-					excp);
-		}
 
 		mLogFailureReportMinIntervalInMs = MiscUtil.getIntProperty(props,
 				AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);
@@ -206,7 +195,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	 */
 	@Override
 	public boolean logJSON(Collection<String> events) {
-		List<AuditEventBase> eventList = new ArrayList<AuditEventBase>(events.size());
+		List<AuditEventBase> eventList = new ArrayList<>(events.size());
 		for (String event : events) {
 			eventList.add(MiscUtil.fromJson(event, AuthzAuditEvent.class));
 		}
@@ -335,40 +324,43 @@ public abstract class BaseAuditHandler implements AuditHandler {
 					finalPath = ", finalDestination=" + tFinalPath;
 				}
 
-				String msg = "Audit Status Log: name="
-						+ getName()
-						+ finalPath
-						+ ", interval="
-						+ formatIntervalForLog(diffTime)
-						+ ", events="
-						+ diffCount
-						+ (diffSuccess > 0 ? (", succcessCount=" + diffSuccess)
-						: "")
-						+ (diffFailed > 0 ? (", failedCount=" + diffFailed) : "")
-						+ (diffStashed > 0 ? (", stashedCount=" + diffStashed) : "")
-						+ (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
-						: "")
-						+ ", totalEvents="
-						+ totalCount
-						+ (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
-						: "")
-						+ (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
-						: "")
-						+ (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
-						: "")
-						+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
-						: "");
-				LOG.info(msg);
+				logAuditStatus(diffTime, diffCount, diffSuccess, diffFailed, diffStashed, diffDeferred, finalPath);
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			LOG.error("Error while printing stats. auditProvider=" + getName());
 		}
 	}
+	private void logAuditStatus(long diffTime, long diffCount, long diffSuccess, long diffFailed, long diffStashed, long diffDeferred, String finalPath) {
+		String msg = "Audit Status Log: name="
+				+ getName()
+				+ finalPath
+				+ ", interval="
+				+ formatIntervalForLog(diffTime)
+				+ ", events="
+				+ diffCount
+				+ (diffSuccess > 0 ? (", succcessCount=" + diffSuccess)
+				: "")
+				+ (diffFailed > 0 ? (", failedCount=" + diffFailed) : "")
+				+ (diffStashed > 0 ? (", stashedCount=" + diffStashed) : "")
+				+ (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
+				: "")
+				+ ", totalEvents="
+				+ totalCount
+				+ (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
+				: "")
+				+ (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
+				: "")
+				+ (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
+				: "")
+				+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
+				: "");
+		LOG.info(msg);
+	}
 
-	public void logError(String msg) {
+	public void logError(String msg,  Object arg) {
 		long currTimeMS = System.currentTimeMillis();
 		if (currTimeMS - lastErrorLogMS > errorLogIntervalMS) {
-			LOG.error(msg);
+			LOG.error(msg, arg);
 			lastErrorLogMS = currTimeMS;
 		}
 	}
@@ -421,19 +413,13 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			mFailedLogCountSinceLastReport.set(0);
 
 			if (excp != null) {
-				LOG.warn(
-						"failed to log audit event: "
-								+ MiscUtil.stringify(event), excp);
+				LOG.warn(FAILED_TO_LOG_AUDIT_EVENT, MiscUtil.stringify(event), excp);
 			} else {
-				LOG.warn("failed to log audit event: "
-						+ MiscUtil.stringify(event));
+				LOG.warn(FAILED_TO_LOG_AUDIT_EVENT, MiscUtil.stringify(event));
 			}
 
 			if (countLifeTime > 1) { // no stats to print for the 1st failure
-				LOG.warn("Log failure count: " + countSinceLastReport
-						+ " in past "
-						+ formatIntervalForLog(timeSinceLastReport) + "; "
-						+ countLifeTime + " during process lifetime");
+				LOG.warn("Log failure count: {} in past {}; {} during process lifetime", countSinceLastReport, formatIntervalForLog(timeSinceLastReport), countLifeTime);
 			}
 		}
 	}
@@ -460,14 +446,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			mFailedLogLastReportTime.set(now);
 			mFailedLogCountSinceLastReport.set(0);
 
-			LOG.warn("failed to log audit event: " + MiscUtil.stringify(event)
-					+ ", errorMessage=" + message);
+			LOG.warn("failed to log audit event: {} , errorMessage={}", MiscUtil.stringify(event),  message);
 
 			if (countLifeTime > 1) { // no stats to print for the 1st failure
-				LOG.warn("Log failure count: " + countSinceLastReport
-						+ " in past "
-						+ formatIntervalForLog(timeSinceLastReport) + "; "
-						+ countLifeTime + " during process lifetime");
+				LOG.warn("Log failure count: {} in past {}; {} during process lifetime", countSinceLastReport, formatIntervalForLog(timeSinceLastReport), countLifeTime);
 			}
 		}
 	}
@@ -492,16 +474,13 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			mFailedLogCountSinceLastReport.set(0);
 
 			if (excp != null) {
-				LOG.warn("failed to log audit event: " + event, excp);
+				LOG.warn(FAILED_TO_LOG_AUDIT_EVENT, event, excp);
 			} else {
-				LOG.warn("failed to log audit event: " + event);
+				LOG.warn(FAILED_TO_LOG_AUDIT_EVENT, event);
 			}
 
 			if (countLifeTime > 1) { // no stats to print for the 1st failure
-				LOG.warn("Log failure count: " + countSinceLastReport
-						+ " in past "
-						+ formatIntervalForLog(timeSinceLastReport) + "; "
-						+ countLifeTime + " during process lifetime");
+				LOG.warn("Log failure count: {} in past {}; {} during process lifetime", countSinceLastReport, formatIntervalForLog(timeSinceLastReport), countLifeTime);
 			}
 		}
 	}

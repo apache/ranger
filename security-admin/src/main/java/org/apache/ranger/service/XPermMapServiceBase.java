@@ -26,17 +26,26 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 
 public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermMap>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XPermMap";
 
 	public XPermMapServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_PERM_MAP);
 
+		//	trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Permission", false));
+		//	trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Permission", false));
+		trxLogAttrs.put("permType",  new VTrxLogAttr("permType", "Permission Type", true));
+		trxLogAttrs.put("ipAddress", new VTrxLogAttr("ipAddress", "IP Address"));
 	}
 
 	@Override
@@ -90,4 +99,32 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
 		return returnList;
 	}
 
+	@Override
+	public int getParentObjectType(V obj, V oldObj) {
+		return obj.getGroupId() != null ? AppConstants.CLASS_TYPE_XA_GROUP : AppConstants.CLASS_TYPE_XA_USER;
+	}
+
+	@Override
+	public String getParentObjectName(V obj, V oldObj) {
+		String ret;
+
+		if (obj.getGroupId() != null) {
+			XXGroup xGroup = daoManager.getXXGroup().getById(obj.getGroupId());
+
+			ret = xGroup != null ? xGroup.getName() : null;
+		} else if (obj.getUserId() != null) {
+			XXUser xUser = daoManager.getXXUser().getById(obj.getUserId());
+
+			ret = xUser != null ? xUser.getName() : null;
+		} else {
+			ret = null;
+		}
+
+		return ret;
+	}
+
+	@Override
+	public Long getParentObjectId(V obj, V oldObj) {
+		return obj.getGroupId() != null ? obj.getGroupId() : obj.getUserId();
+	}
 }

@@ -133,7 +133,7 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("  KMS Hadoop Version: " + VersionInfo.getVersion());
       LOG.info("-------------------------------------------------------------");
 
-      kmsAcls = getAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
+      kmsAcls = getKeyAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
       kmsAcls.startReloader();
 
       metricRegistry = new MetricRegistry();
@@ -230,7 +230,7 @@ public class KMSWebApp implements ServletContextListener {
   }
 
   @SuppressWarnings("unchecked")
-  private KeyACLs getAcls(String clsStr) throws IOException {
+  private KeyACLs getKeyAcls(String clsStr) throws IOException {
 	  KeyACLs keyAcl = null;
 	  try {
         Class<? extends KeyACLs> cls = null;

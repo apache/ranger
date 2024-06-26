@@ -566,7 +566,7 @@ public class ServiceDefUtil {
                 enricherDefs = new ArrayList<>();
             }
 
-            long enricherItemId = enricherDefs.size() + 1;
+            long enricherItemId = enricherDefs.size() + 1L;
 
             for (RangerServiceDef.RangerContextEnricherDef enricherDef : enricherDefs) {
                 if (enricherDef.getItemId() >= enricherItemId) {

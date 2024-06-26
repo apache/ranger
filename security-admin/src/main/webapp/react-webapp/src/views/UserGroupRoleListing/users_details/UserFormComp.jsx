@@ -32,8 +32,8 @@ import {
 } from "Utils/XAEnums";
 import { toast } from "react-toastify";
 import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
-import { getUserProfile } from "Utils/appState";
-import { has, isEmpty, isUndefined } from "lodash";
+import { getUserProfile, setUserProfile } from "Utils/appState";
+import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import { BlockUi } from "../../../components/CommonComponents";
 import { InfoIcon } from "../../../utils/XAUtils";
@@ -112,6 +112,15 @@ function UserFormComp(props) {
           type: "SET_BLOCK_UI",
           blockUI: false
         });
+
+        const userProps = cloneDeep(getUserProfile());
+        if (userProps.loginId == userInfo.name) {
+          userProps.firstName = userEditData.firstName;
+          userProps.emailAddress = userEditData.emailAddress;
+          userProps.lastName = userEditData.lastName;
+
+          setUserProfile(userProps);
+        }
         toast.success("User updated successfully!!");
         navigate("/users/usertab");
       } catch (error) {

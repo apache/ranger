@@ -59,7 +59,7 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
     XXPortalUserDao xxPortalUserDao;
 
     public RangerGdsDataShareInDatasetService() {
-        super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET);
+        super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET, AppConstants.CLASS_TYPE_GDS_DATASET);
 
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_IN_DATASET_ID, "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_ID,            "obj.dataShareId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
@@ -85,12 +85,12 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,              "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATA_SHARE_IN_DATASET_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
 
-        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID", false));
-        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID", false));
+        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID"));
+        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID"));
         trxLogAttrs.put("status",           new VTrxLogAttr("status", "Status", true));
-        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule", false));
-        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles", false));
-        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver", false));
+        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule"));
+        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles"));
+        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver"));
     }
 
     @Override
@@ -119,6 +119,19 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
         // TODO:
 
         return ret;
+    }
+
+    @Override
+    public String getParentObjectName(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
+        Long         datasetId = obj != null ? obj.getDatasetId() : null;
+        XXGdsDataset dataset   = datasetId != null ? daoMgr.getXXGdsDataset().getById(datasetId) : null;
+
+        return dataset != null ? dataset.getName() : null;
+    }
+
+    @Override
+    public Long getParentObjectId(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
+        return obj != null ? obj.getDatasetId() : null;
     }
 
     @Override

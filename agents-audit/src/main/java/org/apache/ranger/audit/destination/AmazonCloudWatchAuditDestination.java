@@ -59,7 +59,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class AmazonCloudWatchAuditDestination extends AuditDestination {
 
-    private static Logger LOG = LoggerFactory.getLogger(AmazonCloudWatchAuditDestination.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AmazonCloudWatchAuditDestination.class);
 
     public static final String PROP_LOG_GROUP_NAME = "log_group";
     public static final String PROP_LOG_STREAM_PREFIX = "log_stream_prefix";
@@ -92,7 +92,7 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
     }
 
     @Override
-    synchronized public boolean log(Collection<AuditEventBase> collection) {
+    public synchronized boolean log(Collection<AuditEventBase> collection) {
         boolean ret = false;
         AWSLogs client = getClient();
 

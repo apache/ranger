@@ -533,7 +533,7 @@ public class RangerBasePlugin {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
 		}
 
-		if (ret != null) {
+		if (ret != null && !RangerAccessRequestUtil.getIsSkipChainedPlugins(request.getContext())) {
 			for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("BasePlugin.isAccessAllowed result=[" + ret + "]");

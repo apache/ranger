@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -892,6 +894,34 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
 					requests.add(request);
+				} else if (hiveOpType == HiveOperationType.SHOW_GRANT) {
+					String command = context.getCommandString();
+					String regexForShowGrantCommand = "SHOW GRANT\\s*(\\w+)?\\s*(\\w+)?\\s*ON\\s*(\\w+)?\\s*(\\S+)";
+					Pattern pattern = Pattern.compile(regexForShowGrantCommand, Pattern.CASE_INSENSITIVE);
+					Matcher matcher = pattern.matcher(command);
+
+					if (matcher.find()) {
+						String hiveObjectType = matcher.group(3);
+						String hiveObjectValue = matcher.group(4);
+
+						String dbName = hiveObjectValue;
+						String tableName = "";
+						if (hiveObjectValue.contains(".")) {
+							String[] parts = hiveObjectValue.split("\\.");
+							dbName = parts[0];
+							tableName = parts[1];
+						}
+
+						if (hiveObjectType.toUpperCase().equals(HiveObjectType.DATABASE.name())) {
+							RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName);
+							RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
+							requests.add(request);
+						} else if (hiveObjectType.toUpperCase().equals(HiveObjectType.TABLE.name())) {
+							RangerHiveResource resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
+							RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
+							requests.add(request);
+						}
+					}
 				} else if ( hiveOpType ==  HiveOperationType.REPLDUMP) {
 					// This happens when REPL DUMP command with null inputHObjs is sent in checkPrivileges()
 					// following parsing is done for Audit info
@@ -1870,6 +1900,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				// any access done for metadata access of actions that have support from hive for filtering
 				case SHOWDATABASES:
+				case SHOW_GRANT:
 				case SWITCHDATABASE:
 				case DESCDATABASE:
 				case SHOWTABLES:
@@ -1932,7 +1963,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case SHOWFUNCTIONS:
 				case SHOWLOCKS:
 				case SHOW_COMPACTIONS:
-				case SHOW_GRANT:
 				case SHOW_ROLES:
 				case SHOW_ROLE_GRANT:
 				case SHOW_ROLE_PRINCIPALS:

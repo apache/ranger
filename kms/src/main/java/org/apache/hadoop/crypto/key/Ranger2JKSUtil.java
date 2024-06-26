@@ -189,21 +189,9 @@ public class Ranger2JKSUtil {
 						.toCharArray();
 				dbStore = new RangerKeyStore(daoManager);
 			}
-			OutputStream out = null;
-			try {
-				out = new FileOutputStream(new File(keyStoreFileName));
+			try (OutputStream out = new FileOutputStream(new File(keyStoreFileName))) {
 				dbStore.engineLoadToKeyStoreFile(out, keyStorePassword,
 						keyPassword, masterKey, keyStoreType);
-			} finally {
-				if (out != null) {
-					try {
-						out.close();
-					} catch (Exception e) {
-						throw new RuntimeException(
-								"ERROR:  Unable to close file stream for ["
-										+ keyStoreFileName + "]", e);
-					}
-				}
 			}
 		} catch (Throwable t) {
 			throw new RuntimeException("Unable to export keys to ["

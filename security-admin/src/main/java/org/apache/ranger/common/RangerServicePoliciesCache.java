@@ -19,11 +19,10 @@
 
 package org.apache.ranger.common;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -56,8 +55,6 @@ public class RangerServicePoliciesCache {
 
 	private final int     waitTimeInSeconds;
 	private final boolean dedupStrings;
-	private Gson gson;
-
 	private final Map<String, ServicePoliciesWrapper> servicePoliciesMap = new HashMap<>();
 
 	public static RangerServicePoliciesCache getInstance() {
@@ -76,11 +73,6 @@ public class RangerServicePoliciesCache {
 
 		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 		dedupStrings      = config.getBoolean("ranger.admin.policy.dedup.strings", Boolean.TRUE);
-		try {
-			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch(Throwable excp) {
-			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
-		}
 	}
 
 	public void dump() {
@@ -236,7 +228,7 @@ public class RangerServicePoliciesCache {
 
 				if (cacheFile != null) {
 					try (Writer writer = new FileWriter(cacheFile)) {
-						gson.toJson(policies, writer);
+                        JsonUtils.objectToWriter(writer, policies);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 					}

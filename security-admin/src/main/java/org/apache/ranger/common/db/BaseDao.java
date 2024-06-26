@@ -24,6 +24,7 @@
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,7 +120,7 @@ public abstract class BaseDao<T> {
 
 		for (int n = 0; n < obj.size(); ++n) {
 			em.persist(obj.get(n));
-			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.batchPersistSize == 0)) {
+			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.BATCH_PERSIST_SIZE == 0)) {
 				em.flush();
 			}
 		}
@@ -338,8 +339,10 @@ public abstract class BaseDao<T> {
 
 		String tableName = table.name();
 
-		try {
-			entityMgr.unwrap(Connection.class).createStatement().execute("SET IDENTITY_INSERT " + tableName + " " + identityInsertStr);
+		try (PreparedStatement st = entityMgr.unwrap(Connection.class).prepareStatement("SET IDENTITY_INSERT  ?   ?" )) {
+			st.setString(1, tableName);
+			st.setString(2, identityInsertStr);
+			st.execute();
 		} catch (SQLException e) {
 			logger.error("Error while settion identity_insert " + identityInsertStr, e);
 		}

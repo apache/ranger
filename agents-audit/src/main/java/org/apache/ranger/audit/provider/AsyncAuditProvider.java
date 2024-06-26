@@ -120,7 +120,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 			while (mThread.isAlive()) {
 				try {
 					LOG.info(String.format("Waiting for child thread of %s to exit.  Sleeping for %d secs", mName, mStopLoopIntervalSecs));
-					mThread.join(mStopLoopIntervalSecs * 1000);
+					mThread.join(mStopLoopIntervalSecs * 1000L);
 				} catch (InterruptedException e) {
 					LOG.warn("Interrupted while waiting for child thread to join!  Proceeding with stop", e);
 					break;
@@ -255,7 +255,7 @@ public class AsyncAuditProvider extends MultiDestAuditProvider implements
 					&& (maxWaitSeconds <= 0 || maxWaitSeconds > waitTime); waitTime += mWaitToCompleteLoopIntervalSecs) {
 				try {
 					LOG.info(String.format("%d messages yet to be flushed by %s.  Sleeoping for %d sec", mQueue.size(), mName, mWaitToCompleteLoopIntervalSecs));
-					Thread.sleep(mWaitToCompleteLoopIntervalSecs * 1000);
+					Thread.sleep(mWaitToCompleteLoopIntervalSecs * 1000L);
 				} catch (InterruptedException excp) {
 					// someone really wants service to exit, abandon unwritten audits and exit.
 					LOG.warn("Caught interrupted exception! " + mQueue.size() + " messages still unflushed!  Won't wait for queue to flush, exiting...", excp);

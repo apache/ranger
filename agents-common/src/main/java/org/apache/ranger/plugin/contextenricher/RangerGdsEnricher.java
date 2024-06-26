@@ -57,7 +57,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
 
         String propertyPrefix     = "ranger.plugin." + serviceDef.getName();
         String retrieverClassName = getOption(RETRIEVER_CLASSNAME_OPTION);
-        long   pollingIntervalMs  = getLongOption(REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
+        long   pollingIntervalMs  = getLongOption(REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000L);
         String cacheFile          = null;
 
         serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);

@@ -40,13 +40,8 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 	JSONUtil jsonUtil;
 
 	public static final String NAME = "XUgsyncAuditInfo";
-	protected static final String distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM XXUgsyncAuditInfo obj ";
-	protected static final String distinctQueryStr = "SELECT distinct obj FROM XXUgsyncAuditInfo obj ";
 
 	public XUgsyncAuditInfoService() {
-		countQueryStr = "SELECT COUNT(obj) FROM XXUgsyncAuditInfo  obj ";
-		queryStr = "SELECT obj FROM XXUgsyncAuditInfo obj ";
-
 		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));
 		searchFields.add(new SearchField("userName", "obj.userName",
 				DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));

@@ -75,9 +75,9 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         sortFields.add(new SortField(SearchFilter.DATASET_ID,   "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.DATASET_NAME, "obj.name"));
 
-        trxLogAttrs.put("name",       new VTrxLogAttr("name", "Name", false));
-        trxLogAttrs.put("acl",        new VTrxLogAttr("acl", "ACL", false));
-        trxLogAttrs.put("termsOfUse", new VTrxLogAttr("termsOfUse", "Terms of use", false));
+        trxLogAttrs.put("name",       new VTrxLogAttr("name", "Name", false, true));
+        trxLogAttrs.put("acl",        new VTrxLogAttr("acl", "ACL"));
+        trxLogAttrs.put("termsOfUse", new VTrxLogAttr("termsOfUse", "Terms of use"));
     }
 
     @Override

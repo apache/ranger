@@ -19,9 +19,9 @@
 
 import React from "react";
 import { Table, Badge } from "react-bootstrap";
-import dateFormat from "dateformat";
 import { ClassTypes, UserRoles } from "../../../utils/XAEnums";
 import { isEmpty, unionBy, difference, isEqual, without } from "lodash";
+import { currentTimeZone } from "../../../utils/XAUtils";
 
 export const UserLogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;
@@ -265,10 +265,7 @@ export const UserLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_XA_USER.value && (
           <div>
             <div className="fw-bolder">Name: {objectName}</div>
-            <div className="fw-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-              Standard Time
-            </div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Created By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">User Details:</h5>
@@ -339,8 +336,7 @@ export const UserLogs = ({ data, reportdata }) => {
               <div className="col-md-6">
                 <div className="fw-bolder">Name: {objectName}</div>
                 <div className="fw-bolder">
-                  Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                  India Standard Time
+                  Date: {currentTimeZone(createDate)}
                 </div>
                 <div className="fw-bolder">Updated By: {owner}</div>
               </div>
@@ -396,10 +392,7 @@ export const UserLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_XA_USER.value && (
           <div>
             <div className="fw-bolder">Name : {objectName}</div>
-            <div className="fw-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-              Standard Time
-            </div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Created By: {owner} </div>
             <div className="fw-bolder">Deleted By: {owner} </div>
             <br />

@@ -69,7 +69,7 @@ import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
-import org.apache.ranger.service.XTrxLogService;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +113,7 @@ public class AssetREST {
 	XPolicyExportAuditService xPolicyExportAudits;
 	
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 	
 	@Autowired
 	RangerBizUtil msBizUtil;
@@ -650,7 +650,7 @@ public class AssetREST {
 	public VXTrxLogList getReportLogs(@Context HttpServletRequest request){
 
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xTrxLogService.sortFields);
+				request, xTrxLogService.getSortFields());
                 searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
 		searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
 		searchUtil.extractString(request, searchCriteria, "attributeName",

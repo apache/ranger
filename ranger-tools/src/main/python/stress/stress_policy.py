@@ -17,12 +17,13 @@
 # limitations under the License.
 
 
-from apache_ranger.model.ranger_service import *
-from apache_ranger.client.ranger_client import *
-from apache_ranger.model.ranger_policy  import *
-from threading                          import Thread, Lock
-from datetime                           import datetime
-from random                             import randrange
+from apache_ranger.model.ranger_service           import *
+from apache_ranger.client.ranger_client           import *
+from apache_ranger.client.ranger_user_mgmt_client import *
+from apache_ranger.model.ranger_policy            import *
+from threading                                    import Thread, Lock
+from datetime                                     import datetime
+from random                                       import randrange
 import logging
 
 
@@ -201,6 +202,30 @@ def delete_policies(ranger, thread_idx):
 
     lock_progress.release()
 
+
+##
+## create principals referenced in the policies
+##
+def init_principals(ranger):
+  user_mgmt = RangerUserMgmtClient(ranger)
+
+  for u_idx in range(0, max_user_count):
+    user_name = prefix_user + str(u_idx)
+    existing  = user_mgmt.get_user(user_name)
+
+    if existing is None:
+      LOG.info("  CREATING USER: %s", user_name)
+      user_mgmt.create_user(RangerUser({ 'name': user_name, 'firstName': user_name, 'emailAddress': user_name + '@example.com', 'password': 'rangerR0cks!' }))
+
+  for g_idx in range(0, max_group_count):
+    group_name = prefix_group + str(g_idx)
+    existing = user_mgmt.get_group(group_name)
+
+    if existing is None:
+      LOG.info("  CREATING GROUP: %s", group_name)
+      user_mgmt.create_group(RangerGroup({ 'name': group_name }))
+
+
 def get_next_resource():
   global lock_next_resource
   global next_db_idx, next_tbl_idx
@@ -338,6 +363,8 @@ run_start_time = datetime.now()
 clients = []
 for i in range(0, thread_count):
   clients.append(RangerClient(ranger_url, ranger_auth, ranger_qparams, ranger_headers))
+
+init_principals(clients[0])
 
 ##
 ##  create threads to create policies

@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.naming.InvalidNameException;
@@ -55,9 +56,9 @@ import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -65,12 +66,15 @@ import org.apache.ranger.service.*;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
+import org.apache.ranger.view.VXTrxLogV2.AttributeChangeInfo;
+import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Component
 public class AssetMgr extends AssetMgrBase {
@@ -103,7 +107,7 @@ public class AssetMgr extends AssetMgrBase {
 	RangerBizUtil xaBizUtil;
 
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
@@ -1130,17 +1134,24 @@ public class AssetMgr extends AssetMgrBase {
                                         }
 
                                 }
+                       }
 
-			}
 
-                        VXTrxLogList vXTrxLogList = xTrxLogService
-                                        .searchXTrxLogs(searchCriteria);
-                        Long count = xTrxLogService
-                                        .searchXTrxLogsCount(searchCriteria);
-                        vXTrxLogList.setTotalCount(count);
-                        List<VXTrxLog> newList = validateXXTrxLogList(vXTrxLogList.getVXTrxLogs());
-                        vXTrxLogList.setVXTrxLogs(newList);
-                        return vXTrxLogList;
+
+                        searchCriteria.setGetCount(true);
+
+                        PList<VXTrxLogV2> vXTrxLogsV2 = xTrxLogService.searchTrxLogs(searchCriteria);
+                        List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
+                        VXTrxLogList      ret         = new VXTrxLogList(validateXXTrxLogList(vxTrxLogs));
+
+                        ret.setStartIndex(vXTrxLogsV2.getStartIndex());
+                        ret.setPageSize(vXTrxLogsV2.getPageSize());
+                        ret.setTotalCount(vXTrxLogsV2.getTotalCount());
+                        ret.setResultSize(vXTrxLogsV2.getResultSize());
+                        ret.setSortBy(vXTrxLogsV2.getSortBy());
+                        ret.setSortType(vXTrxLogsV2.getSortType());
+
+                        return ret;
                 } else {
                         throw restErrorUtil.create403RESTException("Permission Denied !");
 		}
@@ -1210,9 +1221,9 @@ public class AssetMgr extends AssetMgrBase {
 
         if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
-        } else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+        } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
-        } else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+        } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
@@ -1220,25 +1231,34 @@ public class AssetMgr extends AssetMgrBase {
     }
 
 	public VXTrxLogList getTransactionReport(String transactionId) {
-		List<XXTrxLog> xTrxLogList = rangerDaoManager.getXXTrxLog()
-				.findByTransactionId(transactionId);
-		VXTrxLogList vXTrxLogList = new VXTrxLogList();
-		List<VXTrxLog> trxLogList = new ArrayList<VXTrxLog>();
-		
-		for(XXTrxLog xTrxLog : xTrxLogList) {
-		        trxLogList.add(xTrxLogService.populateViewBean(xTrxLog));
+		List<VXTrxLogV2> trxLogsV2 = xTrxLogService.findByTransactionId(transactionId);
+		List<VXTrxLog>   trxLogs   = new ArrayList<>();
+
+		for (VXTrxLogV2 trxLogV2 : trxLogsV2) {
+			ObjectChangeInfo objChangeInfo = trxLogV2.getChangeInfo();
+
+			if (objChangeInfo == null || CollectionUtils.isEmpty(objChangeInfo.getAttributes())) {
+				trxLogs.add(VXTrxLogV2.toVXTrxLog(trxLogV2));
+			} else {
+				for (AttributeChangeInfo attrChangeInfo : objChangeInfo.getAttributes()) {
+					VXTrxLog trxLog = VXTrxLogV2.toVXTrxLog(trxLogV2);
+
+					trxLog.setAttributeName(attrChangeInfo.getAttributeName());
+					trxLog.setPreviousValue(attrChangeInfo.getOldValue());
+					trxLog.setNewValue(attrChangeInfo.getNewValue());
+
+					trxLogs.add(trxLog);
+				}
+			}
 		}
-		
-		List<VXTrxLog> vXTrxLogs = validateXXTrxLogList(trxLogList);
-		vXTrxLogList.setVXTrxLogs(vXTrxLogs);
-		return vXTrxLogList;
+
+		return new VXTrxLogList(validateXXTrxLogList(trxLogs));
 	}
+
 	public List<VXTrxLog> validateXXTrxLogList(List<VXTrxLog> xTrxLogList) {
 		
 		List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();
-		for (VXTrxLog xTrxLog : xTrxLogList) {
-			VXTrxLog vXTrxLog = new VXTrxLog();
-			vXTrxLog = xTrxLog;
+		for (VXTrxLog vXTrxLog : xTrxLogList) {
 			if(vXTrxLog.getPreviousValue() == null || "null".equalsIgnoreCase(vXTrxLog.getPreviousValue())) {
 				vXTrxLog.setPreviousValue("");
 			}

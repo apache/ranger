@@ -37,12 +37,10 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
-import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
-import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
@@ -52,7 +50,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.service.XGroupPermissionService;
@@ -74,6 +72,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
+
 @Component
 public class UserMgr {
 
@@ -91,16 +91,10 @@ public class UserMgr {
 	SearchUtil searchUtil;
 
 	@Autowired
-        RangerBizUtil rangerBizUtil;
+	RangerBizUtil rangerBizUtil;
 
 	@Autowired
 	SessionMgr sessionMgr;
-
-	@Autowired
-	DateUtil dateUtil;
-
-	@Autowired
-	RangerConfigUtil configUtil;
 
 	@Autowired
 	XPortalUserService xPortalUserService;
@@ -113,9 +107,6 @@ public class UserMgr {
 	
 	@Autowired
 	XUserMgr xUserMgr;
-
-	@Autowired
-	GUIDUtil guidUtil;
 
 	private final boolean isFipsEnabled;
 	private static final int DEFAULT_PASSWORD_HISTORY_COUNT = 4;
@@ -215,6 +206,9 @@ public class UserMgr {
 
 		checkAccess(gjUser);
 		rangerBizUtil.blockAuditorRoleUser();
+
+		VXPortalUser existing = xPortalUserService.populateViewBean(gjUser);
+
 		// Selectively update fields
 
 		// Allowing email address update even when its set to empty.
@@ -268,7 +262,7 @@ public class UserMgr {
 		// userRoleList
 		updateRoles(userProfile.getId(), userProfile.getUserRoleList());
 
-		List<XXTrxLog> trxLogList = xPortalUserService.getTransactionLog(userProfile, gjUser, "update");
+		List<XXTrxLogV2> trxLogList = xPortalUserService.getTransactionLog(userProfile, existing, OPERATION_UPDATE_CONTEXT);
 		userProfile.setPassword(gjUser.getPassword());
 		xPortalUserService.updateResource(userProfile);
 		sessionMgr.resetUserSessionForProfiles(ContextUtil.getCurrentUserSession());
@@ -414,17 +408,8 @@ public class UserMgr {
 			}
 		}
 			if (isNewPasswordDifferent) {
-				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName("Password");
-				xTrxLog.setPreviousValue(currentPassword);
-				xTrxLog.setNewValue(encryptedNewPwd);
-				xTrxLog.setAction("password change");
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
-				xTrxLog.setObjectId(pwdChange.getId());
-				xTrxLog.setObjectName(pwdChange.getLoginId());
-				trxLogList.add(xTrxLog);
-	                        rangerBizUtil.createTrxLog(trxLogList);
+				xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, pwdChange.getId(), pwdChange.getLoginId(), "password change"), "Password", currentPassword, encryptedNewPwd);
+
 				gjUser.setPassword(encryptedNewPwd);
 				updateOldPasswords(gjUser, oldPasswords);
 				gjUser = daoManager.getXXPortalUser().update(gjUser);
@@ -1342,19 +1327,7 @@ public class UserMgr {
                 if(xXPortalUser!=null && logAudits){
                         String dbNewPwd=xXPortalUser.getPassword();
                         if (!dbOldPwd.equals(dbNewPwd)) {
-                                List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-                                XXTrxLog xTrxLog = new XXTrxLog();
-                                xTrxLog.setAttributeName("Password");
-                                xTrxLog.setPreviousValue(dbOldPwd);
-                                xTrxLog.setNewValue(dbNewPwd);
-                                xTrxLog.setAction("password change");
-                                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
-                                xTrxLog.setObjectId(xXPortalUser.getId());
-                                xTrxLog.setObjectName(xXPortalUser.getLoginId());
-                                xTrxLog.setAddedByUserId(xXPortalUser.getId());
-                                xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
-                                trxLogList.add(xTrxLog);
-                                rangerBizUtil.createTrxLog(trxLogList);
+							xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_PASSWORD_CHANGE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "password change"), "Password", dbOldPwd, dbNewPwd);
                         }
                 }
 
@@ -1421,19 +1394,9 @@ public class UserMgr {
                     xXPortalUser.setPassword(xXPortalUser.getPassword());
                 }
                 xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
-                List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-                XXTrxLog xTrxLog = new XXTrxLog();
-                xTrxLog.setAttributeName("User Name");
-                xTrxLog.setPreviousValue(userLoginId);
-                xTrxLog.setNewValue(newUserName);
-                xTrxLog.setAction("update");
-                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_USER_PROFILE);
-                xTrxLog.setObjectId(xXPortalUser.getId());
-                xTrxLog.setObjectName(xXPortalUser.getLoginId());
-                xTrxLog.setAddedByUserId(xXPortalUser.getId());
-                xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
-                trxLogList.add(xTrxLog);
-                rangerBizUtil.createTrxLog(trxLogList);
+
+				xPortalUserService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_USER_PROFILE, xXPortalUser.getId(), xXPortalUser.getLoginId(), "update"), "User Name", userLoginId, newUserName);
+
                 return xXPortalUser;
         }
         public boolean isPasswordValid(String loginId, String encodedPassword, String password) {

@@ -335,6 +335,14 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXTrxLogV2.findByTrxId">
+		<query>SELECT obj FROM XXTrxLogV2 obj WHERE obj.transactionId = :transactionId order by obj.id</query>
+	</named-query>
+
+	<named-query name="XXTrxLogV2.deleteOlderThan">
+		<query>delete from XXTrxLogV2 obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<named-query name="XXUser.findByPortalUserId">
 		<query>select obj from XXUser obj, XXPortalUser portalUser where portalUser.id = :portalUserId and 
 		obj.name = portalUser.loginId</query>

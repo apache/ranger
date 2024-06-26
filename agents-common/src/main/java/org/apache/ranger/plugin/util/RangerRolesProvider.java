@@ -19,11 +19,10 @@
 
 package org.apache.ranger.plugin.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,6 @@ public class RangerRolesProvider {
 	private final String            cacheFileName;
 	private final String			cacheFileNamePrefix;
 	private final String            cacheDir;
-	private final Gson              gson;
 	private final boolean           disableCacheIfServiceNotFound;
 
 	private long	lastActivationTimeInMillis;
@@ -78,15 +76,6 @@ public class RangerRolesProvider {
 
 		this.cacheFileName = cacheFilename;
 		this.cacheDir = cacheDir;
-
-		Gson gson = null;
-		try {
-			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch (Throwable excp) {
-			LOG.error("RangerRolesProvider(): failed to create GsonBuilder object", excp);
-		}
-		this.gson = gson;
-
 		String propertyPrefix = config.getPropertyPrefix();
 		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 
@@ -232,7 +221,7 @@ public class RangerRolesProvider {
 			try {
 				reader = new FileReader(cacheFile);
 
-				roles = gson.fromJson(reader, RangerRoles.class);
+				roles = JsonUtils.jsonToObject(reader, RangerRoles.class);
 
 				if (roles != null) {
 					if (!StringUtils.equals(serviceName, roles.getServiceName())) {
@@ -306,8 +295,7 @@ public class RangerRolesProvider {
 
 				try {
 					writer = new FileWriter(cacheFile);
-
-			        gson.toJson(roles, writer);
+					JsonUtils.objectToWriter(writer, roles);
 		        } catch (Exception excp) {
 					LOG.error("failed to save roles to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 		        } finally {

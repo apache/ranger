@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
+
 @Service
 public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 	Logger logger = LoggerFactory.getLogger(XPolicyService.class);
@@ -167,7 +169,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 		}
 		vXResource.setAssetId(xAsset.getId());
 
-		if (operationContext == AbstractBaseResourceService.OPERATION_UPDATE_CONTEXT) {
+		if (operationContext == RangerBaseModelService.OPERATION_UPDATE_CONTEXT) {
 			XXResource xxResource = xaDaoMgr.getXXResource().getById(
 					vXPolicy.getId());
 			if (xxResource == null) {
@@ -212,7 +214,7 @@ public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
 			vXResource.setAuditList(auditList);
 			vXResource.setPermMapList(permMapList);
 
-		} else if (operationContext == AbstractBaseResourceService.OPERATION_CREATE_CONTEXT) {
+		} else if (operationContext == OPERATION_CREATE_CONTEXT) {
 			if (vXPolicy.getIsAuditEnabled()) {
 				VXAuditMap vXAuditMap = new VXAuditMap();
 				vXAuditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);

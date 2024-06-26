@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -1319,22 +1320,27 @@ public class TagDBStore extends AbstractTagStore {
 						serviceResource = rangerServiceResourceService.getPopulatedViewObject(xServiceResource);
 
 						if (StringUtils.isNotEmpty(xServiceResource.getTags())) {
-							List<RangerTag> tags = RangerTagDBRetriever.gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+							try {
+								List<RangerTag> tags = (List<RangerTag>) JsonUtils.jsonToObject(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
 
-							if (CollectionUtils.isNotEmpty(tags)) {
-								List<Long> resourceTagIds = new ArrayList<>(tags.size());
 
-								for (RangerTag tag : tags) {
-									RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+								if (CollectionUtils.isNotEmpty(tags)) {
+									List<Long> resourceTagIds = new ArrayList<>(tags.size());
 
-									if (!ret.getTags().containsKey(tag.getId())) {
-										ret.getTags().put(tag.getId(), tag);
+									for (RangerTag tag : tags) {
+										RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
+										if (!ret.getTags().containsKey(tag.getId())) {
+											ret.getTags().put(tag.getId(), tag);
+										}
+
+										resourceTagIds.add(tag.getId());
 									}
 
-									resourceTagIds.add(tag.getId());
+									ret.getResourceToTagIds().put(serviceResourceId, resourceTagIds);
 								}
-
-								ret.getResourceToTagIds().put(serviceResourceId, resourceTagIds);
+							} catch (JsonProcessingException e) {
+								LOG.error("Error occurred while processing json", e);
 							}
 						}
 					}

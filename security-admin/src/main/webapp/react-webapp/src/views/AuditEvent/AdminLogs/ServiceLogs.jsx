@@ -21,6 +21,7 @@ import React from "react";
 import { Badge, Table } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { ClassTypes } from "../../../utils/XAEnums";
+import { currentTimeZone } from "../../../utils/XAUtils";
 import { isEmpty, isUndefined, sortBy } from "lodash";
 
 export const ServiceLogs = ({ data, reportdata }) => {
@@ -150,11 +151,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
           <div>
             <div className="fw-bolder">Name: {objectName || ""}</div>
-            <div className="fw-bolder">
-              Date:
-              {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
+            <div className="fw-bolder">Date:{currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Created By: {owner}</div>
             <br />
             {action == "create" && (
@@ -252,8 +249,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
               <div className="col-md-6">
                 <div className="fw-bolder">Name : {objectName}</div>
                 <div className="fw-bolder">
-                  Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                  India Standard Time
+                  Date:{currentTimeZone(createDate)}
                 </div>
                 <div className="fw-bolder">Updated By: {owner}</div>
               </div>
@@ -371,11 +367,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
           <div>
             <div className="fw-bolder">Name: {objectName || ""}</div>
-            <div className="fw-bolder">
-              Date:
-              {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
             <div className="fw-bolder">Deleted By: {owner}</div>
             <br />
             {action == "delete" &&

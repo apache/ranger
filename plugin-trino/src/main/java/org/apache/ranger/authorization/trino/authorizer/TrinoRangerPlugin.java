@@ -26,7 +26,9 @@ public class TrinoRangerPlugin
     {
         ArrayList<SystemAccessControlFactory> list = new ArrayList<>();
         SystemAccessControlFactory factory = new RangerSystemAccessControlFactory();
+
         list.add(factory);
+
         return list;
     }
 }

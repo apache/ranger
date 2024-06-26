@@ -27,12 +27,10 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -45,6 +43,7 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerBaseModelService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,9 +74,6 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
     @Autowired
     ServiceMgr serviceMgr;
-
-    @Autowired
-    RangerSearchUtil searchUtil;
 
     public void init() throws Exception {}
 
@@ -113,8 +109,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             throw restErrorUtil.createRESTException("Cannot create security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(createdSecurityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(createdSecurityZone, null, "create");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(createdSecurityZone, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
         return createdSecurityZone;
     }
 
@@ -133,8 +128,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 		if (isRenamed) {
 			securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
 		}
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(updatedSecurityZone, oldSecurityZone, "update");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(updatedSecurityZone, oldSecurityZone, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
         return securityZone;
     }
 
@@ -151,8 +145,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
         }
 
     @Override
@@ -164,8 +157,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     @Override

@@ -44,7 +44,7 @@ import org.springframework.security.web.authentication.ExceptionMappingAuthentic
  */
 public class RangerAuthFailureHandler extends
 ExceptionMappingAuthenticationFailureHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RangerAuthFailureHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuthFailureHandler.class);
 
     String ajaxLoginfailurePage = null;
 
@@ -72,8 +72,8 @@ ExceptionMappingAuthenticationFailureHandler {
 	    HttpServletResponse response, AuthenticationException exception)
     throws IOException, ServletException {
 	String ajaxRequestHeader = request.getHeader("X-Requested-With");
-	if (logger.isDebugEnabled()) {
-	    logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
+	if (LOG.isDebugEnabled()) {
+	    LOG.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 	}
 
 		response.setContentType("application/json;charset=UTF-8");
@@ -87,7 +87,7 @@ ExceptionMappingAuthenticationFailureHandler {
 				if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials",request).equalsIgnoreCase(msg)) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("The username or password you entered is incorrect.");
-					logger.info("Error Message : " + msg);
+					LOG.info("Error Message : " + msg);
 				} else if (msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("Unable to connect to DB.");
@@ -106,22 +106,14 @@ ExceptionMappingAuthenticationFailureHandler {
 			response.getWriter().write(jsonResp);
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		} catch (IOException e) {
-			logger.info("Error while writing JSON in HttpServletResponse");
+			LOG.info("Error while writing JSON in HttpServletResponse");
 		}
 
 	if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
-//	    if (logger.isDebugEnabled()) {
-//		logger.debug("Forwarding AJAX login request failure to "
-//			+ ajaxLoginfailurePage);
-//	    }
-//	    request.getRequestDispatcher(ajaxLoginfailurePage).forward(request,
-//		    response);
-		if (logger.isDebugEnabled()) {
-			logger.debug("Sending login failed response : " + jsonResp);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Sending login failed response : " + jsonResp);
 		}
-	}// else {
-//	    super.onAuthenticationFailure(request, response, exception);
-	//}
+	}
     }
 
 }

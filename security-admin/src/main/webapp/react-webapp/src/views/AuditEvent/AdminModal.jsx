@@ -22,9 +22,9 @@ import { useSearchParams } from "react-router-dom";
 import { fetchApi } from "Utils/fetchAPI";
 import { AuthStatus, AuthType } from "../../utils/XAEnums";
 import { Modal, Table, Button } from "react-bootstrap";
-import dateFormat from "dateformat";
 import { has } from "lodash";
 import { ModalLoader } from "../../components/CommonComponents";
+import { currentTimeZone } from "../../utils/XAUtils";
 
 export const AdminModal = (props) => {
   const [authSession, setAuthSession] = useState([]);
@@ -137,10 +137,7 @@ export const AdminModal = (props) => {
                 <th>Login Time</th>
                 <td>
                   {authSession.map((obj) => {
-                    return (
-                      dateFormat(obj.authTime, "mm/dd/yyyy hh:MM:ss TT ") +
-                      " India Standard Time"
-                    );
+                    return currentTimeZone(obj.authTime);
                   })}
                 </td>
               </tr>

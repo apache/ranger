@@ -55,7 +55,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
     GUIDUtil guidUtil;
 
     public RangerGdsDataShareService() {
-        super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE);
+        super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE, AppConstants.CLASS_TYPE_XA_SERVICE);
 
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_ID,           "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME,         "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
@@ -79,14 +79,14 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         sortFields.add(new SortField(SearchFilter.DATA_SHARE_NAME, "obj.name"));
 
 
-        trxLogAttrs.put("name",               new VTrxLogAttr("name", "Name", false));
-        trxLogAttrs.put("acl",                new VTrxLogAttr("acl", "ACL", false));
-        trxLogAttrs.put("service",            new VTrxLogAttr("service", "Service name", false));
-        trxLogAttrs.put("zone",               new VTrxLogAttr("zone", "Zone name", false));
-        trxLogAttrs.put("conditionExpr",      new VTrxLogAttr("conditionExpr", "Condition expression", false));
-        trxLogAttrs.put("defaultAccessTypes", new VTrxLogAttr("defaultAccessTypes", "Default access types", false));
-        trxLogAttrs.put("defaultTagMasks",    new VTrxLogAttr("defaultTagMasks", "Default tag masks", false));
-        trxLogAttrs.put("termsOfUse",         new VTrxLogAttr("termsOfUse", "Terms of use", false));
+        trxLogAttrs.put("name",               new VTrxLogAttr("name", "Name", false, true));
+        trxLogAttrs.put("acl",                new VTrxLogAttr("acl", "ACL"));
+        trxLogAttrs.put("service",            new VTrxLogAttr("service", "Service name"));
+        trxLogAttrs.put("zone",               new VTrxLogAttr("zone", "Zone name"));
+        trxLogAttrs.put("conditionExpr",      new VTrxLogAttr("conditionExpr", "Condition expression"));
+        trxLogAttrs.put("defaultAccessTypes", new VTrxLogAttr("defaultAccessTypes", "Default access types"));
+        trxLogAttrs.put("defaultTagMasks",    new VTrxLogAttr("defaultTagMasks", "Default tag masks"));
+        trxLogAttrs.put("termsOfUse",         new VTrxLogAttr("termsOfUse", "Terms of use"));
     }
 
     @Override
@@ -115,6 +115,19 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         // TODO:
 
         return ret;
+    }
+
+    @Override
+    public String getParentObjectName(RangerDataShare obj, RangerDataShare oldObj) {
+        return obj != null ? obj.getService() : null;
+    }
+
+    @Override
+    public Long getParentObjectId(RangerDataShare obj, RangerDataShare oldObj) {
+        String    serviceName = obj != null ? obj.getService() : null;
+        XXService service     = serviceName != null ? daoMgr.getXXService().findByName(serviceName) : null;
+
+        return service != null ? service.getId() : null;
     }
 
     @Override

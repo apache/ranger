@@ -26,7 +26,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
@@ -35,11 +37,20 @@ import org.apache.ranger.view.VXUserList;
 import javax.persistence.Query;
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XUser";
 
 	public XUserServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_USER);
 
+		trxLogAttrs.put("name",            new VTrxLogAttr("name", "Login ID", false, true));
+		trxLogAttrs.put("firstName",       new VTrxLogAttr("firstName", "First Name"));
+		trxLogAttrs.put("lastName",        new VTrxLogAttr("lastName", "Last Name"));
+		trxLogAttrs.put("emailAddress",    new VTrxLogAttr("emailAddress", "Email Address"));
+		trxLogAttrs.put("password",        new VTrxLogAttr("password", "Password"));
+		trxLogAttrs.put("userRoleList",    new VTrxLogAttr("userRoleList", "User Role"));
+		trxLogAttrs.put("otherAttributes", new VTrxLogAttr("otherAttributes", "Other Attributes"));
+		trxLogAttrs.put("syncSource",      new VTrxLogAttr("syncSource", "Sync Source"));
 	}
 
 	@SuppressWarnings("unchecked")

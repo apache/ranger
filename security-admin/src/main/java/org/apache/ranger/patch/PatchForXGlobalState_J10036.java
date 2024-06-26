@@ -17,9 +17,9 @@
 
 package org.apache.ranger.patch;
 
-import com.google.gson.Gson;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGlobalState;
 import org.apache.ranger.util.CLIUtil;
@@ -72,17 +72,22 @@ public class PatchForXGlobalState_J10036 extends BaseLoader {
 		XXGlobalState globalState     = daoManager.getXXGlobalState().findByStateName("RangerRole");
 		if (globalState != null) {
 			logger.info("Updating globalstate with id = " + globalState.getId());
-			Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
-			if (MapUtils.isNotEmpty(appDataVersionJson)) {
-				logger.info("Updating globalstate appdata version for = " + appDataVersionJson);
-				String roleVersion = appDataVersionJson.get("RangerRoleVersion");
-				if (StringUtils.isNotEmpty(roleVersion)) {
-					appDataVersionJson.put("Version", roleVersion);
-					appDataVersionJson.remove("RangerRoleVersion");
-					globalState.setAppData(new Gson().toJson(appDataVersionJson));
-					daoManager.getXXGlobalState().update(globalState);
+
+			if(StringUtils.isNotEmpty(globalState.getAppData())) {
+				Map<String, String> appDataVersionJson = null;
+				appDataVersionJson = JsonUtils.jsonToObject(globalState.getAppData(), Map.class);
+				if (MapUtils.isNotEmpty(appDataVersionJson)) {
+					logger.info("Updating globalstate appdata version for = " + appDataVersionJson);
+					String roleVersion = appDataVersionJson.get("RangerRoleVersion");
+					if (StringUtils.isNotEmpty(roleVersion)) {
+						appDataVersionJson.put("Version", roleVersion);
+						appDataVersionJson.remove("RangerRoleVersion");
+						globalState.setAppData(JsonUtils.objectToJson(appDataVersionJson));
+						daoManager.getXXGlobalState().update(globalState);
+					}
 				}
 			}
+
 		}
 	}
 

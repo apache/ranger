@@ -70,7 +70,7 @@ import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.XXAuthSessionDao;
 import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXPolicyDao;
-import org.apache.ranger.db.XXTrxLogDao;
+import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -138,7 +138,7 @@ import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
@@ -178,7 +178,6 @@ import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
-import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceDefWithAssignedIdService;
@@ -218,10 +217,9 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
@@ -269,7 +267,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
 	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
-
 
 	static {
 		try {
@@ -353,13 +350,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RangerSecurityZoneServiceService securityZoneService;
 
 	@Autowired
-	RoleDBStore roleStore;
-
-	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	RangerRoleService roleService;
 
 	@Autowired
 	UserMgr userMgr;
@@ -467,7 +458,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 									removePolicyExportLogs(POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS, purgeResults);
 								}
 
-								//createUnzonedSecurityZone();
 								initRMSDaos();
 								return null;
 							}
@@ -776,12 +766,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		List<RangerServiceConfigDef> configs 			= serviceDef.getConfigs() != null 			? serviceDef.getConfigs()   		  : new ArrayList<RangerServiceConfigDef>();
-		List<RangerResourceDef> resources 				= serviceDef.getResources() != null  		? serviceDef.getResources() 		  : new ArrayList<RangerResourceDef>();
-		List<RangerAccessTypeDef> accessTypes 			= serviceDef.getAccessTypes() != null 		? serviceDef.getAccessTypes() 	  	  : new ArrayList<RangerAccessTypeDef>();
-		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions() != null 	? serviceDef.getPolicyConditions() 	  : new ArrayList<RangerPolicyConditionDef>();
-		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers() != null 	? serviceDef.getContextEnrichers() 	  : new ArrayList<RangerContextEnricherDef>();
-		List<RangerEnumDef> enums 						= serviceDef.getEnums() != null 			? serviceDef.getEnums() 			  : new ArrayList<RangerEnumDef>();
+		List<RangerServiceConfigDef> configs 			= serviceDef.getConfigs() != null 			? serviceDef.getConfigs()   		  : new ArrayList<>();
+		List<RangerResourceDef> resources 				= serviceDef.getResources() != null  		? serviceDef.getResources() 		  : new ArrayList<>();
+		List<RangerAccessTypeDef> accessTypes 			= serviceDef.getAccessTypes() != null 		? serviceDef.getAccessTypes() 	  	  : new ArrayList<>();
+		List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions() != null 	? serviceDef.getPolicyConditions() 	  : new ArrayList<>();
+		List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers() != null 	? serviceDef.getContextEnrichers() 	  : new ArrayList<>();
+		List<RangerEnumDef> enums 						= serviceDef.getEnums() != null 			? serviceDef.getEnums() 			  : new ArrayList<>();
 		RangerDataMaskDef dataMaskDef                   = serviceDef.getDataMaskDef();
 		RangerRowFilterDef rowFilterDef                 = serviceDef.getRowFilterDef();
 
@@ -1633,9 +1623,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		dataHistService.createObjectDataHistory(createdService, RangerDataHistService.ACTION_CREATE);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(createdService,
-				RangerServiceService.OPERATION_CREATE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		svcService.createTransactionLog(createdService, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
 
 		if (createDefaultPolicy) {
 			createDefaultPolicies(createdService);
@@ -1651,13 +1639,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.updateService()");
 		}
 
-		XXService existing = daoMgr.getXXService().getById(service.getId());
+		XXService xExisting = daoMgr.getXXService().getById(service.getId());
 
-		if(existing == null) {
+		if(xExisting == null) {
 			throw restErrorUtil.createRESTException(
 					"no service exists with ID=" + service.getId(),
 					MessageEnums.DATA_NOT_FOUND);
 		}
+
+		RangerService existing = svcService.getPopulatedViewObject(xExisting);
 
 		String existingName = existing.getName();
 
@@ -1695,13 +1685,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		boolean hasTagServiceValueChanged = false;
-		Long    existingTagServiceId      = existing.getTagService();
+		String  existingTagService        = existing.getTagService();
 		String  newTagServiceName         = service.getTagService(); // null for old clients; empty string to remove existing association
 		Long    newTagServiceId           = null;
 
 		if(newTagServiceName == null) { // old client; don't update existing tagService
-			if(existingTagServiceId != null) {
-				newTagServiceName = getServiceName(existingTagServiceId);
+			if(existingTagService != null) {
+				newTagServiceName = existingTagService;
 
 				service.setTagService(newTagServiceName);
 
@@ -1723,20 +1713,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if (existingTagServiceId == null) {
+		if (existingTagService == null) {
 			if (newTagServiceId != null) {
 				hasTagServiceValueChanged = true;
 			}
-		} else if (!existingTagServiceId.equals(newTagServiceId)) {
+		} else if (!existingTagService.equals(newTagServiceName)) {
 			hasTagServiceValueChanged = true;
 		}
 
-		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
+		boolean hasIsEnabledChanged = !existing.getIsEnabled().equals(service.getIsEnabled());
 
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
 		boolean hasServiceConfigForPluginChanged = hasServiceConfigForPluginChanged(dbConfigMaps, validConfigs);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
+		svcService.createTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
 		if(populateExistingBaseFields) {
 			svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
@@ -1825,7 +1815,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
-		bizUtil.createTrxLog(trxLogList);
 
 		return updService;
 	}
@@ -1853,7 +1842,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				deletePolicy(rangerPolicy, service);
 				totalDeletedPolicies = totalDeletedPolicies + 1;
 				// its a bulk policy delete call flush and clear
-				if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+				if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 					bizUtil.bulkModeOnlyFlushAndClear();
 				}
 			}
@@ -1882,8 +1871,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		dataHistService.createObjectDataHistory(service, RangerDataHistService.ACTION_DELETE);
 
-		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		svcService.createTransactionLog(service, null, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
 		//During the servie deletion ,we need to clear the RangerServicePoliciesCache,RangerServiceTagsCache for the given serviceName.
 		resetPolicyCache(service.getName());
 		tagStore.resetTagCache(service.getName());
@@ -2150,9 +2139,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
-		List<XXTrxLog> trxLogList = getTransactionLogList(createdPolicy,
-				RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
-		bizUtil.createTrxLog(trxLogList);
+		createTransactionLog(createdPolicy, RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
 
 		return createdPolicy;
 	}
@@ -2302,7 +2289,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		policy.setVersion(xxExisting.getVersion());
 
-		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
+		policyService.createTransactionLog(policy, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
 
 		updatePolicySignature(policy);
 
@@ -2322,8 +2309,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
-
-		bizUtil.createTrxLog(trxLogList);
 
 		return updPolicy;
 	}
@@ -2355,8 +2340,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		policy.setVersion(version);
 
-		List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT,
-				RangerPolicyService.OPERATION_DELETE_CONTEXT);
+		createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
@@ -2365,8 +2349,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 
 		dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
-
-		bizUtil.createTrxLog(trxLogList);
 
 		LOG.info("Policy Deleted Successfully. PolicyName : " + policyName);
 	}
@@ -2396,10 +2378,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 				policyRefUpdater.cleanupRefTables(policy);
 				deleteExistingPolicyLabel(policy);
 				policyService.delete(policy);
-				List<XXTrxLog> trxLogList = getTransactionLogList(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
+				createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 				handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
 				dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
-				bizUtil.createTrxLog(trxLogList);
 			}
 		}
 		if(LOG.isDebugEnabled()) {
@@ -2407,16 +2388,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	List<XXTrxLog> getTransactionLogList(RangerPolicy policy, int operationImportContext, int operationContext) {
-		List<XXTrxLog> trxLogList;
+	void createTransactionLog(RangerPolicy policy, int operationImportContext, int operationContext) {
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		if (trace.length > 3 && (StringUtils.contains(trace[4].getMethodName(), "import") ||
     StringUtils.contains(trace[5].getMethodName(), "import"))) {
-      trxLogList = policyService.getTransactionLog(policy, operationImportContext);
+      policyService.createTransactionLog(policy, null, operationImportContext);
 		} else {
-			trxLogList = policyService.getTransactionLog(policy, operationContext);
+			policyService.createTransactionLog(policy, null, operationContext);
 		}
-		return trxLogList;
 	}
 
 	@Override
@@ -2452,7 +2431,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 		RangerPolicyList policyList = searchRangerPolicies(filter);
 		List<RangerPolicy> resourcePolicies = policyList.getPolicies();
-		List<RangerPolicy> tagPolicies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> tagPolicies = new ArrayList<>();
 
 		if(fetchTagPolicies) {
 			tagPolicies = searchRangerTagPoliciesOnBasisOfServiceName(resourcePolicies);
@@ -2610,7 +2589,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 
-		return new PList<RangerPolicy>(policyList.getPolicies(), policyList.getStartIndex(), policyList.getPageSize(), policyList.getTotalCount(),
+		return new PList<>(policyList.getPolicies(), policyList.getStartIndex(), policyList.getPageSize(), policyList.getTotalCount(),
 				policyList.getResultSize(), policyList.getSortType(), policyList.getSortBy());
 
 	}
@@ -2642,7 +2621,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	public List<RangerPolicy> noZoneFilter(List<RangerPolicy> servicePolicies) {
-		List<RangerPolicy> noZonePolicies = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> noZonePolicies = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(servicePolicies)) {
 			for (RangerPolicy policy : servicePolicies) {
 				if (StringUtils.isBlank(policy.getZoneName())) {
@@ -2784,7 +2763,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.applyResourceFilter(policies-size=" + policies.size() + ", filterResources=" + filterResources + ", " + scope + ")");
 		}
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> ret = new ArrayList<>();
 
 		List<RangerPolicyResourceMatcher> matchers = getMatchers(serviceDef, filterResources, filter);
 
@@ -2821,7 +2800,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.getMatchers(filterResources=" + filterResources + ")");
 		}
 
-		List<RangerPolicyResourceMatcher> ret = new ArrayList<RangerPolicyResourceMatcher>();
+		List<RangerPolicyResourceMatcher> ret = new ArrayList<>();
 
 		RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
 
@@ -2841,7 +2820,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				LOG.debug("Found " + validResourceHierarchies.size() + " valid resource hierarchies for key-set " + filterResources.keySet());
 			}
 
-			List<List<RangerResourceDef>> resourceHierarchies = new ArrayList<List<RangerResourceDef>>(validResourceHierarchies);
+			List<List<RangerResourceDef>> resourceHierarchies = new ArrayList<>(validResourceHierarchies);
 
 			for (List<RangerResourceDef> validResourceHierarchy : resourceHierarchies) {
 
@@ -2849,7 +2828,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					LOG.debug("validResourceHierarchy:[" + validResourceHierarchy + "]");
 				}
 
-				Map<String, RangerPolicyResource> policyResources = new HashMap<String, RangerPolicyResource>();
+				Map<String, RangerPolicyResource> policyResources = new HashMap<>();
 
 				for (RangerResourceDef resourceDef : validResourceHierarchy) {
 					policyResources.put(resourceDef.getName(), new RangerPolicyResource(filterResources.get(resourceDef.getName()), false, resourceDef.getRecursiveSupported()));
@@ -3440,7 +3419,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				RangerService service = getServiceByName(serviceName);
 				List<Long> policyIds = policyDao.findPolicyIdsByServiceNameAndZoneId(serviceName, zoneId);
 				if (CollectionUtils.isNotEmpty(policyIds)) {
-					List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
+					List<RangerPolicy> rangerPolicyList = new ArrayList<>();
 					for (Long id : policyIds) {
 						rangerPolicyList.add(getPolicy(id));
 					}
@@ -3448,7 +3427,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					for (RangerPolicy rangerPolicy : rangerPolicyList) {
 						deletePolicy(rangerPolicy, service);
 						totalDeletedPolicies = totalDeletedPolicies + 1;
-						if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+						if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 							bizUtil.bulkModeOnlyFlushAndClear();
 						}
 					}
@@ -3467,7 +3446,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (svc != null) {
 
 			List<String> serviceCheckUsers = getServiceCheckUsers(service);
-                        List<String> users = new ArrayList<String>();
+                        List<String> users = new ArrayList<>();
 
                         /*Need to create ambari service check user before initiating policy creation. */
                         if(serviceCheckUsers != null){
@@ -3530,8 +3509,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	void createDefaultPolicyUsersAndGroups(List<RangerPolicy> defaultPolicies) {
-		Set<String> defaultPolicyUsers = new HashSet<String>();
-		Set<String> defaultPolicyGroups = new HashSet<String>();
+		Set<String> defaultPolicyUsers = new HashSet<>();
+		Set<String> defaultPolicyGroups = new HashSet<>();
 
 		for (RangerPolicy defaultPolicy : defaultPolicies) {
 
@@ -3596,15 +3575,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXGroup.setGroupSource(RangerCommonEnums.GROUP_INTERNAL);
 					vXGroup.setIsVisible(RangerCommonEnums.IS_VISIBLE);
 					VXGroup createdVXGrp = xGroupService.createResource(vXGroup);
-					List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(createdVXGrp, "create");
-					bizUtil.createTrxLog(trxLogList);
+					xGroupService.createTransactionLog(createdVXGrp, null, OPERATION_CREATE_CONTEXT);
 				}
 			}
 		}
 	}
 
 	List<String> getServiceCheckUsers(RangerService createdService) {
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = new ArrayList<>();
 		String userNames ="";
 
 		Map<String, String> serviceConfig = createdService.getConfigs();
@@ -3654,7 +3632,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		}
-		Map<String, String> validConfigs = new HashMap<String, String>();
+		Map<String, String> validConfigs = new HashMap<>();
 		for(Entry<String, String> config : configs.entrySet()) {
 			if(!stringUtil.isEmpty(config.getValue())) {
 				validConfigs.put(config.getKey(), config.getValue());
@@ -4131,10 +4109,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private void writeExcel(List<RangerPolicy> policies, String excelFileName, HttpServletResponse response) throws IOException {
-		Workbook workbook = null;
 		OutputStream outStream = null;
-		try {
-			workbook = new HSSFWorkbook();
+		try (Workbook workbook = new HSSFWorkbook()) {
 			Sheet sheet = workbook.createSheet();
 			createHeaderRow(sheet);
 			int rowCount = 0;
@@ -4225,9 +4201,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (outStream != null) {
 				outStream.close();
 			}
-			if (workbook != null) {
-				workbook.close();
-			}
 		}
 	}
 
@@ -4310,9 +4283,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		final String COMMA_DELIMITER = "|";
 		final String LINE_SEPARATOR = "\n";
-		List<String> roles = new ArrayList<String>();
-		List<String> groups = new ArrayList<String>();
-		List<String> users = new ArrayList<String>();
+		List<String> roles = new ArrayList<>();
+		List<String> groups = new ArrayList<>();
+		List<String> users = new ArrayList<>();
 		String roleNames = "";
 		String groupNames = "";
 		String userNames = "";
@@ -4329,7 +4302,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		String isExcludesValue = "";
 		String maskingInfo = "";
 		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-		List<RangerPolicyItemCondition> conditionsList = new ArrayList<RangerPolicyItemCondition>();
+		List<RangerPolicyItemCondition> conditionsList = new ArrayList<>();
 		String conditionKeyValue = "";
 		String resValue = "";
 		String resourceKeyVal = "";
@@ -4338,7 +4311,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		String ServiceType = "";
 		String filterExpr = "";
 		String policyName = "";
-		List<String> policyLabels = new ArrayList<String>();
+		List<String> policyLabels = new ArrayList<>();
 		String policyConditionTypeValue = "";
 		serviceName = policy.getService();
 		description = policy.getDescription();
@@ -4548,7 +4521,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	public Map<String, Object> getMetaDataInfo() {
-		Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+		Map<String, Object> metaDataInfo = new LinkedHashMap<>();
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		String userId = usb!=null ? usb.getLoginId() : null;
 
@@ -4566,7 +4539,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
 		ServletOutputStream out = null;
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String json = null;
 
 		switch(type) {
@@ -4574,7 +4546,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 			rangerExportPolicyList.setGenericPolicies(objList);
 			rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
-			json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
+			json = JsonUtils.objectToJson(rangerExportPolicyList);
 			break;
 		case ROLE :
 			RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
@@ -4582,7 +4554,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			Map<String, Object> metaDataInfo = getMetaDataInfo();
 			metaDataInfo.put(EXPORT_COUNT,rangerExportRoleList.getListSize());
 			rangerExportRoleList.setMetaDataInfo(metaDataInfo);
-			json = gson.toJson(rangerExportRoleList, RangerExportRoleList.class);
+			json = JsonUtils.objectToJson(rangerExportRoleList);
 			break;
 		default :
 			throw restErrorUtil.createRESTException("Invalid type "+type);
@@ -4608,7 +4580,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getMapFromInputStream()");
 		}
-		Map<String, String> inputMap = new LinkedHashMap<String, String>();
+		Map<String, String> inputMap = new LinkedHashMap<>();
 		String inputMapString = IOUtils.toString(mapStream);
 		if (StringUtils.isNotEmpty(inputMapString)) {
 			inputMap = jsonUtil.jsonToMap(inputMapString);
@@ -4671,9 +4643,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("policyConditionType:[" + policyConditionType + "]");
 		}
-		List<String> groups = new ArrayList<String>();
-		List<String> users = new ArrayList<String>();
-		List<String> roles = new ArrayList<String>();
+		List<String> groups = new ArrayList<>();
+		List<String> users = new ArrayList<>();
+		List<String> roles = new ArrayList<>();
 		String roleNames = "";
 		String groupNames = "";
 		String policyConditionTypeValue = "";
@@ -4693,10 +4665,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		String isExcludesValue = "";
 		Cell cell = row.createCell(0);
 		cell.setCellValue(policy.getId());
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-		List<RangerPolicyItemCondition> conditionsList = new ArrayList<RangerPolicyItemCondition>();
+		List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+		List<RangerPolicyItemCondition> conditionsList = new ArrayList<>();
 		String conditionKeyValue = "";
-		List<String> policyLabels = new ArrayList<String>();
+		List<String> policyLabels = new ArrayList<>();
 		String resValue = "";
 		String resourceKeyVal = "";
 		String isRecursiveValue = "";
@@ -4979,12 +4951,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private RangerPolicyList searchRangerPolicies(SearchFilter searchFilter) {
-		List<RangerPolicy> policyList = new ArrayList<RangerPolicy>();
+		List<RangerPolicy> policyList = new ArrayList<>();
 		RangerPolicyList retList = new RangerPolicyList();
-		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
-		Set<Long> processedServices=new HashSet<Long>();
+		Map<Long,RangerPolicy> policyMap=new HashMap<>();
+		Set<Long> processedServices=new HashSet<>();
 		Set<Long> processedSvcIdsForRole = new HashSet<>();
-		Set<Long> processedPolicies=new HashSet<Long>();
+		Set<Long> processedPolicies=new HashSet<>();
 		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
 			public int compare(RangerPolicy c1, RangerPolicy c2) {
 				return (int) ((c1.getId()).compareTo(c2.getId()));
@@ -5015,7 +4987,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (!StringUtils.isEmpty(userName)) {
 			searchFilter.setParam("user", RangerPolicyEngine.USER_CURRENT);
 			List<XXPolicy> xPolListForMacroUser = policyService.searchResources(searchFilter,policyService.searchFields, policyService.sortFields, retList);
-			Set<Long> processedSvcIdsForMacroUser = new HashSet<Long>();
+			Set<Long> processedSvcIdsForMacroUser = new HashSet<>();
 			if (!CollectionUtils.isEmpty(xPolListForMacroUser)) {
 				for (XXPolicy xXPolicy : xPolListForMacroUser) {
 					if (!processedPolicies.contains(xXPolicy.getId())) {
@@ -5033,8 +5005,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             searchFilter.removeParam("user");
 			Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
 			groupNames.add(RangerConstants.GROUP_PUBLIC);
-			Set<Long> processedSvcIdsForGroup = new HashSet<Long>();
-			Set<String> processedGroupsName = new HashSet<String>();
+			Set<Long> processedSvcIdsForGroup = new HashSet<>();
+			Set<String> processedGroupsName = new HashSet<>();
 			List<XXPolicy> xPolList2;
 				for (String groupName : groupNames) {
 					searchFilter.setParam("group", groupName);
@@ -5100,8 +5072,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			Set<String> groupNames = daoMgr.getXXGroupGroup().findGroupNamesByGroupName(groupName);
 			groupNames.add(RangerConstants.GROUP_PUBLIC);
 			groupNames.add(groupName);
-			Set<Long> processedSvcIdsForGroup = new HashSet<Long>();
-			Set<String> processedGroupsName = new HashSet<String>();
+			Set<Long> processedSvcIdsForGroup = new HashSet<>();
+			Set<String> processedGroupsName = new HashSet<>();
 			List<XXPolicy> xPolList2;
 			for (String grpName : groupNames) {
 				searchFilter.setParam("group", grpName);
@@ -5370,14 +5342,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_auth_sess that are older than " + retentionInDays + " days");
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted Auth Session records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_AUTH_SESS);
-			trxLog.setPreviousValue("Total Records : " + rowsCount);
-			trxLog.setNewValue("Deleted Records : " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			svcService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_AUTH_SESS, null, null, "Deleted Auth Session records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_LOGIN_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5393,20 +5358,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (retentionInDays > 0) {
-			XXTrxLogDao dao         = daoMgr.getXXTrxLog();
-			long        rowsCount   = dao.getAllCount();
-			long        rowsDeleted = dao.deleteOlderThan(retentionInDays);
+			XXTrxLogV2Dao dao         = daoMgr.getXXTrxLogV2();
+			long          rowsCount   = dao.getAllCount();
+			long          rowsDeleted = dao.deleteOlderThan(retentionInDays);
 
 			LOG.info("Deleted " + rowsDeleted + " records from x_trx_log that are older than " + retentionInDays + " days");
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted Transaction records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_TRX_LOG);
-			trxLog.setPreviousValue("Total Records : " + rowsCount);
-			trxLog.setNewValue("Deleted Records : " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			svcService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_TRX_LOG, null, null, "Deleted Transaction records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_TRX_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5428,14 +5386,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			LOG.info("Deleted {} records from x_policy_export_audit that are older than {} days", rowsDeleted, retentionInDays);
 
-			XXTrxLog trxLog = new XXTrxLog();
-
-			trxLog.setAction("Deleted policy export audit records");
-			trxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT);
-			trxLog.setPreviousValue("Total Records: " + rowsCount);
-			trxLog.setNewValue("Deleted Records: " + rowsDeleted);
-
-			bizUtil.createTrxLog(Collections.singletonList(trxLog));
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_XA_POLICY_EXPORT_AUDIT, null, null, "Deleted policy export audit records"), "Records count", "Total Records : " + rowsCount, "Deleted Records : " + rowsDeleted);
 
 			result.add(new RangerPurgeResult(ServiceREST.PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS, rowsCount, rowsDeleted));
 		}
@@ -5453,7 +5404,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         @SuppressWarnings("unchecked")
                 List<XXPolicyLabel> xPolList = (List<XXPolicyLabel>) policyLabelsService.searchResources(searchFilter,
                         policyLabelsService.searchFields, policyLabelsService.sortFields, vxPolicyLabelList);
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (XXPolicyLabel xPolicyLabel : xPolList) {
                 result.add(xPolicyLabel.getPolicyLabel());
         }
@@ -5565,19 +5516,19 @@ public class ServiceDBStore extends AbstractServiceStore {
         try {
             VXGroupList       vxGroupList        = xUserMgr.searchXGroups(searchCriteria);
             long              groupCount         = vxGroupList.getTotalCount();
-            ArrayList<String> userAdminRoleCount = new ArrayList<String>();
+            ArrayList<String> userAdminRoleCount = new ArrayList<>();
             userAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
             long              userSysAdminCount         = getUserCountBasedOnUserRole(userAdminRoleCount);
-            ArrayList<String> userAdminAuditorRoleCount = new ArrayList<String>();
+            ArrayList<String> userAdminAuditorRoleCount = new ArrayList<>();
             userAdminAuditorRoleCount.add(RangerConstants.ROLE_ADMIN_AUDITOR);
             long              userSysAdminAuditorCount = getUserCountBasedOnUserRole(userAdminAuditorRoleCount);
-            ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<String>();
+            ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<>();
             userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
             long              userKeyAdminCount               = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
-            ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<String>();
+            ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<>();
             userRoleListKeyadminAduitorRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
             long              userKeyadminAuditorCount = getUserCountBasedOnUserRole(userRoleListKeyadminAduitorRole);
-            ArrayList<String> userRoleListUser         = new ArrayList<String>();
+            ArrayList<String> userRoleListUser         = new ArrayList<>();
             userRoleListUser.add(RangerConstants.ROLE_USER);
             long                   userRoleCount        = getUserCountBasedOnUserRole(userRoleListUser);
             long                   userTotalCount       = userSysAdminCount + userKeyAdminCount + userRoleCount + userKeyadminAuditorCount + userSysAdminAuditorCount;
@@ -5589,8 +5540,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
             metricUserGroupCount.setUserTotalCount(userTotalCount);
             metricUserGroupCount.setGroupCount(groupCount);
-            Gson         gson               = new GsonBuilder().create();
-            final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
+            final String jsonUserGroupCount = JsonUtils.objectToJson(metricUserGroupCount);
             ret = jsonUserGroupCount;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(usergroup): Error calculating Metric for usergroup : " + e.getMessage());
@@ -5644,8 +5594,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();
             auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
 
-            Gson         gson      = new GsonBuilder().create();
-            final String jsonAudit = gson.toJson(auditObj);
+            final String jsonAudit = JsonUtils.objectToJson(auditObj);
             ret = jsonAudit;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(audits): Error calculating Metric for audits : " + e.getMessage());
@@ -5667,7 +5616,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             PList<RangerService> paginatedSvcs        = getPaginatedServices(serviceFilter);
             long                 totalServiceCount    = paginatedSvcs.getTotalCount();
             List<RangerService>  rangerServiceList    = paginatedSvcs.getList();
-            Map<String, Long>    services             = new HashMap<String, Long>();
+            Map<String, Long>    services             = new HashMap<>();
             for (Object rangerService : rangerServiceList) {
                 RangerService RangerServiceObj = (RangerService) rangerService;
                 String        serviceName      = RangerServiceObj.getType();
@@ -5679,8 +5628,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
             vXMetricServiceCount.setServiceBasedCountList(services);
             vXMetricServiceCount.setTotalCount(totalServiceCount);
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonServices = gson.toJson(vXMetricServiceCount);
+            final String jsonServices = JsonUtils.objectToJson(vXMetricServiceCount);
             ret = jsonServices;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(services): Error calculating Metric for services : " + e.getMessage());
@@ -5700,7 +5648,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             VXMetricPolicyWithServiceNameCount vXMetricPolicyWithServiceNameCount = new VXMetricPolicyWithServiceNameCount();
             PList<RangerPolicy>                paginatedSvcsList                  = getPaginatedPolicies(policyFilter);
             vXMetricPolicyWithServiceNameCount.setTotalCount(paginatedSvcsList.getTotalCount());
-            Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<String, VXMetricServiceNameCount>();
+            Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<>();
             for (int k = 2; k >= 0; k--) {
                 String                   policyType               = String.valueOf(k);
                 VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(policyType);
@@ -5712,8 +5660,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                     servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceNameCount);
                 }
             }
-            Map<String, Map<String, Long>> tagMap                     = new HashMap<String, Map<String, Long>>();
-            Map<String, Long>              ServiceNameWithPolicyCount = new HashMap<String, Long>();
+            Map<String, Map<String, Long>> tagMap                     = new HashMap<>();
+            Map<String, Long>              ServiceNameWithPolicyCount = new HashMap<>();
             boolean                        tagFlag                    = false;
             if (tagFlag == false) {
                 policyFilter.setParam("serviceType", "tag");
@@ -5736,8 +5684,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 tagFlag = true;
             }
             vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonPolicies = gson.toJson(vXMetricPolicyWithServiceNameCount);
+            final String jsonPolicies = JsonUtils.objectToJson(vXMetricPolicyWithServiceNameCount);
             ret = jsonPolicies;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(policies): Error calculating Metric for policies : " + e.getMessage());
@@ -5762,8 +5709,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 dbFlavourType = "SQLSERVER ";
             }
             String       dbDetail     = dbFlavourType + bizUtil.getDBVersion();
-            Gson         gson         = new GsonBuilder().create();
-            final String jsonDBDetail = gson.toJson(dbDetail);
+            final String jsonDBDetail = JsonUtils.objectToJson(dbDetail);
             ret = jsonDBDetail;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(database): Error calculating Metric for database : " + e.getMessage());
@@ -5790,8 +5736,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
-            Gson         gson                 = new GsonBuilder().create();
-            final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
+            final String jsonContextEnrichers = JsonUtils.objectToJson(serviceWithContextEnrichers);
             ret = jsonContextEnrichers;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(contextenrichers): Error calculating Metric for contextenrichers : " + e.getMessage());
@@ -5810,7 +5755,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             policyFilter1.setSortType("asc");
             policyFilter1.setParam("denyCondition", "true");
             int                     denyCount           = 0;
-            Map<String, Integer>    denyconditionsonMap = new HashMap<String, Integer>();
+            Map<String, Integer>    denyconditionsonMap = new HashMap<>();
             PList<RangerServiceDef> paginatedSvcDefs    = getPaginatedServiceDefs(policyFilter1);
             if (paginatedSvcDefs != null) {
                 List<RangerServiceDef> rangerServiceDefs = paginatedSvcDefs.getList();
@@ -5855,8 +5800,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
-            Gson   gson                      = new GsonBuilder().create();
-            String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
+            String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
             ret = jsonContextDenyCondtionOn;
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(denyconditions): Error calculating Metric for denyconditions : " + e.getMessage());
@@ -5897,7 +5841,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             PList<RangerPolicy> policies = getPaginatedPolicies(policyFilter1);
             PList<RangerService> paginatedSvcsSevice = getPaginatedServices(policyFilter1);
             List<RangerService> rangerServiceList = paginatedSvcsSevice.getList();
-            Map<String, Map<String, Long> > servicesforPolicyType = new HashMap<String, Map<String, Long> >();
+            Map<String, Map<String, Long> > servicesforPolicyType = new HashMap<>();
 
             long tagCount = 0;
             for (Object rangerService : rangerServiceList) {
@@ -5905,7 +5849,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 String servicetype = rangerServiceObj.getType();
                 String serviceName =rangerServiceObj.getName();
                 policyFilter1.setParam("serviceName", serviceName);
-                Map<String, Long> servicesNamewithPolicyCount = new HashMap<String, Long>();
+                Map<String, Long> servicesNamewithPolicyCount = new HashMap<>();
                     PList<RangerPolicy> policiestype = getPaginatedPolicies(policyFilter1);
                     long count = policiestype.getTotalCount();
                     if (count != 0) {
@@ -5938,7 +5882,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             long totalCountOfAudits = 0;
             SearchFilter filter = new SearchFilter();
             filter.setStartIndex(0);
-            Map<String, Long> servicesRepoType = new HashMap<String, Long>();
+            Map<String, Long> servicesRepoType = new HashMap<>();
             VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
             PList<RangerServiceDef> paginatedSvcDefs = getPaginatedServiceDefs(filter);
             Iterable<RangerServiceDef> repoTypeGet = paginatedSvcDefs.getList();
@@ -5972,9 +5916,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             searchCriteria.setGetCount(true);
             searchCriteria.setSortType("asc");
             searchCriteria.addParam("userRoleList", userRoleList);
-            VXUserList VXUserListKeyAdmin = xUserMgr.searchXUsers(searchCriteria);
-            long userCount = VXUserListKeyAdmin.getTotalCount();
-            return userCount;
+			return xUserMgr.searchXUsers(searchCriteria).getTotalCount();
     }
 
     public boolean isServiceAdminUser(String serviceName, String userName) {
@@ -6086,7 +6028,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
-		Map<String, String> configs = new HashMap<String, String>();
+		Map<String, String> configs = new HashMap<>();
 		List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
 		if (CollectionUtils.isNotEmpty(xxServiceConfigMaps)) {
 			for (XXServiceConfigMap svcConfMap : xxServiceConfigMaps) {
@@ -6100,7 +6042,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	boolean hasServiceConfigForPluginChanged(List<XXServiceConfigMap> dbConfigMaps, Map<String, String> validConfigs) {
 		boolean ret = false;
-		Map<String, String> configs = new HashMap<String, String>();
+		Map<String, String> configs = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(dbConfigMaps)) {
 			for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
 				if (StringUtils.startsWith(dbConfigMap.getConfigkey(), RANGER_PLUGIN_CONFIG_PREFIX)) {
@@ -6314,7 +6256,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				ret.setSecurityZones(servicePolicies.getSecurityZones());
 
 				if (containsDisabledResourcePolicies) {
-					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					List<RangerPolicy> filteredPolicies = new ArrayList<>();
 					for (RangerPolicy policy : servicePolicies.getPolicies()) {
 						if (policy.getIsEnabled()) {
 							filteredPolicies.add(policy);
@@ -6332,7 +6274,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					tagPolicies.setPolicyVersion(servicePolicies.getTagPolicies().getPolicyVersion());
 					tagPolicies.setPolicyUpdateTime(servicePolicies.getTagPolicies().getPolicyUpdateTime());
 
-					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					List<RangerPolicy> filteredPolicies = new ArrayList<>();
 					for (RangerPolicy policy : servicePolicies.getTagPolicies().getPolicies()) {
 						if (policy.getIsEnabled()) {
 							filteredPolicies.add(policy);
@@ -6356,7 +6298,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXServiceConfigMap> configMapToBeModified = null;
 
 		if (StringUtils.isNotBlank(searchUsrGrpRoleName)) {
-			configMapToBeModified = new ArrayList<XXServiceConfigMap>();
+			configMapToBeModified = new ArrayList<>();
 			XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
 			List<XXServiceConfigMap> configs = configDao.findByConfigKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS);
 			for (XXServiceConfigMap configMap : configs) {
@@ -6461,7 +6403,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					&& CollectionUtils.isEmpty(auditFilter.getGroups())
 					&& CollectionUtils.isEmpty(auditFilter.getRoles())) {
 				if (itemsToRemove == null) {
-					itemsToRemove = new ArrayList<AuditFilter>();
+					itemsToRemove = new ArrayList<>();
 				}
 				itemsToRemove.add(auditFilter);
 			}

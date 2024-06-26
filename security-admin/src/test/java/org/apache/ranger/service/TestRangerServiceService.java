@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;
@@ -38,7 +39,6 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
 
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -66,6 +66,9 @@ public class TestRangerServiceService {
 
 	@Mock
 	RangerDaoManager daoManager;
+
+	@Mock
+	RangerBizUtil bizUtil;
 
 	@Mock
 	RangerServiceService svcService;
@@ -402,40 +405,22 @@ public class TestRangerServiceService {
 
 	@Test
 	public void test6GetTransactionLogCreate() {
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerService rangerService = rangerService();
 
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
-				.thenReturn(xServiceDef);
-
-		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
-				rangerService, 1);
-		Assert.assertNotNull(dbXXTrxLogList);
+		serviceService.createTransactionLog(rangerService, null, 1);
 	}
 
 	@Test
 	public void test7GetTransactionLogUpdate() {
 		RangerService rangerService = rangerService();
 
-		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
-				rangerService, 2);
-		Assert.assertNull(dbXXTrxLogList);
+		serviceService.createTransactionLog(rangerService, null, 2);
 	}
 
 	@Test
 	public void test8GetTransactionLogDelete() {
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerService rangerService = rangerService();
 
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
-				.thenReturn(xServiceDef);
-
-		List<XXTrxLog> dbXXTrxLogList = serviceService.getTransactionLog(
-				rangerService, 3);
-		Assert.assertNotNull(dbXXTrxLogList);
+		serviceService.createTransactionLog(rangerService, null, 3);
 	}
 }

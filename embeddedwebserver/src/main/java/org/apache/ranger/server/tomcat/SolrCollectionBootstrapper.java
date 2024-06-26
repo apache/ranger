@@ -65,10 +65,10 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	private static final Logger logger = Logger
 			.getLogger(SolrCollectionBootstrapper.class.getName());
-	final static String SOLR_ZK_HOSTS = "ranger.audit.solr.zookeepers";
-	final static String SOLR_COLLECTION_NAME = "ranger.audit.solr.collection.name";
-	final static String SOLR_CONFIG_NAME = "ranger.audit.solr.config.name";
-	final static String CONFIG_SET_LOCATION = "ranger.audit.solr.configset.location";
+	final static String SOLR_ZK_HOSTS            = "ranger.audit.solr.zookeepers";
+	final static String SOLR_COLLECTION_NAME_KEY = "ranger.audit.solr.collection.name";
+	final static String SOLR_CONFIG_NAME_KEY     = "ranger.audit.solr.config.name";
+	final static String CONFIG_SET_LOCATION      = "ranger.audit.solr.configset.location";
 	final static String SOLR_NO_SHARDS = "ranger.audit.solr.no.shards";
 	final static String SOLR_MAX_SHARD_PER_NODE = "ranger.audit.solr.max.shards.per.node";
 	final static String SOLR_NO_REPLICA = "ranger.audit.solr.no.replica";
@@ -128,11 +128,11 @@ public class SolrCollectionBootstrapper extends Thread {
 			}
 		}
 
-		solr_collection_name = EmbeddedServerUtil.getConfig(SOLR_COLLECTION_NAME,
-				DEFAULT_COLLECTION_NAME);
+		solr_collection_name = EmbeddedServerUtil.getConfig(SOLR_COLLECTION_NAME_KEY,
+															DEFAULT_COLLECTION_NAME);
 		logger.info("Solr Collection name provided is : "
 				+ solr_collection_name);
-		solr_config_name = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME, DEFAULT_CONFIG_NAME);
+		solr_config_name = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME_KEY, DEFAULT_CONFIG_NAME);
 		logger.info("Solr Config name provided is : " + solr_config_name);
 		no_of_replicas = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, DEFAULT_VALUE);
 		logger.info("No. of replicas provided is : " + no_of_replicas);
@@ -240,9 +240,10 @@ public class SolrCollectionBootstrapper extends Thread {
 	}
 
 	private void setHttpClientBuilderForKrb() {
-		Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-		SolrHttpClientBuilder kb = krbBuild.getBuilder();
-		HttpClientUtil.setHttpClientBuilder(kb);
+		try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+			SolrHttpClientBuilder kb = krbBuild.getBuilder();
+			HttpClientUtil.setHttpClientBuilder(kb);
+		}
 	}
 
 	public static Map postDataAndGetResponse(CloudSolrClient cloudClient,

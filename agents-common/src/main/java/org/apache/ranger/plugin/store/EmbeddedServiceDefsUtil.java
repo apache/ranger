@@ -27,14 +27,13 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 /*
@@ -129,12 +128,10 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef tagServiceDef;
 	private RangerServiceDef gdsServiceDef;
 
-	private final Gson              gsonBuilder;
 	private final RangerAdminConfig config;
 
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 		config      = RangerAdminConfig.getInstance();
 	}
 
@@ -346,7 +343,7 @@ public class EmbeddedServiceDefsUtil {
 
 		InputStreamReader reader = new InputStreamReader(inStream);
 
-		ret = gsonBuilder.fromJson(reader, RangerServiceDef.class);
+		ret = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
 
 		//Set DEFAULT displayName if missing
 		if (ret != null && StringUtils.isBlank(ret.getDisplayName())) {

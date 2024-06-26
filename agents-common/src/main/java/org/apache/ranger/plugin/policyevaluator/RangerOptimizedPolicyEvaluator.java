@@ -254,9 +254,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
         boolean ret = false;
 
-        if (isUseAclSummaryForEvaluation()) {
-            ret = true;
-        } else if (checkIfAllEvaluatorsInitialized()) {
+        if (checkIfAllEvaluatorsInitialized()) {
             if (hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups()) || (CollectionUtils.isNotEmpty(roles) && CollectionUtils.containsAny(roles, RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext())))) {
                 if (hasAllPerms || request.isAccessTypeAny()) {
                     ret = true;
@@ -301,9 +299,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     private boolean hasMatchablePolicyItem(String user, Set<String> userGroups, Set<String> rolesFromContext, String owner, String accessType) {
         boolean ret = false;
 
-        if (isUseAclSummaryForEvaluation()) {
-            ret = true;
-        } else if (checkIfAllEvaluatorsInitialized()) {
+        if (checkIfAllEvaluatorsInitialized()) {
             boolean hasRole = false;
             if (CollectionUtils.isNotEmpty(roles)) {
                 if (CollectionUtils.isNotEmpty(rolesFromContext)) {

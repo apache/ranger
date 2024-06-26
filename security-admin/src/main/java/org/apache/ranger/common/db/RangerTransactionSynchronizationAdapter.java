@@ -210,7 +210,9 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                             if (!isThisTransactionCommitted) {
                                 LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
                             } else {
-                                LOG.info("Committed runnable:[" + runnable + "].");
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Committed runnable:[" + runnable + "].");
+                                }
                             }
                         }
 
