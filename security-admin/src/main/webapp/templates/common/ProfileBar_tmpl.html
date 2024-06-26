@@ -22,16 +22,9 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <a class="dropdown-item" href="#!/userprofile"><i class="fa fa-user m-r-xs"></i> Profile </a>
-                <a class="dropdown-item" href={{reactUI}}><i class="fa fa-sign-out m-r-xs"></i> React UI </a>
+                <a class="dropdown-item" href={{reactUI}}><i class="fa fa-sign-out m-r-xs"></i> React Latest UI </a>
                 <a class="dropdown-item" href={{swaggerUI}} target='_blank'><i class="fa fa-user m-r-xs"></i> API Documentation </a>
-                {{#if oldUi}}
-                    <a class="dropdown-item" href="javascript:;" data-id="oldNewSwitch" data-value="true">
-                      <i class="fa fa-sign-out m-r-xs"></i> Switch to classic UI </a>
-                {{else}}
-                    <a class="dropdown-item" href="javascript:;" data-id="oldNewSwitch" data-value="false">
-                      <i class="fa fa-sign-out m-r-xs"></i> Switch to latest UI </a>
-                {{/if}}
-                <a class="dropdown-item" href="javascript:;" class="_allowNav" data-id="logout"><i class="fa fa-power-off m-r-xs"></i> Log Out </a>
+               <a class="dropdown-item" href="javascript:;" class="_allowNav" data-id="logout"><i class="fa fa-power-off m-r-xs"></i> Log Out </a>
             </div>
         </li>
     </ul>
