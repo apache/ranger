@@ -227,7 +227,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		}
 		value = doc.getFieldValue("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(MiscUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toLocalDate(value));
 		}
 		value = doc.getFieldValue("seq_num");
 		if (value != null) {
