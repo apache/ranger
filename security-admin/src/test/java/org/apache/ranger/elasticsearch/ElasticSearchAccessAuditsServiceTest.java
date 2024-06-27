@@ -53,6 +53,7 @@ public class ElasticSearchAccessAuditsServiceTest {
         ElasticSearchAccessAuditsService elasticSearchAccessAuditsService = new ElasticSearchAccessAuditsService();
         Map<String, String> properties = PropertiesUtil.getPropertiesMap();
         properties.put("ranger.audit.elasticsearch.urls", "localhost");
+        properties.put("ranger.audit.elasticsearch.protocol", "http");
         properties.put("ranger.audit.elasticsearch.user", "elastic");
         properties.put("ranger.audit.elasticsearch.password", "password1");
         properties.put("ranger.audit.elasticsearch.port", "9200");
