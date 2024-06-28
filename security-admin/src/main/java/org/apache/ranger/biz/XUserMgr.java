@@ -160,6 +160,7 @@ public class XUserMgr extends XUserMgrBase {
 	PlatformTransactionManager txManager;
 
 	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
+	static final Set<String> roleAssignmentUpdatedUsers = new HashSet<>();
 
 	public VXUser getXUserByUserName(String userName) {
 		VXUser vXUser=null;
@@ -3005,27 +3006,35 @@ public class XUserMgr extends XUserMgrBase {
 			}
 
 			if (!vXPortalUser.getUserRoleList().contains(userRole)) {
-				//Update the role of the user only if newly computed role is different from the existing role.
 				if (logger.isDebugEnabled()) {
-					logger.debug("Updating role for " + userName + " to " + userRole);
+					logger.debug(String.format("Updating role for %s to %s", userName, userRole));
 				}
+				//Update the role of the user only if newly computed role is different from the existing role.
 				String updatedUser = setRolesByUserName(userName, Collections.singletonList(userRole));
 				if (updatedUser != null) {
 					updatedUsers.add(updatedUser);
 				}
+			} else {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Role for %s unchanged: %s", userName, userRole));
+				}
+			}
+
+			if (ugRoleAssignments.isReset()) { // use below data structure only when reset is true
+				roleAssignmentUpdatedUsers.add(userName);
 			}
 		}
 
 		// Reset the role of any other users that are not part of the updated role assignments rules
-		if (ugRoleAssignments.isReset()) {
-			List<String> exitingNonUserRoleUsers = daoManager.getXXPortalUser().getNonUserRoleExternalUsers();
+		if (ugRoleAssignments.isReset() && ugRoleAssignments.isLastPage()) {
+			List<String> externalUsersWithNonUserRole = daoManager.getXXPortalUser().getNonUserRoleExternalUsers();
 			if (logger.isDebugEnabled()) {
-				logger.debug("Existing non user role users = " + exitingNonUserRoleUsers);
+				logger.debug("Existing external users with roles excluding ROLE_USER role: " + externalUsersWithNonUserRole);
 			}
-			for (String userName : exitingNonUserRoleUsers) {
-				if (!requestedUsers.contains(userName)) {
+			for (String userName : externalUsersWithNonUserRole) {
+				if (!roleAssignmentUpdatedUsers.contains(userName)) {
 					if (logger.isDebugEnabled()) {
-						logger.debug("Resetting to User role for " + userName);
+						logger.debug(String.format("Resetting to ROLE_USER for %s", userName));
 					}
 					String updatedUser = setRolesByUserName(userName, Collections.singletonList(RangerConstants.ROLE_USER));
 					if (updatedUser != null) {
@@ -3033,8 +3042,8 @@ public class XUserMgr extends XUserMgrBase {
 					}
 				}
 			}
+			roleAssignmentUpdatedUsers.clear();
 		}
-
 		return updatedUsers;
 	}
 
