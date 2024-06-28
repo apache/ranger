@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends RangerAuditedModelService<T, V> {
