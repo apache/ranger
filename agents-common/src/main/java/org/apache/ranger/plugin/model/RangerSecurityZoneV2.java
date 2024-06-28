@@ -19,9 +19,9 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -161,7 +161,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
     }
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class RangerSecurityZoneServiceV2 implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -233,7 +233,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
     }
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class RangerSecurityZoneResourceBase implements java.io.Serializable {
         private Long    id;
@@ -316,7 +316,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
     }
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class RangerSecurityZoneResource extends RangerSecurityZoneResourceBase implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
@@ -365,7 +365,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
     }
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class RangerSecurityZoneChangeRequest implements java.io.Serializable {
         private static final long serialVersionUID = 1L;

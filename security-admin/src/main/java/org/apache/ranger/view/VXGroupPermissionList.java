@@ -21,12 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VXGroupPermissionList extends VList {
 
 	private static final long serialVersionUID = 1L;
@@ -45,6 +46,7 @@ public class VXGroupPermissionList extends VList {
 	/**
 	 * @return the vXGroupPermission
 	 */
+	@JsonProperty("vXGroupPermission")
 	public List<VXGroupPermission> getvXGroupPermission() {
 		return vXGroupPermission;
 	}
@@ -52,6 +54,7 @@ public class VXGroupPermissionList extends VList {
 	/**
 	 * @param vXGroupPermission the vXGroupPermission to set
 	 */
+	@JsonProperty("vXGroupPermission")
 	public void setvXGroupPermission(List<VXGroupPermission> vXGroupPermission) {
 		this.vXGroupPermission = vXGroupPermission;
 	}

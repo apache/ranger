@@ -28,12 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VXPolicyList extends VList {
 	private static final long serialVersionUID = 1L;
 	List<VXPolicy> vXPolicies = new ArrayList<VXPolicy>();
@@ -50,6 +51,7 @@ public class VXPolicyList extends VList {
 	/**
 	 * @return the vXPolicies
 	 */
+	@JsonProperty("vXPolicies")
 	public List<VXPolicy> getVXPolicies() {
 		return vXPolicies;
 	}
@@ -58,6 +60,7 @@ public class VXPolicyList extends VList {
 	 * @param vXPolicies
 	 *            the vXPolicies to set
 	 */
+	@JsonProperty("vXPolicies")
 	public void setVXPolicies(List<VXPolicy> vXPolicies) {
 		this.vXPolicies = vXPolicies;
 	}

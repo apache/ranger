@@ -60,10 +60,10 @@
               <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
               <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
               <include>org.noggit:noggit:jar:${noggit.version}</include>
-              <include>org.codehaus.jackson:jackson-core-asl</include>
-              <include>org.codehaus.jackson:jackson-jaxrs</include>
-              <include>org.codehaus.jackson:jackson-mapper-asl</include>
-              <include>org.codehaus.jackson:jackson-xc</include>
+              <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+              <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+              <include>com.fasterxml.jackson.core:jackson-databind</include>
+              <include>com.fasterxml.jackson.core:jackson-core</include>
               <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
               <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
               <include>org.apache.ranger:ranger-plugins-common</include>
