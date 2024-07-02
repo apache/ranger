@@ -43,6 +43,13 @@ public class UsersGroupRoleAssignments {
 	Map<String, String> whiteListUserRoleAssignments;
 
 	boolean isReset = false;
+	boolean isLastPage = false;
+	public boolean isLastPage() {
+		return isLastPage;
+	}
+	public void setLastPage(boolean lastPage) {
+		isLastPage = lastPage;
+	}
 
 	public List<String> getUsers() {
 		return users;
