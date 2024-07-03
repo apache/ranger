@@ -47,19 +47,19 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         private final String adp;
         private Provider provider;
         private static final String MK_ALGO = "AES";
-        private final int mkSize;
-        private static final int MK_KeySize = 256;
-        private String pkcs11CfgFilePath = null;
+        private final int        mkSize;
+        private static final int MK_KEY_SIZE_DEFAULT = 256;
+        private String           pkcs11CfgFilePath   = null;
         private static final String CFGFILEPATH = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
         private static final String MK_KEYSIZE = "ranger.kms.keysecure.masterkey.size";
-        private static final String ALIAS = "ranger.kms.keysecure.masterkey.name";
-        private static final String PROVIDER = "ranger.kms.keysecure.provider.type";
+        private static final String ALIAS_KEY       = "ranger.kms.keysecure.masterkey.name";
+        private static final String PROVIDER_KEY    = "ranger.kms.keysecure.provider.type";
         private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
 
 	public RangerSafenetKeySecure(Configuration conf) throws Exception {
-		mkSize = conf.getInt(MK_KEYSIZE, MK_KeySize);
-		alias = conf.get(ALIAS, "RANGERMK");
-		providerType = conf.get(PROVIDER, "SunPKCS11");
+		mkSize = conf.getInt(MK_KEYSIZE, MK_KEY_SIZE_DEFAULT);
+		alias = conf.get(ALIAS_KEY, "RANGERMK");
+		providerType = conf.get(PROVIDER_KEY, "SunPKCS11");
 		adp = conf.get(KEYSECURE_LOGIN);
 		pkcs11CfgFilePath = conf.get(CFGFILEPATH);
 		/*

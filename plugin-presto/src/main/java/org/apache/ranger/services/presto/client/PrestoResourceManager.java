@@ -91,6 +91,7 @@ public class PrestoResourceManager {
           break;
         case SCHEMA:
           schemaName = userInput;
+          break;
         case TABLE:
           tableName = userInput;
           break;

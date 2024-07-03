@@ -162,7 +162,9 @@ define(function(require) {
 				_.each(this.model.get('accesses'), function(p){
 					if(p.isAllowed){
 						var access = _.find(that.accessTypes,function(obj){if(obj.name == p.type) return obj});
-						this.permsIds.push(access.name);
+						if(access !== undefined){
+							this.permsIds.push(access.name);
+						}
 					}
 					
 				}, this);
@@ -347,7 +349,7 @@ define(function(require) {
                         	if(!_.isUndefined(id)){
                         		var obj = _.findWhere(that.rangerServiceDefModel.attributes.accessTypes,{'name' : id});
 								permTypeArr.push({permType : obj.value});
-								return "<span class='badge badge-info'>" + obj.label + "</span>";
+								return "<span class='badge badge-info'>" + _.escape(obj.label) + "</span>";
                         	}
                         });
                         var items=[];
@@ -529,7 +531,7 @@ define(function(require) {
 						if(!_.isUndefined(id)){
 							var obj = _.findWhere(srcData,{'value' : id});
 							permTypeArr.push({permType : obj.value});
-							return "<span class='badge badge-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+							return "<span class='badge badge-info'>" + _.escape(id.substr(0,id.indexOf(":"))).toUpperCase() + "</span>";
 						}
 					});
 					var items=[];
@@ -641,8 +643,8 @@ define(function(require) {
 						$(this).siblings('[data-id="maskTypeCustom"]').val(" ");
 					}
 					
-					$(this).html("<span class='badge badge-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
-							+ obj.text +"</span>");
+					$(this).html("<span class='badge badge-info'>"+ _.escape(value.substr(0,value.indexOf(":"))).toUpperCase() +" : "
+							+ _.escape(obj.text) +"</span>");
 					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},
@@ -946,7 +948,7 @@ define(function(require) {
                                                 $(this).siblings('[data-id="maskTypeCustom"]').val(" ")
 					}
 					
-					$(this).html("<span class='badge badge-info'>" + obj.text + "</span>");
+					$(this).html("<span class='badge badge-info'>" + _.escape(obj.text) + "</span>");
 					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},

@@ -41,6 +41,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -258,6 +259,7 @@ public class TestRangerValidator {
 		String[] names = new String[] { null, "", "a", "  ", "b ", "		", " C", "	D	" };
 		accessTypeDefs.addAll(_utils.createAccessTypeDefs(names));
 		accessTypes = _validator.getAccessTypes(serviceDef);
+		accessTypes.removeAll(ServiceDefUtil.ACCESS_TYPE_MARKERS);
 		Assert.assertEquals(4, accessTypes.size());
 		Assert.assertTrue(accessTypes.contains("a"));
 		Assert.assertTrue(accessTypes.contains("b "));

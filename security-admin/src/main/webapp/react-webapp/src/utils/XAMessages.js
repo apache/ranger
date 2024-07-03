@@ -18,6 +18,7 @@
  */
 
 import React from "react";
+import { pluginStatusColumnInfoMsg } from "./XAEnums";
 
 export const RegexMessage = {
   MESSAGE: {
@@ -127,5 +128,26 @@ export const udfResourceWarning = () => {
       <strong>Warning !! </strong> : UDF create is a privileged operation.
       Please make sure you grant them to only trusted users.
     </p>
+  );
+};
+
+/* PluginStatus Column Info */
+
+export const pluginStatusColumnInfo = (colName) => {
+  return (
+    <ul className="list-inline">
+      <li className="list-inline-item">
+        <strong>Last Update: </strong>{" "}
+        {pluginStatusColumnInfoMsg[colName].lastUpdated}
+      </li>
+      <li className="list-inline-item">
+        <strong>Download: </strong>
+        {pluginStatusColumnInfoMsg[colName].downloadTime}
+      </li>
+      <li className="list-inline-item">
+        <strong>Active: </strong>{" "}
+        {pluginStatusColumnInfoMsg[colName].activeTime}
+      </li>
+    </ul>
   );
 };

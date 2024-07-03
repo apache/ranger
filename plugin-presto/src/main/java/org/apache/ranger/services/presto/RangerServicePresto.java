@@ -56,7 +56,7 @@ public class RangerServicePresto extends RangerBaseService {
         policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
         policyItemForLookupUser.setAccesses(accessListForLookupUser);
         policyItemForLookupUser.setDelegateAdmin(false);
-        defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+        defaultPolicy.addPolicyItem(policyItemForLookupUser);
       }
     }
 

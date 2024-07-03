@@ -223,34 +223,33 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
         }
 
         Security.addProvider(new BouncyCastleProvider());
+        KeyCert keycert = null;
+        try (PEMParser pemParser = new PEMParser(new FileReader(path))) {
+            PrivateKey      privateKey = null;
+            X509Certificate cert       = null;
+            Object          object     = pemParser.readObject();
 
-        PEMParser       pemParser  = new PEMParser(new FileReader(path));
-        PrivateKey      privateKey = null;
-        X509Certificate cert       = null;
-        Object          object     = pemParser.readObject();
+            while (object != null) {
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
 
-        while (object != null) {
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+                if (object instanceof X509CertificateHolder) {
+                    cert = new JcaX509CertificateConverter().getCertificate((X509CertificateHolder) object);
+                } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
+                    PKCS8EncryptedPrivateKeyInfo pinfo    = (PKCS8EncryptedPrivateKeyInfo) object;
+                    InputDecryptorProvider       provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
+                    PrivateKeyInfo               info     = pinfo.decryptPrivateKeyInfo(provider);
 
-            if (object instanceof X509CertificateHolder) {
-                cert = new JcaX509CertificateConverter().getCertificate((X509CertificateHolder) object);
-            } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
-                PKCS8EncryptedPrivateKeyInfo pinfo    = (PKCS8EncryptedPrivateKeyInfo) object;
-                InputDecryptorProvider       provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                PrivateKeyInfo               info     = pinfo.decryptPrivateKeyInfo(provider);
+                    privateKey = converter.getPrivateKey(info);
+                } else if (object instanceof PrivateKeyInfo) {
+                    privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
+                }
 
-                privateKey = converter.getPrivateKey(info);
-            } else if (object instanceof PrivateKeyInfo) {
-                privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
+                object = pemParser.readObject();
             }
 
-            object = pemParser.readObject();
+            keycert = new KeyCert(cert, privateKey);
+
         }
-
-        KeyCert keycert = new KeyCert(cert, privateKey);
-
-        pemParser.close();
-
         if (logger.isDebugEnabled()) {
             logger.debug("<== readPem({})", path);
         }

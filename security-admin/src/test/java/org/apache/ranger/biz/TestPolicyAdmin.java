@@ -111,16 +111,16 @@ public class TestPolicyAdmin {
 				RangerPolicy     policy     = new RangerPolicy();
 				RangerPolicyItem policyItem = new RangerPolicyItem();
 
-				policyItem.getUsers().add(test.user);
-				policyItem.getUsers().addAll(test.userGroups);
+				policyItem.addUser(test.user);
+				policyItem.addGroups(test.userGroups);
 
 				for (String accessType : test.accessTypes) {
-					policyItem.getAccesses().add(new RangerPolicy.RangerPolicyItemAccess(accessType));
+					policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess(accessType));
 				}
 
 				policy.setResources(test.resources);
 				policy.setAdditionalResources(test.additionalResources);
-				policy.getPolicyItems().add(policyItem);
+				policy.addPolicyItem(policyItem);
 
 				final boolean expected = test.result;
 				final boolean result;

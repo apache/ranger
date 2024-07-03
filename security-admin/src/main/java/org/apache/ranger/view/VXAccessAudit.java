@@ -137,7 +137,11 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	protected long eventDuration;
 	
 	protected String tags;
-	
+
+	protected String datasets;
+
+	protected String projects;
+
 	protected String clusterName;
 
 	// Security Zone
@@ -548,7 +552,24 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	public void setTags(String tags) {
 		this.tags = tags;
 	}
-	
+
+	public String getDatasets() {
+		return datasets;
+	}
+
+	public void setDatasets(String datasets) {
+		this.datasets = datasets;
+	}
+
+	public String getProjects() {
+		return projects;
+	}
+
+	public void setProjects(String projects) {
+		this.projects = projects;
+	}
+
+
 	/**
 	 * @return the clusterName
 	 */
@@ -645,6 +666,8 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "eventCount={" + eventCount + "}";
 		str += "eventDuration={" + eventDuration + "}";
 		str += "tags={" + tags + "}";
+		str += "datasets={" + datasets + "}";
+		str += "projects={" + projects + "}";
 		str += "clusterName={" + clusterName + "}";
 		str += "zoneName={" + zoneName + "}";
 		str += "agentHost={" + agentHost + "}";

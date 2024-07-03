@@ -71,26 +71,30 @@
 		{
 			"itemId": 1,
 			"name": "read",
-			"label": "Read"
+			"label": "Read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 2,
 			"name": "write",
-			"label": "Write"
+			"label": "Write",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "create",
-			"label": "Create"
+			"label": "Create",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 4,
 			"name": "admin",
 			"label": "Admin",
-			"impliedGrants": 
+			"category": "MANAGE",
+			"impliedGrants":
 			[
 				"read",
 				"write",
@@ -100,7 +104,8 @@
 		{
 			"itemId": 5,
 			"name": "execute",
-			"label": "Execute"
+			"label": "Execute",
+			"category": "READ"
 		}
 	],
 

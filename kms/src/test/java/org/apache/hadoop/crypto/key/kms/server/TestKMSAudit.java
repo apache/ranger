@@ -26,8 +26,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.junit.*;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
 public class TestKMSAudit {
@@ -50,10 +52,7 @@ public class TestKMSAudit {
     }
   }
 
-  @Rule
-  public final Timeout testTimeout = new Timeout(180000);
-
-  @Before
+  @BeforeEach
   public void setUp() {
     originalOut = System.err;
     memOut = new ByteArrayOutputStream();
@@ -64,7 +63,7 @@ public class TestKMSAudit {
     this.kmsAudit = new KMSAudit(conf);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     System.setErr(originalOut);
     kmsAudit.shutdown();
@@ -102,7 +101,7 @@ public class TestKMSAudit {
     kmsAudit.evictCacheForTesting();
     String out = getAndResetLogOutput();
     System.out.println(out);
-    Assert.assertTrue(
+    Assertions.assertTrue(
         out.matches(
             "OK\\[op=DECRYPT_EEK, key=k1, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
             // Not aggregated !!
@@ -138,7 +137,7 @@ public class TestKMSAudit {
     // The UNAUTHORIZED will trigger cache invalidation, which then triggers
     // the aggregated OK (accessCount=5). But the order of the UNAUTHORIZED and
     // the aggregated OK is arbitrary - no correctness concerns, but flaky here.
-    Assert.assertTrue(
+    Assertions.assertTrue(
         out.matches(
             "UNAUTHORIZED\\[op=GENERATE_EEK, key=k2, user=luser@REALM\\] "
             + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
@@ -162,7 +161,7 @@ public class TestKMSAudit {
         kmsAudit.unauthenticated("remotehost", "method", "url", "testmsg");
         String out = getAndResetLogOutput();
         System.out.println(out);
-        Assert.assertTrue(out.matches(
+        Assertions.assertTrue(out.matches(
           "OK\\[op=GENERATE_EEK, key=k4, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
            + "OK\\[op=GENERATE_EEK, user=luser@REALM\\] testmsg"
            + "OK\\[op=GENERATE_EEK, key=k4, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
@@ -177,8 +176,8 @@ public class TestKMSAudit {
     // Default should be the simple logger
     List<KMSAuditLogger> loggers = (List<KMSAuditLogger>) Whitebox
         .getInternalState(kmsAudit, "auditLoggers");
-    Assert.assertEquals(1, loggers.size());
-    Assert.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
+    Assertions.assertEquals(1, loggers.size());
+    Assertions.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
 
     // Explicitly configure the simple logger. Duplicates are ignored.
     final Configuration conf = new Configuration();
@@ -188,19 +187,19 @@ public class TestKMSAudit {
     final KMSAudit audit = new KMSAudit(conf);
     loggers =
         (List<KMSAuditLogger>) Whitebox.getInternalState(audit, "auditLoggers");
-    Assert.assertEquals(1, loggers.size());
-    Assert.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
+    Assertions.assertEquals(1, loggers.size());
+    Assertions.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
 
     // If any loggers unable to load, init should fail.
     conf.set(KMSConfiguration.KMS_AUDIT_LOGGER_KEY,
         SimpleKMSAuditLogger.class.getName() + ",unknown");
-    try {
+
+    Exception exception = Assertions.assertThrows(Exception.class, () -> {
       new KMSAudit(conf);
-      Assert.fail("loggers configured but invalid, init should fail.");
-    } catch (Exception ex) {
-      GenericTestUtils
-          .assertExceptionContains(KMSConfiguration.KMS_AUDIT_LOGGER_KEY, ex);
-    }
+      Assertions.fail("loggers configured but invalid, init should fail.");
+    });
+
+    Assertions.assertTrue(exception.getMessage().contains(KMSConfiguration.KMS_AUDIT_LOGGER_KEY));
   }
 
 }

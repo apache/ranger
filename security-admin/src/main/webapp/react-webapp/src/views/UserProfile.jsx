@@ -26,7 +26,7 @@ import { InfoIcon } from "../utils/XAUtils";
 import { BlockUi, scrollToError } from "../components/CommonComponents";
 import withRouter from "Hooks/withRouter";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
-import { has, isEmpty, isUndefined } from "lodash";
+import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
 import { RegexMessage } from "../utils/XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 import CustomBreadcrumb from "./CustomBreadcrumb";
@@ -40,7 +40,7 @@ class UserProfile extends Component {
   }
 
   updateUserInfo = async (values) => {
-    const userProps = getUserProfile();
+    const userProps = cloneDeep(getUserProfile());
 
     userProps.firstName = values.firstName;
     userProps.emailAddress = values.emailAddress;
@@ -51,9 +51,13 @@ class UserProfile extends Component {
       const profResp = await fetchApi({
         url: "users",
         method: "put",
-        data: userProps
+        data: userProps,
+        skipNavigate: true
       });
       this.setState({ blockUI: false });
+      if (has(profResp, "data")) {
+        profResp.data["configProperties"] = userProps.configProperties;
+      }
       setUserProfile(profResp.data);
       this.props.navigate("/");
       toast.success("Successfully updated user profile");
@@ -75,14 +79,13 @@ class UserProfile extends Component {
     const userProps = getUserProfile();
 
     let jsonData = {};
-    jsonData["emailAddress"] = "";
     jsonData["loginId"] = userProps.loginId;
     jsonData["oldPassword"] = values.oldPassword;
     jsonData["updPassword"] = values.newPassword;
 
     try {
       this.setState({ blockUI: true });
-      const passwdResp = await fetchApi({
+      await fetchApi({
         url: "users/" + userProps.id + "/passwordchange",
         method: "post",
         data: jsonData,
@@ -160,7 +163,7 @@ class UserProfile extends Component {
 
     if (
       values &&
-      has(values, "lastName") &&
+      !isEmpty(values?.lastName) &&
       !RegexValidation.NAME_VALIDATION.regexExpressionForFirstAndLastName.test(
         values.lastName
       )
@@ -176,6 +179,7 @@ class UserProfile extends Component {
     ) {
       errors.emailAddress = RegexValidation.EMAIL_VALIDATION.message;
     }
+
     return errors;
   };
 
@@ -217,14 +221,7 @@ class UserProfile extends Component {
                       emailAddress: userProps.emailAddress,
                       userRoleList: userProps.userRoleList[0]
                     }}
-                    render={({
-                      handleSubmit,
-                      form,
-                      submitting,
-                      values,
-                      invalid,
-                      errors
-                    }) => (
+                    render={({ handleSubmit, form, invalid, errors }) => (
                       <form
                         onSubmit={(event) => {
                           if (invalid) {
@@ -242,11 +239,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   First Name *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="text"
@@ -271,7 +268,7 @@ class UserProfile extends Component {
                                   data-cy="firstName"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE.firstNameValidationMsg
@@ -290,11 +287,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Last Name
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="text"
@@ -319,7 +316,7 @@ class UserProfile extends Component {
                                   data-cy="lastName"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE.lastNameValidationMsg
@@ -338,11 +335,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Email Address
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   name="emailAddress"
@@ -367,7 +364,7 @@ class UserProfile extends Component {
                                   data-cy="emailAddress"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE
@@ -387,7 +384,7 @@ class UserProfile extends Component {
                         <Row className="form-group">
                           <Col xs={3}>
                             {" "}
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Role *
                             </label>
                           </Col>
@@ -433,7 +430,10 @@ class UserProfile extends Component {
                               variant="secondary"
                               type="button"
                               size="sm"
-                              onClick={() => this.props.navigate("/")}
+                              onClick={() => {
+                                form.reset();
+                                this.props.navigate("/");
+                              }}
                               data-id="cancel"
                               data-cy="cancel"
                             >
@@ -455,7 +455,6 @@ class UserProfile extends Component {
                       handleSubmit,
                       form,
                       submitting,
-                      values,
                       invalid,
                       errors
                     }) => (
@@ -483,11 +482,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Old Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -507,7 +506,7 @@ class UserProfile extends Component {
                                   data-cy="oldPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p
@@ -531,11 +530,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   New Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -555,7 +554,7 @@ class UserProfile extends Component {
                                   data-cy="newPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p
@@ -579,11 +578,11 @@ class UserProfile extends Component {
                           {({ input, meta }) => (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Re-enter New Password *
                                 </label>
                               </Col>
-                              <Col xs={4}>
+                              <Col xs={4} className={"position-relative"}>
                                 <input
                                   {...input}
                                   type="password"
@@ -603,7 +602,7 @@ class UserProfile extends Component {
                                   data-cy="reEnterPassword"
                                 />
                                 <InfoIcon
-                                  css="info-user-role-grp-icon"
+                                  css="input-box-info-icon"
                                   position="right"
                                   message={
                                     <p
@@ -640,7 +639,10 @@ class UserProfile extends Component {
                               variant="secondary"
                               type="button"
                               size="sm"
-                              onClick={() => this.props.navigate("/")}
+                              onClick={() => {
+                                form.reset();
+                                this.props.navigate("/");
+                              }}
                               data-id="cancel"
                               data-cy="cancel"
                             >

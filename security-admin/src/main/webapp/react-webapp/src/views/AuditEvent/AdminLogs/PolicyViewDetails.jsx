@@ -23,18 +23,18 @@ import { Table, Badge, Row, Col } from "react-bootstrap";
 import { RangerPolicyType, DefStatus } from "../../../utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
-import { find, isEmpty, map, sortBy } from "lodash";
+import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
 import { getResourcesDefVal, serverError } from "../../../utils/XAUtils";
 import { ModalLoader } from "../../../components/CommonComponents";
 import { getServiceDef } from "../../../utils/appState";
 
 export function PolicyViewDetails(props) {
+  const isMultiResources = true;
   const [access, setAccess] = useState([]);
   const [loader, SetLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});
   const { updateServices } = props;
-  let { allServiceDefs } = getServiceDef();
-  const isMultiResources = true;
+  let { allServiceDefs, gdsServiceDef } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     if (props.paramsData.isRevert) {
@@ -51,6 +51,7 @@ export function PolicyViewDetails(props) {
       ? props.paramsData.isRevert
       : props.paramsData.version || props.paramsData.policyVersion
   ]);
+
   const fetchInitialData = async () => {
     await fetchByEventTime();
   };
@@ -77,9 +78,15 @@ export function PolicyViewDetails(props) {
     } catch (error) {
       console.error(`eventTime can not be undefined ${error}`);
     }
-    accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
-      return servicedef.name == accesslogs?.data?.serviceType;
-    });
+
+    if (accesslogs?.data?.serviceType == "gds") {
+      accessLogsServiceDef = gdsServiceDef;
+    } else {
+      accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
+        return servicedef.name == accesslogs?.data?.serviceType;
+      });
+    }
+
     setAccess(accesslogs?.data);
     setServiceDef(accessLogsServiceDef);
     SetLoader(false);
@@ -182,24 +189,26 @@ export function PolicyViewDetails(props) {
             <td>{obj.label}</td>
             <td>
               <Row>
-                <Col>
+                <Col md={9} className="d-flex flex-wrap">
                   {obj.values.map((val, index) => (
-                    <h6 className="d-inline mr-1" key={index}>
-                      <Badge className="d-inline mr-1" variant="info" key={val}>
+                    <Badge
+                      className="d-inline me-1 text-start"
+                      bg="info"
+                      key={index}
+                    >
+                      <span className="d-inline me-1 item" key={val}>
                         {val}
-                      </Badge>
-                    </h6>
+                      </span>
+                    </Badge>
                   ))}
                 </Col>
-                <Col className="text-right">
-                  <h6 className="d-inline mr-1">
-                    <Badge variant="dark text-capitalize">{obj.Rec_Exc}</Badge>
+                <Col className="text-end" md={3}>
+                  <h6 className="d-inline me-1">
+                    <Badge bg="dark text-capitalize">{obj.Rec_Exc}</Badge>
                   </h6>
 
-                  <h6 className="d-inline mr-1">
-                    <Badge variant="dark text-capitalize">
-                      {obj.Rec_Recursive}
-                    </Badge>
+                  <h6 className="d-inline me-1">
+                    <Badge bg="dark text-capitalize">{obj.Rec_Recursive}</Badge>
                   </h6>
                 </Col>
               </Row>
@@ -215,7 +224,7 @@ export function PolicyViewDetails(props) {
       if (policyTypeVal == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value) {
         return (policyTypeVal = (
           <h6>
-            <Badge variant="primary">
+            <Badge bg="primary">
               {RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.label}
             </Badge>
           </h6>
@@ -224,7 +233,7 @@ export function PolicyViewDetails(props) {
       if (policyTypeVal == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value) {
         return (policyTypeVal = (
           <h6>
-            <Badge variant="primary">
+            <Badge bg="primary">
               {RangerPolicyType.RANGER_MASKING_POLICY_TYPE.label}
             </Badge>
           </h6>
@@ -235,7 +244,7 @@ export function PolicyViewDetails(props) {
       ) {
         return (policyTypeVal = (
           <h6>
-            <Badge variant="primary">
+            <Badge bg="primary">
               {RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.label}
             </Badge>
           </h6>
@@ -243,7 +252,7 @@ export function PolicyViewDetails(props) {
       }
       return (
         <h6>
-          <Badge variant="primary">{policyTypeVal}</Badge>
+          <Badge bg="primary">{policyTypeVal}</Badge>
         </h6>
       );
     };
@@ -251,17 +260,17 @@ export function PolicyViewDetails(props) {
     const getPolicyName = (name) => {
       return (
         <>
-          <span className="float-left">{name}</span>
+          <span className="float-start">{name}</span>
           <br />
-          <div className="text-right">
-            <h6 className="d-inline mr-1">
-              <Badge variant="dark">
+          <div className="text-end">
+            <h6 className="d-inline me-1">
+              <Badge bg="dark">
                 {policyPriority == 1 ? "Override" : "Normal"}
               </Badge>
             </h6>
 
-            <h6 className="d-inline mr-1">
-              <Badge variant="dark">
+            <h6 className="d-inline me-1">
+              <Badge bg="dark">
                 {isEnabled == true ? "Enabled" : "Disabled"}
               </Badge>
             </h6>
@@ -281,31 +290,31 @@ export function PolicyViewDetails(props) {
         <tr>
           <td className="text-nowrap">Policy ID</td>
           <td>
-            <h6 className="d-inline mr-1">
-              <Badge variant="primary">{id}</Badge>
+            <h6 className="d-inline me-1">
+              <Badge bg="primary">{id}</Badge>
             </h6>
           </td>
         </tr>
         <tr>
           <td className="text-nowrap">Version</td>
           <td>
-            <h6 className="d-inline mr-1">
-              <Badge variant="primary">{version}</Badge>
+            <h6 className="d-inline me-1">
+              <Badge bg="primary">{version}</Badge>
             </h6>
           </td>
         </tr>
         <tr>
           <td className="text-nowrap">Policy Name </td>
-          <td>{getPolicyName(name)}</td>
+          <td className="text-break">{getPolicyName(name)}</td>
         </tr>
         <tr>
           <td className="text-nowrap">Policy Labels </td>
-          <td>
+          <td className="text-break">
             {!isEmpty(policyLabels)
               ? policyLabels.map((policyLabel, index) => (
                   <Badge
-                    variant="dark"
-                    className="mr-1 more-less-width text-truncate"
+                    bg="dark"
+                    className="me-1 more-less-width text-truncate"
                     key={index}
                   >
                     {policyLabel}
@@ -317,24 +326,24 @@ export function PolicyViewDetails(props) {
         {!isMultiResources && getPolicyResources(policyType, resources)}
         <tr>
           <td className="text-nowrap">Description</td>
-          <td>{!isEmpty(description) ? description : "--"}</td>
+          <td className="text-break">
+            {!isEmpty(description) ? description : "--"}
+          </td>
         </tr>
         <tr>
           <td className="text-nowrap">Audit Logging </td>
           <td>
-            <h6 className="d-inline mr-1">
-              <Badge variant="info">
-                {isAuditEnabled == true ? "Yes" : "No"}
-              </Badge>
+            <h6 className="d-inline me-1">
+              <Badge bg="info">{isAuditEnabled == true ? "Yes" : "No"}</Badge>
             </h6>
           </td>
         </tr>
         {!isEmpty(zoneName) && (
           <tr>
             <td className="text-nowrap">Zone Name </td>
-            <td>
-              <h6 className="d-inline mr-1">
-                <Badge variant="dark">{zoneName}</Badge>
+            <td className="text-break">
+              <h6 className="d-inline me-1">
+                <Badge bg="dark">{zoneName}</Badge>
               </h6>
             </td>
           </tr>
@@ -357,8 +366,8 @@ export function PolicyViewDetails(props) {
         return obj.name == label ? (filterLabel = obj.label) : "--";
       });
       return (
-        <h6 className="d-inline mr-1">
-          <Badge variant="info">{filterLabel}</Badge>
+        <h6 className="d-inline me-1">
+          <Badge bg="info">{filterLabel}</Badge>
         </h6>
       );
     };
@@ -405,8 +414,8 @@ export function PolicyViewDetails(props) {
                       {!isEmpty(items.roles)
                         ? items.roles.map((role) => (
                             <Badge
-                              variant="info"
-                              className="text-truncate mr-1 more-less-width"
+                              bg="info"
+                              className="text-truncate me-1 more-less-width"
                               key={role}
                             >
                               {role}
@@ -419,8 +428,8 @@ export function PolicyViewDetails(props) {
                       {!isEmpty(items.groups)
                         ? items.groups.map((group) => (
                             <Badge
-                              variant="info"
-                              className="text-truncate mr-1 more-less-width"
+                              bg="info"
+                              className="text-truncate me-1 more-less-width"
                               key={group}
                             >
                               {group}
@@ -432,9 +441,9 @@ export function PolicyViewDetails(props) {
                       {!isEmpty(items.users)
                         ? items.users.map((user) => (
                             <Badge
-                              variant="info"
+                              bg="info"
                               key={user}
-                              className="text-truncate mr-1 more-less-width "
+                              className="text-truncate me-1 more-less-width "
                             >
                               {user}
                             </Badge>
@@ -452,10 +461,10 @@ export function PolicyViewDetails(props) {
                                   return e.name == obj.type;
                                 });
                               return (
-                                <h6 className="d-inline mr-1" key={index}>
+                                <h6 className="d-inline me-1" key={index}>
                                   <Badge
-                                    variant="info"
-                                    className="d-inline mr-1"
+                                    bg="info"
+                                    className="d-inline me-1"
                                     key={obj.values}
                                   >{`${conditionObj.label}: ${obj.values.join(
                                     ", "
@@ -471,10 +480,10 @@ export function PolicyViewDetails(props) {
                       <td className="text-center d-flex flex-wrap policyview-permission-wrap">
                         {" "}
                         {items.accesses.map((obj, index) => (
-                          <h6 className="d-inline mr-1" key={index}>
+                          <h6 className="d-inline me-1" key={index}>
                             <Badge
-                              variant="info"
-                              className="d-inline mr-1"
+                              bg="info"
+                              className="d-inline me-1"
                               key={obj.type}
                             >
                               {obj.type}
@@ -509,8 +518,8 @@ export function PolicyViewDetails(props) {
                       RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value && (
                       <td className="text-center">
                         {items.rowFilterInfo.filterExp == undefined ? (
-                          <h6 className="d-inline mr-1">
-                            <Badge variant="info">
+                          <h6 className="d-inline me-1">
+                            <Badge bg="info">
                               {items.rowFilterInfo.filterExpr}
                             </Badge>
                           </h6>
@@ -539,13 +548,10 @@ export function PolicyViewDetails(props) {
   };
 
   const getPolicyConditions = (conditions, serviceDef) => {
-    let filterServiceDef = serviceDef;
     const getConditionLabel = (label) => {
-      let filterLabel = "";
-      filterServiceDef.policyConditions.map((obj) =>
-        obj.name == label ? (filterLabel = obj.label) : ""
-      );
-      return filterLabel;
+      let filterLabel = find(serviceDef.policyConditions, { name: label });
+
+      return filterLabel && filterLabel?.label ? filterLabel.label : "";
     };
     return (
       !isEmpty(conditions) && (
@@ -608,7 +614,7 @@ export function PolicyViewDetails(props) {
                   <td className="text-center">
                     {!isEmpty(obj.timeZone) ? (
                       <h6 className="d-inline">
-                        <Badge variant="info">{obj.timeZone}</Badge>
+                        <Badge bg="info">{obj.timeZone}</Badge>
                       </h6>
                     ) : (
                       "--"
@@ -639,8 +645,8 @@ export function PolicyViewDetails(props) {
           </p>
         </div>
       </div>
+      <p className="form-header">Policy Details :</p>
       <div className="overflow-auto">
-        <p className="form-header">Policy Details :</p>
         <Table bordered size="sm" className="table-audit-filter-ready-only">
           <tbody>{getPolicyDetails(serviceDef)}</tbody>
         </Table>
@@ -659,7 +665,7 @@ export function PolicyViewDetails(props) {
                 >
                   <thead>
                     <tr>
-                      <th className="text-left" colSpan={2}>
+                      <th className="text-start" colSpan={2}>
                         #{index + 1}
                       </th>
                     </tr>
@@ -674,14 +680,8 @@ export function PolicyViewDetails(props) {
         RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value) &&
         !isEmpty(validitySchedules) &&
         getValidityPeriod(validitySchedules)}
-      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
-        <>{getPolicyConditions(conditions, serviceDef)}</>
-      )}
-      {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value &&
-        serviceType == "tag" && (
-          <>{getPolicyConditions(conditions, serviceDef)}</>
-        )}
-
+      {/* Get Policy Condition */}
+      {getPolicyConditions(conditions, serviceDef)}
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
         <>
           <p className="form-header">Allow Conditions :</p>
@@ -699,7 +699,6 @@ export function PolicyViewDetails(props) {
           <br />
         </>
       )}
-
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
@@ -728,11 +727,11 @@ export function PolicyViewDetails(props) {
               Deny All Other Accesses :{" "}
               {isDenyAllElse == false ? (
                 <h6 className="d-inline">
-                  <Badge variant="dark">FALSE</Badge>
+                  <Badge bg="dark">FALSE</Badge>
                 </h6>
               ) : (
                 <h6 className="d-inline">
-                  <Badge variant="dark">TRUE</Badge>
+                  <Badge bg="dark">TRUE</Badge>
                 </h6>
               )}
               <br />
@@ -784,7 +783,6 @@ export function PolicyViewDetails(props) {
             </div>
           </>
         )}
-
       {policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value && (
         <>
           <p className="form-header">Row Level Conditions :</p>
@@ -800,7 +798,6 @@ export function PolicyViewDetails(props) {
           </div>
         </>
       )}
-
       {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value && (
         <>
           <p className="form-header">Masking Conditions :</p>
@@ -816,8 +813,8 @@ export function PolicyViewDetails(props) {
           </div>
         </>
       )}
-      <div className="updateInfo">
-        <div className="pull-left">
+      <div className="updateInfo clearfix">
+        <div className="float-start">
           <p>
             <strong>Updated By : </strong> {updatedBy}
           </p>
@@ -826,7 +823,7 @@ export function PolicyViewDetails(props) {
             {dateFormat(updateTime, "mm/dd/yyyy hh:MM TT ")}
           </p>
         </div>
-        <div className="pull-right">
+        <div className="float-end">
           <p>
             <strong>Created By : </strong> {createdBy}
           </p>

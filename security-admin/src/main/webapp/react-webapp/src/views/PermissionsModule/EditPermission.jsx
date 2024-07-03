@@ -266,7 +266,7 @@ const EditPermission = () => {
   const fetchUsers = async (inputValue) => {
     let params = { isVisible: 1 };
     let usersOp = [];
-
+    let notAllowedRoles = ["ROLE_KEY_ADMIN", "ROLE_KEY_ADMIN_AUDITOR"];
     if (inputValue) {
       params["name"] = inputValue || "";
     }
@@ -276,7 +276,12 @@ const EditPermission = () => {
         url: "xusers/users",
         params: params
       });
-      usersOp = userResp.data?.vXUsers;
+      usersOp =
+        permissionData.module == "Tag Based Policies"
+          ? userResp.data?.vXUsers.filter(
+              (users) => !notAllowedRoles.includes(users.userRoleList[0])
+            )
+          : userResp.data?.vXUsers;
     } catch (error) {
       console.error(`Error occurred while fetching Users ! ${error}`);
       serverError(error);
@@ -336,8 +341,7 @@ const EditPermission = () => {
           render={({ handleSubmit, submitting, values }) => (
             <form onSubmit={handleSubmit}>
               <div className="form-horizontal">
-                <header>Module Details:</header>
-                <hr className="zoneheader" />
+                <p className="form-header">Module Details:</p>
 
                 <div>
                   <Field
@@ -349,7 +353,7 @@ const EditPermission = () => {
                         className="mb-3"
                         controlId="moduleName"
                       >
-                        <FormB.Label column sm="3" className="text-right">
+                        <FormB.Label column sm="3" className="text-end">
                           <strong>Module Name *</strong>
                         </FormB.Label>
                         <Col sm="4">
@@ -363,8 +367,7 @@ const EditPermission = () => {
               <br />
               <br />
               <div className="form-horizontal">
-                <header>User and Group Permissions:</header>
-                <hr className="zoneheader" />
+                <p className="form-header">User and Group Permissions:</p>
 
                 <Field
                   className="form-control"
@@ -375,11 +378,11 @@ const EditPermission = () => {
                       className="mb-3"
                       controlId="formPlaintextEmail"
                     >
-                      <FormB.Label className="text-right" column sm="2">
+                      <FormB.Label className="text-end" column sm="2">
                         Permissions
                       </FormB.Label>
                       <Col sm="10">
-                        <Table striped bordered>
+                        <Table bordered>
                           <thead className="table-edit-permission">
                             <tr>
                               <th width="49%">Select and Add Group</th>
@@ -412,7 +415,7 @@ const EditPermission = () => {
                                       />
                                       <Button
                                         size="sm"
-                                        className="ml-2  m-r-sm"
+                                        className="ms-2  m-r-sm"
                                         variant="outline-secondary"
                                         onClick={() => {
                                           if (
@@ -460,7 +463,7 @@ const EditPermission = () => {
 
                                       <Button
                                         size="sm"
-                                        className="ml-2  m-r-sm"
+                                        className="ms-2  m-r-sm"
                                         variant="outline-secondary"
                                         onClick={() => {
                                           if (
@@ -546,11 +549,8 @@ const EditPermission = () => {
                 />
               </div>
 
-              <br />
-              <hr />
-              <div className="text-center">
+              <div className="text-center form-actions">
                 <Button
-                  className="mr-2"
                   type="submit"
                   variant="primary"
                   size="sm"

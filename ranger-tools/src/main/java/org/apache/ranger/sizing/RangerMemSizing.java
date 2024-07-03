@@ -30,10 +30,11 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.plugin.util.RangerUserStore;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -49,6 +50,7 @@ public class RangerMemSizing {
   private final String      tagFile;
   private final String      rolesFile;
   private final String      userStoreFile;
+  private final String      gdsInfoFile;
   private final boolean     deDup;
   private final boolean     deDupStrings;
   private final String      optimizationMode;
@@ -61,6 +63,7 @@ public class RangerMemSizing {
     this.tagFile          = cmdLine.getOptionValue('t');
     this.rolesFile        = cmdLine.getOptionValue('r');
     this.userStoreFile    = cmdLine.getOptionValue('u');
+    this.gdsInfoFile      = cmdLine.getOptionValue('g');
     this.deDup            = Boolean.parseBoolean(cmdLine.getOptionValue("d", "true"));
     this.deDupStrings     = this.deDup;
     this.optimizationMode = StringUtils.startsWithIgnoreCase(cmdLine.getOptionValue('o', "space"), "s") ? OPT_MODE_SPACE : OPT_MODEL_RETRIEVAL;
@@ -73,7 +76,8 @@ public class RangerMemSizing {
     ServiceTags      tags      = loadTags(tagFile, tracker);
     RangerRoles      roles     = loadRoles(rolesFile, tracker);
     RangerUserStore  userStore = loadUserStore(userStoreFile, tracker);
-    RangerBasePlugin plugin    = createRangerPlugin(policies, tags, roles, userStore, tracker);
+    ServiceGdsInfo   gdsInfo   = loadGdsInfo(gdsInfoFile, tracker);
+    RangerBasePlugin plugin    = createRangerPlugin(policies, tags, roles, userStore, gdsInfo, tracker);
 
     tracker.stop();
 
@@ -293,7 +297,53 @@ public class RangerMemSizing {
     return ret;
   }
 
-  private RangerBasePlugin createRangerPlugin(ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore, PerfMemTimeTracker parent) {
+  private ServiceGdsInfo loadGdsInfo(String fileName, PerfMemTimeTracker parent) {
+    if (fileName == null) {
+      return null;
+    }
+
+    ServiceGdsInfo ret = null;
+
+    try {
+      File               file        = new File(fileName);
+      PerfMemTimeTracker loadTracker = new PerfMemTimeTracker("Load gdsInfo");
+
+      log("loading gdsInfo(file=" + fileName + ")");
+
+      {
+        PerfMemTimeTracker tracker = new PerfMemTimeTracker("Read gdsInfo");
+
+        try (FileReader reader = new FileReader(file)) {
+          ret = gson.fromJson(reader, ServiceGdsInfo.class);
+        }
+
+        tracker.stop();
+        loadTracker.addChild(tracker);
+      }
+
+      if (deDupStrings) {
+        PerfMemTimeTracker tracker = new PerfMemTimeTracker("DeDupStrings");
+
+        ret.dedupStrings();
+
+        tracker.stop();
+        loadTracker.addChild(tracker);
+      }
+
+      loadTracker.stop();
+      parent.addChild(loadTracker);
+
+      log("loaded gdsInfo(file=" + fileName + ", size=" + file.length() + "): " + toSummaryStr(ret) + ")");
+    } catch (FileNotFoundException excp) {
+      log(fileName + ": file does not exist!");
+    } catch (IOException excp) {
+      log(fileName, excp);
+    }
+
+    return ret;
+  }
+
+  private RangerBasePlugin createRangerPlugin(ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore, ServiceGdsInfo gdsInfo, PerfMemTimeTracker parent) {
     RangerBasePlugin ret = null;
 
     if (policies != null) {
@@ -305,7 +355,7 @@ public class RangerMemSizing {
 
       log("Initializing RangerBasePlugin...");
 
-      ret = new RangerBasePlugin(pluginConfig, policies, tags, roles, userStore);
+      ret = new RangerBasePlugin(pluginConfig, policies, tags, roles, userStore, gdsInfo);
 
       tracker.stop();
       parent.addChild(tracker);
@@ -466,5 +516,32 @@ public class RangerMemSizing {
     }
 
     return "users=" + userCount + ", groups=" + groupCount + ", userGroupMappings=" + userGroupCount;
+  }
+
+  private static String toSummaryStr(ServiceGdsInfo gdsInfo) {
+    int dataShareCount = 0;
+    int resourcesCount = 0;
+    int datasetCount   = 0;
+    int projectCount   = 0;
+
+    if (gdsInfo != null) {
+      if (gdsInfo.getDataShares() != null) {
+        dataShareCount = gdsInfo.getDataShares().size();
+      }
+
+      if (gdsInfo.getResources() != null) {
+        resourcesCount = gdsInfo.getResources().size();
+      }
+
+      if (gdsInfo.getDatasets() != null) {
+        datasetCount = gdsInfo.getDatasets().size();
+      }
+
+      if (gdsInfo.getProjects() != null) {
+        projectCount = gdsInfo.getProjects().size();
+      }
+    }
+
+    return "dataShares=" + dataShareCount + ", resources=" + resourcesCount + ", datasets=" + datasetCount + ", projects=" + projectCount;
   }
 }

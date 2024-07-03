@@ -21,6 +21,7 @@ import React from "react";
 import { Badge, Table } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { ClassTypes } from "../../../utils/XAEnums";
+import { currentTimeZone } from "../../../utils/XAUtils";
 import { isEmpty, isUndefined, sortBy } from "lodash";
 
 export const ServiceLogs = ({ data, reportdata }) => {
@@ -99,7 +100,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
                 {val && val.previousValue && !isEmpty(val.previousValue) ? (
                   isEmpty(val.newValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="danger">
+                      <Badge className="d-inline me-1" bg="danger">
                         {getfilteredoldval(
                           val.attributeName,
                           val.previousValue
@@ -121,7 +122,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
                 {val && val.newValue && !isEmpty(val.newValue) ? (
                   isEmpty(val.previousValue) ? (
                     <h6>
-                      <Badge className="d-inline mr-1" variant="success">
+                      <Badge className="d-inline me-1" bg="success">
                         {getfilterednewval(val.attributeName, val.newValue)}
                       </Badge>
                     </h6>
@@ -149,18 +150,14 @@ export const ServiceLogs = ({ data, reportdata }) => {
       {action == "create" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName || ""}</div>
-            <div className="font-weight-bolder">
-              Date:
-              {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
-            <div className="font-weight-bolder">Created By: {owner}</div>
+            <div className="fw-bolder">Name: {objectName || ""}</div>
+            <div className="fw-bolder">Date:{currentTimeZone(createDate)}</div>
+            <div className="fw-bolder">Created By: {owner}</div>
             <br />
             {action == "create" && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Service Details:</h5>
-                <Table className="table  table-bordered table-striped w-50">
+                <Table className="table table-bordered w-50">
                   <thead className="thead-light">
                     <tr>
                       <th>Fields</th>
@@ -250,14 +247,13 @@ export const ServiceLogs = ({ data, reportdata }) => {
           <div>
             <div className="row">
               <div className="col-md-6">
-                <div className="font-weight-bolder">Name : {objectName}</div>
-                <div className="font-weight-bolder">
-                  Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                  India Standard Time
+                <div className="fw-bolder">Name : {objectName}</div>
+                <div className="fw-bolder">
+                  Date:{currentTimeZone(createDate)}
                 </div>
-                <div className="font-weight-bolder">Updated By: {owner}</div>
+                <div className="fw-bolder">Updated By: {owner}</div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -268,7 +264,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
               !isUndefined(serviceUpdate) && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Service Details:</h5>
-                  <Table className="table  table-bordered  table-striped  w-50">
+                  <Table className="table table-bordered w-50">
                     <thead className="thead-light">
                       <tr>
                         <th>Fields</th>
@@ -289,7 +285,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Connection Configurations :
                   </h5>
-                  <Table className="table  table-bordered  table-striped  w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Fields</th>
@@ -315,8 +311,8 @@ export const ServiceLogs = ({ data, reportdata }) => {
                                     ) ? (
                                       <h6>
                                         <Badge
-                                          className="d-inline mr-1"
-                                          variant="danger"
+                                          className="d-inline me-1"
+                                          bg="danger"
                                         >
                                           {
                                             JSON.parse(config.previousValue)[
@@ -341,8 +337,8 @@ export const ServiceLogs = ({ data, reportdata }) => {
                                     ) ? (
                                       <h6>
                                         <Badge
-                                          className="d-inline mr-1"
-                                          variant="success"
+                                          className="d-inline me-1"
+                                          bg="success"
                                         >
                                           {JSON.parse(config.newValue)[obj]}
                                         </Badge>
@@ -370,20 +366,16 @@ export const ServiceLogs = ({ data, reportdata }) => {
       {action == "delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName || ""}</div>
-            <div className="font-weight-bolder">
-              Date:
-              {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
-            <div className="font-weight-bolder">Deleted By: {owner}</div>
+            <div className="fw-bolder">Name: {objectName || ""}</div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
+            <div className="fw-bolder">Deleted By: {owner}</div>
             <br />
             {action == "delete" &&
               !isEmpty(serviceDelete) &&
               !isUndefined(serviceDelete) && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Service Details:</h5>
-                  <Table className="table  table-bordered table-striped  w-50">
+                  <Table className="table table-bordered w-50">
                     <thead className="thead-light">
                       <tr>
                         <th>Fields</th>
@@ -424,7 +416,7 @@ export const ServiceLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Connection Configurations :
                   </h5>
-                  <Table className="table  table-bordered table-striped w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Fields</th>

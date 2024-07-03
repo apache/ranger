@@ -24,8 +24,8 @@ import org.apache.ranger.biz.XAuditMgr;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXTrxLog;
@@ -54,13 +54,13 @@ public class TestXAuditREST {
 	SearchUtil searchUtil;
 
 	@Mock
-	XTrxLogService xLog;
-
-	@Mock
 	XAccessAuditService xAccessAuditSrv;
 
 	@Mock
-	VXTrxLogList vxExpList;
+	VXTrxLogList          vxExpList;
+
+	@Mock
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Mock
 	HttpServletRequest request;
@@ -198,22 +198,23 @@ public class TestXAuditREST {
 	public void Test8countXAccessAudits() {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		searchCriteria.addParam("name", name);
-		VXLong vxLongExp = new VXLong();
-		vxLongExp.setValue(id);
+		VXAccessAuditList vxAuditList = new VXAccessAuditList();
+		vxAuditList.setTotalCount(id);
 
 		Mockito.when(searchUtil.extractCommonCriterias((HttpServletRequest) Mockito.any(),
 				(List<SortField>) Mockito.any())).thenReturn(searchCriteria);
-		Mockito.when(xAuditMgr.getXAccessAuditSearchCount(searchCriteria)).thenReturn(vxLongExp);
+		Mockito.when(auditREST.searchXAccessAudits(request)).thenReturn(vxAuditList);
+
+		VXLong vXLongExpect = new VXLong();
+		vXLongExpect.setValue(vxAuditList.getTotalCount());
 
 		VXLong vxLongAct = auditREST.countXAccessAudits(request);
 
 		Assert.assertNotNull(vxLongAct);
-		Assert.assertEquals(vxLongExp, vxLongAct);
-		Assert.assertEquals(vxLongExp.getValue(), vxLongAct.getValue());
+		Assert.assertEquals(vXLongExpect.getValue(), vxLongAct.getValue());
 
-		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest) Mockito.any(),
+		Mockito.verify(searchUtil, Mockito.times(2)).extractCommonCriterias((HttpServletRequest) Mockito.any(),
 				(List<SortField>) Mockito.any());
-		Mockito.verify(xAuditMgr).getXAccessAuditSearchCount(searchCriteria);
 	}
 
 }

@@ -31,7 +31,7 @@ import {
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
-import { map, sortBy } from "lodash";
+import { cloneDeep, isEmpty, map, sortBy } from "lodash";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
@@ -56,7 +56,7 @@ function reducer(state, action) {
 
 export const PolicyListingTabView = () => {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const serviceDefs = getServiceDef();
+  const serviceDefs = cloneDeep(getServiceDef());
   const navigate = useNavigate();
   const params = useParams();
   const [policyState, dispatch] = useReducer(reducer, {
@@ -72,7 +72,11 @@ export const PolicyListingTabView = () => {
 
   useEffect(() => {
     fetchServiceDetails();
-  }, [params?.serviceId, JSON.parse(localStorageZoneDetails)?.value]);
+  }, [
+    params?.serviceId,
+    params?.policyType,
+    JSON.parse(localStorageZoneDetails)?.value
+  ]);
 
   const fetchServiceDetails = async () => {
     document
@@ -131,12 +135,12 @@ export const PolicyListingTabView = () => {
       serviceData: getServiceData?.data,
       serviceDefData: getServiceDefData
     });
-
-    dispatch({
-      type: "SET_LOADER",
-      loader: false
-    });
-
+    if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+      dispatch({
+        type: "SET_LOADER",
+        loader: false
+      });
+    }
     document
       .getElementById("resourceSelectedZone")
       ?.classList?.remove("disabledEvents");
@@ -166,10 +170,7 @@ export const PolicyListingTabView = () => {
         }
       });
       navigate(
-        `/service/${selectedServiceData?.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-        {
-          replace: true
-        }
+        `/service/${selectedServiceData?.id}/policies/${params.policyType}`
       );
       localStorage.removeItem("zoneDetails");
     }
@@ -197,12 +198,7 @@ export const PolicyListingTabView = () => {
     } else {
       localStorage.removeItem("zoneDetails");
     }
-    navigate(
-      `/service/${params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-      {
-        replace: true
-      }
-    );
+    navigate(`/service/${params.serviceId}/policies/${params.policyType}`);
   };
 
   const getServiceZone = () => {
@@ -223,9 +219,7 @@ export const PolicyListingTabView = () => {
   };
 
   const tabChange = (tabName) => {
-    navigate(`/service/${params?.serviceId}/policies/${tabName}`, {
-      replace: true
-    });
+    navigate(`/service/${params?.serviceId}/policies/${tabName}`);
   };
 
   return (

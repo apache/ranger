@@ -22,6 +22,7 @@ services:
     environment:
       - BRANCH
       - BUILD_HOST_SRC
+      - BUILD_OPTS
       - PROFILE
       - GIT_URL
       - RANGER_VERSION

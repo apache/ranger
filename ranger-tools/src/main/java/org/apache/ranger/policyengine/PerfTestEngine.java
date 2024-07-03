@@ -65,8 +65,7 @@ public class PerfTestEngine {
 		Reader reader = null;
 		ServicePolicies servicePolicies;
 
-		try {
-			InputStream in = servicePoliciesFileURL.openStream();
+		try (InputStream in = servicePoliciesFileURL.openStream()) {
 
 			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
 

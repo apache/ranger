@@ -52,6 +52,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     private final boolean                   useOnlyRangerGroups;
     private final boolean                   convertEmailToUsername;
     private final boolean                   enableImplicitUserStoreEnricher;
+    private final boolean                   enableImplicitGdsInfoEnricher;
     private       boolean                   isFallbackSupported;
     private       Set<String>               auditExcludedUsers  = Collections.emptySet();
     private       Set<String>               auditExcludedGroups = Collections.emptySet();
@@ -124,6 +125,7 @@ public class RangerPluginConfig extends RangerConfiguration {
         useOnlyRangerGroups             = this.getBoolean(propertyPrefix + ".use.only.rangerGroups", false);
         convertEmailToUsername          = this.getBoolean(propertyPrefix + ".convert.emailToUser", false);
         enableImplicitUserStoreEnricher = useRangerGroups || convertEmailToUsername || this.getBoolean(propertyPrefix + ".enable.implicit.userstore.enricher", false);
+        enableImplicitGdsInfoEnricher   = this.getBoolean(propertyPrefix + ".enable.implicit.gdsinfo.enricher", true);
 
         LOG.info("" + policyEngineOptions);
     }
@@ -148,6 +150,7 @@ public class RangerPluginConfig extends RangerConfiguration {
         this.useOnlyRangerGroups             = sourcePluginConfig.useOnlyRangerGroups;
         this.convertEmailToUsername          = sourcePluginConfig.convertEmailToUsername;
         this.enableImplicitUserStoreEnricher = sourcePluginConfig.enableImplicitUserStoreEnricher;
+        this.enableImplicitGdsInfoEnricher   = sourcePluginConfig.enableImplicitGdsInfoEnricher;
     }
 
     public String getServiceType() {
@@ -196,6 +199,10 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public boolean isEnableImplicitUserStoreEnricher() {
         return enableImplicitUserStoreEnricher;
+    }
+
+    public boolean isEnableImplicitGdsInfoEnricher() {
+        return enableImplicitGdsInfoEnricher;
     }
 
     public boolean getIsFallbackSupported() {

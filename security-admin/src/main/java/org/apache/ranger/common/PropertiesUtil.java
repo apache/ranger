@@ -46,9 +46,10 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 
 public class PropertiesUtil extends PropertyPlaceholderConfigurer {
-    private static Map<String, String> propertiesMap = new HashMap<String, String>();
-    private static final Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
-    protected List<String> xmlPropertyConfigurer  = new ArrayList<String>();
+    private static final Logger        LOG                   = LoggerFactory.getLogger(PropertiesUtil.class);
+
+	private static Map<String, String> propertiesMap         = new HashMap<>();
+    protected List<String>             xmlPropertyConfigurer = new ArrayList<>();
 
     private PropertiesUtil() {
 
@@ -81,7 +82,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
 			Path trustStoreFile = Paths.get(propertiesMap.get("ranger.truststore.file"));
 			if (!Files.exists(trustStoreFile) || !Files.isReadable(trustStoreFile)) {
-				logger.debug("Could not find or read truststore file '"+propertiesMap.get("ranger.truststore.file")+"'");
+				LOG.debug("Could not find or read truststore file '"+propertiesMap.get("ranger.truststore.file")+"'");
 			}else{
 				if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path")){
 					String path=propertiesMap.get("ranger.credential.provider.path");
@@ -92,7 +93,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 							propertiesMap.put("ranger.truststore.password", trustStorePassword);
 							props.put("ranger.truststore.password", trustStorePassword);
 						}else{
-							logger.info("trustStorePassword password not applied; clear text password shall be applicable");
+							LOG.info("trustStorePassword password not applied; clear text password shall be applicable");
 						}
 					}
 				}
@@ -108,7 +109,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
 			Path keyStoreFile = Paths.get(propertiesMap.get("ranger.keystore.file"));
 			if (!Files.exists(keyStoreFile) || !Files.isReadable(keyStoreFile)) {
-				logger.debug("Could not find or read keystore file '"+propertiesMap.get("ranger.keystore.file")+"'");
+				LOG.debug("Could not find or read keystore file '"+propertiesMap.get("ranger.keystore.file")+"'");
 			}else{
 				if(propertiesMap!=null && propertiesMap.containsKey("ranger.credential.provider.path")){
 					String path=propertiesMap.get("ranger.credential.provider.path");
@@ -119,7 +120,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 							propertiesMap.put("ranger.keystore.password", keyStorePassword);
 							props.put("ranger.keystore.password", keyStorePassword);
 						}else{
-							logger.info("keyStorePassword password not applied; clear text password shall be applicable");
+							LOG.info("keyStorePassword password not applied; clear text password shall be applicable");
 						}
 					}
 				}
@@ -139,7 +140,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 					propertiesMap.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
 					props.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
 				}else{
-					logger.info("unixauth keystore password not applied; clear text password shall be applicable");
+					LOG.info("unixauth keystore password not applied; clear text password shall be applicable");
 				}
 			}
 			//
@@ -150,7 +151,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 					propertiesMap.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
 					props.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
 				}else{
-					logger.info("unixauth truststore password not applied; clear text password shall be applicable");
+					LOG.info("unixauth truststore password not applied; clear text password shall be applicable");
 				}
 			}
 		}
@@ -167,7 +168,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				propertiesMap.put("ranger.jpa.jdbc.password", xaDBPassword);
 				props.put("ranger.jpa.jdbc.password", xaDBPassword);
 			}else{
-				logger.info("Credential keystore password not applied for Ranger DB; clear text password shall be applicable");
+				LOG.info("Credential keystore password not applied for Ranger DB; clear text password shall be applicable");
 			}
 		}
 	}
@@ -181,7 +182,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				propertiesMap.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
 				props.put("ranger.jpa.audit.jdbc.password", auditDBPassword);
 			}else{
-				logger.info("Credential keystore password not applied for Audit DB; clear text password shall be applicable");
+				LOG.info("Credential keystore password not applied for Audit DB; clear text password shall be applicable");
 			}
 		}
 	}
@@ -198,7 +199,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 						propertiesMap.put("ranger.ldap.ad.bind.password", bindDNPassword);
 						props.put("ranger.ldap.ad.bind.password", bindDNPassword);
 					}else{
-						logger.info("Credential keystore password not applied for AD Bind DN; clear text password shall be applicable");
+						LOG.info("Credential keystore password not applied for AD Bind DN; clear text password shall be applicable");
 					}
 				}
 			}
@@ -217,7 +218,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 						propertiesMap.put("ranger.ldap.bind.password", bindDNPassword);
 						props.put("ranger.ldap.bind.password", bindDNPassword);
 					}else{
-						logger.info("Credential keystore password not applied for LDAP Bind DN; clear text password shall be applicable");
+						LOG.info("Credential keystore password not applied for LDAP Bind DN; clear text password shall be applicable");
 					}
 				}
 			}
@@ -236,7 +237,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 						propertiesMap.put("ranger.solr.audit.user.password", solrAuditPassword);
 						props.put("ranger.solr.audit.user.password", solrAuditPassword);
 					}else{
-						logger.info("Credential keystore password not applied for Solr; clear text password shall be applicable");
+						LOG.info("Credential keystore password not applied for Solr; clear text password shall be applicable");
 					}
 				}
 			}
@@ -305,7 +306,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				if(StringUtils.isNotEmpty(ranger_jpa_jdbc_url)) {
 					props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url);
 				}
-				logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
+				LOG.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
                                } else {
 				           String ranger_jpa_jdbc_url_extra_args="";
 					   if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)) {
@@ -329,7 +330,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 						   if(StringUtils.isNotEmpty(ranger_jpa_jdbc_url)) {
 							   props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url);
 						   }
-						   logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
+						   LOG.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
 					   }
 			   }
 		}
@@ -347,8 +348,8 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	keySet = props.keySet();
 	for (Object key : keySet) {
 		String keyStr = key.toString();
-		if (logger.isDebugEnabled()) {
-			logger.debug("PropertiesUtil:[" + keyStr + "][" + (keyStr.toLowerCase().contains("pass") ? "********]" : props.get(keyStr)) + "]");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PropertiesUtil:[" + keyStr + "][" + (keyStr.toLowerCase().contains("pass") ? "********]" : props.get(keyStr)) + "]");
 		}
 	}
 

@@ -72,6 +72,7 @@
       "itemId": 1,
       "name": "select",
       "label": "SELECT",
+      "category": "READ",
       "impliedGrants":
       [
         "metadata"
@@ -82,6 +83,7 @@
       "itemId": 2,
       "name": "insert",
       "label": "INSERT",
+      "category": "UPDATE",
       "impliedGrants":
       [
         "metadata"
@@ -91,6 +93,7 @@
       "itemId": 3,
       "name": "update",
       "label": "UPDATE",
+      "category": "UPDATE",
       "impliedGrants":
       [
         "metadata"
@@ -100,6 +103,7 @@
       "itemId": 4,
       "name": "delete",
       "label": "DELETE",
+      "category": "DELETE",
       "impliedGrants":
       [
         "metadata"
@@ -109,6 +113,7 @@
       "itemId": 5,
       "name": "alter",
       "label": "ALTER",
+      "category": "CREATE",
       "impliedGrants":
       [
         "metadata"
@@ -118,6 +123,7 @@
       "itemId": 6,
       "name": "create",
       "label": "CREATE",
+      "category": "CREATE",
       "impliedGrants":
       [
         "metadata"
@@ -127,6 +133,7 @@
       "itemId": 7,
       "name": "drop",
       "label": "DROP",
+      "category": "DELETE",
       "impliedGrants":
       [
         "metadata"
@@ -135,7 +142,8 @@
     {
       "itemId": 8,
       "name": "metadata",
-      "label": "METADATA"
+      "label": "METADATA",
+      "category": "MANAGE"
     },
     {
       "itemId": 9,

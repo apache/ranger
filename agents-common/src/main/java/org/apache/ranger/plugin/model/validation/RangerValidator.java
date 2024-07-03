@@ -434,6 +434,14 @@ public abstract class RangerValidator {
 					}
 				}
 			}
+
+			if (serviceDef.getMarkerAccessTypes() != null) {
+				for (RangerAccessTypeDef accessTypeDef : serviceDef.getMarkerAccessTypes()) {
+					if (accessTypeDef != null) {
+						accessTypes.add(accessTypeDef.getName());
+					}
+				}
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useSearchParams, useOutletContext } from "react-router-dom";
+import { useSearchParams, useOutletContext, Link } from "react-router-dom";
 import { Badge, Button, Row, Col, Table, Modal } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import dateFormat from "dateformat";
@@ -40,10 +40,13 @@ import {
   toString,
   toUpper,
   has,
-  filter
+  filter,
+  find,
+  isArray,
+  cloneDeep
 } from "lodash";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import qs from "qs";
 import { AccessMoreLess } from "Components/CommonComponents";
 import { PolicyViewDetails } from "./AdminLogs/PolicyViewDetails";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
@@ -97,7 +100,7 @@ function Access() {
   );
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [policyDetails, setPolicyDetails] = useState({});
-  const { allServiceDefs } = getServiceDef();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     if (!isKMSRole) {
@@ -120,11 +123,14 @@ function Access() {
       });
     }
 
-    // Updating the states for search params, search filter, default search filter and localStorage
-    if (localStorage?.excludeServiceUser) {
+    // Add excludeServiceUser if not present in the search param with default state value of checked
+    if (!has(searchParam, "excludeServiceUser")) {
       searchParam["excludeServiceUser"] = checked;
     }
-    setSearchParams(searchParam);
+    localStorage.setItem("excludeServiceUser", checked);
+
+    // Updating the states for search params, search filter, default search filter and localStorage
+    setSearchParams(searchParam, { replace: true });
     setSearchFilterParams(searchFilterParam);
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     localStorage.setItem("bigData", JSON.stringify(searchParam));
@@ -135,18 +141,17 @@ function Access() {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
 
-      // Updating the states for search params, search filter, default search filter and localStorage
-      if (localStorage?.excludeServiceUser || searchParam?.excludeServiceUser) {
-        if (searchParam?.excludeServiceUser) {
-          setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
-          localStorage.setItem(
-            "excludeServiceUser",
-            searchParam?.excludeServiceUser
-          );
-        }
-        searchParam["excludeServiceUser"] = localStorage?.excludeServiceUser;
+      // Update excludeServiceUser in the search param and in the localStorage
+      if (searchParam?.excludeServiceUser) {
+        setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
+        localStorage.setItem(
+          "excludeServiceUser",
+          searchParam?.excludeServiceUser
+        );
       }
-      setSearchParams(searchParam);
+
+      // Updating the states for search params, search filter, default search filter and localStorage
+      setSearchParams(searchParam, { replace: true });
       if (
         JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
       ) {
@@ -154,6 +159,7 @@ function Access() {
       }
       setDefaultSearchFilterParams(defaultSearchFilterParam);
       localStorage.setItem("bigData", JSON.stringify(searchParam));
+
       setContentLoader(false);
     }
   }, [searchParams, servicesAvailable]);
@@ -186,7 +192,11 @@ function Access() {
           try {
             logsResp = await fetchApi({
               url: "assets/accessAudit",
-              params: params
+              params: params,
+              skipNavigate: true,
+              paramsSerializer: function (params) {
+                return qs.stringify(params, { arrayFormat: "repeat" });
+              }
             });
             logs = logsResp.data.vXAccessAudits;
             totalCount = logsResp.data.totalCount;
@@ -223,13 +233,39 @@ function Access() {
   };
 
   const toggleChange = (chkVal) => {
-    let currentParams = Object.fromEntries([...searchParams]);
-    currentParams["excludeServiceUser"] = chkVal?.target?.checked;
-    localStorage.setItem(
-      "excludeServiceUser",
-      JSON.stringify(chkVal?.target?.checked)
-    );
-    setSearchParams(currentParams);
+    let checkBoxValue = chkVal?.target?.checked;
+    let searchParam = {};
+
+    for (const [key, value] of searchParams.entries()) {
+      let searchFilterObj = find(searchFilterOptions, {
+        urlLabel: key
+      });
+
+      if (!isUndefined(searchFilterObj)) {
+        if (searchFilterObj?.addMultiple) {
+          let oldValue = searchParam[key];
+          let newValue = value;
+          if (oldValue) {
+            if (isArray(oldValue)) {
+              searchParam[key].push(newValue);
+            } else {
+              searchParam[key] = [oldValue, newValue];
+            }
+          } else {
+            searchParam[key] = newValue;
+          }
+        } else {
+          searchParam[key] = value;
+        }
+      } else {
+        searchParam[key] = value;
+      }
+    }
+
+    searchParam["excludeServiceUser"] = checkBoxValue;
+    localStorage.setItem("excludeServiceUser", checkBoxValue);
+
+    setSearchParams(searchParam, { replace: true });
     setAccessLogs([]);
     setChecked(chkVal?.target?.checked);
     setLoader(true);
@@ -238,6 +274,7 @@ function Access() {
 
   const handleClosePolicyId = () => setPolicyViewModal(false);
   const handleClose = () => setShowRowModal(false);
+
   const rowModal = (row) => {
     setShowRowModal(true);
     setRowData(row.original);
@@ -293,9 +330,9 @@ function Access() {
         <Col sm={9} className="popover-span">
           <span>{requestData}</span>
         </Col>
-        <Col sm={3} className="pull-right">
+        <Col sm={3} className="float-end">
           <button
-            className="pull-right link-tag query-icon btn btn-sm"
+            className="float-end link-tag query-icon btn btn-sm"
             size="sm"
             title="Copy"
             onClick={(e) => {
@@ -355,7 +392,7 @@ function Access() {
 
   const queryPopupContent = (rowId, serviceType, requestData) => {
     return (
-      <div className="pull-right">
+      <div className="float-end">
         <div className="queryInfo btn btn-sm link-tag query-icon">
           <CustomPopoverOnClick
             icon="fa-fw fa fa-table"
@@ -474,11 +511,14 @@ function Access() {
         Header: "Service (Name / Type)",
         accessor: (s) => (
           <div>
-            <div className="text-left lht-2 mb-1" title={s.repoDisplayName}>
+            <div
+              className="text-start lht-2 mb-1 text-truncate"
+              title={s.repoDisplayName}
+            >
               {s.repoDisplayName}
             </div>
             <div
-              className="bt-1 text-left lht-2 mb-0"
+              className="bt-1 text-start lht-2 mb-0"
               title={s.serviceTypeDisplayName}
             >
               {s.serviceTypeDisplayName}
@@ -500,14 +540,14 @@ function Access() {
           let aclEnforcer = r.row.original.aclEnforcer;
           let requestData = r.row.original.requestData;
 
-          if (!isUndefined(resourcePath)) {
+          if (!isUndefined(resourcePath) || !isUndefined(requestData)) {
             let resourcePathText = isEmpty(resourcePath) ? "--" : resourcePath;
-            let resourceTypeText = isEmpty(resourceType) ? "--" : resourceType;
+            let resourceTypeText = isEmpty(resourceType) || resourceType=="@null" ? "--" : resourceType;
             return (
               <React.Fragment>
                 <div className="clearfix d-flex flex-nowrap m-0">
                   <div
-                    className="pull-left resource-text lht-2 mb-1"
+                    className="float-start resource-text lht-2 mb-1"
                     title={resourcePathText}
                   >
                     {resourcePathText}
@@ -542,7 +582,7 @@ function Access() {
           return (
             <h6>
               <Badge
-                variant="info"
+                bg="info"
                 title={rawValue.value}
                 className="text-truncate mw-100"
               >
@@ -562,13 +602,13 @@ function Access() {
           if (rawValue.value == 1) {
             return (
               <h6>
-                <Badge variant="success">Allowed</Badge>
+                <Badge bg="success">Allowed</Badge>
               </h6>
             );
           } else
             return (
               <h6>
-                <Badge variant="danger">Denied</Badge>
+                <Badge bg="danger">Denied</Badge>
               </h6>
             );
         },
@@ -588,7 +628,7 @@ function Access() {
         Header: "Agent Host Name",
         accessor: "agentHost",
         Cell: (rawValue) => {
-          if (!isUndefined(rawValue.value) || !isEmpty(rawValue.value)) {
+          if (!isEmpty(rawValue?.value)) {
             return (
               <div className="text-truncate" title={rawValue.value}>
                 {rawValue.value}
@@ -614,16 +654,23 @@ function Access() {
         width: 100,
         disableResizing: true,
         disableSortBy: true,
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return <div className="text-truncate">{rawValue.value}</div>;
+          } else {
+            return <div className="text-center">--</div>;
+          }
+        },
         getResizerProps: () => {}
       },
       {
         Header: "Zone Name",
         accessor: "zoneName",
         Cell: (rawValue) => {
-          if (!isUndefined(rawValue.value) || !isEmpty(rawValue.value)) {
+          if (!isEmpty(rawValue?.value)) {
             return (
               <h6>
-                <Badge variant="dark" className="text-truncate mw-100">
+                <Badge bg="dark" className="text-truncate mw-100">
                   {rawValue.value}
                 </Badge>
               </h6>
@@ -668,6 +715,40 @@ function Access() {
             return <div className="text-center">--</div>;
           }
           return <AccessMoreLess Data={Tags} />;
+        },
+        width: 140,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Datasets",
+        accessor: "datasets",
+        Cell: (rawValue) => {
+          let Datasets = [];
+          if (!isEmpty(rawValue.value)) {
+            Datasets = JSON.parse(rawValue.value).sort();
+          } else {
+            return <div className="text-center">--</div>;
+          }
+          return <AccessMoreLess Data={Datasets} />;
+        },
+        width: 140,
+        disableResizing: true,
+        disableSortBy: true,
+        getResizerProps: () => {}
+      },
+      {
+        Header: "Projects",
+        accessor: "projects",
+        Cell: (rawValue) => {
+          let Projects = [];
+          if (!isEmpty(rawValue.value)) {
+            Projects = JSON.parse(rawValue.value).sort();
+          } else {
+            return <div className="text-center">--</div>;
+          }
+          return <AccessMoreLess Data={Projects} />;
         },
         width: 140,
         disableResizing: true,
@@ -733,7 +814,7 @@ function Access() {
     searchParam["excludeServiceUser"] = checked;
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("bigData", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {
@@ -770,7 +851,7 @@ function Access() {
       category: "eventId",
       label: "Audit ID",
       urlLabel: "eventId",
-      type: "number"
+      type: "text"
     },
     {
       category: "clientIP",
@@ -794,7 +875,8 @@ function Access() {
       category: "excludeUser",
       label: "Exclude User",
       urlLabel: "excludeUser",
-      type: "number"
+      addMultiple: true,
+      type: "text"
     },
     {
       category: "policyId",
@@ -854,9 +936,22 @@ function Access() {
       type: "text"
     },
     {
+      category: "datasets",
+      label: "Datasets",
+      urlLabel: "datasets",
+      type: "text"
+    },
+    {
+      category: "projects",
+      label: "Projects",
+      urlLabel: "projects",
+      type: "text"
+    },
+    {
       category: "requestUser",
       label: "User",
       urlLabel: "user",
+      addMultiple: true,
       type: "text"
     },
     {
@@ -917,6 +1012,8 @@ function Access() {
                       <br /> <b> Exclude User :</b> Name of User.
                       <br /> <b> Application :</b> Application.
                       <br /> <b> Tags :</b> Tag Name.
+                      <br /> <b> Datasets:</b> Dataset Name.
+                      <br /> <b> Projects:</b> Project Name.
                       <br /> <b> Permission :</b> Permission
                     </p>
                   }
@@ -926,40 +1023,45 @@ function Access() {
             </div>
           </Col>
         </Row>
-        <Row className="mb-2">
-          <Col sm={2}>
-            <span>Exclude Service Users: </span>
-            <input
-              type="checkbox"
-              className="align-middle"
-              checked={checked}
-              onChange={toggleChange}
-              data-id="serviceUsersExclude"
-              data-cy="serviceUsersExclude"
-            />
-          </Col>
-          <Col sm={9}>
-            <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          </Col>
-        </Row>
-        <XATableLayout
-          data={accessListingData}
-          columns={columns}
-          fetchData={fetchAccessLogsInfo}
-          totalCount={entries && entries.totalCount}
-          loading={loader}
-          pageCount={pageCount}
-          getRowProps={(row) => ({
-            onClick: (e) => {
-              e.stopPropagation();
-              rowModal(row);
-            }
-          })}
-          columnHide={true}
-          columnResizable={true}
-          columnSort={true}
-          defaultSort={getDefaultSort}
-        />
+        <div className="position-relative">
+          <Row className="mb-2">
+            <Col sm={2}>
+              <span>Exclude Service Users: </span>
+              <input
+                type="checkbox"
+                className="align-middle"
+                checked={checked}
+                onChange={toggleChange}
+                data-id="serviceUsersExclude"
+                data-cy="serviceUsersExclude"
+              />
+            </Col>
+            <Col sm={9}>
+              <AuditFilterEntries
+                entries={entries}
+                refreshTable={refreshTable}
+              />
+            </Col>
+          </Row>
+          <XATableLayout
+            data={accessListingData}
+            columns={columns}
+            fetchData={fetchAccessLogsInfo}
+            totalCount={entries && entries.totalCount}
+            loading={loader}
+            pageCount={pageCount}
+            getRowProps={(row) => ({
+              onClick: (e) => {
+                e.stopPropagation();
+                rowModal(row);
+              }
+            })}
+            columnHide={{ tableName: "bigData", isVisible: true }}
+            columnResizable={true}
+            columnSort={true}
+            defaultSort={getDefaultSort}
+          />
+        </div>
         <Modal show={showrowmodal} size="lg" onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>
@@ -973,12 +1075,12 @@ function Access() {
                     pathname: `/reports/audit/eventlog/${rowdata.eventId}`
                   }}
                 >
-                  <i className="fa-fw fa fa-external-link pull-right text-info"></i>
+                  <i className="fa-fw fa fa-external-link float-end text-info"></i>
                 </Link>
               </h4>
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">
             <AccessLogsTable data={rowdata}></AccessLogsTable>
           </Modal.Body>
           <Modal.Footer>

@@ -19,36 +19,46 @@
 
 package org.apache.ranger.service;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXServiceResource;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
+	private static final Logger logger = LoggerFactory.getLogger(RangerTagService.class);
 
-	public static final Type subsumedDataType = new TypeToken<Map<String, String>>() {}.getType();
+	private static final    TypeReference subsumedDataType = new TypeReference<Map<String, String>>() {};
 
 	public RangerTagService() {
 		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.type", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField(SearchFilter.TAG_TYPE, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXTagDef tagDef", "obj.type = tagDef.id"));
+		searchFields.add(new SearchField(SearchFilter.TAG_TYPE_PARTIAL, "tagDef.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXTagDef tagDef", "obj.type = tagDef.id"));
+		searchFields.add(new SearchField(SearchFilter.TAG_IDS, "obj.id", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+
+		sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.type"));
+		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
 	}
 
 	@Override
@@ -129,7 +139,11 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 		if (serviceResourceEntity != null) {
 			String tagsText = serviceResourceEntity.getTags();
 			if (StringUtils.isNotEmpty(tagsText)) {
-				ret = RangerTagDBRetriever.gsonBuilder.fromJson(tagsText, RangerServiceResourceService.duplicatedDataType);
+				try {
+					ret = (List<RangerTag>) JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
+				} catch (JsonProcessingException e) {
+					logger.error("Error occurred while processing json", e);
+				}
 			}
 		}
 
@@ -144,7 +158,11 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 		if (serviceResourceEntity != null) {
 			String tagsText = serviceResourceEntity.getTags();
 			if (StringUtils.isNotEmpty(tagsText)) {
-				ret = RangerTagDBRetriever.gsonBuilder.fromJson(tagsText, RangerServiceResourceService.duplicatedDataType);
+				try {
+					ret = (List<RangerTag>) JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
+				} catch (JsonProcessingException e) {
+					logger.error("Error occurred while processing json", e);
+				}
 			}
 		}
 
@@ -170,9 +188,14 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     @Override
     protected RangerTag mapEntityToViewBean(RangerTag vObj, XXTag xObj) {
         RangerTag ret = super.mapEntityToViewBean(vObj, xObj);
-
-        Map<String, String> attributes = RangerTagDBRetriever.gsonBuilder.fromJson(xObj.getTagAttrs(), RangerTagService.subsumedDataType);
-        ret.setAttributes(attributes);
+		if (StringUtils.isNotEmpty(xObj.getTagAttrs())) {
+			try {
+				Map<String, String> attributes = (Map<String, String>) JsonUtils.jsonToObject(xObj.getTagAttrs(), RangerTagService.subsumedDataType);
+				ret.setAttributes(attributes);
+			} catch (JsonProcessingException e) {
+				logger.error("Error occurred while processing json", e);
+			}
+		}
         return ret;
     }
 

@@ -33,6 +33,7 @@ import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -132,10 +133,14 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setClientType(request.getClientType());
 			ret.setSessionId(request.getSessionId());
 			ret.setAclEnforcer(moduleName);
+
 			Set<String> tags = getTags(request);
 			if (tags != null) {
 				ret.setTags(tags);
 			}
+
+			ret.setDatasets(getDatasets(request));
+			ret.setProjects(getProjects(request));
 			ret.setAdditionalInfo(getAdditionalInfo(request));
 			ret.setClusterName(request.getClusterName());
 			ret.setZoneName(result.getZoneName());
@@ -261,6 +266,18 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		}
 
 		return ret;
+	}
+
+	public final Set<String> getDatasets(RangerAccessRequest request) {
+		GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
+
+		return gdsResult != null ? gdsResult.getDatasets() : null;
+	}
+
+	public final Set<String> getProjects(RangerAccessRequest request) {
+		GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
+
+		return gdsResult != null ? gdsResult.getProjects() : null;
 	}
 
 	public 	String getAdditionalInfo(RangerAccessRequest request) {

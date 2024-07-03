@@ -48,6 +48,16 @@
             Posted on Oct 15, 2023 by Barbara Eckman, Comcast
         </div>
     </li>
+    <p/>
+    <li>
+        <p>
+            <a href="blogs/dynamic_expressions.html" target="_blank">Dynamic expressions</a>
+        </p>
+        Explores use of dynamic expressions using context attributes in Apache Ranger policies.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Dec 10, 2023 by Madhan Neethiraj, Apache Ranger committer
+        </div>
+    </li>
 </ul>
 </section>
 </body>

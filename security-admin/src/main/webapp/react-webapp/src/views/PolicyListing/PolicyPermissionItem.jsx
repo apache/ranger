@@ -28,7 +28,6 @@ import {
   groupBy,
   isEmpty,
   isArray,
-  has,
   map,
   filter,
   some,
@@ -151,6 +150,8 @@ export default function PolicyPermissionItem(props) {
                   }
                 }
                 multiplePermissionItem = [...multiplePermissionItem, ...op];
+              } else {
+                multiplePermissionItem = [...srcOp];
               }
               break;
             }
@@ -498,6 +499,7 @@ export default function PolicyPermissionItem(props) {
                               </td>
                             );
                           } else {
+                            let accessTypeOptions = getAccessTypeOptions();
                             return (
                               <td key={colName} className="align-middle">
                                 <Field
@@ -509,18 +511,39 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input }) => (
-                                    <div className="table-editable">
-                                      <Editable
-                                        {...input}
-                                        placement="auto"
-                                        type="checkbox"
-                                        options={getAccessTypeOptions()}
-                                        showSelectAll={true}
-                                        selectAllLabel="Select All"
-                                      />
-                                    </div>
-                                  )}
+                                  render={({ input }) => {
+                                    if (
+                                      formValues[attrName][index]?.accesses &&
+                                      isArray(
+                                        formValues[attrName][index].accesses
+                                      ) &&
+                                      changePolicyItemPermissions
+                                    ) {
+                                      let accTypeVal = filter(
+                                        formValues[attrName][index].accesses,
+                                        (m) => {
+                                          if (some(accessTypeOptions, m)) {
+                                            return m;
+                                          }
+                                        }
+                                      );
+                                      if (!isEqual(input.value, accTypeVal)) {
+                                        input.onChange(accTypeVal);
+                                      }
+                                    }
+                                    return (
+                                      <div className="table-editable">
+                                        <Editable
+                                          {...input}
+                                          placement="auto"
+                                          type="checkbox"
+                                          options={accessTypeOptions}
+                                          showSelectAll={true}
+                                          selectAllLabel="Select All"
+                                        />
+                                      </div>
+                                    );
+                                  }}
                                 />
                               </td>
                             );

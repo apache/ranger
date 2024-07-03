@@ -17,15 +17,14 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.common.GUIDUtil;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.*;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
@@ -35,11 +34,9 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
 import java.util.Map;
 
-public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends
-		RangerBaseModelService<T, V> {
+public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends RangerPolicy> extends RangerAuditedModelService<T, V> {
 
     public static final String OPTION_POLICY_VALIDITY_SCHEDULES = "POLICY_VALIDITY_SCHEDULES";
 
@@ -47,7 +44,8 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 	GUIDUtil guidUtil;
 
 	public RangerPolicyServiceBase() {
-		super();
+		super(AppConstants.CLASS_TYPE_RANGER_POLICY, AppConstants.CLASS_TYPE_XA_SERVICE);
+
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
 				"XXServiceDef xSvcDef, XXService xSvc", "xSvc.type = xSvcDef.id and xSvc.id = obj.service"));
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "xSvc.type", DATA_TYPE.INTEGER,
@@ -92,6 +90,68 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		sortFields.add(new SortField(SearchFilter.POLICY_ID, "obj.id", true, SORT_ORDER.ASC));
 		sortFields.add(new SortField(SearchFilter.POLICY_NAME, "obj.name"));
 
+		trxLogAttrs.put("name",                 new VTrxLogAttr("name", "Policy Name", false, true));
+		trxLogAttrs.put("description",          new VTrxLogAttr("description", "Policy Description"));
+		trxLogAttrs.put("isEnabled",            new VTrxLogAttr("isEnabled", "Policy Status"));
+		trxLogAttrs.put("resources",            new VTrxLogAttr("resources", "Policy Resources"));
+		trxLogAttrs.put("additionalResources",  new VTrxLogAttr("additionalResources", "Policy Additional Resources"));
+		trxLogAttrs.put("conditions",           new VTrxLogAttr("conditions", "Policy Conditions"));
+		trxLogAttrs.put("policyItems",          new VTrxLogAttr("policyItems", "Policy Items"));
+		trxLogAttrs.put("denyPolicyItems",      new VTrxLogAttr("denyPolicyItems", "DenyPolicy Items"));
+		trxLogAttrs.put("allowExceptions",      new VTrxLogAttr("allowExceptions", "Allow Exceptions"));
+		trxLogAttrs.put("denyExceptions",       new VTrxLogAttr("denyExceptions", "Deny Exceptions"));
+		trxLogAttrs.put("dataMaskPolicyItems",  new VTrxLogAttr("dataMaskPolicyItems", "Masked Policy Items"));
+		trxLogAttrs.put("rowFilterPolicyItems", new VTrxLogAttr("rowFilterPolicyItems", "Row level filter Policy Items"));
+		trxLogAttrs.put("isAuditEnabled",       new VTrxLogAttr("isAuditEnabled", "Audit Status"));
+		trxLogAttrs.put("policyLabels",         new VTrxLogAttr("policyLabels", "Policy Labels"));
+		trxLogAttrs.put("validitySchedules",    new VTrxLogAttr("validitySchedules", "Validity Schedules"));
+		trxLogAttrs.put("policyPriority",       new VTrxLogAttr("policyPriority", "Priority"));
+		trxLogAttrs.put("zoneName",             new VTrxLogAttr("zoneName", "Zone Name"));
+		trxLogAttrs.put("isDenyAllElse",        new VTrxLogAttr("isDenyAllElse", "Deny All Other Accesses"));
+	}
+
+	@Override
+	public String getParentObjectName(V obj, V oldObj) {
+		return obj != null ? obj.getService() : null;
+	}
+
+	@Override
+	public Long getParentObjectId(V obj, V oldObj) {
+		String    serviceName = obj != null ? obj.getService() : null;
+		XXService service     = serviceName != null ? daoMgr.getXXService().findByName(obj.getService()) : null;
+
+		return service != null ? service.getId() : null;
+	}
+
+	@Override
+	public boolean skipTrxLogForAttribute(V obj, V oldObj, VTrxLogAttr trxLogAttr) {
+		final boolean ret;
+
+		int policyType = (obj == null || obj.getPolicyType() == null) ? RangerPolicy.POLICY_TYPE_ACCESS : obj.getPolicyType();
+
+		switch (trxLogAttr.getAttribName()) {
+			case "dataMaskPolicyItems":
+				ret = policyType != RangerPolicy.POLICY_TYPE_DATAMASK;
+			break;
+
+			case "rowFilterPolicyItems":
+				ret = policyType != RangerPolicy.POLICY_TYPE_ROWFILTER;
+			break;
+
+			case "policyItems":
+			case "allowExceptions":
+			case "denyPolicyItems":
+			case "denyExceptions":
+			case "isDenyAllElse":
+                ret = policyType != RangerPolicy.POLICY_TYPE_ACCESS;
+			break;
+
+			default:
+				ret = false;
+			break;
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -101,6 +161,8 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 			throw restErrorUtil.createRESTException("No corresponding service found for policyName: " + vObj.getName()
 					+ "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
 		}
+		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
+		xObj.setZoneId(zoneId);
 
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
 		if (xServiceDef != null) {
@@ -133,20 +195,14 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());
 		xObj.setIsEnabled(vObj.getIsEnabled());
-		Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
-
-		xObj.setZoneId(zoneId);
 
 		String              validitySchedules = JsonUtils.listToJson(vObj.getValiditySchedules());
 		Map<String, Object> options           = vObj.getOptions();
 
-		if (options == null) {
-			options = new HashMap<>();
-		}
-
 		if (StringUtils.isNotBlank(validitySchedules)) {
+			options = vObj.getUpdatableMap(options);
 			options.put(OPTION_POLICY_VALIDITY_SCHEDULES, validitySchedules);
-		} else {
+		} else if (MapUtils.isNotEmpty(options)) {
 			options.remove(OPTION_POLICY_VALIDITY_SCHEDULES);
 		}
 

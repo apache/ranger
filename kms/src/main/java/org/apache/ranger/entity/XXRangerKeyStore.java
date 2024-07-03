@@ -23,7 +23,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -70,7 +69,6 @@ public class XXRangerKeyStore extends XXDBBase implements java.io.Serializable {
 		this.createdDate = createdDate;
 	}
 
-	@Lob
 	@Column(name="kms_encoded")
 	protected String encoded;
 

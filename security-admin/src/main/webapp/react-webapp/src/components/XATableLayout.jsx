@@ -28,7 +28,7 @@ import {
 } from "react-table";
 import { Table, ButtonGroup } from "react-bootstrap";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import { isEmpty } from "lodash";
+import { groupBy, isEmpty, uniqBy } from "lodash";
 
 const IndeterminateCheckbox = forwardRef(
   ({ indeterminate, chkType, ...rest }, ref) => {
@@ -74,16 +74,19 @@ function XATableLayout({
 }) {
   const getLocalStorageVal = () => {
     let localStorageVal = [];
+
     if (localStorage.getItem("showHideTableCol") != null) {
       localStorageVal =
         !isEmpty(localStorage.getItem("showHideTableCol")) &&
-        JSON.parse(localStorage.getItem("showHideTableCol")).bigData;
+        JSON.parse(localStorage.getItem("showHideTableCol"));
     }
-    let filterColVal = !isEmpty(localStorageVal)
-      ? localStorageVal
-          .filter((obj) => obj.renderable == false)
-          .map((r) => r.name)
+
+    let filterColVal = !isEmpty(localStorageVal[columnHide?.tableName])
+      ? localStorageVal[columnHide?.tableName]
+          ?.filter((obj) => obj.renderable == false)
+          ?.map((r) => r.name)
       : [];
+
     return filterColVal;
   };
 
@@ -190,56 +193,129 @@ function XATableLayout({
       error = `Value must be less than or equal to ${pageOptions.length}`;
     }
     return (
-      <span className="text-danger position-absolute text-left pagination-error-field">
+      <span className="text-danger position-absolute text-start pagination-error-field">
         {error}
       </span>
     );
   };
 
+  /* For Column Visibility */
+  const groupedColumnsData = groupBy(allColumns, "parent[id]");
+  delete groupedColumnsData.undefined;
+  const allColumnsData = allColumns.map((column) => {
+    const columnName = column?.parent
+      ? `Group(${column?.parent.id})`
+      : `Non-Group(${column?.id})`;
+    return {
+      columnName,
+      columnData: groupedColumnsData[column.parent?.id] || column
+    };
+  });
+
+  let filterAllColumns = uniqBy(allColumnsData, function (column) {
+    return column.columnName;
+  });
+
   let columnShowHide = [];
+
   return (
     // apply the table props
     <>
-      {columnHide && (
-        <div className="text-right mb-2 mt-n5">
+      {columnHide?.isVisible && (
+        <div className="position-absolute top-0 end-0">
           <DropdownButton
-            className="p-0"
-            menuAlign="right"
+            className="p-0 column-dropdown"
+            align="end"
             as={ButtonGroup}
             size="sm"
             id="dropdown-variants-info"
             variant="info"
             title="Columns"
           >
-            <ul className="list-group">
-              {allColumns.map((column, index) => {
-                columnShowHide.push({
-                  name: column.id,
-                  renderable: column.isVisible
-                });
+            <div className="column-dropdown-maxheight">
+              <ul className="list-group fnt-14">
+                {filterAllColumns.map((column, index) => {
+                  if (
+                    column.columnName == `Non-Group(${column.columnData.id})`
+                  ) {
+                    columnShowHide.push({
+                      name: column.columnData.id,
+                      renderable: column.columnData.isVisible
+                    });
+                  } else {
+                    column.columnData.forEach((col) => {
+                      columnShowHide.push({
+                        name: col.id,
+                        renderable: col.isVisible
+                      });
+                    });
+                  }
 
-                localStorage.setItem(
-                  "showHideTableCol",
-                  JSON.stringify({ bigData: columnShowHide })
-                );
-                return (
-                  <li
-                    className="column-list text-truncate"
-                    key={`col-${index}`}
-                  >
-                    <label>
-                      <input
-                        className="mr-1"
-                        type="checkbox"
-                        {...column.getToggleHiddenProps()}
-                      />
+                  let localStorageColumnData =
+                    JSON.parse(localStorage.getItem("showHideTableCol")) || {};
 
-                      {column.Header}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
+                  let columnData = {
+                    ...localStorageColumnData,
+                    [columnHide.tableName]: columnShowHide
+                  };
+
+                  localStorage.setItem(
+                    "showHideTableCol",
+                    JSON.stringify(columnData)
+                  );
+
+                  return column.columnName ==
+                    `Non-Group(${column.columnData.id})` ? (
+                    <li
+                      className="column-list text-truncate"
+                      key={`col-${index}`}
+                    >
+                      <label
+                        title={column.columnData.Header}
+                        className="d-flex align-items-center"
+                      >
+                        <input
+                          className="me-1"
+                          type="checkbox"
+                          {...column.columnData.getToggleHiddenProps()}
+                        />
+                        {column.columnData.Header}
+                      </label>
+                    </li>
+                  ) : (
+                    <li
+                      className="column-list text-truncate"
+                      key={`col-${index}`}
+                    >
+                      {column.columnName !== undefined && (
+                        <div className="font-weight-bold text-secondary mb-2 fnt-14">
+                          {column.columnName !== undefined &&
+                            column?.columnData[0]?.parent?.id}
+                        </div>
+                      )}
+                      {column.columnData.map((columns) => (
+                        <ul key={columns.id} className="p-0">
+                          <li className=" list-unstyled">
+                            {" "}
+                            <label
+                              title={columns.Header}
+                              className="d-flex align-items-center"
+                            >
+                              <input
+                                className="me-1"
+                                type="checkbox"
+                                {...columns.getToggleHiddenProps()}
+                              />
+                              {columns.Header}
+                            </label>
+                          </li>
+                        </ul>
+                      ))}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </DropdownButton>
         </div>
       )}
@@ -312,7 +388,7 @@ function XATableLayout({
                       <td colSpan={columns.length + 1}>
                         <center>
                           <span className="text-muted" data-cy="tbleDataMsg">
-                            "No data to show!!"
+                            &quot;No data to show!!&quot;
                           </span>
                         </center>
                       </td>
@@ -349,7 +425,7 @@ function XATableLayout({
                   <span>
                     Records per page
                     <select
-                      className="select-pagesize ml-2"
+                      className="select-pagesize ms-2"
                       value={pageSize}
                       onChange={(e) => {
                         gotoPage(0);
@@ -373,7 +449,7 @@ function XATableLayout({
                       setCurrentPageVal(1);
                     }}
                     disabled={!canPreviousPage}
-                    className="pagination-btn-last btn btn-outline-dark btn-sm mr-1"
+                    className="pagination-btn-last btn btn-outline-dark btn-sm me-1"
                   >
                     <i
                       className="fa fa-angle-double-left"
@@ -388,12 +464,12 @@ function XATableLayout({
                       setCurrentPageVal(pageIndex);
                     }}
                     disabled={!canPreviousPage}
-                    className="pagination-btn-previous btn btn-outline-dark btn-sm mr-2"
+                    className="pagination-btn-previous btn btn-outline-dark btn-sm me-2"
                   >
                     <i className="fa fa-angle-left" aria-hidden="true"></i>
                   </button>
                   Page{" "}
-                  <div className="position-relative ml-1">
+                  <div className="position-relative ms-1">
                     <input
                       className="pagination-input"
                       type="number"
@@ -422,20 +498,20 @@ function XATableLayout({
                         currentPageVal > pageOptions.length ||
                         !Number.isInteger(Number(currentPageVal))) &&
                       validatePageNumber(currentPageVal, pageOptions)}
-                    <span className="mr-1"> </span>
+                    <span className="me-1"> </span>
                   </div>
-                  <span className="mr-1">
-                    <span className="mr-1"> </span>
+                  <span className="me-1">
+                    <span className="me-1"> </span>
                     of {pageOptions.length}
                   </span>
-                  <span className="mr-1"> </span>
+                  <span className="me-1"> </span>
                   <button
                     onClick={() => {
                       currentPageValRef.current.value = pageIndex + 2;
                       nextPage();
                       setCurrentPageVal(pageIndex + 2);
                     }}
-                    className="pagination-btn-previous mr-1 btn btn-outline-dark btn-sm lh-1"
+                    className="pagination-btn-previous me-1 btn btn-outline-dark btn-sm lh-1"
                     disabled={!canNextPage}
                   >
                     <i className="fa fa-angle-right" aria-hidden="true"></i>

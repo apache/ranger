@@ -130,7 +130,7 @@ function Users() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -359,7 +359,7 @@ function Users() {
             let role = rawValue.value[0];
             return (
               <h6 className="text-center">
-                <Badge variant="info">{UserRoles[role].label} </Badge>
+                <Badge bg="info">{UserRoles[role].label} </Badge>
               </h6>
             );
           }
@@ -375,17 +375,13 @@ function Users() {
             if (rawValue.value == UserSource.XA_PORTAL_USER.value)
               return (
                 <h6 className="text-center">
-                  <Badge variant="success">
-                    {UserTypes.USER_INTERNAL.label}
-                  </Badge>
+                  <Badge bg="success">{UserTypes.USER_INTERNAL.label}</Badge>
                 </h6>
               );
             else
               return (
                 <h6 className="text-center">
-                  <Badge variant="warning">
-                    {UserTypes.USER_EXTERNAL.label}
-                  </Badge>
+                  <Badge bg="warning">{UserTypes.USER_EXTERNAL.label}</Badge>
                 </h6>
               );
           } else return "--";
@@ -398,7 +394,7 @@ function Users() {
         Cell: (rawValue) => {
           return rawValue.value ? (
             <h6 className="text-center">
-              <Badge variant="success">{rawValue.value} </Badge>
+              <Badge bg="success">{rawValue.value} </Badge>
             </h6>
           ) : (
             <div className="text-center">--</div>
@@ -438,7 +434,7 @@ function Users() {
             if (rawValue.value == VisibilityStatus.STATUS_VISIBLE.value)
               return (
                 <h6 className="text-center">
-                  <Badge variant="success">
+                  <Badge bg="success">
                     {VisibilityStatus.STATUS_VISIBLE.label}
                   </Badge>
                 </h6>
@@ -446,7 +442,7 @@ function Users() {
             else
               return (
                 <h6 className="text-center">
-                  <Badge variant="info">
+                  <Badge bg="info">
                     {VisibilityStatus.STATUS_HIDDEN.label}
                   </Badge>
                 </h6>
@@ -605,7 +601,7 @@ function Users() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -630,7 +626,7 @@ function Users() {
               />
             </Col>
             {isSystemAdmin() && (
-              <Col sm={4} className="text-right">
+              <Col sm={4} className="text-end">
                 <Button
                   variant="primary"
                   size="sm"
@@ -644,7 +640,7 @@ function Users() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  className="ml-1 d-inline-block manage-visibility"
+                  className="ms-1 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
@@ -657,7 +653,7 @@ function Users() {
                   size="sm"
                   title="Delete"
                   onClick={handleDeleteBtnClick}
-                  className="ml-1 btn-sm"
+                  className="ms-1 btn-sm"
                   data-id="deleteUserGroup"
                   data-cy="deleteUserGroup"
                 >
@@ -694,11 +690,12 @@ function Users() {
                 Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    <b>"{selectedRows.current[0].original.name}"</b> user ?
+                    <b>&quot;{selectedRows.current[0].original.name}&quot;</b>
+                    &nbsp;user ?
                   </>
                 ) : (
                   <>
-                    selected<b> {selectedRows.current.length}</b> users?
+                    selected<b> {selectedRows.current.length}</b> users ?
                   </>
                 )}
               </span>

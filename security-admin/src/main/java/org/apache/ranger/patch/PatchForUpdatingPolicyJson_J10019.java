@@ -314,9 +314,10 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 			resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
+			if (dbServiceDef != null) {
+				for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
+				}
 			}
 		}
 
@@ -446,9 +447,10 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 			accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
+			if (dbServiceDef != null) {
+				for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
+				}
 			}
 		}
 
@@ -485,9 +487,10 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 			conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
+			if (dbServiceDef != null) {
+				for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
+				}
 			}
 		}
 
@@ -525,9 +528,10 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 			dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
 
 			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
-
-			for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
+			if (dbServiceDef != null) {
+				for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+					serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
+				}
 			}
 		}
 
@@ -1077,7 +1081,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 							XXPolicyResourceMap xResourceMap = iterResourceMaps.next();
 
 							if (xResourceMap.getResourceid().equals(xResource.getId())) {
-								resource.getValues().add(xResourceMap.getValue());
+								resource.addValue(xResourceMap.getValue());
 							} else {
 								if (iterResourceMaps.hasPrevious()) {
 									iterResourceMaps.previous();
@@ -1087,7 +1091,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 							}
 						}
 
-						policy.getResources().put(lookupCache.getResourceName(xResource.getResdefid()), resource);
+						policy.setResource(lookupCache.getResourceName(xResource.getResdefid()), resource);
 					} else if (xResource.getPolicyid().compareTo(policy.getId()) > 0) {
 						if (iterResources.hasPrevious()) {
 							iterResources.previous();
@@ -1125,7 +1129,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 							XXPolicyItemAccess xAccess = iterAccesses.next();
 
 							if (xAccess.getPolicyitemid().equals(xPolicyItem.getId())) {
-								policyItem.getAccesses().add(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
+								policyItem.addAccess(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
 							} else {
 								if (iterAccesses.hasPrevious()) {
 									iterAccesses.previous();
@@ -1142,7 +1146,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 								String userName = lookupCache.getUserName(xUserPerm.getUserid());
 
 								if (userName != null) {
-									policyItem.getUsers().add(userName);
+									policyItem.addUser(userName);
 								}
 							} else {
 								if (iterUserPerms.hasPrevious()) {
@@ -1160,7 +1164,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 								String groupName = lookupCache.getGroupName(xGroupPerm.getGroupid());
 
 								if (groupName != null) {
-									policyItem.getGroups().add(groupName);
+									policyItem.addGroup(groupName);
 								}
 							} else {
 								if (iterGroupPerms.hasPrevious()) {
@@ -1182,13 +1186,13 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 									condition = new RangerPolicyItemCondition();
 
 									condition.setType(lookupCache.getConditionType(xCondition.getType()));
-									condition.getValues().add(xCondition.getValue());
+									condition.addValue(xCondition.getValue());
 
-									policyItem.getConditions().add(condition);
+									policyItem.addCondition(condition);
 
 									prevConditionType = xCondition.getType();
 								} else {
-									condition.getValues().add(xCondition.getValue());
+									condition.addValue(xCondition.getValue());
 								}
 							} else {
 								if (iterConditions.hasPrevious()) {
@@ -1236,17 +1240,17 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 						int itemType = xPolicyItem.getItemType() == null ? RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW : xPolicyItem.getItemType();
 
 						if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
-							policy.getPolicyItems().add(policyItem);
+							policy.addPolicyItem(policyItem);
 						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
-							policy.getDenyPolicyItems().add(policyItem);
+							policy.addDenyPolicyItem(policyItem);
 						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS) {
-							policy.getAllowExceptions().add(policyItem);
+							policy.addAllowException(policyItem);
 						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
-							policy.getDenyExceptions().add(policyItem);
+							policy.addDenyPolicyItem(policyItem);
 						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
-							policy.getDataMaskPolicyItems().add(dataMaskPolicyItem);
+							policy.addDataMaskPolicyItem(dataMaskPolicyItem);
 						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
-							policy.getRowFilterPolicyItems().add(rowFilterPolicyItem);
+							policy.addRowFilterPolicyItem(rowFilterPolicyItem);
 						} else { // unknown itemType
 							LOG.warn("RangerPolicyRetriever.getPolicy(policyId=" + policy.getId() + "): ignoring unknown policyItemType " + itemType);
 						}

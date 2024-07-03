@@ -93,3 +93,5 @@ class PList(RangerBase):
 
     def type_coerce_list(self, elemType):
         self.list = type_coerce_list(self.list, elemType)
+
+        return self

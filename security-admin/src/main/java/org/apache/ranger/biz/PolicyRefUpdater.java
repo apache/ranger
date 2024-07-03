@@ -44,7 +44,6 @@ import org.apache.ranger.entity.XXPolicyRefUser;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
@@ -65,6 +64,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletResponse;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 
 @Component
@@ -231,6 +232,10 @@ public class PolicyRefUpdater {
 		}
 
 		List<XXPolicyRefAccessType> xPolAccesses = new ArrayList<>();
+
+		// ignore built-in access-types while creating ref-table entries
+		accessTypes.removeAll(ServiceDefUtil.ACCESS_TYPE_MARKERS);
+
 		for (String accessType : accessTypes) {
 			XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessType, xPolicy.getService());
 
@@ -418,12 +423,8 @@ public class PolicyRefUpdater {
 					vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
 					VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
 					if (vXGroup != null) {
-						List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, "create");
-						for (XXTrxLog xTrxLog : trxLogList) {
-							xTrxLog.setAddedByUserId(xPolicy.getAddedByUserId());
-							xTrxLog.setUpdatedByUserId(xPolicy.getAddedByUserId());
-						}
-						rangerBizUtil.createTrxLog(trxLogList);
+						xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT, xPolicy.getAddedByUserId());
+
 						ret = vXGroup.getId();
 					}
 				}

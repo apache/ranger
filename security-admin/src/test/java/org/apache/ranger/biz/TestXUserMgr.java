@@ -78,7 +78,6 @@ import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -218,6 +217,9 @@ public class TestXUserMgr {
 
 	@Mock
 	ServiceDBStore svcStore;
+
+	@Mock
+	GdsDBStore gdsStore;
 
 	@Mock
 	XGroupGroupService xGroupGroupService;
@@ -581,6 +583,7 @@ public class TestXUserMgr {
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
 		policy.setPolicyLabels(policyLabels);
+		policy.setServiceType("hdfs");
 		return policy;
 	}
 
@@ -791,8 +794,6 @@ public class TestXUserMgr {
 		groupIdList.clear();
 		groupIdList.add(9L);
 		vxUser.setGroupIdList(groupIdList);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.when(xGroupUserService.getTransactionLog((VXGroupUser) Mockito.any(), Mockito.anyString())).thenReturn(trxLogList);
 		VXGroup vXGroup = vxGroup();
 		Mockito.when(xGroupService.readResource(Mockito.anyLong())).thenReturn(vXGroup);
 		VXGroupUser vXGroupUser = vxGroupUser();
@@ -2656,8 +2657,6 @@ public class TestXUserMgr {
 		groupIdList.clear();
 		groupIdList.add(9L);
 		vxUser.setGroupIdList(groupIdList);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.when(xGroupUserService.getTransactionLog((VXGroupUser) Mockito.any(), Mockito.anyString())).thenReturn(trxLogList);
 		vxUser.setPassword("TestUser@1234");
 		oldUserProfile.setPassword(vxUser.getPassword());
 		vxGroupUserList.setVXGroupUsers(null);

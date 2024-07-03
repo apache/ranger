@@ -26,17 +26,26 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 
 public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends VXPortalUser>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XPortalUser";
 
 	public XPortalUserServiceBase() {
+		super(AppConstants.CLASS_TYPE_USER_PROFILE);
 
+		trxLogAttrs.put("loginId",          new VTrxLogAttr("loginId", "Login ID", false, true));
+		trxLogAttrs.put("status",           new VTrxLogAttr("status", "Activation Status"));
+		trxLogAttrs.put("firstName",        new VTrxLogAttr("firstName", "First Name"));
+		trxLogAttrs.put("lastName",         new VTrxLogAttr("lastName", "Last Name"));
+		trxLogAttrs.put("emailAddress",     new VTrxLogAttr("emailAddress", "Email Address"));
+		trxLogAttrs.put("publicScreenName", new VTrxLogAttr("publicScreenName", "Public Screen Name"));
 	}
 
 	@Override

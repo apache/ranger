@@ -22,36 +22,46 @@
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
+import org.apache.ranger.view.VXTrxLogV2;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class XAuditMgrBase {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
 	public VXTrxLog getXTrxLog(Long id){
-		return (VXTrxLog)xTrxLogService.readResource(id);
+		VXTrxLogV2 ret = xTrxLogService.readResource(id);
+
+		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
 	}
 
 	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog){
-		vXTrxLog =  (VXTrxLog)xTrxLogService.createResource(vXTrxLog);
-		return vXTrxLog;
+		VXTrxLogV2 ret = xTrxLogService.createResource(new VXTrxLogV2(vXTrxLog));
+
+		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
 	}
 
 	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
-		vXTrxLog =  (VXTrxLog)xTrxLogService.updateResource(vXTrxLog);
-		return vXTrxLog;
+		VXTrxLogV2 ret =  xTrxLogService.updateResource(new VXTrxLogV2(vXTrxLog));
+
+		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
 	}
 
 	public void deleteXTrxLog(Long id, boolean force) {
@@ -65,12 +75,28 @@ public class XAuditMgrBase {
 	}
 
 	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
-		return xTrxLogService.searchXTrxLogs(searchCriteria);
+		PList<VXTrxLogV2> vXTrxLogsV2 = xTrxLogService.searchTrxLogs(searchCriteria);
+		List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
+		VXTrxLogList      ret         = new VXTrxLogList(vxTrxLogs);
+
+		ret.setStartIndex(vXTrxLogsV2.getStartIndex());
+		ret.setPageSize(vXTrxLogsV2.getPageSize());
+		ret.setTotalCount(vXTrxLogsV2.getTotalCount());
+		ret.setResultSize(vXTrxLogsV2.getResultSize());
+		ret.setSortBy(vXTrxLogsV2.getSortBy());
+		ret.setSortType(vXTrxLogsV2.getSortType());
+
+		return ret;
 	}
 
 	public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
-		return xTrxLogService.getSearchCount(searchCriteria,
-				xTrxLogService.searchFields);
+		long count = xTrxLogService.getTrxLogsCount(searchCriteria);
+
+		VXLong ret = new VXLong();
+
+		ret.setValue(count);
+
+		return ret;
 	}
 
 	public VXAccessAudit getXAccessAudit(Long id){

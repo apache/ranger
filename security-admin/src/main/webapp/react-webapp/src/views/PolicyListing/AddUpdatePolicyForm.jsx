@@ -44,7 +44,9 @@ import {
   maxBy,
   map,
   isUndefined,
-  forEach
+  forEach,
+  reject,
+  cloneDeep
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -63,7 +65,7 @@ import {
   isPolicyExpired,
   getResourcesDefVal
 } from "../../utils/XAUtils";
-import { useAccordionToggle } from "react-bootstrap/AccordionToggle";
+import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "../../utils/XAMessages";
@@ -119,7 +121,7 @@ export default function AddUpdatePolicyForm() {
   let { serviceId, policyType, policyId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const serviceDefs = getServiceDef();
+  const serviceDefs = cloneDeep(getServiceDef());
   const [policyState, dispatch] = useReducer(reducer, initialState);
   const { loader, serviceDetails, serviceCompDetails, policyData, formData } =
     policyState;
@@ -138,7 +140,7 @@ export default function AddUpdatePolicyForm() {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [serviceId, policyType, policyId]);
 
   const showDeleteModal = () => {
     setShowDelete(true);
@@ -239,8 +241,7 @@ export default function AddUpdatePolicyForm() {
         Object.keys(serviceCompData.rowFilterDef).length != 0
       )
         serviceDefPolicyType++;
-      if (+policyType > serviceDefPolicyType)
-        navigate("/pageNotFound", { replace: true });
+      if (+policyType > serviceDefPolicyType) navigate("/pageNotFound");
     }
     let policyData = null;
     if (policyId) {
@@ -287,12 +288,12 @@ export default function AddUpdatePolicyForm() {
     if (inputValue) {
       params["policyLabel"] = inputValue || "";
     }
-    const policyLabalResp = await fetchApi({
+    const policyLabelResp = await fetchApi({
       url: "plugins/policyLabels",
       params: params
     });
 
-    return policyLabalResp.data.map((name) => ({
+    return policyLabelResp.data.map((name) => ({
       label: name,
       value: name
     }));
@@ -623,7 +624,7 @@ export default function AddUpdatePolicyForm() {
       let obj = {},
         accessTypesObj = [];
 
-      if (val.hasOwnProperty("delegateAdmin")) {
+      if (has(val, "delegateAdmin")) {
         obj.delegateAdmin = val.delegateAdmin;
       }
 
@@ -672,18 +673,10 @@ export default function AddUpdatePolicyForm() {
           return { label: opt, value: opt };
         });
       }
-      if (
-        val.hasOwnProperty("rowFilterInfo") &&
-        val.rowFilterInfo &&
-        val.rowFilterInfo.filterExpr
-      ) {
+      if (val?.rowFilterInfo?.filterExpr) {
         obj.rowFilterInfo = val.rowFilterInfo.filterExpr;
       }
-      if (
-        val.hasOwnProperty("dataMaskInfo") &&
-        val.dataMaskInfo &&
-        val.dataMaskInfo.dataMaskType
-      ) {
+      if (val?.dataMaskInfo?.dataMaskType) {
         obj.dataMaskInfo = {};
         let maskDataType = maskTypes.find((m) => {
           return m.name == val.dataMaskInfo.dataMaskType;
@@ -742,10 +735,10 @@ export default function AddUpdatePolicyForm() {
       values,
       "rowFilterPolicyItems"
     );
-    data.description = values.description;
-    data.isAuditEnabled = values.isAuditEnabled;
+    data.description = values.description ?? "";
+    data.isAuditEnabled = values.isAuditEnabled ?? true;
     data.isDenyAllElse = values.isDenyAllElse;
-    data.isEnabled = values.isEnabled;
+    data.isEnabled = values.isEnabled ?? true;
     data.name = values.policyName;
     data.policyLabels = (values.policyLabel || [])?.map(({ value }) => value);
     data.policyPriority = values.policyPriority ? "1" : "0";
@@ -769,7 +762,9 @@ export default function AddUpdatePolicyForm() {
       for (const level of grpResourcesKeys) {
         if (
           values[`resourceName-${level}`] &&
-          values[`resourceName-${level}`].value !== noneOptions.value
+          values[`resourceName-${level}`].value !== noneOptions.value &&
+          values[`value-${level}`] &&
+          !isEmpty(values[`value-${level}`])
         ) {
           let defObj = serviceCompRes.find(function (m) {
             if (m.name == values[`resourceName-${level}`].name) {
@@ -802,7 +797,10 @@ export default function AddUpdatePolicyForm() {
         for (const level of grpResourcesKeys) {
           if (
             resourceValue[`resourceName-${level}`] &&
-            resourceValue[`resourceName-${level}`].value !== noneOptions.value
+            resourceValue[`resourceName-${level}`].value !==
+              noneOptions.value &&
+            resourceValue[`value-${level}`] &&
+            !isEmpty(resourceValue[`value-${level}`])
           ) {
             let defObj = serviceCompRes.find(function (m) {
               if (m.name == resourceValue[`resourceName-${level}`].name) {
@@ -837,8 +835,15 @@ export default function AddUpdatePolicyForm() {
       });
     }
     if (data?.additionalResources?.length > 0) {
+      data.additionalResources = reject(data.additionalResources, isEmpty);
       data.resources = data.additionalResources[0];
       data.additionalResources.shift();
+    }
+    if (isEmpty(data.resources)) {
+      delete data.resources;
+      if (policyId) {
+        delete policyData.resources;
+      }
     }
     if (values?.validitySchedules) {
       data["validitySchedules"] = [];
@@ -891,7 +896,7 @@ export default function AddUpdatePolicyForm() {
       };
       try {
         setBlockUI(true);
-        const resp = await fetchApi({
+        await fetchApi({
           url: `plugins/policies/${policyId}`,
           method: "PUT",
           data: dataVal
@@ -912,7 +917,7 @@ export default function AddUpdatePolicyForm() {
     } else {
       try {
         setBlockUI(true);
-        const resp = await fetchApi({
+        await fetchApi({
           url: "plugins/policies",
           method: "POST",
           data
@@ -982,20 +987,24 @@ export default function AddUpdatePolicyForm() {
   const CustomToggle = ({ children, eventKey, callback }) => {
     const currentEventKey = useContext(AccordionContext);
 
-    const decoratedOnClick = useAccordionToggle(
+    const decoratedOnClick = useAccordionButton(
       eventKey,
       () => callback && callback(eventKey)
     );
-    const isCurrentEventKey = currentEventKey === eventKey;
+    const isCurrentEventKey = currentEventKey?.activeEventKey === eventKey;
 
     return (
-      <a className="pull-right" role="button" onClick={decoratedOnClick}>
+      <a
+        className="float-end text-decoration-none"
+        role="button"
+        onClick={decoratedOnClick}
+      >
         {!isCurrentEventKey ? (
           <span className="wrap-expand">
             show <i className="fa-fw fa fa-caret-down"></i>
           </span>
         ) : (
-          <span className="wrap-collapse">
+          <span className="wrap-collapse text-decoration-none">
             hide <i className="fa-fw fa fa-caret-up"></i>
           </span>
         )}
@@ -1131,7 +1140,7 @@ export default function AddUpdatePolicyForm() {
                 errors,
                 dirty,
                 form: {
-                  mutators: { push: addPolicyItem, pop: removePolicyItem }
+                  mutators: { push: addPolicyItem }
                 },
                 dirtyFields,
                 modified,
@@ -1220,14 +1229,14 @@ export default function AddUpdatePolicyForm() {
                             render={({ input }) => (
                               <>
                                 <FormB.Label column sm={3}>
-                                  <span className="pull-right fnt-14">
+                                  <span className="float-end fnt-14">
                                     Policy Type
                                   </span>
                                 </FormB.Label>
                                 <Col sm={5}>
-                                  <h6 className="d-inline mr-1">
+                                  <h6 className="d-inline me-1">
                                     <Badge
-                                      variant="primary"
+                                      bg="primary"
                                       style={{ verticalAlign: "sub" }}
                                     >
                                       {
@@ -1246,16 +1255,14 @@ export default function AddUpdatePolicyForm() {
                         {policyId && (
                           <FormB.Group as={Row} className="mb-3">
                             <FormB.Label column sm={3}>
-                              <span className="pull-right fnt-14">
+                              <span className="float-end fnt-14">
                                 Policy ID*
                               </span>
                             </FormB.Label>
                             <Col sm={5}>
-                              <h6 className="d-inline mr-1">
+                              <h6 className="d-inline me-1">
                                 <span style={{ verticalAlign: "sub" }}>
-                                  <Badge variant="primary">
-                                    {policyData.id}
-                                  </Badge>
+                                  <Badge bg="primary">{policyData.id}</Badge>
                                 </span>
                               </h6>
                             </Col>
@@ -1268,12 +1275,12 @@ export default function AddUpdatePolicyForm() {
                             render={({ input, meta }) => (
                               <>
                                 <FormB.Label column sm={3}>
-                                  <span className="pull-right fnt-14">
+                                  <span className="float-end fnt-14">
                                     Policy Name*
                                   </span>
                                 </FormB.Label>
                                 <>
-                                  <Col sm={5}>
+                                  <Col sm={5} className={"position-relative"}>
                                     <FormB.Control
                                       {...input}
                                       placeholder="Policy Name"
@@ -1290,7 +1297,7 @@ export default function AddUpdatePolicyForm() {
                                       data-cy="policyName"
                                     />
                                     <InfoIcon
-                                      css="info-user-role-grp-icon"
+                                      css="input-box-info-icon"
                                       position="right"
                                       message={
                                         <p
@@ -1364,7 +1371,7 @@ export default function AddUpdatePolicyForm() {
                           render={({ input }) => (
                             <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
-                                <span className="pull-right fnt-14">
+                                <span className="float-end fnt-14">
                                   Policy Label
                                 </span>
                               </FormB.Label>
@@ -1399,7 +1406,7 @@ export default function AddUpdatePolicyForm() {
                           render={({ input }) => (
                             <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
-                                <span className="pull-right fnt-14">
+                                <span className="float-end fnt-14">
                                   Description
                                 </span>
                               </FormB.Label>
@@ -1420,7 +1427,7 @@ export default function AddUpdatePolicyForm() {
                           render={({ input }) => (
                             <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
-                                <span className="pull-right fnt-14">
+                                <span className="float-end fnt-14">
                                   Audit Logging*
                                 </span>
                               </FormB.Label>
@@ -1476,7 +1483,7 @@ export default function AddUpdatePolicyForm() {
                                       />
                                     )}
                                     <Button
-                                      className="pull-right btn btn-mini"
+                                      className="float-end btn btn-mini"
                                       onClick={() => {
                                         policyConditionState(true);
                                       }}
@@ -1557,7 +1564,10 @@ export default function AddUpdatePolicyForm() {
                           <FieldArray name="additionalResources">
                             {({ fields }) =>
                               fields.map((name, index) => (
-                                <Row className="resource-block">
+                                <Row
+                                  className="resource-block"
+                                  key={`${name}-${index}`}
+                                >
                                   <Col md={8}>
                                     <ResourceComp
                                       serviceDetails={serviceDetails}
@@ -1565,7 +1575,11 @@ export default function AddUpdatePolicyForm() {
                                       formValues={
                                         values.additionalResources[index]
                                       }
-                                      policyType={policyType}
+                                      policyType={
+                                        policyId
+                                          ? policyData.policyType
+                                          : policyType
+                                      }
                                       name={name}
                                       isMultiResources={isMultiResources}
                                     />
@@ -1610,62 +1624,60 @@ export default function AddUpdatePolicyForm() {
                         <div>
                           <Accordion defaultActiveKey="0">
                             <>
-                              <>
-                                <p className="formHeader">
-                                  Allow Conditions:{" "}
-                                  <CustomToggle eventKey="0"></CustomToggle>
-                                </p>
-                                <Accordion.Collapse eventKey="0">
-                                  <>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="policyItems"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                        changePolicyItemPermissions={
-                                          changePolicyItemPermissions
-                                        }
-                                        isMultiResources={isMultiResources}
-                                      />
-                                    </div>
-                                    {serviceCompDetails?.options
-                                      ?.enableDenyAndExceptionsInPolicies ==
-                                      "true" && (
-                                      <>
-                                        <fieldset>
-                                          <p className="wrap-header search-header">
-                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                            Exclude from Allow Conditions:
-                                          </p>
-                                        </fieldset>
-                                        <div className="wrap">
-                                          <PolicyPermissionItem
-                                            serviceDetails={serviceDetails}
-                                            serviceCompDetails={
-                                              serviceCompDetails
-                                            }
-                                            formValues={values}
-                                            addPolicyItem={addPolicyItem}
-                                            attrName="allowExceptions"
-                                            fetchUsersData={fetchUsersData}
-                                            fetchGroupsData={fetchGroupsData}
-                                            fetchRolesData={fetchRolesData}
-                                            changePolicyItemPermissions={
-                                              changePolicyItemPermissions
-                                            }
-                                            isMultiResources={isMultiResources}
-                                          />
-                                        </div>
-                                      </>
-                                    )}
-                                  </>
-                                </Accordion.Collapse>
-                              </>
+                              <p className="formHeader">
+                                Allow Conditions:{" "}
+                                <CustomToggle eventKey="0"></CustomToggle>
+                              </p>
+                              <Accordion.Collapse eventKey="0">
+                                <>
+                                  <div className="wrap">
+                                    <PolicyPermissionItem
+                                      serviceDetails={serviceDetails}
+                                      serviceCompDetails={serviceCompDetails}
+                                      formValues={values}
+                                      addPolicyItem={addPolicyItem}
+                                      attrName="policyItems"
+                                      fetchUsersData={fetchUsersData}
+                                      fetchGroupsData={fetchGroupsData}
+                                      fetchRolesData={fetchRolesData}
+                                      changePolicyItemPermissions={
+                                        changePolicyItemPermissions
+                                      }
+                                      isMultiResources={isMultiResources}
+                                    />
+                                  </div>
+                                  {serviceCompDetails?.options
+                                    ?.enableDenyAndExceptionsInPolicies ==
+                                    "true" && (
+                                    <>
+                                      <fieldset>
+                                        <p className="wrap-header search-header">
+                                          <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                          Exclude from Allow Conditions:
+                                        </p>
+                                      </fieldset>
+                                      <div className="wrap">
+                                        <PolicyPermissionItem
+                                          serviceDetails={serviceDetails}
+                                          serviceCompDetails={
+                                            serviceCompDetails
+                                          }
+                                          formValues={values}
+                                          addPolicyItem={addPolicyItem}
+                                          attrName="allowExceptions"
+                                          fetchUsersData={fetchUsersData}
+                                          fetchGroupsData={fetchGroupsData}
+                                          fetchRolesData={fetchRolesData}
+                                          changePolicyItemPermissions={
+                                            changePolicyItemPermissions
+                                          }
+                                          isMultiResources={isMultiResources}
+                                        />
+                                      </div>
+                                    </>
+                                  )}
+                                </>
+                              </Accordion.Collapse>
                             </>
                           </Accordion>
                         </div>
@@ -1896,8 +1908,8 @@ export default function AddUpdatePolicyForm() {
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
                             <span className="text-word-break">
-                              Are you sure want to delete policy&nbsp;"
-                              <b>{`${values?.policyName}`}</b>" ?
+                              Are you sure want to delete policy&nbsp;&quot;
+                              <b>{`${values?.policyName}`}</b>&quot; ?
                             </span>
                           </Modal.Header>
 

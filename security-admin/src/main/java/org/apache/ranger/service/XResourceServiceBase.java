@@ -26,17 +26,38 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResourceList;
 
 public abstract class XResourceServiceBase<T extends XXResource, V extends VXResource>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XResource";
 
 	public XResourceServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_RESOURCE, AppConstants.CLASS_TYPE_XA_ASSET);
 
+		trxLogAttrs.put("name",           new VTrxLogAttr("name", "Resource Path", false, true));
+		trxLogAttrs.put("description",    new VTrxLogAttr("description", "Policy Description"));
+		trxLogAttrs.put("resourceType",   new VTrxLogAttr("resourceType", "Policy Type", true));
+		trxLogAttrs.put("isEncrypt",      new VTrxLogAttr("isEncrypt", "Policy Encryption", true));
+		trxLogAttrs.put("isRecursive",    new VTrxLogAttr("isRecursive", "Is Policy Recursive", true));
+		trxLogAttrs.put("databases",      new VTrxLogAttr("databases", "Databases"));
+		trxLogAttrs.put("tables",         new VTrxLogAttr("tables", "Tables"));
+		trxLogAttrs.put("columnFamilies", new VTrxLogAttr("columnFamilies", "Column Families"));
+		trxLogAttrs.put("columns",        new VTrxLogAttr("columns", "Columns"));
+		trxLogAttrs.put("udfs",           new VTrxLogAttr("udfs", "UDF"));
+		trxLogAttrs.put("resourceStatus", new VTrxLogAttr("resourceStatus", "Policy Status", true));
+		trxLogAttrs.put("tableType",      new VTrxLogAttr("tableType", "Table Type", true));
+		trxLogAttrs.put("columnType",     new VTrxLogAttr("columnType", "Column Type", true));
+		trxLogAttrs.put("policyName",     new VTrxLogAttr("policyName", "Policy Name"));
+		trxLogAttrs.put("topologies",     new VTrxLogAttr("topologies", "Topologies"));
+		trxLogAttrs.put("services",       new VTrxLogAttr("services", "Services"));
+		trxLogAttrs.put("assetType",      new VTrxLogAttr("assetType", "Repository Type", true));
 	}
 
 	@Override
@@ -110,4 +131,16 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
 		return returnList;
 	}
 
+	@Override
+	public String getParentObjectName(V obj, V oldObj) {
+		Long    assetId = getParentObjectId(obj, oldObj);
+		XXAsset xAsset  = assetId != null ? daoManager.getXXAsset().getById(assetId) : null;
+
+		return xAsset != null ? xAsset.getName() : null;
+	}
+
+	@Override
+	public Long getParentObjectId(V obj, V oldObj) {
+		return obj != null ? obj.getAssetId() : null;
+	}
 }

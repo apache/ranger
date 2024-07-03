@@ -407,16 +407,13 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 
 			logger.info("Solr zkHosts=" + zkHosts
 					+ ", collectionName=" + collectionName);
-
-			try {
-				// Instantiate
-				Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+			// Instantiate
+			try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
 				SolrHttpClientBuilder kb = krbBuild.getBuilder();
 				HttpClientUtil.setHttpClientBuilder(kb);
-				final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
-				CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, null).build();
-				solrCloudClient
-						.setDefaultCollection(collectionName);
+				final List<String> zkhosts         = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
+				CloudSolrClient    solrCloudClient = new CloudSolrClient.Builder(zkhosts, null).build();
+				solrCloudClient.setDefaultCollection(collectionName);
 				return solrCloudClient;
 			} catch (Exception e) {
 				logger.error(
@@ -433,24 +430,22 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 						+ " or "
 						+ SOLR_URLS_PROP);
 			} else {
-				try {
-					Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-					SolrHttpClientBuilder kb = krbBuild.getBuilder();
-					HttpClientUtil.setHttpClientBuilder(kb);
-					HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
-					builder.withBaseSolrUrl(solrURL);
-					builder.allowCompression(true);
-					builder.withConnectionTimeout(1000);
-					HttpSolrClient httpSolrClient = builder.build();
-					httpSolrClient.setRequestWriter(new BinaryRequestWriter());
-					solrClient = httpSolrClient;
-
+				try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+						SolrHttpClientBuilder kb = krbBuild.getBuilder();
+						HttpClientUtil.setHttpClientBuilder(kb);
+						HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+						builder.withBaseSolrUrl(solrURL);
+						builder.allowCompression(true);
+						builder.withConnectionTimeout(1000);
+						HttpSolrClient httpSolrClient = builder.build();
+						httpSolrClient.setRequestWriter(new BinaryRequestWriter());
+						solrClient = httpSolrClient;
 					} catch (Exception e) {
 					logger.error(
 							"Can't connect to Solr server. URL="
 									+ solrURL, e);
 					throw e;
-				}
+					}
 			}
 		}
 		return solrClient;

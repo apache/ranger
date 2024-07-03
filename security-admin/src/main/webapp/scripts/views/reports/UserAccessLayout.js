@@ -384,9 +384,9 @@ define(function(require) {'use strict';
 							var access_str = '';
 							_.each(model.get('accesses'),function(access,index){
 								if(index < 4){
-                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + _.escape(access.type)+'</span>'  + " ";
 								} else {
-                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + _.escape(access.type)+'</span>'+ " ";
 								}
 							});
 							if(model.get('accesses').length > 4) {
@@ -566,7 +566,7 @@ define(function(require) {'use strict';
 						fromRaw: function (rawValue, model) {
 							var labels ="";
 							if(!_.isUndefined(rawValue) && rawValue.length != 0){
-								return '<span class="badge badge-dark" style="float:inherit;">'+rawValue+'</span>'
+								return '<span class="badge badge-dark" style="float:inherit;">'+_.escape(rawValue)+'</span>'
 							}else{
 								return '<span style="float:inherit;">'+"--"+'</span>';
 							}
@@ -814,7 +814,6 @@ define(function(require) {'use strict';
 				closeOnSelect : true,
 				placeholder : 'Select Group',
 				maximumSelectionSize : 1,
-				tokenSeparators: [",", " "],
 				allowClear: true,
 				// tags : this.groupArr,
 				initSelection : function (element, callback) {
@@ -831,7 +830,7 @@ define(function(require) {'use strict';
 					results: function (data, page) { 
 						var results = [],selectedVals = [];
 						if(!_.isEmpty(that.ui.userGroup.val()))
-							selectedVals = that.ui.userGroup.val().split(',');
+							selectedVals.push(that.ui.userGroup.val());
 						if(data.totalCount != "0"){
 							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
@@ -874,8 +873,8 @@ define(function(require) {'use strict';
 					},
 					results: function (data, page) { 
 						var results = [],selectedVals=[];
-						if(!_.isEmpty(that.ui.userName.select2('val')))
-							selectedVals = that.ui.userName.select2('val');
+						if(!_.isEmpty(that.ui.userName.val()))
+							selectedVals.push(that.ui.userName.val());
 						if(data.totalCount != "0"){
 							results = data.vXStrings.map(function(m){	return {id : m.value, text: _.escape(m.value) };	});
 							if(!_.isEmpty(selectedVals))
@@ -920,8 +919,8 @@ define(function(require) {'use strict';
 					},
 					results: function (data, page) {
 						var results = [],selectedVals=[];
-						if(!_.isEmpty(that.ui.roleName.select2('val')))
-							selectedVals = that.ui.roleName.select2('val');
+						if(!_.isEmpty(that.ui.roleName.val()))
+							selectedVals.push(that.ui.roleName.val());
 						if(data.totalCount != "0"){
 							results = data.roles.map(function(m){	return {id : _.escape(m.name), text: _.escape(m.name) };});
 							if(!_.isEmpty(selectedVals))

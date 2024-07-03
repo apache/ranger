@@ -19,19 +19,19 @@
 
 package org.apache.ranger.service;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.XXServiceResource;
@@ -48,15 +48,24 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
 
-    private boolean serviceUpdateNeeded = true;
+    private             boolean       serviceUpdateNeeded = true;
+    public static final TypeReference subsumedDataType    = new TypeReference<Map<String, RangerPolicy.RangerPolicyResource>>() {};
 
-    public static final Type subsumedDataType   = new TypeToken<Map<String, RangerPolicy.RangerPolicyResource>>() {}.getType();
-    public static final Type duplicatedDataType = new TypeToken<List<RangerTag>>() {}.getType();
+    public static final TypeReference duplicatedDataType = new TypeReference<List<RangerTag>>() {};
 
     public RangerServiceResourceService() {
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "service.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXService service", "obj.serviceId = service.id"));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME_PARTIAL, "service.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL, "XXService service", "obj.serviceId = service.id"));
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_GUID, "obj.guid", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_SIGNATURE, "obj.resourceSignature", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_IDS, "obj.id", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+
+        sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId"));
+        sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
+        sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
     }
 
     @Override
@@ -164,8 +173,12 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     protected RangerServiceResource mapEntityToViewBean(RangerServiceResource serviceResource, XXServiceResource xxServiceResource) {
         RangerServiceResource ret = super.mapEntityToViewBean(serviceResource, xxServiceResource);
         if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
-            Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements =
-                RangerTagDBRetriever.gsonBuilder.fromJson(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+            Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = null;
+            try {
+                serviceResourceElements = (Map<String, RangerPolicy.RangerPolicyResource>) JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+            } catch (JsonProcessingException e) {
+                LOG.error("Error occurred while processing JSON  ", e);
+            }
             if (MapUtils.isNotEmpty(serviceResourceElements)) {
                 ret.setResourceElements(serviceResourceElements);
             } else {

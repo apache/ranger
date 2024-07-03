@@ -35,7 +35,7 @@ class Home extends Component {
   }
 
   tabChange = (tabName) => {
-    this.props.navigate(`/policymanager/${tabName}`, { replace: true });
+    this.props.navigate(`/policymanager/${tabName}`);
   };
 
   componentDidUpdate(nextProps, prevState) {
@@ -59,39 +59,26 @@ class Home extends Component {
   };
 
   disableTabs = (loader) => {
-    loader == true &&
-      document
-        .getElementById("resourceSelectedZone")
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document
-        .getElementById("tagSelectedZone")
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document
-        .getElementsByClassName("sidebar-header")?.[0]
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document.getElementById("rangerIcon")?.classList?.add("disabledCursor");
+    const elements = [
+      { id: "resourceSelectedZone", className: "disabledEvents" },
+      { id: "tagSelectedZone", className: "disabledEvents" },
+      { selector: "sidebar-header", className: "disabledEvents" },
+      { id: "rangerIcon", className: "disabledCursor" }
+    ];
+    elements.forEach((element) => {
+      const target = element.id
+        ? document.getElementById(element.id)
+        : document.getElementsByClassName(element.selector)?.[0];
 
+      if (target) {
+        if (loader) {
+          target.classList.add(element.className);
+        } else {
+          target.classList.remove(element.className);
+        }
+      }
+    });
     this.setState({ loader: loader });
-    loader == false &&
-      document
-        .getElementsByClassName("sidebar-header")?.[0]
-        ?.classList.remove("disabledEvents");
-    loader == false &&
-      document
-        .getElementById("rangerIcon")
-        ?.classList?.remove("disabledCursor");
-
-    loader == false &&
-      document
-        .getElementById("resourceSelectedZone")
-        ?.classList?.remove("disabledEvents");
-    loader == false &&
-      document
-        .getElementById("tagSelectedZone")
-        ?.classList?.remove("disabledEvents");
   };
 
   render() {

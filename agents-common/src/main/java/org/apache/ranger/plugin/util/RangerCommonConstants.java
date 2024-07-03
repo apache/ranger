@@ -21,6 +21,10 @@ package org.apache.ranger.plugin.util;
 
 public class RangerCommonConstants {
 
+	private RangerCommonConstants() {
+
+	}
+
 	public static final String PROP_COOKIE_NAME                             = "ranger.admin.cookie.name";
 	public static final String DEFAULT_COOKIE_NAME                          = "RANGERADMINSESSIONID";
 
@@ -150,6 +154,9 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_MACRO_IS_IN_ANY_ROLE        = "IS_IN_ANY_ROLE";
 	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP   = "IS_NOT_IN_ANY_GROUP";
 	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE    = "IS_NOT_IN_ANY_ROLE";
+	public static final String SCRIPT_MACRO_IS_ACCESS_TIME_AFTER   = "IS_ACCESS_TIME_AFTER";
+	public static final String SCRIPT_MACRO_IS_ACCESS_TIME_BEFORE  = "IS_ACCESS_TIME_BEFORE";
+	public static final String SCRIPT_MACRO_IS_ACCESS_TIME_BETWEEN = "IS_ACCESS_TIME_BETWEEN";
 
 	public static final String SCRIPT_POLYFILL_INCLUDES = "if (!Array.prototype.includes) {\n" +
 			"    Object.defineProperty(\n" +
@@ -172,13 +179,13 @@ public class RangerCommonConstants {
 			"      Array.prototype, 'intersects', {\n" +
 			"          value: function (x) {\n" +
 			"           if (x == null) {return false;}\n" +
-			"                        var o = Object(this);\n" +
-			"                        var len = o.length >>> 0;\n" +
-			"            if (len === 0) { return false; }\n" +
-			"            var result = o.filter(function(n) { return x.indexOf(n) > -1;})\n" +
-			"            return result.length != 0;\n" +
+			"           var o = Object(this);\n" +
+			"           var len = o.length >>> 0;\n" +
+			"           if (len === 0) { return false; }\n" +
+			"           var result = o.filter(function(n) { return x.indexOf(n) > -1;})\n" +
+			"           return result.length != 0;\n" +
 			"        }\n" +
 			"      }\n" +
-			"    )\n" +
+			"    );\n" +
 			"}; ";
 }

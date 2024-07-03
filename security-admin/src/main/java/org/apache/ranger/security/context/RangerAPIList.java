@@ -151,6 +151,7 @@ public class RangerAPIList {
 	public static final String SEARCH_X_USERS = "XUserREST.searchXUsers";
 	public static final String GET_USERS_LOOKUP = "XUserREST.getUsersLookup";
 	public static final String GET_GROUPS_LOOKUP = "XUserREST.getGroupsLookup";
+	public static final String GET_PRINCIPALS_LOOKUP = "XUserREST.getPrincipalsLookup";
 	public static final String COUNT_X_USERS = "XUserREST.countXUsers";
 	public static final String GET_X_GROUP_USER = "XUserREST.getXGroupUser";
 	public static final String CREATE_X_GROUP_USER = "XUserREST.createXGroupUser";
@@ -211,4 +212,50 @@ public class RangerAPIList {
 	public static final String GET_USER_ROLES_BY_NAME="XUserREST.getUserRolesByName";
 	public static final String FORCE_DELETE_EXTERNAL_USERS = "XUserREST.forceDeleteExternalUsers";
 	public static final String FORCE_DELETE_EXTERNAL_GROUPS = "XUserREST.forceDeleteExternalGroups";
+
+	/**
+	 * List of APIs for DataShareREST
+	 */
+	public static final String GET_DATASET_SUMMARY = "GdsREST.getDatasetSummary";
+	public static final String CREATE_DATASET      = "GdsREST.createDataset";
+	public static final String UPDATE_DATASET      = "GdsREST.updateDataset";
+	public static final String DELETE_DATASET      = "GdsREST.deleteDataset";
+	public static final String GET_DATASET         = "GdsREST.getDataset";
+	public static final String SEARCH_DATASETS     = "GdsREST.searchDatasets";
+	public static final String LIST_DATASET_NAMES  = "GdsREST.listDatasetNames";
+	public static final String DATASET_POLICY      = "GdsREST.datasetPolicy";
+
+	public static final String CREATE_PROJECT      = "GdsREST.createProject";
+	public static final String UPDATE_PROJECT      = "GdsREST.updateProject";
+	public static final String DELETE_PROJECT      = "GdsREST.deleteProject";
+	public static final String GET_PROJECT         = "GdsREST.getProject";
+	public static final String SEARCH_PROJECTS     = "GdsREST.searchProjects";
+	public static final String LIST_PROJECT_NAMES  = "GdsREST.listProjectNames";
+	public static final String PROJECT_POLICY      = "GdsREST.projectPolicy";
+
+	public static final String CREATE_DATA_SHARE      = "GdsREST.createDataShare";
+	public static final String UPDATE_DATA_SHARE      = "GdsREST.updateDataShare";
+	public static final String DELETE_DATA_SHARE      = "GdsREST.deleteDataShare";
+	public static final String GET_DATA_SHARE         = "GdsREST.getDataShare";
+	public static final String SEARCH_DATA_SHARES     = "GdsREST.searchDataShares";
+	public static final String GET_DATA_SHARE_SUMMARY = "GdsREST.getDataShareSummary";
+
+	public static final String ADD_SHARED_RESOURCE     = "GdsREST.addSharedResource";
+	public static final String UPDATE_SHARED_RESOURCE  = "GdsREST.updateSharedResource";
+	public static final String REMOVE_SHARED_RESOURCE  = "GdsREST.removeSharedResource";
+	public static final String GET_SHARED_RESOURCE     = "GdsREST.getSharedResource";
+	public static final String SEARCH_SHARED_RESOURCES = "GdsREST.searchSharedResources";
+
+	public static final String ADD_DATASHARE_IN_DATASET    = "GdsREST.addDataShareInDataset";
+	public static final String UPDATE_DATASHARE_IN_DATASET = "GdsREST.updateDataShareInDataset";
+	public static final String REMOVE_DATASHARE_IN_DATASET = "GdsREST.removeDataShareInDataset";
+	public static final String GET_DATASHARE_IN_DATASET    = "GdsREST.getDataShareInDataset";
+	public static final String SEARCH_DATASHARE_IN_DATASET = "GdsREST.searchDataShareInDataset";
+	public static final String SEARCH_DATASHARE_IN_DATASET_SUMMARY = "GdsREST.getDshInDsSummary";
+
+	public static final String ADD_DATASET_IN_PROJECT    = "GdsREST.addDatasetInProject";
+	public static final String UPDATE_DATASET_IN_PROJECT = "GdsREST.updateDatasetInProject";
+	public static final String REMOVE_DATASET_IN_PROJECT = "GdsREST.removeDatasetInProject";
+	public static final String GET_DATASET_IN_PROJECT    = "GdsREST.getDatasetInProject";
+	public static final String SEARCH_DATASET_IN_PROJECT = "GdsREST.searchDatasetInProject";
 }

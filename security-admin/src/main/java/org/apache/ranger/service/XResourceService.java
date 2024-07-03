@@ -19,32 +19,24 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXResource;
@@ -65,43 +57,7 @@ public class XResourceService extends
 	XAuditMapService xAuditMapService;
 
 	@Autowired
-	XUserService xUserService;
-
-	@Autowired
-	StringUtil stringUtil;
-	
-	@Autowired
 	RangerBizUtil xaBizUtil;
-	
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	
-	@Autowired
-	XPolicyService xPolicyService;
-
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	
-	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
-	
-	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Resource Path", false));
-		trxLogAttrs.put("description", new VTrxLogAttr("description", "Policy Description", false));
-		trxLogAttrs.put("resourceType", new VTrxLogAttr("resourceType", "Policy Type", true));
-		trxLogAttrs.put("isEncrypt", new VTrxLogAttr("isEncrypt", "Policy Encryption", true));
-		trxLogAttrs.put("isRecursive", new VTrxLogAttr("isRecursive", "Is Policy Recursive", true));
-		trxLogAttrs.put("databases", new VTrxLogAttr("databases", "Databases", false));
-		trxLogAttrs.put("tables", new VTrxLogAttr("tables", "Tables", false));
-		trxLogAttrs.put("columnFamilies", new VTrxLogAttr("columnFamilies", "Column Families", false));
-		trxLogAttrs.put("columns", new VTrxLogAttr("columns", "Columns", false));
-		trxLogAttrs.put("udfs", new VTrxLogAttr("udfs", "UDF", false));
-		trxLogAttrs.put("resourceStatus", new VTrxLogAttr("resourceStatus", "Policy Status", true));
-		trxLogAttrs.put("tableType", new VTrxLogAttr("tableType", "Table Type", true));
-		trxLogAttrs.put("columnType", new VTrxLogAttr("columnType", "Column Type", true));
-		trxLogAttrs.put("policyName", new VTrxLogAttr("policyName", "Policy Name", false));
-		trxLogAttrs.put("topologies", new VTrxLogAttr("topologies", "Topologies", false));
-		trxLogAttrs.put("services", new VTrxLogAttr("services", "Services", false));
-		trxLogAttrs.put("assetType", new VTrxLogAttr("assetType", "Repository Type", true));
-	}
 
 	public XResourceService() {
 		searchFields.add(new SearchField("name", "obj.name",
@@ -456,151 +412,6 @@ public class XResourceService extends
 			}
 		}
 		return ret;
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXResource vResource, String action){
-		return getTransactionLog(vResource, null, action);
-	}
-	
-	public List<XXTrxLog> getTransactionLog(VXResource vObj, XXResource mObj, String action){
-		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)) {
-			return null;
-		}
-
-		XXAsset xAsset = daoManager.getXXAsset().getById(vObj.getAssetId());
-		String parentObjectName = xAsset.getName();
-		
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Field[] fields = vObj.getClass().getDeclaredFields();
-
-		Field nameField;
-		try {
-			nameField = vObj.getClass().getDeclaredField("name");
-			nameField.setAccessible(true);
-			String objectName = ""+nameField.get(vObj);
-
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-				}
-				
-				int policyType = vObj.getAssetType();
-				if(policyType == AppConstants.ASSET_HDFS){
-					String[] ignoredAttribs = {"tableType", "columnType", "isEncrypt", "databases",
-							"tables", "columnFamilies",  "columns", "udfs"};
-					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
-						continue;
-					}
-				} else if(policyType == AppConstants.ASSET_HIVE) {
-					String[] ignoredAttribs = {"name", "isRecursive", "isEncrypt", "columnFamilies"};
-					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
-						continue;
-					}
-				} else if(policyType == AppConstants.ASSET_HBASE){
-					String[] ignoredAttribs = {"name", "tableType", "columnType", "isRecursive", "databases",
-							"udfs"};
-					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
-						continue;
-					}
-				} else if(policyType == AppConstants.ASSET_KNOX || policyType == AppConstants.ASSET_STORM){
-					String[] ignoredAttribs = {"name", "tableType", "columnType", "isEncrypt", "databases",
-							"tables", "columnFamilies",  "columns", "udfs"};
-					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
-						continue;
-					}
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-			
-				String value = null;
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXResource.getEnumName(fieldName);
-					if(enumName==null && "assetType".equals(fieldName)){
-						enumName="CommonEnums.AssetType";
-					}
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-					if(value == null || "null".equalsIgnoreCase(value)){
-						continue;
-					}
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					if(stringUtil.isEmpty(value)){
-						continue;
-					}
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					String oldValue = null;
-					Field[] mFields = mObj.getClass().getDeclaredFields();
-					for(Field mField : mFields){
-						mField.setAccessible(true);
-						String mFieldName = mField.getName();
-						if(fieldName.equalsIgnoreCase(mFieldName)){
-							if(isEnum){
-								String enumName = XXResource.getEnumName(mFieldName);
-								if(enumName==null && "assetType".equals(mFieldName)){
-									enumName="CommonEnums.AssetType";
-								}
-								int enumValue = mField.get(mObj) == null ? 0 : Integer.parseInt(""+mField.get(mObj));
-								oldValue = xaEnumUtil.getLabel(enumName, enumValue);
-							} else {
-								oldValue = mField.get(mObj)+"";
-							}
-							break;
-						}
-					}
-					if(value.equalsIgnoreCase(oldValue) && !"policyName".equals(fieldName)){
-						continue;
-					}
-					xTrxLog.setPreviousValue(oldValue);
-					xTrxLog.setNewValue(value);
-				}
-				
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_RESOURCE);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_ASSET);
-				xTrxLog.setParentObjectId(vObj.getAssetId());
-				xTrxLog.setParentObjectName(parentObjectName);
-				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-			
-			}
-				
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-		
-		if(trxLogList.isEmpty()){
-			XXTrxLog xTrxLog = new XXTrxLog();
-			xTrxLog.setAction(action);
-			xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_RESOURCE);
-			xTrxLog.setObjectId(vObj.getId());
-			xTrxLog.setObjectName(vObj.getName());
-			xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_ASSET);
-			xTrxLog.setParentObjectId(vObj.getAssetId());
-			xTrxLog.setParentObjectName(parentObjectName);
-			trxLogList.add(xTrxLog);
-		}
-		
-		return trxLogList;
 	}
 
 	@Override

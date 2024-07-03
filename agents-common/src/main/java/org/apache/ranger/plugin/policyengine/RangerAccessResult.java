@@ -26,13 +26,15 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerAccessResult {
-	public final static String KEY_MASK_TYPE =      "maskType";
-	public final static String KEY_MASK_CONDITION = "maskCondition";
-	public final static String KEY_MASKED_VALUE =   "maskedValue";
-
-	private static String KEY_FILTER_EXPR = "filterExpr";
+	public  final static String KEY_MASK_TYPE      = "maskType";
+	public  final static String KEY_MASK_CONDITION = "maskCondition";
+	public  final static String KEY_MASKED_VALUE   = "maskedValue";
+	private final static String KEY_FILTER_EXPR    = "filterExpr";
+	private final static String KEY_DATASETS       = "datasets";
+	private final static String KEY_PROJECTS       = "projects";
 
 	private final String              serviceName;
 	private final RangerServiceDef    serviceDef;
@@ -324,6 +326,30 @@ public class RangerAccessResult {
 
 	public boolean isRowFilterEnabled() {
 		return StringUtils.isNotEmpty(getFilterExpr());
+	}
+
+	public Set<String> getDatasets() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_DATASETS);
+	}
+
+	public void setDatasets(Set<String> datasets) {
+		if (datasets == null) {
+			removeAdditionalInfo(KEY_DATASETS);
+		} else {
+			addAdditionalInfo(KEY_DATASETS, datasets);
+		}
+	}
+
+	public Set<String> getProjects() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_PROJECTS);
+	}
+
+	public void setProjects(Set<String> projects) {
+		if (projects == null) {
+			removeAdditionalInfo(KEY_PROJECTS);
+		} else {
+			addAdditionalInfo(KEY_PROJECTS, projects);
+		}
 	}
 
 	@Override

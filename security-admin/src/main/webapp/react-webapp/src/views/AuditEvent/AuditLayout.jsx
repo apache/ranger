@@ -35,7 +35,7 @@ class AuditLayout extends Component {
 
   tabChange = (tabName) => {
     this.setState({ activeKey: tabName });
-    this.props.navigate(`/reports/audit/${tabName}`, { replace: true });
+    this.props.navigate(`/reports/audit/${tabName}`);
   };
 
   componentDidUpdate(nextProps, prevState) {

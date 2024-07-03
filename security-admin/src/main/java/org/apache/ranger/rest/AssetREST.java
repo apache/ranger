@@ -22,7 +22,9 @@
 import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,7 +69,7 @@ import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
-import org.apache.ranger.service.XTrxLogService;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +113,7 @@ public class AssetREST {
 	XPolicyExportAuditService xPolicyExportAudits;
 	
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 	
 	@Autowired
 	RangerBizUtil msBizUtil;
@@ -277,9 +279,26 @@ public class AssetREST {
 			logger.debug("==> AssetREST.countXAssets()");
 		}
 
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
+
+		filter.setMaxRows(Integer.MAX_VALUE);
+
+		List<RangerService> services      = serviceREST.getServices(filter);
+		int                 servicesCount = 0;
+
+		if (services != null) {
+			for (RangerService service : services) {
+				VXAsset asset = serviceUtil.toVXAsset(service);
+
+				if (asset != null) {
+					servicesCount++;
+				}
+			}
+		}
+
 		VXLong ret = new VXLong();
 
-		ret.setValue(searchXAssets(request).getListSize());
+		ret.setValue(servicesCount);
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== AssetREST.countXAssets(): " + ret);
@@ -429,12 +448,39 @@ public class AssetREST {
 			logger.debug("==> AssetREST.countXResources()");
 		}
 
+		SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
+
+		filter.setMaxRows(Integer.MAX_VALUE);
+
+		List<RangerPolicy> policies      = serviceREST.getPolicies(filter);
+		int                policiesCount = 0;
+
+		if (policies != null) {
+			Map<String, RangerService> services = new HashMap<>();
+
+			for (RangerPolicy policy : policies) {
+				RangerService service = services.get(policy.getService());
+
+				if (service == null) {
+					service = serviceREST.getServiceByName(policy.getService());
+
+					services.put(policy.getService(), service);
+				}
+
+				VXResource resource = serviceUtil.toVXResource(policy, service);
+
+				if (resource != null) {
+					policiesCount++;
+				}
+			}
+		}
+
 		VXLong ret = new VXLong();
 
-		ret.setValue(searchXResources(request).getListSize());
+		ret.setValue(policiesCount);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== AssetREST.countXAssets(): " + ret);
+			logger.debug("<== AssetREST.countXResources(): " + ret);
 		}
 
 		return ret;
@@ -604,8 +650,9 @@ public class AssetREST {
 	public VXTrxLogList getReportLogs(@Context HttpServletRequest request){
 
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xTrxLogService.sortFields);
+				request, xTrxLogService.getSortFields());
                 searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
+		searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
 		searchUtil.extractString(request, searchCriteria, "attributeName",
 				"Attribute Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "action",

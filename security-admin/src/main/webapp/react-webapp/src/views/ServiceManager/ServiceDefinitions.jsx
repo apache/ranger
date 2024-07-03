@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import { Button, Col, Row } from "react-bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
-import { filter, map, sortBy, uniq, isEmpty } from "lodash";
+import { filter, map, sortBy, uniq, isEmpty, cloneDeep } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   isSystemAdmin,
@@ -42,7 +42,7 @@ import noServiceImage from "Images/no-service.svg";
 class ServiceDefinitions extends Component {
   constructor(props) {
     super(props);
-    this.serviceDefData = getServiceDef();
+    this.serviceDefData = cloneDeep(getServiceDef());
     this.state = {
       serviceDefs: this.props.isTagView
         ? this.serviceDefData.tagServiceDefs
@@ -176,17 +176,16 @@ class ServiceDefinitions extends Component {
     try {
       let zonesResp = [];
       if (e && e !== undefined) {
-        zonesResp = await fetchApi({
+        const response = await fetchApi({
           url: `public/v2/api/zones/${e && e.value}/service-headers`
         });
-
+        zonesResp = response?.data || [];
         zonesResp &&
           this.props.navigate(
-            `${this.props.location.pathname}?securityZone=${e.label}`,
-            { replace: true }
+            `${this.props.location.pathname}?securityZone=${e.label}`
           );
 
-        let zoneServiceNames = map(zonesResp.data, "name");
+        let zoneServiceNames = map(zonesResp, "name");
 
         let zoneServices = zoneServiceNames.map((zoneService) => {
           return this.state.services.filter((service) => {
@@ -207,19 +206,16 @@ class ServiceDefinitions extends Component {
         }
 
         let zoneServiceDefTypes = uniq(map(zoneServices, "type"));
-        let filterZoneServiceDef;
-        if (!this.state.isTagView) {
-          filterZoneServiceDef = sortBy(
-            zoneServiceDefTypes.map((obj) => {
-              return this.state.serviceDefs.find((serviceDef) => {
-                return serviceDef.name == obj;
-              });
-            }),
-            "id"
-          );
-        } else {
-          filterZoneServiceDef = this.state.serviceDefs;
-        }
+        let filterZoneServiceDef = [];
+        filterZoneServiceDef = sortBy(
+          zoneServiceDefTypes.map((obj) => {
+            return this.state.serviceDefs.find((serviceDef) => {
+              return serviceDef.name == obj;
+            });
+          }),
+          "id"
+        );
+
         let zoneDetails = {};
         zoneDetails["label"] = e.label;
         zoneDetails["value"] = e.value;
@@ -250,7 +246,6 @@ class ServiceDefinitions extends Component {
   deleteService = async (sid) => {
     let localStorageZoneDetails = localStorage.getItem("zoneDetails");
     let zonesResp = [];
-
     try {
       this.setState({ blockUI: true });
 
@@ -263,19 +258,41 @@ class ServiceDefinitions extends Component {
         localStorageZoneDetails !== undefined &&
         localStorageZoneDetails !== null
       ) {
-        zonesResp = await fetchApi({
+        let filterZoneServiceDef = [];
+
+        const response = await fetchApi({
           url: `public/v2/api/zones/${
             JSON.parse(localStorageZoneDetails)?.value
           }/service-headers`
         });
 
-        if (isEmpty(zonesResp?.data)) {
-          this.setState({
-            zones: this.state.zones.filter(
-              (z) => z.id !== JSON.parse(localStorageZoneDetails)?.value
-            )
+        zonesResp = response?.data || [];
+
+        if (!isEmpty(zonesResp)) {
+          let zoneServiceNames = filter(zonesResp, ["isTagService", false]);
+
+          zoneServiceNames = map(zoneServiceNames, "name");
+
+          let zoneServices = zoneServiceNames?.map((zoneService) => {
+            return this.state.services?.filter((service) => {
+              return service.name === zoneService;
+            });
           });
+
+          let zoneServiceDefTypes = uniq(map(zoneServices?.flat(), "type"));
+
+          filterZoneServiceDef = sortBy(
+            zoneServiceDefTypes?.map((obj) => {
+              return this.state.serviceDefs?.find((serviceDef) => {
+                return serviceDef.name == obj;
+              });
+            }),
+            "id"
+          );
         }
+        this.setState({
+          filterServiceDefs: filterZoneServiceDef
+        });
       }
 
       this.setState({
@@ -343,7 +360,7 @@ class ServiceDefinitions extends Component {
     return (
       <React.Fragment>
         <div>
-          <div className="text-right px-3 pt-3">
+          <div className="text-end px-3 pt-3">
             {!isKMSRole && (
               <div
                 className="body bold  pd-b-10"
@@ -379,7 +396,6 @@ class ServiceDefinitions extends Component {
                             this.state.selectedZone.value
                         }
                   }
-                  //isDisabled={true}
                   formatOptionLabel={this.formatOptionLabel}
                   isDisabled={isEmpty(zones) ? true : false}
                   onChange={this.getSelectedZone}
@@ -403,10 +419,13 @@ class ServiceDefinitions extends Component {
               <Button
                 variant="outline-secondary"
                 size="sm"
-                className="ml-2"
+                className={`${
+                  isEmpty(filterServiceDefs) ? "not-allowed" : "pe-auto"
+                } ms-2`}
                 onClick={this.showImportModal}
                 data-id="importBtn"
                 data-cy="importBtn"
+                disabled={isEmpty(filterServiceDefs) ? true : false}
               >
                 <i className="fa fa-fw fa-rotate-180 fa-external-link-square" />
                 Import
@@ -429,10 +448,13 @@ class ServiceDefinitions extends Component {
               <Button
                 variant="outline-secondary"
                 size="sm"
-                className="ml-2"
+                className={`${
+                  isEmpty(filterServiceDefs) ? "not-allowed" : "pe-auto"
+                } ms-2`}
                 onClick={this.showExportModal}
                 data-id="exportBtn"
                 data-cy="exportBtn"
+                disabled={isEmpty(filterServiceDefs) ? true : false}
               >
                 <i className="fa fa-fw fa-external-link-square" />
                 Export

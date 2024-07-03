@@ -37,7 +37,7 @@ import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
+import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXTrxLog;
@@ -48,6 +48,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.biz.RangerBizUtil;
 
 @Path("xaudit")
 @Component
@@ -63,10 +65,14 @@ public class XAuditREST {
 	XAuditMgr xAuditMgr;
 
 	@Autowired
-	XTrxLogService xTrxLogService;
+	RangerTrxLogV2Service xTrxLogService;
 
 	@Autowired
 	XAccessAuditService xAccessAuditService;
+
+	@Autowired
+	RangerBizUtil bizUtil;
+
 	// Handle XTrxLog
 	@GET
 	@Path("/trx_log/{id}")
@@ -117,7 +123,7 @@ public class XAuditREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
 	public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.sortFields);
+		 request, xTrxLogService.getSortFields());
 		 return xAuditMgr.searchXTrxLogs(searchCriteria);
 	}
 
@@ -127,7 +133,7 @@ public class XAuditREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_TRX_LOGS + "\")")
 	public VXLong countXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.sortFields);
+		 request, xTrxLogService.getSortFields());
 
 		 return xAuditMgr.getXTrxLogSearchCount(searchCriteria);
 	}
@@ -144,7 +150,19 @@ public class XAuditREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
 	public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+		SearchCriteria searchCriteria  = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+		long           kmsServiceDefId = EmbeddedServiceDefsUtil.instance().getKmsServiceDefId();
+
+		if (kmsServiceDefId != -1) {
+			boolean includeKmsAuditLogs = bizUtil.isKeyAdmin() || bizUtil.isAuditKeyAdmin();
+
+			if (includeKmsAuditLogs) {
+				searchCriteria.getParamList().put("repoType", kmsServiceDefId);
+			} else {
+				searchCriteria.getParamList().put("-repoType", kmsServiceDefId);
+			}
+		}
+
 		return xAuditMgr.searchXAccessAudits(searchCriteria);
 	}
 
@@ -153,10 +171,11 @@ public class XAuditREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
 	public VXLong countXAccessAudits(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xAccessAuditService.sortFields);
+		VXLong ret = new VXLong();
 
-		 return xAuditMgr.getXAccessAuditSearchCount(searchCriteria);
+		ret.setValue(searchXAccessAudits(request).getTotalCount());
+
+		return ret;
 	}
 
 }

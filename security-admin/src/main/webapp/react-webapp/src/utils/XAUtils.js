@@ -41,7 +41,8 @@ import {
   isNull,
   some,
   has,
-  sortBy
+  sortBy,
+  isArray
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -52,6 +53,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
 import { policyInfoMessage } from "./XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
+import folderIcon from "Images/folder-grey.png";
 
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
@@ -196,7 +198,9 @@ export const setTimeStamp = (dateTime) => {
     <span title={formatDateTime}>
       {formatDateTime}
       <div className="text-muted">
-        <small>{moment(formatDateTime).fromNow()}</small>
+        <small>
+          {moment(formatDateTime, "MM/DD/YYYY h:mm:ss A").fromNow()}
+        </small>
       </div>
     </span>
   ) : (
@@ -1141,28 +1145,49 @@ export const fetchSearchFilterParams = (
   let defaultSearchFilterParam = [];
 
   // Get search filter params from current search params
-  const currentParams = Object.fromEntries([...searchParams]);
-  for (const param in currentParams) {
+  for (const [key, value] of searchParams.entries()) {
     let searchFilterObj = find(searchFilterOptions, {
-      urlLabel: param
+      urlLabel: key
     });
 
     if (!isUndefined(searchFilterObj)) {
       let category = searchFilterObj.category;
-      let value = currentParams[param];
+      let categoryValue = value;
 
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          label: value
-        });
-        value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
+      if (searchFilterObj?.addMultiple) {
+        let oldValue = searchFilterParam[category];
+        let newValue = value;
+        if (oldValue) {
+          if (isArray(oldValue)) {
+            searchFilterParam[category].push(newValue);
+            searchParam[key].push(newValue);
+          } else {
+            searchFilterParam[category] = [oldValue, newValue];
+            searchParam[key] = [oldValue, newValue];
+          }
+        } else {
+          searchFilterParam[category] = newValue;
+          searchParam[key] = newValue;
+        }
+      } else {
+        if (searchFilterObj.type == "textoptions") {
+          let textOptionObj = find(searchFilterObj.options(), {
+            label: categoryValue
+          });
+          categoryValue = !isUndefined(textOptionObj)
+            ? textOptionObj.value
+            : categoryValue;
+        }
+
+        searchFilterParam[category] = categoryValue;
+        searchParam[key] = value;
       }
-
-      searchFilterParam[category] = value;
       defaultSearchFilterParam.push({
         category: category,
-        value: value
+        value: categoryValue
       });
+    } else {
+      searchParam[key] = value;
     }
   }
 
@@ -1182,26 +1207,49 @@ export const fetchSearchFilterParams = (
           let category = searchFilterObj.category;
           let value = localStorageParams[localParam];
 
-          if (searchFilterObj.type == "textoptions") {
-            let textOptionObj = find(searchFilterObj.options(), {
-              label: value
-            });
-            value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
-          }
+          if (searchFilterObj?.addMultiple) {
+            if (isArray(value)) {
+              for (const val of value) {
+                searchFilterParam[category] = value;
+                defaultSearchFilterParam.push({
+                  category: category,
+                  value: val
+                });
+                searchParam[localParam] = value;
+              }
+            } else {
+              searchFilterParam[category] = value;
+              defaultSearchFilterParam.push({
+                category: category,
+                value: value
+              });
+              searchParam[localParam] = value;
+            }
+          } else {
+            if (searchFilterObj.type == "textoptions") {
+              let textOptionObj = find(searchFilterObj.options(), {
+                label: value
+              });
+              value = !isUndefined(textOptionObj) ? textOptionObj.value : value;
+            }
 
-          searchFilterParam[category] = value;
-          defaultSearchFilterParam.push({
-            category: category,
-            value: value
-          });
+            searchFilterParam[category] = value;
+            defaultSearchFilterParam.push({
+              category: category,
+              value: value
+            });
+            searchParam[localParam] = localStorageParams[localParam];
+          }
+        } else {
           searchParam[localParam] = localStorageParams[localParam];
         }
       }
     }
   }
+
   finalSearchFilterData["searchFilterParam"] = searchFilterParam;
   finalSearchFilterData["defaultSearchFilterParam"] = defaultSearchFilterParam;
-  finalSearchFilterData["searchParam"] = { ...currentParams, ...searchParam };
+  finalSearchFilterData["searchParam"] = searchParam;
 
   return finalSearchFilterData;
 };
@@ -1217,7 +1265,21 @@ export const parseSearchFilter = (filter, searchFilterOptions) => {
     });
 
     if (searchFilterObj !== undefined) {
-      searchFilterParam[obj.category] = obj.value;
+      if (searchFilterObj?.addMultiple) {
+        let oldValue = searchFilterParam[obj.category];
+        let newValue = obj.value;
+        if (oldValue) {
+          if (isArray(oldValue)) {
+            searchFilterParam[obj.category].push(newValue);
+          } else {
+            searchFilterParam[obj.category] = [oldValue, newValue];
+          }
+        } else {
+          searchFilterParam[obj.category] = newValue;
+        }
+      } else {
+        searchFilterParam[obj.category] = obj.value;
+      }
 
       let urlLabelParam = searchFilterObj.urlLabel;
 
@@ -1228,7 +1290,12 @@ export const parseSearchFilter = (filter, searchFilterOptions) => {
         searchParam[urlLabelParam] =
           textOptionObj !== undefined ? textOptionObj.label : obj.value;
       } else {
-        searchParam[urlLabelParam] = obj.value;
+        if (searchFilterObj?.addMultiple) {
+          searchParam[urlLabelParam] =
+            searchFilterParam[searchFilterObj.category];
+        } else {
+          searchParam[urlLabelParam] = obj.value;
+        }
       }
     }
   });
@@ -1352,9 +1419,8 @@ export const updateTagActive = (isTagView) => {
 };
 
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
-  let logoutResp = {};
   try {
-    logoutResp = await fetchApi({
+    await fetchApi({
       url: "logout",
       baseURL: "",
       headers: {
@@ -1428,7 +1494,7 @@ export const requestDataTitle = (serviceType) => {
 
 export const policyConditionUpdatedJSON = (policyCond) => {
   let newPolicyConditionJSON = [...policyCond];
-  newPolicyConditionJSON.filter(function (key, val) {
+  newPolicyConditionJSON.filter(function (key) {
     if (!key?.uiHint || key?.uiHint == "") {
       if (
         key.evaluatorOptions &&
@@ -1457,4 +1523,64 @@ export const getResourcesDefVal = (serviceDef, policyType) => {
     resources = sortBy(serviceDef.resources, "itemId");
   }
   return resources;
+};
+
+// Get defult landing page
+
+export const getLandingPageURl = () => {
+  if (hasAccessToTab("Resource Based Policies")) {
+    return "/policymanager/resource";
+  } else {
+    if (hasAccessToTab("Tag Based Policies")) {
+      return "/policymanager/tag";
+    } else {
+      return "/userprofile";
+    }
+  }
+};
+
+export const getServiceDefIcon = (serviceDefName) => {
+  let imagePath = folderIcon;
+  let imageStyling;
+
+  try {
+    const serviceDefIcon =
+      require(`../images/serviceDefIcons/${serviceDefName}/icon.svg`).default;
+    imagePath = serviceDefIcon;
+    imageStyling = { height: "27px", width: "27px" };
+  } catch (error) {
+    console.log(
+      `Continuing to use default icon for ${serviceDefName.toUpperCase()}`
+    );
+  }
+
+  return (
+    <span className={imageStyling !== undefined ? "serviceDef-icon m-r-5" : ""}>
+      <img
+        src={imagePath}
+        style={imageStyling !== undefined ? imageStyling : {}}
+        className={imageStyling !== undefined ? "" : "m-r-5"}
+        alt={`${serviceDefName.toUpperCase()} Icon`}
+        title={`${serviceDefName.toUpperCase()}`}
+      />
+    </span>
+  );
+};
+
+export const capitalizeFirstLetter = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const currentTimeZone = (timeZoneDate) => {
+  return timeZoneDate
+    ? `${dateFormat(timeZoneDate, "mm/dd/yyyy hh:MM:ss TT ")} ${new Date(
+        timeZoneDate
+      )
+        .toString()
+        .replace(/^.*GMT.*\(/, "")
+        .replace(/\)$/, "")}`
+    : new Date()
+        .toString()
+        .replace(/^.*GMT.*\(/, "")
+        .replace(/\)$/, "");
 };

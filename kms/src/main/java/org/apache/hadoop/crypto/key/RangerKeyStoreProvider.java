@@ -76,6 +76,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private static final String AZURE_KEYVAULT_ENABLED       = "ranger.kms.azurekeyvault.enabled";
     private static final String AZURE_CLIENT_SECRET_ALIAS    = "ranger.kms.azure.client.secret.alias";
     private static final String AZURE_CLIENT_SECRET          = "ranger.kms.azure.client.secret";
+    private static final String AWS_KMS_ENABLED              = "ranger.kms.awskms.enabled";
+    private static final String AWS_CLIENT_SECRETKEY_ALIAS   = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY+".alias";
+    private static final String AWS_CLIENT_SECRETKEY         = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY;
     private static final String TENCENT_KMS_ENABLED          = "ranger.kms.tencentkms.enabled";
     private static final String TENCENT_CLIENT_SECRET        = RangerTencentKMSProvider.TENCENT_CLIENT_SECRET;
     private static final String TENCENT_CLIENT_SECRET_ALIAS  = "ranger.kms.tencent.client.secret.alias";
@@ -110,6 +113,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
         boolean isHSMEnabled           = conf.getBoolean(HSM_ENABLED, false);
         boolean isKeySecureEnabled     = conf.getBoolean(KEYSECURE_ENABLED, false);
         boolean isAzureKeyVaultEnabled = conf.getBoolean(AZURE_KEYVAULT_ENABLED, false);
+        boolean isAWSKMSEnabled        = conf.getBoolean(AWS_KMS_ENABLED, false);
         boolean isGCPEnabled           = conf.getBoolean(IS_GCP_ENABLED, false);
         boolean isTencentKMSEnabled    = conf.getBoolean(TENCENT_KMS_ENABLED, false);
 
@@ -160,6 +164,24 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 masterKey = null;
             } catch (Exception ex) {
                 throw new Exception("Error while generating master key and master key secret in Azure Key Vault. Error : " + ex);
+            }
+        } else if (isAWSKMSEnabled) {
+            logger.info("AWS KMS is enabled for storing the master key.");
+
+            getFromJceks(conf, CREDENTIAL_PATH, AWS_CLIENT_SECRETKEY_ALIAS, AWS_CLIENT_SECRETKEY);
+
+            try {
+                masterKeyProvider = new RangerAWSKMSProvider(conf);
+
+                masterKeyProvider.onInitialization();
+
+                // ensure master key exist
+                masterKeyProvider.generateMasterKey(password);
+
+                dbStore   = new RangerKeyStore(daoManager, true, masterKeyProvider);
+                masterKey = null;
+            } catch (Exception ex) {
+                throw new Exception("Error while generating master key and master key secret in AWS KMS. Error : " + ex);
             }
         } else if (isTencentKMSEnabled) {
             logger.info("Ranger KMS Tencent KMS is enabled for storing master key.");

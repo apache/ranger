@@ -36,6 +36,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.ugsyncutil.model.FileSyncSourceInfo;
@@ -45,9 +46,8 @@ import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
 public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  implements UserGroupSource {
@@ -265,16 +265,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 	}
 	
 	public 	Map<String, List<String>> readJSONfile(File jsonFile) throws Exception {
-		Map<String, List<String>> ret = new HashMap<String, List<String>>();
-
-		JsonReader jsonReader = new JsonReader(new BufferedReader(new FileReader(jsonFile)));
-		
-		Gson gson = new GsonBuilder().create();
-
-		ret = gson.fromJson(jsonReader, ret.getClass());
-		
-		return ret;
-
+		return JsonUtils.getMapper().readValue(jsonFile, new TypeReference<HashMap<String, List<String>>>() {});
 	}
 	
 	public Map<String, List<String>> readTextFile(File textFile) throws Exception {
@@ -285,31 +276,31 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 		
 		CSVFormat csvFormat = CSVFormat.newFormat(delimiter.charAt(0));
 		
-		CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat);
+		try(CSVParser csvParser = new CSVParser(new BufferedReader(new FileReader(textFile)), csvFormat)) {
 		
-		List<CSVRecord> csvRecordList = csvParser.getRecords();
-		
-		if ( csvRecordList != null) {
-			for(CSVRecord csvRecord : csvRecordList) {
-				List<String> groups = new ArrayList<String>();
-				String user = csvRecord.get(0);
-				
-				user = user.replaceAll("^\"|\"$", "");
-					
-				int i = csvRecord.size();
-				
-				for (int j = 1; j < i; j ++) {
-					String group = csvRecord.get(j);
-					if ( group != null && !group.isEmpty()) {
-						 group = group.replaceAll("^\"|\"$", "");
-						 groups.add(group);
-					}
-				}
-				ret.put(user,groups);
-			 }
-		}
+			List<CSVRecord> csvRecordList = csvParser.getRecords();
 
-		csvParser.close();
+			if ( csvRecordList != null) {
+				for(CSVRecord csvRecord : csvRecordList) {
+					List<String> groups = new ArrayList<String>();
+					String user = csvRecord.get(0);
+
+					user = user.replaceAll("^\"|\"$", "");
+
+					int i = csvRecord.size();
+
+					for (int j = 1; j < i; j ++) {
+						String group = csvRecord.get(j);
+						if ( group != null && !group.isEmpty()) {
+							 group = group.replaceAll("^\"|\"$", "");
+							 groups.add(group);
+						}
+					}
+					ret.put(user,groups);
+				 }
+			}
+
+		}
 
 		return ret;
 	}

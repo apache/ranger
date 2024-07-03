@@ -223,6 +223,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				tagAccessType.setName(prefix + svcAccessType.getName());
 				tagAccessType.setLabel(svcAccessType.getLabel());
 				tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
+				tagAccessType.setCategory(svcAccessType.getCategory());
 
 				tagAccessType.setImpliedGrants(new HashSet<String>());
 				if (CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
@@ -275,7 +276,8 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	private void updateTagServiceDefForUpdatingAccessTypes(RangerServiceDef serviceDef) throws Exception {
-		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) ||
+		    StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
 			return;
 		}
 

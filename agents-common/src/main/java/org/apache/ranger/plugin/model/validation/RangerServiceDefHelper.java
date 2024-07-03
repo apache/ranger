@@ -172,6 +172,14 @@ public class RangerServiceDefHelper {
 		_delegate.patchServiceDefWithDefaultValues();
 	}
 
+	public RangerResourceDef getResourceDef(String resourceName) {
+		return _delegate.getResourceDef(resourceName, RangerPolicy.POLICY_TYPE_ACCESS);
+	}
+
+	public RangerResourceDef getResourceDef(String resourceName, Integer policyType) {
+		return _delegate.getResourceDef(resourceName, policyType);
+	}
+
 	/**
 	 * for a resource definition as follows:
 	 *
@@ -346,6 +354,32 @@ public class RangerServiceDefHelper {
 		return _delegate.getImpliedAccessGrants();
 	}
 
+	public Set<String> expandImpliedAccessGrants(Set<String> accessTypes) {
+		final Set<String> ret;
+
+		if (CollectionUtils.isNotEmpty(accessTypes)) {
+			Map<String, Collection<String>> impliedGrants = getImpliedAccessGrants();
+
+			if (CollectionUtils.containsAny(impliedGrants.keySet(), accessTypes)) {
+				ret = new HashSet<>(accessTypes);
+
+				for (String accessType : accessTypes) {
+					Collection<String> impliedAccessTypes = impliedGrants.get(accessType);
+
+					if (CollectionUtils.isNotEmpty(impliedAccessTypes)) {
+						ret.addAll(impliedAccessTypes);
+					}
+				}
+			} else {
+				ret = accessTypes;
+			}
+		} else {
+			ret = Collections.emptySet();
+		}
+
+		return ret;
+	}
+
 	/**
 	 * Not designed for public access.  Package level only for testability.
 	 */
@@ -426,6 +460,28 @@ public class RangerServiceDefHelper {
 					}
 				}
 			}
+		}
+
+		public RangerResourceDef getResourceDef(String resourceName, Integer policyType) {
+			RangerResourceDef ret = null;
+
+			if (policyType == null) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			List<RangerResourceDef> resourceDefs = this.getResourceDefs(_serviceDef, policyType);
+
+			if (resourceDefs != null) {
+				for (RangerResourceDef resourceDef : resourceDefs) {
+					if (StringUtils.equals(resourceName, resourceDef.getName())) {
+						ret = resourceDef;
+
+						break;
+					}
+				}
+			}
+
+			return ret;
 		}
 
 		public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {
@@ -686,6 +742,22 @@ public class RangerServiceDefHelper {
 						}
 
 						impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
+					}
+				}
+
+				if (_serviceDef.getMarkerAccessTypes() != null) {
+					for (RangerAccessTypeDef accessTypeDef : _serviceDef.getMarkerAccessTypes()) {
+						if(CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+							Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
+
+							if(impliedAccessGrants == null) {
+								impliedAccessGrants = new HashSet<>();
+
+								ret.put(accessTypeDef.getName(), impliedAccessGrants);
+							}
+
+							impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
+						}
 					}
 				}
 			}

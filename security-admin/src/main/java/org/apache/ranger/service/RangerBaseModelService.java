@@ -52,8 +52,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerBaseModelService<T extends XXDBBase, V extends RangerBaseModelObject> {
-	private static final Logger LOG = LoggerFactory
-			.getLogger(RangerBaseModelService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerBaseModelService.class);
+
+	public static final int OPERATION_CREATE_CONTEXT        = 1;
+	public static final int OPERATION_UPDATE_CONTEXT        = 2;
+	public static final int OPERATION_DELETE_CONTEXT        = 3;
+	public static final int OPERATION_IMPORT_CREATE_CONTEXT = 4;
+	public static final int OPERATION_IMPORT_DELETE_CONTEXT = 5;
+
 
 	@Autowired
 	protected RangerDaoManager daoMgr;
@@ -66,54 +72,51 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	
 	@Autowired
 	protected RangerSearchUtil searchUtil;
-	
-	@Autowired
-	RangerBizUtil bizUtil;
-
-	public static final int OPERATION_CREATE_CONTEXT = 1;
-	public static final int OPERATION_UPDATE_CONTEXT = 2;
-	public static final int OPERATION_DELETE_CONTEXT = 3;
-	public static final int OPERATION_IMPORT_CREATE_CONTEXT = 4;
-	public static final int OPERATION_IMPORT_DELETE_CONTEXT = 5;
-	protected Class<T> tEntityClass;
-	protected Class<V> tViewClass;
-	private Boolean populateExistingBaseFields;
-	protected String tClassName;
-	
-	public List<SortField> sortFields = new ArrayList<SortField>();
-	public List<SearchField> searchFields = new ArrayList<SearchField>();
-	protected final String countQueryStr;
-	protected String queryStr;
 
 	@Autowired
 	protected BaseDao<T> entityDao;
 
+	@Autowired
+	RangerBizUtil bizUtil;
+
+	public    final List<SortField>   sortFields = new ArrayList<>();
+	public    final List<SearchField> searchFields = new ArrayList<>();
+	protected final Class<T>          tEntityClass;
+	protected final Class<V>          tViewClass;
+	protected final String            tClassName;
+	protected final String            countQueryStr;
+	protected final String            distinctCountQueryStr;
+	protected final String            queryStr;
+	protected final String            distinctQueryStr;
+	private         Boolean           populateExistingBaseFields;
+
 	@SuppressWarnings("unchecked")
 	public RangerBaseModelService() {
-		Class klass = getClass();
-		ParameterizedType genericSuperclass = (ParameterizedType) klass
-				.getGenericSuperclass();
-		TypeVariable<Class<?>> var[] = klass.getTypeParameters();
+		Class                  klass             = getClass();
+		ParameterizedType      genericSuperclass = (ParameterizedType) klass.getGenericSuperclass();
+		TypeVariable<Class<?>> var[]             = klass.getTypeParameters();
 
 		if (genericSuperclass.getActualTypeArguments()[0] instanceof Class) {
-			tEntityClass = (Class<T>) genericSuperclass
-					.getActualTypeArguments()[0];
-			tViewClass = (Class<V>) genericSuperclass.getActualTypeArguments()[1];
+			tEntityClass = (Class<T>) genericSuperclass.getActualTypeArguments()[0];
+			tViewClass   = (Class<V>) genericSuperclass.getActualTypeArguments()[1];
 		} else if (var.length > 0) {
 			tEntityClass = (Class<T>) var[0].getBounds()[0];
-			tViewClass = (Class<V>) var[1].getBounds()[0];
+			tViewClass   = (Class<V>) var[1].getBounds()[0];
 		} else {
 			LOG.error("Cannot find class for template", new Throwable());
-		}
-		
-		if (tEntityClass != null) {
-			tClassName = tEntityClass.getName();
+
+			tEntityClass = null;
+			tViewClass   = null;
 		}
 
+		tClassName = (tEntityClass != null) ? tEntityClass.getName() : "XXDBBase";
+
 		populateExistingBaseFields = false;
-		
-		countQueryStr = "SELECT COUNT(obj) FROM " + tClassName + " obj ";
-		queryStr = "SELECT obj FROM " + tClassName + " obj ";
+
+		countQueryStr         = "SELECT COUNT(obj) FROM " + tClassName + " obj ";
+		distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM " + tClassName + " obj ";
+		queryStr              = "SELECT obj FROM " + tClassName + " obj ";
+		distinctQueryStr      = "SELECT DISTINCT obj FROM " + tClassName + " obj ";
 	}
 
 	protected abstract T mapViewToEntityBean(V viewBean, T t,
@@ -160,12 +163,12 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 	}
 
 	protected T populateEntityBeanForCreate(T entityObj, V vObj) {
-		if(!populateExistingBaseFields) {
+		if (!populateExistingBaseFields) {
 			entityObj.setCreateTime(DateUtil.getUTCDate());
 			entityObj.setUpdateTime(entityObj.getCreateTime());
 			entityObj.setAddedByUserId(ContextUtil.getCurrentUserId());
 			entityObj.setUpdatedByUserId(entityObj.getAddedByUserId());
-		} else if(populateExistingBaseFields) {
+		} else {
 			XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
 			XXPortalUser updByUser     = daoMgr.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 
@@ -349,13 +352,11 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 				return Collections.emptyList();
 			}
 		}
-		
-		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
 
-		String q = queryStr;
-		Query query = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
-
-		List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);		
+		String  sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
+		String  q          = searchCriteria.isDistinct() ? distinctQueryStr : queryStr;
+		Query   query      = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
+		List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);
 
 		if (vList != null) {
 			vList.setResultSize(resultList.size());
@@ -397,16 +398,13 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		return resultList;
 	}
 
-	protected long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+	//If not efficient we need to review this and add jpa_named queries to get the count
+	public long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+		String q     = searchCriteria.isDistinct() ? distinctCountQueryStr : countQueryStr;
+		Query  query = createQuery(q, null, searchCriteria, searchFieldList, true);
+		Long   count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);
 
-		String q = countQueryStr;
-		Query query = createQuery(q, null, searchCriteria, searchFieldList, true);
-		Long count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);
-
-		if (count == null) {
-			return 0;
-		}
-		return count.longValue();
+		return (count == null) ? 0 : count.longValue();
 	}
 	
 	protected Query createQuery(String searchString, String sortString, SearchFilter searchCriteria,

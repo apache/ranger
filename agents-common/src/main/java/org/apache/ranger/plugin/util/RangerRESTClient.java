@@ -49,13 +49,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -101,9 +100,8 @@ public class RangerRESTClient {
 	private String mTrustStoreURL;
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
-	private String mTrustStoreType;
-	private Gson   gsonBuilder;
-	private int    mRestClientConnTimeOutMs;
+	private String       mTrustStoreType;
+	private int          mRestClientConnTimeOutMs;
 	private int    mRestClientReadTimeOutMs;
 	private int    maxRetryAttempts;
 	private int    retryIntervalMs;
@@ -171,16 +169,16 @@ public class RangerRESTClient {
 
 	public WebResource getResource(String relativeUrl) {
 		WebResource ret = getClient().resource(getUrl() + relativeUrl);
-		
+
 		return ret;
 	}
 
 	public String toJson(Object obj) {
-		return gsonBuilder.toJson(obj);		
+		return JsonUtils.objectToJson(obj);
 	}
 	
 	public <T> T fromJson(String json, Class<T> cls) {
-		return gsonBuilder.fromJson(json, cls);
+		return JsonUtils.jsonToObject(json, cls);
 	}
 
 	public Client getClient() {
@@ -244,13 +242,7 @@ public class RangerRESTClient {
 	}
 
 	private void init(Configuration config) {
-		try {
-			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
-		} catch(Throwable excp) {
-			LOG.error("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
-		}
-
-		mIsSSL = isSsl(mUrl);
+		mIsSSL = isSslEnabled(mUrl);
 
 		if (mIsSSL) {
 
@@ -281,7 +273,7 @@ public class RangerRESTClient {
 		}
 	}
 
-	private boolean isSsl(String url) {
+	private boolean isSslEnabled(String url) {
 		return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
 	}
 

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_GDS_ENRICHER_NAME;
 import static org.junit.Assert.*;
 
 import java.io.InputStream;
@@ -28,7 +29,9 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -93,7 +96,7 @@ public class TestRangerAuthContext {
 			RangerAuthContext                  ctx              = plugin.getCurrentRangerAuthContext();
 			Map<RangerContextEnricher, Object> contextEnrichers = ctx.getRequestContextEnrichers();
 
-			assertTrue(fileName + "-" + testName + " - Empty contextEnrichers", MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 2);
+			assertTrue(fileName + "-" + testName + " - Empty contextEnrichers", MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 3);
 
 			for (Map.Entry<RangerContextEnricher, Object> entry : contextEnrichers.entrySet()) {
 				RangerContextEnricher enricher     = entry.getKey();
@@ -104,8 +107,10 @@ public class TestRangerAuthContext {
 					assertTrue(fileName + "-" + testName + " - Invalid contextEnricher", enricherData instanceof RangerContextEnricher);
 				} else if (enricherName.equals("TagEnricher")) {
 					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerTagEnricher || enricherData instanceof RangerTagEnricher.EnrichedServiceTags));
+				} else if (enricherName.equals(IMPLICIT_GDS_ENRICHER_NAME) || enricher instanceof RangerGdsEnricher) {
+					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerGdsEnricher || enricherData instanceof GdsPolicyEngine));
 				} else {
-					assertTrue(fileName + "-" + testName + " - Unexpected type of contextEnricher", false);
+					fail(fileName + "-" + testName + " - Unexpected type of contextEnricher: " + enricher);
 				}
 			}
 		}

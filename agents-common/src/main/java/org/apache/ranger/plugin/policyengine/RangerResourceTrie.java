@@ -576,7 +576,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
 
     }
 
-    private String getNonWildcardPrefix(String str) {
+    private int getNonWildcardPrefixLength(String str) {
         int minIndex = str.length();
 
         for (int i = 0; i < wildcardChars.length(); i++) {
@@ -587,8 +587,16 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
             }
         }
 
-        return str.substring(0, minIndex);
+        return minIndex;
     }
+
+    private String getNonWildcardPrefix(String str) {
+        int prefixLen = getNonWildcardPrefixLength(str);
+
+        return (prefixLen < str.length()) ? str.substring(0, prefixLen) : str;
+    }
+
+
 
     private Set<T> getEvaluatorsForResource(String resource, ResourceElementMatchingScope scope) {
         if(LOG.isDebugEnabled()) {
@@ -718,7 +726,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
 
         TrieNode<T> curr = root;
-        final int   len  = resource.length();
+        final int   len  = getNonWildcardPrefixLength(resource);
         int         i    = 0;
 
         while (i < len) {
@@ -737,6 +745,8 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
             curr = child;
             i    += childStr.length();
         }
+
+        curr = (i == len) ? curr : null;
 
         RangerPerfTracer.logAlways(perf);
 
@@ -1128,11 +1138,21 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
 
         void removeSelfFromTrie() {
-            if (evaluators == null && wildcardEvaluators == null && children.size() == 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("==> removeSelfFromTrie(" + this + ")");
+            }
+            if (evaluators == null && children.size() == 0) {
                 TrieNode<U> parent = getParent();
                 if (parent != null) {
                     parent.children.remove(str.charAt(0));
                 }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("removeSelfFromTrie(" + this + ") could not remove self from Trie");
+                }
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== removeSelfFromTrie(" + this + ")");
             }
         }
 
@@ -1298,12 +1318,25 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
 
         private void removeEvaluatorFromSubtree(U evaluator) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("==> removeEvaluatorFromSubtree(" + evaluator.getId() + ")");
+            }
             if (CollectionUtils.isNotEmpty(wildcardEvaluators) && wildcardEvaluators.contains(evaluator)) {
                 removeWildcardEvaluator(evaluator);
             } else {
                 removeEvaluator(evaluator);
             }
             removeSelfFromTrie();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== removeEvaluatorFromSubtree(" + evaluator.getId() + ")");
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            toString(sb);
+            return sb.toString();
         }
 
         void toString(StringBuilder sb) {

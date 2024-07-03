@@ -73,7 +73,8 @@ public class RangerPluginCapability {
         RANGER_PLUGIN_CAPABILITY_USERSTORE_DOWNLOAD("UserStore Download"),
         RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY("Audit Policy"),
         RANGER_PLUGIN_CAPABILITY_UGT_ATTRIBUTES_IN_POLICY("User/group/tag attributes in policy"),
-        RANGER_PLUGIN_CAPABILITY_ADDITIONAL_RESOURCES_IN_POLICY("additional resources in policy");
+        RANGER_PLUGIN_CAPABILITY_ADDITIONAL_RESOURCES_IN_POLICY("additional resources in policy"),
+        RANGER_PLUGIN_CAPABILITY_GDS_POLICIES("GDS Policies");
 
         private final String name;
         RangerPluginFeature(String name) {

@@ -28,6 +28,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
@@ -38,12 +39,20 @@ import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
+import org.apache.ranger.service.RangerTagDefService;
+import org.apache.ranger.service.RangerTagResourceMapService;
+import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +78,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.List;
+import java.util.Map;
 
 @Path(TagRESTConstants.TAGDEF_NAME_AND_VERSION)
 @Component
@@ -99,6 +109,24 @@ public class TagREST {
     AssetMgr assetMgr;
 
     TagValidator validator;
+
+    @Autowired
+    RangerSearchUtil searchUtil;
+
+    @Autowired
+    RangerTagService tagService;
+
+    @Autowired
+    RangerTagDefService tagDefService;
+
+    @Autowired
+    RangerServiceResourceService rangerServiceResourceService;
+
+    @Autowired
+    RangerServiceResourceWithTagsService rangerServiceResourceWithTagsService;
+
+    @Autowired
+    RangerTagResourceMapService rangerTagResourceMapService;
 
     public TagREST() {
 	}
@@ -341,6 +369,38 @@ public class TagREST {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllTagDefs()");
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.TAGDEFS_RESOURCE_PAGINATED)
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public PList<RangerTagDef> getTagDefs(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTagDefs()");
+        }
+
+        final PList<RangerTagDef> ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, tagDefService.sortFields);
+
+            ret = tagStore.getPaginatedTagDefs(filter);
+        } catch (Exception excp) {
+            LOG.error("getTagDefs() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (ret == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTagDefs(): count=" + ((ret == null || ret.getList() == null) ? 0 : ret.getList().size()));
         }
 
         return ret;
@@ -601,6 +661,42 @@ public class TagREST {
         }
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllTags(): " + ret);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.TAGS_RESOURCE_PAGINATED)
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public PList<RangerTag> getTags(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTags()");
+        }
+
+        final PList<RangerTag> ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, tagService.sortFields);
+
+            searchUtil.extractIntList(request, filter, SearchFilter.TAG_IDS, "Tag Id List");
+
+            ret = tagStore.getPaginatedTags(filter);
+        } catch (Exception excp) {
+            LOG.error("getTags() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (CollectionUtils.isEmpty(ret.getList())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("getTags() - No tags found");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTags(): count=" + ((ret == null || ret.getList() == null) ? 0 : ret.getList().size()));
         }
 
         return ret;
@@ -923,6 +1019,27 @@ public class TagREST {
     }
 
     @GET
+    @Path(TagRESTConstants.RESOURCE_RESOURCE + "service/{serviceName}/resource")
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public RangerServiceResource getServiceResourceByResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getServiceResourceByResource(" + serviceName + ")");
+        }
+
+        Map<String, String[]> resourceMap     = searchUtil.getMultiValueParamsWithPrefix(request, SearchFilter.RESOURCE_PREFIX, true);
+        RangerServiceResource serviceResource = tagStore.toRangerServiceResource(serviceName, resourceMap);
+
+        serviceResource = getServiceResourceByServiceAndResourceSignature(serviceName, new RangerServiceResourceSignature(serviceResource).getSignature());
+
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getServiceResourceByResource(serviceName={" + serviceName + "} RangerServiceResource={" + serviceResource + "})");
+        }
+
+        return serviceResource;
+    }
+
+    @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
@@ -943,6 +1060,35 @@ public class TagREST {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllServiceResources(): count=" + (ret == null ? 0 : ret.size()));
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.RESOURCES_RESOURCE_PAGINATED)
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public RangerServiceResourceWithTagsList getServiceResourcesWithTags(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getServiceResources()");
+        }
+
+        RangerServiceResourceWithTagsList ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, rangerServiceResourceWithTagsService.sortFields);
+            searchUtil.extractIntList(request, filter, SearchFilter.TAG_RESOURCE_IDS, "Tag resource list");
+            searchUtil.extractStringList(request, filter, SearchFilter.TAG_NAMES, "Tag type List", "tagTypes", null, null);
+            ret = tagStore.getPaginatedServiceResourcesWithTags(filter);
+        } catch (Exception excp) {
+            LOG.error("getServiceResources() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getServiceResources(): count=" + ((ret == null || ret.getList() == null) ? 0 : ret.getList().size()));
         }
 
         return ret;
@@ -1150,6 +1296,38 @@ public class TagREST {
         }
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllTagResourceMaps(): " + ret);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE_PAGINATED)
+    @Produces({ "application/json" })
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public PList<RangerTagResourceMap> getTagResourceMaps(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.getTagResourceMaps()");
+        }
+
+        final PList<RangerTagResourceMap> ret;
+
+        try {
+            SearchFilter filter = searchUtil.getSearchFilter(request, rangerTagResourceMapService.sortFields);
+
+            ret = tagStore.getPaginatedTagResourceMaps(filter);
+        } catch (Exception excp) {
+            LOG.error("getTagResourceMaps() failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
+        }
+
+        if (ret == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.getTagResourceMaps(): " + ret);
         }
 
         return ret;

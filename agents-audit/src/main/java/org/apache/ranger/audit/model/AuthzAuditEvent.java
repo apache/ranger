@@ -23,103 +23,112 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.StringUtils;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonSerialize
 public class AuthzAuditEvent extends AuditEventBase {
 	protected static String FIELD_SEPARATOR = ";";
 
 	protected static final int MAX_ACTION_FIELD_SIZE = 1800;
 	protected static final int MAX_REQUEST_DATA_FIELD_SIZE = 1800;
 
-	@SerializedName("repoType")
+	@JsonProperty("repoType")
 	protected int repositoryType = 0;
 
-	@SerializedName("repo")
+	@JsonProperty("repo")
 	protected String repositoryName = null;
 
-	@SerializedName("reqUser")
+	@JsonProperty("reqUser")
 	protected String user = null;
 
-	@SerializedName("evtTime")
+	@JsonProperty("evtTime")
 	protected Date eventTime = new Date();
 
-	@SerializedName("access")
+	@JsonProperty("access")
 	protected String accessType = null;
 
-	@SerializedName("resource")
+	@JsonProperty("resource")
 	protected String resourcePath = null;
 
-	@SerializedName("resType")
+	@JsonProperty("resType")
 	protected String resourceType = null;
 
-	@SerializedName("action")
+	@JsonProperty("action")
 	protected String action = null;
 
-	@SerializedName("result")
+	@JsonProperty("result")
 	protected short accessResult = 0; // 0 - DENIED; 1 - ALLOWED; HTTP return
 										// code
 
-	@SerializedName("agent")
+	@JsonProperty("agent")
 	protected String agentId = null;
 
-	@SerializedName("policy")
+	@JsonProperty("policy")
 	protected long policyId = 0;
 
-	@SerializedName("reason")
+	@JsonProperty("reason")
 	protected String resultReason = null;
 
-	@SerializedName("enforcer")
+	@JsonProperty("enforcer")
 	protected String aclEnforcer = null;
 
-	@SerializedName("sess")
+	@JsonProperty("sess")
 	protected String sessionId = null;
 
-	@SerializedName("cliType")
+	@JsonProperty("cliType")
 	protected String clientType = null;
 
-	@SerializedName("cliIP")
+	@JsonProperty("cliIP")
 	protected String clientIP = null;
 
-	@SerializedName("reqData")
+	@JsonProperty("reqData")
 	protected String requestData = null;
 
-	@SerializedName("agentHost")
+	@JsonProperty("agentHost")
 	protected String agentHostname = null;
 
-	@SerializedName("logType")
+	@JsonProperty("logType")
 	protected String logType = null;
 
-	@SerializedName("id")
+	@JsonProperty("id")
 	protected String eventId = null;
 
 	/**
 	 * This to ensure order within a session. Order not guaranteed across
 	 * processes and hosts
 	 */
-	@SerializedName("seq_num")
+	@JsonProperty("seq_num")
 	protected long seqNum = 0;
 
-	@SerializedName("event_count")
+	@JsonProperty("event_count")
 	protected long eventCount = 1;
 
-	@SerializedName("event_dur_ms")
+	@JsonProperty("event_dur_ms")
 	protected long eventDurationMS = 0;
 
-	@SerializedName("tags")
+	@JsonProperty("tags")
 	protected Set<String> tags = new HashSet<>();
 
-	@SerializedName("additional_info")
+	@JsonProperty("datasets")
+	protected Set<String> datasets = null;
+
+	@JsonProperty("projects")
+	protected Set<String> projects = null;
+
+	@JsonProperty("additional_info")
 	protected String additionalInfo;
 	
-	@SerializedName("cluster_name")
+	@JsonProperty("cluster_name")
 	protected String clusterName;
 
-	@SerializedName("zone_name")
+	@JsonProperty("zone_name")
 	protected String zoneName;
 
-	@SerializedName("policy_version")
+	@JsonProperty("policy_version")
 	protected Long policyVersion;
 
 	public AuthzAuditEvent() {
@@ -472,16 +481,32 @@ public class AuthzAuditEvent extends AuditEventBase {
 		return eventDurationMS;
 	}
 
-	public Set<String> getTags() {
-		return tags;
-	}
-
 	public void setEventDurationMS(long frequencyDurationMS) {
 		this.eventDurationMS = frequencyDurationMS;
 	}
 
+	public Set<String> getTags() {
+		return tags;
+	}
+
 	public void setTags(Set<String> tags) {
 		this.tags = tags;
+	}
+
+	public Set<String> getDatasets() {
+		return datasets;
+	}
+
+	public void setDatasets(Set<String> datasets) {
+		this.datasets = datasets;
+	}
+
+	public Set<String> getProjects() {
+		return projects;
+	}
+
+	public void setProjects(Set<String> projects) {
+		this.projects = projects;
 	}
 
 	public String getClusterName() {
@@ -512,6 +537,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 
 	public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
 
+	@JsonIgnore
 	@Override
 	public String getEventKey() {
 		String key = user + "^" + accessType + "^" + resourcePath + "^"
@@ -561,10 +587,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 				.append(FIELD_SEPARATOR).append("event_count=")
 				.append(eventCount).append(FIELD_SEPARATOR)
 				.append("event_dur_ms=").append(eventDurationMS)
-				.append(FIELD_SEPARATOR)
-				.append("tags=").append("[")
-				.append(StringUtils.join(tags, ", "))
-				.append("]")
+				.append(FIELD_SEPARATOR).append("tags=").append("[").append(StringUtils.join(tags, ", ")).append("]")
+				.append(FIELD_SEPARATOR).append("datasets=").append("[").append(datasets != null ? StringUtils.join(datasets, ", ") : "").append("]")
+				.append(FIELD_SEPARATOR).append("projects=").append("[").append(projects != null ? StringUtils.join(projects, ", ") : "").append("]")
 				.append(FIELD_SEPARATOR).append("clusterName=").append(clusterName)
 				.append(FIELD_SEPARATOR).append("zoneName=").append(zoneName)
 				.append(FIELD_SEPARATOR).append("policyVersion=").append(policyVersion)

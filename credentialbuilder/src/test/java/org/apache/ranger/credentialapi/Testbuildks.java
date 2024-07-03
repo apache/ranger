@@ -17,22 +17,22 @@
  */
 package org.apache.ranger.credentialapi;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class Testbuildks {
 
     private String keystoreFile;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
@@ -41,7 +41,7 @@ public class Testbuildks {
         keystoreFile = basedir + File.separator + "target" + File.separator + "testkeystore.jceks";
     }
 
-    @After
+    @AfterEach
     public void cleanup() throws Exception {
         FileUtils.deleteQuietly(new File(keystoreFile));
     }

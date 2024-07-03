@@ -498,7 +498,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 				if(policyCond != null) {
 					RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList(ipAddress));
 
-					policyItem.getConditions().add(ipCondition);
+					policyItem.addCondition(ipCondition);
 				}
 			}
 

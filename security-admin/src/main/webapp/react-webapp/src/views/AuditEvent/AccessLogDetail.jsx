@@ -26,34 +26,16 @@ import { isEmpty } from "lodash";
 import { Loader } from "Components/CommonComponents";
 import { useParams } from "react-router-dom";
 
-function AccessLogDetail(props) {
+function AccessLogDetail() {
   const params = useParams();
   const [access, setAccess] = useState([]);
-  const [serviceDefs, setServiceDefs] = useState([]);
   const [loader, setLoader] = useState(true);
 
   useEffect(() => {
-    fetchServiceDefs();
-    fetchAcessLogs();
+    fetchAccessLogs();
   }, []);
 
-  const fetchServiceDefs = async () => {
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: "plugins/definitions"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
-      );
-    }
-
-    setServiceDefs(serviceDefsResp.data.serviceDefs);
-    setLoader(false);
-  };
-
-  const fetchAcessLogs = async () => {
+  const fetchAccessLogs = async () => {
     let accessResp = {};
     let accessData = {};
 
@@ -97,13 +79,7 @@ function AccessLogDetail(props) {
             <>
               <h5 className="heading-without-wrap">Policy Details</h5>
               <div className="wrap">
-                <PolicyViewDetails
-                  paramsData={access}
-                  serviceDef={serviceDefs?.find((servicedef) => {
-                    return servicedef.name == access.serviceType;
-                  })}
-                  policyView={false}
-                />
+                <PolicyViewDetails paramsData={access} policyView={false} />
               </div>
             </>
           )}

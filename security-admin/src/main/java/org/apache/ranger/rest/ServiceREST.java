@@ -22,19 +22,9 @@ package org.apache.ranger.rest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.IntStream;
-import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
@@ -96,18 +86,12 @@ import org.apache.ranger.entity.XXSecurityZoneRefService;
 import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXRole;
-import org.apache.ranger.plugin.model.RangerPluginInfo;
-import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.ServiceDeleteResponse;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -159,6 +143,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.gson.JsonSyntaxException;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
+
+import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
 
 
 @Path("plugins")
@@ -255,7 +241,7 @@ public class ServiceREST {
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
-	
+
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
 	private RangerPolicyEngineOptions defaultAdminOptions;
@@ -776,14 +762,13 @@ public class ServiceREST {
 			}
                          bizUtil.blockAuditorRoleUser();
 
-			if (StringUtils.isBlank(service.getTagService())
-					&& xxServiceDef != null
-					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, xxServiceDef.getName())
-					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , xxServiceDef.getName())) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
-				}
-				createOrGetTagService(service);
+			String serviceType = xxServiceDef != null ? xxServiceDef.getName() : null;
+
+			if (StringUtils.isBlank(service.getTagService()) &&
+				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, serviceType) &&
+				!StringUtils.equals(EMBEDDED_SERVICEDEF_GDS_NAME, serviceType) &&
+				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , serviceType)) {
+				createOrGetLinkedServices(service);
 			}
 
 			ret = svcStore.createService(service);
@@ -1109,6 +1094,32 @@ public class ServiceREST {
 		return ret;
 	}
 
+	public List<RangerServiceHeaderInfo> getServiceHeaders(@Context HttpServletRequest request) {
+		LOG.debug("==> ServiceREST.getServiceHeaders()");
+
+		String  namePrefix         = request.getParameter(SearchFilter.SERVICE_NAME_PREFIX);
+		String  svcType            = request.getParameter(SearchFilter.SERVICE_TYPE);
+		boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+		boolean filterByType       = StringUtils.isNotBlank(svcType);
+
+		List<RangerServiceHeaderInfo> ret = daoManager.getXXService().findServiceHeaders();
+
+		for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+			RangerServiceHeaderInfo serviceHeader = iter.next();
+
+			if (EMBEDDED_SERVICEDEF_GDS_NAME.equals(serviceHeader.getType())) {
+				iter.remove();
+			} else if (filterByNamePrefix && !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
+				iter.remove();
+			} else if (filterByType && !StringUtils.equals(serviceHeader.getType(), svcType)) {
+				iter.remove();
+			}
+		}
+
+		LOG.debug("<== ServiceREST.getServiceHeaders(namePrefix={}, svcType={}): ret={}", namePrefix, svcType, ret);
+
+		return ret;
+	}
 
 	@GET
 	@Path("/services/count")
@@ -1245,7 +1256,7 @@ public class ServiceREST {
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = grantRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(grantRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					VXUser               vxUser = xUserService.getXUserByUserName(userName);
 
@@ -1272,6 +1283,7 @@ public class ServiceREST {
 	
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+							ensureAdminAccess(policy);
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processGrantRequest processing failed");
@@ -1290,10 +1302,7 @@ public class ServiceREST {
 			
 						if(! CollectionUtils.isEmpty(resourceNames)) {
 							for(String resourceName : resourceNames) {
-								RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
-								policyResource.setIsRecursive(grantRequest.getIsRecursive());
-		
-								policyResources.put(resourceName, policyResource);
+								policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
 							}
 						}
 						policy.setResources(policyResources);
@@ -1301,17 +1310,18 @@ public class ServiceREST {
 						RangerPolicyItem policyItem = new RangerPolicyItem();
 	
 						policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-						policyItem.getUsers().addAll(grantRequest.getUsers());
-						policyItem.getGroups().addAll(grantRequest.getGroups());
-						policyItem.getRoles().addAll(grantRequest.getRoles());
+						policyItem.addUsers(grantRequest.getUsers());
+						policyItem.addGroups(grantRequest.getGroups());
+						policyItem.addRoles(grantRequest.getRoles());
 	
 						for(String accessType : grantRequest.getAccessTypes()) {
-							policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+							policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 						}
 	
-						policy.getPolicyItems().add(policyItem);
+						policy.addPolicyItem(policyItem);
 						policy.setZoneName(zoneName);
 
+						ensureAdminAccess(policy);
 						svcStore.createPolicy(policy);
 					}
 				} catch(WebApplicationException excp) {
@@ -1344,6 +1354,7 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		bizUtil.blockAuditorRoleUser();
 
 		if(grantRequest != null) {
@@ -1366,7 +1377,7 @@ public class ServiceREST {
 					Set<String>          userGroups = grantRequest.getGrantorGroups();
 					String				 ownerUser  = grantRequest.getOwnerUser();
 
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(grantRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					String               zoneName   = getRangerAdminZoneName(serviceName, grantRequest);
 
@@ -1389,6 +1400,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureGrantRequest processing failed");
@@ -1407,10 +1421,7 @@ public class ServiceREST {
 
 							if(! CollectionUtils.isEmpty(resourceNames)) {
 								for(String resourceName : resourceNames) {
-									RangerPolicyResource policyResource = new RangerPolicyResource((String) resource.getValue(resourceName));
-									policyResource.setIsRecursive(grantRequest.getIsRecursive());
-
-									policyResources.put(resourceName, policyResource);
+									policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
 								}
 							}
 							policy.setResources(policyResources);
@@ -1418,16 +1429,18 @@ public class ServiceREST {
 							RangerPolicyItem policyItem = new RangerPolicyItem();
 
 							policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-							policyItem.getUsers().addAll(grantRequest.getUsers());
-							policyItem.getGroups().addAll(grantRequest.getGroups());
-							policyItem.getRoles().addAll(grantRequest.getRoles());
+							policyItem.addUsers(grantRequest.getUsers());
+							policyItem.addGroups(grantRequest.getGroups());
+							policyItem.addRoles(grantRequest.getRoles());
 
 							for(String accessType : grantRequest.getAccessTypes()) {
-								policyItem.getAccesses().add(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+								policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
 							}
 
-							policy.getPolicyItems().add(policyItem);
+							policy.addPolicyItem(policyItem);
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy);
 
 							svcStore.createPolicy(policy);
 						}
@@ -1465,6 +1478,7 @@ public class ServiceREST {
 
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		if(revokeRequest!=null){
 			if (serviceUtil.isValidateHttpsAuthentication(serviceName,request)) {
 
@@ -1483,7 +1497,7 @@ public class ServiceREST {
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = revokeRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					RangerAccessResource resource   = new RangerAccessResourceImpl(getAccessResourceObjectMap(revokeRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					VXUser vxUser = xUserService.getXUserByUserName(userName);
 
@@ -1510,6 +1524,9 @@ public class ServiceREST {
 
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy);
+
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processRevokeRequest processing failed");
@@ -1546,6 +1563,7 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
+
 		bizUtil.blockAuditorRoleUser();
 
 		if (revokeRequest != null) {
@@ -1568,7 +1586,7 @@ public class ServiceREST {
 					Set<String> userGroups = revokeRequest.getGrantorGroups();
 					String ownerUser = revokeRequest.getOwnerUser();
 
-					RangerAccessResource resource = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					RangerAccessResource resource = new RangerAccessResourceImpl(getAccessResourceObjectMap(revokeRequest.getResource()), ownerUser);
 					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					String               zoneName = getRangerAdminZoneName(serviceName, revokeRequest);
 
@@ -1592,6 +1610,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureRevokeRequest processing failed");
@@ -1636,6 +1657,7 @@ public class ServiceREST {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.createPolicy(policyName=" + policy.getName() + ")");
 			}
+
 			if(request != null) {
 				boolean deleteIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_DELETE_IF_EXISTS)))) ? true : false ;
 				if(deleteIfExists) {
@@ -1715,7 +1737,6 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		if (policy != null && StringUtils.isNotBlank(policy.getService())) {
-
 			try {
 
 				final              RangerPolicy existingPolicy;
@@ -1823,7 +1844,8 @@ public class ServiceREST {
 			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin() || isServiceAdmin(policy.getService()) || isZoneAdmin(policy.getZoneName()));
 
 			ensureAdminAccess(policy);
-                        bizUtil.blockAuditorRoleUser();
+			bizUtil.blockAuditorRoleUser();
+
 			ret = svcStore.updatePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -2117,13 +2139,7 @@ public class ServiceREST {
 			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("EXPORT EXCEL");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue(metaDataInfo);
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT EXCEL"), "Export Excel", metaDataInfo, null);
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -2170,13 +2186,7 @@ public class ServiceREST {
 			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("EXPORT CSV");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue(metaDataInfo);
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT CSV"), "Export CSV", metaDataInfo, null);
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -2232,13 +2242,7 @@ public class ServiceREST {
 				rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
-				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-				XXTrxLog xxTrxLog = new XXTrxLog();
-				xxTrxLog.setAction("EXPORT JSON");
-				xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-				xxTrxLog.setPreviousValue(metaDataInfo);
-				trxLogList.add(xxTrxLog);
-				bizUtil.createTrxLog(trxLogList);
+				policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT JSON"), "Export Json", metaDataInfo, null);
 			}
 		} catch (WebApplicationException excp) {
 			throw excp;
@@ -2280,8 +2284,6 @@ public class ServiceREST {
 
 		RangerPerfTracer perf = null;
 		String metaDataInfo = null;
-		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
-		XXTrxLog xxTrxLogError = new XXTrxLog();
 		request.setAttribute(PARAM_IMPORT_IN_PROGRESS, true);
 
 		try {
@@ -2289,13 +2291,7 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.importPoliciesFromFile()");
 			}
 
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLog = new XXTrxLog();
-			xxTrxLog.setAction("IMPORT START");
-			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			xxTrxLog.setPreviousValue("IMPORT START");
-			trxLogList.add(xxTrxLog);
-			bizUtil.createTrxLog(trxLogList);
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT START"), "Import", "IMPORT START", null);
 
 			if (isOverride == null){
 				isOverride = false;
@@ -2446,45 +2442,27 @@ public class ServiceREST {
 			}
 		} catch(JsonSyntaxException ex) { 
 			LOG.error("Provided json file is not valid!!", ex);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
+
 			throw restErrorUtil.createRESTException(ex.getMessage());
 	      }catch (WebApplicationException excp) {
 			LOG.error("Error while importing policy from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
+
 			throw excp;
 		} catch (Throwable excp) {
 			LOG.error("Error while importing policy from file!!", excp);
-			xxTrxLogError.setAction("IMPORT ERROR");
-			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogError.setPreviousValue(metaDataInfo);
-			}
-			trxLogListError.add(xxTrxLogError);
-			bizUtil.createTrxLog(trxLogListError);
+
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT ERROR"), "Import failed", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
+
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
-			List<XXTrxLog> trxLogListEnd = new ArrayList<XXTrxLog>();
-			XXTrxLog xxTrxLogEnd = new XXTrxLog();
-			xxTrxLogEnd.setAction("IMPORT END");
-			xxTrxLogEnd.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
-			if(StringUtils.isNotEmpty(metaDataInfo)){
-				xxTrxLogEnd.setPreviousValue(metaDataInfo);
-			}
-			trxLogListEnd.add(xxTrxLogEnd);
-			bizUtil.createTrxLog(trxLogListEnd);
+
+			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "IMPORT END"), "IMPORT END", StringUtils.isNotEmpty(metaDataInfo) ? metaDataInfo : null, null);
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== ServiceREST.importPoliciesFromFile()");
 			}
@@ -2569,7 +2547,7 @@ public class ServiceREST {
 						}
 					}
 				}
-				if(totalPolicyCreate % RangerBizUtil.policyBatchSize == 0) {
+				if(totalPolicyCreate % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 					bizUtil.bulkModeOnlyFlushAndClear();
 				}
 			}
@@ -2841,7 +2819,7 @@ public class ServiceREST {
 									bizUtil.blockAuditorRoleUser();
 									svcStore.deletePolicy(rangerPolicy, service);
 									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 										bizUtil.bulkModeOnlyFlushAndClear();
 									}
 									if (LOG.isDebugEnabled()) {
@@ -2914,7 +2892,7 @@ public class ServiceREST {
 										LOG.debug("Policy " + rangerPolicy.getName() + " deleted successfully.");
 									}
 									totalDeletedPolicies = totalDeletedPolicies + 1;
-									if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+									if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 										bizUtil.bulkModeOnlyFlushAndClear();
 									}
 								}
@@ -3667,6 +3645,8 @@ public class ServiceREST {
 	}
 
 	void ensureAdminAccess(RangerPolicy policy) {
+		blockIfGdsService(policy.getService());
+
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
 		String userName = bizUtil.getCurrentUserLoginId();
@@ -3708,6 +3688,14 @@ public class ServiceREST {
 							MessageEnums.OPER_NO_PERMISSION);
 				}
 			}
+		}
+	}
+
+	public void blockIfGdsService(String serviceName) {
+		String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
+
+		if (EMBEDDED_SERVICEDEF_GDS_NAME.equals(serviceType)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, EMBEDDED_SERVICEDEF_GDS_NAME.toUpperCase() + " policies can't be managed via this API", true);
 		}
 	}
 
@@ -4003,6 +3991,37 @@ public class ServiceREST {
 		return ret;
 	}
 
+	public RangerPolicyResource getPolicyResource(Object resourceName, GrantRevokeRequest grantRequest) {
+		RangerPolicyResource ret;
+		if (resourceName instanceof List) {
+			List<String> resourceValues = (List<String>) resourceName;
+			ret = new RangerPolicyResource(resourceValues, false, grantRequest.getIsRecursive());
+		} else {
+			ret = new RangerPolicyResource((String) resourceName);
+			ret.setIsRecursive(grantRequest.getIsRecursive());
+		}
+		return ret;
+	}
+
+	public static Map<String, Object> getAccessResourceObjectMap(Map<String, String> map) {
+		Map<String, Object> ret = null;
+
+		if (map != null) {
+			ret = new HashMap<>(map.size());
+
+			for (Map.Entry<String, String> e : map.entrySet()) {
+				if (e.getValue().contains(",")) {
+					List<String> values = Arrays.asList(e.getValue().split(","));
+					ret.put(e.getKey(),values);
+				} else {
+					ret.put(e.getKey(), e.getValue());
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	private HashMap<String, Object> getCSRFPropertiesMap(HttpServletRequest request) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));
@@ -4253,155 +4272,139 @@ public class ServiceREST {
 		}
 	}
 
-	private void createOrGetTagService(RangerService resourceService) {
+	private void createOrGetLinkedServices(RangerService resourceService) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> createOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("==> createOrGetLinkedServices(resourceService=" + resourceService.getName() + ")");
 		}
-		final boolean isAutoCreateTagService = config.getBoolean("ranger.tagservice.auto.create", true);
 
-		if (isAutoCreateTagService) {
+		Runnable createAndLinkTagServiceTask = new Runnable() {
+			@Override
+			public void run() {
+				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
-			String tagServiceName = config.get("ranger.tagservice.auto.name");
-
-			if (StringUtils.isBlank(tagServiceName)) {
-				tagServiceName = getGeneratedTagServiceName(resourceService.getName());
+				creator.doCreateAndLinkService();
 			}
+		};
 
-			if (StringUtils.isNotBlank(tagServiceName)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Attempting to get/create and possibly link to tag-service:[" + tagServiceName + "]");
-				}
+		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
 
-				final boolean isAutoLinkTagService = config.getBoolean("ranger.tagservice.auto.link", true);
-				RangerService tagService = null;
-
-				try {
-					tagService = svcStore.getServiceByName(tagServiceName);
-				} catch (Exception e) {
-					LOG.info("failed to retrieve tag-service [" + tagServiceName + "]. Will attempt to create.", e);
-				}
-
-				if (tagService == null) {
-					final TagServiceOperationContext context = new TagServiceOperationContext(tagServiceName, resourceService.getName(), isAutoLinkTagService);
-
-					Runnable createAndLinkTagServiceTask = new Runnable() {
-						@Override
-						public void run() {
-							doCreateAndLinkTagService(context);
-						}
-					};
-
-					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
-
-				} else if (isAutoLinkTagService) {
-					resourceService.setTagService(tagServiceName);
-				}
-			}
-		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== createOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("<== createOrGetLinkedServices(resourceService=" + resourceService.getName() + ")");
 		}
 	}
 
-	private String getGeneratedTagServiceName(String resourceServiceName) {
-		int lastIndexOfMarker = StringUtils.lastIndexOf(resourceServiceName, '_');
-		if (lastIndexOfMarker != -1) {
-			return resourceServiceName.substring(0, lastIndexOfMarker) + "_tag";
-		} else {
-			return null;
-		}
-	}
+	private final class LinkedServiceCreator {
+		static final char SEP = '_';
 
-	private final class TagServiceOperationContext {
-		final String tagServiceName;
-		final String resourceServiceName;
-		final boolean isAutoLinkTagService;
+		final String  resourceServiceName;
+		final String  linkedServiceType;
+		final String  linkedServiceName;
+		final boolean isAutoCreate;
+		final boolean isAutoLink;
 
-		TagServiceOperationContext(@Nonnull String tagserviceName, @Nonnull String resourceServiceName, boolean isAutoLinkTagService) {
-			this.tagServiceName = tagserviceName;
+		LinkedServiceCreator(@Nonnull String resourceServiceName, @Nonnull String linkedServiceType) {
 			this.resourceServiceName = resourceServiceName;
-			this.isAutoLinkTagService = isAutoLinkTagService;
+			this.linkedServiceType   = linkedServiceType;
+			this.linkedServiceName   = computeLinkedServiceName();
+			this.isAutoCreate        = config.getBoolean("ranger." + linkedServiceType + "service.auto.create", true);
+			this.isAutoLink          = config.getBoolean("ranger." + linkedServiceType + "service.auto.link", true);
+		}
+
+		void doCreateAndLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doCreateAndLinkService()");
+			}
+
+			RangerService resourceService = null;
+
+			try {
+				resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+			} catch (Exception e) {
+				LOG.error("Resource-service:[" + resourceServiceName + "] cannot be retrieved");
+			}
+
+			if (resourceService != null) {
+				try {
+					RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+
+					if (linkedService == null && isAutoCreate) {
+						linkedService = new RangerService();
+
+						linkedService.setName(linkedServiceName);
+						linkedService.setDisplayName(linkedServiceName); //set DEFAULT display name
+						linkedService.setType(linkedServiceType);
+
+						LOG.info("creating service [" + linkedServiceName + "]");
+
+						svcStore.createService(linkedService);
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+
+				if (isAutoLink) {
+					doLinkService();
+				}
+
+			} else {
+				LOG.info("Resource service :[" + resourceServiceName + "] not found! Returning without linking " + linkedServiceType + " service!!");
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doCreateAndLinkService()");
+			}
+		}
+
+		private String computeLinkedServiceName() {
+			String ret = config.get("ranger." + linkedServiceType + "service.auto.name");
+
+			if (StringUtils.isBlank(ret)) {
+				final int lastIndexOfSep = StringUtils.lastIndexOf(resourceServiceName, SEP);
+
+				ret = (lastIndexOfSep != -1) ? resourceServiceName.substring(0, lastIndexOfSep) + SEP + linkedServiceType : linkedServiceType;
+			}
+
+			return ret;
+		}
+
+		private void doLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doLinkTagService()");
+			}
+
+			try {
+				RangerService resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+
+				RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+
+				if (linkedService == null) {
+					LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]: " + linkedServiceName + " not found");
+				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(linkedServiceType)) {
+					LOG.info("Successfully retrieved service:[" + linkedService.getName() + "]");
+
+					if (!StringUtils.equals(linkedService.getName(), resourceService.getTagService())) {
+						resourceService.setTagService(linkedService.getName());
+
+						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + linkedService.getName() + "]");
+
+						RangerService service = svcStore.updateService(resourceService, null);
+
+						LOG.info("Updated resource-service:[" + service.getName() + "]");
+					}
+				}
+			} catch (Exception e) {
+				LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]");
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doLinkTagService()");
+			}
 		}
 
 		@Override
 		public String toString() {
-			return "{tagServiceName=" + tagServiceName + ", resourceServiceName=" + resourceServiceName + ", isAutoLinkTagService=" + isAutoLinkTagService + "}";
-		}
-	}
-
-	private void doCreateAndLinkTagService(final TagServiceOperationContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> doCreateAndLinkTagService(context=" + context + ")");
-		}
-
-		RangerService resourceService = null;
-
-		try {
-			resourceService = svcStore.getServiceByName(context.resourceServiceName);
-			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
-		} catch (Exception e) {
-			LOG.error("Resource-service:[" + context.resourceServiceName + "] cannot be retrieved");
-		}
-
-		if (resourceService != null) {
-			try {
-				String tagServiceName = context.tagServiceName;
-
-				RangerService tagService = svcStore.getServiceByName(tagServiceName);
-
-				if (tagService == null) {
-					tagService = new RangerService();
-
-					tagService.setName(context.tagServiceName);
-					tagService.setDisplayName(context.tagServiceName);//set DEFAULT display name
-					tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-
-					LOG.info("creating tag-service [" + context.tagServiceName + "]");
-
-					svcStore.createService(tagService);
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-
-			if (context.isAutoLinkTagService) {
-				doLinkTagService(context);
-			}
-
-		} else {
-			LOG.info("Resource service :[" + context.resourceServiceName + "] not found! Returning without linking tag service!!");
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== doCreateAndLinkTagService(context=" + context + ")");
-		}
-	}
-
-	private void doLinkTagService(final TagServiceOperationContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> doLinkTagService(context=" + context + ")");
-		}
-		try {
-			RangerService resourceService = svcStore.getServiceByName(context.resourceServiceName);
-			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
-
-			RangerService tagService = svcStore.getServiceByName(context.tagServiceName);
-			LOG.info("Successfully retrieved tag-service:[" + tagService.getName() + "]");
-
-			if (!StringUtils.equals(tagService.getName(), resourceService.getTagService())) {
-				resourceService.setTagService(tagService.getName());
-
-				LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + tagService.getName() + "]");
-
-				RangerService service = svcStore.updateService(resourceService, null);
-
-				LOG.info("Updated resource-service:[" + service.getName() + "]");
-			}
-		} catch (Exception e) {
-			LOG.error("Failed to link service[" + context.resourceServiceName + "] with tag-service [" + context.tagServiceName + "]");
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== doLinkTagService(context=" + context + ")");
+			return "{resourceServiceName=" + resourceServiceName + ", linkedServiceType=" + linkedServiceType + ", isAutoCreate=" + isAutoCreate + ", isAutoLink=" + isAutoLink + "}";
 		}
 	}
 
@@ -4421,7 +4424,7 @@ public class ServiceREST {
 				if (existingPolicy != null) {
 					svcStore.deletePolicy(existingPolicy, null);
 					totalDeletedPolicies = totalDeletedPolicies + 1;
-					if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
+					if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
 						bizUtil.bulkModeOnlyFlushAndClear();
 					}
 					if (LOG.isDebugEnabled()) {
@@ -4597,7 +4600,9 @@ public class ServiceREST {
 						bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
 						bizUtil.blockAuditorRoleUser();
 					}
+
 					tagStore.deleteAllTagObjectsForService(service.getName());
+
 					deletedServiceName = service.getName();
 
 					svcStore.deleteService(id);

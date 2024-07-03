@@ -46,27 +46,24 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'zookeeper.znode.parent': '/hbase'}})
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
-                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                  'provider': 'http://ranger-kms:9292'}})
+                     'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
+                                 'provider': 'http://ranger-kms:9292'}})
 
-if service_not_exists(hdfs):
-    ranger_client.create_service(hdfs)
-    print('HDFS service created!')
-if service_not_exists(yarn):
-    ranger_client.create_service(yarn)
-    print('Yarn service created!')
-if service_not_exists(hive):
-    ranger_client.create_service(hive)
-    print('Hive service created!')
-if service_not_exists(hbase):
-    ranger_client.create_service(hbase)
-    print('HBase service created!')
-if service_not_exists(kafka):
-    ranger_client.create_service(kafka)
-    print('Kafka service created!')
-if service_not_exists(knox):
-    ranger_client.create_service(knox)
-    print('Knox service created!')
-if service_not_exists(kms):
-    ranger_client.create_service(kms)
-    print('KMS service created!')
+trino = RangerService({'name': 'dev_trino',
+                       'type': 'trino',
+                       'configs': {
+                           'username': 'trino',
+                           'password': 'trino',
+                           'jdbc.driverClassName': 'io.trino.jdbc.TrinoDriver',
+                           'jdbc.url': 'jdbc:trino://ranger-trino:8080',
+                       }})
+
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino]
+for service in services:
+    try:
+        if service_not_exists(service):
+            ranger_client.create_service(service)
+            print(f" {service.name} service created!")
+    except Exception as e:
+        print(f"An exception occured: {e}")
+

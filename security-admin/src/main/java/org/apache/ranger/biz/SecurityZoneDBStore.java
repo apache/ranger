@@ -17,26 +17,20 @@
 
 package org.apache.ranger.biz;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -49,14 +43,12 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerBaseModelService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 @Component
 public class SecurityZoneDBStore implements SecurityZoneStore {
@@ -114,45 +106,29 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
         RangerSecurityZone createdSecurityZone = securityZoneService.create(securityZone);
         if (createdSecurityZone == null) {
-            throw new Exception("Cannot create security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot create security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(createdSecurityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(createdSecurityZone, null, "create");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(createdSecurityZone, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
         return createdSecurityZone;
     }
 
     @Override
 	public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
-		XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
-        if (xxSecurityZone == null) {
-            throw restErrorUtil.createRESTException("security-zone with id: " + securityZone.getId() + " does not exist");
-        }
-
-        Gson   gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        String json        = xxSecurityZone.getJsonData();
-
-        try {
-            json = StringUtil.decompressString(json);
-        } catch (IOException excp) {
-            LOG.error("updateSecurityZoneById(): json decompression failed. Will treat as uncompressed json", excp);
-        }
-
-        RangerSecurityZone oldSecurityZone = gsonBuilder.fromJson(json, RangerSecurityZone.class);
+        RangerSecurityZone oldSecurityZone = securityZoneService.read(securityZone.getId());
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
         RangerSecurityZone updatedSecurityZone = securityZoneService.update(securityZone);
         if (updatedSecurityZone == null) {
-            throw new Exception("Cannot update security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot update security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
         boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
 		if (isRenamed) {
 			securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
 		}
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(updatedSecurityZone, oldSecurityZone, "update");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(updatedSecurityZone, oldSecurityZone, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
         return securityZone;
     }
 
@@ -169,8 +145,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
         }
 
     @Override
@@ -182,8 +157,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     @Override
@@ -212,7 +186,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(ret) && filter != null) {
             List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
             predicateUtil.applyFilter(copy, filter);
@@ -246,23 +220,70 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         return ret;
     }
 
-    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
-        return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList(HttpServletRequest request) {
+        String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
+        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            for (ListIterator<RangerSecurityZoneHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+                RangerSecurityZoneHeaderInfo zoneHeader = iter.next();
+
+                if (!StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix)) {
+                    iter.remove();
+                }
+            }
+        }
+
+        return ret;
     }
 
-    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId) {
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId, HttpServletRequest request) {
+        String  namePrefix         = request.getParameter(SearchFilter.SERVICE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
         List<RangerServiceHeaderInfo> services    = daoMgr.getXXSecurityZoneRefService().findServiceHeaderInfosByZoneId(zoneId);
         List<RangerServiceHeaderInfo> tagServices = daoMgr.getXXSecurityZoneRefTagService().findServiceHeaderInfosByZoneId(zoneId);
-        services.addAll(tagServices);
+        List<RangerServiceHeaderInfo> ret         = new ArrayList<>(services.size() + tagServices.size());
 
-        return services;
+        ret.addAll(services);
+        ret.addAll(tagServices);
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+                RangerServiceHeaderInfo serviceHeader = iter.next();
+
+                if (!StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
+                    iter.remove();
+                }
+            }
+        }
+
+        return ret;
     }
 
-    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService ) {
-        if(serviceId == null){
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService, HttpServletRequest request) {
+        if (serviceId == null){
             throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
         }
-        return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId,isTagService);
+
+        String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
+        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId, isTagService);
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            for (ListIterator<RangerSecurityZoneHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
+                RangerSecurityZoneHeaderInfo zoneHeader = iter.next();
+
+                if (!StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix)) {
+                    iter.remove();
+                }
+            }
+        }
+
+        return ret;
     }
 
     public PList<SecurityZoneSummary> getZonesSummary(SearchFilter filter) throws Exception {
@@ -347,6 +368,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
                 summary.setId(xService.getId());
                 summary.setName(serviceName);
                 summary.setType(serviceDef.getName());
+                summary.setDisplayName(xService.getDisplayName());
                 summary.setResourceCount((long)zoneService.getResources().size());
 
                 ret.add(summary);

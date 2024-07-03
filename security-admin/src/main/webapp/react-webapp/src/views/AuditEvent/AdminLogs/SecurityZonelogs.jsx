@@ -22,6 +22,7 @@ import { Table, Badge } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { ClassTypes } from "../../../utils/XAEnums";
 import { isEmpty } from "lodash";
+import { currentTimeZone } from "../../../utils/XAUtils";
 
 export const SecurityZonelogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;
@@ -82,16 +83,13 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
       {action == "create" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName}</div>
-            <div className="font-weight-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
-            <div className="font-weight-bolder">Created By: {owner}</div>
+            <div className="fw-bolder">Name: {objectName}</div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
+            <div className="fw-bolder">Created By: {owner}</div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Zone Details:</h5>
 
-            <Table className="table table-striped table-bordered w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -124,7 +122,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 <h5 className="bold wrap-header m-t-sm">
                   Zone Service Details:
                 </h5>
-                <Table className="table table-striped table-bordered w-75">
+                <Table className="table table-bordered w-75">
                   <thead className="thead-light">
                     <tr>
                       <th>Service Name</th>
@@ -179,14 +177,13 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
             <div>
               <div className="row">
                 <div className="col-md-6">
-                  <div className="font-weight-bolder">Name: {objectName}</div>
-                  <div className="font-weight-bolder">
-                    Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-                    India Standard Time
+                  <div className="fw-bolder">Name: {objectName}</div>
+                  <div className="fw-bolder">
+                    Date: {currentTimeZone(createDate)}
                   </div>
-                  <div className="font-weight-bolder">Updated By: {owner}</div>
+                  <div className="fw-bolder">Updated By: {owner}</div>
                 </div>
-                <div className="col-md-6 text-right">
+                <div className="col-md-6 text-end">
                   <div className="bg-success legend"></div> {" Added "}
                   <div className="bg-danger legend"></div> {" Deleted "}
                 </div>
@@ -196,7 +193,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 <>
                   <h5 className="bold wrap-header m-t-sm">Zone Details:</h5>
 
-                  <Table className="table  table-bordered table-striped  w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Fields</th>
@@ -219,10 +216,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                             ) ? (
                               isEmpty(obj.newValue.replace(/[[\]]/g, "")) ? (
                                 <h6>
-                                  <Badge
-                                    className="d-inline mr-1"
-                                    variant="danger"
-                                  >
+                                  <Badge className="d-inline me-1" bg="danger">
                                     {obj.previousValue.replace(/[[\]]/g, "")}
                                   </Badge>
                                 </h6>
@@ -239,10 +233,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                                 obj.previousValue.replace(/[[\]]/g, "")
                               ) ? (
                                 <h6>
-                                  <Badge
-                                    className="d-inline mr-1"
-                                    variant="success"
-                                  >
+                                  <Badge className="d-inline me-1" bg="success">
                                     {obj.newValue.replace(/[[\]]/g, "")}
                                   </Badge>
                                 </h6>
@@ -269,7 +260,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                     Old Zone Service Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Service Name</th>
@@ -328,7 +319,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                     New Zone Service Details:
                   </h5>
 
-                  <Table className="table  table-bordered table-striped w-100">
+                  <Table className="table table-bordered w-100">
                     <thead className="thead-light">
                       <tr>
                         <th>Service Name </th>
@@ -395,15 +386,12 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
       {action == "delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value && (
           <div>
-            <div className="font-weight-bolder">Name: {objectName}</div>
-            <div className="font-weight-bolder">
-              Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
-            </div>
-            <div className="font-weight-bolder">Deleted By: {owner}</div>
+            <div className="fw-bolder">Name: {objectName}</div>
+            <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
+            <div className="fw-bolder">Deleted By: {owner}</div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Zone Details:</h5>
-            <Table className="table table-striped table-bordered w-50">
+            <Table className="table table-bordered w-50">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -436,7 +424,7 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 <h5 className="bold wrap-header m-t-sm">
                   Zone Service Details:
                 </h5>
-                <Table className="table table-striped table-bordered w-75">
+                <Table className="table table-bordered w-75">
                   <thead className="thead-light">
                     <tr>
                       <th>Service Name</th>

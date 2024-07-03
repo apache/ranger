@@ -19,21 +19,10 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXUser;
@@ -50,23 +39,6 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 	
 	@Autowired
 	XUserService xUserService;
-	
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-
-	@Autowired
-	RangerBizUtil rangerBizUtil;
-
-	@Autowired
-	XResourceService xResourceService;
-
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-//		trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Permission", false));
-//		trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Permission", false));
-		trxLogAttrs.put("permType", new VTrxLogAttr("permType", "Permission Type", true));
-		trxLogAttrs.put("ipAddress", new VTrxLogAttr("ipAddress", "IP Address", false));
-	}
 
 	
 	public XPermMapService() {
@@ -129,133 +101,6 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
 			return null;
 	}
 
-	public List<XXTrxLog> getTransactionLog(VXPermMap vXPermMap, String action){
-		return getTransactionLog(vXPermMap, null, action);
-	}
-	
-	public List<XXTrxLog> getTransactionLog(VXPermMap vObj, VXPermMap mObj, String action){
-		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
-			return null;
-		}
-		
-		boolean isGroupPolicy = true;
-		if(vObj.getGroupId() == null){
-			isGroupPolicy = false;
-		}
-		
-		Long groupId = null;
-		Long userId = null;
-		String groupName = null;
-		String userName = null;
-		
-		if(isGroupPolicy){
-			groupId = vObj.getGroupId();
-			XXGroup xGroup = daoManager.getXXGroup().getById(groupId);
-			groupName = xGroup.getName();
-		} else {
-			userId = vObj.getUserId();
-			XXUser xUser = daoManager.getXXUser().getById(userId);
-			userName = xUser.getName();
-		}
-
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Field[] fields = vObj.getClass().getDeclaredFields();
-		
-		try {
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-//				int policyType = vObj.getIpAddress();
-				/*if(policyType == AppConstants.ASSET_HDFS){
-					String[] ignoredAttribs = {"ipAddress"};
-					if(ArrayUtils.contains(ignoredAttribs, fieldName)){
-						continue;
-					}
-				}*/	
-//				} else {
-//					if(isGroupPolicy){
-//						if(fieldName.equalsIgnoreCase("userId")){
-//							continue;
-//						}
-//					} else {
-//						if (fieldName.equalsIgnoreCase("groupId")){
-//							continue;
-//						}
-//					}
-				}
-				Long assetId = daoManager.getXXResource().getById(vObj.getResourceId()).getAssetId();
-				int policyType = daoManager.getXXAsset().getById(assetId).getAssetType();
-				if(policyType != AppConstants.ASSET_KNOX){
-					if("ipAddress".equals(fieldName))
-						continue;
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-			
-				String value = null,prevValue = "";
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXPermMap.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-//					XXUser xUser = rangerDaoManager.getXXUser().getById(Long.parseLong(value));
-//					value = xUser.getName();
-					if("ipAddress".equals(fieldName) && "update".equalsIgnoreCase(action)){
-						prevValue = "" + field.get(mObj);
-						value = "null".equalsIgnoreCase(value) ? "" : value;
-					}
-					else if(value == null || "null".equalsIgnoreCase(value) || stringUtil.isEmpty(value)){
-						continue;
-					}
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					// Not Changed.
-					xTrxLog.setNewValue(value);
-					xTrxLog.setPreviousValue(value);
-					if("ipAddress".equals(fieldName)){
-						xTrxLog.setPreviousValue(prevValue);
-					}
-				}
-				
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_PERM_MAP);
-				xTrxLog.setObjectId(vObj.getId());
-				if(isGroupPolicy){
-					xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_GROUP);
-					xTrxLog.setParentObjectId(groupId);
-					xTrxLog.setParentObjectName(groupName);
-				} else {
-					xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_USER);
-					xTrxLog.setParentObjectId(userId);
-					xTrxLog.setParentObjectName(userName);
-				}
-//				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-				
-			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-		
-		return trxLogList;
-	}
-	
 	@Override
 	protected XXPermMap mapViewToEntityBean(VXPermMap vObj, XXPermMap mObj, int OPERATION_CONTEXT) {
 	    XXPermMap ret = null;

@@ -1,0 +1,80 @@
+{
+  "name":        "gds",
+  "displayName": "Governed Data Sharing",
+  "implClass":   "org.apache.ranger.services.gds.RangerServiceGds",
+  "label":       "GDS",
+  "description": "GDS Service Definition",
+  "options": {
+    "enableDenyInPolicies": "false"
+  },
+  "resources": [
+    {
+      "itemId":              1,
+      "name":               "dataset-id",
+      "type":               "string",
+      "level":              1,
+      "parent":             "",
+      "mandatory":          true,
+      "lookupSupported":    false,
+      "recursiveSupported": false,
+      "excludesSupported":  false,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": false, "ignoreCase": false },
+      "uiHint":             "{ \"singleValue\": true }",
+      "label":              "Dataset ID",
+      "description":        "Dataset ID"
+    },
+    {
+      "itemId":              2,
+      "name":               "project-id",
+      "type":               "string",
+      "level":              1,
+      "parent":             "",
+      "mandatory":          true,
+      "lookupSupported":    false,
+      "recursiveSupported": false,
+      "excludesSupported":  false,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": false, "ignoreCase": false },
+      "uiHint":             "{ \"singleValue\": true }",
+      "label":              "Project ID",
+      "description":        "Project ID"
+    }
+  ],
+
+  "accessTypes": [
+    { "itemId": 1, "name": "_CREATE",  "label": "_CREATE" },
+    { "itemId": 2, "name": "_READ",    "label": "_READ" },
+    { "itemId": 3, "name": "_UPDATE",  "label": "_UPDATE" },
+    { "itemId": 4, "name": "_DELETE",  "label": "_DELETE" },
+    { "itemId": 5, "name": "_MANAGE",  "label": "_MANAGE" },
+    { "itemId": 6, "name": "_ALL",     "label": "_ALL" }
+  ],
+
+  "configs": [
+    {
+      "itemId":       1,
+      "name":         "ranger.plugin.audit.filters",
+      "type":         "string",
+      "mandatory":    false,
+      "label":        "Ranger Default Audit Filters",
+      "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
+    }
+  ],
+
+  "enums": [ ],
+
+  "contextEnrichers": [ ],
+
+  "policyConditions":
+  [
+    {
+      "itemId":           1,
+      "name":             "expression",
+      "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      "evaluatorOptions": { "engineName":"JavaScript", "ui.isMultiline":"true" },
+      "label":            "Enter boolean expression",
+      "description":      "Boolean expression"
+    }
+  ]
+}

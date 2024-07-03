@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.util;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -34,6 +35,34 @@ public class AutoClosableLock implements AutoCloseable {
     @Override
     public void close() {
         lock.unlock();
+    }
+
+    public static class AutoClosableTryLock implements AutoCloseable {
+        private final Lock    lock;
+        private final boolean isLocked;
+
+        public AutoClosableTryLock(Lock lock, long timeout, TimeUnit timeUnit) {
+            this.lock = lock;
+
+            boolean isLocked = false;
+
+            try {
+                isLocked = this.lock.tryLock(timeout, timeUnit);
+            } catch (InterruptedException excp) {
+                // ignored
+            }
+
+            this.isLocked = isLocked;
+        }
+
+        public boolean isLocked() { return isLocked; }
+
+        @Override
+        public void close() {
+            if (isLocked) {
+                lock.unlock();
+            }
+        }
     }
 
     public static class AutoClosableReadLock implements AutoCloseable {

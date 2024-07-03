@@ -20,8 +20,9 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +64,21 @@ public class RangerTagsAllPresentConditionEvaluator extends RangerAbstractCondit
 
 		boolean matched = true;
 
-		if (CollectionUtils.isNotEmpty(policyConditionTags))  {
-			RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
-			Set<String>                  resourceTags = evaluator.getAllTagTypes();
+		if (CollectionUtils.isNotEmpty(policyConditionTags)) {
+			Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 			// check if resource Tags  atleast have to have all the tags in policy Condition
-			matched = resourceTags != null && resourceTags.containsAll(policyConditionTags);
+			if (CollectionUtils.isNotEmpty(resourceTags)) {
+				Set<String> tags = new HashSet<>(resourceTags.size());
+
+				for (RangerTagForEval tag : resourceTags) {
+					tags.add(tag.getType());
+				}
+
+				matched = tags.containsAll(policyConditionTags);
+			} else {
+				matched = false;
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

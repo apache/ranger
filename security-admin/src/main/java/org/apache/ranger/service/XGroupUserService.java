@@ -19,28 +19,18 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
-import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroupUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -54,16 +44,8 @@ public class XGroupUserService extends
 	private final Long createdByUserId;
 
 	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	
-	@Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 	
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-		trxLogAttrs.put("parentGroupId", new VTrxLogAttr("parentGroupId", "Group Name", false));
-	}
-
 
 	public XGroupUserService() {
 		searchFields.add(new SearchField("xUserId", "obj.userId",
@@ -183,85 +165,6 @@ public class XGroupUserService extends
 
 		VXGroupUser view = populateViewBean(resource);
 		return view;
-	}
-	
-	public List<XXTrxLog> getTransactionLog(VXGroupUser vXGroupUser, String action){
-		return getTransactionLog(vXGroupUser, null, action);
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXGroupUser vObj, XXGroupUser mObj, String action){
-//		if(vObj == null && (action == null || !action.equalsIgnoreCase("update"))){
-//			return null;
-//		}
-		
-		Long groupId = vObj.getParentGroupId();
-		XXGroup xGroup = daoManager.getXXGroup().getById(groupId);
-		String groupName = xGroup.getName();
-
-		Long userId = vObj.getUserId();
-		XXUser xUser = daoManager.getXXUser().getById(userId);
-		String userName = xUser.getName();
-
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Field[] fields = vObj.getClass().getDeclaredFields();
-		
-		try {
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-			
-				String value = null;
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXAsset.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-					XXGroup xXGroup = daoManager.getXXGroup().getById(Long.parseLong(value));
-					value = xXGroup.getName();
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					// No Change.
-					xTrxLog.setNewValue(value);
-					xTrxLog.setPreviousValue(value);
-				}
-				
-				xTrxLog.setAction(action);
-				
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_GROUP_USER);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setObjectName(userName);
-				
-				xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_GROUP);
-				xTrxLog.setParentObjectId(groupId);
-				xTrxLog.setParentObjectName(groupName);
-				
-				trxLogList.add(xTrxLog);
-				
-			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-		
-		return trxLogList;
 	}
 
 	private class GroupUserMappingUpdator implements Runnable {

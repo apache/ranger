@@ -213,7 +213,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-exclamation-circle',
 			title: '<strong>Info!</strong>',
-			message: text
+			message: _.escape(text)
 		});
 	};
 
@@ -231,7 +231,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-exclamation-triangle',
 			title: '<strong>Error!</strong>',
-			message: text
+			message: _.escape(text)
 		},{
 			type: 'danger',
 		});
@@ -251,7 +251,7 @@ define(function(require) {
 		$.notify({
 			icon: 'fa-fw fa fa-check-circle',
 			title: '<strong>Success!</strong>',
-			message: text
+			message: _.escape(text)
 		},{
 			type: 'success'
 		});
@@ -1673,6 +1673,7 @@ define(function(require) {
         return {
             closeOnSelect : true,
             placeholder   : placeholder,
+            separator : "@-undefined-@",
             tags : true,
             width : width,
             initSelection: function(element, callback) {
@@ -1725,8 +1726,14 @@ define(function(require) {
                         //remove selected values
                         if(that.collection && that.collection.models){
                             _.filter(that.collection.models, function(model){
-                                if(model && !_.isUndefined(model.get('name'))){
-                                    selectedVals.push(model.get('name'));
+                                if(auditFilter !== "auditFilter"){
+                                    if(model && !_.isUndefined(model.get('name'))){
+                                        selectedVals.push(model.get('name'));
+                                    }
+                                } else {
+                                    if(model && !_.isUndefined(model.get($select))){
+                                        selectedVals = model.get($select);
+                                    }
                                 }
                             })
                         }

@@ -32,7 +32,8 @@ import {
   find,
   maxBy,
   sortBy,
-  map
+  map,
+  cloneDeep
 } from "lodash";
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
@@ -48,6 +49,7 @@ import {
   selectCustomStyles
 } from "../../components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
+import { getServiceDef } from "../../utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -64,7 +66,7 @@ const SecurityZoneForm = () => {
   const navigate = useNavigate();
   const params = useParams();
   const toastId = useRef(null);
-  const [serviceDefs, setServiceDefs] = useState([]);
+  const { allServiceDefs } = cloneDeep(getServiceDef());
   const [services, setServices] = useState([]);
   const [zone, setZone] = useState({});
   const [resourceServiceDef, setResourceServiceDef] = useState({});
@@ -90,7 +92,7 @@ const SecurityZoneForm = () => {
 
   useEffect(() => {
     fetchInitalData();
-  }, []);
+  }, [params.zoneId]);
 
   const validate = (values) => {
     const errors = {};
@@ -161,23 +163,8 @@ const SecurityZoneForm = () => {
   };
 
   const fetchInitalData = async () => {
-    await fetchServiceDefs();
     await fetchResourceServices();
     await fetchZones();
-  };
-
-  const fetchServiceDefs = async () => {
-    let servicetypeResp;
-
-    try {
-      servicetypeResp = await fetchApi({
-        url: `plugins/definitions`
-      });
-    } catch (error) {
-      console.error(`Error occurred while fetching Services! ${error}`);
-    }
-
-    setServiceDefs(servicetypeResp.data.serviceDefs);
   };
 
   const fetchResourceServices = async () => {
@@ -197,7 +184,7 @@ const SecurityZoneForm = () => {
 
     for (let key of Object.keys(servicesByType)) {
       resourceServices.push({
-        label: <span className="font-weight-bold text-body h6">{key}</span>,
+        label: <span className="fw-bold text-body h6">{key}</span>,
         options: servicesByType[key].map((name) => {
           return { label: name.name, value: name.name };
         })
@@ -231,9 +218,12 @@ const SecurityZoneForm = () => {
     setLoader(false);
   };
 
-  const renderResourcesModal = (input, serviceType) => {
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const renderResourcesModal = (resourceInput, resourceField) => {
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -246,7 +236,7 @@ const SecurityZoneForm = () => {
     setModalstate({
       showModalResource: true,
       data: {},
-      inputval: input,
+      inputval: resourceInput,
       index: -1
     });
 
@@ -254,10 +244,13 @@ const SecurityZoneForm = () => {
     setResourceService(filterService);
   };
 
-  const editResourcesModal = (idx, input, serviceType) => {
-    let editData = input.input.value[idx];
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const editResourcesModal = (resourceIndex, resourceInput, resourceField) => {
+    let editData = resourceInput.input.value[resourceIndex];
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -270,8 +263,8 @@ const SecurityZoneForm = () => {
     setModalstate({
       showModalResource: true,
       data: editData,
-      inputval: input,
-      index: idx
+      inputval: resourceInput,
+      index: resourceIndex
     });
 
     setResourceServiceDef(filterServiceDef);
@@ -479,7 +472,7 @@ const SecurityZoneForm = () => {
       let serviceType = find(services, ["name", name]);
       tableValues["serviceType"] = serviceType.type;
 
-      let filterServiceDef = find(serviceDefs, ["name", serviceType.type]);
+      let filterServiceDef = find(allServiceDefs, ["name", serviceType.type]);
 
       for (const obj of filterServiceDef.resources) {
         obj.recursiveSupported = false;
@@ -649,16 +642,16 @@ const SecurityZoneForm = () => {
     }
   };
 
-  const handleRemove = (idx, input) => {
-    input.input.value.splice(idx, 1);
+  const handleRemove = (resourceIndex, resourceInput) => {
+    resourceInput.input.value.splice(resourceIndex, 1);
     handleClose();
   };
 
-  const showResources = (value, serviceType) => {
+  const showResources = (resourceObj, serviceType) => {
     let data = {};
-    let filterdef = serviceDefs.find((obj) => obj.name == serviceType);
+    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
 
-    for (const obj of filterdef.resources) {
+    for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
       obj.excludesSupported = false;
       if (obj.level !== 10) {
@@ -666,24 +659,26 @@ const SecurityZoneForm = () => {
       }
     }
 
-    const grpResources = groupBy(filterdef.resources || [], "level");
+    const grpResources = groupBy(filterServiceDef.resources || [], "level");
+
     let grpResourcesKeys = [];
     for (const resourceKey in grpResources) {
       grpResourcesKeys.push(+resourceKey);
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     data.resources = {};
+
     for (const level of grpResourcesKeys) {
       if (
-        value[`resourceName-${level}`] &&
-        value[`resourceName-${level}`].value !== noneOptions.value
+        resourceObj[`resourceName-${level}`] &&
+        resourceObj[`resourceName-${level}`].value !== noneOptions.value
       ) {
-        data.resources[value[`resourceName-${level}`].name] = {
-          isExcludes: value[`isExcludesSupport-${level}`] || false,
-          isRecursive: value[`isRecursiveSupport-${level}`] || false,
+        data.resources[resourceObj[`resourceName-${level}`].name] = {
+          isExcludes: resourceObj[`isExcludesSupport-${level}`] || false,
+          isRecursive: resourceObj[`isRecursiveSupport-${level}`] || false,
           values:
-            value[`value-${level}`] !== undefined
-              ? value[`value-${level}`].map(({ value }) => value)
+            resourceObj[`value-${level}`] !== undefined
+              ? resourceObj[`value-${level}`].map(({ value }) => value)
               : ""
         };
       }
@@ -703,6 +698,7 @@ const SecurityZoneForm = () => {
       </p>
     ));
   };
+
   const onFocusUserSelect = () => {
     setUserLoading(true);
     fetchUsersData().then((opts) => {
@@ -718,6 +714,7 @@ const SecurityZoneForm = () => {
       setGroupLoading(false);
     });
   };
+
   const onFocusRoleSelect = () => {
     setRoleLoading(true);
     fetchRolesData().then((opts) => {
@@ -725,6 +722,7 @@ const SecurityZoneForm = () => {
       setRoleLoading(false);
     });
   };
+
   const onFocusTagServiceSelect = () => {
     setTagServiceLoading(true);
     fetchTagServices().then((opts) => {
@@ -732,6 +730,7 @@ const SecurityZoneForm = () => {
       setTagServiceLoading(false);
     });
   };
+
   return (
     <React.Fragment>
       <div className="clearfix">
@@ -786,7 +785,7 @@ const SecurityZoneForm = () => {
                       {({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Name *
                             </label>
                           </Col>
@@ -818,7 +817,7 @@ const SecurityZoneForm = () => {
                       {({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Description
                             </label>
                           </Col>
@@ -839,7 +838,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Users
                             </label>
                           </Col>
@@ -883,7 +882,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Usergroups
                             </label>
                           </Col>
@@ -927,7 +926,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Roles
                             </label>
                           </Col>
@@ -976,7 +975,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Users
                             </label>
                           </Col>
@@ -1014,12 +1013,13 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <Field
                       name="auditUserGroups"
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Usergroups
                             </label>
                           </Col>
@@ -1063,7 +1063,7 @@ const SecurityZoneForm = () => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Roles
                             </label>
                           </Col>
@@ -1113,7 +1113,7 @@ const SecurityZoneForm = () => {
                       render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Tag Services
                             </label>
                           </Col>
@@ -1141,12 +1141,13 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
+
                     <Field
                       name="resourceServices"
                       render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Resource Services
                             </label>
                           </Col>
@@ -1176,7 +1177,8 @@ const SecurityZoneForm = () => {
                         </Row>
                       )}
                     />
-                    <Table striped bordered>
+
+                    <Table bordered>
                       <thead>
                         <tr>
                           <th className="p-3 mb-2 bg-white text-dark  align-middle text-center">
@@ -1200,7 +1202,7 @@ const SecurityZoneForm = () => {
                                     {fields.value[index].serviceName}
                                   </td>
                                   <td className="align-middle" width="20%">
-                                    {fields.value[index].serviceType.toString()}
+                                    {fields.value[index].serviceType}
                                   </td>
                                   <td
                                     className="text-center"
@@ -1215,16 +1217,19 @@ const SecurityZoneForm = () => {
                                           {input.input.value &&
                                           input.input.value.length > 0
                                             ? input.input.value.map(
-                                                (obj, idx) => (
+                                                (
+                                                  resourceObj,
+                                                  resourceIndex
+                                                ) => (
                                                   <div
                                                     className="resource-group text-break"
-                                                    key={idx}
+                                                    key={resourceIndex}
                                                   >
                                                     <Row>
                                                       <Col xs={9}>
                                                         <span className="m-t-xs">
                                                           {showResources(
-                                                            obj,
+                                                            resourceObj,
                                                             fields.value[index]
                                                               .serviceType
                                                           )}
@@ -1237,11 +1242,11 @@ const SecurityZoneForm = () => {
                                                           size="sm"
                                                           onClick={() =>
                                                             editResourcesModal(
-                                                              idx,
+                                                              resourceIndex,
                                                               input,
                                                               fields.value[
                                                                 index
-                                                              ].serviceType
+                                                              ]
                                                             )
                                                           }
                                                           data-action="editResource"
@@ -1255,7 +1260,7 @@ const SecurityZoneForm = () => {
                                                           size="sm"
                                                           onClick={() =>
                                                             handleRemove(
-                                                              idx,
+                                                              resourceIndex,
                                                               input
                                                             )
                                                           }
@@ -1280,7 +1285,6 @@ const SecurityZoneForm = () => {
                                                 renderResourcesModal(
                                                   input,
                                                   fields.value[index]
-                                                    .serviceType
                                                 )
                                               }
                                               data-action="addResource"
@@ -1309,6 +1313,7 @@ const SecurityZoneForm = () => {
                         </FieldArray>
                       </tbody>
                     </Table>
+
                     <Row className="form-actions">
                       <Col sm={{ span: 9, offset: 3 }}>
                         <Button

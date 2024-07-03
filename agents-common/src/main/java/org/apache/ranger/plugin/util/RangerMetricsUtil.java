@@ -20,11 +20,10 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -187,9 +186,8 @@ public class RangerMetricsUtil {
 		if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerMetricsUtil.writeMetricsToFIle() for path: "+ filePath);
         }
-		Gson gson = new Gson();
 		try (FileWriter file = new FileWriter(filePath)) {
-			gson.toJson(rangerMetrics, file);
+            JsonUtils.objectToWriter(file, rangerMetrics);
 			file.flush();
 		} catch (Exception e ) {
 			LOG.error("RangerMetricsUtil.writeMetricsToFile() got an error",e);

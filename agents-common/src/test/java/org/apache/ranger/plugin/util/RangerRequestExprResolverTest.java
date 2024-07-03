@@ -42,6 +42,7 @@ public class RangerRequestExprResolverTest {
 
         exprValue.put("s3://mybucket/users/${{USER._name}}/${{USER.state}}/test.txt", "s3://mybucket/users/test-user/CA/test.txt");
         exprValue.put("state == '${{USER.state}}' AND dept == '${{UGA.sVal.dept}}'", "state == 'CA' AND dept == 'ENGG'");
+        exprValue.put("state == '${{USER.state}}' AND group IN (${{GET_UG_NAMES_Q()}})", "state == 'CA' AND group IN ('test-group1','test-group2')");
         exprValue.put("attr1 == '${{TAG.attr1}}'", "attr1 == 'PII_value'");
 
         exprValue.put("${{USER._name}}", "test-user");
@@ -56,8 +57,8 @@ public class RangerRequestExprResolverTest {
         exprValue.put("${{UG['test-group1'].site}}", "10");
         exprValue.put("${{UG['test-group2'].dept}}", "PROD");
         exprValue.put("${{UG['test-group2'].site}}", "20");
-        exprValue.put("${{UG['test-group3']}}", "null");
-        exprValue.put("${{UG['test-group1'].notExists}}", "null");
+        exprValue.put("${{UG['test-group3']}}", "");
+        exprValue.put("${{UG['test-group1'].notExists}}", "");
 
         exprValue.put("${{URNAMES.indexOf('test-role1') != -1}}", "true");
         exprValue.put("${{URNAMES.indexOf('test-role2') != -1}}", "true");
@@ -65,10 +66,10 @@ public class RangerRequestExprResolverTest {
 
         exprValue.put("${{UGA.sVal.dept}}", "ENGG");
         exprValue.put("${{UGA.sVal.site}}", "10");
-        exprValue.put("${{UGA.sVal.notExists}}", "null");
+        exprValue.put("${{UGA.sVal.notExists}}", "");
         exprValue.put("${{J(UGA.mVal.dept)}}", "[\"ENGG\",\"PROD\"]");
         exprValue.put("${{J(UGA.mVal.site)}}", "[\"10\",\"20\"]");
-        exprValue.put("${{J(UGA.mVal.notExists)}}", "null");
+        exprValue.put("${{J(UGA.mVal.notExists)}}", "");
         exprValue.put("${{UGA.mVal['dept'].indexOf('ENGG') != -1}}", "true");
         exprValue.put("${{UGA.mVal['dept'].indexOf('PROD') != -1}}", "true");
         exprValue.put("${{UGA.mVal['dept'].indexOf('EXEC') == -1}}", "true");
@@ -92,6 +93,7 @@ public class RangerRequestExprResolverTest {
         exprValue.put("${{TAGNAMES.length}}", "2");
         exprValue.put("${{TAGNAMES.indexOf('PII') != -1}}", "true");
         exprValue.put("${{TAGNAMES.indexOf('PCI') != -1}}", "true");
+        exprValue.put("${{var s=USER['state'];}}state == '${{s}}'", "state == 'CA'");
 
         for (Map.Entry<String, String> entry : exprValue.entrySet()) {
             String                    expr        = entry.getKey();

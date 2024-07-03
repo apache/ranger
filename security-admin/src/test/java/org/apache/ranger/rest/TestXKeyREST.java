@@ -24,7 +24,6 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.junit.Assert;
@@ -50,9 +49,6 @@ public class TestXKeyREST {
 
 	@Mock
 	SearchUtil searchUtil;
-
-	@Mock
-	XTrxLogService xLog;
 
 	@Mock
 	XAccessAuditService xAccessAuditSrv;

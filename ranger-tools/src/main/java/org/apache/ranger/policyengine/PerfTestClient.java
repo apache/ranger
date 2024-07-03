@@ -80,9 +80,7 @@ public class PerfTestClient extends Thread {
 
 		Reader reader = null;
 
-		try {
-
-			InputStream in = requestFileURL.openStream();
+		try (InputStream in = requestFileURL.openStream()) {
 
 			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
 

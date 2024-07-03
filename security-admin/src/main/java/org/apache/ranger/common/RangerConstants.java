@@ -81,6 +81,7 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final String MODULE_KEY_MANAGER="Key Manager";
 	public static final String MODULE_TAG_BASED_POLICIES="Tag Based Policies";
         public static final String MODULE_SECURITY_ZONE="Security Zone";
+	public static final String MODULE_GOVERNED_DATA_SHARING = "Governed Data Sharing";
 
 	// User create validation errors
 	public enum ValidationUserProfile {
@@ -181,6 +182,8 @@ public class RangerConstants extends RangerCommonEnums {
 	public static final List<String> VALID_USER_ROLE_LIST = new ArrayList<String>(Arrays.asList(RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_ADMIN_AUDITOR,
 			RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
+
+	public static final String DEFAULT_SORT_ORDER       = "asc";
 
 	public static enum RBAC_PERM {
 		ALLOW_NONE,

@@ -116,7 +116,7 @@
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
-        <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
+        <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
         <graalvm.version>22.3.0</graalvm.version>
@@ -161,7 +161,7 @@
         <jsonsmart.version>2.4.10</jsonsmart.version>
         <jsr250.version>1.0</jsr250.version>
         <jsr305.version>1.3.9</jsr305.version>
-        <junit.version>4.13.1</junit.version>
+        <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <kafka.version>2.8.1</kafka.version>
         <kerby.version>2.0.3</kerby.version>
         <knox.gateway.version>1.4.0</knox.gateway.version>
@@ -178,7 +178,7 @@
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
-        <netty-all.version>4.1.94.Final</netty-all.version>
+        <netty-all.version>4.1.100.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
@@ -200,13 +200,13 @@
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
-        <springframework.security.version>5.7.10</springframework.security.version>
-        <springframework.test.version>5.3.29</springframework.test.version>
-        <springframework.version>5.3.29</springframework.version>
+        <springframework.security.version>5.7.12</springframework.security.version>
+        <springframework.test.version>5.3.33</springframework.test.version>
+        <springframework.version>5.3.33</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
-        <tomcat.embed.version>8.5.93</tomcat.embed.version>
+        <tomcat.embed.version>8.5.94</tomcat.embed.version>
         <testng.version>7.0.0</testng.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.5.5</zookeeper.version>
@@ -244,7 +244,7 @@
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <org.bouncycastle.bcprov-jdk15on>1.70</org.bouncycastle.bcprov-jdk15on>
         <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
-        <lucene.version>8.4.0</lucene.version>
+        <lucene.version>8.11.3</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
         <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
@@ -336,73 +336,29 @@
         <profile>
             <id>ranger-jdk11</id>
             <activation>
-               <jdk>11</jdk>
+                <jdk>11</jdk>
             </activation>
             <modules>
-                <module>jisql</module>
+                <!--  ranger-admin requirements  -->
+                <module>security-admin</module>
                 <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>agents-cred</module>
-                <module>intg</module>
-                <module>agents-installer</module>
-                <module>credentialbuilder</module>
+                <module>jisql</module>
                 <module>embeddedwebserver</module>
-		<module>ranger-common-ha</module>
-                <module>kms</module>
-                <module>hbase-agent</module>
-                <module>hdfs-agent</module>
-                <module>hive-agent</module>
-                <module>knox-agent</module>
-                <module>storm-agent</module>
-                <module>plugin-yarn</module>
-                <module>plugin-ozone</module>
-                <module>security-admin</module>
-                <module>plugin-kafka</module>
-                <module>plugin-solr</module>
-                <module>plugin-nestedstructure</module>
-                <module>plugin-nifi</module>
-                <module>plugin-nifi-registry</module>
-                <module>plugin-presto</module>
-                <module>plugin-trino</module>
-                <module>plugin-kudu</module>
-                <module>ugsync-util</module>
-                <module>ugsync</module>
-                <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
-                <module>unixauthclient</module>
-                <module>unixauthservice</module>
-                <module>unixauthnative</module>
+                <module>credentialbuilder</module>
                 <module>ranger-util</module>
-                <module>plugin-kms</module>
-                <module>tagsync</module>
-                <module>ranger-hdfs-plugin-shim</module>
+                <module>ugsync-util</module>
+                <module>unixauthclient</module>
                 <module>ranger-plugin-classloader</module>
-                <module>ranger-hive-plugin-shim</module>
-                <module>ranger-hbase-plugin-shim</module>
-                <module>ranger-knox-plugin-shim</module>
-                <module>ranger-yarn-plugin-shim</module>
-                <module>ranger-ozone-plugin-shim</module>
-                <module>ranger-storm-plugin-shim</module>
-                <module>ranger-kafka-plugin-shim</module>
-                <module>ranger-solr-plugin-shim</module>
-                <module>ranger-atlas-plugin-shim</module>
-                <module>ranger-kms-plugin-shim</module>
-                <module>ranger-presto-plugin-shim</module>
-                <module>ranger-trino-plugin-shim</module>
-                <module>ranger-examples</module>
-                <module>ranger-tools</module>
-                <module>plugin-atlas</module>
-                <module>plugin-schema-registry</module>
-                <module>plugin-sqoop</module>
-                <module>ranger-sqoop-plugin-shim</module>
-                <module>plugin-kylin</module>
-                <module>ranger-kylin-plugin-shim</module>
-                <module>plugin-elasticsearch</module>
-                <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
                 <module>ranger-metrics</module>
+                <!-- trino-plugin requirements -->
+                <module>agents-installer</module>
+                <module>plugin-trino</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
-                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                   plugin-nestedstructure, make sure to update dependency in distro/pom.xml
                 -->
                 <module>distro</module>
             </modules>
@@ -892,9 +848,15 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+                <version>${junit.jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

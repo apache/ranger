@@ -99,6 +99,9 @@ public class TestPublicAPIs {
 	
 	@Mock
 	RangerPolicyService policyService;
+
+	@Mock
+	AssetREST assetREST;
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -351,26 +354,16 @@ public class TestPublicAPIs {
 	@Test
 	public void test6countRepositories() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		VXLong vXLong = new VXLong();
-		List<RangerService> ret = new ArrayList<RangerService>();
-		RangerService rangerService = rangerService();
-		VXRepository vXRepository = vXRepository(rangerService);
-		List<VXRepository> repoList = new ArrayList<VXRepository>();
-		repoList.add(vXRepository);
-		VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
-		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
-		Mockito.when(searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields)).thenReturn(filter);
-		Mockito.when(serviceREST.getServices(filter)).thenReturn(ret);
-		Mockito.when(serviceUtil.rangerServiceListToPublicObjectList(ret)).thenReturn(vXRepositoryList);
-		VXRepositoryList dbVXRepositoryList = publicAPIs.searchRepositories(request);
-		vXLong.setValue(dbVXRepositoryList.getResultSize());
-		Assert.assertNotNull(vXLong);
-		Assert.assertEquals(vXLong.getValue(), 1);		
-		Mockito.verify(searchUtil).getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
-		Mockito.verify(serviceREST).getServices(filter);
-		Mockito.verify(serviceUtil).rangerServiceListToPublicObjectList(ret);
+
+		VXLong resultExpected = new VXLong();
+		resultExpected.setValue(4l);
+
+		Mockito.when(assetREST.countXAssets(request)).thenReturn(resultExpected);
+
+		VXLong resultActual = publicAPIs.countRepositories(request);
+
+		Assert.assertEquals(resultExpected.getValue(), resultActual.getValue());
+		Mockito.verify(assetREST).countXAssets(request);
 	}
 	
 	@Test
@@ -481,32 +474,17 @@ public class TestPublicAPIs {
 	
 	@Test
 	public void test12countPolicies() throws Exception {
-		VXLong vXLong = new VXLong();
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		RangerService service = rangerService();
-		RangerPolicy policy = rangerPolicy();
-		List<RangerPolicy> policyList = new ArrayList<RangerPolicy>();
-		policyList.add(policy);
-		VXPolicy vXPolicy = vXPolicy(policy, service);
-		List<VXPolicy> vXPolicies = new ArrayList<VXPolicy>();
-		vXPolicies.add(vXPolicy);
-		VXPolicyList vXPolicyList = new VXPolicyList(vXPolicies);
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
-		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
-		filter.setStartIndex(0);
-		filter.setMaxRows(10);
-		Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, policyService.sortFields)).thenReturn(filter);
-		Mockito.when(serviceREST.getPolicies(filter)).thenReturn(policyList);
-		Mockito.when(serviceUtil.rangerPolicyListToPublic(policyList,filter)).thenReturn(vXPolicyList);
-		VXPolicyList dbVXPolicyList = publicAPIs.searchPolicies(request);
-		vXLong.setValue(dbVXPolicyList.getResultSize());
-		Assert.assertNotNull(vXLong);
-		Assert.assertEquals(vXLong.getValue(), 1);
-		Mockito.verify(searchUtil).getSearchFilterFromLegacyRequest(request, policyService.sortFields);
-		Mockito.verify(serviceREST).getPolicies(filter);
-		Mockito.verify(serviceUtil).rangerPolicyListToPublic(policyList,filter);
-		
+
+		VXLong resultExpected = new VXLong();
+		resultExpected.setValue(6l);
+
+		Mockito.when(assetREST.countXResources(request)).thenReturn(resultExpected);
+
+		VXLong resultActual = publicAPIs.countPolicies(request);
+
+		Assert.assertEquals(resultExpected.getValue(), resultActual.getValue());
+		Mockito.verify(assetREST).countXResources(request);
 	}
 
 }

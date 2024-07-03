@@ -46,6 +46,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.service.RangerDefaultService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -154,7 +155,7 @@ public class ServiceMgr {
 
 		return ret;
 	}
-	
+
 	public VXResponse validateConfig(RangerService service, ServiceStore svcStore) throws Exception {
 		VXResponse        ret = new VXResponse();
 		String authType = PropertiesUtil.getProperty(AUTHENTICATION_TYPE);
@@ -163,7 +164,7 @@ public class ServiceMgr {
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
 		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
 		String rangerkeytab = PropertiesUtil.getProperty(ADMIN_USER_KEYTAB);
-		
+
 		if(!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(lookupPrincipal, lookupKeytab)){
 			if(service != null && service.getConfigs() != null){
 				service.getConfigs().put(HadoopConfigHolder.RANGER_LOOKUP_PRINCIPAL, lookupPrincipal);
@@ -177,7 +178,7 @@ public class ServiceMgr {
 				service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_KEYTAB, rangerkeytab);
 				service.getConfigs().put(HadoopConfigHolder.RANGER_NAME_RULES, nameRules);
-				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);				
+				service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
 			}
 		}
 		RangerBaseService svc=null;
@@ -190,6 +191,19 @@ public class ServiceMgr {
 			LOG.debug("==> ServiceMgr.validateConfig for Service: (" + svc + ")");
 		}
 
+		// check if service configs contains localhost/127.0.0.1
+		if (service != null && service.getConfigs() != null) {
+			for (Map.Entry<String, String> entry : service.getConfigs().entrySet()) {
+				if (entry.getValue() != null && StringUtils.containsIgnoreCase(entry.getValue(), "localhost")
+						|| StringUtils.containsIgnoreCase(entry.getValue(), "127.0.0.1")) {
+					URL url = getValidURL(entry.getValue());
+					if ((url != null) && (url.getHost().equalsIgnoreCase("localhost") || url.getHost().equals("127.0.0.1"))) {
+						throw new Exception("Invalid value for configuration " + entry.getKey() + ": host " + url.getHost() + " is not allowed");
+					}
+				}
+			}
+		}
+
 		if(svc != null) {
 			try {
 				// Timeout value use during validate config is 10 times that used during lookup
@@ -199,13 +213,17 @@ public class ServiceMgr {
 
 				ret = generateResponseForTestConn(responseData, "");
 			} catch (Exception e) {
-				String msg = "Unable to connect repository with given config for " + svc.getServiceName();
-						
-				HashMap<String, Object> respData = new HashMap<String, Object>();
-				if (e instanceof HadoopException) {
-					respData = ((HadoopException) e).getResponseData();
+				Map<String, Object> respData = (e instanceof HadoopException) ? ((HadoopException) e).getResponseData() : new HashMap<>();
+				String              msg;
+
+				if (StringUtils.contains(e.getMessage(), RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED)) {
+					msg = RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED + " for " + svc.getServiceType();
+				} else {
+					msg = "Unable to connect repository with given config for " + svc.getServiceName();
 				}
+
 				ret = generateResponseForTestConn(respData, msg);
+
 				LOG.error("==> ServiceMgr.validateConfig Error:" + e);
 			}
 		}
@@ -216,7 +234,15 @@ public class ServiceMgr {
 
 		return ret;
 	}
-	
+
+	private static URL getValidURL(String urlString) {
+		try {
+			return new URL(urlString);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	public boolean isZoneAdmin(String zoneName) {
 		boolean            isZoneAdmin  = false;
 		RangerSecurityZone securityZone = null;

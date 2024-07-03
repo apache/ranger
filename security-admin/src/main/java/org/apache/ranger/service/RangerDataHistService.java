@@ -30,6 +30,12 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
+import org.apache.ranger.plugin.model.RangerGds.RangerProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -94,6 +100,42 @@ public class RangerDataHistService {
 			classType = AppConstants.CLASS_TYPE_RANGER_POLICY;
 			policy.setServiceType(policy.getServiceType());
 			content = jsonUtil.writeObjectAsString(policy);
+		} else if (baseModelObj instanceof RangerDataset) {
+			RangerDataset dataset = (RangerDataset) baseModelObj;
+
+			objectName = dataset.getName();
+			classType  = AppConstants.CLASS_TYPE_GDS_DATASET;
+			content    = jsonUtil.writeObjectAsString(dataset);
+		} else if (baseModelObj instanceof RangerProject) {
+			RangerProject project = (RangerProject) baseModelObj;
+
+			objectName = project.getName();
+			classType  = AppConstants.CLASS_TYPE_GDS_PROJECT;
+			content    = jsonUtil.writeObjectAsString(project);
+		} else if (baseModelObj instanceof RangerDataShare) {
+			RangerDataShare dataShare = (RangerDataShare) baseModelObj;
+
+			objectName = dataShare.getName();
+			classType  = AppConstants.CLASS_TYPE_GDS_DATA_SHARE;
+			content    = jsonUtil.writeObjectAsString(dataShare);
+		} else if (baseModelObj instanceof RangerSharedResource) {
+			RangerSharedResource sharedResource = (RangerSharedResource) baseModelObj;
+
+			objectName = sharedResource.getName();
+			classType  = AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE;
+			content    = jsonUtil.writeObjectAsString(sharedResource);
+		} else if (baseModelObj instanceof RangerDataShareInDataset) {
+			RangerDataShareInDataset dataShareInDataset = (RangerDataShareInDataset) baseModelObj;
+
+			objectName = dataShareInDataset.getGuid();
+			classType  = AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET;
+			content    = jsonUtil.writeObjectAsString(dataShareInDataset);
+		} else if (baseModelObj instanceof RangerDatasetInProject) {
+			RangerDatasetInProject datasetInProject = (RangerDatasetInProject) baseModelObj;
+
+			objectName = datasetInProject.getGuid();
+			classType  = AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT;
+			content    = jsonUtil.writeObjectAsString(datasetInProject);
 		}
 		
 		xDataHist.setObjectClassType(classType);

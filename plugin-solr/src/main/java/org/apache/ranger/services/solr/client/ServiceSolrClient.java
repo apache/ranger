@@ -290,6 +290,7 @@ public class ServiceSolrClient {
 				break;
 			case RangerSolrConstants.SCHEMA_KEY:
 				lookupResource = RangerSolrConstants.RESOURCE_TYPE.SCHEMA;
+				break;
 			default:
 				break;
 			}
@@ -537,9 +538,10 @@ public class ServiceSolrClient {
 
 	private void setHttpClientBuilderForKrb() {
 		if (this.isKerberosAuth) {
-			Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-			SolrHttpClientBuilder kb = krbBuild.getBuilder();
-			HttpClientUtil.setHttpClientBuilder(kb);
+			try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+				SolrHttpClientBuilder kb = krbBuild.getBuilder();
+				HttpClientUtil.setHttpClientBuilder(kb);
+			}
 		}
 	}
 

@@ -283,6 +283,16 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
 			accessAudit.setTags(value.toString());
 		}
 
+		value = auditEvent.getDatasets();
+		if (value != null) {
+			accessAudit.setDatasets(value.toString());
+		}
+
+		value = auditEvent.getProjects();
+		if (value != null) {
+			accessAudit.setProjects(value.toString());
+		}
+
 		return accessAudit;
 	}
 

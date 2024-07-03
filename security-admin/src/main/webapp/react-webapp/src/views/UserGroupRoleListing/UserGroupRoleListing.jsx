@@ -32,7 +32,7 @@ class UserGroupRoleListing extends Component {
   }
   tabChange = (tabName) => {
     this.setState({ activeKey: tabName });
-    this.props.navigate(`/users/${tabName}`, { replace: true });
+    this.props.navigate(`/users/${tabName}`);
   };
   componentDidUpdate(nextProps, prevState) {
     let activeTabVal = this.activeTab();

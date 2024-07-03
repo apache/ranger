@@ -1,0 +1,74 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG TRINO_VERSION
+FROM trinodb/trino:${TRINO_VERSION}
+
+# trino base image layer has undergone changes in base os image with time.
+##########################################
+#   Trino Versions  |      OS Layer      #
+#    359 - 369      |     centos 11      #
+#    370 - 389      |       ubi8         #
+#    390 - 391      |    azul openjdk    #
+#       392         |       ubi8         #
+#    393 - 431      |   eclipse-temurin  #
+#    432 - current  |       ubi9         #
+##########################################
+
+USER root
+
+ARG TRINO_VERSION
+ARG TRINO_PLUGIN_VERSION
+ENV PLUGIN_DIR=ranger-${TRINO_PLUGIN_VERSION}-trino-plugin
+
+RUN mkdir -p /home/ranger/dist /home/ranger/scripts /opt/ranger
+
+COPY ./dist/version                                              /home/ranger/dist
+COPY ./dist/ranger-${TRINO_PLUGIN_VERSION}-trino-plugin.tar.gz   /home/ranger/dist
+COPY ./scripts/ranger-trino.sh                                   /home/ranger/scripts
+COPY ./scripts/ranger-trino-setup.sh                             /home/ranger/scripts
+COPY ./scripts/ranger-trino-plugin-install.properties            /home/ranger/scripts
+
+RUN if [ $TRINO_VERSION -ge 370 ] && [ $TRINO_VERSION -lt 390 ] || [ $TRINO_VERSION -eq 392 ]; then\
+        dnf install -y initscripts;\
+        dnf install -y openssh-clients;\
+        dnf install -y openssh-server;\
+        dnf install -y sudo;\
+    elif [ $TRINO_VERSION -ge 432 ]; then\
+        microdnf install -y gzip;\
+        microdnf install -y initscripts;\
+        microdnf install -y openssh-clients;\
+        microdnf install -y openssh-server;\
+        microdnf install -y sudo;\
+    else\
+        apt-get update; DEBIAN_FRONTEND="noninteractive" apt-get -y install ssh sudo;\
+    fi
+
+RUN tar xvfz /home/ranger/dist/${PLUGIN_DIR}.tar.gz --directory=/opt/ranger && \
+    ln -s /opt/ranger/${PLUGIN_DIR} /opt/ranger/ranger-trino-plugin && \
+    rm -f /home/ranger/dist/${PLUGIN_DIR}.tar.gz && \
+    cp -f /home/ranger/scripts/ranger-trino-plugin-install.properties /opt/ranger/ranger-trino-plugin/install.properties && \
+    chown -R trino:trino /home/ranger /opt/ranger && \
+    chown root:root /home/ranger/scripts /home/ranger/scripts/ranger-trino-setup.sh && \
+    chmod 744 /home/ranger/scripts/ranger-trino-setup.sh /home/ranger/scripts/ranger-trino.sh
+
+# enable trino user to execute setup script as root
+RUN echo "trino  ALL=(ALL) NOPASSWD:/home/ranger/scripts/ranger-trino-setup.sh" > /etc/sudoers.d/trino
+
+
+USER trino
+
+ENTRYPOINT ["/home/ranger/scripts/ranger-trino.sh"]

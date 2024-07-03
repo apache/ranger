@@ -40,11 +40,13 @@ public class RangerPluginInfo implements Serializable {
 	public static final int ENTITY_TYPE_TAGS     	= 1;
 	public static final int ENTITY_TYPE_ROLES	 	= 2;
 	public static final int ENTITY_TYPE_USERSTORE	= 3;
+	public static final int ENTITY_TYPE_GDS         = 4;
 
 	public static final String PLUGIN_INFO_POLICY_DOWNLOAD_TIME      = "policyDownloadTime";
 	public static final String PLUGIN_INFO_POLICY_DOWNLOADED_VERSION = "policyDownloadedVersion";
 	public static final String PLUGIN_INFO_POLICY_ACTIVATION_TIME    = "policyActivationTime";
 	public static final String PLUGIN_INFO_POLICY_ACTIVE_VERSION     = "policyActiveVersion";
+
 	public static final String PLUGIN_INFO_TAG_DOWNLOAD_TIME         = "tagDownloadTime";
 	public static final String PLUGIN_INFO_TAG_DOWNLOADED_VERSION    = "tagDownloadedVersion";
 	public static final String PLUGIN_INFO_TAG_ACTIVATION_TIME       = "tagActivationTime";
@@ -60,10 +62,17 @@ public class RangerPluginInfo implements Serializable {
 	public static final String PLUGIN_INFO_USERSTORE_ACTIVATION_TIME       = "userstoreActivationTime";
 	public static final String PLUGIN_INFO_USERSTORE_ACTIVE_VERSION        = "userstoreActiveVersion";
 
+	public static final String PLUGIN_INFO_GDS_DOWNLOAD_TIME         = "gdsDownloadTime";
+	public static final String PLUGIN_INFO_GDS_DOWNLOADED_VERSION    = "gdsDownloadedVersion";
+	public static final String PLUGIN_INFO_GDS_ACTIVATION_TIME       = "gdsActivationTime";
+	public static final String PLUGIN_INFO_GDS_ACTIVE_VERSION        = "gdsActiveVersion";
+
 	public static final String RANGER_ADMIN_LAST_POLICY_UPDATE_TIME  = "lastPolicyUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_POLICY_VERSION    = "latestPolicyVersion";
 	public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME     = "lastTagUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_TAG_VERSION       = "latestTagVersion";
+	public static final String RANGER_ADMIN_LAST_GDS_UPDATE_TIME     = "lastGdsUpdateTime";
+	public static final String RANGER_ADMIN_LATEST_GDS_VERSION       = "latestGdsVersion";
 
 	public static final String RANGER_ADMIN_CAPABILITIES             = "adminCapabilities";
 	public static final String PLUGIN_INFO_CAPABILITIES              = "pluginCapabilities";
@@ -385,6 +394,50 @@ public class RangerPluginInfo implements Serializable {
 	@JsonIgnore
 	public Long getUserStoreActiveVersion() {
 		String activeVersionString = getInfo().get(PLUGIN_INFO_USERSTORE_ACTIVE_VERSION);
+		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
+	}
+
+	@JsonIgnore
+	public void setGdsDownloadTime(Long gdsDownloadTime) {
+		getInfo().put(PLUGIN_INFO_GDS_DOWNLOAD_TIME, gdsDownloadTime == null ? null : Long.toString(gdsDownloadTime));
+	}
+
+	@JsonIgnore
+	public Long getGdsDownloadTime() {
+		String downloadTimeString = getInfo().get(PLUGIN_INFO_GDS_DOWNLOAD_TIME);
+		return StringUtils.isNotBlank(downloadTimeString) ? Long.valueOf(downloadTimeString) : null;
+	}
+
+	@JsonIgnore
+	public void setGdsDownloadedVersion(Long gdsDownloadedVersion) {
+		getInfo().put(PLUGIN_INFO_GDS_DOWNLOADED_VERSION, gdsDownloadedVersion == null ? null : Long.toString(gdsDownloadedVersion));
+	}
+
+	@JsonIgnore
+	public Long getGdsDownloadedVersion() {
+		String downloadedVersionString = getInfo().get(PLUGIN_INFO_GDS_DOWNLOADED_VERSION);
+		return StringUtils.isNotBlank(downloadedVersionString) ? Long.valueOf(downloadedVersionString) : null;
+	}
+
+	@JsonIgnore
+	public void setGdsActivationTime(Long gdsActivationTime) {
+		getInfo().put(PLUGIN_INFO_GDS_ACTIVATION_TIME, gdsActivationTime == null ? null : Long.toString(gdsActivationTime));
+	}
+
+	@JsonIgnore
+	public Long getGdsActivationTime() {
+		String activationTimeString = getInfo().get(PLUGIN_INFO_GDS_ACTIVATION_TIME);
+		return StringUtils.isNotBlank(activationTimeString) ? Long.valueOf(activationTimeString) : null;
+	}
+
+	@JsonIgnore
+	public void setGdsActiveVersion(Long gdsActiveVersion) {
+		getInfo().put(PLUGIN_INFO_GDS_ACTIVE_VERSION, gdsActiveVersion == null ? null : Long.toString(gdsActiveVersion));
+	}
+
+	@JsonIgnore
+	public Long getGdsActiveVersion() {
+		String activeVersionString = getInfo().get(PLUGIN_INFO_GDS_ACTIVE_VERSION);
 		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
 	}
 

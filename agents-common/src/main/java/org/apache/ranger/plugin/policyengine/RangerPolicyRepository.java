@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.plugin.contextenricher.RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.contextenricher.RangerTagEnricher.TAG_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.PLUGIN_AUDIT_FILTER;
@@ -1004,6 +1006,16 @@ public class RangerPolicyRepository {
                         Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
 
                         enricherOptions.remove(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
+
+                        enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
+                    }
+                }
+
+                if (options.disableGdsInfoRetriever && StringUtils.equals(enricherDef.getEnricher(), RangerGdsEnricher.class.getName())) {
+                    if (MapUtils.isNotEmpty(enricherDef.getEnricherOptions())) {
+                        Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
+
+                        enricherOptions.remove(RETRIEVER_CLASSNAME_OPTION);
 
                         enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
                     }
