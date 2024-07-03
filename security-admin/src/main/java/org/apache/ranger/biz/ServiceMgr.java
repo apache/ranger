@@ -66,18 +66,22 @@ import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUB
 
 @Component
 public class ServiceMgr {
-
 	private static final Logger LOG = LoggerFactory.getLogger(ServiceMgr.class);
 	
-	private static final String LOOKUP_PRINCIPAL = "ranger.lookup.kerberos.principal";
-	private static final String LOOKUP_KEYTAB = "ranger.lookup.kerberos.keytab";
-    private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
-    private static final String ADMIN_USER_KEYTAB = "ranger.admin.kerberos.keytab";
-	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
-	private static final String KERBEROS_TYPE = "kerberos";
-	static final String NAME_RULES = "hadoop.security.auth_to_local";
-	static final String HOST_NAME = "ranger.service.host";
-	
+	private static final String LOOKUP_PRINCIPAL     = "ranger.lookup.kerberos.principal";
+	private static final String LOOKUP_KEYTAB        = "ranger.lookup.kerberos.keytab";
+	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
+	private static final String ADMIN_USER_KEYTAB    = "ranger.admin.kerberos.keytab";
+	private static final String AUTHENTICATION_TYPE  = "hadoop.security.authentication";
+	private static final String KERBEROS_TYPE        = "kerberos";
+	private static final String NAME_RULES           = "hadoop.security.auth_to_local";
+	private static final String HOST_NAME            = "ranger.service.host";
+
+	private static final long _DefaultTimeoutValue_Lookp          = 1000; // 1 s
+	private static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
+
+	private static final Map<String, Class<? extends RangerBaseService>> serviceTypeClassMap = new HashMap<>();
+
 	@Autowired
 	RangerServiceService rangerSvcService;
 	
@@ -362,7 +366,7 @@ public class ServiceMgr {
 			RangerServiceDef serviceDef = svcStore == null ? null : svcStore.getServiceDefByName(serviceType);
 
 			if(serviceDef != null) {
-				Class<RangerBaseService> cls = getClassForServiceType(serviceDef);
+				Class<? extends RangerBaseService> cls = getClassForServiceType(serviceDef);
 
 				if(cls != null) {
 					ret = cls.newInstance();
@@ -390,16 +394,13 @@ public class ServiceMgr {
 		return ret;
 	}
 
-	private static Map<String, Class<RangerBaseService>> serviceTypeClassMap = new HashMap<String, Class<RangerBaseService>>();
-	private static String RANGER_DEFAULT_SERVICE_NAME = "org.apache.ranger.plugin.service.RangerDefaultService";
-
 	@SuppressWarnings("unchecked")
-	private Class<RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) throws Exception {
+	private Class<? extends RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceMgr.getClassForServiceType(" + serviceDef + ")");
 		}
 
-		Class<RangerBaseService> ret = null;
+		Class<? extends RangerBaseService> ret = null;
 
 		if(serviceDef != null) {
 			String serviceType = serviceDef.getName();
@@ -416,36 +417,31 @@ public class ServiceMgr {
 						if(LOG.isDebugEnabled()) {
 							LOG.debug("ServiceMgr.getClassForServiceType(" + serviceType + "): service-class " + clsName + " not found in cache");
 						}
+
 						try {
-
-							Class<?> cls;
-
 							if (StringUtils.isEmpty(clsName)) {
 								if (LOG.isDebugEnabled()) {
 									LOG.debug("No service-class configured for service-type:[" + serviceType + "], using RangerDefaultService");
 								}
-								clsName = RANGER_DEFAULT_SERVICE_NAME;
 
-								cls = Class.forName(clsName);
+								ret = RangerDefaultService.class;
 							} else {
-								URL[] pluginFiles = getPluginFilesForServiceType(serviceType);
+								URL[]          pluginFiles = getPluginFilesForServiceType(serviceType);
+								URLClassLoader clsLoader   = new URLClassLoader(pluginFiles, Thread.currentThread().getContextClassLoader());
+								Class<?>       cls         = Class.forName(clsName, true, clsLoader);
 
-								URLClassLoader clsLoader = new URLClassLoader(pluginFiles, Thread.currentThread().getContextClassLoader());
-
-								cls = Class.forName(clsName, true, clsLoader);
-							}
-
-							ret = (Class<RangerBaseService>) cls;
-
-							serviceTypeClassMap.put(serviceType, ret);
-
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("ServiceMgr.getClassForServiceType(" + serviceType + "): service-class " + clsName + " added to cache");
+								ret = (Class<? extends RangerBaseService>) cls;
 							}
 						} catch (Exception excp) {
-							LOG.warn("ServiceMgr.getClassForServiceType(" + serviceType + "): failed to find service-class '" + clsName + "'. Resource lookup will not be available", excp);
-							//Let's propagate the error
-							throw new Exception(serviceType + " failed to find service class " + clsName + ". Resource lookup will not be available. Please make sure plugin jar is in the correct place.");
+							LOG.warn("ServiceMgr.getClassForServiceType(" + serviceType + "): failed to find service-class '" + clsName + "'. Resource lookup will not be available. Using RangerDefaultService", excp);
+
+							ret = RangerDefaultService.class;
+						}
+
+						serviceTypeClassMap.put(serviceType, ret);
+
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ServiceMgr.getClassForServiceType(" + serviceType + "): service-class " + ret.getCanonicalName() + " added to cache");
 						}
 					} else {
 						if(LOG.isDebugEnabled()) {
@@ -595,9 +591,6 @@ public class ServiceMgr {
 
 		return ret;
 	}
-
-	static final long _DefaultTimeoutValue_Lookp = 1000; // 1 s
-	static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
 
 	long getTimeoutValueForLookupInMilliSeconds(RangerBaseService svc) {
 		return getTimeoutValueInMilliSeconds("resource.lookup", svc, _DefaultTimeoutValue_Lookp);
