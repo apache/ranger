@@ -166,11 +166,6 @@
             <version>${javax.persistence.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${google.guava.version}</version>
-        </dependency>
-        <dependency>
             <groupId>net.htmlparser.jericho</groupId>
             <artifactId>jericho-html</artifactId>
             <version>${jericho.html.version}</version>

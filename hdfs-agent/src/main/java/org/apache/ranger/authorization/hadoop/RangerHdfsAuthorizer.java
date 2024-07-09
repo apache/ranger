@@ -61,6 +61,7 @@ import org.apache.hadoop.hdfs.util.ReadOnlyList;
 import org.apache.hadoop.ipc.CallerContext;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -79,7 +80,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 

@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +51,8 @@ class SimpleKMSAuditLogger implements KMSAuditLogger {
 
   @Override
   public void logAuditEvent(final OpStatus status, final AuditEvent event) {
-    if (!Strings.isNullOrEmpty(event.getUser()) && !Strings
-        .isNullOrEmpty(event.getKeyName()) && (event.getOp() != null)
+    if (!StringUtils.isEmpty(event.getUser()) && !StringUtils
+        .isEmpty(event.getKeyName()) && (event.getOp() != null)
         && KMSAudit.AGGREGATE_OPS_WHITELIST.contains(event.getOp())) {
       switch (status) {
       case OK:
@@ -80,10 +80,10 @@ class SimpleKMSAuditLogger implements KMSAuditLogger {
     if (event.getOp() != null) {
       kvs.add("op=" + event.getOp());
     }
-    if (!Strings.isNullOrEmpty(event.getKeyName())) {
+    if (!StringUtils.isEmpty(event.getKeyName())) {
       kvs.add("key=" + event.getKeyName());
     }
-    if (!Strings.isNullOrEmpty(event.getUser())) {
+    if (!StringUtils.isEmpty(event.getUser())) {
       kvs.add("user=" + event.getUser());
     }
     if (kvs.isEmpty()) {

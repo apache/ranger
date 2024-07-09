@@ -47,7 +47,6 @@
 							<include>commons-collections:commons-collections</include>
 							<include>commons-lang:commons-lang</include>
 							<include>commons-logging:commons-logging</include>
-							<include>com.google.guava:guava</include>
 							<include>org.apache.hadoop:hadoop-auth</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 							<include>org.apache.hadoop:hadoop-common</include>

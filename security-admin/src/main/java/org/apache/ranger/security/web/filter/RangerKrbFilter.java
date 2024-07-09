@@ -47,7 +47,8 @@ import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.google.common.io.ByteStreams.skipFully;
+import static org.apache.hadoop.thirdparty.com.google.common.io.ByteStreams.skipFully;
+
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable

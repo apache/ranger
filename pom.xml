@@ -117,7 +117,6 @@
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
-        <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
         <graalvm.version>22.3.0</graalvm.version>
         <gson.version>2.9.0</gson.version>
@@ -223,7 +222,6 @@
         <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
         <presto.guice.version>4.2.2</presto.guice.version>
-        <presto.guava.version>26.0-jre</presto.guava.version>
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.re2j.version>1.1</presto.re2j.version>
 
@@ -231,7 +229,6 @@
         <trino.airlift.version>0.192</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
         <trino.guice.version>5.1.0</trino.guice.version>
-        <trino.guava.version>26.0-jre</trino.guava.version>
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
         <trino.re2j.version>1.1</trino.re2j.version>
 

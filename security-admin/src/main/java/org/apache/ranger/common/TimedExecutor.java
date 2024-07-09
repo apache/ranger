@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.RangerDefaultService;
 import org.slf4j.Logger;
@@ -44,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 @Service
 @Scope("singleton")

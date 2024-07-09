@@ -46,6 +46,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
@@ -83,7 +84,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Sets;
 
 @Path("zones")
 @Component

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -33,7 +34,6 @@ import org.apache.ranger.services.elasticsearch.privilege.IndexPrivilegeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessControl {
 

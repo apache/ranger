@@ -25,18 +25,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * A {@link KeyProvider} proxy that checks whether the current user derived via
@@ -295,7 +295,7 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
     String              aclName    = attributes.get(KEY_ACL_NAME);
     boolean             success;
 
-    if (Strings.isNullOrEmpty(aclName)) {
+    if (StringUtils.isEmpty(aclName)) {
       if (acls.isACLPresent(keyName, KeyOpType.MANAGEMENT)) {
         options.setAttributes(ImmutableMap.<String, String> builder().putAll(attributes).put(KEY_ACL_NAME, keyName).build());
 

@@ -30,6 +30,8 @@ import java.util.HashMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableSet;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -44,8 +46,6 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 public class RangerServiceDefValidator extends RangerValidator {

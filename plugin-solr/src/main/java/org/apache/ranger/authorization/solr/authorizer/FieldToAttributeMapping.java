@@ -19,8 +19,8 @@
 
 package org.apache.ranger.authorization.solr.authorizer;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Sets;
+import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Collections;

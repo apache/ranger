@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -32,7 +33,6 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 public class RangerServiceValidator extends RangerValidator {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceValidator.class);

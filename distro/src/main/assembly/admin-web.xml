@@ -191,7 +191,6 @@
           <include>org.apache.commons:commons-compress:jar:1.4.1</include>
           <include>org.bouncycastle:bcpkix-jdk15on:jar:${org.bouncycastle.bcpkix-jdk15on}</include>
           <include>commons-net:commons-net:jar:${commons.net.version}</include>
-          <include>com.google.guava:guava</include>
           <include>io.jaegertracing:jaeger-core:jar:1.6.0</include>
           <include>io.opentracing:opentracing-api:jar:0.33.0</include>
           <include>io.opentracing:opentracing-noop:jar:0.33.0</include>
@@ -240,7 +239,6 @@
           <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
           <include>com.sun.jersey.contribs:jersey-multipart</include>
-          <include>com.google.guava:guava</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-lang:commons-lang</include>
           <include>commons-io:commons-io</include>
@@ -303,7 +301,6 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging</include>
-          <include>com.google.guava:guava</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.commons:commons-lang3</include>
           <include>org.apache.hadoop:hadoop-common</include>
