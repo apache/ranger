@@ -823,7 +823,7 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string,db_allow_public_key_retrieval):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -839,6 +839,7 @@ class MysqlConf(BaseDB):
 		self.XA_DB_FLAVOR = "MYSQL"
 		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
 		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
+		self.db_allow_public_key_retrieval=db_allow_public_key_retrieval.lower()
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		path = RANGER_ADMIN_HOME
@@ -854,6 +855,8 @@ class MysqlConf(BaseDB):
 		else:
 			if "useSSL" not in db_name:
 				db_ssl_param="?useSSL=false"
+		if self.db_allow_public_key_retrieval == 'true':
+                	db_ssl_param += "&allowPublicKeyRetrieval=true" 
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
@@ -1271,6 +1274,7 @@ def main(argv):
 	javax_net_ssl_keyStore_type='bcfks'
 	is_override_db_connection_string='false'
 	db_override_jdbc_connection_string=''
+	db_allow_public_key_retrieval='false'
 
 	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "POSTGRES":
 		if 'db_ssl_enabled' in globalDict:
@@ -1319,11 +1323,12 @@ def main(argv):
 		is_override_db_connection_string=globalDict['is_override_db_connection_string'].lower()
 	if 'db_override_jdbc_connection_string' in globalDict:
 		db_override_jdbc_connection_string=globalDict['db_override_jdbc_connection_string'].strip()
-
+        if 'db_allow_public_key_retrieval' in globalDict:
+                db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string,db_allow_public_key_retrieval)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , mysql_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , mysql_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME ,mysql_patches)
