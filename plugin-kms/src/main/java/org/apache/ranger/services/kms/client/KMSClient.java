@@ -43,7 +43,6 @@ import org.apache.ranger.plugin.client.HadoopException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
@@ -95,7 +94,7 @@ public class KMSClient {
 		URL origUrl = new URL(extractKMSPath(providerUri).toString());
 		String authority = origUrl.getAuthority();
 		// check for ';' which delimits the backup hosts
-		if (Strings.isNullOrEmpty(authority)) {
+		if (StringUtils.isEmpty(authority)) {
 			throw new IOException("No valid authority in kms uri [" + origUrl
 					+ "]");
 		}

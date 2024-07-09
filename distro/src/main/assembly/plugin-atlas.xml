@@ -55,7 +55,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>com.sun.jersey:jersey-bundle</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.codehaus.jackson:jackson-jaxrs</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
@@ -116,7 +115,6 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>

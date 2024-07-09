@@ -34,9 +34,9 @@ import java.util.Date;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.thirdparty.com.google.common.collect.HashBasedTable;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Table;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.ugsyncutil.model.UnixSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;

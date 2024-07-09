@@ -28,12 +28,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.sun.jersey.core.util.Base64;
 public class PasswordUtils {
 
@@ -169,7 +169,7 @@ public class PasswordUtils {
     }
 
 	public static boolean needsIv(String cryptoAlgo) {
-		if (Strings.isNullOrEmpty(cryptoAlgo))
+		if (StringUtils.isEmpty(cryptoAlgo))
 			return false;
 
 		return PBE_SHA512_AES_128.toLowerCase().equals(cryptoAlgo.toLowerCase())

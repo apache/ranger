@@ -66,7 +66,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Strings;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
@@ -492,7 +491,7 @@ public class KmsKeyMgr {
 		URL origUrl = new URL(extractKMSPath(providerUri).toString());
 		String authority = origUrl.getAuthority();
 		// 	check for ';' which delimits the backup hosts
-		if (Strings.isNullOrEmpty(authority)) {
+		if (StringUtils.isEmpty(authority)) {
 			throw new IOException("No valid authority in kms uri [" + origUrl+ "]");
 		}
 		// 	Check if port is present in authority

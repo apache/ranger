@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.authorization.storm.StormRangerPlugin.StormConstants.PluginConfiguration;
 import org.apache.ranger.authorization.storm.StormRangerPlugin.StormConstants.ResourceName;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -33,7 +34,6 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 public class StormRangerPlugin extends RangerBasePlugin {
 	

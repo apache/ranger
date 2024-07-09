@@ -31,6 +31,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.hadoop.yarn.security.*;
 import org.apache.hadoop.yarn.security.PrivilegedEntity.EntityType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -45,7 +46,6 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
