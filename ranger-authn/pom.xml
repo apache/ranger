@@ -50,6 +50,10 @@
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-configuration2</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
