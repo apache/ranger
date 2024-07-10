@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class RangerPolicyValidator extends RangerValidator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyValidator.class);
+	private static final Set<String> INVALID_POLICY_ITEM_VALUES = new HashSet<>(Arrays.asList("null", "NULL", "Null", null, ""));
 
 	public RangerPolicyValidator(ServiceStore store) {
 		super(store);
@@ -381,6 +383,12 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = isValidPolicyItems(policy.getDenyPolicyItems(), failures, serviceDef) && valid;
 					valid = isValidPolicyItems(policy.getAllowExceptions(), failures, serviceDef) && valid;
 					valid = isValidPolicyItems(policy.getDenyExceptions(), failures, serviceDef) && valid;
+					@SuppressWarnings("unchecked")
+					List<RangerPolicyItem> dataMaskPolicyItems = (List<RangerPolicyItem>)(List<?>) policy.getDataMaskPolicyItems();
+					valid = isValidPolicyItems(dataMaskPolicyItems, failures, serviceDef) && valid;
+					@SuppressWarnings("unchecked")
+					List<RangerPolicyItem> rowFilterPolicyItems = (List<RangerPolicyItem>)(List<?>) policy.getRowFilterPolicyItems();
+					valid = isValidPolicyItems(rowFilterPolicyItems, failures, serviceDef) && valid;
 				}
 			}
 
@@ -959,6 +967,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			return;
 		}
 		HashSet<String> uniqueElements = new HashSet<>();
+		values.replaceAll(e -> e == null ? null : e.trim());
 		values.removeIf(e -> !uniqueElements.add(e));
 	}
 
@@ -999,12 +1008,23 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("==> RangerPolicyValidator.isValid(%s, %s, %s)", policyItem, failures, serviceDef));
 		}
 
-		List<String> invalidItems = new ArrayList<String>(Arrays.asList("null", "NULL", "Null", null));
-
 		boolean valid = true;
 		if (policyItem == null) {
 			LOG.debug("policy item was null!");
 		} else {
+			if (policyItem instanceof RangerDataMaskPolicyItem) {
+				RangerPolicyItemDataMaskInfo dataMaskInfo = ((RangerDataMaskPolicyItem) policyItem).getDataMaskInfo();
+				if (StringUtils.isBlank(dataMaskInfo.getDataMaskType())) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policy item datamask-type")
+							.isMissing()
+							.becauseOf(error.getMessage("policy item datamask-type"))
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+			}
 			// access items collection can't be empty (unless delegated admin is true) and should be otherwise valid
 			if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
 				if (!Boolean.TRUE.equals(policyItem.getDelegateAdmin())) {
@@ -1036,7 +1056,7 @@ public class RangerPolicyValidator extends RangerValidator {
 				removeDuplicates(policyItem.getUsers());
 				removeDuplicates(policyItem.getGroups());
 				removeDuplicates(policyItem.getRoles());
-				if (CollectionUtils.isNotEmpty(policyItem.getUsers()) && CollectionUtils.containsAny(policyItem.getUsers(), invalidItems)) {
+				if (CollectionUtils.isNotEmpty(policyItem.getUsers()) && CollectionUtils.containsAny(policyItem.getUsers(), INVALID_POLICY_ITEM_VALUES)) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("policy item users")
@@ -1046,7 +1066,7 @@ public class RangerPolicyValidator extends RangerValidator {
 							.build());
 					valid = false;
 				}
-				if (CollectionUtils.isNotEmpty(policyItem.getGroups()) && CollectionUtils.containsAny(policyItem.getGroups(), invalidItems)) {
+				if (CollectionUtils.isNotEmpty(policyItem.getGroups()) && CollectionUtils.containsAny(policyItem.getGroups(), INVALID_POLICY_ITEM_VALUES)) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("policy item groups")
@@ -1056,7 +1076,7 @@ public class RangerPolicyValidator extends RangerValidator {
 							.build());
 					valid = false;
 				}
-				if (CollectionUtils.isNotEmpty(policyItem.getRoles()) && CollectionUtils.containsAny(policyItem.getRoles(), invalidItems)) {
+				if (CollectionUtils.isNotEmpty(policyItem.getRoles()) && CollectionUtils.containsAny(policyItem.getRoles(), INVALID_POLICY_ITEM_VALUES)) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("policy item roles")
