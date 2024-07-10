@@ -23,7 +23,6 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hadoop.version>3.1.1</hadoop.version>
     </properties>
     <parent>
         <groupId>org.apache.ranger</groupId>

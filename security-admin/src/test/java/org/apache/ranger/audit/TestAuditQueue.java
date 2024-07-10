@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.ranger.audit.destination.FileAuditDestination;
+import org.apache.ranger.audit.model.AuditIndexRecord;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.*;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
@@ -43,8 +44,6 @@ import org.apache.ranger.audit.queue.AuditBatchQueue;
 import org.apache.ranger.audit.queue.AuditFileSpool;
 import org.apache.ranger.audit.queue.AuditQueue;
 import org.apache.ranger.audit.queue.AuditSummaryQueue;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -824,7 +823,7 @@ public class TestAuditQueue {
 			for(String f: convertedLogFileNames){
 				totalLogsArchive += getLogCountInFile(f);
 			}
-		} catch (IOException | JSONException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		System.out.println("Number of logs in archive:"+totalLogsArchive);
@@ -846,7 +845,7 @@ public class TestAuditQueue {
 				}
 			}
 		}
-		catch (IOException | JSONException e){
+		catch (IOException e){
 			throw new RuntimeException(e);
 		}
 		System.out.println("Number of logs not converted to ORC:"+notYetConvertedToORCLogsCount);
@@ -893,15 +892,22 @@ public class TestAuditQueue {
 		return lines;
 	}
 
-	private static List<String> getFileNames(String jsonIndexFile) throws IOException, JSONException {
+	private static List<String> getFileNames(String jsonIndexFile) throws IOException {
 		List<String> fileNames = new ArrayList<>();
 		BufferedReader reader = new BufferedReader(new FileReader(jsonIndexFile));
 		while (true) {
 			String line = reader.readLine();
 			if (line!=null){
-				JSONObject jsonObject = new JSONObject(line);
-				String filePath = (String) jsonObject.get("filePath");
-				fileNames.add(filePath);
+				try {
+					AuditIndexRecord indexRecord = MiscUtil.getMapper().readValue(line, AuditIndexRecord.class);
+					String           filePath    = indexRecord != null ? indexRecord.getFilePath() : null;
+
+					if (filePath != null) {
+						fileNames.add(filePath);
+					}
+				} catch (Exception excp) {
+					excp.printStackTrace(System.out);
+				}
 			}
 			else{
 				break;

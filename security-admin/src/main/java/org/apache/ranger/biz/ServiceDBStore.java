@@ -205,7 +205,6 @@ import org.apache.ranger.view.VXPolicyLabelList;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
-import org.codehaus.jettison.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -4517,7 +4516,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private <T> void writeJson(List<T> objList, String jsonFileName,
-			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws JSONException, IOException {
+			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws IOException {
 		response.setContentType("text/json");
 		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
 		ServletOutputStream out = null;

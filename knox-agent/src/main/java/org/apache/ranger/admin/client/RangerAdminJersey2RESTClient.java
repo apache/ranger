@@ -343,7 +343,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 			ret = null;
 		} else if (response.getStatus() == 200) { // OK
-			ret = response.readEntity(RangerUserStore.class);
+			String body = response.readEntity(String.class);
+
+			ret = getGson().fromJson(body, RangerUserStore.class);
 		} else if (response.getStatus() == 404) { // NOT_FOUND
 			ret = null;
 

@@ -66,10 +66,10 @@
 					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
 					<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 					<include>org.noggit:noggit:jar:${noggit.version}</include>
-					<include>org.codehaus.jackson:jackson-core-asl</include>
-					<include>org.codehaus.jackson:jackson-jaxrs</include>
-					<include>org.codehaus.jackson:jackson-mapper-asl</include>
-					<include>org.codehaus.jackson:jackson-xc</include>
+					<include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+					<include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+					<include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
