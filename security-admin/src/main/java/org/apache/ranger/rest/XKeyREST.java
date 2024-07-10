@@ -30,16 +30,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.ranger.biz.KmsKeyMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,11 +199,12 @@ public class XKeyREST {
 			 message = uie.getResponse().getEntity(String.class);
 			 logger.error(message);
 			 try {
-				JSONObject objRE = new JSONObject(message);
-				message = objRE.getString("RemoteException");
-				JSONObject obj = new JSONObject(message);
-				message = obj.getString("message");
-			} catch (JSONException e1) {
+				JsonNode rootNode = JsonUtilsV2.getMapper().readTree(message);
+				JsonNode excpNode = rootNode != null ? rootNode.get("RemoteException") : null;
+				JsonNode msgNode  = excpNode != null ? excpNode.get("message") : null;
+
+				message = msgNode != null ? msgNode.asText() : null;
+			} catch (JsonProcessingException e1) {
 				logger.error("Unable to parse the error message, So sending error message as it is - Error : " + e1.getMessage());
 			}
 		}

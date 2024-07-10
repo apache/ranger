@@ -20,9 +20,9 @@
 package org.apache.ranger.plugin.model;
 
 import org.apache.commons.collections.MapUtils;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RangerRole extends RangerBaseModelObject implements java.io.Serializable {
     public static final String KEY_USER = "user";
@@ -132,7 +132,7 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
     }
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class RoleMember implements java.io.Serializable {
         private static final long serialVersionUID = 1L;

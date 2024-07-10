@@ -21,12 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXModuleDefList extends VList {
 
 	private static final long serialVersionUID = 1L;
@@ -45,6 +46,7 @@ public class VXModuleDefList extends VList {
 	/**
 	 * @return the vXModuleDef
 	 */
+	@JsonProperty("vXModuleDef")
 	public List<VXModuleDef> getvXModuleDef() {
 		return vXModuleDef;
 	}
@@ -52,6 +54,7 @@ public class VXModuleDefList extends VList {
 	/**
 	 * @param vXModuleDef the vXModuleDef to set
 	 */
+	@JsonProperty("vXModuleDef")
 	public void setvXModuleDef(List<VXModuleDef> vXModuleDef) {
 		this.vXModuleDef = vXModuleDef;
 	}

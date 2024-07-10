@@ -103,10 +103,10 @@
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-		            <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 		            <include>com.sun.xml.bind:jaxb-impl</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>commons-lang:commons-lang</include>
