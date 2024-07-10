@@ -19,7 +19,7 @@
     "@babel/core": "^7.13.16",
     "@babel/preset-env": "^7.14.2",
     "@babel/preset-react": "^7.13.13",
-    "axios": "^0.21.4",
+    "axios": "^1.7.2",
     "babel-loader": "^8.2.2",
     "bootstrap": "^5.3.2",
     "bootstrap-switch-button-react": "^1.2.0",
@@ -54,7 +54,7 @@
     "react-toastify": "^8.1.0",
     "style-loader": "^2.0.0",
     "tether": "^2.0.0",
-    "webpack": "^5.75.0",
+    "webpack": "^5.76.0",
     "webpack-cli": "^5.0.0",
     "webpack-dev-server": "^4.11.0",
     "webpack-merge": "^5.8.0"
