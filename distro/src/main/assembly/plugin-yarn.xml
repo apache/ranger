@@ -131,7 +131,6 @@
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-          <include>org.apache.htrace:htrace-core4</include>
         </includes>
       </binaries>
     </moduleSet>
