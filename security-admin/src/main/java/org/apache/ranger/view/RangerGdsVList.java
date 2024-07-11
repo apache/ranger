@@ -24,9 +24,9 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,7 +37,7 @@ import java.util.List;
 public class RangerGdsVList {
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerDatasetList extends VList {
@@ -63,7 +63,7 @@ public class RangerGdsVList {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerProjectList extends VList {
@@ -89,7 +89,7 @@ public class RangerGdsVList {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerDataShareList extends VList {
@@ -115,7 +115,7 @@ public class RangerGdsVList {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerSharedResourceList extends VList {
@@ -141,7 +141,7 @@ public class RangerGdsVList {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerDataShareInDatasetList extends VList {
@@ -167,7 +167,7 @@ public class RangerGdsVList {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerDatasetInProjectList extends VList {

@@ -15,30 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.ranger.common;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import org.apache.hadoop.util.HttpExceptionUtils;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
 
 
-/**
- * Invalid attribute type or Invalid JSON format in JSON request body
- *
- * We get the JSON request body which is a valid json and contains attribute names expected by the Ranger Rest API,
- * but the type of attribute is not as expected.
- * or
- * We get the JSON request body which is not a valid json
- * Jersey provider(RangerJsonMappingExceptionMapper) that converts Ranger Rest API exceptions into detailed HTTP errors.
- */
-@Component
 @Provider
-public class RangerJsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
-  @Override
-  public Response toResponse(JsonMappingException excp) {
-    return HttpExceptionUtils.createJerseyExceptionResponse(Response.Status.BAD_REQUEST, excp);
-  }
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Component
+public class RangerJsonProvider extends JacksonJaxbJsonProvider {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerJsonProvider.class);
+
+    public RangerJsonProvider() {
+        super(JsonUtilsV2.getMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
+
+        LOG.info("RangerJsonProvider() instantiated");
+    }
 }

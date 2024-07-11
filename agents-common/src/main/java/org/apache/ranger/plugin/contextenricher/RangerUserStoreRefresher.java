@@ -24,12 +24,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.DownloadTrigger;
-import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.plugin.util.RangerUserStore;
-import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
-import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -412,7 +407,7 @@ public class RangerUserStoreRefresher extends Thread {
             }
             ret = null;
         } else if (response.getStatus() == HttpServletResponse.SC_OK) {
-            ret = response.getEntity(RangerUserStore.class);
+            ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
         } else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
             ret = null;
             LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user

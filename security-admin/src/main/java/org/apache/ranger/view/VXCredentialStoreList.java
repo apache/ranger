@@ -28,12 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class VXCredentialStoreList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXCredentialStore> vXCredentialStores = new ArrayList<VXCredentialStore>();
@@ -50,6 +51,7 @@ public class VXCredentialStoreList extends VList {
     /**
      * @return the vXCredentialStores
      */
+    @JsonProperty("vXCredentialStores")
     public List<VXCredentialStore> getVXCredentialStores() {
 	return vXCredentialStores;
     }
@@ -58,6 +60,7 @@ public class VXCredentialStoreList extends VList {
      * @param vXCredentialStores
      *            the vXCredentialStores to set
      */
+    @JsonProperty("vXCredentialStores")
     public void setVXCredentialStores(List<VXCredentialStore> vXCredentialStores) {
 	this.vXCredentialStores = vXCredentialStores;
     }

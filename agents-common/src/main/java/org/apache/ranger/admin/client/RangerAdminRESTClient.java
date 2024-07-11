@@ -222,7 +222,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		} else if(response == null) {
 			throw new Exception("unknown error during createRole. roleName="  + request.getName());
 		} else {
-			ret = response.getEntity(RangerRole.class);
+			ret = JsonUtilsV2.readResponse(response, RangerRole.class);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -444,7 +444,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 			} else {
-				ret = response.getEntity(RangerRole.class);
+				ret = JsonUtilsV2.readResponse(response, RangerRole.class);
 			}
 		} else {
 			throw new Exception("unknown error during getPrincipalsForRole. roleName="  + roleName);
@@ -804,7 +804,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
-			ret = response.getEntity(RangerUserStore.class);
+			ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user
@@ -879,7 +879,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("No change in GdsInfo: secureMode={}, user={}, response={}, serviceName={}, lastKnownGdsVersion={}, lastActivationTimeInMillis={}",
 					  isSecureMode, user, resp, serviceName, lastKnownVersion, lastActivationTimeInMillis);
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
-			ret = response.getEntity(ServiceGdsInfo.class);
+			ret = JsonUtilsV2.readResponse(response, ServiceGdsInfo.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			ret = null;
 
@@ -931,7 +931,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			setCookieReceivedFromCredSession(response);
-			ret = response.getEntity(ServicePolicies.class);
+			ret = JsonUtilsV2.readResponse(response, ServicePolicies.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			policyDownloadSessionId = null;
 			ret       = null;
@@ -982,7 +982,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			checkAndResetSessionCookie(response);
-			ret = response.getEntity(ServicePolicies.class);
+			ret = JsonUtilsV2.readResponse(response, ServicePolicies.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			policyDownloadSessionId = null;
 			isValidPolicyDownloadSessionCookie = false;
@@ -1112,7 +1112,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			setCookieReceivedFromTagDownloadSession(response);
-			ret = response.getEntity(ServiceTags.class);
+			ret = JsonUtilsV2.readResponse(response, ServiceTags.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			tagDownloadSessionId = null;
 			ret = null;
@@ -1167,7 +1167,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			checkAndResetTagDownloadSessionCookie(response);
-			ret = response.getEntity(ServiceTags.class);
+			ret = JsonUtilsV2.readResponse(response, ServiceTags.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			tagDownloadSessionId = null;
 			isValidTagDownloadSessionCookie = false;
@@ -1294,7 +1294,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			setCookieReceivedFromRoleDownloadSession(response);
-			ret = response.getEntity(RangerRoles.class);
+			ret = JsonUtilsV2.readResponse(response, RangerRoles.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			roleDownloadSessionId = null;
 			ret = null;
@@ -1350,7 +1350,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
 			checkAndResetRoleDownloadSessionCookie(response);
-			ret = response.getEntity(RangerRoles.class);
+			ret = JsonUtilsV2.readResponse(response, RangerRoles.class);
 		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
 			roleDownloadSessionId = null;
 			isValidRoleDownloadSessionCookie = false;

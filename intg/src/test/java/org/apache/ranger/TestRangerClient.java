@@ -23,6 +23,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.junit.jupiter.api.Assertions;
@@ -67,7 +68,7 @@ public class TestRangerClient {
 
             when(restClient.get(anyString(), any())).thenReturn(response);
             when(response.getStatus()).thenReturn(GET_TEST_API.getExpectedStatus().getStatusCode());
-            when(response.getEntity(RangerService.class)).thenReturn(service);
+            when(response.getEntity(String.class)).thenReturn(JsonUtilsV2.objToJson(service));
 
             RangerService ret = client.getService(service.getName());
 
@@ -90,9 +91,9 @@ public class TestRangerClient {
 
             RangerService ret = client.getService(1L);
 
-            Assertions.assertNull(ret);
+            Assertions.fail("Expected to fail with SERVICE_UNAVAILABLE");
         } catch(RangerServiceException excp){
-            Assertions.fail("Not expected to fail! Found exception: " + excp);
+            Assertions.assertEquals(ClientResponse.Status.SERVICE_UNAVAILABLE,  excp.getStatus(), "Expected to fail with status SERVICE_UNAVAILABLE");
         }
     }
 

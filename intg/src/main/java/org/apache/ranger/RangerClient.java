@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.GenericType;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -582,7 +583,11 @@ public class RangerClient {
         }
         final ClientResponse clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
-            ret = clientResponse.getEntity(responseType);
+            try {
+                ret = JsonUtilsV2.readResponse(clientResponse, responseType);
+            } catch (Exception excp) {
+                throw new RangerServiceException(api, clientResponse);
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Response: {}", restClient.toJson(ret));

@@ -19,8 +19,9 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.ClientResponse;
 
 import java.io.Reader;
 import java.io.Serializable;
@@ -77,6 +78,12 @@ public class JsonUtilsV2 {
 
     static public <T> T readValue(Reader reader, Class<T> tClass) throws Exception {
         return getMapper().readValue(reader, tClass);
+    }
+
+    static public <T> T readResponse(ClientResponse response, Class<T> cls) throws Exception {
+        String jsonStr = response.getEntity(String.class);
+
+        return JsonUtilsV2.jsonToObj(jsonStr, cls);
     }
 
     static public String nonSerializableObjToJson(Object obj) throws Exception {

@@ -88,9 +88,11 @@
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>com.fasterxml.jackson.core:jackson-core</include>
-                    <include>com.fasterxml.jackson.core:jackson-annotations</include>
-                    <include>com.fasterxml.jackson.core:jackson-databind</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-util:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-crypto:jar:${kerby.version}</include>
@@ -107,7 +109,7 @@
                     <include>com.squareup.retrofit2:retrofit</include>
                     <include>com.squareup.retrofit2:adapter-rxjava</include>
                     <include>com.squareup.okhttp3:okhttp-urlconnection</include>
-                    <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
+                    <include>com.fasterxml.jackson.datatype:jackson-datatype-joda:jar:${fasterxml.jackson.version}</include>
                     <include>joda-time:okhttp-urlconnection</include>
                     <include>joda-time:joda-time</include>
                     <include>com.nimbusds:oauth2-oidc-sdk</include>
@@ -233,10 +235,10 @@
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
                     <include>com.google.code.gson:gson</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-                    <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
