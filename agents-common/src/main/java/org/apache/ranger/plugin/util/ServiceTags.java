@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -61,9 +62,11 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, List<Long>>       resourceToTagIds;
 	private Boolean					 	isDelta;
 	private TagsChangeExtent			tagsChangeExtent;
+	private Boolean						isTagsDeduped;
 
+	// MutablePair.left is the tag-id, MutablePair.right is the reference-count
 	@JsonIgnore
-	Map<RangerTag, Long>                cachedTags  = new HashMap<>();
+	Map<RangerTag, MutablePair<Long, Long>> cachedTags = new HashMap<>();
 
 	public ServiceTags() {
 		this(OP_ADD_OR_UPDATE, null, 0L, null, null, null, null, null);
@@ -71,10 +74,10 @@ public class ServiceTags implements java.io.Serializable {
 
 	public ServiceTags(String op, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
 					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds) {
-		this(op, serviceName, tagVersion, tagUpdateTime, tagDefinitions, tags, serviceResources, resourceToTagIds, false, TagsChangeExtent.ALL);
+		this(op, serviceName, tagVersion, tagUpdateTime, tagDefinitions, tags, serviceResources, resourceToTagIds, false, TagsChangeExtent.ALL, false);
 	}
 	public ServiceTags(String op, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
-					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds, Boolean isDelta, TagsChangeExtent tagsChangeExtent) {
+					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds, Boolean isDelta, TagsChangeExtent tagsChangeExtent, Boolean isTagsDeduped) {
 		setOp(op);
 		setServiceName(serviceName);
 		setTagVersion(tagVersion);
@@ -85,6 +88,7 @@ public class ServiceTags implements java.io.Serializable {
 		setResourceToTagIds(resourceToTagIds);
 		setIsDelta(isDelta);
 		setTagsChangeExtent(tagsChangeExtent);
+		setIsTagsDeduped(isTagsDeduped);
 	}
 
 	public ServiceTags(ServiceTags other) {
@@ -97,6 +101,7 @@ public class ServiceTags implements java.io.Serializable {
 		setServiceResources(other.getServiceResources() != null ? new ArrayList<>(other.getServiceResources()) : null);
 		setResourceToTagIds(other.getResourceToTagIds() != null ? new HashMap<>(other.getResourceToTagIds()) : null);
 		setIsDelta(other.getIsDelta());
+		setIsTagsDeduped(other.getIsTagsDeduped());
 		setTagsChangeExtent(other.getTagsChangeExtent());
 
 		this.cachedTags = new HashMap<>(other.cachedTags);
@@ -198,6 +203,14 @@ public class ServiceTags implements java.io.Serializable {
 		this.isDelta = isDelta;
 	}
 
+	public Boolean getIsTagsDeduped() {
+		return isTagsDeduped == null ? Boolean.FALSE : isTagsDeduped;
+	}
+
+	public void setIsTagsDeduped(Boolean isTagsDeduped) {
+		this.isTagsDeduped = isTagsDeduped;
+	}
+
 	public TagsChangeExtent getTagsChangeExtent() {
 		return tagsChangeExtent;
 	}
@@ -225,6 +238,8 @@ public class ServiceTags implements java.io.Serializable {
 				.append(", serviceResources={").append(serviceResources).append("}")
 				.append(", tags={").append(tags).append("}")
 				.append(", resourceToTagIds={").append(resourceToTagIds).append("}")
+				.append(", isTagsDeduped={").append(isTagsDeduped).append("}")
+				.append(", cachedTags={").append(cachedTags).append("}")
 				.append("}");
 
 		return sb;
@@ -234,19 +249,29 @@ public class ServiceTags implements java.io.Serializable {
 		final int             ret;
 		final Map<Long, Long> replacedIds      = new HashMap<>();
 		final int             initialTagsCount = tags.size();
+		final List<Long>      tagIdsToRemove   = new ArrayList<>();
 
 		for (Iterator<Map.Entry<Long, RangerTag>> iter = tags.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry<Long, RangerTag> entry       = iter.next();
 			Long                       tagId       = entry.getKey();
 			RangerTag                  tag         = entry.getValue();
-			Long                       cachedTagId = cachedTags.get(tag);
+			MutablePair<Long, Long>    cachedTag   = cachedTags.get(tag);
 
-			if (cachedTagId == null) {
-				cachedTags.put(tag, tagId);
+			if (cachedTag == null) {
+				cachedTags.put(tag, new MutablePair<>(tagId, 0L)); // reference count will be incremented later
 			} else {
-				replacedIds.put(tagId, cachedTagId);
-				iter.remove();
+				if (tagId < cachedTag.left) {
+					replacedIds.put(cachedTag.left, tagId);
+					tagIdsToRemove.add(cachedTag.left);
+					cachedTag.left = tagId;
+				} else {
+					replacedIds.put(tagId, cachedTag.left);
+					iter.remove();
+				}
 			}
+		}
+		for (Long tagIdToRemove : tagIdsToRemove) {
+			tags.remove(tagIdToRemove);
 		}
 
 		final int finalTagsCount = tags.size();
@@ -254,11 +279,21 @@ public class ServiceTags implements java.io.Serializable {
 		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
 			for (ListIterator<Long> listIter = resourceEntry.getValue().listIterator(); listIter.hasNext(); ) {
 				Long tagId         = listIter.next();
-				Long replacerTagId = replacedIds.get(tagId);
 
-				if (replacerTagId != null) {
-					listIter.set(replacerTagId);
+				for (Long replacerTagId = replacedIds.get(tagId); replacerTagId != null; replacerTagId = replacedIds.get(tagId)) {
+					tagId = replacerTagId;
 				}
+
+				listIter.set(tagId);
+
+				RangerTag tag = tags.get(tagId);
+				if (tag != null) {	// This should always be true
+					MutablePair<Long, Long> cachedTag = cachedTags.get(tag);
+					if (cachedTag != null) { // This should always be true
+						cachedTag.right++;
+					}
+				}
+
 			}
 		}
 

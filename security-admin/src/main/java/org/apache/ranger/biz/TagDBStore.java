@@ -1033,7 +1033,9 @@ public class TagDBStore extends AbstractTagStore {
 			ret.setServiceResources(resources);
 			ret.setResourceToTagIds(resourceToTagIds);
 
-			if (RangerServiceTagsDeltaUtil.isSupportsTagsDedup()) {
+			ret.setIsTagsDeduped(isSupportsTagsDedup());
+
+			if (isSupportsTagsDedup()) {
 				final int countOfDuplicateTags = ret.dedupTags();
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
@@ -1243,6 +1245,7 @@ public class TagDBStore extends AbstractTagStore {
 			if (CollectionUtils.isNotEmpty(serviceResourceIds) || CollectionUtils.isNotEmpty(tagIds)) {
 				ret = new ServiceTags();
 				ret.setIsDelta(true);
+				ret.setIsTagsDeduped(isSupportsTagsDedup());
 
 				ServiceTags.TagsChangeExtent tagsChangeExtent = ServiceTags.TagsChangeExtent.TAGS;
 
@@ -1456,5 +1459,18 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		return ret;
+	}
+
+	private static boolean SUPPORTS_TAGS_DEDUP_INITIALIZED = false;
+	private static boolean SUPPORTS_TAGS_DEDUP             = false;
+
+	public static boolean isSupportsTagsDedup() {
+		if (!SUPPORTS_TAGS_DEDUP_INITIALIZED) {
+			RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+			SUPPORTS_TAGS_DEDUP = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_SUPPORTS_TAGS_DEDUP, RangerCommonConstants.RANGER_SUPPORTS_TAGS_DEDUP_DEFAULT);
+			SUPPORTS_TAGS_DEDUP_INITIALIZED = true;
+		}
+		return SUPPORTS_TAGS_DEDUP;
 	}
 }

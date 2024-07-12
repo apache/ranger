@@ -309,13 +309,18 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				}
 
 				if (!serviceTags.getIsDelta()) {
+					if (serviceTags.getIsTagsDeduped()) {
+						final int countOfDuplicateTags = serviceTags.dedupTags();
+
+						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + serviceTags.getTags().size() + "].");
+					}
 					processServiceTags(serviceTags);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Received service-tag deltas:" + serviceTags);
 					}
 					ServiceTags oldServiceTags = enrichedServiceTags != null ? enrichedServiceTags.getServiceTags() : new ServiceTags();
-					ServiceTags allServiceTags = rebuildOnlyIndex ? oldServiceTags : RangerServiceTagsDeltaUtil.applyDelta(oldServiceTags, serviceTags);
+					ServiceTags allServiceTags = rebuildOnlyIndex ? oldServiceTags : RangerServiceTagsDeltaUtil.applyDelta(oldServiceTags, serviceTags, serviceTags.getIsTagsDeduped());
 
 					if (serviceTags.getTagsChangeExtent() == ServiceTags.TagsChangeExtent.NONE) {
 						if (LOG.isDebugEnabled()) {

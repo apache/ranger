@@ -71,4 +71,5 @@ public abstract class RangerTagRetriever {
 	public void setPluginContext(RangerPluginContext pluginContext) {
 		this.pluginContext = pluginContext;
 	}
+
 }

@@ -170,7 +170,7 @@ public class RangerServiceTags implements java.io.Serializable {
             ret = new ServiceTags(toServiceTagsOp(tags.getOp()), tags.getServiceName(),
                                   tags.tagVersion, tags.getTagUpdateTime(), tags.getTagDefinitions(), tags.getTags(),
                                   tags.getServiceResources(), tags.getResourceToTagIds(), false,
-                                  ServiceTags.TagsChangeExtent.ALL);
+                                  ServiceTags.TagsChangeExtent.ALL, false);
         }
 
         return ret;
