@@ -265,7 +265,6 @@ function Roles() {
       },
       {
         Header: "Users",
-        accessor: "users",
         accessor: (raw) => {
           let usersList = map(raw.users, "name");
           return !isEmpty(usersList) ? (
@@ -277,7 +276,6 @@ function Roles() {
       },
       {
         Header: "Groups",
-        accessor: "groups",
         accessor: (raw) => {
           let groupsList = map(raw.groups, "name");
           return !isEmpty(groupsList) ? (
@@ -289,7 +287,6 @@ function Roles() {
       },
       {
         Header: "Roles",
-        accessor: "roles",
         accessor: (raw) => {
           let rolesList = map(raw.roles, "name");
 

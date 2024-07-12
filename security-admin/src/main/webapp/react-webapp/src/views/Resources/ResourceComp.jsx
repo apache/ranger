@@ -82,10 +82,9 @@ export default function ResourceComp(props) {
   };
 
   const RenderValidateField = ({ name }) =>
-    (formValues && formValues[name]?.mandatory && (
-      <span className="compulsory-resource">*</span>
-    )) ||
-    null;
+    (formValues && formValues[name]?.mandatory && <span>*</span>) || (
+      <span>&nbsp;</span>
+    );
 
   const renderResourceSelect = (levelKey, index) => {
     let renderLabel = false;
@@ -196,20 +195,21 @@ export default function ResourceComp(props) {
                     </FormB.Label>
                   </span>
                 ) : (
-                  <>
-                    <Select
-                      {...input}
-                      options={getResourceLabelOp(levelKey, index)}
-                      getOptionLabel={(obj) => obj.label}
-                      getOptionValue={(obj) => obj.name}
-                      onChange={(value) =>
-                        handleResourceChange(value, input, index)
-                      }
-                      styles={customStyles}
-                      isSearchable={false}
-                    />
+                  <div className="resource-drop-down">
+                    <span className="w-75">
+                      <Select
+                        {...input}
+                        options={getResourceLabelOp(levelKey, index)}
+                        getOptionLabel={(obj) => obj.label}
+                        getOptionValue={(obj) => obj.name}
+                        onChange={(value) =>
+                          handleResourceChange(value, input, index)
+                        }
+                        isSearchable={false}
+                      />
+                    </span>
                     <RenderValidateField name={`resourceName-${levelKey}`} />
-                  </>
+                  </div>
                 )
               ) : null
             }

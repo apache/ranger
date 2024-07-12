@@ -136,7 +136,7 @@ function KeyCreate(props) {
         data: serviceJson
       });
       setBlockUI(false);
-      toast.success(`Success! Key created succesfully`);
+      toast.success(`Success! Key created successfully`);
       navigate(`/kms/keys/edit/manage/${state.detail}`, {
         state: {
           detail: state.detail

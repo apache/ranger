@@ -140,7 +140,6 @@ function Permissions() {
       },
       {
         Header: "Groups",
-        accessor: "groupPermList",
         accessor: (raw) => {
           const Groups = raw.groupPermList.map((group) => {
             return group.groupName;
@@ -155,7 +154,6 @@ function Permissions() {
       },
       {
         Header: "Users",
-        accessor: "userPermList",
         accessor: (raw) => {
           const Users = raw.userPermList.map((user) => {
             return user.userName;

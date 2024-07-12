@@ -107,7 +107,7 @@ function RoleForm() {
     preventUnBlock,
     blockUI
   } = roleFormState;
-
+  const toastId = React.useRef(null);
   useEffect(() => {
     if (params?.roleID) {
       fetchRoleData(params.roleID);
@@ -257,6 +257,9 @@ function RoleForm() {
         serverError(error);
         console.error(`Error occurred while updating Role! ${error}`);
       }
+    }
+    if (toastId.current !== null) {
+      toast.dismiss(toastId.current);
     }
   };
 
@@ -537,8 +540,8 @@ function RoleForm() {
                     <Col sm="8">
                       <FieldArray name="users">
                         {({ fields }) => (
-                          <Table className="table table-striped table-bordered">
-                            <thead>
+                          <Table className="table table-bordered fixed-headertable">
+                            <thead className="thead-light">
                               <tr>
                                 <th className="text-center">User Name</th>
                                 <th className="text-center">Is Role Admin</th>
@@ -642,9 +645,9 @@ function RoleForm() {
                         {({ fields }) => (
                           <Table
                             bordered
-                            className="table table-striped table-bordered"
+                            className="table table-bordered fixed-headertable"
                           >
-                            <thead>
+                            <thead className="thead-light">
                               <tr>
                                 <th className="text-center">Group Name</th>
                                 <th className="text-center">Is Role Admin</th>
@@ -748,9 +751,9 @@ function RoleForm() {
                         {({ fields }) => (
                           <Table
                             bordered
-                            className="table table-striped table-bordered"
+                            className="table table-bordered fixed-headertable"
                           >
-                            <thead>
+                            <thead className="thead-light">
                               <tr>
                                 <th className="text-center">Role Name</th>
                                 <th className="text-center">Is Role Admin</th>
