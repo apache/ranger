@@ -33,12 +33,7 @@ import java.util.Map;
 public class RangerAdminTagRetriever extends RangerTagRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagRetriever.class);
 
-	private static final String  OPTION_DEDUP_TAGS         = "deDupTags";
-	private static final Boolean OPTION_DEDUP_TAGS_DEFAULT = true;
-
-
 	private RangerAdminClient adminClient;
-	private boolean           deDupTags;
 
 	@Override
 	public void init(Map<String, String> options) {
@@ -50,11 +45,9 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 				pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
 			}
 
-			String              deDupTagsVal  = options != null? options.get(OPTION_DEDUP_TAGS) : null;
 			RangerPluginContext pluginContext = getPluginContext();
 			RangerAdminClient	rangerAdmin   = pluginContext.getAdminClient();
 
-			this.deDupTags   = StringUtils.isNotBlank(deDupTagsVal) ? Boolean.parseBoolean(deDupTagsVal) : OPTION_DEDUP_TAGS_DEFAULT;
 			this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
 		} else {
 			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
@@ -76,12 +69,6 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 				LOG.error("Tag-retriever encounterd exception, exception=", e);
 				LOG.error("Returning null service tags");
 			}
-		}
-
-		if (serviceTags != null && !serviceTags.getIsDelta() && deDupTags) {
-			final int countOfDuplicateTags = serviceTags.dedupTags();
-
-			LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + serviceTags.getTags().size() + "].");
 		}
 
 		return serviceTags;

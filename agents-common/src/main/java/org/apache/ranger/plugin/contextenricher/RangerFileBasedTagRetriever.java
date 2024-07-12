@@ -37,7 +37,6 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 	private URL serviceTagsFileURL;
 	private String serviceTagsFileName;
-	private boolean deDupTags;
 	int            tagFilesCount = 0;
 	int            currentTagFileIndex = 0;
 	boolean        isInitial = true;
@@ -50,15 +49,12 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 		String serviceTagsFileNameProperty = "serviceTagsFileName";
 		String serviceTagsDefaultFileName = "/testdata/test_servicetags_hive.json";
-		String deDupTagsProperty          = "deDupTags";
 		String tagFilesCountProperty      = "tagFileCount";
 
 		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
 			// Open specified file from options- it should contain service-tags
 
 			serviceTagsFileName = options != null? options.get(serviceTagsFileNameProperty) : null;
-			String deDupTagsVal = options != null? options.get(deDupTagsProperty) : "false";
-			deDupTags           = Boolean.parseBoolean(deDupTagsVal);
 
 			serviceTagsFileName = serviceTagsFileName == null ? serviceTagsDefaultFileName : serviceTagsFileName;
 			if (options != null) {
@@ -179,7 +175,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 				) {
 
 					ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
-					if (deDupTags) {
+					if (ret.getIsTagsDeduped()) {
 						final int countOfDuplicateTags = ret.dedupTags();
 						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
 					}
@@ -204,7 +200,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 					ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
 					currentTagFileIndex++;
-					if (deDupTags) {
+					if (ret.getIsTagsDeduped()) {
 						final int countOfDuplicateTags = ret.dedupTags();
 						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
 					}
