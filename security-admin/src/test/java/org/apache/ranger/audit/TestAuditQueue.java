@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -746,7 +747,9 @@ public class TestAuditQueue {
 	@Test
 	public void testAuditFileQueueSpoolORCRollover(){
 		String appType = "test";
-		int messageToSend = 100000;
+		int messageToSend = 1000;
+		int nowMessagesToSend = (int)(0.8*messageToSend);
+		int afterRolloverMessagesToSendCount = messageToSend - nowMessagesToSend;
 		String spoolFolderName = "target/spool";
 		String logFolderName = "target/testAuditFileQueueSpoolORC";
 		try {
@@ -761,11 +764,7 @@ public class TestAuditQueue {
 		}
 		assertTrue(Files.notExists(Paths.get(spoolFolderName)));
 		assertTrue(Files.notExists(Paths.get(logFolderName)));
-		String subdir = appType + "/" + LocalDate.now().toString().replace("-","");
 		File logFolder = new File(logFolderName);
-		File logSubfolder = new File(logFolder, subdir);
-		String logFileName = "test_ranger_audit.orc";
-		File logFile = new File(logSubfolder, logFileName);
 		Properties props = new Properties();
 		props.put(AuditProviderFactory.AUDIT_IS_ENABLED_PROP, "true");
 		String hdfsPropPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".hdfs";
@@ -775,6 +774,7 @@ public class TestAuditQueue {
 				"%app-type%_ranger_audit.orc");
 		String orcPrefix = hdfsPropPrefix + ".orc";
 		props.put(orcPrefix+".compression","snappy");
+		//large numbers used here to ensure that file rollover happens because of file rollover seconds and not orc file /related props
 		props.put(orcPrefix+".buffersize",""+100000000000000L);
 		props.put(orcPrefix+".stripesize",""+100000000000000L);
 		props.put(hdfsPropPrefix + ".batch.queuetype","filequeue");
@@ -783,31 +783,49 @@ public class TestAuditQueue {
 		String fileSpoolPrefix = filequeuePrefix + ".filespool";
 		props.put(fileSpoolPrefix+".dir",spoolFolderName);
 		props.put(fileSpoolPrefix+".buffer.size",""+100000000000000L);
-		props.put(fileSpoolPrefix+".file.rollover.sec",""+300);
+		props.put(fileSpoolPrefix+".file.rollover.sec",""+5);
 		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(props, appType);
 		AuditHandler queue = factory.getAuditProvider();
-		for (int i = 0; i < messageToSend; i++) {
+		for (int i = 0; i < nowMessagesToSend; i++) {
 			queue.log(createEvent());
 			try {
-				Thread.sleep(5);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				System.out.println(e);
 			}
 		}
+		//wait for rollover to happen
 		try {
-			Thread.sleep(40000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			System.out.println(e);
 		}
+		//send some more logs
+		for (int i = 0; i < afterRolloverMessagesToSendCount; i++) {
+			queue.log(createEvent());
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				System.out.println(e);
+			}
+		}
 		queue.waitToComplete();
-		assertTrue("File created", logFile.exists());
-		File[] listOfFiles = logSubfolder.listFiles();
 		int totalLogsOrc = 0;
-		if (listOfFiles != null){
-			for(File f : listOfFiles){
-				if (f.getName().endsWith(".orc")){
-					totalLogsOrc += getOrcFileRowCount(f.getPath());
+		File appSubFolder = new File(logFolder,appType);
+		String[] datewiseSubfolders = appSubFolder.list();
+		System.out.println("subfolder list="+ Arrays.toString(datewiseSubfolders));
+		if (datewiseSubfolders != null) {
+			for (String dateSubfolder : datewiseSubfolders){
+				File logSubfolder = new File(appSubFolder, dateSubfolder);
+				File[] listOfFiles = logSubfolder.listFiles();
+				if (listOfFiles != null){
+					for(File f : listOfFiles){
+						if (f.getName().endsWith(".orc")){
+							System.out.println("Reading orc file:"+f.getName());
+							totalLogsOrc += getOrcFileRowCount(f.getPath());
+						}
+					}
 				}
 			}
 		}
