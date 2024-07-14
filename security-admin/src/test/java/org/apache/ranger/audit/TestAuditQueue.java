@@ -748,8 +748,8 @@ public class TestAuditQueue {
 	public void testAuditFileQueueSpoolORCRollover(){
 		String appType = "test";
 		int messageToSend = 1000;
-		int nowMessagesToSend = (int)(0.8*messageToSend);
-		int afterRolloverMessagesToSendCount = messageToSend - nowMessagesToSend;
+		int preRolloverMessagesCount = (int)(0.8*messageToSend);
+		int postRolloverMessagesCount = messageToSend - preRolloverMessagesCount;
 		String spoolFolderName = "target/spool";
 		String logFolderName = "target/testAuditFileQueueSpoolORC";
 		try {
@@ -787,7 +787,7 @@ public class TestAuditQueue {
 		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(props, appType);
 		AuditHandler queue = factory.getAuditProvider();
-		for (int i = 0; i < nowMessagesToSend; i++) {
+		for (int i = 0; i < preRolloverMessagesCount; i++) {
 			queue.log(createEvent());
 			try {
 				Thread.sleep(10);
@@ -802,7 +802,7 @@ public class TestAuditQueue {
 			System.out.println(e);
 		}
 		//send some more logs
-		for (int i = 0; i < afterRolloverMessagesToSendCount; i++) {
+		for (int i = 0; i < postRolloverMessagesCount; i++) {
 			queue.log(createEvent());
 			try {
 				Thread.sleep(10);
