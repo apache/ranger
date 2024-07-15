@@ -68,7 +68,6 @@
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                     <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.slf4j:jcl-over-slf4j:jar:${slf4j.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
@@ -85,7 +84,6 @@
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>com.sun.jersey:jersey-json</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
@@ -135,7 +133,6 @@
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
@@ -143,7 +140,6 @@
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>

@@ -98,11 +98,6 @@
             <version>${commons.lang3.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-core4</artifactId>
-            <version>${htrace-core.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
             <version>${httpcomponents.httpcore.version}</version>

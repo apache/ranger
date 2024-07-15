@@ -92,7 +92,6 @@
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>com.sun.jersey:jersey-json</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
@@ -146,7 +145,6 @@
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
