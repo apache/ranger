@@ -737,7 +737,7 @@ public class TestAuditQueue {
 		try {
 			Thread.sleep(40000);
 		} catch (InterruptedException e) {
-			System.out.println(e);
+			logger.error(e.getMessage());
 		}
 		queue.waitToComplete();
 		assertTrue("File created", logFile.exists());
@@ -792,14 +792,14 @@ public class TestAuditQueue {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
-				System.out.println(e);
+				logger.error(e.getMessage());
 			}
 		}
 		//wait for rollover to happen
 		try {
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
-			System.out.println(e);
+			logger.error(e.getMessage());
 		}
 		//send some more logs
 		for (int i = 0; i < postRolloverMessagesCount; i++) {
@@ -807,14 +807,14 @@ public class TestAuditQueue {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
-				System.out.println(e);
+				logger.error(e.getMessage());
 			}
 		}
 		queue.waitToComplete();
 		int totalLogsOrc = 0;
 		File appSubFolder = new File(logFolder,appType);
 		String[] datewiseSubfolders = appSubFolder.list();
-		System.out.println("subfolder list="+ Arrays.toString(datewiseSubfolders));
+		logger.info("subfolder list="+ Arrays.toString(datewiseSubfolders));
 		if (datewiseSubfolders != null) {
 			for (String dateSubfolder : datewiseSubfolders){
 				File logSubfolder = new File(appSubFolder, dateSubfolder);
@@ -822,14 +822,14 @@ public class TestAuditQueue {
 				if (listOfFiles != null){
 					for(File f : listOfFiles){
 						if (f.getName().endsWith(".orc")){
-							System.out.println("Reading orc file:"+f.getName());
+							logger.info("Reading orc file:"+f.getName());
 							totalLogsOrc += getOrcFileRowCount(f.getPath());
 						}
 					}
 				}
 			}
 		}
-		System.out.println("Number of logs in orc="+totalLogsOrc);
+		logger.info("Number of logs in orc="+totalLogsOrc);
 		long totalLogsArchive = 0;
 
 		try {
@@ -845,7 +845,7 @@ public class TestAuditQueue {
 		} catch (IOException | JSONException e) {
 			throw new RuntimeException(e);
 		}
-		System.out.println("Number of logs in archive:"+totalLogsArchive);
+		logger.info("Number of logs in archive:"+totalLogsArchive);
 		assertEquals(totalLogsOrc, totalLogsArchive);
 
 		long notYetConvertedToORCLogsCount = 0;
@@ -867,7 +867,7 @@ public class TestAuditQueue {
 		catch (IOException | JSONException e){
 			throw new RuntimeException(e);
 		}
-		System.out.println("Number of logs not converted to ORC:"+notYetConvertedToORCLogsCount);
+		logger.info("Number of logs not converted to ORC:"+notYetConvertedToORCLogsCount);
 		assertEquals(messageToSend, notYetConvertedToORCLogsCount+totalLogsArchive);
 	}
 
