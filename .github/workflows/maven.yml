@@ -78,10 +78,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: target-8
-      - name: Download build-11 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: target-11
       - name: Copy artifacts for docker build
         run: |
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
