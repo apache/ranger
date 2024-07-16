@@ -840,7 +840,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		requirePermission(c, "assign", regionInfo.getTable().getName(), null, null, Action.ADMIN);
 	}
 	@Override
-	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
+	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c, BalanceRequest request) throws IOException {
 		requirePermission(c,"balance", Permission.Action.ADMIN);
 	}
 	@Override
