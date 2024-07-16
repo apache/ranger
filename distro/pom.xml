@@ -75,42 +75,8 @@
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
-                                    </descriptors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>ranger-jdk11</id>
-            <activation>
-                <jdk>11</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>${assembly.plugin.version}</version>
-                        <configuration>
-                            <finalName>ranger-${project.version}</finalName>
-                            <outputDirectory>../target</outputDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <phase>package</phase>
-                                <configuration>
-                                    <skipAssembly>false</skipAssembly>
-                                    <descriptors>
-                                        <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                                        <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>

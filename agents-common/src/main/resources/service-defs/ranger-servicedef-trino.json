@@ -203,6 +203,70 @@
       "label": "Schema Procedure",
       "description": "Schema Procedure",
       "accessTypeRestrictions": ["execute", "grant"]
+    },
+    {
+      "itemId":                 10,
+      "name":                   "schemafunction",
+      "type":                   "string",
+      "level":                  30,
+      "parent":                 "schema",
+      "mandatory":              true,
+      "lookupSupported":        false,
+      "recursiveSupported":     false,
+      "excludesSupported":      false,
+      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":         { "wildCard": true, "ignoreCase": true },
+      "label":                  "Schema Function",
+      "description":            "Schema Function",
+      "accessTypeRestrictions": [ "create", "drop", "show" ]
+    },
+    {
+      "itemId":                 11,
+      "name":                   "queryid",
+      "type":                   "string",
+      "level":                  10,
+      "parent":                 "",
+      "mandatory":              true,
+      "lookupSupported":        false,
+      "recursiveSupported":     false,
+      "excludesSupported":      false,
+      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":         { "wildCard": true, "ignoreCase": true },
+      "label":                  "Query ID",
+      "description":            "Query ID",
+      "accessTypeRestrictions": [ "execute" ]
+    },
+    {
+      "itemId":                 12,
+      "name":                   "sysinfo",
+      "type":                   "string",
+      "level":                  10,
+      "parent":                 "",
+      "mandatory":              true,
+      "lookupSupported":        false,
+      "recursiveSupported":     false,
+      "excludesSupported":      false,
+      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":         { "wildCard": true, "ignoreCase": true },
+      "label":                  "System Information",
+      "description":            "Trino System Information",
+      "accessTypeRestrictions": [ "read_sysinfo", "write_sysinfo" ]
+    },
+    {
+      "itemId":                 13,
+      "name":                   "role",
+      "type":                   "string",
+      "level":                  10,
+      "parent":                 "",
+      "mandatory":              true,
+      "lookupSupported":        false,
+      "recursiveSupported":     false,
+      "excludesSupported":      false,
+      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":         { "wildCard": true, "ignoreCase": true },
+      "label":                  "Role",
+      "description":            "Trino Role",
+      "accessTypeRestrictions": [ "create", "drop", "show", "grant", "revoke" ]
     }
   ],
   "accessTypes": [
@@ -288,14 +352,28 @@
         "revoke",
         "show",
         "impersonate",
-        "execute"
+        "execute",
+        "read_sysinfo",
+        "write_sysinfo"
       ]
     },
     {
       "itemId": 13,
       "name": "execute",
-      "label": "execute",
+      "label": "Execute",
       "category": "READ"
+    },
+    {
+      "itemId":   14,
+      "name":     "read_sysinfo",
+      "label":    "Read System Information",
+      "category": "MANAGE"
+    },
+    {
+      "itemId":   15,
+      "name":     "write_sysinfo",
+      "label":    "Write System Information",
+      "category": "MANAGE"
     }
   ],
   "configs": [
@@ -338,6 +416,44 @@
       "validationRegEx": "",
       "validationMessage": "",
       "uiHint": ""
+    },
+    {
+      "itemId":       5,
+      "name":         "ranger.plugin.audit.filters",
+      "type":         "string",
+      "defaultValue": "[{'accessResult':'DENIED','isAudited':true},{'isAudited':false,'resources':{'queryid':{'values':['*']}},'accessTypes':['execute']},{'isAudited':false,'resources':{'trinouser':{'values':['{USER}']}},'accessTypes':['impersonate']}]"
+    },
+    {
+      "itemId":       6,
+      "name":         "ranger.plugin.super.users",
+      "label":        "Superusers",
+      "description":  "Superusers will have full access to all resources in this Trino instance",
+      "type":         "string",
+      "defaultValue": "trino"
+    },
+    {
+      "itemId":       7,
+      "name":         "ranger.plugin.super.groups",
+      "label":        "Superuser groups",
+      "description":  "Users in superuser groups will have full access to all resources in this Trino instance",
+      "type":         "string",
+      "defaultValue": "trino"
+    },
+    {
+      "itemId":       8,
+      "name":         "service.admin.users",
+      "label":        "Service admin users",
+      "description":  "Service admin users can create policies for any resource in this Trino instance",
+      "type":         "string",
+      "defaultValue": "trino"
+    },
+    {
+      "itemId":       9,
+      "name":         "service.admin.groups",
+      "label":        "Service admin usergroups",
+      "description":  "Users in service admin usergroups can create policies for any resource in this Trino instance",
+      "type":         "string",
+      "defaultValue": "trino"
     }
   ],
   "enums": [
