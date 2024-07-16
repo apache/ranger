@@ -184,7 +184,7 @@
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>333</presto.version>
-        <trino.version>377</trino.version>
+        <trino.version>451</trino.version>
         <poi.version>5.2.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>3.19.3</protobuf-java.version>
@@ -323,6 +323,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>plugin-trino</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -330,38 +331,6 @@
                 <module>distro</module>
             </modules>
         </profile>
-
-        <profile>
-            <id>ranger-jdk11</id>
-            <activation>
-                <jdk>11</jdk>
-            </activation>
-            <modules>
-                <!--  ranger-admin requirements  -->
-                <module>security-admin</module>
-                <module>agents-audit</module>
-                <module>agents-common</module>
-                <module>agents-cred</module>
-                <module>jisql</module>
-                <module>embeddedwebserver</module>
-                <module>credentialbuilder</module>
-                <module>ranger-util</module>
-                <module>ugsync-util</module>
-                <module>unixauthclient</module>
-                <module>ranger-plugin-classloader</module>
-                <module>ranger-authn</module>
-                <module>ranger-metrics</module>
-                <!-- trino-plugin requirements -->
-                <module>agents-installer</module>
-                <module>plugin-trino</module>
-                <!--
-                   'distro' should be the last module. If a module gets inserted after
-                   plugin-nestedstructure, make sure to update dependency in distro/pom.xml
-                -->
-                <module>distro</module>
-            </modules>
-        </profile>
-
         <profile>
             <id>ranger-examples</id>
             <modules>
@@ -600,7 +569,6 @@
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
                 <module>plugin-trino</module>
-                <module>ranger-trino-plugin-shim</module>
             </modules>
         </profile>
         <profile>
@@ -681,6 +649,7 @@
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
                 <module>ranger-metrics</module>
+                <module>plugin-trino</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -765,6 +734,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>plugin-trino</module>
             </modules>
             <build>
                 <plugins>
