@@ -278,14 +278,14 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 	}
 
 	@Override
-	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c)	throws IOException {
+	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c, BalanceRequest request)	throws IOException {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preBalance()");
 		}
 
 		try {
 			activatePluginClassLoader();
-			implMasterObserver.preBalance(c);
+			implMasterObserver.preBalance(c, request);
 		} finally {
 			deactivatePluginClassLoader();
 		}
@@ -2386,14 +2386,15 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 	}
 
 	@Override
-	public void postBalance(ObserverContext<MasterCoprocessorEnvironment> ctx, List<RegionPlan> plans) throws IOException {
+	public void postBalance(ObserverContext<MasterCoprocessorEnvironment> ctx,
+							BalanceRequest request, List<RegionPlan> plans) throws IOException {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.postBalance()");
 		}
 
 		try {
 			activatePluginClassLoader();
-			implMasterObserver.postBalance(ctx, plans);
+			implMasterObserver.postBalance(ctx, request, plans);
 		} finally {
 			deactivatePluginClassLoader();
 		}
