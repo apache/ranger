@@ -21,8 +21,8 @@
 				"wildCard": "true",
 				"ignoreCase": "true"
 			},
-			"label": "Type Catagory",
-			"description": "Type Catagory"
+			"label": "Type Category",
+			"description": "Type Category"
 		},
 		{
 			"itemId": 2,
@@ -502,6 +502,7 @@
 		}
 	],
 	"options": {
-		"enableDenyAndExceptionsInPolicies": "true"
+		"enableDenyAndExceptionsInPolicies": "true",
+		"enableTagBasedPolicies":"false"
 	}
 }

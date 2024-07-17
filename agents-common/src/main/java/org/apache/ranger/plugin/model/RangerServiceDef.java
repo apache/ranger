@@ -42,6 +42,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 	public static final String OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES = "enableDenyAndExceptionsInPolicies";
 	public static final String OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION   = "enableImplicitConditionExpression";
+	public static final String OPTION_ENABLE_TAG_BASED_POLICIES = "enableTagBasedPolicies";
 
 	private String                         name;
 	private String                         displayName;
