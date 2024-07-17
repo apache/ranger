@@ -98,6 +98,8 @@ public class UserGroupSyncConfig  {
 
 	private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle";
 
+	private static final String UGSYNC_SLEEP_LDAP_FORCE_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM_ENABLED = "ranger.usersync.ldap.force.sleeptimeinmillisbetweensynccycle.enabled";
+
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE = 60000L;
 
 	private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 60000L;
@@ -517,6 +519,7 @@ public class UserGroupSyncConfig  {
 	}
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
+		boolean is_ldap_force = Boolean.parseBoolean(prop.getProperty(UGSYNC_SLEEP_LDAP_FORCE_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM_ENABLED));
 		String className = getUserGroupSource().getClass().getName();
 		if (val == null) {
 			if (LGSYNC_SOURCE_CLASS.equals(className)) {
@@ -529,7 +532,12 @@ public class UserGroupSyncConfig  {
 			long ret = Long.parseLong(val);
 			long min_interval;
 			if (LGSYNC_SOURCE_CLASS.equals(className)) {
-				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
+				if (is_ldap_force && ret < UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE) {
+					min_interval = ret;
+					LOG.info("If you force the synchronization time of ldap users to be less than the default of 3600s, this setting [" + min_interval + "] millisec will take effect.");
+				} else {
+					min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
+				}
 			}else if(UGSYNC_SOURCE_CLASS.equals(className)){
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
 			} else {
