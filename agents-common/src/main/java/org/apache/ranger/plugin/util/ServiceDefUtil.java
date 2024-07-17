@@ -107,6 +107,17 @@ public class ServiceDefUtil {
         return ret;
     }
 
+    public static boolean getOption_enableTagBasedPolicies(RangerServiceDef serviceDef, Configuration config) {
+        boolean ret = false;
+
+        if(serviceDef != null) {
+            boolean defaultValue = config == null || config.getBoolean("ranger.servicedef.enableTagBasedPolicies", true);
+            ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, defaultValue);
+        }
+
+        return ret;
+    }
+
     public static RangerDataMaskTypeDef getDataMaskType(RangerServiceDef serviceDef, String typeName) {
         RangerDataMaskTypeDef ret = null;
 

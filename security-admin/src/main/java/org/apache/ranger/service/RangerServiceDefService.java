@@ -72,6 +72,15 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 			ret.setOptions(serviceDefOptions);
 		}
 
+		if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES) == null) {
+			boolean enableTagBasedPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableTagBasedPolicies", true);
+			if (enableTagBasedPoliciesHiddenOption) {
+				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "true");
+			} else {
+				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "false");
+			}
+			ret.setOptions(serviceDefOptions);
+		}
 		return ret;
 	}
 

@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.services.tag.RangerServiceTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		List<RangerServiceDef> allServiceDefs = getServiceDefs(new SearchFilter());
 		for (RangerServiceDef serviceDef : allServiceDefs) {
-			updateTagServiceDefForUpdatingAccessTypes(serviceDef);
+			if (ServiceDefUtil.getOption_enableTagBasedPolicies(serviceDef, config)) {
+				updateTagServiceDefForUpdatingAccessTypes(serviceDef);
+			}
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.updateTagServiceDefForAccessTypes()");
