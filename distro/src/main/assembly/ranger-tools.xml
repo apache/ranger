@@ -62,6 +62,7 @@
               <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+              <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
               <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
               <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
