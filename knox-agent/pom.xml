@@ -53,6 +53,10 @@
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>net.minidev</groupId>
+                    <artifactId>json-smart</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
