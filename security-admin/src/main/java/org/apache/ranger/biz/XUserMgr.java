@@ -261,7 +261,15 @@ public class XUserMgr extends XUserMgrBase {
 		createdXUser.setGroupIdList(groupIdList);
 		createdXUser.setGroupNameList(groupNamesList);
 		for (VXGroupUser vXGroupUser : vXGroupUsers) {
-			trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
+			List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+
+			if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+				if (trxLogList == null) {
+					trxLogList = new ArrayList<>();
+				}
+
+				trxLogList.addAll(groupUserTrxLogs);
+			}
 		}
 		//
 		xaBizUtil.createTrxLog(trxLogList);
@@ -491,7 +499,16 @@ public class XUserMgr extends XUserMgrBase {
 
 		Long userId = vXUser.getId();
 		List<Long> groupUsersToRemove = new ArrayList<Long>();
-		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
+		List<XXTrxLogV2> groupUserTrxLogs = createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove);
+
+		if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+			if (trxLogList == null) {
+				trxLogList = new ArrayList<>();
+			}
+
+			trxLogList.addAll(groupUserTrxLogs);
+		}
+
 		xaBizUtil.createTrxLog(trxLogList);
 
 		updateUserStoreVersion("updateXUser(" + vXUser.getName() + ")");
@@ -523,7 +540,10 @@ public class XUserMgr extends XUserMgrBase {
 					}
 					if (!found) {
 						VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
+						List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+						if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+							trxLogList.addAll(groupUserTrxLogs);
+						}
 						groupNamesSet.add(vXGroupUser.getName());
 					}
 				}
@@ -533,14 +553,20 @@ public class XUserMgr extends XUserMgrBase {
 					boolean found = false;
 					for (Long groupId : groupIdList) {
 						if (groupId.equals(vXGroupUser.getParentGroupId())) {
-							trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_UPDATE_CONTEXT));
+							List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_UPDATE_CONTEXT);
+							if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+								trxLogList.addAll(groupUserTrxLogs);
+							}
 							found = true;
 							break;
 						}
 					}
 					if (!found) {
 						// TODO I've to get the transaction log from here.
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_DELETE_CONTEXT));
+						List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_DELETE_CONTEXT);
+						if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+							trxLogList.addAll(groupUserTrxLogs);
+						}
 						groupUsersToRemove.add(vXGroupUser.getId());
 						// xGroupUserService.deleteResource(vXGroupUser.getId());
 						groupNamesSet.remove(vXGroupUser.getName());
@@ -550,7 +576,10 @@ public class XUserMgr extends XUserMgrBase {
 			} else {
 				for (Long groupId : groupIdList) {
 					VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-					trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT));
+					List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+					if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+						trxLogList.addAll(groupUserTrxLogs);
+					}
 					groupNamesSet.add(vXGroupUser.getName());
 				}
 			}
