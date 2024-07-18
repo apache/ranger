@@ -116,7 +116,7 @@
     ,
     {"name":"EMAIL_PII hive_table read by a email-admin",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"], "entity":"entity1"}},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"], "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["email-admins"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":20}
