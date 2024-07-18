@@ -139,6 +139,8 @@
         <httpcomponents.httpcore.version>4.4.14</httpcomponents.httpcore.version>
         <httpcomponents.httpasyncclient.version>4.1.4</httpcomponents.httpasyncclient.version>
         <httpcomponents.httpmime.version>4.5.13</httpcomponents.httpmime.version>
+        <io.opentelemetry.version>1.40.0</io.opentelemetry.version>
+        <io.opentelemetry-semconv.version>1.26.0-alpha</io.opentelemetry-semconv.version>
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>

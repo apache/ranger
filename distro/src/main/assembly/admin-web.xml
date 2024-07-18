@@ -105,6 +105,9 @@
             <include>org.apache.hbase.thirdparty:hbase-shaded-protobuf:jar:${hbase-shaded-protobuf}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-netty:jar:${hbase-shaded-netty}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-miscellaneous:jar:${hbase-shaded-miscellaneous}</include>
+            <include>io.opentelemetry:opentelemetry-api:jar:${io.opentelemetry.version}</include>
+            <include>io.opentelemetry:opentelemetry-context:jar:${io.opentelemetry.version}</include>
+            <include>io.opentelemetry:opentelemetry-semconv:jar:${io.opentelemetry-semconv.version}</include>
             <include>io.dropwizard.metrics:metrics-core</include>
         </includes>
       </binaries>
