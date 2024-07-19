@@ -60,12 +60,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: build (11)
-        run: mvn -T 8 clean install -P ranger-jdk11,!all,!linux --no-transfer-progress -B -V
+        run: mvn -T 8 clean install --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: target-11
-          path: target/*trino*
+          path: target/*
   
   docker-build:
     needs:
@@ -116,10 +116,10 @@ jobs:
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml up -d
-      - name: Check status of containers
+      - name: Check status of containers and remove them
         run: | 
           sleep 60
-          containers=(ranger ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
