@@ -532,7 +532,6 @@ public class UserGroupSyncConfig  {
 				try {
 					min_interval = Long.parseLong(val);
 				} catch (Exception e) {
-					LOG.warn("invalid config, param ranger.usersync.sleeptimeinmillisbetweensynccycle must be");
 					min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 				}
 				if (min_interval < UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE) {
