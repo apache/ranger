@@ -58,6 +58,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXTrxLogV2;
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
@@ -286,10 +287,14 @@ public class RoleREST {
         } catch(Throwable excp) {
             LOG.error("deleteRole(" + roleId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(
-					"Data Not Found for given Id",
-					MessageEnums.DATA_NOT_FOUND, roleId, null,
-					"readResource : No Object found with given id.");
+            if (excp.getMessage().contains(String.valueOf(ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_ID.getErrorCode()))) {
+                throw restErrorUtil.createRESTException(
+                        "Data Not Found for given Id",
+                        MessageEnums.DATA_NOT_FOUND, roleId, null,
+                        "readResource : No Object found with given id.");
+            } else {
+                throw restErrorUtil.createRESTException(excp.getMessage());
+            }
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteRole(id=" + roleId + ")");

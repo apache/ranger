@@ -22,6 +22,9 @@ import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
@@ -60,6 +63,7 @@ public class TestRoleREST {
     private static final String adminLoginID = "admin";
     private static final JSON_FILE_NAME_TYPE ROLE = JSON_FILE_NAME_TYPE.ROLE;
     String importRoleTestFilePath = "./src/test/java/org/apache/ranger/rest/importRole/import_role_test_file.json";
+    private static Long Id = 7L;
 
     @Mock
     RangerRole role;
@@ -1326,5 +1330,73 @@ public class TestRoleREST {
         rangerRole.setCreatedByUser(name);
         rangerRole.setId(roleId);
         return rangerRole;
+    }
+
+    @Test(expected = Throwable.class)
+    public void test21deleteRoleWithinPolicy() {
+        RangerRole rangerRole = createRole();
+        rangerPolicy(rangerRole);
+        try {
+            Mockito.doThrow(new Throwable()).when(roleStore).deleteRole(Mockito.anyLong());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            Assert.assertThrows(Throwable.class, () -> roleRest.deleteRole(rangerRole.getId()));
+            Mockito.verify(restErrorUtil, Mockito.times(1)).createRESTException(Mockito.anyString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test(expected = Throwable.class)
+    public void test22deleteRoleWithValidationError() {
+        RangerRole rangerRole = createRole();
+        try {
+            Mockito.when(validatorFactory.getRangerRoleValidator(roleStore)).thenThrow(new Exception());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            Assert.assertThrows(Throwable.class,() -> roleRest.deleteRole(rangerRole.getId()));
+            Mockito.verify(restErrorUtil, Mockito.times(1)).createRESTException(Mockito.anyString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+     private RangerPolicy rangerPolicy(RangerRole rangerRole) {
+         List<String> roles = new ArrayList<>();
+         roles.add(rangerRole.getName());
+
+         List<RangerPolicyItem> policyItems = new ArrayList<>();
+
+         policyItems.add(new RangerPolicyItem(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), roles, new ArrayList<>(), false));
+
+         Map<String, RangerPolicyResource> policyResource = new HashMap<>();
+
+         policyResource.put("resource", new RangerPolicyResource("1", true, true));
+
+         return getRangerPolicy(policyItems, policyResource);
+     }
+
+    private static RangerPolicy getRangerPolicy(List<RangerPolicyItem> policyItems, Map<String, RangerPolicyResource> policyResource) {
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(Id);
+        policy.setCreateTime(new Date());
+        policy.setDescription("policy");
+        policy.setGuid("policyguid");
+        policy.setIsEnabled(true);
+        policy.setName("HDFS_1-1-20150316062453");
+        policy.setUpdatedBy("Admin");
+        policy.setUpdateTime(new Date());
+        policy.setService("HDFS_1-1-20150316062453");
+        policy.setIsAuditEnabled(true);
+        policy.setPolicyItems(policyItems);
+        policy.setResources(policyResource);
+        policy.setService("HDFS_1");
+        return policy;
     }
 }
