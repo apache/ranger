@@ -19,12 +19,13 @@
 
 import React, { useEffect, useState } from "react";
 import { ClassTypes } from "../../utils/XAEnums";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Table } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import SecurityZonelogs from "./AdminLogs/SecurityZonelogs";
 import UserLogs from "./AdminLogs/UserLogs";
 import GroupLogs from "./AdminLogs/GroupLogs";
 import RoleLogs from "./AdminLogs/RoleLogs";
+import UserAssociationWithGroupLogs from "./AdminLogs/UserAssociationWithGroupLogs";
 import ServiceLogs from "./AdminLogs/ServiceLogs";
 import PolicyLogs from "./AdminLogs/PolicyLogs";
 import PasswordLogs from "./AdminLogs/PasswordLogs";
@@ -98,6 +99,15 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
             {objectClassType == ClassTypes.CLASS_TYPE_XA_USER.value && (
               <UserLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* USER ADDED TO GROUP */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_XA_GROUP_USER.value && (
+              <UserAssociationWithGroupLogs
+                reportdata={reportdata}
+                data={data}
+              />
             )}
 
             {/* GROUP */}

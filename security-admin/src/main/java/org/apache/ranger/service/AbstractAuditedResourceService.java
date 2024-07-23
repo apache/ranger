@@ -28,6 +28,7 @@ import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXDataObject;
+import org.apache.ranger.view.VXTrxLogV2.AttributeChangeInfo;
 import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +87,11 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 		try {
 			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
 
+			if ("Password".equalsIgnoreCase(attrName)) {
+				oldValue = hiddenPasswordString;
+				newValue = hiddenPasswordString;
+			}
+
 			objChangeInfo.addAttribute(attrName, oldValue, newValue);
 
 			trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
@@ -132,7 +138,16 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 				processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
 			}
 
-			trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+			if (objChangeInfo.getAttributes() != null) {
+				for (AttributeChangeInfo changeInfo : objChangeInfo.getAttributes()) {
+					if ("Password".equalsIgnoreCase(changeInfo.getAttributeName())) {
+						changeInfo.setNewValue(hiddenPasswordString);
+						changeInfo.setOldValue(hiddenPasswordString);
+					}
+				}
+
+				trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+			}
 		} catch (Exception e) {
 			logger.warn("failed to get transaction log for object: type=" + obj.getClass().getName() + ", id=" + obj.getId(), e);
 		}
@@ -202,7 +217,7 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 			newValue  = null;
 		}
 
-		if (StringUtils.equals(prevValue, newValue) || (StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue))) {
+		if ((StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue)) || StringUtils.equals(prevValue, newValue)) {
 			return;
 		}
 

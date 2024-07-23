@@ -221,6 +221,23 @@ function Admin() {
                   Role {action}d <strong>{objectname}</strong>
                 </span>
               );
+            else if (classtype == ClassTypes.CLASS_TYPE_XA_GROUP_USER.value)
+              operation =
+                action == "create" ? (
+                  <span>
+                    User <strong> {objectname} </strong>added to group{" "}
+                    <strong>
+                      {rawValue?.row?.original?.parentObjectName || " "}
+                    </strong>
+                  </span>
+                ) : (
+                  <span>
+                    User <strong> {objectname} </strong>removed from group{" "}
+                    <strong>
+                      {rawValue?.row?.original?.parentObjectName || " "}
+                    </strong>
+                  </span>
+                );
             return <div className="text-truncate">{operation}</div>;
           }
         },

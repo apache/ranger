@@ -141,10 +141,11 @@ public class TestXPermMapService {
 	@Test
 	public void test4GetTransactionLog() {
 		VXPermMap vObj = createVXPermMap();
+		VXPermMap vObj2 = createVXPermMap2();
 		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
 		XXGroup xGroup = createXXGroup();
 		Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
-		xPermMapService.createTransactionLog(vObj, vObj, OPERATION_UPDATE_CONTEXT);
+		xPermMapService.createTransactionLog(vObj, vObj2, OPERATION_UPDATE_CONTEXT);
 	}
 
 	private VXPermMap createVXPermMap() {
@@ -156,6 +157,30 @@ public class TestXPermMapService {
 		vXPermMap.setGroupName("testGroupName");
 		vXPermMap.setId(1L);
 		vXPermMap.setIpAddress("123.45.678.90");
+		vXPermMap.setIsRecursive(0);
+		vXPermMap.setIsWildCard(false);
+		vXPermMap.setMObj(gjObj);
+		vXPermMap.setOwner("admin");
+		vXPermMap.setPermFor(0);
+		vXPermMap.setPermGroup("");
+		vXPermMap.setPermType(0);
+		vXPermMap.setResourceId(1L);
+		vXPermMap.setUpdateDate(date);
+		vXPermMap.setUpdatedBy("admin");
+		vXPermMap.setUserId(1L);
+		vXPermMap.setUserName("testUser");
+		return vXPermMap;
+	}
+
+	private VXPermMap createVXPermMap2() {
+		VXPermMap vXPermMap = new VXPermMap();
+		Date date = new Date();
+		vXPermMap.setCreateDate(date);
+		vXPermMap.setGrantOrRevoke(false);
+		vXPermMap.setGroupId(1L);
+		vXPermMap.setGroupName("testGroupName1");
+		vXPermMap.setId(1L);
+		vXPermMap.setIpAddress("123.45.678.91");
 		vXPermMap.setIsRecursive(0);
 		vXPermMap.setIsWildCard(false);
 		vXPermMap.setMObj(gjObj);
