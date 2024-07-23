@@ -139,7 +139,9 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 				processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
 			}
 
-			ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+			if(objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
+				ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+			}
 		} catch (Exception excp) {
 			LOG.warn("failed to get transaction log for object: type=" + obj.getClass().getName() + ", id=" + obj.getId(), excp);
 		}
@@ -204,6 +206,12 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 		} else if (action == OPERATION_UPDATE_CONTEXT) {
 			prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
 			newValue  = value;
+		} else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
+			prevValue = null;
+			newValue  = value;
+		} else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
+			prevValue = value;
+			newValue  = null;
 		} else {
 			prevValue = null;
 			newValue  = null;
@@ -224,6 +232,10 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 				return "update";
 			case OPERATION_DELETE_CONTEXT:
 				return "delete";
+			case OPERATION_IMPORT_CREATE_CONTEXT:
+				return "Import Create";
+			case OPERATION_IMPORT_DELETE_CONTEXT:
+				return "Import Delete";
 		}
 
 		return "unknown";

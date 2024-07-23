@@ -403,7 +403,7 @@ function Admin() {
   const getDefaultSort = React.useMemo(
     () => [
       {
-        id: "createDate",
+        id: "id",
         desc: true
       }
     ],

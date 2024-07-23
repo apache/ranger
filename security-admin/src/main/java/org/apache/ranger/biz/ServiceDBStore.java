@@ -4522,10 +4522,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		Map<String, Object> metaDataInfo = new LinkedHashMap<>();
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		String userId = usb!=null ? usb.getLoginId() : null;
+		DateFormat formatter = new SimpleDateFormat("MMM dd, yyyy h:mm:ss a");
 
 		metaDataInfo.put(HOSTNAME, LOCAL_HOSTNAME);
 		metaDataInfo.put(USER_NAME, userId);
-		metaDataInfo.put(TIMESTAMP, MiscUtil.getUTCDateForLocalDate(new Date()));
+		metaDataInfo.put(TIMESTAMP, formatter.format(MiscUtil.getUTCDateForLocalDate(new Date())));
 		metaDataInfo.put(RANGER_VERSION, RangerVersionInfo.getVersion());
 
 		return metaDataInfo;
