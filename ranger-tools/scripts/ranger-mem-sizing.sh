@@ -17,7 +17,6 @@
 #
 # Review and update following variables as needed
 #
-RANGER_ADMIN_HOME=${RANGER_ADMIN_HOME:-/opt/ranger/admin}
 MEMORY=1g
 
 #
@@ -29,7 +28,7 @@ MEMORY=1g
 #
 #
 cdir=$(cd "$(dirname "$0")"; pwd)
-cp="${cdir}/dist/*:${cdir}/lib/commons-cli-1.3.1.jar:${RANGER_ADMIN_HOME}/ews/lib/*:${RANGER_ADMIN_HOME}/ews/webapp/WEB-INF/lib/*"
+cp="${cdir}/dist/*:${cdir}/lib/*"
 
 if [ "${JAVA_HOME}" != "" ]
 then

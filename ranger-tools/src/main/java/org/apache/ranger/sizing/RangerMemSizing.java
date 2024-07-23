@@ -27,15 +27,14 @@ import java.util.Set;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.plugin.util.RangerUserStore;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 
 public class RangerMemSizing {
@@ -44,7 +43,6 @@ public class RangerMemSizing {
 
   private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 
-  private final Gson        gson;
   private final String      policyFile;
   private final String      tagFile;
   private final String      rolesFile;
@@ -56,7 +54,6 @@ public class RangerMemSizing {
 
   public RangerMemSizing(CommandLine cmdLine) {
     this.out              = System.out;
-    this.gson             = createGson();
     this.policyFile       = cmdLine.getOptionValue('p');
     this.tagFile          = cmdLine.getOptionValue('t');
     this.rolesFile        = cmdLine.getOptionValue('r');
@@ -132,7 +129,7 @@ public class RangerMemSizing {
         PerfMemTimeTracker tracker = new PerfMemTimeTracker("Read policies");
 
         try (FileReader reader = new FileReader(file)) {
-          ret = gson.fromJson(reader, ServicePolicies.class);
+          ret = JsonUtils.jsonToObject(reader, ServicePolicies.class);
         }
 
         tracker.stop();
@@ -178,10 +175,11 @@ public class RangerMemSizing {
         PerfMemTimeTracker tracker = new PerfMemTimeTracker("Read tags");
 
         try (FileReader reader = new FileReader(file)) {
-          ret = gson.fromJson(reader, ServiceTags.class);
+          ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
         }
 
         tracker.stop();
+
         loadTracker.addChild(tracker);
       }
 
@@ -192,7 +190,8 @@ public class RangerMemSizing {
 
         tracker.stop();
         loadTracker.addChild(tracker);
-        log("DeDupTags(duplicateTags=" + countOfDuplicateTags + ")");
+
+        log("DeDupTags(): duplicateTagsCount=" + countOfDuplicateTags);
       }
 
       if (deDupStrings) {
@@ -231,7 +230,7 @@ public class RangerMemSizing {
       log("loading roles(file=" + fileName + ")");
 
       try (FileReader reader = new FileReader(file)) {
-        ret = gson.fromJson(reader, RangerRoles.class);
+        ret = JsonUtils.jsonToObject(reader, RangerRoles.class);
       }
 
       loadTracker.stop();
@@ -264,7 +263,7 @@ public class RangerMemSizing {
         PerfMemTimeTracker tracker = new PerfMemTimeTracker("Read userStore");
 
         try (FileReader reader = new FileReader(file)) {
-          ret = gson.fromJson(reader, RangerUserStore.class);
+          ret = JsonUtils.jsonToObject(reader, RangerUserStore.class);
         }
 
         tracker.stop();
@@ -350,18 +349,6 @@ public class RangerMemSizing {
     return null;
   }
 
-  private Gson createGson() {
-    Gson gson = null;
-
-    try {
-      gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-    } catch(Throwable excp) {
-      log("failed to create GsonBuilder object", excp);
-    }
-
-    return gson;
-  }
-
   private void log(String msg) {
     out.println(DATE_FORMAT.format(new Date()) + ": " +msg);
   }
@@ -429,7 +416,7 @@ public class RangerMemSizing {
       }
     }
 
-    return "tagDefCount=" + tagDefCount + ", tagCount" + tagCount + ", resourceCount=" + resourceCount;
+    return "tagDefCount=" + tagDefCount + ", tagCount=" + tagCount + ", resourceCount=" + resourceCount;
   }
 
   private static String toSummaryStr(RangerRoles roles) {
