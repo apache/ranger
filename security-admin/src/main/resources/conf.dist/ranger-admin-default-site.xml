@@ -352,7 +352,7 @@
 
 	<property>
 		<name>ranger.accesslog.rotate.rename_on_rotate</name>
-		<value>15</value>
+		<value>false</value>
 	</property>
 
 	<property>
