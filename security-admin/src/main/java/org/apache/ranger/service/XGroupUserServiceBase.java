@@ -42,7 +42,7 @@ public abstract class XGroupUserServiceBase<T extends XXGroupUser, V extends VXG
 	public XGroupUserServiceBase() {
 		super(AppConstants.CLASS_TYPE_XA_GROUP_USER, AppConstants.CLASS_TYPE_XA_GROUP);
 
-		trxLogAttrs.put("parentGroupId", new VTrxLogAttr("parentGroupId", "Group Name"));
+		trxLogAttrs.put("name", new VTrxLogAttr("name", "Group Name"));
 	}
 
 	@Override

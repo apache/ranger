@@ -393,7 +393,6 @@ export const UserLogs = ({ data, reportdata }) => {
           <div>
             <div className="fw-bolder">Name : {objectName}</div>
             <div className="fw-bolder">Date: {currentTimeZone(createDate)}</div>
-            <div className="fw-bolder">Created By: {owner} </div>
             <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">User Details:</h5>

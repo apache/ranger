@@ -433,6 +433,7 @@ public class XUserMgr extends XUserMgrBase {
 			vXPortalUser.setPassword(password);
 		}
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
+		VXUser existing = xUserService.readResource(vXUser.getId());
 		XXPortalUser xXPortalUser = new XXPortalUser();
 		xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
 		//update permissions start
@@ -492,8 +493,9 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		VXUser existing = xUserService.readResource(vXUser.getId());
-
+		if(password == null) {
+		vXUser.setPassword(hiddenPasswordString); //To stop Auditing Password transaction log, when it is not edited.
+		}
 		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 

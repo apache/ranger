@@ -1135,7 +1135,7 @@ public class RangerBizUtil {
 	}
 
 	public void createTrxLog(List<XXTrxLogV2> trxLogList) {
-		if (trxLogList == null) {
+		if (trxLogList == null || trxLogList.size() == 0) {
 			return;
 		}
 
