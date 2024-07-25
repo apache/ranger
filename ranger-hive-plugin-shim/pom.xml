@@ -57,6 +57,10 @@
                     <artifactId>commons-compress</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.thrift</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
