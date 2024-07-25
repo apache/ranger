@@ -33,11 +33,6 @@
     </parent>
     <dependencies>
         <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-linq4j</artifactId>
-            <version>1.16.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-server-base</artifactId>
             <version>${kylin.version}</version>
