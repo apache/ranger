@@ -211,7 +211,7 @@
         <tomcat.embed.version>8.5.94</tomcat.embed.version>
         <testng.version>7.5.1</testng.version>
         <velocity.version>2.3</velocity.version>
-        <zookeeper.version>3.5.5</zookeeper.version>
+        <zookeeper.version>3.9.2</zookeeper.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
         <fasterxml.jackson.version>2.17.0</fasterxml.jackson.version>
