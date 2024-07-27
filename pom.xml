@@ -121,7 +121,7 @@
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
-        <hadoop.version>3.3.3</hadoop.version>
+        <hadoop.version>3.3.4</hadoop.version>
         <ozone.version>1.4.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase.version>2.6.0</hbase.version>
@@ -247,7 +247,7 @@
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
         <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
-        <aws-java-sdk.version>1.12.481</aws-java-sdk.version>
+        <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
@@ -865,6 +865,10 @@
                         <groupId>org.codehaus.jackson</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.avro</groupId>
+                        <artifactId>avro</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -944,6 +948,11 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch-x-content</artifactId>
+                <version>${elasticsearch.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -323,6 +323,10 @@
                     <groupId>javax.ws.rs</groupId>
                     <artifactId>javax.ws.rs-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
