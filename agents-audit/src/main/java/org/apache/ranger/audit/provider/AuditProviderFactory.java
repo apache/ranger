@@ -388,7 +388,7 @@ public class AuditProviderFactory {
 			mProvider.start();
 		}
 
-		installJvmSutdownHook(props);
+		installJvmShutdownHook(props);
 	}
 
 	private AuditHandler getProviderFromConfig(Properties props,
@@ -474,7 +474,7 @@ public class AuditProviderFactory {
 		return new DummyAuditProvider();
 	}
 
-	private void installJvmSutdownHook(Properties props) {
+	private void installJvmShutdownHook(Properties props) {
 		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
 		jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
 		String appType = this.componentAppType;
@@ -502,7 +502,7 @@ public class AuditProviderFactory {
 				try {
 					startCleanup.acquire();
 				} catch (InterruptedException e) {
-					LOG.info("RangerAsyncAuditCleanup: Interrupted while waiting for audit startCleanup signal!  Exiting the thread...", e);
+					LOG.error("RangerAsyncAuditCleanup: Interrupted while waiting for audit startCleanup signal!  Exiting the thread...", e);
 					break;
 				}
 				LOG.info("RangerAsyncAuditCleanup: Starting cleanup");
@@ -547,7 +547,7 @@ public class AuditProviderFactory {
 					LOG.warn("JVMShutdownHook: could not detect finishing of audit cleanup even after waiting for " + maxWait + " seconds!");
 				}
 			} catch (InterruptedException e) {
-				LOG.info("JVMShutdownHook: Interrupted while waiting for completion of Async executor!", e);
+				LOG.error("JVMShutdownHook: Interrupted while waiting for completion of Async executor!", e);
 			}
 			LOG.info("JVMShutdownHook: Interrupting ranger async audit cleanup thread");
 			cleanupThread.interrupt();

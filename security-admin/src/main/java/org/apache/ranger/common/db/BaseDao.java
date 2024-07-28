@@ -35,6 +35,7 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
@@ -48,6 +49,7 @@ public abstract class BaseDao<T> {
 	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
 	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
 	private static       int    BATCH_DELETE_BATCH_SIZE;
+	private static final String NOT_AVAILABLE = "Not Available";
 	private static final String GDS_TABLES = "x_gds_";
 
 	static {
@@ -364,30 +366,19 @@ public abstract class BaseDao<T> {
 		}
 	}
 
-	public String getDBVersion(){
-		String dbVersion="Not Available";
-		int dbFlavor = RangerBizUtil.getDBFlavor();
-		String query ="SELECT 1";
-		try{
-			if(dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
-				query="SELECT version()";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_ORACLE){
-				query="SELECT banner from v$version where rownum<2";
-				dbVersion = (String)getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_POSTGRES){
-				query="SELECT version()";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER){
-				query="SELECT @@version";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE){
-				query="SELECT @@version";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+	public String getDBVersion() {
+		String dbVersion = NOT_AVAILABLE;
+		int    dbFlavor  = RangerBizUtil.getDBFlavor();
+		String query     = RangerBizUtil.getDBVersionQuery(dbFlavor);
+
+		if (StringUtils.isNotBlank(query)) {
+			try {
+				dbVersion = (String) getEntityManager().createNativeQuery(query).getSingleResult();
+			} catch (Exception ex) {
+				logger.error("Error occurred while fetching the DB version.", ex);
 			}
-		}catch(Exception ex){
-			logger.error("Error occurred while fetching the DB version.", ex);
 		}
+
 		return dbVersion;
 	}
 }

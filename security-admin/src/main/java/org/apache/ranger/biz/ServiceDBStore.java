@@ -5694,21 +5694,10 @@ public class ServiceDBStore extends AbstractServiceStore {
         String ret = null;
         try {
             int    dbFlavor      = RangerBizUtil.getDBFlavor();
-            String dbFlavourType = "Unknow ";
-            if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
-                dbFlavourType = "MYSQL ";
-            } else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-                dbFlavourType = "ORACLE ";
-            } else if (dbFlavor == AppConstants.DB_FLAVOR_POSTGRES) {
-                dbFlavourType = "POSTGRES ";
-            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE) {
-                dbFlavourType = "SQLANYWHERE ";
-            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
-                dbFlavourType = "SQLSERVER ";
-            }
-            String       dbDetail     = dbFlavourType + bizUtil.getDBVersion();
-            final String jsonDBDetail = JsonUtils.objectToJson(dbDetail);
-            ret = jsonDBDetail;
+            String dbFlavourType = RangerBizUtil.getDBFlavorType(dbFlavor);
+            String dbDetail      = dbFlavourType + " " + bizUtil.getDBVersion();
+
+            ret = JsonUtils.objectToJson(dbDetail);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(database): Error calculating Metric for database : " + e.getMessage());
         }

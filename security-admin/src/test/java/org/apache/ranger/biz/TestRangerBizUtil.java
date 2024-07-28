@@ -103,7 +103,39 @@ public class TestRangerBizUtil {
 
 //		RESTErrorUtil restErrorUtil;
 	}
-	
+
+	@Test
+	public void testGetDBFlavor(){
+		int dbFlavor = RangerBizUtil.getDBFlavor();
+		Assert.assertEquals(AppConstants.DB_FLAVOR_UNKNOWN, dbFlavor);
+	}
+
+	@Test
+	public void testGetDBFlavorType(){
+		int dbFlavor = 1;
+		String dbFlavourType = RangerBizUtil.getDBFlavorType(dbFlavor);
+		Assert.assertEquals("MYSQL", dbFlavourType);
+		dbFlavor = 2;
+		dbFlavourType = RangerBizUtil.getDBFlavorType(dbFlavor);
+		Assert.assertEquals("ORACLE", dbFlavourType);
+	}
+
+	@Test
+	public void testGetDBQuery(){
+		int dbFlavor = 1;
+		String dbQuery = RangerBizUtil.getDBVersionQuery(dbFlavor);
+		Assert.assertEquals("SELECT version()", dbQuery);
+		dbFlavor = 2;
+		dbQuery =RangerBizUtil.getDBVersionQuery(dbFlavor);
+		Assert.assertEquals("SELECT banner from v$version where rownum<2", dbQuery);
+		dbFlavor = 3;
+		dbQuery =RangerBizUtil.getDBVersionQuery(dbFlavor);
+		Assert.assertEquals("SELECT version()", dbQuery);
+		dbFlavor = 5;
+		dbQuery =RangerBizUtil.getDBVersionQuery(dbFlavor);
+		Assert.assertEquals("SELECT @@version", dbQuery);
+	}
+
 	@Test
 	public void testHasPermission_When_disableAccessControl(){
 		VXResource vXResource = null;
@@ -651,5 +683,4 @@ public class TestRangerBizUtil {
                 Mockito.verify(rangerBizUtilMock).blockAuditorRoleUser();
 
         }
-
 }
