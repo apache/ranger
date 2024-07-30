@@ -497,9 +497,7 @@ public class RangerBasePlugin {
 		if (policyEngine != null) {
 			((RangerPolicyEngineImpl) policyEngine).releaseResources(true);
 		}
-		if (pluginAnalytics!=null) {
-			pluginAnalytics.stopPluginAnalytics();
-		}
+		pluginAnalytics.stopPluginAnalytics();
 	}
 
 	public void setResultProcessor(RangerAccessResultProcessor resultProcessor) {

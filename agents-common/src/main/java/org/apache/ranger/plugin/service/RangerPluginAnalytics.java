@@ -53,18 +53,12 @@ public class RangerPluginAnalytics {
       return;
     }
     LOG.info("Attempting to cancel asyncLoggerPluginAnalytics");
-    try {
-      scheduler.shutdown();
-      statusHandler.cancel(true);
-    }
-    catch (Exception e){
-      LOG.info("Exception while trying to shutdown/cancel asyncLoggerPluginAnalytics");
-    }
-    if (statusHandler.isCancelled()){
+    scheduler.shutdown();
+    statusHandler.cancel(true);
+    if (statusHandler.isDone()){
       LOG.info("Canceled asyncLoggerPluginAnalytics");
     }
     else{
-
       LOG.info("Could not cancel asyncLoggerPluginAnalytics");
     }
   }
