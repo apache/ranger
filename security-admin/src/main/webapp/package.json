@@ -5,6 +5,6 @@
     "r.js": "r.js"
   },
   "devDependencies": {
-    "requirejs": "^2.3.6"
+    "requirejs": "^2.3.7"
   }
 }
