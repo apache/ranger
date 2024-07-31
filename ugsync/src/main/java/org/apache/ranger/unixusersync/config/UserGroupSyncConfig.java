@@ -529,7 +529,15 @@ public class UserGroupSyncConfig  {
 			long ret = Long.parseLong(val);
 			long min_interval;
 			if (LGSYNC_SOURCE_CLASS.equals(className)) {
-				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
+				try {
+					min_interval = Long.parseLong(val);
+				} catch (Exception e) {
+					min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
+				}
+				if (min_interval < UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE) {
+					min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
+					LOG.warn("Sleep Time Between Cycle can not be lower than [" + UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE + "] millisec. resetting to default value.");
+				}
 			}else if(UGSYNC_SOURCE_CLASS.equals(className)){
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
 			} else {
