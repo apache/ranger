@@ -147,11 +147,11 @@
         <javax.el.version>3.0.1-b12</javax.el.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
-        <jersey-bundle.version>1.19.3</jersey-bundle.version>
+        <jersey-bundle.version>1.19.4</jersey-bundle.version>
         <jersey-client.version>2.35</jersey-client.version>
-        <jersey-core.version>1.19.3</jersey-core.version>
-        <jersey-server.version>1.19.3</jersey-server.version>
-        <jersey-spring.version>1.19.3</jersey-spring.version>
+        <jersey-core.version>1.19.4</jersey-core.version>
+        <jersey-server.version>1.19.4</jersey-server.version>
+        <jersey-spring.version>1.19.4</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.5.4</jettison.version>
         <jetty-client.version>9.4.49.v20220914</jetty-client.version>
@@ -213,8 +213,8 @@
         <zookeeper.version>3.9.2</zookeeper.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
-        <fasterxml.jackson.version>2.17.0</fasterxml.jackson.version>
-        <fasterxml.jackson.databind.version>2.17.0</fasterxml.jackson.databind.version>
+        <fasterxml.jackson.version>2.17.2</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.17.2</fasterxml.jackson.databind.version>
         <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
         <jna.version>5.7.0</jna.version>
         <jna-platform.version>5.7.0</jna-platform.version>
