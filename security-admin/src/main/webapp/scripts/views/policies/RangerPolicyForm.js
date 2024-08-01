@@ -506,15 +506,15 @@ define(function(require){
                                 if(!_.isUndefined(m.get('groupName')) || !_.isUndefined(m.get("userName")) || !_.isUndefined(m.get('roleName'))){ //groupName or userName
 					var RangerPolicyItem=Backbone.Model.extend()
 					var policyItem = new RangerPolicyItem();
-					if(!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))){
-						policyItem.set("groups",m.get("groupName"));
+					if (!_.isUndefined(m.get('groupName')) && !_.isNull(m.get('groupName'))) {
+						policyItem.set("groups", m.get("groupName"));
 					}
-					if(!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))){
-						policyItem.set("users",m.get("userName"));
+					if (!_.isUndefined(m.get('userName')) && !_.isNull(m.get('userName'))) {
+						policyItem.set("users", m.get("userName"));
 					}
-                                        if(!_.isUndefined(m.get('roleName')) && !_.isNull(m.get('roleName'))){
-                                                policyItem.set("roles",m.get("roleName"));
-                                        }
+					if (!_.isUndefined(m.get('roleName')) && !_.isNull(m.get('roleName'))) {
+						policyItem.set("roles", m.get("roleName"));
+					}
 					if(!(_.isUndefined(m.get('conditions')) && _.isEmpty(m.get('conditions')))){
 						var RangerPolicyItemConditionList = Backbone.Collection.extend();
 						var rPolicyItemCondList = new RangerPolicyItemConditionList(m.get('conditions'))
