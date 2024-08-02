@@ -121,7 +121,7 @@
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
-        <hadoop.version>3.3.4</hadoop.version>
+        <hadoop.version>3.3.6</hadoop.version>
         <ozone.version>1.4.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase.version>2.6.0</hbase.version>
