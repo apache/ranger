@@ -361,6 +361,18 @@
             <organization>
                 Freestone Infotech
             </organization>
+	</developer>
+        <developer>
+            <id>mugdha</id>
+            <name>Mugdha Varadkar</name>
+            <email>mugdha@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
         </developer>
         <developer>
             <id>nikhil</id>
@@ -741,10 +753,6 @@
         <contributor>
             <name>Mateen Mansoori</name>
             <organization></organization>
-        </contributor>
-        <contributor>
-            <name>Mugdha Varadkar</name>
-            <organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
             <name>Naoki Takezoe</name>
