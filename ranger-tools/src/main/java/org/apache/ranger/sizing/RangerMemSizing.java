@@ -20,14 +20,42 @@
 package org.apache.ranger.sizing;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.cli.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -43,10 +71,15 @@ public class RangerMemSizing {
 
   private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 
+  private static final TypeReference<List<RangerAccessRequest>> TYPE_LIST_REQUESTS = new TypeReference<List<RangerAccessRequest>>() {};
+
   private final String      policyFile;
   private final String      tagFile;
   private final String      rolesFile;
   private final String      userStoreFile;
+  private final String      genRequestsFile;
+  private final String      evalRequestsFile;
+  private final int         evalClientsCount;
   private final boolean     deDup;
   private final boolean     deDupStrings;
   private final String      optimizationMode;
@@ -58,6 +91,9 @@ public class RangerMemSizing {
     this.tagFile          = cmdLine.getOptionValue('t');
     this.rolesFile        = cmdLine.getOptionValue('r');
     this.userStoreFile    = cmdLine.getOptionValue('u');
+    this.genRequestsFile  = cmdLine.getOptionValue('q');
+    this.evalRequestsFile = cmdLine.getOptionValue('e');
+    this.evalClientsCount = cmdLine.hasOption('c') ? Integer.parseInt(cmdLine.getOptionValue('c')) : 1;
     this.deDup            = Boolean.parseBoolean(cmdLine.getOptionValue("d", "true"));
     this.deDupStrings     = this.deDup;
     this.optimizationMode = StringUtils.startsWithIgnoreCase(cmdLine.getOptionValue('o', "space"), "s") ? OPT_MODE_SPACE : OPT_MODEL_RETRIEVAL;
@@ -71,6 +107,20 @@ public class RangerMemSizing {
     RangerRoles      roles     = loadRoles(rolesFile, tracker);
     RangerUserStore  userStore = loadUserStore(userStoreFile, tracker);
     RangerBasePlugin plugin    = createRangerPlugin(policies, tags, roles, userStore, tracker);
+    int              genReqCount   = 0;
+    int              evalReqCount  = 0;
+    int              evalAvgTimeNs = 0;
+
+    if (StringUtils.isNotBlank(genRequestsFile)) {
+      genReqCount = generateRequestsFile(policies, tags, genRequestsFile, tracker);
+    }
+
+    if (StringUtils.isNotBlank(evalRequestsFile)) {
+      int[] res = evaluateRequests(evalRequestsFile, plugin, tracker);
+
+      evalReqCount  = res[0];
+      evalAvgTimeNs = res[1];
+    }
 
     tracker.stop();
 
@@ -90,6 +140,14 @@ public class RangerMemSizing {
 
     if (userStore != null) {
       out.println("  UserStore: file=" + userStoreFile + ", size=" + new File(userStoreFile).length() + ", " + toSummaryStr(userStore));
+    }
+
+    if (genRequestsFile != null) {
+      out.println("  GenReq:    file=" + genRequestsFile + ", requestCount=" + genReqCount);
+    }
+
+    if (evalRequestsFile != null) {
+      out.println("  EvalReq:   file=" + evalRequestsFile + ", requestCount=" + evalReqCount + ", avgTimeTaken=" + evalAvgTimeNs +  "ns, clientCount=" + evalClientsCount);
     }
 
     out.println("  DeDup:     " + deDup);
@@ -314,13 +372,144 @@ public class RangerMemSizing {
     return ret;
   }
 
+  private int generateRequestsFile(ServicePolicies policies, ServiceTags tags, String fileName, PerfMemTimeTracker parent) {
+    ObjectMapper mapper = JsonUtils.getMapper();
+
+    initMapper(mapper);
+
+    PerfMemTimeTracker tracker = new PerfMemTimeTracker("generateRequests");
+
+    Collection<RangerAccessRequest> requests = new PerfRequestGenerator().generate(policies, tags);
+
+    log("generateRequestsFile(): saving " + requests.size() + " requests..");
+
+    try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileName))) {
+      writer.write('[');
+
+      boolean isFirst = true;
+
+      for (RangerAccessRequest request : requests) {
+        if (!isFirst) {
+          writer.write(',');
+        } else {
+          isFirst = false;
+        }
+        writer.newLine();
+
+        writer.write(mapper.writeValueAsString(request));
+      }
+
+      writer.newLine();
+      writer.write(']');
+
+      log("generateRequestsFile(): saved " + requests.size() + " requests");
+    } catch (IOException excp) {
+      log("generateRequestsFile(): failed", excp);
+    }
+
+    tracker.stop();
+    parent.addChild(tracker);
+
+    return requests.size();
+  }
+
+  private int[] evaluateRequests(String evalRequestsFile, RangerBasePlugin plugin, PerfMemTimeTracker parent) {
+    PerfMemTimeTracker tracker = new PerfMemTimeTracker("evaluateRequests");
+
+    final List<RangerAccessRequest> requests          = readRequests(evalRequestsFile, tracker);
+    final Thread[]                  clients           = new Thread[evalClientsCount];
+    final AtomicInteger             idxNextRequest    = new AtomicInteger();
+    final AtomicLong                totalTimeTakenNs  = new AtomicLong();
+
+    for (int idxClient = 0; idxClient < evalClientsCount; idxClient++) {
+      clients[idxClient] = new Thread(() -> {
+        do {
+          int idxReq = idxNextRequest.getAndIncrement();
+
+          if (idxReq >= requests.size()) {
+            break;
+          }
+
+          RangerAccessRequest request = requests.get(idxReq);
+
+          long startTime = System.nanoTime();
+
+          RangerAccessResult result = plugin.isAccessAllowed(request);
+
+          totalTimeTakenNs.getAndAdd(System.nanoTime() - startTime);
+
+          if ((idxReq + 1) % 1000 == 0) {
+            log("  evaluated requests: " + (idxReq + 1) + ", avgTimeTaken=" + (totalTimeTakenNs.get() / idxReq) + "ns");
+          }
+
+          requests.set(idxReq, null); // so that objects associated with the request can be freed
+        } while (true);
+      });
+    }
+
+    log("evaluateRequests(): evaluating " + requests.size() + " requests in " + clients.length + " clients...");
+
+    for (Thread client : clients) {
+      client.run();
+    }
+
+    log("evaluateRequests(): waiting for " + clients.length + " clients to complete...");
+    for (Thread client : clients) {
+      try {
+        client.join();
+      } catch (Exception excp) {
+        // ignore
+      }
+    }
+
+    tracker.stop();
+    parent.addChild(tracker);
+
+    int avgTimeTakenNs = (int) (totalTimeTakenNs.get() / idxNextRequest.get());
+
+    log("evaluateRequests(): evaluated " + idxNextRequest.get() + " requests, avgTimeTaken=" + avgTimeTakenNs + "ns");
+
+    return new int[] { requests.size(), avgTimeTakenNs };
+  }
+
+  private List<RangerAccessRequest> readRequests(String fileName, PerfMemTimeTracker parent) {
+    PerfMemTimeTracker tracker = new PerfMemTimeTracker("readRequests");
+
+    List<RangerAccessRequest> ret = null;
+
+    ObjectMapper mapper = JsonUtils.getMapper();
+
+    initMapper(mapper);
+
+    try (InputStream inStr = Files.newInputStream(Paths.get(evalRequestsFile))) {
+      ret = mapper.readValue(inStr, TYPE_LIST_REQUESTS);
+    } catch (IOException excp) {
+      log("readRequests(): failed to read file " + evalRequestsFile, excp);
+    }
+
+    if (ret == null) {
+      ret = Collections.emptyList();
+    }
+
+    tracker.stop();
+    parent.addChild(tracker);
+
+    log("readRequests(file=" + fileName + ", size=" + new File(evalRequestsFile).length() + "): request count=" + ret.size());
+
+    return ret;
+  }
+
   private static CommandLine parseArgs(String[] args) {
     Option help         = new Option("h", "help", false, "show help");
-    Option deDup        = new Option("d", "deDup", true, "deDup string/tags");
+    Option deDup        = new Option("d", "deDup", true, "deDup string, tags: true|false");
     Option policies     = new Option("p", "policies", true, "policies file");
     Option tags         = new Option("t", "tags", true, "tags file");
     Option roles        = new Option("r", "roles", true, "roles file");
     Option userStore    = new Option("u", "userStore", true, "userStore file");
+    Option genRequests  = new Option("q", "genRequests", true, "generate requests file");
+    Option evalRequests = new Option("e", "evalRequests", true, "eval requests file");
+    Option evalClients  = new Option("c", "evalClients", true, "eval clients count");
+    Option gdsInfo      = new Option("g", "gdsInfo", true, "gdsInfo file");
     Option optimizeMode = new Option("o", "optMode", true, "optimization mode: space|retrieval");
 
     Options options = new Options();
@@ -330,6 +519,10 @@ public class RangerMemSizing {
     options.addOption(tags);
     options.addOption(roles);
     options.addOption(userStore);
+    options.addOption(genRequests);
+    options.addOption(evalRequests);
+    options.addOption(evalClients);
+    options.addOption(gdsInfo);
     options.addOption(deDup);
     options.addOption(optimizeMode);
 
@@ -453,5 +646,113 @@ public class RangerMemSizing {
     }
 
     return "users=" + userCount + ", groups=" + groupCount + ", userGroupMappings=" + userGroupCount;
+  }
+
+  private void initMapper(ObjectMapper mapper) {
+    SimpleModule serDeModule = new SimpleModule("RangerMemSizing", new Version(1, 0, 0, null, null, null));
+
+    serDeModule.addSerializer(RangerAccessResource.class, new RangerAccessResourceSerializer());
+    serDeModule.addSerializer(RangerAccessResourceImpl.class, new RangerAccessResourceImplSerializer());
+    serDeModule.addDeserializer(RangerAccessResource.class, new RangerAccessResourceDeserializer());
+
+    serDeModule.addSerializer(RangerAccessRequest.class, new RangerAccessRequestSerializer());
+    serDeModule.addSerializer(RangerAccessRequestImpl.class, new RangerAccessRequestImplSerializer());
+    serDeModule.addDeserializer(RangerAccessRequest.class, new RangerAccessRequestDeserializer());
+
+    mapper.registerModule(serDeModule);
+  }
+
+
+  static class TestRangerAccessResourceImpl {
+    private Map<String, Object> elements;
+
+    public TestRangerAccessResourceImpl() {
+    }
+
+    public TestRangerAccessResourceImpl(Map<String, Object> elements) {
+      this.elements = elements;
+    }
+
+    public Map<String, Object> getElements() { return elements; }
+  }
+
+  static class TestRangerAccessRequestImpl {
+    private TestRangerAccessResourceImpl resource;
+    private String                       accessType;
+    private String                       user;
+    private Set<String>                  userGroups;
+
+    public TestRangerAccessRequestImpl() {
+    }
+
+    public TestRangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups) {
+      this.resource   = new TestRangerAccessResourceImpl(resource.getAsMap());
+      this.accessType = accessType;
+      this.user       = user;
+      this.userGroups = userGroups;
+    }
+
+    public TestRangerAccessResourceImpl getResource() {
+      return resource;
+    }
+
+    public String getAccessType() {
+      return accessType;
+    }
+
+    public String getUser() {
+      return user;
+    }
+
+    public Set<String> getUserGroups() {
+      return userGroups;
+    }
+
+  }
+
+  static class RangerAccessResourceSerializer extends JsonSerializer<RangerAccessResource> {
+    @Override
+    public void serialize(RangerAccessResource value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      JsonUtils.getMapper().writeValue(gen, new TestRangerAccessResourceImpl(value.getAsMap()));
+    }
+  }
+
+  static class RangerAccessResourceImplSerializer extends JsonSerializer<RangerAccessResource> {
+    @Override
+    public void serialize(RangerAccessResource value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      JsonUtils.getMapper().writeValue(gen, new TestRangerAccessResourceImpl(value.getAsMap()));
+    }
+  }
+
+  static class RangerAccessResourceDeserializer extends JsonDeserializer<RangerAccessResource> {
+    @Override
+    public RangerAccessResource deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+      TestRangerAccessResourceImpl resource = context.readValue(parser, TestRangerAccessResourceImpl.class);
+
+      return new RangerAccessResourceImpl(resource.getElements());
+    }
+  }
+
+  static class RangerAccessRequestSerializer extends JsonSerializer<RangerAccessRequest> {
+    @Override
+    public void serialize(RangerAccessRequest value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      JsonUtils.getMapper().writeValue(gen, new TestRangerAccessRequestImpl(value.getResource(), value.getAccessType(), value.getUser(), value.getUserGroups()));
+    }
+  }
+
+  static class RangerAccessRequestImplSerializer extends JsonSerializer<RangerAccessRequestImpl> {
+    @Override
+    public void serialize(RangerAccessRequestImpl value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      JsonUtils.getMapper().writeValue(gen, new TestRangerAccessRequestImpl(value.getResource(), value.getAccessType(), value.getUser(), value.getUserGroups()));
+    }
+  }
+
+  static class RangerAccessRequestDeserializer extends JsonDeserializer<RangerAccessRequest> {
+    @Override
+    public RangerAccessRequest deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+      TestRangerAccessRequestImpl req = context.readValue(parser, TestRangerAccessRequestImpl.class);
+
+      return new RangerAccessRequestImpl(new RangerAccessResourceImpl(req.resource.getElements()), req.accessType, req.user, req.userGroups, null);
+    }
   }
 }
