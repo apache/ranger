@@ -32,7 +32,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -415,14 +415,15 @@ class DestinationDispatcherThread<T> extends Thread {
 			return;
 		}
 
-		loginUser.doAs(new PrivilegedAction<Integer>() {
-			@Override
-			public Integer run() {
+		try {
+			loginUser.doAs((PrivilegedExceptionAction<Integer>) () -> {
 				doRun();
 
 				return 0;
-			}
-		});
+			});
+		} catch (Exception excp) {
+			mLogger.error("DestinationDispatcherThread.run(): failed", excp);
+		}
 	}
 
 	private void doRun() {
