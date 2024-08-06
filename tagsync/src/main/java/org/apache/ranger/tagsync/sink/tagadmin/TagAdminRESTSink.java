@@ -20,7 +20,7 @@
 package org.apache.ranger.tagsync.sink.tagadmin;
 
 import java.io.IOException;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -155,19 +155,14 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Using Principal = " + userGroupInformation.getUserName());
 						}
-						final ServiceTags serviceTag = serviceTags;
-						ServiceTags ret = userGroupInformation.doAs(new PrivilegedAction<ServiceTags>() {
-							@Override
-							public ServiceTags run() {
-								try {
-									return uploadServiceTags(serviceTag);
-								} catch (Exception e) {
-									LOG.error("Upload of service-tags failed with message ", e);
-								}
-								return null;
+						return userGroupInformation.doAs((PrivilegedExceptionAction<ServiceTags>) () -> {
+							try {
+								return uploadServiceTags(serviceTags);
+							} catch (Exception e) {
+								LOG.error("Upload of service-tags failed with message ", e);
 							}
+							return null;
 						});
-						return ret;
 					} else {
 						LOG.error("Failed to get UserGroupInformation.getLoginUser()");
 						return null; // This will cause retries !!!

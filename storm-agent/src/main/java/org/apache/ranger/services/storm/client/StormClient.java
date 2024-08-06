@@ -20,7 +20,7 @@
 package org.apache.ranger.services.storm.client;
 
 import java.io.IOException;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,7 +91,7 @@ public class StormClient {
 			LOG.debug("Getting Storm topology list for topologyNameMatching : " + topologyNameMatching);
 		}
 
-		PrivilegedAction<ArrayList<String>> topologyListGetter = new PrivilegedAction<ArrayList<String>>() {
+		PrivilegedExceptionAction<ArrayList<String>> topologyListGetter = new PrivilegedExceptionAction<ArrayList<String>>() {
 			@Override
 			public ArrayList<String> run() {
 				if (stormUIUrl == null || stormUIUrl.trim().isEmpty()) {
@@ -226,7 +226,7 @@ public class StormClient {
 	}
 
 	public static <T> T executeUnderKerberos(String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules,
-			PrivilegedAction<T> action) throws IOException {
+			PrivilegedExceptionAction<T> action) throws IOException {
 
 		T ret = null;
 
@@ -276,7 +276,14 @@ public class StormClient {
 			hdpException.generateResponseDataMap(false,
 					BaseClient.getMessage(se), msgDesc + errMessage, null, null);
 			throw hdpException;
+		} catch (Exception excp) {
+			String msgDesc = "executeUnderKerberos: Exception while getting Storm TopologyList.";
+			HadoopException hdpException = new HadoopException(msgDesc, excp);
+			LOG.error(msgDesc, excp);
 
+			hdpException.generateResponseDataMap(false,
+					BaseClient.getMessage(excp), msgDesc + errMessage, null, null);
+			throw hdpException;
 		} finally {
 			if (loginContext != null) {
 				if (subject != null) {

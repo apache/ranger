@@ -33,7 +33,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -169,13 +169,12 @@ public class RangerClient {
 
     private final RangerRESTClient restClient;
     private boolean isSecureMode     = false;
-    private UserGroupInformation ugi = null;
 
     private void authInit(String authType, String username, String password) {
         if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
             isSecureMode = true;
             MiscUtil.loginWithKeyTab(password, username, null);
-            ugi = MiscUtil.getUGILoginUser();
+            UserGroupInformation ugi = MiscUtil.getUGILoginUser();
             LOG.info("RangerClient.authInit() UGI user: " + ugi.getUserName() + " principal: " + username);
         } else {
             restClient.setBasicAuthInfo(username, password);
@@ -528,15 +527,18 @@ public class RangerClient {
         }
 
         if (isSecureMode) {
-            ugi = MiscUtil.getUGILoginUser();
-            clientResponse = ugi.doAs((PrivilegedAction<ClientResponse>) () -> {
-                try {
-                    return invokeREST(api,params,request);
-                } catch (RangerServiceException e) {
-                    LOG.error(e.getMessage());
-                }
-                return null;
-            });
+            try {
+                clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                    try {
+                        return invokeREST(api,params,request);
+                    } catch (RangerServiceException e) {
+                        LOG.error(e.getMessage());
+                    }
+                    return null;
+                });
+            } catch (Exception excp) {
+                throw new RangerServiceException(excp);
+            }
         } else {
             clientResponse = invokeREST(api,params,request);
         }
