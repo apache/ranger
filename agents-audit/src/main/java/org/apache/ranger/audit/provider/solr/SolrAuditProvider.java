@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
 public class SolrAuditProvider extends AuditDestination {
 	private static final Logger LOG = LoggerFactory.getLogger(SolrAuditProvider.class);
 
-	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.solr.async.max.queue.size";
-	public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.solr.async.max.flush.interval.ms";
 	public static final String AUDIT_RETRY_WAIT_PROP = "xasecure.audit.solr.retry.ms";
 
 	static final Object lock = new Object();
