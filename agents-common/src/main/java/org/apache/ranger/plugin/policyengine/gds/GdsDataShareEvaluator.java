@@ -198,7 +198,7 @@ public class GdsDataShareEvaluator {
 
         Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
 
-        if (evaluators == null) {
+        if (evaluators == null || evaluators.isEmpty()) {
             ret = Collections.emptyList();
         } else if (evaluators.size() > 1) {
             ret = new ArrayList<>(evaluators);
