@@ -115,6 +115,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final String CMD_SHOW_PRINCIPALS    = "show principals %s";
 	private static final String CMD_GRANT_ROLE         = "grant %s to %s ";
 	private static final String CMD_REVOKE_ROLE        = "revoke %s from %s";
+	private static final String CMD_SET_ROLE           = "set role %s";
 
 	private static final Set<String> RESERVED_ROLE_NAMES;
 
@@ -311,39 +312,59 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	@Override
 	public void setCurrentRole(String roleName) throws HiveAccessControlException, HiveAuthzPluginException {
 		// from SQLStdHiveAccessController.setCurrentRole()
-		initUserRoles();
-		if (ROLE_NONE.equalsIgnoreCase(roleName)) {
-			// for set role NONE, clear all roles for current session.
-			currentRoles.clear();
-			isCurrentRoleSet = true;
-			return;
-		}
-		if (ROLE_ALL.equalsIgnoreCase(roleName)) {
-			// for set role ALL, reset roles to default roles.
-			currentRoles.clear();
-			currentRoles.addAll(getCurrentRoleNamesFromRanger());
-			isCurrentRoleSet = true;
-			return;
-		}
-		for (String role : getCurrentRoleNamesFromRanger()) {
-			// set to one of the roles user belongs to.
-			if (role.equalsIgnoreCase(roleName)) {
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
+		List<String> roles = new ArrayList<>();
+		roles.add(roleName);
+		boolean result = false;
+
+		try {
+			initUserRoles();
+			if (ROLE_NONE.equalsIgnoreCase(roleName)) {
+				// for set role NONE, clear all roles for current session.
 				currentRoles.clear();
-				currentRoles.add(role);
 				isCurrentRoleSet = true;
+				result = true;
 				return;
 			}
+			if (ROLE_ALL.equalsIgnoreCase(roleName)) {
+				// for set role ALL, reset roles to default roles.
+				currentRoles.clear();
+				currentRoles.addAll(getCurrentRoleNamesFromRanger());
+				isCurrentRoleSet = true;
+				result = true;
+				return;
+			}
+			for (String role : getCurrentRoleNamesFromRanger()) {
+				// set to one of the roles user belongs to.
+				if (role.equalsIgnoreCase(roleName)) {
+					currentRoles.clear();
+					currentRoles.add(role);
+					isCurrentRoleSet = true;
+					result = true;
+					return;
+				}
+			}
+			// set to ADMIN role, if user belongs there.
+			if (ROLE_ADMIN.equalsIgnoreCase(roleName) && null != this.adminRole) {
+				currentRoles.clear();
+				currentRoles.add(adminRole);
+				isCurrentRoleSet = true;
+				result = true;
+				return;
+			}
+			LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
+			// If we are here it means, user is requesting a role he doesn't belong to.
+			throw new HiveAccessControlException(currentUserName + " doesn't belong to role " + roleName);
+		} catch(Exception excp) {
+			throw new HiveAuthzPluginException(excp);
+		} finally {
+			List<String> roleUsers = new ArrayList<>();
+			roleUsers.add(currentUserName);
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, roleUsers, HiveOperationType.SET, HiveAccessType.UPDATE, roles, result);
+			hivePlugin.evalAuditPolicies(accessResult);
+			auditHandler.processResult(accessResult);
+			auditHandler.flushAudit();
 		}
-		// set to ADMIN role, if user belongs there.
-		if (ROLE_ADMIN.equalsIgnoreCase(roleName) && null != this.adminRole) {
-			currentRoles.clear();
-			currentRoles.add(adminRole);
-			isCurrentRoleSet = true;
-			return;
-		}
-		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
-		// If we are here it means, user is requesting a role he doesn't belong to.
-		throw new HiveAccessControlException(currentUserName + " doesn't belong to role " + roleName);
 	}
 
 	@Override
@@ -2960,6 +2981,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case REVOKE_ROLE:
 				ret = String.format(CMD_REVOKE_ROLE, roleName, user);
 				break;
+			case SET:
+				ret = String.format(CMD_SET_ROLE, roleName);
 		}
 
 		return ret;
