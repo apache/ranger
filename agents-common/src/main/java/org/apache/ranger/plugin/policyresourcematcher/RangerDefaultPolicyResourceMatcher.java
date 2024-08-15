@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -60,6 +61,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     private List<RangerResourceDef>             validResourceHierarchy;
     private boolean                             isInitialized = false;
     private RangerServiceDefHelper              serviceDefHelper;
+    private RangerPluginContext                 pluginContext = null;
 
     private final boolean forceEnableWildcardMatch;
 
@@ -112,6 +114,9 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     public void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper) {
         this.serviceDefHelper = serviceDefHelper;
     }
+
+    @Override
+    public void setPluginContext(RangerPluginContext pluginContext) { this.pluginContext = pluginContext; }
 
     public int getPolicyType() { return policyType; }
 
@@ -812,29 +817,41 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
             String resName = resourceDef.getName();
             String clsName = resourceDef.getMatcher();
 
-            if (!StringUtils.isEmpty(clsName)) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(clsName);
-
-                    ret = matcherClass.newInstance();
-                } catch (Exception excp) {
-                    LOG.error("failed to instantiate resource matcher '" + clsName + "' for '" + resName + "'. Default resource matcher will be used", excp);
-                }
+            if (pluginContext != null) {
+                ret = pluginContext.getResourceMatcher(resName, resource);
             }
-
 
             if (ret == null) {
-                ret = new RangerDefaultResourceMatcher();
-            }
+                if (!StringUtils.isEmpty(clsName)) {
+                    try {
+                        @SuppressWarnings("unchecked") Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(clsName);
 
-            if (forceEnableWildcardMatch && !Boolean.parseBoolean(resourceDef.getMatcherOptions().get(OPTION_WILD_CARD))) {
-                resourceDef = serviceDefHelper.getWildcardEnabledResourceDef(resourceDef.getName(), policyType);
-            }
+                        ret = matcherClass.newInstance();
+                    } catch (Exception excp) {
+                        LOG.error("failed to instantiate resource matcher '" + clsName + "' for '" + resName + "'. Default resource matcher will be used", excp);
+                    }
+                }
 
-            ret.setResourceDef(resourceDef);
-            ret.setPolicyResource(resource);
-            ret.init();
+
+                if (ret == null) {
+                    ret = new RangerDefaultResourceMatcher();
+                }
+
+                if (forceEnableWildcardMatch && !Boolean.parseBoolean(resourceDef.getMatcherOptions().get(OPTION_WILD_CARD))) {
+                    resourceDef = serviceDefHelper.getWildcardEnabledResourceDef(resourceDef.getName(), policyType);
+                }
+
+                ret.setResourceDef(resourceDef);
+                ret.setPolicyResource(resource);
+                ret.init();
+                if (pluginContext != null) {
+                    pluginContext.setResourceMatcher(resName, resource, ret);
+                }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Did not create a fresh matcher - used matcher from pluginContext");
+                }
+            }
         } else {
             LOG.error("RangerDefaultPolicyResourceMatcher: RangerResourceDef is null");
         }

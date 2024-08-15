@@ -261,7 +261,7 @@ public class GdsPolicyEngine {
 
         if (gdsInfo.getDataShares() != null) {
             for (DataShareInfo dsh : gdsInfo.getDataShares()) {
-                GdsDataShareEvaluator       dshEvaluator   = new GdsDataShareEvaluator(dsh, dshResources.get(dsh.getId()), serviceDefHelper);
+                GdsDataShareEvaluator       dshEvaluator   = new GdsDataShareEvaluator(dsh, dshResources.get(dsh.getId()), serviceDefHelper, pluginContext);
                 List<GdsDataShareEvaluator> zoneEvaluators = zoneDataShares.computeIfAbsent(dshEvaluator.getZoneName(), k -> new ArrayList<>());
 
                 zoneEvaluators.add(dshEvaluator);

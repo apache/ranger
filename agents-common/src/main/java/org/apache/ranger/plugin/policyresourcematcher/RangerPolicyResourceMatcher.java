@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 public interface RangerPolicyResourceMatcher {
@@ -47,6 +48,8 @@ public interface RangerPolicyResourceMatcher {
 	void setPolicyResources(Map<String, RangerPolicyResource> policyResources, int policyType);
 
 	void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper);
+
+	void setPluginContext(RangerPluginContext pluginContext);
 
 	RangerServiceDef getServiceDef();
 

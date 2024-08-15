@@ -171,7 +171,7 @@ public class RangerSecurityZoneMatcher {
                         policyResources.put(resourceDefName, new RangerPolicyResource(resourceValues, false, isRecursive));
                     }
 
-                    matchers.add(new RangerZoneResourceMatcher(zoneName, policyResources, serviceDef));
+                    matchers.add(new RangerZoneResourceMatcher(zoneName, policyResources, serviceDef, pluginContext));
 
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Built matcher for resource:[{}] in zone:[{}]", resource, zoneName);

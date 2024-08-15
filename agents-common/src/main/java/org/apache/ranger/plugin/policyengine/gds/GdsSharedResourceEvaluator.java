@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
@@ -55,7 +56,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     private final RangerResourceDef                 leafResourceDef;
     private final Set<String>                       allowedAccessTypes;
 
-    public GdsSharedResourceEvaluator(SharedResourceInfo resource, Set<String> defaultAccessTypes, RangerServiceDefHelper serviceDefHelper) {
+    public GdsSharedResourceEvaluator(SharedResourceInfo resource, Set<String> defaultAccessTypes, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         this.resource           = resource;
         this.conditionEvaluator = RangerCustomConditionEvaluator.getInstance().getExpressionEvaluator(resource.getConditionExpr(), serviceDefHelper.getServiceDef());
 
@@ -71,7 +72,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             this.policyResource = resource.getResource();
         }
 
-        this.policyResourceMatcher = initPolicyResourceMatcher(policyResource, serviceDefHelper);
+        this.policyResourceMatcher = initPolicyResourceMatcher(policyResource, serviceDefHelper, pluginContext);
         this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(serviceDefHelper.getServiceDef(), policyResource);
         this.allowedAccessTypes    = serviceDefHelper.expandImpliedAccessGrants(resource.getAccessTypes() != null ? resource.getAccessTypes() : defaultAccessTypes);
 
@@ -170,12 +171,13 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         return resource.getSubResourceMasks() != null ? resource.getSubResourceMasks().get(subResourceName) : null;
     }
 
-    private static RangerPolicyResourceMatcher initPolicyResourceMatcher(Map<String, RangerPolicyResource> policyResource, RangerServiceDefHelper serviceDefHelper) {
+    private static RangerPolicyResourceMatcher initPolicyResourceMatcher(Map<String, RangerPolicyResource> policyResource, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
         matcher.setServiceDefHelper(serviceDefHelper);
         matcher.setServiceDef(serviceDefHelper.getServiceDef());
         matcher.setPolicyResources(policyResource, RangerPolicy.POLICY_TYPE_ACCESS);
+        matcher.setPluginContext(pluginContext);
 
         matcher.init();
 

@@ -24,6 +24,7 @@ import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
@@ -48,7 +49,7 @@ public class GdsDataShareEvaluator {
     private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> resourceTries;
     private final List<GdsDshidEvaluator>                                     dsidEvaluators = new ArrayList<>();
 
-    public GdsDataShareEvaluator(DataShareInfo dsh, List<SharedResourceInfo> resources, RangerServiceDefHelper serviceDefHelper) {
+    public GdsDataShareEvaluator(DataShareInfo dsh, List<SharedResourceInfo> resources, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         LOG.debug("==> GdsDataShareEvaluator({}, {})", dsh, resources);
 
         this.dsh                = dsh;
@@ -63,7 +64,7 @@ public class GdsDataShareEvaluator {
             resourceTries = new HashMap<>();
 
             for (SharedResourceInfo resource : resources) {
-                GdsSharedResourceEvaluator evaluator = new GdsSharedResourceEvaluator(resource, dsh.getDefaultAccessTypes(), serviceDefHelper);
+                GdsSharedResourceEvaluator evaluator = new GdsSharedResourceEvaluator(resource, dsh.getDefaultAccessTypes(), serviceDefHelper, pluginContext);
 
                 evaluators.add(evaluator);
 

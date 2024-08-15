@@ -542,6 +542,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			this.resourceMatcher.setPolicyResources(resource, policyType);
 			this.resourceMatcher.setServiceDef(serviceDef);
 			this.resourceMatcher.setServiceDefHelper(serviceDefHelper);
+			this.resourceMatcher.setPluginContext(pluginContext);
 			this.resourceMatcher.init();
 		}
 
