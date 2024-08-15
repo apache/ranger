@@ -36,6 +36,7 @@ public class RangerPolicyEngineOptions {
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
 	public boolean enableUserStoreEnricherWithLocalRefresher = false;
+	public boolean enableResourceMatcherReuse = true;
 	@Deprecated
 	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
 	public boolean optimizeTrieForRetrieval = false;
@@ -61,6 +62,7 @@ public class RangerPolicyEngineOptions {
 		this.evaluateDelegateAdminOnly = other.evaluateDelegateAdminOnly;
 		this.enableTagEnricherWithLocalRefresher = other.enableTagEnricherWithLocalRefresher;
 		this.enableUserStoreEnricherWithLocalRefresher = other.enableUserStoreEnricherWithLocalRefresher;
+		this.enableResourceMatcherReuse = other.enableResourceMatcherReuse;
 		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
 		this.disableRoleResolution = other.disableRoleResolution;
 		this.serviceDefHelper = null;
@@ -79,6 +81,7 @@ public class RangerPolicyEngineOptions {
 		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", false);
 
 		cacheAuditResults = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
+		enableResourceMatcherReuse = conf.getBoolean(propertyPrefix + ".policyengine.option.enable.resourcematcher.reuse", true);
 
 		if (!disableTrieLookupPrefilter) {
 			cacheAuditResults = false;
@@ -109,6 +112,7 @@ public class RangerPolicyEngineOptions {
 		enableUserStoreEnricherWithLocalRefresher = false;
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
+		enableResourceMatcherReuse = conf.getBoolean(propertyPrefix + ".policyengine.option.enable.resourcematcher.reuse", true);
 	}
 
 	public void configureDelegateAdmin(Configuration conf, String propertyPrefix) {
@@ -120,6 +124,7 @@ public class RangerPolicyEngineOptions {
 		disableTagRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", true);
 		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
+		enableResourceMatcherReuse = conf.getBoolean(propertyPrefix + ".policyengine.option.enable.resourcematcher.reuse", true);
 
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = true;
@@ -145,6 +150,7 @@ public class RangerPolicyEngineOptions {
 		optimizeTrieForSpace = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.space", false);
 		optimizeTagTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.tag.trie.for.retrieval", false);
 		optimizeTagTrieForSpace = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.tag.trie.for.space", true);
+		enableResourceMatcherReuse = conf.getBoolean(propertyPrefix + ".policyengine.option.enable.resourcematcher.reuse", true);
 	}
 
 	public RangerServiceDefHelper getServiceDefHelper() {
@@ -181,6 +187,7 @@ public class RangerPolicyEngineOptions {
 					&& this.optimizeTrieForSpace == that.optimizeTrieForSpace
 					&& this.optimizeTagTrieForRetrieval == that.optimizeTagTrieForRetrieval
 					&& this.optimizeTagTrieForSpace == that.optimizeTagTrieForSpace
+					&& this.enableResourceMatcherReuse == that.enableResourceMatcherReuse
 			;
 		}
 		return ret;
@@ -221,6 +228,8 @@ public class RangerPolicyEngineOptions {
 		ret *= 2;
 		ret += optimizeTagTrieForSpace ? 1 : 0;
 		ret *= 2;
+		ret += enableResourceMatcherReuse ? 1 : 0;
+		ret *= 2;
 		return ret;
 	}
 
@@ -244,6 +253,7 @@ public class RangerPolicyEngineOptions {
 				", optimizeTrieForSpace: " + optimizeTrieForSpace +
 				", optimizeTagTrieForRetrieval: " + optimizeTagTrieForRetrieval +
 				", optimizeTagTrieForSpace: " + optimizeTagTrieForSpace +
+				", enableResourceMatcherReuse: " + enableResourceMatcherReuse +
 				" }";
 
 	}

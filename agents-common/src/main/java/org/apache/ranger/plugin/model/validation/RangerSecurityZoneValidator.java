@@ -354,7 +354,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                     policyResources.put(resourceDefName, policyResource);
                 }
 
-                RangerZoneResourceMatcher matcher = new RangerZoneResourceMatcher(zone.getName(), policyResources, serviceDefHelper);
+                RangerZoneResourceMatcher matcher = new RangerZoneResourceMatcher(zone.getName(), policyResources, serviceDefHelper, null);
 
                 matchers.add(matcher);
                 resourceNames.addAll(policyResources.keySet());

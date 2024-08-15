@@ -29,11 +29,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
+import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.DownloadTrigger;
@@ -437,7 +433,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			for (ListIterator<RangerServiceResource> iter = serviceResources.listIterator(); iter.hasNext(); ) {
 				RangerServiceResource        serviceResource        = iter.next();
-				RangerServiceResourceMatcher serviceResourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies);
+				RangerServiceResourceMatcher serviceResourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies, getPluginContext());
 
 				if (serviceResourceMatcher != null) {
 					resourceMatchers.add(serviceResourceMatcher);
@@ -484,7 +480,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (removedOldServiceResource) {
 				if (!StringUtils.isEmpty(serviceResource.getResourceSignature())) {
-					RangerServiceResourceMatcher resourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies);
+					RangerServiceResourceMatcher resourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies, getPluginContext());
 
 					if (resourceMatcher != null) {
 						for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
@@ -613,7 +609,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	static public RangerServiceResourceMatcher createRangerServiceResourceMatcher(RangerServiceResource serviceResource, RangerServiceDefHelper serviceDefHelper, ResourceHierarchies hierarchies) {
+	static public RangerServiceResourceMatcher createRangerServiceResourceMatcher(RangerServiceResource serviceResource, RangerServiceDefHelper serviceDefHelper, ResourceHierarchies hierarchies, RangerPluginContext pluginContext) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> createRangerServiceResourceMatcher(serviceResource=" + serviceResource + ")");
@@ -644,6 +640,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 				matcher.setServiceDef(serviceDefHelper.getServiceDef());
 				matcher.setPolicyResources(serviceResource.getResourceElements(), policyType);
+				matcher.setPluginContext(pluginContext);
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource

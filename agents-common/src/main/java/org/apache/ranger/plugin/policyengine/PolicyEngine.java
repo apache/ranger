@@ -197,6 +197,7 @@ public class PolicyEngine {
         }
 
         normalizeServiceDefs(servicePolicies);
+        pluginContext.cleanResourceMatchers();
 
         this.pluginContext = pluginContext;
         this.lock          = new RangerReadWriteLock(isUseReadWriteLock);

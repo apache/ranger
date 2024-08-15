@@ -83,6 +83,7 @@ public class RangerMemSizing {
   private final boolean     deDup;
   private final boolean     deDupStrings;
   private final String      optimizationMode;
+  private final boolean     reuseResourceMatchers;
   private final PrintStream out;
 
   public RangerMemSizing(CommandLine cmdLine) {
@@ -97,6 +98,7 @@ public class RangerMemSizing {
     this.deDup            = Boolean.parseBoolean(cmdLine.getOptionValue("d", "true"));
     this.deDupStrings     = this.deDup;
     this.optimizationMode = StringUtils.startsWithIgnoreCase(cmdLine.getOptionValue('o', "space"), "s") ? OPT_MODE_SPACE : OPT_MODEL_RETRIEVAL;
+    this.reuseResourceMatchers = Boolean.parseBoolean(cmdLine.getOptionValue('m', "true"));
   }
 
   public void run() {
@@ -127,31 +129,32 @@ public class RangerMemSizing {
     out.println();
     out.println("Parameters:");
     if (policies != null) {
-      out.println("  Policies:  file=" + policyFile + ", size=" + new File(policyFile).length() + ", " + toSummaryStr(policies));
+      out.println("  Policies:      file=" + policyFile + ", size=" + new File(policyFile).length() + ", " + toSummaryStr(policies));
     }
 
     if (tags != null) {
-      out.println("  Tags:      file=" + tagFile + ", size=" + new File(tagFile).length() + ", " + toSummaryStr(tags));
+      out.println("  Tags:          file=" + tagFile + ", size=" + new File(tagFile).length() + ", " + toSummaryStr(tags));
     }
 
     if (roles != null) {
-      out.println("  Roles:     file=" + rolesFile + ", size=" + new File(rolesFile).length() + ", " + toSummaryStr(roles));
+      out.println("  Roles:         file=" + rolesFile + ", size=" + new File(rolesFile).length() + ", " + toSummaryStr(roles));
     }
 
     if (userStore != null) {
-      out.println("  UserStore: file=" + userStoreFile + ", size=" + new File(userStoreFile).length() + ", " + toSummaryStr(userStore));
+      out.println("  UserStore:     file=" + userStoreFile + ", size=" + new File(userStoreFile).length() + ", " + toSummaryStr(userStore));
     }
 
     if (genRequestsFile != null) {
-      out.println("  GenReq:    file=" + genRequestsFile + ", requestCount=" + genReqCount);
+      out.println("  GenReq:        file=" + genRequestsFile + ", requestCount=" + genReqCount);
     }
 
     if (evalRequestsFile != null) {
-      out.println("  EvalReq:   file=" + evalRequestsFile + ", requestCount=" + evalReqCount + ", avgTimeTaken=" + evalAvgTimeNs +  "ns, clientCount=" + evalClientsCount);
+      out.println("  EvalReq:       file=" + evalRequestsFile + ", requestCount=" + evalReqCount + ", avgTimeTaken=" + evalAvgTimeNs +  "ns, clientCount=" + evalClientsCount);
     }
 
-    out.println("  DeDup:     " + deDup);
-    out.println("  OptMode:   " + optimizationMode);
+    out.println("  DeDup:         " + deDup);
+    out.println("  OptMode:       " + optimizationMode);
+    out.println("  ReuseMatchers: " + reuseResourceMatchers);
     out.println();
 
     out.println("Results:");
@@ -511,6 +514,7 @@ public class RangerMemSizing {
     Option evalClients  = new Option("c", "evalClients", true, "eval clients count");
     Option gdsInfo      = new Option("g", "gdsInfo", true, "gdsInfo file");
     Option optimizeMode = new Option("o", "optMode", true, "optimization mode: space|retrieval");
+    Option reuseResourceMatchers = new Option("m", "reuseResourceMatchers", true, "reuse resource matchers: true|false");
 
     Options options = new Options();
 
@@ -525,6 +529,7 @@ public class RangerMemSizing {
     options.addOption(gdsInfo);
     options.addOption(deDup);
     options.addOption(optimizeMode);
+    options.addOption(reuseResourceMatchers);
 
     try {
       CommandLine cmdLine = new DefaultParser().parse(options, args);
@@ -562,6 +567,7 @@ public class RangerMemSizing {
     ret.optimizeTrieForRetrieval    = !ret.optimizeTrieForSpace;
     ret.optimizeTagTrieForSpace     = ret.optimizeTrieForSpace;
     ret.optimizeTagTrieForRetrieval = ret.optimizeTrieForRetrieval;
+    ret.enableResourceMatcherReuse  = reuseResourceMatchers;
 
     return ret;
   }
