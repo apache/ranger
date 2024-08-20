@@ -537,9 +537,10 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class DatasetInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long               id;
-        private String             name;
-        private List<RangerPolicy> policies;
+        private Long                   id;
+        private String                 name;
+        private RangerValiditySchedule validitySchedule;
+        private List<RangerPolicy>     policies;
 
         public DatasetInfo() {
         }
@@ -560,6 +561,10 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.name = name;
         }
 
+        public RangerValiditySchedule getValiditySchedule() { return validitySchedule; }
+
+        public void setValiditySchedule(RangerValiditySchedule validitySchedule) { this.validitySchedule = validitySchedule; }
+
         public List<RangerPolicy> getPolicies() {
             return policies;
         }
@@ -576,7 +581,8 @@ public class ServiceGdsInfo implements java.io.Serializable {
         public StringBuilder toString(StringBuilder sb) {
             sb.append("DatasetInfo={")
               .append("id=").append(id)
-              .append(", name=").append(name);
+              .append(", name=").append(name)
+              .append(", validitySchedule=").append(validitySchedule);
 
             sb.append(", policies=[");
             if (policies != null) {
@@ -598,9 +604,10 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class ProjectInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long               id;
-        private String             name;
-        private List<RangerPolicy> policies;
+        private Long                   id;
+        private String                 name;
+        private RangerValiditySchedule validitySchedule;
+        private List<RangerPolicy>     policies;
 
         public ProjectInfo() {
         }
@@ -621,6 +628,10 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.name = name;
         }
 
+        public RangerValiditySchedule getValiditySchedule() { return validitySchedule; }
+
+        public void setValiditySchedule(RangerValiditySchedule validitySchedule) { this.validitySchedule = validitySchedule; }
+
         public List<RangerPolicy> getPolicies() {
             return policies;
         }
@@ -637,7 +648,8 @@ public class ServiceGdsInfo implements java.io.Serializable {
         public StringBuilder toString(StringBuilder sb) {
             sb.append("ProjectInfo={")
                     .append("id=").append(id)
-                    .append(", name=").append(name);
+                    .append(", name=").append(name)
+                    .append(", validitySchedule=").append(validitySchedule);
 
             sb.append(", policies=[");
             if (policies != null) {

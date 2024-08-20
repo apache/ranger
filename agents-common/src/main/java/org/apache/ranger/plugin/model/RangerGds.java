@@ -89,9 +89,10 @@ public class RangerGds {
     public static class RangerDataset extends RangerGdsBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String             name;
-        private RangerGdsObjectACL acl;
-        private String             termsOfUse;
+        private String                 name;
+        private RangerGdsObjectACL     acl;
+        private RangerValiditySchedule validitySchedule;
+        private String                 termsOfUse;
 
         public RangerDataset() { }
 
@@ -102,6 +103,10 @@ public class RangerGds {
         public RangerGdsObjectACL getAcl() { return acl; }
 
         public void setAcl(RangerGdsObjectACL acl) { this.acl = acl; }
+
+        public RangerValiditySchedule getValiditySchedule() { return validitySchedule; }
+
+        public void setValiditySchedule(RangerValiditySchedule validitySchedule) { this.validitySchedule = validitySchedule; }
 
         public String getTermsOfUse() { return termsOfUse; }
 
@@ -115,6 +120,7 @@ public class RangerGds {
 
             sb.append("name={").append(name).append("} ")
               .append("acl={").append(acl).append("} ")
+              .append("validitySchedule={").append(validitySchedule).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
               .append("}");
 
@@ -130,9 +136,10 @@ public class RangerGds {
     public static class RangerProject extends RangerGdsBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String             name;
-        private RangerGdsObjectACL acl;
-        private String             termsOfUse;
+        private String                 name;
+        private RangerGdsObjectACL     acl;
+        private RangerValiditySchedule validitySchedule;
+        private String                 termsOfUse;
 
         public RangerProject() { }
 
@@ -143,6 +150,10 @@ public class RangerGds {
         public RangerGdsObjectACL getAcl() { return acl; }
 
         public void setAcl(RangerGdsObjectACL acl) { this.acl = acl; }
+
+        public RangerValiditySchedule getValiditySchedule() { return validitySchedule; }
+
+        public void setValiditySchedule(RangerValiditySchedule validitySchedule) { this.validitySchedule = validitySchedule; }
 
         public String getTermsOfUse() { return termsOfUse; }
 
@@ -156,6 +167,7 @@ public class RangerGds {
 
             sb.append("name={").append(name).append("} ")
               .append("acl={").append(acl).append("} ")
+              .append("validitySchedule={").append(validitySchedule).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
               .append("}");
 

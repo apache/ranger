@@ -104,7 +104,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
       "name":    "database: customers, user: ds-user, access: _any",
@@ -112,7 +112,7 @@
         "resource":   { "elements": { "database": "customers" } },
         "accessType": "", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
       "name":    "table: operations.facilities, user: ds-user, access: select",
@@ -178,7 +178,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 3002 }
     },
     {
       "name":    "table: operations.facilities, user: proj-user, access: select",
@@ -236,7 +236,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3" ], "projects": [ "project-2" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name":    "table: operations.facilities, user: scott, access: select",
@@ -384,11 +384,13 @@
         "userACLs": {
           "ds-user":    { "select": { "result": 1, "isFinal": true } },
           "ds3-user":   { "select": { "result": 1, "isFinal": true } },
+          "ds6-user":   { "select": { "result": 1, "isFinal": true } },
           "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj2-user": { "select": { "result": 1, "isFinal": true } }
+          "proj2-user": { "select": { "result": 1, "isFinal": true } },
+          "proj4-user": { "select": { "result": 1, "isFinal": true } }
         },
-        "datasets": [ "dataset-3" ],
-        "projects": [ "project-2" ]
+        "datasets": [ "dataset-3", "dataset-6" ],
+        "projects": [ "project-2", "project-4" ]
       }
     },
     {
@@ -411,7 +413,7 @@
     {
       "name":       "Datasets for principals: users[ ds-user ]",
       "sharedWith": { "users": [ "ds-user" ] },
-      "datasets":   [ 1, 2, 3, 4 ]
+      "datasets":   [ 1, 2, 3, 4, 5, 6 ]
     },
     {
       "name":       "Datasets for principals: users[ ds1-user ]",
@@ -434,6 +436,16 @@
       "datasets":   [ 4 ]
     },
     {
+      "name":       "Datasets for principals: users[ ds5-user ]",
+      "sharedWith": { "users": [ "ds5-user" ] },
+      "datasets":   [ 5 ]
+    },
+    {
+      "name":       "Datasets for principals: users[ ds6-user ]",
+      "sharedWith": { "users": [ "ds6-user" ] },
+      "datasets":   [ 6 ]
+    },
+    {
       "name":       "Datasets for principals: users[ ds1-user, ds4-user ]",
       "sharedWith": { "users": [ "ds1-user","ds4-user" ] },
       "datasets":   [ 1, 4 ]
@@ -441,7 +453,7 @@
     {
       "name":        "Projects for principals: users=[ proj-user ]",
       "principals:": { "users": [ "proj-user" ] },
-      "projects":    [ 1, 2 ]
+      "projects":    [ 1, 2, 3, 4 ]
     },
     {
       "name":       "Projects for principals: users[ proj1-user ]",
@@ -452,6 +464,16 @@
       "name":       "Projects for principals: users[ proj2-user ]",
       "sharedWith": { "users": [ "proj2-user" ] },
       "projects":   [ 2 ]
+    },
+    {
+      "name":       "Projects for principals: users[ proj3-user ]",
+      "sharedWith": { "users": [ "proj3-user" ] },
+      "projects":   [ 3 ]
+    },
+    {
+      "name":       "Projects for principals: users[ proj4-user ]",
+      "sharedWith": { "users": [ "proj4-user" ] },
+      "projects":   [ 4 ]
     },
     {
       "name":       "Projects for principals: users[ proj1-user, proj2-user ]",

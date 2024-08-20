@@ -40,6 +40,26 @@
           ]
         }
       ]
+    },
+    { "id": 5, "name": "dataset-5", "validitySchedule": { "startTime": "2023/01/01 00:00:00", "endTime": "2024/01/01 00:00:00" },
+      "policies": [
+        { "id": 2005, "name": "dataset-5", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "dataset-id": { "values": ["5"] } },
+          "policyItems":[
+            { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user", "ds5-user" ], "groups": []}
+          ]
+        }
+      ]
+    },
+    { "id": 6, "name": "dataset-6", "validitySchedule": { "startTime": "2024/01/01 00:00:00", "endTime": "2064/01/01 00:00:00" },
+      "policies": [
+        { "id": 2006, "name": "dataset-6", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "dataset-id": { "values": ["6"] } },
+          "policyItems":[
+            { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user", "ds6-user" ], "groups": []}
+          ]
+        }
+      ]
     }
   ],
   "projects": [
@@ -62,6 +82,26 @@
           ]
         }
       ]
+    },
+    { "id": 3, "name": "project-3", "validitySchedule": { "startTime": "2023/01/01 00:00:00", "endTime": "2024/01/01 00:00:00" },
+      "policies": [
+        { "id": 3003, "name": "project-3", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "project-id": { "values": ["3"] } },
+          "policyItems":[
+            { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "proj-user", "proj3-user" ], "groups": []}
+          ]
+        }
+      ]
+    },
+    { "id": 4, "name": "project-4", "validitySchedule": { "startTime": "2024/01/01 00:00:00", "endTime": "2064/01/01 00:00:00" },
+      "policies": [
+        { "id": 3004, "name": "project-4", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "project-id": { "values": ["4"] } },
+          "policyItems":[
+            { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "proj-user", "proj4-user" ], "groups": []}
+          ]
+        }
+      ]
     }
   ],
   "dataShares": [
@@ -69,7 +109,8 @@
     { "id": 2, "name": "hive-finance-2023",       "zoneName": "finance",  "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
     { "id": 3, "name": "hive-shipping-2023",      "zoneName": "shipping", "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
     { "id": 4, "name": "hive-new-customers-2023", "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 5, "name": "hive-facilities",         "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] }
+    { "id": 5, "name": "hive-facilities",         "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 6, "name": "hive-eu-customers",       "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] }
   ],
   "dshids": [
     { "dataShareId": 1, "datasetId": 1, "status": "ACTIVE", "validitySchedule": null },
@@ -77,12 +118,16 @@
     { "dataShareId": 2, "datasetId": 2, "status": "ACTIVE", "validitySchedule": null },
     { "dataShareId": 3, "datasetId": 2, "status": "ACTIVE", "validitySchedule": null },
     { "dataShareId": 4, "datasetId": 3, "status": "ACTIVE", "validitySchedule": null },
-    { "dataShareId": 5, "datasetId": 4, "status": "ACTIVE", "validitySchedule": null }
+    { "dataShareId": 5, "datasetId": 4, "status": "ACTIVE", "validitySchedule": null },
+    { "dataShareId": 6, "datasetId": 5, "status": "ACTIVE", "validitySchedule": null },
+    { "dataShareId": 6, "datasetId": 6, "status": "ACTIVE", "validitySchedule": null }
   ],
   "dips": [
     { "datasetId": 1, "projectId": 1, "status": "ACTIVE", "validitySchedule": null },
     { "datasetId": 2, "projectId": 1, "status": "ACTIVE", "validitySchedule": null },
-    { "datasetId": 3, "projectId": 2, "status": "ACTIVE", "validitySchedule": null }
+    { "datasetId": 3, "projectId": 2, "status": "ACTIVE", "validitySchedule": null },
+    { "datasetId": 5, "projectId": 3, "status": "ACTIVE", "validitySchedule": null },
+    { "datasetId": 6, "projectId": 4, "status": "ACTIVE", "validitySchedule": null }
   ],
   "resources": [
     {
@@ -118,6 +163,11 @@
     {
       "id": 51, "dataShareId": 5, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "operations" ] }, "table": { "values": [ "facilities" ] } }, "rowFilter": null,
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
+    },
+    {
+      "id": 61, "dataShareId": 6, "conditionExpr": "", "accessTypes": [ "select" ],
+      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } }, "rowFilter": { "filterExpr": "country = 'US'" },
       "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
     }
   ],
