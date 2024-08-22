@@ -269,7 +269,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			// then need to redirect user to the login page.
 			String url = ((HttpServletRequest) servletRequest).getRequestURI() ;
 			if (!url.contains("login.jsp")) {
-				url = url + "login.jsp";
+				url = url.replace("index.html", "") + "login.jsp";
 			}
 			// invalidating session
 			if (LOG.isDebugEnabled()) {
