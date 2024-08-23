@@ -23,9 +23,11 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +80,7 @@ public class RangerMemSizing {
   private final String      rolesFile;
   private final String      userStoreFile;
   private final String      genRequestsFile;
+  private final Set<String> genResourceKeys;
   private final String      evalRequestsFile;
   private final int         evalClientsCount;
   private final boolean     deDup;
@@ -93,6 +96,7 @@ public class RangerMemSizing {
     this.rolesFile        = cmdLine.getOptionValue('r');
     this.userStoreFile    = cmdLine.getOptionValue('u');
     this.genRequestsFile  = cmdLine.getOptionValue('q');
+    this.genResourceKeys  = csvToSet(cmdLine.getOptionValue('k'));
     this.evalRequestsFile = cmdLine.getOptionValue('e');
     this.evalClientsCount = cmdLine.hasOption('c') ? Integer.parseInt(cmdLine.getOptionValue('c')) : 1;
     this.deDup            = Boolean.parseBoolean(cmdLine.getOptionValue("d", "true"));
@@ -382,7 +386,7 @@ public class RangerMemSizing {
 
     PerfMemTimeTracker tracker = new PerfMemTimeTracker("generateRequests");
 
-    Collection<RangerAccessRequest> requests = new PerfRequestGenerator().generate(policies, tags);
+    Collection<RangerAccessRequest> requests = new PerfRequestGenerator(genResourceKeys).generate(policies, tags);
 
     log("generateRequestsFile(): saving " + requests.size() + " requests..");
 
@@ -515,6 +519,7 @@ public class RangerMemSizing {
     Option gdsInfo      = new Option("g", "gdsInfo", true, "gdsInfo file");
     Option optimizeMode = new Option("o", "optMode", true, "optimization mode: space|retrieval");
     Option reuseResourceMatchers = new Option("m", "reuseResourceMatchers", true, "reuse resource matchers: true|false");
+    Option genResourceKeys       = new Option("k", "genResourceKeys", true, "list of resourceKeys (comma separated) to generate requests for");
 
     Options options = new Options();
 
@@ -530,6 +535,7 @@ public class RangerMemSizing {
     options.addOption(deDup);
     options.addOption(optimizeMode);
     options.addOption(reuseResourceMatchers);
+    options.addOption(genResourceKeys);
 
     try {
       CommandLine cmdLine = new DefaultParser().parse(options, args);
@@ -652,6 +658,10 @@ public class RangerMemSizing {
     }
 
     return "users=" + userCount + ", groups=" + groupCount + ", userGroupMappings=" + userGroupCount;
+  }
+
+  private Set<String> csvToSet(String str) {
+    return StringUtils.isBlank(str) ? Collections.emptySet() : new HashSet<>(Arrays.asList(StringUtils.split(str, ',')));
   }
 
   private void initMapper(ObjectMapper mapper) {
