@@ -23,7 +23,13 @@ hive = RangerService({'name': 'dev_hive', 'type': 'hive',
                       'configs': {'username': 'hive', 'password': 'hive',
                                   'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver',
                                   'jdbc.url': 'jdbc:hive2://ranger-hive:10000',
-                                  'hadoop.security.authorization': 'true'}})
+                                  'hadoop.security.authorization': 'true',
+                                  'tag.download.auth.users': 'hive,hdfs,impala',
+                                  'policy.download.auth.users': 'hive,hdfs,impala',
+                                  'policy.grantrevoke.auth.users': 'hive,impala',
+                                  'enable.hive.metastore.lookup': 'true',
+                                  'default.policy.users': 'impala,hive,admin',
+                                  'hive.site.file.path': '/opt/hive/conf/hive-site.xml'}})
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                        'configs': {'username': 'kafka', 'password': 'kafka',

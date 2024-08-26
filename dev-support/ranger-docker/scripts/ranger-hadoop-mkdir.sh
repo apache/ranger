@@ -19,6 +19,7 @@
 # setup directories for Ranger audits
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/yarn
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/impala
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseMaster
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseRegional
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/kafka
@@ -27,6 +28,7 @@ ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/knox
 
 ${HADOOP_HOME}/bin/hdfs dfs -chown hdfs:hadoop  /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -chown yarn:hadoop  /ranger/audit/yarn
+${HADOOP_HOME}/bin/hdfs dfs -chown impala:hadoop  /ranger/audit/impala
 ${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseMaster
 ${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseRegional
 ${HADOOP_HOME}/bin/hdfs dfs -chown kafka:hadoop /ranger/audit/kafka
