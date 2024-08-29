@@ -808,15 +808,11 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!--
-    <repository>
-      <id>repo</id>
-      <url>file://${basedir}/local-repo</url>
-      <snapshots>
-         <enabled>true</enabled>
-      </snapshots>
-  </repository>
-  -->
+    	<repository>
+            <id>jetbrains-pty4j</id>
+            <name>jetbrains-intellij-dependencies</name>
+            <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
+        </repository>
     </repositories>
     <dependencyManagement>
         <dependencies>
