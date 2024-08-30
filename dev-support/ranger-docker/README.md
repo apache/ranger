@@ -97,8 +97,10 @@ docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB
 ~~~
 docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
 ~~~
-#### Bring up ozone container
+#### Bring up ozone containers
 ~~~
+source download-archives.sh
+setup_ozone
 docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 #### Bring up trino container (requires docker build with jdk 11):
