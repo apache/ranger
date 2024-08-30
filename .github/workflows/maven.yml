@@ -73,14 +73,28 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: target-8
+      
       - name: Copy artifacts for docker build
         run: |
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
           cp version dev-support/ranger-docker/dist
-      - name: Build all ranger-service images
+      
+      - name: Cache downloaded archives
+        uses: actions/cache@v3
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
+      - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
           chmod +x download-archives.sh && ./download-archives.sh
+      
+      - name: Build all ranger-service images
+        run: |
+          cd dev-support/ranger-docker
           docker compose -f docker-compose.ranger-base.yml build
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
