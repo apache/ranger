@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
@@ -38,19 +39,26 @@ public class GdsDatasetEvaluator {
     public static final GdsDatasetEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsDatasetEvalOrderComparator();
 
 
-    private final DatasetInfo                 dataset;
-    private final RangerServiceDef            gdsServiceDef;
-    private final String                      name;
-    private final List<GdsDipEvaluator>       dipEvaluators = new ArrayList<>();
-    private final List<RangerPolicyEvaluator> policyEvaluators;
+    private final DatasetInfo                     dataset;
+    private final RangerServiceDef                gdsServiceDef;
+    private final String                          name;
+    private final RangerValidityScheduleEvaluator scheduleEvaluator;
+    private final List<GdsDipEvaluator>           dipEvaluators = new ArrayList<>();
+    private final List<RangerPolicyEvaluator>     policyEvaluators;
 
 
     public GdsDatasetEvaluator(DatasetInfo dataset, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsDatasetEvaluator()");
 
-        this.dataset       = dataset;
-        this.gdsServiceDef = gdsServiceDef;
-        this.name          = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
+        this.dataset            = dataset;
+        this.gdsServiceDef      = gdsServiceDef;
+        this.name               = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
+
+        if (dataset.getValiditySchedule() != null) {
+            scheduleEvaluator = new RangerValidityScheduleEvaluator(dataset.getValiditySchedule());
+        } else {
+            scheduleEvaluator = null;
+        }
 
         if (dataset.getPolicies() != null) {
             policyEvaluators = new ArrayList<>(dataset.getPolicies().size());
@@ -94,33 +102,35 @@ public class GdsDatasetEvaluator {
     public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
 
-        result.addDataset(getName());
+        if (isActive()) {
+            result.addDataset(getName());
 
-        if (!policyEvaluators.isEmpty()) {
-            GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
-            RangerAccessResult      datasetResult  = datasetRequest.createAccessResult();
+            if (!policyEvaluators.isEmpty()) {
+                GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
+                RangerAccessResult      datasetResult  = datasetRequest.createAccessResult();
 
-            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                policyEvaluator.evaluate(datasetRequest, datasetResult);
-            }
+                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                    policyEvaluator.evaluate(datasetRequest, datasetResult);
+                }
 
-            if (!result.getIsAllowed()) {
-                if (datasetResult.getIsAllowed()) {
-                    result.setIsAllowed(true);
-                    result.setPolicyId(datasetResult.getPolicyId());
-                    result.setPolicyVersion(datasetResult.getPolicyVersion());
+                if (!result.getIsAllowed()) {
+                    if (datasetResult.getIsAllowed()) {
+                        result.setIsAllowed(true);
+                        result.setPolicyId(datasetResult.getPolicyId());
+                        result.setPolicyVersion(datasetResult.getPolicyVersion());
+                    }
+                }
+
+                if (!result.getIsAudited()) {
+                    result.setIsAudited(datasetResult.getIsAudited());
                 }
             }
 
-            if (!result.getIsAudited()) {
-                result.setIsAudited(datasetResult.getIsAudited());
-            }
-        }
-
-        for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-            if (!projectIds.contains(dipEvaluator.getProjectId())) {
-                if (dipEvaluator.isAllowed(request)) {
-                    projectIds.add(dipEvaluator.getProjectId());
+            for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
+                if (!projectIds.contains(dipEvaluator.getProjectId())) {
+                    if (dipEvaluator.isAllowed(request)) {
+                        projectIds.add(dipEvaluator.getProjectId());
+                    }
                 }
             }
         }
@@ -129,18 +139,20 @@ public class GdsDatasetEvaluator {
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
-        acls.getDatasets().add(getName());
+        if (isActive()) {
+            acls.getDatasets().add(getName());
 
-        if (!policyEvaluators.isEmpty()) {
-            GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
+            if (!policyEvaluators.isEmpty()) {
+                GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
 
-            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                policyEvaluator.getResourceACLs(datasetRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                    policyEvaluator.getResourceACLs(datasetRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+                }
             }
-        }
 
-        for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-            dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
+            for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
+                dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
+            }
         }
     }
 
@@ -160,6 +172,10 @@ public class GdsDatasetEvaluator {
 
     void addDipEvaluator(GdsDipEvaluator dipEvaluator) {
         dipEvaluators.add(dipEvaluator);
+    }
+
+    private boolean isActive() {
+        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
     private static class GdsDatasetAccessRequest extends RangerAccessRequestImpl {

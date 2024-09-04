@@ -148,6 +148,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
                 dsInfo.setId(dataset.getId());
                 dsInfo.setName(dataset.getName());
+                dsInfo.setValiditySchedule(dataset.getValiditySchedule());
                 dsInfo.setPolicies(getPolicies(daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(dataset.getId())));
 
                 gdsInfo.addDataset(dsInfo);
@@ -160,6 +161,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
                 projInfo.setId(project.getId());
                 projInfo.setName(project.getName());
+                projInfo.setValiditySchedule(project.getValiditySchedule());
                 projInfo.setPolicies(getPolicies(daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(project.getId())));
 
                 gdsInfo.addProject(projInfo);
