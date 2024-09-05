@@ -19,8 +19,9 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -38,12 +39,12 @@ public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 
 	private final RangerServiceResource       serviceResource;
 	private final RangerPolicyResourceMatcher policyResourceMatcher;
-	private RangerServiceDef.RangerResourceDef leafResourceDef;
+	private final RangerResourceDef           leafResourceDef;
 
 	public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
 		this.serviceResource       = serviceResource;
 		this.policyResourceMatcher = policyResourceMatcher;
-		this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(policyResourceMatcher.getServiceDef(), getPolicyResource());
+		this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(policyResourceMatcher.getServiceDef(), getPolicyResource(), true);
 	}
 
 	public RangerServiceResource getServiceResource() { return serviceResource; }
@@ -67,7 +68,7 @@ public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 	}
 
 	@Override
-	public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
+	public boolean isAncestorOf(RangerResourceDef resourceDef) {
 		return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
 	}
 
@@ -86,4 +87,7 @@ public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 	public String toString() {
 		return String.valueOf(getId());
 	}
+
+	@Override
+	public boolean isLeaf(String resourceName) { return StringUtils.equals(resourceName, leafResourceDef.getName()); }
 }

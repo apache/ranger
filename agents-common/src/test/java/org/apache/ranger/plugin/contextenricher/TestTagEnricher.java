@@ -128,6 +128,7 @@ public class TestTagEnricher {
         for (TestData test : testCase.tests) {
             RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null, null);
 
+            ((RangerMutableResource)request.getResource()).setServiceDef(testCase.serviceDef);
             tagEnricher.enrich(request);
 
             List<RangerTag> expected = test.result;

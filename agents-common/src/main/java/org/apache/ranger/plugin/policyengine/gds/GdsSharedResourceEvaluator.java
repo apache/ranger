@@ -105,6 +105,9 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
     }
 
+    @Override
+    public boolean isLeaf(String resourceName) { return StringUtils.equals(leafResourceDef.getName(), resourceName); }
+
     public Collection<String> getResourceKeys() {
         return resource != null && resource.getResource() != null ? resource.getResource().keySet() : Collections.emptySet();
     }

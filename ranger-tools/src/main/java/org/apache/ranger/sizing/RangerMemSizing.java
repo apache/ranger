@@ -619,6 +619,7 @@ public class RangerMemSizing {
     ret.disablePolicyRefresher      = true;
     ret.disableTagRetriever         = true;
     ret.disableUserStoreRetriever   = true;
+    ret.disableGdsInfoRetriever     = true;
     ret.optimizeTrieForSpace        = optimizationMode.equals(OPT_MODE_SPACE);
     ret.optimizeTrieForRetrieval    = !ret.optimizeTrieForSpace;
     ret.optimizeTagTrieForSpace     = ret.optimizeTrieForSpace;

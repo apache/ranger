@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
@@ -188,6 +189,10 @@ public class ServiceDefUtil {
     }
 
     public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource) {
+        return getLeafResourceDef(serviceDef, policyResource, false);
+    }
+
+    public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource, boolean excludeWildcardLeaves) {
         RangerResourceDef ret = null;
 
         if(serviceDef != null && policyResource != null) {
@@ -197,13 +202,28 @@ public class ServiceDefUtil {
                     RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
 
                     if (resourceDef != null && resourceDef.getLevel() != null) {
-                        if (ret == null) {
-                            ret = resourceDef;
-                        } else if(ret.getLevel() < resourceDef.getLevel()) {
-                            ret = resourceDef;
+                        if (ret == null || ret.getLevel() < resourceDef.getLevel()) {
+                            if (StringUtils.isEmpty(resourceDef.getParent())) {
+                                ret = resourceDef;
+                            } else if (!excludeWildcardLeaves || !hasWildcardValue(entry.getValue().getValues())) {
+                                ret = resourceDef;
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean hasWildcardValue(List<String> values) {
+        boolean ret = false;
+
+        for (String strValue : values) {
+            ret = StringUtils.equals(strValue, RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+            if (ret) {
+                break;
             }
         }
 
