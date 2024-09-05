@@ -172,6 +172,14 @@ public class RangerServiceDefHelper {
 		_delegate.patchServiceDefWithDefaultValues();
 	}
 
+	public RangerResourceDef getResourceDef(String resourceName) {
+		return _delegate.getResourceDef(resourceName, RangerPolicy.POLICY_TYPE_ACCESS);
+	}
+
+	public RangerResourceDef getResourceDef(String resourceName, Integer policyType) {
+		return _delegate.getResourceDef(resourceName, policyType);
+	}
+
 	/**
 	 * for a resource definition as follows:
 	 *
@@ -426,6 +434,28 @@ public class RangerServiceDefHelper {
 					}
 				}
 			}
+		}
+
+		public RangerResourceDef getResourceDef(String resourceName, Integer policyType) {
+			RangerResourceDef ret = null;
+
+			if (policyType == null) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			List<RangerResourceDef> resourceDefs = this.getResourceDefs(_serviceDef, policyType);
+
+			if (resourceDefs != null) {
+				for (RangerResourceDef resourceDef : resourceDefs) {
+					if (StringUtils.equals(resourceName, resourceDef.getName())) {
+						ret = resourceDef;
+
+						break;
+					}
+				}
+			}
+
+			return ret;
 		}
 
 		public Set<List<RangerResourceDef>> getResourceHierarchies(Integer policyType) {

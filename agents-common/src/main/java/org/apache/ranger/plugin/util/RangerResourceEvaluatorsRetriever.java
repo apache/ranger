@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
@@ -40,6 +41,10 @@ public class RangerResourceEvaluatorsRetriever {
     }
 
     public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
+        return getEvaluators(resourceTrie, resource, scopes, null);
+    }
+
+    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes, Predicate predicate) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators(" + resource + ")");
         }
@@ -65,12 +70,17 @@ public class RangerResourceEvaluatorsRetriever {
 
                     Object resourceValues = resource.get(resourceDefName);
 
-                    int evalCount = trie.getEvaluatorsCountForResource(resourceValues, scopes.get(resourceDefName));
+                    int evalCount = trie.getEvaluatorsCountForResource(resourceValues, scopes.get(resourceDefName), predicate);
 
                     if (resourceWithMinEvals == null || (evalCount < minEvalCount)) {
                         resourceWithMinEvals = resourceDefName;
                         minEvalCount         = evalCount;
                     }
+                }
+
+                if (minEvalCount == 0) {
+                    resourceWithMinEvals = null;
+                    ret = Collections.emptySet();
                 }
             } else if (resourceKeys.size() == 1) { // skip getEvaluatorsCountForResource() when there is only one resource
                 String                resourceKey = resourceKeys.iterator().next();
@@ -84,7 +94,7 @@ public class RangerResourceEvaluatorsRetriever {
             if (resourceWithMinEvals != null) {
                 RangerResourceTrie<T> trie = resourceTrie.get(resourceWithMinEvals);
 
-                ret = trie.getEvaluatorsForResource(resource.get(resourceWithMinEvals), scopes.get(resourceWithMinEvals));
+                ret = trie.getEvaluatorsForResource(resource.get(resourceWithMinEvals), scopes.get(resourceWithMinEvals), predicate);
 
                 for (String resourceDefName : resourceKeys) {
                     if (resourceWithMinEvals.equals(resourceDefName)) {
@@ -97,7 +107,7 @@ public class RangerResourceEvaluatorsRetriever {
                         continue;
                     }
 
-                    Set<T> evaluators = trie.getEvaluatorsForResource(resource.get(resourceDefName), scopes.get(resourceDefName), ret);
+                    Set<T> evaluators = trie.getEvaluatorsForResource(resource.get(resourceDefName), scopes.get(resourceDefName), ret, predicate);
 
                     if (CollectionUtils.isEmpty(evaluators)) {
                         ret = Collections.emptySet();

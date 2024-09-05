@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -609,5 +610,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 				return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
 			}
 		}
+
+		@Override
+		public boolean isLeaf(String resourceName) { return StringUtils.equals(resourceName, leafResourceDef.getName()); }
 	}
 }

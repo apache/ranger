@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model.validation;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
@@ -108,6 +109,9 @@ public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
     public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
         return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
     }
+
+    @Override
+    public boolean isLeaf(String resourceName) { return StringUtils.equals(resourceName, leafResourceDef.getName()); }
 
     @Override
     public String toString() {

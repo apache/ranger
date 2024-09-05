@@ -192,6 +192,9 @@ public class TestPathResourceTrie {
 		}
 
 		@Override
+		public boolean isLeaf(String resourceName) { return true; }
+
+		@Override
 		public String toString() {
 			return "id=" + id + ", resource=" + policyResource;
 		}

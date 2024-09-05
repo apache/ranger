@@ -36,4 +36,6 @@ public interface RangerResourceEvaluator {
     RangerResourceMatcher getResourceMatcher(String resourceName);
 
     boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef);
+
+    boolean isLeaf(String resourceName);
 }

@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.policyengine;
 
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -36,15 +37,7 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -194,7 +187,11 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
     }
 
     public Set<T> getEvaluatorsForResource(Object resource, ResourceElementMatchingScope scope) {
-        EvalCollector<T> ret = new EvalCollector<>();
+        return getEvaluatorsForResource(resource, scope, (Predicate) null);
+    }
+
+    public Set<T> getEvaluatorsForResource(Object resource, ResourceElementMatchingScope scope, Predicate predicate) {
+        EvalCollector<T> ret = new EvalCollector<>(predicate);
 
         traverse(resource, scope, ret);
 
@@ -202,7 +199,11 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
     }
 
     public Set<T> getEvaluatorsForResource(Object resource, ResourceElementMatchingScope scope, Set<T> filter) {
-        EvalSubsetCollector<T> ret = new EvalSubsetCollector<>(filter);
+        return getEvaluatorsForResource(resource, scope, filter, null);
+    }
+
+    public Set<T> getEvaluatorsForResource(Object resource, ResourceElementMatchingScope scope, Set<T> filter, Predicate predicate) {
+        EvalSubsetCollector<T> ret = new EvalSubsetCollector<>(filter, predicate);
 
         traverse(resource, scope, ret);
 
@@ -210,7 +211,11 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
     }
 
     public int getEvaluatorsCountForResource(Object resource, ResourceElementMatchingScope scope) {
-        EvalCountCollector<T> ret = new EvalCountCollector<>();
+        return getEvaluatorsCountForResource(resource, scope, null);
+    }
+
+    public int getEvaluatorsCountForResource(Object resource, ResourceElementMatchingScope scope, Predicate predicate) {
+        EvalCountCollector<T> ret = new EvalCountCollector<>(predicate);
 
         traverse(resource, scope, ret);
 
@@ -1321,18 +1326,20 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
     }
 
-    public interface TraverseMatchHandler<T> {
+    public interface TraverseMatchHandler<T extends RangerResourceEvaluator> {
         // return: true  - stop traverse, processing is complete
         //         false - continue traverse, processing is not complete yet
         boolean process(Set<T> evaluators);
     }
 
-    public static class EvalCollector<T> implements TraverseMatchHandler<T> {
-        private Set<T>  result;
-        private boolean isOwnedResult = false;
+    public static class EvalCollector<T extends RangerResourceEvaluator> implements TraverseMatchHandler<T> {
+        private final Predicate predicate;
+        private       Set<T>    result;
+        private       boolean   isOwnedResult = false;
 
-        public EvalCollector() {
-            this.result = null;
+        public EvalCollector(Predicate predicate) {
+            this.predicate = predicate;
+            this.result    = null;
         }
 
         public Set<T> getResult() {
@@ -1343,7 +1350,18 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         public boolean process(Set<T> evaluators) {
             if (evaluators != null && !evaluators.isEmpty()) {
                 if (result == null) {
-                    result = evaluators;
+                    if (predicate == null) {
+                        result = evaluators;
+                    } else {
+                        result = new HashSet<>();
+                        isOwnedResult = true;
+
+                        for (T evaluator : evaluators) {
+                            if (predicate.evaluate(evaluator)) {
+                                result.add(evaluator);
+                            }
+                        }
+                    }
                 } else {
                     if (!isOwnedResult) {
                         result = new HashSet<>(result);
@@ -1351,7 +1369,15 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
                         isOwnedResult = true;
                     }
 
-                    result.addAll(evaluators);
+                    if (predicate == null) {
+                        result.addAll(evaluators);
+                    } else {
+                        for (T evaluator : evaluators) {
+                            if (predicate.evaluate(evaluator)) {
+                                result.add(evaluator);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1359,13 +1385,15 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
     }
 
-    public static class EvalSubsetCollector<T> implements TraverseMatchHandler<T> {
-        private final Set<T> filter;
-        private       Set<T> result;
+    public static class EvalSubsetCollector<T extends RangerResourceEvaluator> implements TraverseMatchHandler<T> {
+        private final Predicate predicate;
+        private final Set<T>    filter;
+        private       Set<T>    result;
 
-        public EvalSubsetCollector(Set<T> filter) {
-            this.filter = filter == null ? Collections.emptySet() : filter;
-            this.result = null;
+        public EvalSubsetCollector(Set<T> filter, Predicate predicate) {
+            this.predicate = predicate;
+            this.filter    = filter == null ? Collections.emptySet() : filter;
+            this.result    = null;
         }
 
         public Set<T> getResult() {
@@ -1380,6 +1408,10 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
                 }
 
                 intersect(filter, evaluators, result);
+
+                if (predicate != null) {
+                    result.removeIf(evaluator -> !predicate.evaluate(evaluator));
+                }
             }
 
             return result != null && (filter.size() == result.size()); // stop traverse once the result includes all entries in the filter
@@ -1393,8 +1425,13 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         }
     }
 
-    public static class EvalCountCollector<T> implements TraverseMatchHandler<T> {
-        private int result = 0;
+    public static class EvalCountCollector<T extends RangerResourceEvaluator> implements TraverseMatchHandler<T> {
+        private final Predicate predicate;
+        private       int       result = 0;
+
+        public EvalCountCollector(Predicate predicate) {
+            this.predicate = predicate;
+        }
 
         public int getResult() {
             return result;
@@ -1403,7 +1440,15 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         @Override
         public boolean process(Set<T> evaluators) {
             if (evaluators != null) {
-                result += evaluators.size();
+                if (predicate == null) {
+                    result += evaluators.size();
+                } else {
+                    for (T evaluator : evaluators) {
+                        if (predicate.evaluate(evaluator)) {
+                            result++;
+                        }
+                    }
+                }
             }
 
             return false; // continue traverse
