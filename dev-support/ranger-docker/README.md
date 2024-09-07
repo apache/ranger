@@ -62,7 +62,11 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
       3. Build the ranger-base image:
          ~~~
+         # ubuntu base image:
          docker-compose -f docker-compose.ranger-base.yml build --no-cache
+         # OR
+         # ubi base image:
+         docker-compose -f docker-compose.ranger-base-ubi.yml build --no-cache
          ~~~
 7. To enable file based sync source for usersync execute: ```export ENABLE_FILE_SYNC_SOURCE=true```
 
