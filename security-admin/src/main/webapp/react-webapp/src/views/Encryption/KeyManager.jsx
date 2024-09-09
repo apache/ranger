@@ -30,8 +30,7 @@ import { Row, Col, Button, Modal } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
-import { find, sortBy, isUndefined, isEmpty } from "lodash";
-import { commonBreadcrumb } from "../../utils/XAUtils";
+import { find, sortBy, isUndefined, isEmpty, reject } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
 import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
@@ -60,7 +59,7 @@ function init(props) {
     updatetable: moment.now(),
     currentPageIndex: 0,
     currentPageSize: 25,
-    resetPage: { page: null }
+    resetPage: { page: 0 }
   };
 }
 
@@ -141,7 +140,7 @@ function reducer(state, action) {
   }
 }
 
-const KeyManager = (props) => {
+const KeyManager = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const params = useParams();
@@ -166,7 +165,8 @@ const KeyManager = (props) => {
     currentPageIndex,
     currentPageSize,
     pagecount,
-    updatetable
+    updatetable,
+    resetPage
   } = keyState;
 
   useEffect(() => {
@@ -201,7 +201,7 @@ const KeyManager = (props) => {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       (!isEmpty(searchFilterParams) || !isEmpty(searchFilterParam)) &&
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
@@ -331,9 +331,8 @@ const KeyManager = (props) => {
       setBlockUI(false);
       toast.success(`Success! Key deleted successfully`);
       if (keydata.length == 1 && currentPageIndex > 1) {
-        let page = currentPageIndex - currentPageIndex;
         if (typeof resetPage?.page === "function") {
-          resetPage.page(page);
+          resetPage.page(0);
         }
       } else {
         dispatch({
@@ -344,7 +343,7 @@ const KeyManager = (props) => {
     } catch (error) {
       setBlockUI(false);
       let errorMsg = "";
-      if (error.response.data.msgDesc) {
+      if (error?.response?.data?.msgDesc) {
         errorMsg = toast.error("Error! " + error.response.data.msgDesc + "\n");
       } else {
         errorMsg = `Error occurred during deleting Key` + "\n";
@@ -410,7 +409,7 @@ const KeyManager = (props) => {
       });
       dispatch({
         type: "SET_RESET_PAGE",
-        resetPage: gotoPage
+        resetPage: { page: gotoPage }
       });
       dispatch({
         type: "SET_LOADER",
@@ -559,7 +558,7 @@ const KeyManager = (props) => {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
   };
 
   return (
@@ -601,8 +600,8 @@ const KeyManager = (props) => {
               defaultSelected={defaultSearchFilterParams}
             />
           </Col>
-          {isKeyAdmin && (
-            <Col sm={2} className="text-right">
+          {isKeyAdmin() && (
+            <Col sm={2} className="text-end">
               <Button
                 className={onchangeval !== null ? "" : "button-disabled"}
                 disabled={onchangeval != null ? false : true}
@@ -619,7 +618,9 @@ const KeyManager = (props) => {
         <XATableLayout
           loading={loader}
           data={keydata || []}
-          columns={columns}
+          columns={
+            isKeyAdmin() ? columns : reject(columns, ["Header", "Action"])
+          }
           fetchData={selectServices}
           pageCount={pagecount}
           currentPageIndex={currentPageIndex}

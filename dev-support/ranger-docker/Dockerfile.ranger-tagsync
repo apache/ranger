@@ -16,18 +16,18 @@
 
 FROM ranger-base:latest
 
-ARG RANGER_VERSION
+ARG TAGSYNC_VERSION
 
 COPY ./dist/version                                  /home/ranger/dist/
-COPY ./dist/ranger-${RANGER_VERSION}-tagsync.tar.gz /home/ranger/dist/
+COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz /home/ranger/dist/
 
-COPY ./scripts/ranger-tagsync.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-tagsync-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-tagsync-tags.json          ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-tagsync.sh                     ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-tagsync-install.properties     ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-tagsync-tags.json              ${RANGER_SCRIPTS}/
 
-RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
-    ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
-    rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz && \
+RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
+    ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
+    rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \
     mkdir -p /opt/ranger/tagsync/data && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-install.properties ${RANGER_HOME}/tagsync/install.properties && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-tags.json ${RANGER_HOME}/tagsync/data/tags.json && \
@@ -35,6 +35,9 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz --directo
     mkdir -p /var/log/ranger/tagsync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     mkdir -p /etc/ranger && \
+    mkdir /etc/init.d || true && \
+    mkdir /etc/rc2.d  || true && \
+    mkdir /etc/rc3.d  || true && \
     touch /etc/init.d/ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/S99ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/K00ranger-tagsync && \

@@ -38,6 +38,26 @@
             Posted on Apr 29, 2023 by Barbara Eckman, Comcast
         </div>
     </li>
+    <p/>
+    <li>
+        <p>
+            <a href="blogs/adventures_in_abac_2.html" target="_blank">Adventures in attribute-based access control (ABAC) - part 2</a>
+        </p>
+        Explores use of attribute based access control to address more advanced use cases.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Oct 15, 2023 by Barbara Eckman, Comcast
+        </div>
+    </li>
+    <p/>
+    <li>
+        <p>
+            <a href="blogs/dynamic_expressions.html" target="_blank">Dynamic expressions</a>
+        </p>
+        Explores use of dynamic expressions using context attributes in Apache Ranger policies.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Dec 10, 2023 by Madhan Neethiraj, Apache Ranger committer
+        </div>
+    </li>
 </ul>
 </section>
 </body>

@@ -34,6 +34,7 @@ public enum MessageEnums {
     DATA_NOT_UPDATABLE( "xa.error.data_not_updatable", "Data not updatable"),
     ERROR_CREATING_OBJECT("xa.error.create_object", "Error creating object"),
     ERROR_DUPLICATE_OBJECT("xa.error.duplicate_object", "Error creating duplicate object"),
+    ERROR_DELETE_OBJECT("xa.error.delete_object", "Error deleting object"),
     ERROR_SYSTEM("xa.error.system", "System Error. Please try later."),
     OPER_NO_EXPORT("xa.error.oper_no_export", "repository is disabled"),
 

@@ -28,7 +28,9 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.util.MacroProcessor;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerTimeRangeChecker;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,16 +59,16 @@ public final class RangerRequestScriptEvaluator {
 	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 	private static final String SCRIPT_SAFE_PREEXEC                         = "exit=null;quit=null;";
 	private static final String SCRIPT_PREEXEC                              = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
-                                                                                 SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
-                                                                                 SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
-                                                                                 SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
-                                                                                 SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
-                                                                                 SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
-                                                                                 SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
-                                                                                 SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
-                                                                                 SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
-                                                                                 SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
-                                                                                 SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
+			SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
+			SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
+			SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
+			SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
+			SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
+			SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
+			SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
+			SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
+			SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
+			SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
 	private static final Pattern JSON_VAR_NAMES_PATTERN   = Pattern.compile(getJsonVarNamesPattern());
 	private static final Pattern USER_ATTRIBUTES_PATTERN  = Pattern.compile(getUserAttributesPattern());
 	private static final Pattern GROUP_ATTRIBUTES_PATTERN = Pattern.compile(getGroupAttributesPattern());
@@ -78,6 +80,8 @@ public final class RangerRequestScriptEvaluator {
 	private static String[] dateFormatStrings = null;
 
 	private final RangerAccessRequest              accessRequest;
+	private final ScriptEngine                     scriptEngine;
+	private final Bindings                         bindings;
 	private       boolean                          initDone   = false;
 	private       Map<String, String>              userAttrs  = Collections.emptyMap();
 	private       Map<String, Map<String, String>> groupAttrs = Collections.emptyMap();
@@ -177,20 +181,47 @@ public final class RangerRequestScriptEvaluator {
 		return MACRO_PROCESSOR.expandMacros(script);
 	}
 
-	public RangerRequestScriptEvaluator(final RangerAccessRequest accessRequest) {
+	public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine) {
+		this(accessRequest, scriptEngine, true);
+	}
+
+	public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine, boolean enableJsonCtx) {
 		this.accessRequest = accessRequest.getReadOnlyCopy();
+		this.scriptEngine  = scriptEngine;
+		this.bindings      = scriptEngine.createBindings();
+
+		RangerTagForEval    currentTag = this.getCurrentTag();
+		Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+
+		bindings.put(SCRIPT_VAR_ctx, this);
+		bindings.put(SCRIPT_VAR_tag, currentTag);
+		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+
+		String preExecScript = "";
+
+		if (enableJsonCtx) {
+			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+
+			preExecScript += SCRIPT_PREEXEC;
+		}
+
+		if (StringUtils.isNotBlank(preExecScript)) {
+			try {
+				scriptEngine.eval(preExecScript, bindings);
+			} catch (ScriptException excp) {
+				LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+			}
+		}
 	}
 
-	public Object evaluateScript(ScriptEngine scriptEngine, String script) {
+	public Object evaluateScript(String script) {
 		script = expandMacros(script);
 
-		return evaluateScript(scriptEngine, script, needsJsonCtxEnabled(script));
+		return evaluateScriptImpl(script);
 	}
 
-	public Object evaluateConditionScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		script = expandMacros(script);
-
-		Object ret = evaluateScript(scriptEngine, script, enableJsonCtx);
+	public Object evaluateConditionScript(String script) {
+		Object ret = evaluateScript(script);
 
 		if (ret == null) {
 			ret = getResult();
@@ -203,54 +234,34 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
-	private Object evaluateScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		Object              ret           = null;
-		Bindings            bindings      = scriptEngine.createBindings();
-		RangerTagForEval    currentTag    = this.getCurrentTag();
-		Map<String, String> tagAttribs    = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
-		boolean             hasIncludes   = StringUtils.contains(script, ".includes(");
-		boolean             hasIntersects = StringUtils.contains(script, ".intersects(");
-
-		bindings.put(SCRIPT_VAR_ctx, this);
-		bindings.put(SCRIPT_VAR_tag, currentTag);
-		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
-
-		script = SCRIPT_SAFE_PREEXEC + script;
-
-		if (enableJsonCtx) {
-			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
-
-			script = SCRIPT_PREEXEC + script;
-		}
-
-		if (hasIncludes) {
-			script = SCRIPT_POLYFILL_INCLUDES + script;
-		}
-
-		if (hasIntersects) {
-			script = SCRIPT_POLYFILL_INTERSECTS + script;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerRequestScriptEvaluator.evaluateScript(): script={" + script + "}");
-		}
-
+	private Object evaluateScriptImpl(String script) {
+		Object           ret  = null;
 		RangerPerfTracer perf = null;
 
 		try {
-			long requestHash = accessRequest.hashCode();
-
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_EVAL)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + requestHash + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + accessRequest.hashCode() + ")");
 			}
 
-			ret = scriptEngine.eval(script, bindings);
+			String preExec = SCRIPT_SAFE_PREEXEC;
+
+			if (script.contains(".includes(")) {
+				preExec += SCRIPT_POLYFILL_INCLUDES;
+			}
+
+			if (script.contains(".intersects(")) {
+				preExec += SCRIPT_POLYFILL_INTERSECTS;
+			}
+
+			if (JavaScriptEdits.hasDoubleBrackets(script)) {
+				script = JavaScriptEdits.replaceDoubleBrackets(script);
+			}
+
+			ret = scriptEngine.eval(preExec + script, bindings);
 		} catch (NullPointerException nullp) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): eval called with NULL argument(s)", nullp);
-
-		} catch (ScriptException exception) {
-			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script," +
-					" exception=" + exception);
+		} catch (ScriptException excp) {
+			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", excp);
 		} catch (Throwable t) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", t);
 		} finally {
@@ -263,10 +274,8 @@ public final class RangerRequestScriptEvaluator {
 	private String toJson() {
 		RangerPerfTracer perf = null;
 
-		long requestHash = accessRequest.hashCode();
-
 		if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_TOJSON)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + requestHash + ")");
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + accessRequest.hashCode() + ")");
 		}
 
 		Map<String, Object> ret        = new HashMap<>();
@@ -353,6 +362,18 @@ public final class RangerRequestScriptEvaluator {
 		}
 
 		return ret;
+	}
+
+	public String getResourceZone() {
+		String ret = RangerAccessRequestUtil.getResourceZoneNameFromContext(getRequestContext());
+
+		return ret != null ? ret : StringUtils.EMPTY;
+	}
+
+	public Set<String> getResourceZones() {
+		Set<String> ret = RangerAccessRequestUtil.getResourceZoneNamesFromContext(getRequestContext());
+
+		return ret != null ? Collections.emptySet() : ret;
 	}
 
 	public String getRequestContextAttribute(String attributeName) {
@@ -822,6 +843,32 @@ public final class RangerRequestScriptEvaluator {
 		return !userRoles.isEmpty();
 	}
 
+	public boolean isAccessTimeAfter(String strTime) {
+		return isAccessTimeBetween(strTime, null, null);
+	}
+
+	public boolean isAccessTimeAfter(String strTime, String timeZone) {
+		return isAccessTimeBetween(strTime, null, timeZone);
+	}
+
+	public boolean isAccessTimeBefore(String strTime) {
+		return isAccessTimeBetween(null, strTime, null);
+	}
+
+	public boolean isAccessTimeBefore(String strTime, String timeZone) {
+		return isAccessTimeBetween(null, strTime, timeZone);
+	}
+
+	public boolean isAccessTimeBetween(String fromTime, String toTime) {
+		return isAccessTimeBetween(fromTime, toTime, null);
+	}
+
+	public boolean isAccessTimeBetween(String fromTime, String toTime, String timeZone) {
+		RangerTimeRangeChecker evaluator = new RangerTimeRangeChecker(fromTime, toTime, timeZone);
+
+		return evaluator.isInRange(getAccessTime().getTime());
+	}
+
 	// for backward compatibility
 	public String ugNamesCsv() {
 		return ugNames(null, STR_COMMA);
@@ -1262,6 +1309,9 @@ public final class RangerRequestScriptEvaluator {
 		ret.put(SCRIPT_MACRO_IS_IN_ANY_ROLE,        "ctx.isInAnyRole()");
 		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP,   "!ctx.isInAnyGroup()");
 		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE,    "!ctx.isInAnyRole()");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_AFTER,   "ctx.isAccessTimeAfter");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BEFORE,  "ctx.isAccessTimeBefore");
+		ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BETWEEN, "ctx.isAccessTimeBetween");
 
 		return ret;
 	}

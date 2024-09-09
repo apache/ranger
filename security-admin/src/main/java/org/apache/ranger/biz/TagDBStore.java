@@ -21,11 +21,13 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -45,6 +47,7 @@ import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.*;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
@@ -59,7 +62,9 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +93,9 @@ public class TagDBStore extends AbstractTagStore {
 
 	@Autowired
 	RangerServiceResourceService rangerServiceResourceService;
+
+	@Autowired
+	RangerServiceResourceWithTagsService rangerServiceResourceWithTagsService;
 
 	@Autowired
 	RangerTagResourceMapService rangerTagResourceMapService;
@@ -165,23 +173,15 @@ public class TagDBStore extends AbstractTagStore {
 	@Override
 	public void deleteTagDefByName(String name) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> TagDBStore.deleteTagDef(" + name + ")");
+			LOG.debug("==> TagDBStore.deleteTagDefByName(" + name + ")");
 		}
 
 		if (StringUtils.isNotBlank(name)) {
-			RangerTagDef tagDef = getTagDefByName(name);
-
-			if(tagDef != null) {
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("Deleting tag-def [name=" + name + "; id=" + tagDef.getId() + "]");
-				}
-
-				rangerTagDefService.delete(tagDef);
-			}
+			deleteTagDef(getTagDefByName(name));
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== TagDBStore.deleteTagDef(" + name + ")");
+			LOG.debug("<== TagDBStore.deleteTagDefByName(" + name + ")");
 		}
 	}
 
@@ -192,11 +192,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		if(id != null) {
-			RangerTagDef tagDef = rangerTagDefService.read(id);
-
-			if(tagDef != null) {
-				rangerTagDefService.delete(tagDef);
-			}
+			deleteTagDef(rangerTagDefService.read(id));
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -726,6 +722,10 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
+	public RangerServiceResourceWithTagsList getPaginatedServiceResourcesWithTags(SearchFilter filter) throws Exception {
+		return rangerServiceResourceWithTagsService.searchServiceResourcesWithTags(filter);
+	}
+
 
 	@Override
 	public RangerTagResourceMap createTagResourceMap(RangerTagResourceMap tagResourceMap) throws Exception {
@@ -1033,7 +1033,9 @@ public class TagDBStore extends AbstractTagStore {
 			ret.setServiceResources(resources);
 			ret.setResourceToTagIds(resourceToTagIds);
 
-			if (RangerServiceTagsDeltaUtil.isSupportsTagsDedup()) {
+			ret.setIsTagsDeduped(isSupportsTagsDedup());
+
+			if (isSupportsTagsDedup()) {
 				final int countOfDuplicateTags = ret.dedupTags();
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
@@ -1243,6 +1245,7 @@ public class TagDBStore extends AbstractTagStore {
 			if (CollectionUtils.isNotEmpty(serviceResourceIds) || CollectionUtils.isNotEmpty(tagIds)) {
 				ret = new ServiceTags();
 				ret.setIsDelta(true);
+				ret.setIsTagsDeduped(isSupportsTagsDedup());
 
 				ServiceTags.TagsChangeExtent tagsChangeExtent = ServiceTags.TagsChangeExtent.TAGS;
 
@@ -1320,22 +1323,27 @@ public class TagDBStore extends AbstractTagStore {
 						serviceResource = rangerServiceResourceService.getPopulatedViewObject(xServiceResource);
 
 						if (StringUtils.isNotEmpty(xServiceResource.getTags())) {
-							List<RangerTag> tags = RangerTagDBRetriever.gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+							try {
+								List<RangerTag> tags = (List<RangerTag>) JsonUtils.jsonToObject(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
 
-							if (CollectionUtils.isNotEmpty(tags)) {
-								List<Long> resourceTagIds = new ArrayList<>(tags.size());
 
-								for (RangerTag tag : tags) {
-									RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+								if (CollectionUtils.isNotEmpty(tags)) {
+									List<Long> resourceTagIds = new ArrayList<>(tags.size());
 
-									if (!ret.getTags().containsKey(tag.getId())) {
-										ret.getTags().put(tag.getId(), tag);
+									for (RangerTag tag : tags) {
+										RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
+										if (!ret.getTags().containsKey(tag.getId())) {
+											ret.getTags().put(tag.getId(), tag);
+										}
+
+										resourceTagIds.add(tag.getId());
 									}
 
-									resourceTagIds.add(tag.getId());
+									ret.getResourceToTagIds().put(serviceResourceId, resourceTagIds);
 								}
-
-								ret.getResourceToTagIds().put(serviceResourceId, resourceTagIds);
+							} catch (JsonProcessingException e) {
+								LOG.error("Error occurred while processing json", e);
 							}
 						}
 					}
@@ -1381,5 +1389,88 @@ public class TagDBStore extends AbstractTagStore {
 	public boolean isInPlaceTagUpdateSupported() {
 		initStatics();
 		return SUPPORTS_IN_PLACE_TAG_UPDATES;
+	}
+
+	private void deleteTagDef(RangerTagDef tagDef) throws Exception {
+		if (tagDef != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Deleting tag-def [name=" + tagDef.getName() + "; id=" + tagDef.getId() + "]");
+			}
+
+			List<RangerTag> tagsByType = rangerTagService.getTagsByType(tagDef.getName());
+
+			if (CollectionUtils.isEmpty(tagsByType)) {
+				rangerTagDefService.delete(tagDef);
+			} else {
+				throw new Exception("Cannot delete tag-def: " + tagDef.getName() + ". " + tagsByType.size() + " tag instances for this tag-def exist");
+			}
+		}
+	}
+
+	public static RangerServiceResource toRangerServiceResource(String serviceName, Map<String, String[]> resourceMap) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> TagDBStore.toRangerServiceResource(): serviceName={" + serviceName + "}");
+		}
+
+		Map<String, RangerPolicyResource> resourceElements = new HashMap<>();
+
+		for (Map.Entry<String, String[]> entry : resourceMap.entrySet()) {
+			String[] parts      = entry.getKey().split("\\.");
+			String[] valueArray = entry.getValue();
+
+			if (parts.length < 1 || valueArray == null) {
+				continue;
+			}
+
+			String key = parts[0];
+
+			RangerPolicyResource policyResource = resourceElements.get(key);
+
+			if (policyResource == null) {
+				policyResource = new RangerPolicyResource();
+
+				resourceElements.put(key, policyResource);
+			}
+
+			if (parts.length == 1) {
+				List<String> valueList = new ArrayList<>(valueArray.length);
+
+				for (String str : valueArray) {
+					valueList.add(str.trim());
+				}
+
+				policyResource.setValues(valueList);
+			} else if (parts.length == 2 && valueArray[0] != null) {
+				String subKey = parts[1];
+				String value  = valueArray[0];
+
+				if (subKey.equalsIgnoreCase("isExcludes")) {
+					policyResource.setIsExcludes(Boolean.parseBoolean(value.trim()));
+				} else if (subKey.equalsIgnoreCase("isRecursive")) {
+					policyResource.setIsRecursive(Boolean.parseBoolean(value.trim()));
+				}
+			}
+		}
+
+		RangerServiceResource ret = new RangerServiceResource(serviceName, resourceElements);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== TagDBStore.toRangerServiceResource(): (serviceName={" + serviceName + "} RangerServiceResource={" + ret + "})");
+		}
+
+		return ret;
+	}
+
+	private static boolean SUPPORTS_TAGS_DEDUP_INITIALIZED = false;
+	private static boolean SUPPORTS_TAGS_DEDUP             = false;
+
+	public static boolean isSupportsTagsDedup() {
+		if (!SUPPORTS_TAGS_DEDUP_INITIALIZED) {
+			RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+			SUPPORTS_TAGS_DEDUP = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_SUPPORTS_TAGS_DEDUP, RangerCommonConstants.RANGER_SUPPORTS_TAGS_DEDUP_DEFAULT);
+			SUPPORTS_TAGS_DEDUP_INITIALIZED = true;
+		}
+		return SUPPORTS_TAGS_DEDUP;
 	}
 }

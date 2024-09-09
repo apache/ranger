@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -48,8 +50,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 public class TestRangerPolicyValidator {
 
@@ -140,6 +140,16 @@ public class TestRangerPolicyValidator {
 			{"extra", new String[] { "extra1", "extra2" }, null, null } // spurious "extra" specified
 	};
 
+	private final Object[][] policyResourceMap_bad_duplicate_values = new Object[][]{
+			// resource-name, values, excludes, recursive
+			{ "db", new String[] {"db1", "db2" }, null, true},
+			{ "tbl", new String[] {"tbl1", "tbl1"}, null, null} // invalid: there should not be any duplicates for any resource value
+	};
+	private final Object[][] policyResourceMap_good_duplicate_values = new Object[][]{
+			// resource-name, values, excludes, recursive
+			{ "db", new String[] {"db1", "db2" }, null, true},
+			{ "tbl", new String[] {"tbl1", "tbl2"}, null, null} // valid: there should not be any duplicates for any resource value
+	};
 	private final Object[][] policyResourceMap_bad_multiple_hierarchies = new Object[][] {
 			// resource-name, values, excludes, recursive
 			{  "db", new String[] { "db1", "db2" }, null, true },
@@ -533,6 +543,14 @@ public class TestRangerPolicyValidator {
 		
 		policyResources = _utils.createPolicyResourceMap(policyResourceMap_good);
 		Assert.assertTrue(_validator.isValidResourceValues(policyResources, _failures, _serviceDef));
+
+		policyResources = _utils.createPolicyResourceMap(policyResourceMap_bad_duplicate_values);
+		Assert.assertFalse(_validator.isValidResourceValues(policyResources, _failures, _serviceDef));
+		_utils.checkFailureForSemanticError(_failures, "resource-values", "tbl");
+
+		policyResources = _utils.createPolicyResourceMap(policyResourceMap_good_duplicate_values);
+		Assert.assertTrue(_validator.isValidResourceValues(policyResources, _failures, _serviceDef));
+
 	}
 	
 	@Test

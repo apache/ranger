@@ -17,13 +17,12 @@
  * under the License.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Accordion,
   Badge,
   Button,
-  Card,
   Col,
   Modal,
   Row,
@@ -34,6 +33,7 @@ import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
 import { Loader } from "../../components/CommonComponents";
+import { isAuditor, isKMSAuditor } from "../../utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -95,16 +95,26 @@ function SearchPolicyTable(props) {
         Header: "Policy ID",
         accessor: "id",
         Cell: (rawValue) => {
-          return (
-            <Link
-              title="Edit"
-              to={`/service/${getServiceId(
-                rawValue.row.original.service
-              )}/policies/${rawValue.value}/edit`}
-            >
-              {rawValue.value}
-            </Link>
-          );
+          if (isAuditor() || isKMSAuditor()) {
+            return (
+              <div className="position-relative text-center">
+                {rawValue.value}
+              </div>
+            );
+          } else {
+            return (
+              <div className="position-relative text-center">
+                <Link
+                  title="Edit"
+                  to={`/service/${getServiceId(
+                    rawValue.row.original.service
+                  )}/policies/${rawValue.value}/edit`}
+                >
+                  {rawValue.value}
+                </Link>
+              </div>
+            );
+          }
         },
         width: 65
       },
@@ -161,19 +171,19 @@ function SearchPolicyTable(props) {
           if (rawValue.value == 1) {
             return (
               <h6 className="text-center">
-                <Badge variant="primary">Masking</Badge>
+                <Badge bg="primary">Masking</Badge>
               </h6>
             );
           } else if (rawValue.value == 2) {
             return (
               <h6 className="text-center">
-                <Badge variant="primary">Row Level Filter</Badge>
+                <Badge bg="primary">Row Level Filter</Badge>
               </h6>
             );
           } else
             return (
               <h6 className="text-center">
-                <Badge variant="primary">Access</Badge>
+                <Badge bg="primary">Access</Badge>
               </h6>
             );
         }
@@ -185,13 +195,13 @@ function SearchPolicyTable(props) {
           if (rawValue.value)
             return (
               <h6 className="text-center">
-                <Badge variant="success">Enabled</Badge>
+                <Badge bg="success">Enabled</Badge>
               </h6>
             );
           else
             return (
               <h6 className="text-center">
-                <Badge variant="danger">Disabled</Badge>
+                <Badge bg="danger">Disabled</Badge>
               </h6>
             );
         }
@@ -201,7 +211,7 @@ function SearchPolicyTable(props) {
         accessor: "zoneName",
         Cell: (rawValue) => {
           return !isEmpty(rawValue.value) ? (
-            <Badge variant="dark" className="text-truncate mw-100">
+            <Badge bg="dark" className="text-truncate mw-100">
               {rawValue.value}
             </Badge>
           ) : (
@@ -239,40 +249,32 @@ function SearchPolicyTable(props) {
     <Row>
       <Col sm={12} className="mt-3">
         <Accordion defaultActiveKey="0">
-          <Card>
-            <Accordion.Toggle
-              className="border-top-0 border-right-0 border-right-0"
-              as={Card.Header}
-              eventKey="0"
-              data-js="hdfsHeader"
-              data-cy="hdfsHeader"
-            >
+          <Accordion.Item eventKey="0">
+            <Accordion.Header data-js="hdfsHeader" data-cy="hdfsHeader">
               <div className="clearfix">
-                <span className="bold float-left text-uppercase">
+                <span className="bold float-start text-uppercase">
                   {props.serviceDef.name}
                 </span>
-                <span className="float-right"></span>
+                <span className="float-end"></span>
               </div>
-            </Accordion.Toggle>
-            <Accordion.Collapse eventKey="0">
+            </Accordion.Header>
+            <Accordion.Body>
               {props.contentLoader ? (
                 <Loader />
               ) : (
-                <Card.Body>
-                  <XATableLayout
-                    columnHide={false}
-                    loading={loader}
-                    data={searchPoliciesData}
-                    columns={columns}
-                    fetchData={fetchSearchPolicies}
-                    pagination
-                    pageCount={pageCount}
-                    totalCount={totalCount}
-                  />
-                </Card.Body>
+                <XATableLayout
+                  columnHide={false}
+                  loading={loader}
+                  data={searchPoliciesData}
+                  columns={columns}
+                  fetchData={fetchSearchPolicies}
+                  pagination
+                  pageCount={pageCount}
+                  totalCount={totalCount}
+                />
               )}
-            </Accordion.Collapse>
-          </Card>
+            </Accordion.Body>
+          </Accordion.Item>
         </Accordion>
         <Modal show={showModal} onHide={hidePolicyConditionModal} size="lg">
           <Modal.Header closeButton>
@@ -328,10 +330,10 @@ function PolicyConditionData(props) {
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
                       return (
-                        <h6 className="d-inline mr-1" key={index}>
+                        <h6 className="d-inline me-1" key={index}>
                           <Badge
-                            variant="info"
-                            className="d-inline mr-1"
+                            bg="info"
+                            className="d-inline me-1"
                             key={obj.values}
                           >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
                         </h6>
@@ -357,7 +359,7 @@ function PolicyConditionData(props) {
             className="text-center"
             colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "5" : "4"}
           >
-            <span className="text-muted">"No data to show!!"</span>
+            <span className="text-muted">&quot;No data to show!!&quot;</span>
           </td>
         </tr>
       );
@@ -399,10 +401,10 @@ function PolicyConditionData(props) {
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
                       return (
-                        <h6 className="d-inline mr-1" key={index}>
+                        <h6 className="d-inline me-1" key={index}>
                           <Badge
-                            variant="info"
-                            className="d-inline mr-1"
+                            bg="info"
+                            className="d-inline me-1"
                             key={obj.values}
                           >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
                         </h6>
@@ -421,7 +423,7 @@ function PolicyConditionData(props) {
             <td>
               {!isEmpty(items.dataMaskInfo) ? (
                 <h6 className="d-inline">
-                  <Badge variant="info" className="mr-1">
+                  <Badge bg="info" className="me-1">
                     {items.dataMaskInfo["dataMaskType"]}
                   </Badge>
                 </h6>
@@ -439,7 +441,7 @@ function PolicyConditionData(props) {
             className="text-center"
             colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "5" : "4"}
           >
-            <span className="text-muted">"No data to show!!"</span>
+            <span className="text-muted">&quot;No data to show!!&quot;</span>
           </td>
         </tr>
       );
@@ -486,7 +488,7 @@ function PolicyConditionData(props) {
             <td>
               {!isEmpty(items.rowFilterInfo) ? (
                 <h6 className="d-inline">
-                  <Badge variant="info" className="mr-1">
+                  <Badge bg="info" className="me-1">
                     {items.rowFilterInfo["filterExpr"]}
                   </Badge>
                 </h6>
@@ -501,7 +503,7 @@ function PolicyConditionData(props) {
       tableRow.push(
         <tr key="no-data">
           <td className="text-center" colSpan="4">
-            <span className="text-muted">"No data to show!!"</span>
+            <span className="text-muted">&quot;No data to show!!&quot;</span>
           </td>
         </tr>
       );

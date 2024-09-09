@@ -26,17 +26,24 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAssetList;
 
 public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XAsset";
 
 	public XAssetServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_SERVICE, AppConstants.CLASS_TYPE_XA_SERVICE_DEF);
 
+		trxLogAttrs.put("name",         new VTrxLogAttr("name", "Repository Name", false, true));
+		trxLogAttrs.put("description",  new VTrxLogAttr("description", "Repository Description"));
+		trxLogAttrs.put("activeStatus", new VTrxLogAttr("activeStatus", "Repository Status", true));
+		trxLogAttrs.put("config",       new VTrxLogAttr("config", "Connection Configurations"));
 	}
 
 	@Override

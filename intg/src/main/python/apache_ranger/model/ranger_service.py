@@ -36,6 +36,9 @@ class RangerService(RangerBaseModelObject):
         self.policyUpdateTime = attrs.get('policyUpdateTime')
         self.tagVersion       = attrs.get('tagVersion')
         self.tagUpdateTime    = attrs.get('tagUpdateTime')
+        self.gdsService       = attrs.get('gdsService')
+        self.gdsVersion       = attrs.get('gdsVersion')
+        self.gdsUpdateTime    = attrs.get('gdsUpdateTime')
 
 
 class RangerServiceHeaderInfo(RangerBaseModelObject):
@@ -47,3 +50,4 @@ class RangerServiceHeaderInfo(RangerBaseModelObject):
 
         self.name         = attrs.get('name')
         self.isTagService = attrs.get('isTagService')
+        self.isGdsService = attrs.get('isGdsService')

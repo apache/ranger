@@ -19,8 +19,6 @@
 
 package org.apache.ranger.policyengine.perftest.v2;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -30,6 +28,15 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
+import org.apache.hadoop.thirdparty.com.google.common.base.Function;
+import org.apache.hadoop.thirdparty.com.google.common.base.Throwables;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Iterables;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
+import org.apache.hadoop.thirdparty.com.google.common.io.Files;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -44,18 +51,11 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.policyengine.RangerAccessRequestDeserializer;
 import org.apache.ranger.policyengine.RangerResourceDeserializer;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+
+import static org.apache.hadoop.thirdparty.com.google.common.base.Preconditions.checkState;
 
 /**
  * Factory for creating and wiring the object graph of {@link ServicePolicies} and {@link RangerAccessRequest}.

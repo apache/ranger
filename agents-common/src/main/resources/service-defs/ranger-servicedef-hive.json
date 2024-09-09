@@ -129,6 +129,7 @@
 			"type": "string",
 			"level": 10,
 			"parent": "",
+			"mandatory": true,
 			"lookupSupported": false,
 			"recursiveSupported": false,
 			"excludesSupported": false,
@@ -150,43 +151,50 @@
 		{
 			"itemId": 1,
 			"name": "select",
-			"label": "select"
+			"label": "select",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 2,
 			"name": "update",
-			"label": "update"
+			"label": "update",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "create",
-			"label": "Create"
+			"label": "Create",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 4,
 			"name": "drop",
-			"label": "Drop"
+			"label": "Drop",
+			"category": "DELETE"
 		},
 
 		{
 			"itemId": 5,
 			"name": "alter",
-			"label": "Alter"
+			"label": "Alter",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 6,
 			"name": "index",
-			"label": "Index"
+			"label": "Index",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 7,
 			"name": "lock",
-			"label": "Lock"
+			"label": "Lock",
+			"category": "MANAGE"
 		},
 
 		{
@@ -213,37 +221,43 @@
 		{
 			"itemId": 9,
 			"name": "read",
-			"label": "Read"
+			"label": "Read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 10,
 			"name": "write",
-			"label": "Write"
+			"label": "Write",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 11,
 			"name": "repladmin",
-			"label": "ReplAdmin"
+			"label": "ReplAdmin",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 12,
 			"name": "serviceadmin",
-			"label": "Service Admin"
+			"label": "Service Admin",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 13,
 			"name": "tempudfadmin",
-			"label": "Temporary UDF Admin"
+			"label": "Temporary UDF Admin",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 14,
 			"name": "refresh",
-			"label": "Refresh"
+			"label": "Refresh",
+			"category": "MANAGE"
 		}
 	],
 

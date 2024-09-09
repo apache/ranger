@@ -25,20 +25,17 @@
  */
 
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUgsyncAuditInfoList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
@@ -55,6 +52,7 @@ public class VXUgsyncAuditInfoList extends VList {
     /**
      * @return the vXAccessAudits
      */
+    @JsonProperty("vxUgsyncAuditInfoList")
     public List<VXUgsyncAuditInfo> getVxUgsyncAuditInfoList() {
 	return vxUgsyncAuditInfoList;
     }
@@ -63,6 +61,7 @@ public class VXUgsyncAuditInfoList extends VList {
      * @param vxUgsyncAuditInfoList
      *            the vXAccessAudits to set
      */
+    @JsonProperty("vxUgsyncAuditInfoList")
     public void setVxUgsyncAuditInfoList(List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList) {
 	this.vxUgsyncAuditInfoList = vxUgsyncAuditInfoList;
     }

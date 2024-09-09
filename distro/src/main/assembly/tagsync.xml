@@ -27,6 +27,7 @@
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
 				<include>org.apache.ranger:ranger-tagsync</include>
+				<include>org.apache.ranger:ranger-common-ha</include>
 			</includes>
 			<binaries>
 				<outputDirectory>dist</outputDirectory>
@@ -41,7 +42,6 @@
 						<includes>
 							<include>com.101tec:zkclient</include>
 							<include>com.google.code.gson:gson:jar:${gson.version}</include>
-							<include>com.google.guava:guava:jar:${google.guava.version}</include>
 							<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
 							<include>com.sun.jersey.contribs:jersey-multipart:jar:${sun-jersey-bundle.version}</include>
 							<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
@@ -65,9 +65,6 @@
 							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${atlas.jackson.version}</include>
 							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${atlas.jackson.version}</include>
 							<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${atlas.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
 							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 							<include>org.scala-lang:scala-library:jar:${scala.version}</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
@@ -83,7 +80,6 @@
 							<include>joda-time:joda-time:jar:${joda-time.version}</include>
 							<include>org.codehaus.woodstox:stax2-api</include>
 							<include>com.fasterxml.woodstox:woodstox-core</include>
-							<include>org.apache.htrace:htrace-core4</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
 							<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -95,6 +91,13 @@
 							<include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
 							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
+							<include>org.apache.curator:curator-framework:jar:${curator.version}</include>
+							<include>org.apache.curator:curator-recipes:jar:${curator.version}</include>
+							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
+							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+                                                        <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 						</includes>
 					</dependencySet>
 				</dependencySets>

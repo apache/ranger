@@ -35,14 +35,12 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 
 
 @Entity
 @Table(name="x_policy_export_audit")
-@XmlRootElement
 public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

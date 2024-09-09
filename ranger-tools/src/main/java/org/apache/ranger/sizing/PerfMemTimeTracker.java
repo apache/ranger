@@ -41,6 +41,7 @@ public class PerfMemTimeTracker {
 
         Runtime rt = Runtime.getRuntime();
 
+        rt.runFinalization();
         rt.gc();
 
         this.gcTime      = System.currentTimeMillis() - startTime;
@@ -52,10 +53,11 @@ public class PerfMemTimeTracker {
 
         Runtime rt = Runtime.getRuntime();
 
+        rt.runFinalization();
         rt.gc();
 
         this.endTime   = System.currentTimeMillis();
-        this.gcTime    += endTime - gcStartTime;
+        this.gcTime    += (endTime - gcStartTime);
         this.endMemory = rt.totalMemory() - rt.freeMemory();
     }
 

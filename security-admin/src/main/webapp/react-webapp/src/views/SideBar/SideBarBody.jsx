@@ -17,23 +17,13 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useReducer } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  sortBy,
-  capitalize,
-  filter,
-  isEmpty,
-  map,
-  uniq,
-  upperCase,
-  groupBy
-} from "lodash";
+import { sortBy, filter, isEmpty, map, upperCase, groupBy } from "lodash";
 import closeIcon from "Images/close.svg";
-import { RangerPolicyType } from "../../utils/XAEnums";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { fetchApi } from "Utils/fetchAPI";
-import Select, { components } from "react-select";
+import Select from "react-select";
 import {
   hasAccessToTab,
   isAuditor,
@@ -42,9 +32,8 @@ import {
   getBaseUrl,
   isKMSAuditor
 } from "Utils/XAUtils";
-import { getServiceDef } from "../../utils/appState";
 import ResourceTagContent from "./ResourceTagContent";
-import { Button } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -226,7 +215,8 @@ export const SideBarBody = (props) => {
 
   const checkKnoxSSO = async (e) => {
     e.preventDefault();
-    let checkKnoxSSOresp;
+    const userProfile = getUserProfile();
+    let checkKnoxSSOresp = {};
     try {
       checkKnoxSSOresp = await fetchApi({
         url: "plugins/checksso",
@@ -236,12 +226,12 @@ export const SideBarBody = (props) => {
         }
       });
       if (
-        checkKnoxSSOresp.data == "true" &&
-        userProps?.configProperties?.inactivityTimeout > 0
+        checkKnoxSSOresp?.data?.toString() == "true" &&
+        userProfile?.configProperties?.inactivityTimeout > 0
       ) {
         window.location.replace("index.html?action=timeout");
       } else {
-        handleLogout(checkKnoxSSOresp.data);
+        handleLogout(checkKnoxSSOresp?.data);
       }
     } catch (error) {
       if (checkKnoxSSOresp?.status == "419") {
@@ -254,7 +244,7 @@ export const SideBarBody = (props) => {
 
   const handleLogout = async (checkKnoxSSOVal) => {
     try {
-      let logoutResp = await fetchApi({
+      await fetchApi({
         url: "logout",
         baseURL: "",
         headers: {
@@ -262,7 +252,7 @@ export const SideBarBody = (props) => {
         }
       });
       if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-        if (checkKnoxSSOVal == false) {
+        if (checkKnoxSSOVal?.toString() == "false") {
           window.location.replace("locallogin");
           window.localStorage.clear();
           setUserProfile(null);
@@ -398,6 +388,86 @@ export const SideBarBody = (props) => {
           </div>
 
           <div
+            id="gdsCollapse"
+            className={
+              activeMenu !== null && activeMenu === "gdsCollapse"
+                ? "show-menu"
+                : "hide-menu"
+            }
+          >
+            <div className="drawer-menu-title">
+              <span>GOVERNED DATA SHARING</span>
+              <span className="drawer-menu-close">
+                <img
+                  src={closeIcon}
+                  onClick={() => {
+                    props.closeCollapse();
+                  }}
+                />
+              </span>
+            </div>
+            <ul className="list-group list-group-flush">
+              <React.Fragment>
+                <li className="list-group-item">
+                  <NavLink
+                    to="/gds/mydatasetlisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Datasets
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="/gds/mydatasharelisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Datashares
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/request/list"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    My Requests
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/datasetlisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    Datasets
+                  </NavLink>
+                </li>
+                <li className="list-group-item">
+                  <NavLink
+                    to="gds/datasharelisting"
+                    onClick={() => {
+                      props.closeCollapse();
+                    }}
+                    className="list-group-item"
+                  >
+                    Datashares
+                  </NavLink>
+                </li>
+              </React.Fragment>
+            </ul>
+          </div>
+
+          <div
             id="auditCollapse"
             className={
               activeMenu !== null && activeMenu === "auditCollapse"
@@ -520,7 +590,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      User
+                      Users
                     </NavLink>
                   </li>
 
@@ -532,7 +602,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Group
+                      Groups
                     </NavLink>
                   </li>
 
@@ -544,7 +614,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Role
+                      Roles
                     </NavLink>
                   </li>
                 </React.Fragment>
@@ -558,7 +628,7 @@ export const SideBarBody = (props) => {
                     }}
                     className="list-group-item"
                   >
-                    Permission
+                    Permissions
                   </NavLink>
                 </li>
               )}
@@ -604,9 +674,18 @@ export const SideBarBody = (props) => {
                   Profile
                 </NavLink>
               </li>
-              {/* <li className="list-group-item">
-                <a href={backboneUrl}>Backbone Classic UI</a>
-              </li> */}
+              <li className="list-group-item">
+                <a
+                  href={backboneUrl}
+                  onClick={() => {
+                    props.closeCollapse();
+                    localStorage.clear();
+                  }}
+                  className="text-decoration-none"
+                >
+                  Backbone Classic UI
+                </a>
+              </li>
               <li className="list-group-item">
                 <a
                   href={apiUrl}
@@ -614,12 +693,17 @@ export const SideBarBody = (props) => {
                   onClick={() => {
                     props.closeCollapse();
                   }}
+                  className="text-decoration-none"
                 >
                   API Documentation
                 </a>
               </li>
               <li className="list-group-item">
-                <NavLink onClick={checkKnoxSSO} to="#">
+                <NavLink
+                  onClick={checkKnoxSSO}
+                  to="#"
+                  className="text-decoration-none"
+                >
                   Log Out
                 </NavLink>
               </li>

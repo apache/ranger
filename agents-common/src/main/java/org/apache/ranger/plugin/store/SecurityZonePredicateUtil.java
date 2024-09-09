@@ -39,6 +39,8 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         addPredicateForMatchingZoneId(filter.getParam(SearchFilter.ZONE_ID), predicates);
         addPredicateForMatchingZoneName(filter.getParam(SearchFilter.ZONE_NAME), predicates);
         addPredicateForNonMatchingZoneName(filter.getParam(SearchFilter.NOT_ZONE_NAME), predicates);
+		addPredicateForMatchingZoneNamePartial(filter.getParam(SearchFilter.ZONE_NAME_PARTIAL), predicates);
+		addPredicateForCreatedBy(filter.getParam(SearchFilter.CREATED_BY), predicates);
     }
 
     private Predicate addPredicateForServiceName(final String serviceName, List<Predicate> predicates) {
@@ -170,5 +172,71 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
 
         return ret;
     }
+
+	private Predicate addPredicateForMatchingZoneNamePartial(final String zoneName, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(zoneName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if (object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if (object instanceof RangerSecurityZone) {
+					RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+					if (StringUtils.containsIgnoreCase(securityZone.getName(), zoneName)) {
+						ret = true;
+					}
+				}
+
+				return ret;
+			}
+		};
+
+		if (predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForCreatedBy(final String createdBy, List<Predicate> predicates) {
+		if (StringUtils.isEmpty(createdBy)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if (object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if (object instanceof RangerSecurityZone) {
+					RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+					if (StringUtils.equals(securityZone.getCreatedBy(), createdBy)) {
+						ret = true;
+					}
+				}
+
+				return ret;
+			}
+		};
+
+		if (predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
 }
 

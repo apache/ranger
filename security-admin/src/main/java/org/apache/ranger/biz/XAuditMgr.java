@@ -121,9 +121,9 @@ public class XAuditMgr extends XAuditMgrBase {
 		String auditDBType = rangerBizUtil.getAuditDBType();
 		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
+		} else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
 			return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(auditDBType)) {
+		} else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
 			return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
 		} else {
 			return super.searchXAccessAudits(searchCriteria);
@@ -135,9 +135,9 @@ public class XAuditMgr extends XAuditMgrBase {
 		String auditDBType = rangerBizUtil.getAuditDBType();
 		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
+		} else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
 			return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(auditDBType)) {
+		} else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
 			return cloudWatchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else {
 			return super.getXAccessAuditSearchCount(searchCriteria);

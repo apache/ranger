@@ -20,20 +20,14 @@ package org.apache.ranger.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUserPermissionList extends VList {
 
 	private static final long serialVersionUID = 1L;
@@ -52,6 +46,7 @@ public class VXUserPermissionList extends VList {
 	/**
 	 * @return the vXModuleDef
 	 */
+	@JsonProperty("vXUserPermission")
 	public List<VXUserPermission> getvXModuleDef() {
 		return vXUserPermission;
 	}
@@ -59,6 +54,7 @@ public class VXUserPermissionList extends VList {
 	/**
 	 * @param vXModuleDef the vXModuleDef to set
 	 */
+	@JsonProperty("vXUserPermission")
 	public void setvXModuleDef(List<VXUserPermission> vXModuleDef) {
 		this.vXUserPermission = vXModuleDef;
 	}

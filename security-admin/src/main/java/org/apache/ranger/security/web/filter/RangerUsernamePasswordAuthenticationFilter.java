@@ -30,7 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class RangerUsernamePasswordAuthenticationFilter extends
 	UsernamePasswordAuthenticationFilter {
 
-    private static final Logger logger = LoggerFactory
+    private static final Logger LOG = LoggerFactory
 	    .getLogger(RangerUsernamePasswordAuthenticationFilter.class);
 
     /*
@@ -43,8 +43,8 @@ public class RangerUsernamePasswordAuthenticationFilter extends
      */
     @Override
     public void setRememberMeServices(RememberMeServices rememberMeServices) {
-	if (logger.isDebugEnabled()) {
-	    logger.debug("setRememberMeServices() enter: rememberMeServices="
+	if (LOG.isDebugEnabled()) {
+	    LOG.debug("setRememberMeServices() enter: rememberMeServices="
 		    + rememberMeServices.toString());
 	}
 	super.setRememberMeServices(rememberMeServices);

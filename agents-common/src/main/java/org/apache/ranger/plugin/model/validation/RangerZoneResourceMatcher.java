@@ -19,8 +19,10 @@
 
 package org.apache.ranger.plugin.model.validation;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
@@ -41,17 +43,18 @@ public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
     private final RangerPolicyResourceMatcher                    policyResourceMatcher;
     private RangerServiceDef.RangerResourceDef                   leafResourceDef;
 
-    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef) {
-        this(securityZoneName, policyResource, new RangerServiceDefHelper(serviceDef));
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
+        this(securityZoneName, policyResource, new RangerServiceDefHelper(serviceDef), pluginContext);
     }
 
-    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDefHelper serviceDefHelper) {
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         final RangerServiceDef                   serviceDef   = serviceDefHelper.getServiceDef();
         final Collection<String>                 resourceKeys = policyResource.keySet();
         final RangerDefaultPolicyResourceMatcher matcher      = new RangerDefaultPolicyResourceMatcher();
 
         matcher.setServiceDef(serviceDef);
         matcher.setServiceDefHelper(serviceDefHelper);
+        matcher.setPluginContext(pluginContext);
 
         boolean found = false;
 
@@ -106,6 +109,9 @@ public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
     public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
         return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
     }
+
+    @Override
+    public boolean isLeaf(String resourceName) { return StringUtils.equals(resourceName, leafResourceDef.getName()); }
 
     @Override
     public String toString() {

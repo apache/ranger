@@ -65,7 +65,7 @@ class ImportPolicy extends Component {
     });
   };
 
-  handleFileUpload = (e) => {
+  handleFileUpload = (e, values) => {
     e.preventDefault();
     const fileReader = new FileReader();
     fileReader.readAsText(e.target.files[0]);
@@ -132,6 +132,7 @@ class ImportPolicy extends Component {
       const formFields = {};
       formFields["serviceFields"] = serviceFieldsFromJson;
       formFields["sourceZoneName"] = zoneNameJsonParseFile;
+      formFields["isOverride"] = values.isOverride;
 
       this.setState({
         fileJsonData: jsonParseFileData,
@@ -204,7 +205,8 @@ class ImportPolicy extends Component {
     }
   };
 
-  handleSelectedZone = async (e) => {
+  handleSelectedZone = async (e, values) => {
+    const formFields = {};
     let zonesResp = [];
 
     try {
@@ -238,10 +240,10 @@ class ImportPolicy extends Component {
           };
         });
 
-        const formFields = {};
         formFields["serviceFields"] = serviceFieldsFromJson;
         formFields["sourceZoneName"] =
           this.state.initialFormFields["sourceZoneName"];
+        formFields["isOverride"] = values.isOverride;
 
         this.setState({
           destZoneName: e && e.label,
@@ -249,18 +251,24 @@ class ImportPolicy extends Component {
           filterFormFields: formFields
         });
       } else {
+        formFields["serviceFields"] =
+          this.state.initialFormFields["serviceFields"];
+        formFields["sourceZoneName"] =
+          this.state.initialFormFields["sourceZoneName"];
+        formFields["isOverride"] = values.isOverride;
+
         this.setState({
           destZoneName: "",
           destServices: this.props.isParentImport
             ? this.props.allServices
             : this.props.services,
-          filterFormFields: this.state.initialFormFields
+          filterFormFields: formFields
         });
       }
     } catch (error) {
       serverError(error);
       console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
+        `Error occurred while fetching Services from selected Zone! ${error}`
       );
     }
   };
@@ -323,8 +331,9 @@ class ImportPolicy extends Component {
             initialValues={this.state.filterFormFields}
             render={({
               handleSubmit,
+              values,
               form: {
-                mutators: { push: addItem, pop: removeItem }
+                mutators: { push: addItem }
               }
             }) => (
               <form onSubmit={handleSubmit}>
@@ -345,8 +354,8 @@ class ImportPolicy extends Component {
                   <Modal.Body>
                     <React.Fragment>
                       <Row>
-                        <Col sm={12}>
-                          <div className="form-row">
+                        <Row sm={12}>
+                          <Col sm={7}>
                             <Field name="uploadPolicyFile">
                               {({ input }) => (
                                 <div className="form-group col-sm-6">
@@ -359,27 +368,29 @@ class ImportPolicy extends Component {
                                       type="file"
                                       className="form-control-file"
                                       accept=" .json "
-                                      onChange={this.handleFileUpload}
+                                      onChange={(e) =>
+                                        this.handleFileUpload(e, values)
+                                      }
                                     />
                                   </label>
                                 </div>
                               )}
                             </Field>
-                            <div className="form-group col-sm-6 text-center">
-                              <div className="form-check">
-                                <Field
-                                  name="isOverride"
-                                  component="input"
-                                  type="checkbox"
-                                  className="form-check-input"
-                                />
-                                <label className="form-check-label">
-                                  Override Policy
-                                </label>
-                              </div>
+                          </Col>
+                          <Col sm={5}>
+                            <div className="form-check">
+                              <Field
+                                name="isOverride"
+                                component="input"
+                                type="checkbox"
+                                className="form-check-input"
+                              />
+                              <label className="form-check-label">
+                                Override Policy
+                              </label>
                             </div>
-                          </div>
-                        </Col>
+                          </Col>
+                        </Row>
                         <Col sm={12}>
                           {this.state.fileName ? (
                             <span>
@@ -392,7 +403,7 @@ class ImportPolicy extends Component {
                               ></label>
                             </span>
                           ) : (
-                            <span className="ml-1">No File Chosen</span>
+                            <span className="ms-1">No File Chosen</span>
                           )}
                         </Col>
                         <Col sm={12}>
@@ -421,7 +432,7 @@ class ImportPolicy extends Component {
                             </Row>
                             <Row>
                               <Col sm={12}>
-                                <p className="font-weight-bold">
+                                <p className="fw-bold">
                                   Specify Zone Mapping :
                                 </p>
                               </Col>
@@ -452,7 +463,9 @@ class ImportPolicy extends Component {
                               <Col sm={1}>To</Col>
                               <Col sm={4}>
                                 <Select
-                                  onChange={this.handleSelectedZone}
+                                  onChange={(e) =>
+                                    this.handleSelectedZone(e, values)
+                                  }
                                   isClearable
                                   components={{
                                     IndicatorSeparator: () => null
@@ -472,7 +485,7 @@ class ImportPolicy extends Component {
                             <hr />
                             <Row>
                               <Col sm={12}>
-                                <p className="font-weight-bold">
+                                <p className="fw-bold">
                                   Specify Service Mapping :
                                 </p>
                               </Col>

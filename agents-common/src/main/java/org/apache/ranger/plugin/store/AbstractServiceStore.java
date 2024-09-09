@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.services.tag.RangerServiceTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,9 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		List<RangerServiceDef> allServiceDefs = getServiceDefs(new SearchFilter());
 		for (RangerServiceDef serviceDef : allServiceDefs) {
-			updateTagServiceDefForUpdatingAccessTypes(serviceDef);
+			if (ServiceDefUtil.getOption_enableTagBasedPolicies(serviceDef, config)) {
+				updateTagServiceDefForUpdatingAccessTypes(serviceDef);
+			}
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.updateTagServiceDefForAccessTypes()");
@@ -223,6 +226,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 				tagAccessType.setName(prefix + svcAccessType.getName());
 				tagAccessType.setLabel(svcAccessType.getLabel());
 				tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
+				tagAccessType.setCategory(svcAccessType.getCategory());
 
 				tagAccessType.setImpliedGrants(new HashSet<String>());
 				if (CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
@@ -275,7 +279,8 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	}
 
 	private void updateTagServiceDefForUpdatingAccessTypes(RangerServiceDef serviceDef) throws Exception {
-		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) ||
+		    StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
 			return;
 		}
 

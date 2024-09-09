@@ -56,8 +56,13 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public boolean log(AuditEventBase event) {
-		// Add to batchQueue. Block if full
-		queue.add(event);
+		try {
+			// Add to batchQueue. Block if full
+			queue.put(event);
+		} catch (InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
+
 		return true;
 	}
 
@@ -232,15 +237,12 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 			boolean fileSpoolDrain = false;
 			try {
 				if (fileSpoolerEnabled && fileSpooler.isPending()) {
-					int percentUsed = queue.size() * 100
-							/ getMaxQueueSize();
-					long lastAttemptDelta = fileSpooler
-							.getLastAttemptTimeDelta();
+					int percentUsed = queue.size() * 100 / getMaxQueueSize();
+					long lastAttemptDelta = fileSpooler.getLastAttemptTimeDelta();
 
 					fileSpoolDrain = lastAttemptDelta > fileSpoolMaxWaitTime;
 					// If we should even read from queue?
-					if (!isDrain() && !fileSpoolDrain
-							&& percentUsed < fileSpoolDrainThresholdPercent) {
+					if (!isDrain() && !fileSpoolDrain && percentUsed < fileSpoolDrainThresholdPercent) {
 						// Since some files are still under progress and it is
 						// not in drain mode, lets wait and retry
 						if (nextDispatchDuration > 0) {
@@ -254,10 +256,8 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 
 				AuditEventBase event = null;
 
-				if (!isToSpool && !isDrain() && !fileSpoolDrain
-						&& nextDispatchDuration > 0) {
-					event = queue.poll(nextDispatchDuration,
-							TimeUnit.MILLISECONDS);
+				if (!isToSpool && !isDrain() && !fileSpoolDrain && nextDispatchDuration > 0) {
+					event = queue.poll(nextDispatchDuration, TimeUnit.MILLISECONDS);
 				} else {
 					// For poll() is non blocking
 					event = queue.poll();
@@ -266,15 +266,11 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				if (event != null) {
 					localBatchBuffer.add(event);
 					if (getMaxBatchSize() >= localBatchBuffer.size()) {
-						queue.drainTo(localBatchBuffer, getMaxBatchSize()
-								- localBatchBuffer.size());
+						queue.drainTo(localBatchBuffer, getMaxBatchSize() - localBatchBuffer.size());
 					}
 				} else {
 					// poll returned due to timeout, so reseting clock
-					nextDispatchDuration = lastDispatchTime
-							- System.currentTimeMillis()
-							+ getMaxBatchInterval();
-
+					nextDispatchDuration = lastDispatchTime - System.currentTimeMillis() + getMaxBatchInterval();
 					lastDispatchTime = System.currentTimeMillis();
 				}
 			} catch (InterruptedException e) {
@@ -288,8 +284,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 			if (localBatchBuffer.size() > 0 && isToSpool) {
 				// Let spool to the file directly
 				if (isDestActive) {
-					logger.info("Switching to file spool. Queue=" + getName()
-							+ ", dest=" + consumer.getName());
+					logger.info("Switching to file spool. Queue = {}, dest = {}", getName(), consumer.getName());
 				}
 				isDestActive = false;
 				// Just before stashing
@@ -297,20 +292,18 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 				fileSpooler.stashLogs(localBatchBuffer);
 				addStashedCount(localBatchBuffer.size());
 				localBatchBuffer.clear();
-			} else if (localBatchBuffer.size() > 0
-					&& (isDrain()
-							|| localBatchBuffer.size() >= getMaxBatchSize() || nextDispatchDuration <= 0)) {
+			} else if (localBatchBuffer.size() > 0 &&
+					(isDrain() || localBatchBuffer.size() >= getMaxBatchSize() || nextDispatchDuration <= 0)) {
 				if (fileSpoolerEnabled && !isDestActive) {
-					logger.info("Switching to writing to destination. Queue="
-							+ getName() + ", dest=" + consumer.getName());
+					logger.info("Switching to writing to the destination. Queue = {}, dest = {}",
+							getName(), consumer.getName());
 				}
 				// Reset time just before sending the logs
 				lastDispatchTime = System.currentTimeMillis();
 				boolean ret = consumer.log(localBatchBuffer);
 				if (!ret) {
 					if (fileSpoolerEnabled) {
-						logger.info("Switching to file spool. Queue="
-								+ getName() + ", dest=" + consumer.getName());
+						logger.info("Switching to file spool. Queue = {}, dest = {}", getName(), consumer.getName());
 						// Transient error. Stash and move on
 						fileSpooler.stashLogs(localBatchBuffer);
 						isDestActive = false;
@@ -329,9 +322,8 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 
 			if (isDrain()) {
 				if (!queue.isEmpty() || localBatchBuffer.size() > 0) {
-					logger.info("Queue is not empty. Will retry. queue.size)="
-							+ queue.size() + ", localBatchBuffer.size()="
-							+ localBatchBuffer.size());
+					logger.info("Queue is not empty. Will retry. queue.size = {}, localBatchBuffer.size = {}",
+							queue.size(), localBatchBuffer.size());
 				} else {
 					break;
 				}
@@ -344,12 +336,10 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 			}
 		}
 
-		logger.info("Exiting consumerThread. Queue=" + getName() + ", dest="
-				+ consumer.getName());
+		logger.info("Exiting consumerThread. Queue = {}, dest = {}", getName(), consumer.getName());
 		try {
 			// Call stop on the consumer
-			logger.info("Calling to stop consumer. name=" + getName()
-					+ ", consumer.name=" + consumer.getName());
+			logger.info("Calling to stop consumer. name = {}, consumer.name = {}", getName(), consumer.getName());
 
 			consumer.stop();
 			if (fileSpoolerEnabled) {

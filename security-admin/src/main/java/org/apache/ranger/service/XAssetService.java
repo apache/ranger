@@ -20,30 +20,20 @@
  package org.apache.ranger.service;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAsset;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXAsset;
-import org.codehaus.jackson.type.TypeReference;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -51,28 +41,8 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 
-	@Autowired
-	JSONUtil jsonUtil;
-	
-	@Autowired
-	StringUtil stringUtil;
-	
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Repository Name", false));
-		trxLogAttrs.put("description", new VTrxLogAttr("description", "Repository Description", false));
-		trxLogAttrs.put("activeStatus", new VTrxLogAttr("activeStatus", "Repository Status", true));
-		trxLogAttrs.put("config", new VTrxLogAttr("config", "Connection Configurations", false));
-	}
-
-	private String hiddenPasswordString;
-	
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	
 	public XAssetService(){
 		super();
-		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		searchFields.add(new SearchField("status", "obj.activeStatus",
 				SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("name", "obj.name", DATA_TYPE.STRING,
@@ -224,120 +194,6 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 		}
 	}
 
-	public List<XXTrxLog> getTransactionLog(VXAsset vResource, String action){
-		return getTransactionLog(vResource, null, action);
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXAsset vObj, XXAsset mObj, String action){
-		if(vObj == null ||action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
-			return null;
-		}
-		
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Field[] fields = vObj.getClass().getDeclaredFields();
-		
-		try {
-			Field nameField = vObj.getClass().getDeclaredField("name");
-			nameField.setAccessible(true);
-			String objectName = ""+nameField.get(vObj);
-	
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-			
-				String value = null;
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXAsset.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					if(stringUtil.isEmpty(value)){
-						continue;
-					}
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					String oldValue = null;
-					Field[] mFields = mObj.getClass().getDeclaredFields();
-					for(Field mField : mFields){
-						mField.setAccessible(true);
-						String mFieldName = mField.getName();
-						if(fieldName.equalsIgnoreCase(mFieldName)){
-							if(isEnum){
-								String enumName = XXAsset.getEnumName(mFieldName);
-								int enumValue = mField.get(mObj) == null ? 0 : Integer.parseInt(""+mField.get(mObj));
-								oldValue = xaEnumUtil.getLabel(enumName, enumValue);
-							} else {
-								oldValue = mField.get(mObj)+"";
-							}
-							break;
-						}
-					}
-					if("config".equalsIgnoreCase(fieldName)){
-						Map<String, String> vConfig = jsonUtil.jsonToMap(value);
-						Map<String, String> xConfig = jsonUtil.jsonToMap(oldValue);
-						
-						Map<String, String> newConfig = new HashMap<String, String>();
-						Map<String, String> oldConfig = new HashMap<String, String>();
-						
-						for (Entry<String, String> entry: vConfig.entrySet()) {
-							String key = entry.getKey();
-						    if (!xConfig.containsKey(key)) {
-						    	newConfig.put(key, entry.getValue());
-						    } else if(!entry.getValue().equalsIgnoreCase(xConfig.get(key))){
-						    	if("password".equalsIgnoreCase(key) && entry
-						    			.getValue().equalsIgnoreCase(hiddenPasswordString)){
-						    		continue;
-						    	}
-						    	newConfig.put(key, entry.getValue());
-						    	oldConfig.put(key, xConfig.get(key));
-						    }
-						}
-						
-						oldValue = jsonUtil.readMapToString(oldConfig);
-						value = jsonUtil.readMapToString(newConfig);
-					}
-					if(value.equalsIgnoreCase(oldValue)){
-						continue;
-					}
-					xTrxLog.setPreviousValue(oldValue);
-					xTrxLog.setNewValue(value);
-				}
-				
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_ASSET);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-				
-			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-		
-		return trxLogList;
-	}
-	
 	public String getConfigWithEncryptedPassword(String config,boolean isForced){
 		try {
 			if (config != null && !config.isEmpty()) {

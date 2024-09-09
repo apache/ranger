@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.service;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -28,11 +29,15 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerUserStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,9 +47,25 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
     private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
 
     protected final PolicyEngine policyEngine;
+    private final boolean useRangerGroups;
+    private final boolean useOnlyRangerGroups;
+    private final boolean convertEmailToUser;
 
     public RangerDefaultRequestProcessor(PolicyEngine policyEngine) {
         this.policyEngine = policyEngine;
+
+        RangerPluginContext pluginContext = policyEngine.getPluginContext();
+        RangerPluginConfig  pluginConfig  = pluginContext != null ? pluginContext.getConfig() : null;
+
+        if (pluginConfig != null) {
+            useRangerGroups     = pluginConfig.isUseRangerGroups();
+            useOnlyRangerGroups = pluginConfig.isUseOnlyRangerGroups();
+            convertEmailToUser  = pluginConfig.isConvertEmailToUsername();
+        } else {
+            useRangerGroups     = false;
+            useOnlyRangerGroups = false;
+            convertEmailToUser  = false;
+        }
     }
 
     @Override
@@ -63,7 +84,8 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         setResourceServiceDef(request);
 
-        RangerAccessRequestImpl reqImpl = null;
+        RangerPluginContext     pluginContext = policyEngine.getPluginContext();
+        RangerAccessRequestImpl reqImpl       = null;
 
         if (request instanceof RangerAccessRequestImpl) {
             reqImpl = (RangerAccessRequestImpl) request;
@@ -72,14 +94,18 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 reqImpl.extractAndSetClientIPAddress(policyEngine.getUseForwardedIPAddress(), policyEngine.getTrustedProxyAddresses());
             }
 
-            if(policyEngine.getPluginContext() != null) {
+            if (pluginContext != null) {
                 if (reqImpl.getClusterName() == null) {
-                    reqImpl.setClusterName(policyEngine.getPluginContext().getClusterName());
+                    reqImpl.setClusterName(pluginContext.getClusterName());
                 }
 
                 if (reqImpl.getClusterType() == null) {
-                    reqImpl.setClusterType(policyEngine.getPluginContext().getClusterType());
+                    reqImpl.setClusterType(pluginContext.getClusterType());
                 }
+
+                convertEmailToUsername(reqImpl);
+
+                updateUserGroups(reqImpl);
             }
         }
 
@@ -92,8 +118,8 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         }
 
         Set<String> roles = request.getUserRoles();
-        if (CollectionUtils.isEmpty(roles)) {
-            roles = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+        if (pluginContext != null && CollectionUtils.isEmpty(roles)) {
+            roles = pluginContext.getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
 
             if (reqImpl != null && roles != null && !roles.isEmpty()) {
                 reqImpl.setUserRoles(roles);
@@ -104,6 +130,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
             RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);
         }
 
+        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource());
+
+        RangerAccessRequestUtil.setResourceZoneNamesInContext(request, zoneNames);
+
         enrich(request);
 
         RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
@@ -111,7 +141,6 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== preProcess(" + request + ")");
         }
-
     }
 
     @Override
@@ -148,4 +177,62 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         }
     }
 
+    private void convertEmailToUsername(RangerAccessRequestImpl reqImpl) {
+        if (convertEmailToUser) {
+            RangerPluginContext pluginContext = policyEngine.getPluginContext();
+            RangerUserStoreUtil userStoreUtil = pluginContext != null ? pluginContext.getAuthContext().getUserStoreUtil() : null;
+
+            if (userStoreUtil != null) {
+                String userName = reqImpl.getUser();
+                int    idxSep   = StringUtils.indexOf(userName, '@');
+
+                if (idxSep > 0) {
+                    String userNameFromEmail = userStoreUtil.getUserNameFromEmail(userName);
+
+                    if (StringUtils.isBlank(userNameFromEmail)) {
+                        userNameFromEmail = userName.substring(0, idxSep);
+                    }
+
+                    LOG.debug("replacing req.user '{}' with '{}'", userName, userNameFromEmail);
+
+                    reqImpl.setUser(userNameFromEmail);
+                }
+            }
+        }
+    }
+
+    private void updateUserGroups(RangerAccessRequestImpl reqImpl) {
+        if (useRangerGroups) {
+            RangerPluginContext pluginContext = policyEngine.getPluginContext();
+            RangerUserStoreUtil userStoreUtil = pluginContext != null ? pluginContext.getAuthContext().getUserStoreUtil() : null;
+            String              userName      = reqImpl.getUser();
+
+            if (userStoreUtil != null && userName != null) {
+                Set<String> userGroups       = reqImpl.getUserGroups();
+                Set<String> rangerUserGroups = userStoreUtil.getUserGroups(userName);
+
+                if (rangerUserGroups == null) {
+                    rangerUserGroups = Collections.emptySet();
+                }
+
+                if (useOnlyRangerGroups) {
+                    userGroups = new HashSet<>(rangerUserGroups);
+
+                    LOG.debug("replacing req.userGroups '{}' with '{}'", reqImpl.getUserGroups(), userGroups);
+
+                    reqImpl.setUserGroups(userGroups);
+                } else {
+                    if (!rangerUserGroups.isEmpty()) {
+                        userGroups = userGroups != null ? new HashSet<>(userGroups) : new HashSet<>();
+
+                        userGroups.addAll(rangerUserGroups);
+
+                        LOG.debug("replacing req.userGroups '{}' with '{}'", reqImpl.getUserGroups(), userGroups);
+
+                        reqImpl.setUserGroups(userGroups);
+                    }
+                }
+            }
+        }
+    }
 }

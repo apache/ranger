@@ -31,7 +31,6 @@ import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +38,6 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class AuthSessionService extends
 		AbstractBaseResourceService<XXAuthSession, VXAuthSession> {
-	@Autowired
-	StringUtil stringUtil;
 
 	public static final String NAME = "AuthSession";
 

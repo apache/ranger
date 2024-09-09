@@ -28,10 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -39,18 +35,16 @@ import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServicePolicies implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOG = LoggerFactory.getLogger(ServicePolicies.class);
@@ -64,6 +58,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 	private TagPolicies        tagPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private List<RangerPolicyDelta> policyDeltas;
 	private Map<String, String> serviceConfig;
 
@@ -227,10 +222,8 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class TagPolicies implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -363,15 +356,14 @@ public class ServicePolicies implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class SecurityZoneInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		private String                          zoneName;
 		private List<HashMap<String, List<String>>> resources;
 		private List<RangerPolicy>              policies;
+		@JsonInclude(JsonInclude.Include.NON_NULL)
 		private List<RangerPolicyDelta>         policyDeltas;
 		private Boolean                         containsAssociatedTagService;
 

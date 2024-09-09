@@ -20,6 +20,7 @@
 package org.apache.ranger.entity;
 
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -33,7 +34,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
@@ -41,7 +41,6 @@ import org.apache.ranger.common.DateUtil;
 @EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_service_version_info")
 public class XXServiceVersionInfo implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -76,6 +75,13 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="role_update_time"   )
 	protected Date roleUpdateTime = DateUtil.getUTCDate();
+
+	@Column(name = "gds_version")
+	protected Long gdsVersion;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="gds_update_time"   )
+	protected Date gdsUpdateTime = DateUtil.getUTCDate();
 
 	@Version
 	@Column(name = "version")
@@ -167,6 +173,22 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		return this.roleUpdateTime;
 	}
 
+	public void setGdsVersion(Long gdsVersion) {
+		this.gdsVersion = gdsVersion;
+	}
+
+	public Long getGdsVersion() {
+		return this.gdsVersion;
+	}
+
+	public void setGdsUpdateTime( Date updateTime ) {
+		this.gdsUpdateTime = updateTime;
+	}
+
+	public Date getGdsUpdateTime( ) {
+		return this.gdsUpdateTime;
+	}
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -183,6 +205,8 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		str += "tagUpdateTime={" + tagUpdateTime + "} ";
 		str += "setRoleVersion={" + roleVersion + "}" ;
 		str += "setRoleUpdateTime={" + roleUpdateTime + "}" ;
+		str += "gdsVersion={" + gdsVersion + "} ";
+		str += "gdsUpdateTime={" + gdsUpdateTime + "} ";
 		str += "}";
 		return str;
 	}
@@ -193,43 +217,30 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	*/
 	@Override
 	public boolean equals( Object obj) {
-		if (obj == null)
-			return false;
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
-		if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-			return false;
+		final boolean ret;
+
+		if (this == obj) {
+			ret = true;
+		} else if (obj == null || getClass() != obj.getClass()) {
+			ret = false;
+		} else {
+			XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
+
+			ret = super.equals(obj) &&
+				  Objects.equals(id, other.id) &&
+				  Objects.equals(version, other.version) &&
+				  Objects.equals(serviceId, other.serviceId) &&
+				  Objects.equals(policyVersion, other.policyVersion) &&
+				  Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
+				  Objects.equals(tagVersion, other.tagVersion) &&
+				  Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
+				  Objects.equals(roleVersion, other.roleVersion) &&
+				  Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
+				  Objects.equals(gdsVersion, other.gdsVersion) &&
+				  Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
 		}
-		if ((version == null && other.version != null) || (this.version != null && !this.version.equals(other.version))) {
-			return false;
-		}
-		if ((this.serviceId == null && other.serviceId != null) || (this.serviceId != null && !this.serviceId.equals(other.serviceId))) {
-			return false;
-		}
-		if ((this.policyVersion == null && other.policyVersion != null) || (this.policyVersion != null && !this.policyVersion.equals(other.policyVersion))) {
-			return false;
-		}
-		if ((this.policyUpdateTime == null && other.policyUpdateTime != null) || (this.policyUpdateTime != null && !this.policyUpdateTime.equals(other.policyUpdateTime))) {
-			return false;
-		}
-		if ((this.tagVersion == null && other.tagVersion != null) || (this.tagVersion != null && !this.tagVersion.equals(other.tagVersion))) {
-			return false;
-		}
-		if ((this.tagUpdateTime == null && other.tagUpdateTime != null) || (this.tagUpdateTime != null && !this.tagUpdateTime.equals(other.tagUpdateTime))) {
-			return false;
-		}
-		if ((this.roleVersion == null && other.roleVersion != null) || (this.roleVersion != null && !this.roleVersion.equals(other.roleVersion))) {
-			return false;
-		}
-		if ((this.roleUpdateTime == null && other.roleUpdateTime != null) || (this.roleUpdateTime != null && !this.roleUpdateTime.equals(other.roleUpdateTime))) {
-			return false;
-		}
-		return true;
+
+		return ret;
 	}
 
 	public static boolean equals(Object object1, Object object2) {

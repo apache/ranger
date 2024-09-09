@@ -17,18 +17,12 @@
 
 package org.apache.ranger.plugin.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RangerSecurityZoneHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     private String            name;
@@ -51,5 +45,12 @@ public class RangerSecurityZoneHeaderInfo extends RangerBaseModelObject implemen
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("id={").append(getId()).append("} ");
+        sb.append("name={").append(name).append("} ");
+        sb.append("isEnabled={").append(getIsEnabled()).append("} ");
+        return sb;
     }
 }

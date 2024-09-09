@@ -30,7 +30,15 @@ const noneOptions = {
 };
 
 export default function ResourceSelectComp(props) {
-  const { formValues, grpResourcesKeys, levelKey, serviceDetails } = props;
+  const {
+    formValues,
+    grpResourcesKeys,
+    levelKey,
+    serviceDetails,
+    name,
+    isMultiResources,
+    changePolicyItemPermissions
+  } = props;
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const toastId = useRef(null);
@@ -161,7 +169,9 @@ export default function ResourceSelectComp(props) {
     <Field
       key={formValues[`resourceName-${levelKey}`].name}
       className="form-control"
-      name={`value-${levelKey}`}
+      name={
+        isMultiResources ? `${name}.value-${levelKey}` : `value-${levelKey}`
+      }
       validate={
         formValues &&
         formValues[`resourceName-${levelKey}`]?.mandatory &&
@@ -174,9 +184,10 @@ export default function ResourceSelectComp(props) {
             id={
               formValues &&
               formValues[`resourceName-${levelKey}`]?.mandatory &&
-              meta.error &&
-              meta.touched
+              meta.error
                 ? "isError"
+                : isMultiResources
+                ? `${name}.value-${levelKey}`
                 : `value-${levelKey}`
             }
             isMulti={supportMultipleVal(formValues[`resourceName-${levelKey}`])}
@@ -186,6 +197,7 @@ export default function ResourceSelectComp(props) {
             }
             options={options}
             onFocus={(e) => {
+              e.stopPropagation();
               setOptions([]);
               fetchResourceLookup(
                 "",

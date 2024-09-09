@@ -17,18 +17,18 @@ ARG RANGER_DB_TYPE
 
 FROM ranger-base:latest AS ranger-kms
 
-ARG RANGER_VERSION
+ARG KMS_VERSION
 ARG RANGER_DB_TYPE
 
 COPY ./dist/version                             /home/ranger/dist/
-COPY ./dist/ranger-${RANGER_VERSION}-kms.tar.gz /home/ranger/dist/
+COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz /home/ranger/dist/
 
 COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
 
-RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
-    ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-kms ${RANGER_HOME}/kms && \
-    rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-kms.tar.gz && \
+RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
+    ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
+    rm -f /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-kms-install.properties ${RANGER_HOME}/kms/install.properties && \
     mkdir -p /var/run/ranger_kms && \
     mkdir -p /var/log/ranger/kms && \
@@ -51,7 +51,7 @@ RUN  mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql
 FROM ranger-kms AS ranger_mysql
 COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
 COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
-RUN  mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar && \
+RUN  mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector-java.jar && \
      mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/kms/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
 
 FROM ranger_${RANGER_DB_TYPE}

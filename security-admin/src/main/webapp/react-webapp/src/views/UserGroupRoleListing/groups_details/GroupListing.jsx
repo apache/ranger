@@ -129,7 +129,7 @@ function Groups() {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -340,7 +340,7 @@ function Groups() {
               return (
                 <div className="text-center">
                   <h6>
-                    <Badge variant="success">
+                    <Badge bg="success">
                       {GroupTypes.GROUP_INTERNAL.label}
                     </Badge>
                   </h6>
@@ -350,7 +350,7 @@ function Groups() {
               return (
                 <div className="text-center">
                   <h6>
-                    <Badge variant="warning">
+                    <Badge bg="warning">
                       {GroupTypes.GROUP_EXTERNAL.label}
                     </Badge>
                   </h6>
@@ -368,7 +368,7 @@ function Groups() {
             return (
               <div className="text-center">
                 <h6>
-                  <Badge variant="success">{rawValue.value} </Badge>
+                  <Badge bg="success">{rawValue.value} </Badge>
                 </h6>
               </div>
             );
@@ -385,7 +385,7 @@ function Groups() {
               return (
                 <div className="text-center">
                   <h6>
-                    <Badge variant="success">
+                    <Badge bg="success">
                       {VisibilityStatus.STATUS_VISIBLE.label}
                     </Badge>
                   </h6>
@@ -395,7 +395,7 @@ function Groups() {
               return (
                 <div className="text-center">
                   <h6>
-                    <Badge variant="info">
+                    <Badge bg="info">
                       {VisibilityStatus.STATUS_HIDDEN.label}
                     </Badge>
                   </h6>
@@ -540,7 +540,7 @@ function Groups() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -565,7 +565,7 @@ function Groups() {
               />
             </Col>
             {isSystemAdmin() && (
-              <Col md={4} className="text-right">
+              <Col md={4} className="text-end">
                 <Button
                   variant="primary"
                   size="sm"
@@ -578,8 +578,7 @@ function Groups() {
                 <DropdownButton
                   title="Set Visibility"
                   size="sm"
-                  style={{ display: "inline-block" }}
-                  className="ml-2"
+                  className="ms-2 d-inline-block manage-visibility"
                   onSelect={handleSetVisibility}
                   data-id="hideShowVisibility"
                   data-cy="hideShowVisibility"
@@ -591,7 +590,7 @@ function Groups() {
                   variant="danger"
                   size="sm"
                   title="Delete"
-                  className="ml-2"
+                  className="ms-2"
                   onClick={handleDeleteBtnClick}
                   data-id="deleteUserGroup"
                   data-cy="deleteUserGroup"
@@ -626,15 +625,15 @@ function Groups() {
           <Modal show={showModal} onHide={toggleConfirmModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                {" "}
-                Are you sure you want to delete group&nbsp;
+                Are you sure you want to delete the&nbsp;
                 {selectedRows.current.length === 1 ? (
                   <>
-                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                    <b>&quot;{selectedRows.current[0].original.name}&quot;</b>
+                    &nbsp;group ?
                   </>
                 ) : (
                   <>
-                    "<b>{selectedRows.current.length}</b>" ?
+                    selected<b> {selectedRows.current.length}</b> groups ?
                   </>
                 )}
               </span>
@@ -686,9 +685,9 @@ function Groups() {
             <Modal.Header closeButton>
               <Modal.Title>
                 <div className="d-flex">
-                  User's List :
+                  User&apos;s List :
                   <div
-                    className="pl-2 more-less-width text-truncate"
+                    className="ps-2 more-less-width text-truncate"
                     title={showAssociateUserModal?.groupName}
                   >
                     {showAssociateUserModal.groupName}

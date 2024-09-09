@@ -47,8 +47,8 @@
     }
   ],
   "accessTypes": [
-    { "itemId": 1, "name": "read",  "label": "Read" },
-    { "itemId": 2, "name": "write", "label": "Write" }
+    { "itemId": 1, "name": "read",  "label": "Read",  "category": "READ" },
+    { "itemId": 2, "name": "write", "label": "Write", "category": "UPDATE" }
   ],
   "policyConditions": [],
   "contextEnrichers": [],

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.errors;
 
-import com.google.common.collect.ImmutableSet;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
 import org.junit.Test;
 

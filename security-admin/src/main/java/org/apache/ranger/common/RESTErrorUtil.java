@@ -22,6 +22,7 @@
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -95,8 +96,11 @@ public class RESTErrorUtil {
 	 * @return
 	 */
 	public WebApplicationException create403RESTException(String logMessage) {
+		RESTResponse resp = new RESTResponse();
+		resp.setMsgDesc(logMessage);
+
 		Response errorResponse = Response.status(
-				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).build();
+				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
@@ -130,7 +134,25 @@ public class RESTErrorUtil {
 		return restException;
 	}
 
-	
+	public WebApplicationException create403RESTException(VXResponse gjResponse) {
+		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
+		gjResponse.setMessageList(Collections.singletonList(MessageEnums.OPER_NO_PERMISSION.getMessage()));
+
+		Response                errorResponse = Response.status(javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(gjResponse).build();
+		WebApplicationException restException = new WebApplicationException(errorResponse);
+
+		restException.fillInStackTrace();
+
+		if (logger.isInfoEnabled()) {
+			UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+			String          loginId     = (userSession != null) ? userSession.getLoginId() : null;
+
+			logger.info("Request failed. loginId=" + loginId + ", logMessage=" + gjResponse.getMsgDesc(), restException);
+		}
+
+		return restException;
+	}
+
 	public WebApplicationException createGrantRevokeRESTException(String logMessage) {
 		RESTResponse resp = new RESTResponse();
 		resp.setMsgDesc(logMessage);
@@ -330,8 +352,12 @@ public class RESTErrorUtil {
 
 	public WebApplicationException createRESTException(int responseCode,
 			String logMessage, boolean logError) {
+		VXResponse response = new VXResponse();
+
+		response.setMsgDesc(logMessage);
+
 		Response errorResponse = Response
-				.status(responseCode).entity(logMessage).build();
+				.status(responseCode).entity(response).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
@@ -411,6 +437,37 @@ public class RESTErrorUtil {
 		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + vResponse.getMsgDesc(),
 				restException);
+		return restException;
+	}
+
+	public WebApplicationException create404RESTException(String errorMessage,
+			MessageEnums messageEnum, Long objectId, String fieldName,
+			String logMessage) {
+		List<VXMessage> messageList = new ArrayList<VXMessage>();
+		messageList.add(messageEnum.getMessage(objectId, fieldName));
+
+		VXResponse gjResponse = new VXResponse();
+		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
+		gjResponse.setMsgDesc(errorMessage);
+		gjResponse.setMessageList(messageList);
+
+		Response errorResponse = Response
+				.status(javax.servlet.http.HttpServletResponse.SC_NOT_FOUND)
+				.entity(gjResponse).build();
+
+		WebApplicationException restException = new WebApplicationException(
+				errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+		}
+
+		logger.info("Request failed. loginId="
+				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
+				restException);
+
 		return restException;
 	}
 }

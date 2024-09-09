@@ -23,15 +23,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable(false)
 @Table(name="ranger_keystore")
-@XmlRootElement
 public class XXRangerKeyStore extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	
@@ -72,7 +69,6 @@ public class XXRangerKeyStore extends XXDBBase implements java.io.Serializable {
 		this.createdDate = createdDate;
 	}
 
-	@Lob
 	@Column(name="kms_encoded")
 	protected String encoded;
 

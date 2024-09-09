@@ -19,11 +19,9 @@
 
  package org.apache.ranger.common.view;
 
-import javax.xml.bind.annotation.XmlTransient;
-
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXDBBase;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
@@ -34,7 +32,6 @@ public class ViewBaseBean implements java.io.Serializable {
     /**
      * @return the gjObj
      */
-    @XmlTransient
     @JsonIgnore
     public XXDBBase getMObj() {
 	return mObj;
@@ -48,7 +45,6 @@ public class ViewBaseBean implements java.io.Serializable {
 	this.mObj = gjObj;
     }
 
-    @XmlTransient
     @JsonIgnore
     public int getMyClassType() {
 	return RangerCommonEnums.CLASS_TYPE_NONE;

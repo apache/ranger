@@ -129,7 +129,6 @@ public class JKS2RangerUtil {
 			RangerKeyStore dbStore = new RangerKeyStore(daoManager);
 			char[] masterKey = null;
 			String password = conf.get(ENCRYPTION_KEY);
-			InputStream in = null;
 
 			if (conf != null
 					&& StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED))
@@ -224,21 +223,10 @@ public class JKS2RangerUtil {
 				masterKey = rangerMasterKey.getMasterKey(password)
 						.toCharArray();
 			}
-			try {
-				in = new FileInputStream(new File(keyStoreFileName));
-				dbStore.engineLoadKeyStoreFile(in, keyStorePassword,
+			try (InputStream inputStream = new FileInputStream(new File(keyStoreFileName))) {
+				dbStore.engineLoadKeyStoreFile(inputStream, keyStorePassword,
 						keyPassword, masterKey, keyStoreType);
 				dbStore.engineStore(null, masterKey);
-			} finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (Exception e) {
-						throw new RuntimeException(
-								"ERROR:  Unable to close file stream for ["
-										+ keyStoreFileName + "]", e);
-					}
-				}
 			}
 		} catch (Throwable t) {
 			throw new RuntimeException("Unable to import keys from ["

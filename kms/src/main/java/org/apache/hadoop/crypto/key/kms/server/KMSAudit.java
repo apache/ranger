@@ -18,7 +18,15 @@
 package org.apache.hadoop.crypto.key.kms.server;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
+import org.apache.hadoop.thirdparty.com.google.common.cache.Cache;
+import org.apache.hadoop.thirdparty.com.google.common.cache.CacheBuilder;
+import org.apache.hadoop.thirdparty.com.google.common.cache.RemovalListener;
+import org.apache.hadoop.thirdparty.com.google.common.cache.RemovalNotification;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
+import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.hadoop.crypto.key.kms.server.KMSAuditLogger.AuditEvent;
@@ -28,15 +36,6 @@ import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyOp
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.conf.Configuration;
-
-import com.google.common.base.Strings;
-import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -192,7 +191,7 @@ public class KMSAudit {
       final UserGroupInformation ugi, final String key, final String remoteHost,
       final String extraMsg) {
       final String user = ugi == null ? null: ugi.getUserName();
-    if (!Strings.isNullOrEmpty(user) && !Strings.isNullOrEmpty(key)
+    if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(key)
         && (op != null)
         && AGGREGATE_OPS_WHITELIST.contains(op)) {
       String cacheKey = createCacheKey(user, key, op);

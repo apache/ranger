@@ -31,7 +31,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerConstants;
@@ -39,7 +38,6 @@ import org.apache.ranger.common.RangerConstants;
 
 @Entity
 @Table(name="x_trx_log")
-@XmlRootElement
 public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -196,6 +194,16 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 	 */
 	public XXTrxLog ( ) {
 		objectClassType = RangerConstants.CLASS_TYPE_NONE;
+	}
+
+	public XXTrxLog(int objectClassType, Long objectId, String objectName, String action, String attributeName, String previousValue, String newValue) {
+		this.objectClassType = objectClassType;
+		this.objectId        = objectId;
+		this.objectName      = objectName;
+		this.action          = action;
+		this.attributeName   = attributeName;
+		this.previousValue   = previousValue;
+		this.newValue        = newValue;
 	}
 
 	@Override

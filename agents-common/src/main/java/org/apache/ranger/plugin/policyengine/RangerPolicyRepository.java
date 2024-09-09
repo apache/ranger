@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.plugin.contextenricher.RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.contextenricher.RangerTagEnricher.TAG_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.PLUGIN_AUDIT_FILTER;
@@ -632,7 +634,7 @@ public class RangerPolicyRepository {
                         Collections.sort(ret, PolicyEvaluatorForTag.EVAL_ORDER_COMPARATOR);
                         break;
                     case RangerPolicy.POLICY_TYPE_DATAMASK:
-                        Collections.sort(ret, PolicyEvaluatorForTag.NAME_COMPARATOR);
+                        Collections.sort(ret, PolicyEvaluatorForTag.MATCH_TYPE_COMPARATOR);
                         break;
                     case RangerPolicy.POLICY_TYPE_ROWFILTER:
                         Collections.sort(ret, PolicyEvaluatorForTag.NAME_COMPARATOR);
@@ -931,14 +933,13 @@ public class RangerPolicyRepository {
             }
         }
         LOG.info("This policy engine contains " + (policyEvaluators.size()+dataMaskPolicyEvaluators.size()+rowFilterPolicyEvaluators.size()) + " policy evaluators");
-        RangerPolicyEvaluator.PolicyEvalOrderComparator comparator = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
-        Collections.sort(policyEvaluators, comparator);
+        Collections.sort(policyEvaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
         this.policyEvaluators = policyEvaluators;
 
-        Collections.sort(dataMaskPolicyEvaluators, comparator);
+        Collections.sort(dataMaskPolicyEvaluators, RangerPolicyEvaluator.NAME_COMPARATOR);
         this.dataMaskPolicyEvaluators = dataMaskPolicyEvaluators;
 
-        Collections.sort(rowFilterPolicyEvaluators, comparator);
+        Collections.sort(rowFilterPolicyEvaluators, RangerPolicyEvaluator.NAME_COMPARATOR);
         this.rowFilterPolicyEvaluators = rowFilterPolicyEvaluators;
 
         this.policyEvaluatorsMap = createPolicyEvaluatorsMap();
@@ -1005,6 +1006,16 @@ public class RangerPolicyRepository {
                         Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
 
                         enricherOptions.remove(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
+
+                        enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
+                    }
+                }
+
+                if (options.disableGdsInfoRetriever && StringUtils.equals(enricherDef.getEnricher(), RangerGdsEnricher.class.getName())) {
+                    if (MapUtils.isNotEmpty(enricherDef.getEnricherOptions())) {
+                        Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
+
+                        enricherOptions.remove(RETRIEVER_CLASSNAME_OPTION);
 
                         enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
                     }
@@ -1175,7 +1186,7 @@ public class RangerPolicyRepository {
 
         if (CollectionUtils.isNotEmpty(evaluators)) {
             ret = new ArrayList<>(evaluators);
-            Collections.sort(ret, new RangerPolicyEvaluator.PolicyEvalOrderComparator());
+            Collections.sort(ret, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
         }
 
         return ret;

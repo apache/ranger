@@ -27,19 +27,14 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXGroupUserList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXGroupUser> vXGroupUsers = new ArrayList<VXGroupUser>();
@@ -56,6 +51,7 @@ public class VXGroupUserList extends VList {
     /**
      * @return the vXGroupUsers
      */
+    @JsonProperty("vXGroupUsers")
     public List<VXGroupUser> getVXGroupUsers() {
 	return vXGroupUsers;
     }
@@ -64,6 +60,7 @@ public class VXGroupUserList extends VList {
      * @param vXGroupUsers
      *            the vXGroupUsers to set
      */
+    @JsonProperty("vXGroupUsers")
     public void setVXGroupUsers(List<VXGroupUser> vXGroupUsers) {
 	this.vXGroupUsers = vXGroupUsers;
     }

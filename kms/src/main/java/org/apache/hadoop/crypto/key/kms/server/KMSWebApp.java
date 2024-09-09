@@ -20,7 +20,6 @@ package org.apache.hadoop.crypto.key.kms.server;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Preconditions;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.CachingKeyProvider;
@@ -29,6 +28,7 @@ import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyACLs;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.VersionInfo;
@@ -133,7 +133,7 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("  KMS Hadoop Version: " + VersionInfo.getVersion());
       LOG.info("-------------------------------------------------------------");
 
-      kmsAcls = getAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
+      kmsAcls = getKeyAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
       kmsAcls.startReloader();
 
       metricRegistry = new MetricRegistry();
@@ -230,7 +230,7 @@ public class KMSWebApp implements ServletContextListener {
   }
 
   @SuppressWarnings("unchecked")
-  private KeyACLs getAcls(String clsStr) throws IOException {
+  private KeyACLs getKeyAcls(String clsStr) throws IOException {
 	  KeyACLs keyAcl = null;
 	  try {
         Class<? extends KeyACLs> cls = null;

@@ -18,12 +18,11 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import dateFormat from "dateformat";
 import {
   setTimeStamp,
   fetchSearchFilterParams,
@@ -39,17 +38,30 @@ import {
 } from "../../components/CommonComponents";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
-import { isEmpty, isUndefined, map, sortBy, toUpper, filter } from "lodash";
+import {
+  isUndefined,
+  map,
+  sortBy,
+  toUpper,
+  filter,
+  isNull,
+  isEmpty,
+  cloneDeep,
+  get
+} from "lodash";
+import { getServiceDef } from "../../utils/appState";
+import { pluginStatusColumnInfo } from "../../utils/XAMessages";
+import { pluginStatusColumnInfoMsg } from "../../utils/XAEnums";
 
 function Plugin_Status() {
+  const context = useOutletContext();
+  const services = context.services;
+  const servicesAvailable = context.servicesAvailable;
   const [pluginStatusListingData, setPluginStatusLogs] = useState([]);
   const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
   const [entries, setEntries] = useState([]);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const fetchIdRef = useRef(0);
-  const [serviceDefs, setServiceDefs] = useState([]);
-  const [services, setServices] = useState([]);
   const [contentLoader, setContentLoader] = useState(true);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,13 +70,11 @@ function Plugin_Status() {
   );
   const [resetPage, setResetpage] = useState({ page: null });
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
+  const { allServiceDefs } = cloneDeep(getServiceDef());
+  const [pageCount, setPageCount] = React.useState(0);
 
   useEffect(() => {
-    if (isEmpty(serviceDefs)) {
-      fetchServiceDefs(), fetchServices();
-    }
-
-    if (!isEmpty(serviceDefs)) {
+    if (servicesAvailable !== null) {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams(
           "pluginStatus",
@@ -73,70 +83,22 @@ function Plugin_Status() {
         );
 
       // Updating the states for search params, search filter, default search filter and localStorage
-      setSearchParams(searchParam);
-      setSearchFilterParams(searchFilterParam);
+      setSearchParams(searchParam, { replace: true });
+      if (
+        JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      ) {
+        setSearchFilterParams(searchFilterParam);
+      }
       setDefaultSearchFilterParams(defaultSearchFilterParam);
       localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
       setContentLoader(false);
     }
-  }, [serviceDefs]);
-
-  useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
-      fetchSearchFilterParams(
-        "pluginStatus",
-        searchParams,
-        searchFilterOptions
-      );
-
-    // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
-    if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
-    ) {
-      setSearchFilterParams(searchFilterParam);
-    }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
-
-  const fetchServiceDefs = async () => {
-    setLoader(true);
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: "plugins/definitions"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
-      );
-    }
-
-    setServiceDefs(serviceDefsResp.data.serviceDefs);
-    setLoader(false);
-  };
-
-  const fetchServices = async () => {
-    let servicesResp = [];
-    try {
-      servicesResp = await fetchApi({
-        url: "plugins/services"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Services or CSRF headers! ${error}`
-      );
-    }
-    setServices(servicesResp.data.services);
-    setContentLoader(false);
-  };
+  }, [searchParams, servicesAvailable]);
 
   const fetchPluginStatusInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
-      if (!isEmpty(serviceDefs)) {
+      if (servicesAvailable !== null) {
         let logsResp = [];
         let logs = [];
         let totalCount = 0;
@@ -166,12 +128,102 @@ function Plugin_Status() {
         }
       }
     },
-    [updateTable, searchFilterParams]
+    [updateTable, searchFilterParams, servicesAvailable]
   );
 
   const isDateDifferenceMoreThanHr = (date1, date2) => {
     let diff = (date1 - date2) / 36e5;
     return diff < 0 ? true : false;
+  };
+
+  const getLastUpdateTime = (lastUpdateTime) => {
+    if (isUndefined(lastUpdateTime) || isNull(lastUpdateTime)) {
+      return <center>--</center>;
+    }
+    return setTimeStamp(lastUpdateTime);
+  };
+
+  const getDownloadTime = (downloadTime, lastUpdateTime, columnsName) => {
+    if (isUndefined(downloadTime) || isNull(downloadTime)) {
+      return <center>--</center>;
+    }
+
+    if (!isUndefined(lastUpdateTime)) {
+      let downloadDate = new Date(parseInt(downloadTime));
+      let lastUpdateDate = new Date(parseInt(lastUpdateTime));
+      if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
+        if (
+          moment(downloadDate).diff(moment(lastUpdateDate), "minutes") >= -2
+        ) {
+          return (
+            <span className="text-warning">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].downloadTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(downloadTime)}
+            </span>
+          );
+        } else {
+          return (
+            <span className="text-error">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].downloadTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(downloadTime)}{" "}
+            </span>
+          );
+        }
+      }
+    }
+    return setTimeStamp(downloadTime);
+  };
+
+  const getActivationTime = (activeTime, lastUpdateTime, columnsName) => {
+    if (isUndefined(activeTime) || isNull(activeTime) || activeTime == 0) {
+      return <center>--</center>;
+    }
+    if (!isUndefined(lastUpdateTime)) {
+      let activeDate = new Date(parseInt(activeTime));
+      let lastUpdateDate = new Date(parseInt(lastUpdateTime));
+      if (isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)) {
+        if (moment(activeDate).diff(moment(lastUpdateDate), "minutes") >= -2) {
+          return (
+            <span className="text-warning">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].activationTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(activeTime)}
+            </span>
+          );
+        } else {
+          return (
+            <span className="text-error">
+              <CustomTooltip
+                placement="bottom"
+                content={
+                  pluginStatusColumnInfoMsg[columnsName].activationTimeDelayMsg
+                }
+                icon="fa-fw fa fa-exclamation-circle active-policy-alert"
+              />
+              {setTimeStamp(activeTime)}
+            </span>
+          );
+        }
+      }
+    }
+    return setTimeStamp(activeTime);
   };
 
   const refreshTable = () => {
@@ -180,43 +232,15 @@ function Plugin_Status() {
     setUpdateTable(moment.now());
   };
 
-  const contents = (val) => {
+  const infoIcon = (columnsName) => {
     return (
       <>
-        <ul className="list-inline">
-          <li className="list-inline-item">
-            <strong>Last Update: </strong> Last updated time of{" "}
-            {val == "Tag" ? "Tag-service" : "policy"}.
-          </li>
-          <li className="list-inline-item">
-            <strong>Download: </strong>
-            {val == "Tag"
-              ? "Time when tag-based policies sync-up with Ranger."
-              : "Time when policy actually downloaded(sync-up with Ranger)."}
-          </li>
-          <li className="list-inline-item">
-            <strong>Active: </strong> Time when{" "}
-            {val == "Tag" ? "tag-based" : "policy"} actually in use for
-            enforcement.
-          </li>
-        </ul>
-      </>
-    );
-  };
-
-  const infoIcon = (val) => {
-    return (
-      <>
-        <b>{val} ( Time )</b>
+        <b>{columnsName} ( Time )</b>
 
         <CustomPopover
           icon="fa-fw fa fa-info-circle info-icon"
-          title={
-            val == "Policy"
-              ? "Policy (Time details)"
-              : "Tag Policy (Time details)"
-          }
-          content={contents(val)}
+          title={pluginStatusColumnInfoMsg[columnsName].title}
+          content={pluginStatusColumnInfo(columnsName)}
           placement="left"
           trigger={["hover", "focus"]}
         />
@@ -224,172 +248,196 @@ function Plugin_Status() {
     );
   };
 
+  const dateTimeSorting = (rowA, rowB, colAccessor) => {
+    // Custom comparator function for sorting date-time values
+    const dateA = new Date(parseInt(rowA.original?.info[colAccessor] ?? 0));
+    const dateB = new Date(parseInt(rowB.original?.info[colAccessor] ?? 0));
+
+    // Compare dates
+    if (dateA < dateB) return -1;
+    if (dateA > dateB) return 1;
+    return;
+  };
+
+  const dataSorting = (rowA, rowB, colAccessor) => {
+    const allSame =
+      (get(rowA.original, colAccessor) ?? "") ===
+      (get(rowB.original, colAccessor) ?? "");
+    if (allSame == true) {
+      // If all values are the same, return to disable sorting
+      return;
+    } else {
+      // Otherwise, call the generic sorting function for sorting values
+      return (get(rowA.original, colAccessor) ?? "").localeCompare(
+        get(rowB.original, colAccessor) ?? ""
+      );
+    }
+  };
+
   const columns = React.useMemo(
     () => [
       {
         Header: "Service Name",
         accessor: "serviceDisplayName",
-        sortMethod: (a, b) => {
-          if (a.length === b.length) {
-            return a > b ? 1 : -1;
-          }
-          return a.length > b.length ? 1 : -1;
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
+        Cell: (rawValue) => {
+          return (
+            <div className="text-truncate">
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
+            </div>
+          );
         }
       },
       {
         Header: "Service Type",
         accessor: "serviceType",
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
         Cell: (rawValue) => {
           return (
             <div className="text-truncate">
-              <span title={rawValue.value}>{rawValue.value}</span>
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
             </div>
           );
         }
       },
       {
         Header: "Application",
-        accessor: "appType"
+        accessor: "appType",
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
+        Cell: (rawValue) => {
+          return (
+            <div className="text-truncate">
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
+            </div>
+          );
+        }
       },
       {
         Header: "Host Name",
         accessor: "hostName",
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
         Cell: (rawValue) => {
           return (
             <div className="text-truncate">
-              <span title={rawValue.value}>{rawValue.value}</span>
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
             </div>
           );
         }
       },
       {
         Header: "Plugin IP",
-        accessor: "ipAddress"
+        accessor: "ipAddress",
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
+        Cell: (rawValue) => {
+          return (
+            <div className="text-truncate">
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
+            </div>
+          );
+        }
       },
       {
         Header: "Cluster Name",
-        accessor: "clusterName",
-        Cell: ({ row: { original } }) => {
-          let clusterName = original?.info?.clusterName;
-          return isUndefined(clusterName) ? "--" : clusterName;
+        accessor: "info.clusterName",
+        sortType: (rowA, rowB, colAccessor) => {
+          return dataSorting(rowA, rowB, colAccessor);
+        },
+        Cell: (rawValue) => {
+          return (
+            <div className="text-truncate">
+              <span title={rawValue.value}>
+                {!isEmpty(rawValue.value) ? (
+                  rawValue.value
+                ) : (
+                  <center>--</center>
+                )}
+              </span>
+            </div>
+          );
         }
       },
       {
         Header: infoIcon("Policy"),
-        id: "policyinfo",
+        id: "Policy (Time)",
         columns: [
           {
             Header: "Last Update",
             accessor: "lastPolicyUpdateTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              return setTimeStamp(original.info.lastPolicyUpdateTime);
+              return getLastUpdateTime(original.info.lastPolicyUpdateTime);
             },
             minWidth: 190
           },
           {
             Header: "Download",
             accessor: "policyDownloadTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.policyDownloadTime)
+              return getDownloadTime(
+                original.info.policyDownloadTime,
+                original.info.lastPolicyUpdateTime,
+                "Policy"
               );
-
-              dateFormat(
-                parseInt(original.info.policyDownloadTime),
-                "mm/dd/yyyy hh:MM:ss TT"
-              );
-              if (!isUndefined(original.info.lastPolicyUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastPolicyUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyDownloadTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyDownloadTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.policyDownloadTime);
             },
             minWidth: 190
           },
           {
             Header: "Active",
             accessor: "policyActivationTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              let activeDate = new Date(
-                parseInt(original.info.policyActivationTime)
+              return getActivationTime(
+                original.info.policyActivationTime,
+                original.info.lastPolicyUpdateTime,
+                "Policy"
               );
-
-              if (!isUndefined(original.info.lastPolicyUpdateTime)) {
-                let lastUpdateDate = new Date(
-                  parseInt(original.info.lastPolicyUpdateTime)
-                );
-
-                if (isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)) {
-                  if (
-                    moment(activeDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            " Policy is updated but not yet used for any enforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyActivationTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            " Policy is updated but not yet used for any enforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.policyActivationTime)}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.policyActivationTime);
             },
             minWidth: 190
           }
@@ -397,117 +445,140 @@ function Plugin_Status() {
       },
       {
         Header: infoIcon("Tag"),
-        id: "taginfo",
+        id: "Tag (Time)",
         columns: [
           {
             Header: "Last Update",
             accessor: "lastTagUpdateTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              return setTimeStamp(original.info.lastTagUpdateTime);
+              return getLastUpdateTime(original.info.lastTagUpdateTime);
             },
             minWidth: 190
           },
           {
             Header: "Download",
             accessor: "tagDownloadTime",
-
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.tagDownloadTime)
+              return getDownloadTime(
+                original.info.tagDownloadTime,
+                original.info.lastTagUpdateTime,
+                "Tag"
               );
-
-              if (!isUndefined(original.info.lastTagUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastTagUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagDownloadTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet downloaded(sync-upwith Ranger)"
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagDownloadTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.tagDownloadTime);
             },
             minWidth: 190
           },
           {
             Header: "Active",
             accessor: "tagActivationTime",
-
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
             Cell: ({ row: { original } }) => {
-              var downloadDate = new Date(
-                parseInt(original.info.tagActivationTime)
+              return getActivationTime(
+                original.info.tagActivationTime,
+                original.info.lastTagUpdateTime,
+                "Tag"
               );
-
-              if (!isUndefined(original.info.lastTagUpdateTime)) {
-                var lastUpdateDate = new Date(
-                  parseInt(original.info.lastTagUpdateTime)
-                );
-                if (isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)) {
-                  if (
-                    moment(downloadDate).diff(
-                      moment(lastUpdateDate),
-                      "minutes"
-                    ) >= -2
-                  ) {
-                    return (
-                      <span className="text-warning">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet used for anyenforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagActivationTime)}
-                      </span>
-                    );
-                  } else {
-                    return (
-                      <span className="text-error">
-                        <CustomTooltip
-                          placement="bottom"
-                          content={
-                            "Policy is updated but not yet used for anyenforcement."
-                          }
-                          icon="fa-fw fa fa-exclamation-circle active-policy-alert"
-                        />
-                        {setTimeStamp(original.info.tagActivationTime)}{" "}
-                      </span>
-                    );
-                  }
-                }
-              }
-              return setTimeStamp(original.info.tagActivationTime);
+            },
+            minWidth: 190
+          }
+        ]
+      },
+      {
+        Header: infoIcon("GDS"),
+        id: "GDS (Time)",
+        columns: [
+          {
+            Header: "Last Update",
+            accessor: "lastGdsUpdateTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getLastUpdateTime(original.info.lastGdsUpdateTime);
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Download",
+            accessor: "gdsDownloadTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getDownloadTime(
+                original.info.gdsDownloadTime,
+                original.info.lastGdsUpdateTime,
+                "GDS"
+              );
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Active",
+            accessor: "gdsActivationTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getActivationTime(
+                original.info.gdsActivationTime,
+                original.info.lastGdsUpdateTime,
+                "GDS"
+              );
+            },
+            minWidth: 190
+          }
+        ]
+      },
+      {
+        Header: infoIcon("Role"),
+        id: "Role (Time)",
+        columns: [
+          {
+            Header: "Last Update",
+            accessor: "lastRoleUpdateTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getLastUpdateTime(original.info.lastRoleUpdateTime);
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Download",
+            accessor: "roleDownloadTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getDownloadTime(
+                original.info.roleDownloadTime,
+                original.info.lastRoleUpdateTime,
+                "Role"
+              );
+            },
+            minWidth: 190
+          },
+          {
+            Header: "Active",
+            accessor: "roleActivationTime",
+            sortType: (rowA, rowB, colAccessor) => {
+              return dateTimeSorting(rowA, rowB, colAccessor);
+            },
+            Cell: ({ row: { original } }) => {
+              return getActivationTime(
+                original.info.roleActivationTime,
+                original.info.lastRoleUpdateTime,
+                "Role"
+              );
             },
             minWidth: 190
           }
@@ -524,7 +595,7 @@ function Plugin_Status() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {
@@ -535,7 +606,7 @@ function Plugin_Status() {
   const getServiceDefType = () => {
     let serviceDefType = [];
 
-    serviceDefType = map(serviceDefs, function (serviceDef) {
+    serviceDefType = map(allServiceDefs, function (serviceDef) {
       return {
         label: toUpper(serviceDef.displayName),
         value: serviceDef.name
@@ -618,17 +689,27 @@ function Plugin_Status() {
             </div>
           </Col>
         </Row>
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-        <XATableLayout
-          data={pluginStatusListingData}
-          columns={columns}
-          loading={loader}
-          totalCount={entries && entries.totalCount}
-          fetchData={fetchPluginStatusInfo}
-          pageCount={pageCount}
-          columnSort={true}
-          clientSideSorting={true}
-        />
+        <div className="position-relative">
+          <Row>
+            <Col sm={11}>
+              <AuditFilterEntries
+                entries={entries}
+                refreshTable={refreshTable}
+              />
+            </Col>
+          </Row>
+          <XATableLayout
+            data={pluginStatusListingData}
+            columns={columns}
+            loading={loader}
+            totalCount={entries && entries.totalCount}
+            fetchData={fetchPluginStatusInfo}
+            columnSort={true}
+            clientSideSorting={true}
+            pageCount={pageCount}
+            columnHide={{ tableName: "pluginStatus", isVisible: true }}
+          />
+        </div>
       </React.Fragment>
     </div>
   );

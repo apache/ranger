@@ -20,12 +20,12 @@
 
 package org.apache.ranger.authorization.ozone.authorizer;
 
-import com.google.common.collect.Sets;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
 import org.apache.hadoop.ozone.security.acl.OzoneObj;
 import org.apache.hadoop.ozone.security.acl.RequestContext;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -125,6 +125,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		rangerRequest.setAccessTime(eventTime);
 
 		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+		rangerResource.setOwnerUser(context.getOwnerName());
+
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);

@@ -19,9 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.atlas.kafka.NotificationProvider;
 import org.apache.atlas.model.notification.EntityNotification;
 import org.apache.atlas.notification.NotificationConsumer;
@@ -29,6 +26,7 @@ import org.apache.atlas.notification.NotificationInterface;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.atlas.kafka.AtlasKafkaMessage;
@@ -37,7 +35,6 @@ import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntityWithTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -184,9 +181,12 @@ public class AtlasTagSource extends AbstractTagSource {
 			}
 
 			while (true) {
-
-				try {
-					List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> ConsumerRunnable.run() is running as server is active");
+					}
+					try {
+						List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
 					if (newMessages.size() == 0) {
 						if (LOG.isDebugEnabled()) {
@@ -251,6 +251,7 @@ public class AtlasTagSource extends AbstractTagSource {
 						return;
 					}
 				}
+			  }
 			}
 		}
 
@@ -277,9 +278,7 @@ public class AtlasTagSource extends AbstractTagSource {
 						}
 
 						if (LOG.isDebugEnabled()) {
-							Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
-							String serviceTagsString = gsonBuilder.toJson(entry.getValue());
-
+							String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
 							LOG.debug("serviceTags=" + serviceTagsString);
 						}
 						updateSink(entry.getValue());
@@ -312,7 +311,7 @@ public class AtlasTagSource extends AbstractTagSource {
 			int  partitionId   = messageToCommit.getPartition();
 
 			if (offsetOfLastMessageCommittedToKafka < messageOffset) {
-				TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", partitionId);
+				TopicPartition partition = new TopicPartition(messageToCommit.getTopic(), partitionId);
 				try {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Committing message with offset:[" + messageOffset + "] to Kafka");

@@ -66,12 +66,14 @@
     {
       "itemId": 1,
       "name": "read",
-      "label": "Read"
+      "label": "Read",
+      "category": "READ"
     },
     {
       "itemId": 2,
       "name": "write",
-      "label": "Write"
+      "label": "Write",
+      "category": "UPDATE"
     }
   ],
   "configs":
@@ -118,7 +120,8 @@
       "name": "ip-range",
       "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
       "label": "IP Address Range",
-      "description": "IP Address Range"
+      "description": "IP Address Range",
+      "uiHint" : "{ \"isMultiValue\":true }"
     }
   ]
 }

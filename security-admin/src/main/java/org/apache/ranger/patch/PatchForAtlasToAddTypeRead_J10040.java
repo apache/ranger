@@ -193,9 +193,8 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
                 if (xxPolicy.getName().equalsIgnoreCase(ALL_TYPE_RESOURCE_DEF_NAME)) {
 
                     RangerPolicy rPolicy = svcDBStore.getPolicy(xxPolicy.getId());
-                    List<RangerPolicyItem> policyItems = rPolicy.getPolicyItems();
 
-                    for (RangerPolicyItem item : policyItems) {
+                    for (RangerPolicyItem item : rPolicy.getPolicyItems()) {
                         if (!checkIfTypeReadPermissionSet(item)) {
                             List<RangerPolicyItemAccess> itemAccesses = item.getAccesses();
                             itemAccesses.add(getTypeReadPolicyItemAccesses());
@@ -208,7 +207,7 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
                     rangerPolicyItemReadType.setAccesses(Arrays.asList(getTypeReadPolicyItemAccesses()));
                     rangerPolicyItemReadType.setGroups(Arrays.asList(GROUP_PUBLIC));
 
-                    policyItems.add(rangerPolicyItemReadType);
+                    rPolicy.addPolicyItem(rangerPolicyItemReadType);
 
                     svcDBStore.updatePolicy(rPolicy);
                 }

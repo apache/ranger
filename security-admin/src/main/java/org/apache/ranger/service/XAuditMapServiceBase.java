@@ -26,17 +26,22 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 
 public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAuditMap>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XAuditMap";
 
 	public XAuditMapServiceBase() {
-
+		super(AppConstants.CLASS_TYPE_XA_AUDIT_MAP, AppConstants.CLASS_TYPE_XA_RESOURCE);
+		//	trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Audit", false));
+		//	trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Audit", false));
+		trxLogAttrs.put("auditType", new VTrxLogAttr("auditType", "Audit Type", true));
 	}
 
 	@Override
@@ -78,4 +83,8 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
 		return returnList;
 	}
 
+	@Override
+	public Long getParentObjectId(V obj, V oldObj) {
+		return obj != null ? obj.getResourceId() : null;
+	}
 }

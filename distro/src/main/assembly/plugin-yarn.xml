@@ -75,6 +75,11 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -98,7 +103,6 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
@@ -106,6 +110,7 @@
           <include>org.apache.ranger:credentialbuilder</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -118,8 +123,15 @@
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+        </includes>
       </binaries>
     </moduleSet>
   </moduleSets>

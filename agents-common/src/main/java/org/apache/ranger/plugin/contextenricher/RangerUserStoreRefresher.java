@@ -18,15 +18,15 @@
  */
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.DownloadTrigger;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
@@ -41,7 +41,7 @@ import java.io.Writer;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.nio.channels.ClosedByInterruptException;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -57,8 +57,7 @@ public class RangerUserStoreRefresher extends Thread {
     private long lastActivationTimeInMillis;
 
     private final String cacheFile;
-    private boolean hasProvidedUserStoreToReceiver;
-    private Gson gson;
+    private boolean          hasProvidedUserStoreToReceiver;
     private RangerRESTClient rangerRESTClient;
 
     public RangerUserStoreRefresher(RangerUserStoreRetriever userStoreRetriever, RangerUserStoreEnricher userStoreEnricher,
@@ -70,11 +69,6 @@ public class RangerUserStoreRefresher extends Thread {
         this.lastKnownVersion = lastKnownVersion;
         this.userStoreDownloadQueue = userStoreDownloadQueue;
         this.cacheFile = cacheFile;
-        try {
-            gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        } catch(Throwable excp) {
-            LOG.error("failed to create GsonBuilder object", excp);
-        }
         setName("RangerUserStoreRefresher(serviceName=" + userStoreRetriever.getServiceName() + ")-" + getId());
     }
 
@@ -265,7 +259,7 @@ public class RangerUserStoreRefresher extends Thread {
             try {
                 reader = new FileReader(cacheFile);
 
-                rangerUserStore = gson.fromJson(reader, RangerUserStore.class);
+                rangerUserStore = JsonUtils.jsonToObject(reader, RangerUserStore.class);
 
             } catch (Exception excp) {
                 LOG.error("failed to load userstore information from cache file " + cacheFile.getAbsolutePath(), excp);
@@ -303,7 +297,7 @@ public class RangerUserStoreRefresher extends Thread {
                 try {
                     writer = new FileWriter(cacheFile);
 
-                    gson.toJson(rangerUserStore, writer);
+                    JsonUtils.objectToWriter(writer, rangerUserStore);
                 } catch (Exception excp) {
                     LOG.error("failed to save userstore information to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
                 } finally {
@@ -384,19 +378,17 @@ public class RangerUserStoreRefresher extends Thread {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Checking UserStore updated as user : " + user);
             }
-            PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
-                public ClientResponse run() {
-                    ClientResponse clientRes = null;
+            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                try {
                     String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE;
-                    try {
-                        clientRes =  rangerRESTClient.get(relativeURL, queryParams);
-                    } catch (Exception e) {
-                        LOG.error("Failed to get response, Error is : "+e.getMessage());
-                    }
-                    return clientRes;
+
+                    return rangerRESTClient.get(relativeURL, queryParams);
+                } catch (Exception e) {
+                    LOG.error("Failed to get response, Error is : "+e.getMessage());
                 }
-            };
-            response = user.doAs(action);
+
+                return null;
+            });
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Checking UserStore updated as user : " + user);
@@ -419,7 +411,7 @@ public class RangerUserStoreRefresher extends Thread {
             }
             ret = null;
         } else if (response.getStatus() == HttpServletResponse.SC_OK) {
-            ret = response.getEntity(RangerUserStore.class);
+            ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
         } else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
             ret = null;
             LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user

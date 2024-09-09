@@ -28,15 +28,9 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
-import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
+import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
-import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.PolicyACLSummary;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -59,7 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_CONDITIONAL;
+import static org.apache.ranger.plugin.policyengine.PolicyEvaluatorForTag.MATCH_TYPE_COMPARATOR;
 
 public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyEngineImpl.class);
@@ -272,7 +266,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 			requestProcessor.preProcess(request);
 
-			String zoneName = policyEngine.getUniquelyMatchedZoneName(request.getResource().getAsMap());
+			String zoneName = RangerAccessRequestUtil.getResourceZoneNameFromContext(request.getContext());
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("zoneName:[" + zoneName + "]");
@@ -282,6 +276,17 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 
 			for (int policyType : policyTypes) {
+				// if resource isn't applicable for the policyType, skip evaluating policies and gathering ACLs
+				// for example, following resources are not applicable for listed policy-types
+				//   - database: masking/row-filter policies
+				//   - table:    masking policies
+				//   - column:   row-filter policies
+				boolean requireExactMatch = (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) || (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER);
+
+				if (!policyEngine.getServiceDefHelper().isValidHierarchy(policyType, request.getResource().getKeys(), requireExactMatch)) {
+					continue;
+				}
+
 				List<RangerPolicyEvaluator> allEvaluators           = new ArrayList<>();
 				Map<Long, MatchType>        tagMatchTypeMap         = new HashMap<>();
 				Set<Long>                   policyIdForTemporalTags = new HashSet<>();
@@ -309,47 +314,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						policyPriority = evaluator.getPolicyPriority();
 					}
 
-					MatchType matchType = tagMatchTypeMap.get(evaluator.getPolicyId());
+					boolean   isTemporalTagPolicy = policyIdForTemporalTags.contains(evaluator.getPolicyId());
+					MatchType tagMatchType        = tagMatchTypeMap.get(evaluator.getPolicyId());
 
-					boolean isMatched = false;
-					boolean isConditionalMatch = false;
-
-					if (matchType == null) {
-						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
-							RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
-
-							matchType = matcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
-							isMatched = isMatch(matchType, request.getResourceMatchingScope());
-
-							if (isMatched) {
-								isConditionalMatch = false;
-
-								break;
-							} else if (matcher.getNeedsDynamicEval() && !isConditionalMatch) {
-								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
-
-								isConditionalMatch = isMatch(dynWildCardMatch, request.getResourceMatchingScope());
-							}
-						}
-					} else {
-						isMatched = isMatch(matchType, request.getResourceMatchingScope());
+					// tag assigned to ANCESTORS must apply to SELF as well, to be consistent with policy evaluation in RangerDefaultPolicyEvaluator.evaluate()
+					if (tagMatchType == MatchType.ANCESTOR) {
+						tagMatchType = MatchType.SELF;
 					}
 
-					if (!isMatched && !isConditionalMatch) {
-						continue;
-					}
-
-					if (!isConditionalMatch) {
-						isConditionalMatch = policyIdForTemporalTags.contains(evaluator.getPolicyId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
-					}
-
-					if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
-						updateFromPolicyACLs(evaluator, isConditionalMatch, ret);
-					} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
-						updateRowFiltersFromPolicy(evaluator, isConditionalMatch, ret);
-					} else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
-						updateDataMasksFromPolicy(evaluator, isConditionalMatch, ret);
-					}
+					evaluator.getResourceACLs(request, ret, isTemporalTagPolicy, null, tagMatchType, policyEngine);
 				}
 
 				ret.finalizeAcls();
@@ -544,7 +517,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		requestProcessor.preProcess(request);
 
 		RangerResourceAccessInfo ret       = new RangerResourceAccessInfo(request);
-		Set<String>              zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource());
+		Set<String>              zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
@@ -621,7 +594,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerAccessResult     ret                 = null;
 		RangerPolicyRepository policyRepository    = policyEngine.getPolicyRepository();
 		RangerPolicyRepository tagPolicyRepository = policyEngine.getTagPolicyRepository();
-		Set<String>            zoneNames            = policyEngine.getMatchedZonesForResourceAndChildren(request.getResource()); // Evaluate zone-name from request
+		Set<String>            zoneNames            = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("zoneNames:[" + zoneNames + "]");
@@ -681,6 +654,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
+		updateFromGdsResult(ret);
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.zoneAwareAccessEvaluationWithNoAudit(" + request + ", policyType =" + policyType + "): " + ret);
 		}
@@ -703,7 +678,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				String requestedAccess = accessTypeDef.getName();
 				allRequestedAccesses.add(requestedAccess);
 			}
-			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses, Boolean.TRUE);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
+			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
@@ -798,6 +774,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					ret.setIsAllowed(false);
 				} else if (isAllowedByTags) {
 					ret.setIsAllowed(true);
+				} else {
+					updateFromGdsResult(ret);
 				}
 				if (!ret.getIsAllowed() &&
 						!getIsFallbackSupported()) {
@@ -808,6 +786,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			if (ret.getIsAllowed()) {
 				ret.setIsAccessDetermined(true);
 			}
+			RangerAccessRequestUtil.setAccessTypeResults(request.getContext(), null);
+			RangerAccessRequestUtil.setAccessTypeACLResults(request.getContext(), null);
+			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), null);
 
 			if (findAuditByResource && !foundInCache) {
 				policyRepository.storeAuditEnabledInCache(request, ret);
@@ -979,6 +960,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<PolicyEvaluatorForTag> tagPolicyEvaluators = policyEngine.getTagPolicyRepository() == null ? null : policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(request, tags, policyType, null);
 
 			if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
+				tagPolicyEvaluators.sort(MATCH_TYPE_COMPARATOR);
 
 				final boolean useTagPoliciesFromDefaultZone = !policyEngine.isResourceZoneAssociatedWithTagService(zoneName);
 
@@ -1006,8 +988,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					RangerTagForEval tag = tagEvaluator.getTag();
 
-					allEvaluators.add(evaluator);
-					tagMatchTypeMap.put(evaluator.getPolicyId(), tag.getMatchType());
+					// avoid an evaluator making into the list multiple times when the same tag is associated with the resource multiple times
+					// highest precedence matchType will be recorded in tagMatchTypeMap, since tagPolicyEvaluators is sorted by matchType
+					if (tagMatchTypeMap.putIfAbsent(evaluator.getPolicyId(), tag.getMatchType()) == null) {
+						allEvaluators.add(evaluator);
+					}
 
 					if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
 						policyIdForTemporalTags.add(evaluator.getPolicyId());
@@ -1157,150 +1142,40 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return policyEngine.getPluginContext().getConfig().getIsFallbackSupported();
 	}
 
-	private void updateFromPolicyACLs(RangerPolicyEvaluator evaluator, boolean isConditional, RangerResourceACLs resourceACLs) {
-		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
-
-		if (aclSummary == null) {
-			return;
+	private void updateFromGdsResult(RangerAccessResult result) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> updateFromGdsResult(result={})", result);
 		}
 
-		for (Map.Entry<String, Map<String, PolicyACLSummary.AccessResult>> userAccessInfo : aclSummary.getUsersAccessInfo().entrySet()) {
-			final String userName = userAccessInfo.getKey();
+		RangerAccessRequest request   = result.getAccessRequest();
+		GdsAccessResult     gdsResult = request != null ? RangerAccessRequestUtil.getGdsResultFromContext(request.getContext()) : null;
 
-			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : userAccessInfo.getValue().entrySet()) {
-				Integer accessResult;
-
-				if (isConditional) {
-					accessResult = ACCESS_CONDITIONAL;
-				} else {
-					accessResult = accessInfo.getValue().getResult();
-
-					if (accessResult.equals(RangerPolicyEvaluator.ACCESS_UNDETERMINED)) {
-						accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
-					}
+		if (gdsResult != null) {
+			if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS) {
+				if (!result.getIsAccessDetermined() && gdsResult.getIsAllowed()) {
+					result.setIsAllowed(true);
+					result.setIsAccessDetermined(true);
+					result.setPolicyId(gdsResult.getPolicyId());
+					result.setPolicyVersion(gdsResult.getPolicyVersion());
+					result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
 				}
-
-				RangerPolicy policy = evaluator.getPolicy();
-
-				resourceACLs.setUserAccessInfo(userName, accessInfo.getKey(), accessResult, policy);
 			}
-		}
 
-		for (Map.Entry<String, Map<String, PolicyACLSummary.AccessResult>> groupAccessInfo : aclSummary.getGroupsAccessInfo().entrySet()) {
-			final String groupName = groupAccessInfo.getKey();
-
-			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : groupAccessInfo.getValue().entrySet()) {
-				Integer accessResult;
-
-				if (isConditional) {
-					accessResult = ACCESS_CONDITIONAL;
-				} else {
-					accessResult = accessInfo.getValue().getResult();
-
-					if (accessResult.equals(RangerPolicyEvaluator.ACCESS_UNDETERMINED)) {
-						accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
-					}
-				}
-
-				RangerPolicy policy = evaluator.getPolicy();
-
-				resourceACLs.setGroupAccessInfo(groupName, accessInfo.getKey(), accessResult, policy);
+			if (!result.getIsAuditedDetermined() && gdsResult.getIsAudited()) {
+				result.setIsAudited(true);
 			}
-		}
 
-		for (Map.Entry<String, Map<String, PolicyACLSummary.AccessResult>> roleAccessInfo : aclSummary.getRolesAccessInfo().entrySet()) {
-			final String roleName = roleAccessInfo.getKey();
-
-			for (Map.Entry<String, PolicyACLSummary.AccessResult> accessInfo : roleAccessInfo.getValue().entrySet()) {
-				Integer accessResult;
-
-				if (isConditional) {
-					accessResult = ACCESS_CONDITIONAL;
-				} else {
-					accessResult = accessInfo.getValue().getResult();
-
-					if (accessResult.equals(RangerPolicyEvaluator.ACCESS_UNDETERMINED)) {
-						accessResult = RangerPolicyEvaluator.ACCESS_DENIED;
-					}
-				}
-
-				RangerPolicy policy = evaluator.getPolicy();
-
-				resourceACLs.setRoleAccessInfo(roleName, accessInfo.getKey(), accessResult, policy);
-			}
-		}
-	}
-
-	private void updateRowFiltersFromPolicy(RangerPolicyEvaluator evaluator, boolean isConditional, RangerResourceACLs resourceACLs) {
-		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
-
-		if (aclSummary != null) {
-			for (RowFilterResult rowFilterResult : aclSummary.getRowFilters()) {
-				rowFilterResult = copyRowFilter(rowFilterResult);
-
-				if (isConditional) {
-					rowFilterResult.setIsConditional(true);
-				}
-
-				resourceACLs.getRowFilters().add(rowFilterResult);
-			}
-		}
-	}
-
-	private void updateDataMasksFromPolicy(RangerPolicyEvaluator evaluator, boolean isConditional, RangerResourceACLs resourceACLs) {
-		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
-
-		if (aclSummary != null) {
-			for (DataMaskResult dataMaskResult : aclSummary.getDataMasks()) {
-				dataMaskResult = copyDataMask(dataMaskResult);
-
-				if (isConditional) {
-					dataMaskResult.setIsConditional(true);
-				}
-
-				resourceACLs.getDataMasks().add(dataMaskResult);
-			}
-		}
-	}
-
-	private DataMaskResult copyDataMask(DataMaskResult dataMask) {
-		DataMaskResult ret = new DataMaskResult(copyStrings(dataMask.getUsers()),
-												copyStrings(dataMask.getGroups()),
-												copyStrings(dataMask.getRoles()),
-												copyStrings(dataMask.getAccessTypes()),
-												new RangerPolicyItemDataMaskInfo(dataMask.getMaskInfo()));
-
-		ret.setIsConditional(dataMask.getIsConditional());
-
-		return ret;
-	}
-
-	private RowFilterResult copyRowFilter(RowFilterResult rowFilter) {
-		RowFilterResult ret = new RowFilterResult(copyStrings(rowFilter.getUsers()),
-												  copyStrings(rowFilter.getGroups()),
-												  copyStrings(rowFilter.getRoles()),
-												  copyStrings(rowFilter.getAccessTypes()),
-												  new RangerPolicyItemRowFilterInfo(rowFilter.getFilterInfo()));
-
-		ret.setIsConditional(rowFilter.getIsConditional());
-
-		return ret;
-	}
-
-	private Set<String> copyStrings(Set<String> values) {
-		return values != null ? new HashSet<>(values) : null;
-	}
-
-	private boolean isMatch(MatchType matchType, RangerAccessRequest.ResourceMatchingScope matchingScope) {
-		final boolean ret;
-
-		if (matchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-			ret = matchType != MatchType.NONE;
+			result.setDatasets(gdsResult.getDatasets());
+			result.setProjects(gdsResult.getProjects());
 		} else {
-			ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("updateFromGdsResult(): no GdsAccessResult found in request context({})", request);
+			}
 		}
 
-		return ret;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== updateFromGdsResult(result={})", result);
+		}
 	}
 
 	private static class ServiceConfig {

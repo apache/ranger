@@ -32,7 +32,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -244,16 +244,11 @@ public class LocalFileLogBuffer<T> implements LogBuffer<T> {
 
 				if(ostream != null) {
 					mWriter = createWriter(ostream);
-
-					if(mWriter != null) {
-						mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
-
-						mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
-					} else {
-						mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
-
-						mBufferFilename = null;
-					}
+					mLogger.debug("LocalFileLogBuffer.openFile(): opened file " + mBufferFilename);
+					mNextFlushTime = System.currentTimeMillis() + (mFlushIntervalSeconds * 1000L);
+				}  else {
+					mLogger.warn("LocalFileLogBuffer.openFile(): failed to open file for write " + mBufferFilename);
+					mBufferFilename = null;
 				}
 			} finally {
 				if(mWriter == null) {
@@ -387,7 +382,7 @@ class DestinationDispatcherThread<T> extends Thread {
 		if(filename != null) {
 			synchronized(mCompletedLogfiles) {
 				mCompletedLogfiles.add(filename);
-				mCompletedLogfiles.notify();
+				mCompletedLogfiles.notifyAll();
 			}
 		}
 
@@ -420,14 +415,15 @@ class DestinationDispatcherThread<T> extends Thread {
 			return;
 		}
 
-		loginUser.doAs(new PrivilegedAction<Integer>() {
-			@Override
-			public Integer run() {
+		try {
+			loginUser.doAs((PrivilegedExceptionAction<Integer>) () -> {
 				doRun();
 
 				return 0;
-			}
-		});
+			});
+		} catch (Exception excp) {
+			mLogger.error("DestinationDispatcherThread.run(): failed", excp);
+		}
 	}
 
 	private void doRun() {

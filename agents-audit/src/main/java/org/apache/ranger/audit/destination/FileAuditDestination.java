@@ -75,31 +75,24 @@ public class FileAuditDestination extends AuditDestination {
 				+ PROP_FILE_FILE_ROLLOVER, fileRolloverSec);
 
 		if (logFolderProp == null || logFolderProp.isEmpty()) {
-			logger.error("File destination folder is not configured. Please set "
-					+ propPrefix
-					+ "."
-					+ PROP_FILE_LOCAL_DIR
-					+ ". name="
-					+ getName());
+			logger.error("File destination folder is not configured. Please set {}. {}. name= {}",  propPrefix,  PROP_FILE_LOCAL_DIR,  getName());
 			return;
 		}
 		logFolder = new File(logFolderProp);
 		if (!logFolder.isDirectory()) {
 			logFolder.mkdirs();
 			if (!logFolder.isDirectory()) {
-				logger.error("FileDestination folder not found and can't be created. folder="
-						+ logFolder.getAbsolutePath() + ", name=" + getName());
+				logger.error("FileDestination folder not found and can't be created. folder={}, name={}", logFolder.getAbsolutePath(), getName());
 				return;
 			}
 		}
-		logger.info("logFolder=" + logFolder + ", name=" + getName());
+		logger.info("logFolder={}, name={}", logFolder,  getName());
 
 		if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
 			logFileNameFormat = "%app-type%_ranger_audit.log";
 		}
 
-		logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="
-				+ getName());
+		logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, getName());
 
 		initDone = true;
 	}
@@ -110,7 +103,7 @@ public class FileAuditDestination extends AuditDestination {
 		addTotalCount(events.size());
 
 		if (isStopped) {
-			logError("log() called after stop was requested. name=" + getName());
+			logError("logJSON() called after stop was requested. name={}", getName());
 			addDeferredCount(events.size());
 			return false;
 		}
@@ -141,7 +134,7 @@ public class FileAuditDestination extends AuditDestination {
 		if (isStopped) {
 			addTotalCount(events.size());
 			addDeferredCount(events.size());
-			logError("log() called after stop was requested. name=" + getName());
+			logError("log() called after stop was requested. name={}", getName());
 			return false;
 		}
 		List<String> jsonList = new ArrayList<String>();
@@ -152,7 +145,7 @@ public class FileAuditDestination extends AuditDestination {
 				addTotalCount(1);
 				addFailedCount(1);
 				logFailedEvent(event);
-				logger.error("Error converting to JSON. event=" + event);
+				logger.error("Error converting to JSON. event={}", event);
 			}
 		}
 		return logJSON(jsonList);
@@ -178,8 +171,7 @@ public class FileAuditDestination extends AuditDestination {
 				logWriter.flush();
 				logWriter.close();
 			} catch (Throwable t) {
-				logger.error("Error on closing log writter. Exception will be ignored. name="
-						+ getName() + ", fileName=" + currentFileName);
+				logger.error("Error on closing log writer. Exception will be ignored. name= {}, fileName=  {}", getName(), currentFileName);
 			}
 			logWriter = null;
 		}
@@ -211,16 +203,14 @@ public class FileAuditDestination extends AuditDestination {
 					if (!newLogFile.exists()) {
 						// Move the file
 						if (!outLogFile.renameTo(newLogFile)) {
-							logger.error("Error renameing file. " + outLogFile
-									+ " to " + newLogFile);
+							logger.error("Error renameing file. {}  to {} " , outLogFile, newLogFile);
 						}
 						break;
 					}
 				}
 			}
 			if (!outLogFile.exists()) {
-				logger.info("Creating new file. destName=" + getName()
-						+ ", fileName=" + fileName);
+				logger.info("Creating new file. destName={} , fileName={} ", getName(), fileName);
 				// Open the file
 				logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
 						outLogFile)));
@@ -239,14 +229,12 @@ public class FileAuditDestination extends AuditDestination {
 			return;
 		}
 		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
-			logger.info("Closing file. Rolling over. name=" + getName()
-					+ ", fileName=" + currentFileName);
+			logger.info("Closing file. Rolling over. name={} , fileName={}", getName(), currentFileName);
 			try {
 				logWriter.flush();
 				logWriter.close();
 			} catch (Throwable t) {
-				logger.error("Error on closing log writter. Exception will be ignored. name="
-						+ getName() + ", fileName=" + currentFileName);
+				logger.error("Error on closing log writter. Exception will be ignored. name={} , fileName={}", getName(), currentFileName);
 			}
 			logWriter = null;
 			currentFileName = null;

@@ -19,16 +19,23 @@
 
 import React, { useEffect, useState } from "react";
 import { ClassTypes } from "../../utils/XAEnums";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Table } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import SecurityZonelogs from "./AdminLogs/SecurityZonelogs";
 import UserLogs from "./AdminLogs/UserLogs";
 import GroupLogs from "./AdminLogs/GroupLogs";
 import RoleLogs from "./AdminLogs/RoleLogs";
+import UserAssociationWithGroupLogs from "./AdminLogs/UserAssociationWithGroupLogs";
 import ServiceLogs from "./AdminLogs/ServiceLogs";
 import PolicyLogs from "./AdminLogs/PolicyLogs";
 import PasswordLogs from "./AdminLogs/PasswordLogs";
 import UserprofileLogs from "./AdminLogs/UserprofileLogs";
+import DatasetLogs from "./AdminLogs/DatasetLogs";
+import ProjectLogs from "./AdminLogs/ProjectLogs";
+import DataShareLogs from "./AdminLogs/DataShareLogs";
+import SharedResourceLogs from "./AdminLogs/SharedResourceLogs";
+import DataShareInDatasetLogs from "./AdminLogs/DataShareInDatasetLogs";
+import DatasetInProjectLogs from "./AdminLogs/DatasetInProjectLogs";
 import { ModalLoader } from "../../components/CommonComponents";
 
 export const OperationAdminModal = ({ onHide, show, data = {} }) => {
@@ -43,17 +50,20 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
   const rowModal = async () => {
     setLoader(true);
+    let authlogs = [];
+
     try {
       const authResp = await fetchApi({
         url: `assets/report/${transactionId}`
       });
-      let authlogs = authResp.data.vXTrxLogs;
-      setShowview(objectId);
-      setReportData(authlogs);
-      setLoader(false);
+      authlogs = authResp?.data?.vXTrxLogs || [];
     } catch (error) {
       console.error(`Error occurred while fetching Admin logs! ${error}`);
     }
+
+    setShowview(objectId);
+    setReportData(authlogs);
+    setLoader(false);
   };
 
   return (
@@ -62,7 +72,7 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
         <Modal.Title>Operation :{action || ""}</Modal.Title>
       </Modal.Header>
 
-      <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+      <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">
         {loader ? (
           <>
             <ModalLoader />
@@ -97,6 +107,15 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
               <UserLogs reportdata={reportdata} data={data} />
             )}
 
+            {/* USER ADDED TO GROUP */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_XA_GROUP_USER.value && (
+              <UserAssociationWithGroupLogs
+                reportdata={reportdata}
+                data={data}
+              />
+            )}
+
             {/* GROUP */}
 
             {objectClassType == ClassTypes.CLASS_TYPE_XA_GROUP.value && (
@@ -112,6 +131,42 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
             {objectClassType == ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value && (
               <PasswordLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATASET */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATASET.value && (
+              <DatasetLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* PROJECT */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_PROJECT.value && (
+              <ProjectLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATA_SHARE */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value && (
+              <DataShareLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* SHARED_RESOURCE */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+              <SharedResourceLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATA_SHARE_IN_DATASET */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET.value && (
+              <DataShareInDatasetLogs reportdata={reportdata} data={data} />
+            )}
+
+            {/* DATASET_IN_PROJECT */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT.value && (
+              <DatasetInProjectLogs reportdata={reportdata} data={data} />
             )}
           </div>
         )}

@@ -19,10 +19,13 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.ClientResponse;
 
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,4 +71,32 @@ public class JsonUtilsV2 {
         return getMapper().readValue(json, tClass);
     }
 
+    static public <T> T jsonToObj(String json, TypeReference<T> typeRef) throws Exception {
+        return getMapper().readValue(json, typeRef);
+    }
+
+
+    static public void writeValue(Writer writer, Object obj) throws Exception {
+        getMapper().writeValue(writer, obj);
+    }
+
+    static public <T> T readValue(Reader reader, Class<T> tClass) throws Exception {
+        return getMapper().readValue(reader, tClass);
+    }
+
+    static public String nonSerializableObjToJson(Object obj) throws Exception {
+        return getMapper().writeValueAsString(obj);
+    }
+
+    static public <T> T readResponse(ClientResponse response, Class<T> cls) throws Exception {
+        String jsonStr = response.getEntity(String.class);
+
+        return jsonToObj(jsonStr, cls);
+    }
+
+    static public <T> T readResponse(ClientResponse response, TypeReference<T> cls) throws Exception {
+        String jsonStr = response.getEntity(String.class);
+
+        return jsonToObj(jsonStr, cls);
+    }
 }

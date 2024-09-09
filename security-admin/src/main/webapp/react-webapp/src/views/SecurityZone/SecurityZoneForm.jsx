@@ -30,9 +30,10 @@ import {
   isEmpty,
   pickBy,
   find,
-  has,
   maxBy,
-  sortBy
+  sortBy,
+  map,
+  cloneDeep
 } from "lodash";
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
@@ -48,6 +49,7 @@ import {
   selectCustomStyles
 } from "../../components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
+import { getServiceDef } from "../../utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -60,11 +62,11 @@ const PromtDialog = (props) => {
   return null;
 };
 
-const SecurityZoneForm = (props) => {
+const SecurityZoneForm = () => {
   const navigate = useNavigate();
   const params = useParams();
   const toastId = useRef(null);
-  const [serviceDefs, setServiceDefs] = useState([]);
+  const { allServiceDefs } = cloneDeep(getServiceDef());
   const [services, setServices] = useState([]);
   const [zone, setZone] = useState({});
   const [resourceServiceDef, setResourceServiceDef] = useState({});
@@ -79,10 +81,18 @@ const SecurityZoneForm = (props) => {
   });
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [tagServiceLoading, setTagServiceLoading] = useState(false);
+  const [defaultUserOptions, setDefaultUserOptions] = useState([]);
+  const [defaultGroupOptions, setDefaultGroupOptions] = useState([]);
+  const [defaultRoleOptions, setDefaultRoleOptions] = useState([]);
+  const [defaultTagServiceOptions, setDefaultTagServiceOptions] = useState([]);
 
   useEffect(() => {
     fetchInitalData();
-  }, []);
+  }, [params.zoneId]);
 
   const validate = (values) => {
     const errors = {};
@@ -103,10 +113,18 @@ const SecurityZoneForm = (props) => {
       }
     }
 
-    if (isEmpty(values.adminUsers) && isEmpty(values.adminUserGroups)) {
+    if (
+      isEmpty(values?.adminUsers) &&
+      isEmpty(values?.adminUserGroups) &&
+      isEmpty(values?.adminRoles)
+    ) {
+      errors.adminRoles = {
+        required: true,
+        text: "Please provide atleast one admin user or group or role !"
+      };
       errors.adminUserGroups = {
         required: true,
-        text: "Please provide atleast one audit user or group!"
+        text: ""
       };
       errors.adminUsers = {
         required: true,
@@ -114,24 +132,24 @@ const SecurityZoneForm = (props) => {
       };
     }
 
-    if (isEmpty(values.auditUsers) && isEmpty(values.auditUserGroups)) {
+    if (
+      isEmpty(values?.auditUsers) &&
+      isEmpty(values?.auditUserGroups) &&
+      isEmpty(values?.auditRoles)
+    ) {
+      errors.auditRoles = {
+        required: true,
+        text: "Please provide atleast one audit user or group or role !"
+      };
       errors.auditUserGroups = {
         required: true,
-        text: "Please provide atleast one audit user or group!"
+        text: ""
       };
       errors.auditUsers = {
         required: true,
         text: ""
       };
     }
-
-    if (isEmpty(values.resourceServices)) {
-      errors.resourceServices = {
-        required: true,
-        text: "Required"
-      };
-    }
-
     return errors;
   };
 
@@ -145,23 +163,8 @@ const SecurityZoneForm = (props) => {
   };
 
   const fetchInitalData = async () => {
-    await fetchServiceDefs();
     await fetchResourceServices();
     await fetchZones();
-  };
-
-  const fetchServiceDefs = async () => {
-    let servicetypeResp;
-
-    try {
-      servicetypeResp = await fetchApi({
-        url: `plugins/definitions`
-      });
-    } catch (error) {
-      console.error(`Error occurred while fetching Services! ${error}`);
-    }
-
-    setServiceDefs(servicetypeResp.data.serviceDefs);
   };
 
   const fetchResourceServices = async () => {
@@ -179,9 +182,9 @@ const SecurityZoneForm = (props) => {
 
     let resourceServices = [];
 
-    for (var key of Object.keys(servicesByType)) {
+    for (let key of Object.keys(servicesByType)) {
       resourceServices.push({
-        label: <span className="font-weight-bold text-body h6">{key}</span>,
+        label: <span className="fw-bold text-body h6">{key}</span>,
         options: servicesByType[key].map((name) => {
           return { label: name.name, value: name.name };
         })
@@ -205,7 +208,9 @@ const SecurityZoneForm = (props) => {
         console.error(
           `Error occurred while fetching Zone or CSRF headers! ${error}`
         );
-        toast.error(error.response.data.msgDesc);
+        if (error?.response?.data?.msgDesc) {
+          toast.error(error.response.data.msgDesc);
+        }
       }
       setZone(zoneResp?.data);
     }
@@ -213,9 +218,12 @@ const SecurityZoneForm = (props) => {
     setLoader(false);
   };
 
-  const renderResourcesModal = (input, serviceType) => {
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const renderResourcesModal = (resourceInput, resourceField) => {
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -228,7 +236,7 @@ const SecurityZoneForm = (props) => {
     setModalstate({
       showModalResource: true,
       data: {},
-      inputval: input,
+      inputval: resourceInput,
       index: -1
     });
 
@@ -236,10 +244,13 @@ const SecurityZoneForm = (props) => {
     setResourceService(filterService);
   };
 
-  const editResourcesModal = (idx, input, serviceType) => {
-    let editData = input.input.value[idx];
-    let filterServiceDef = find(serviceDefs, ["name", serviceType]);
-    let filterService = find(services, ["type", serviceType]);
+  const editResourcesModal = (resourceIndex, resourceInput, resourceField) => {
+    let editData = resourceInput.input.value[resourceIndex];
+    let filterServiceDef = find(allServiceDefs, [
+      "name",
+      resourceField.serviceType
+    ]);
+    let filterService = find(services, ["name", resourceField.serviceName]);
 
     for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
@@ -252,8 +263,8 @@ const SecurityZoneForm = (props) => {
     setModalstate({
       showModalResource: true,
       data: editData,
-      inputval: input,
-      index: idx
+      inputval: resourceInput,
+      index: resourceIndex
     });
 
     setResourceServiceDef(filterServiceDef);
@@ -287,14 +298,14 @@ const SecurityZoneForm = (props) => {
     zoneData.description = values.description || "";
     zoneData.adminUsers = [];
     if (values.adminUsers) {
-      for (var key of Object.keys(values.adminUsers)) {
+      for (let key of Object.keys(values.adminUsers)) {
         zoneData.adminUsers.push(values.adminUsers[key].value);
       }
     }
     zoneData.adminUserGroups = [];
 
     if (values.adminUserGroups) {
-      for (var key of Object.keys(values.adminUserGroups)) {
+      for (let key of Object.keys(values.adminUserGroups)) {
         zoneData.adminUserGroups.push(values.adminUserGroups[key].label || "");
       }
     }
@@ -302,54 +313,64 @@ const SecurityZoneForm = (props) => {
     zoneData.auditUsers = [];
 
     if (values.auditUsers) {
-      for (var key of Object.keys(values.auditUsers)) {
+      for (let key of Object.keys(values.auditUsers)) {
         zoneData.auditUsers.push(values.auditUsers[key].label || "");
       }
     }
 
     zoneData.auditUserGroups = [];
     if (values.auditUserGroups) {
-      for (var key of Object.keys(values.auditUserGroups)) {
+      for (let key of Object.keys(values.auditUserGroups)) {
         zoneData.auditUserGroups.push(values.auditUserGroups[key].label || "");
+      }
+    }
+
+    if (values.adminRoles) {
+      zoneData.adminRoles = [];
+      for (let key of Object.keys(values.adminRoles)) {
+        zoneData.adminRoles.push(values.adminRoles[key].label || "");
+      }
+    }
+
+    if (values.auditRoles) {
+      zoneData.auditRoles = [];
+      for (let key of Object.keys(values.auditRoles)) {
+        zoneData.auditRoles.push(values.auditRoles[key].label || "");
       }
     }
 
     zoneData.tagServices = [];
 
     if (values.tagServices) {
-      for (var key of Object.keys(values.tagServices)) {
+      for (let key of Object.keys(values.tagServices)) {
         zoneData.tagServices.push(values.tagServices[key].label || "");
       }
     }
 
     zoneData.services = {};
-
-    for (key of Object.keys(values.tableList)) {
-      let serviceName = values.tableList[key].serviceName;
-      let resourcesName = values.tableList[key].resources;
-      zoneData.services[serviceName] = {};
-      zoneData.services[serviceName].resources = [];
-      resourcesName.map((obj) => {
-        let serviceResourceData = {};
-        pickBy(obj, (key, val) => {
-          if (
-            obj[`value-${key.level}`] &&
-            obj[`value-${key.level}`].length > 0
-          ) {
-            if (val.includes("resourceName")) {
-              serviceResourceData[key.name] = obj[`value-${key.level}`].map(
-                (value) => value.value
-              );
+    if (!isEmpty(Object.keys(values.tableList || {}))) {
+      for (let key of Object.keys(values.tableList)) {
+        let serviceName = values.tableList[key].serviceName;
+        let resourcesName = values.tableList[key].resources;
+        zoneData.services[serviceName] = {};
+        zoneData.services[serviceName].resources = [];
+        resourcesName.map((obj) => {
+          let serviceResourceData = {};
+          pickBy(obj, (key, val) => {
+            if (
+              obj[`value-${key.level}`] &&
+              obj[`value-${key.level}`].length > 0
+            ) {
+              if (val.includes("resourceName")) {
+                serviceResourceData[key.name] = obj[`value-${key.level}`].map(
+                  (value) => value.value
+                );
+              }
             }
-          }
-        });
-        return zoneData.services[serviceName].resources.push(
-          serviceResourceData
-        );
-      });
-      if (zoneData.services[serviceName].resources.length === 0) {
-        toast.error("Please add at least one resource for  service", {
-          toastId: "error1"
+          });
+          return zoneData.services[serviceName].resources.push(
+            serviceResourceData
+          );
         });
       }
     }
@@ -371,7 +392,7 @@ const SecurityZoneForm = (props) => {
       setBlockUI(false);
       toast.dismiss(toastId.current);
       toast.current = toast.success(
-        `Success! Service zone ${apiSuccess} successfully`
+        `Success! Security zone ${apiSuccess} successfully`
       );
       navigate(`/zones/zone/${zoneResp.data.id}`);
     } catch (error) {
@@ -414,6 +435,20 @@ const SecurityZoneForm = (props) => {
       );
     }
 
+    zoneData.adminRoles = [];
+    if (zone.adminRoles) {
+      zone.adminRoles.map((name) =>
+        zoneData.adminRoles.push({ label: name, value: name })
+      );
+    }
+
+    zoneData.auditRoles = [];
+    if (zone.auditRoles) {
+      zone.auditRoles.map((name) =>
+        zoneData.auditRoles.push({ label: name, value: name })
+      );
+    }
+
     zoneData.tagServices = [];
     if (zone.tagServices) {
       zone.tagServices.map((name) =>
@@ -429,7 +464,7 @@ const SecurityZoneForm = (props) => {
     }
 
     zoneData.tableList = [];
-    for (let name of Object.keys(zone.services)) {
+    for (let name of Object.keys(zone.services || {})) {
       let tableValues = {};
 
       tableValues["serviceName"] = name;
@@ -437,7 +472,7 @@ const SecurityZoneForm = (props) => {
       let serviceType = find(services, ["name", name]);
       tableValues["serviceType"] = serviceType.type;
 
-      let filterServiceDef = find(serviceDefs, ["name", serviceType.type]);
+      let filterServiceDef = find(allServiceDefs, ["name", serviceType.type]);
 
       for (const obj of filterServiceDef.resources) {
         obj.recursiveSupported = false;
@@ -448,74 +483,107 @@ const SecurityZoneForm = (props) => {
       }
 
       tableValues["resources"] = [];
-      zone.services[name].resources.map((obj) => {
-        let serviceResource = {};
-        let lastResourceLevel = [];
-        Object.entries(obj).map(([key, value]) => {
-          let setResources = find(filterServiceDef.resources, ["name", key]);
-          serviceResource[`resourceName-${setResources.level}`] = setResources;
-          serviceResource[`value-${setResources.level}`] = value.map((m) => {
-            return { label: m, value: m };
+      if (!isEmpty(zone.services[name].resources)) {
+        zone.services[name].resources?.map((obj) => {
+          let serviceResource = {};
+          let lastResourceLevel = [];
+          Object.entries(obj).map(([key, value]) => {
+            let setResources = find(filterServiceDef.resources, ["name", key]);
+            serviceResource[`resourceName-${setResources.level}`] =
+              setResources;
+            serviceResource[`value-${setResources.level}`] = value.map((m) => {
+              return { label: m, value: m };
+            });
+            lastResourceLevel.push({
+              level: setResources.level,
+              name: setResources.name
+            });
           });
-          lastResourceLevel.push({
-            level: setResources.level,
-            name: setResources.name
-          });
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(
+            sortBy(filterServiceDef.resources, "itemId"),
+            ["parent", lastResourceLevel.name]
+          );
+          if (setLastResources && setLastResources?.isValidLeaf) {
+            serviceResource[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
+          }
+          tableValues["resources"].push(serviceResource);
         });
-        lastResourceLevel = maxBy(lastResourceLevel, "level");
-        let setLastResources = find(
-          sortBy(filterServiceDef.resources, "itemId"),
-          ["parent", lastResourceLevel.name]
-        );
-        if (setLastResources && setLastResources?.isValidLeaf) {
-          serviceResource[`resourceName-${setLastResources.level}`] = {
-            label: "None",
-            value: "none"
-          };
-        }
-        tableValues["resources"].push(serviceResource);
-      });
+      }
 
       zoneData.tableList.push(tableValues);
     }
     return zoneData;
   };
 
-  const fetchUsers = async (inputValue) => {
-    let params = {},
-      op = [];
+  const fetchUsersData = async (inputValue) => {
+    let params = { isVisible: 1 };
+    let usersOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const userResp = await fetchApi({
-      url: "xusers/users",
-      params: params
-    });
 
-    if (userResp.data && userResp.data.vXUsers) {
-      op = userResp.data.vXUsers.map((obj) => {
-        return {
-          label: obj.name,
-          value: obj.name
-        };
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/lookup/users",
+        params: params
       });
+      usersOp = userResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users! ${error}`);
+      serverError(error);
     }
 
-    return op;
+    return map(usersOp, function (user) {
+      return { value: user.value, label: user.value };
+    });
   };
 
-  const fetchGroups = async (inputValue) => {
-    let params = {};
+  const fetchGroupsData = async (inputValue) => {
+    let params = { isVisible: 1 };
+    let groupsOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const groupResp = await fetchApi({
-      url: "xusers/groups",
-      params: params
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/lookup/groups",
+        params: params
+      });
+      groupsOp = groupResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups! ${error}`);
+      serverError(error);
+    }
+
+    return map(groupsOp, function (group) {
+      return { label: group.value, value: group.value };
     });
-    return groupResp.data.vXGroups.map(({ name }) => ({
-      label: name,
-      value: name
+  };
+
+  const fetchRolesData = async (inputValue) => {
+    let params = { roleNamePartial: inputValue || "" };
+    let op = [];
+
+    try {
+      const roleResp = await fetchApi({
+        url: "roles/roles",
+        params: params
+      });
+      op = roleResp.data.roles;
+    } catch (error) {
+      console.error(`Error occurred while fetching Roles! ${error}`);
+      serverError(error);
+    }
+    return op.map((obj) => ({
+      label: obj.name,
+      value: obj.name
     }));
   };
 
@@ -574,16 +642,16 @@ const SecurityZoneForm = (props) => {
     }
   };
 
-  const handleRemove = (idx, input) => {
-    input.input.value.splice(idx, 1);
+  const handleRemove = (resourceIndex, resourceInput) => {
+    resourceInput.input.value.splice(resourceIndex, 1);
     handleClose();
   };
 
-  const showResources = (value, serviceType) => {
+  const showResources = (resourceObj, serviceType) => {
     let data = {};
-    let filterdef = serviceDefs.find((obj) => obj.name == serviceType);
+    let filterServiceDef = find(allServiceDefs, ["name", serviceType]);
 
-    for (const obj of filterdef.resources) {
+    for (const obj of filterServiceDef.resources) {
       obj.recursiveSupported = false;
       obj.excludesSupported = false;
       if (obj.level !== 10) {
@@ -591,24 +659,26 @@ const SecurityZoneForm = (props) => {
       }
     }
 
-    const grpResources = groupBy(filterdef.resources || [], "level");
+    const grpResources = groupBy(filterServiceDef.resources || [], "level");
+
     let grpResourcesKeys = [];
     for (const resourceKey in grpResources) {
       grpResourcesKeys.push(+resourceKey);
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     data.resources = {};
+
     for (const level of grpResourcesKeys) {
       if (
-        value[`resourceName-${level}`] &&
-        value[`resourceName-${level}`].value !== noneOptions.value
+        resourceObj[`resourceName-${level}`] &&
+        resourceObj[`resourceName-${level}`].value !== noneOptions.value
       ) {
-        data.resources[value[`resourceName-${level}`].name] = {
-          isExcludes: value[`isExcludesSupport-${level}`] || false,
-          isRecursive: value[`isRecursiveSupport-${level}`] || false,
+        data.resources[resourceObj[`resourceName-${level}`].name] = {
+          isExcludes: resourceObj[`isExcludesSupport-${level}`] || false,
+          isRecursive: resourceObj[`isRecursiveSupport-${level}`] || false,
           values:
-            value[`value-${level}`] !== undefined
-              ? value[`value-${level}`].map(({ value }) => value)
+            resourceObj[`value-${level}`] !== undefined
+              ? resourceObj[`value-${level}`].map(({ value }) => value)
               : ""
         };
       }
@@ -627,6 +697,38 @@ const SecurityZoneForm = (props) => {
         )}
       </p>
     ));
+  };
+
+  const onFocusUserSelect = () => {
+    setUserLoading(true);
+    fetchUsersData().then((opts) => {
+      setDefaultUserOptions(opts);
+      setUserLoading(false);
+    });
+  };
+
+  const onFocusGroupSelect = () => {
+    setGroupLoading(true);
+    fetchGroupsData().then((opts) => {
+      setDefaultGroupOptions(opts);
+      setGroupLoading(false);
+    });
+  };
+
+  const onFocusRoleSelect = () => {
+    setRoleLoading(true);
+    fetchRolesData().then((opts) => {
+      setDefaultRoleOptions(opts);
+      setRoleLoading(false);
+    });
+  };
+
+  const onFocusTagServiceSelect = () => {
+    setTagServiceLoading(true);
+    fetchTagServices().then((opts) => {
+      setDefaultTagServiceOptions(opts);
+      setTagServiceLoading(false);
+    });
   };
 
   return (
@@ -683,7 +785,7 @@ const SecurityZoneForm = (props) => {
                       {({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Name *
                             </label>
                           </Col>
@@ -715,7 +817,7 @@ const SecurityZoneForm = (props) => {
                       {({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Zone Description
                             </label>
                           </Col>
@@ -736,7 +838,7 @@ const SecurityZoneForm = (props) => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Users
                             </label>
                           </Col>
@@ -754,14 +856,20 @@ const SecurityZoneForm = (props) => {
                                   : "auditUsers"
                               }
                               cacheOptions
-                              defaultOptions
-                              loadOptions={fetchUsers}
+                              loadOptions={fetchUsersData}
+                              onFocus={() => {
+                                onFocusUserSelect();
+                              }}
+                              defaultOptions={defaultUserOptions}
+                              noOptionsMessage={() =>
+                                userLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select User"
                             />
                           </Col>
@@ -774,7 +882,7 @@ const SecurityZoneForm = (props) => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Admin Usergroups
                             </label>
                           </Col>
@@ -791,16 +899,66 @@ const SecurityZoneForm = (props) => {
                                   : "adminUserGroups"
                               }
                               {...input}
-                              defaultOptions
-                              loadOptions={fetchGroups}
+                              cacheOptions
+                              loadOptions={fetchGroupsData}
+                              onFocus={() => {
+                                onFocusGroupSelect();
+                              }}
+                              defaultOptions={defaultGroupOptions}
+                              noOptionsMessage={() =>
+                                groupLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Group"
-                              required
+                            />
+                          </Col>
+                        </Row>
+                      )}
+                    />
+
+                    <Field
+                      name="adminRoles"
+                      render={({ input, meta }) => (
+                        <Row className="form-group">
+                          <Col xs={3}>
+                            <label className="form-label float-end">
+                              Admin Roles
+                            </label>
+                          </Col>
+                          <Col xs={4}>
+                            <AsyncSelect
+                              {...input}
+                              styles={
+                                meta.error && meta.touched
+                                  ? selectCustomStyles
+                                  : ""
+                              }
+                              id={
+                                meta.error && meta.touched
+                                  ? "isError"
+                                  : "adminRoles"
+                              }
+                              cacheOptions
+                              loadOptions={fetchRolesData}
+                              onFocus={() => {
+                                onFocusRoleSelect();
+                              }}
+                              defaultOptions={defaultRoleOptions}
+                              noOptionsMessage={() =>
+                                roleLoading ? "Loading..." : "No options"
+                              }
+                              isMulti
+                              components={{
+                                DropdownIndicator: () => null,
+                                IndicatorSeparator: () => null
+                              }}
+                              isClearable={true}
+                              placeholder="Select Role"
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -817,7 +975,7 @@ const SecurityZoneForm = (props) => {
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Users
                             </label>
                           </Col>
@@ -834,26 +992,34 @@ const SecurityZoneForm = (props) => {
                                   ? "isError"
                                   : "auditUsers"
                               }
-                              defaultOptions
-                              loadOptions={fetchUsers}
+                              cacheOptions
+                              loadOptions={fetchUsersData}
+                              onFocus={() => {
+                                onFocusUserSelect();
+                              }}
+                              defaultOptions={defaultUserOptions}
+                              noOptionsMessage={() =>
+                                userLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select User"
                             />
                           </Col>
                         </Row>
                       )}
                     />
+
                     <Field
                       name="auditUserGroups"
                       render={({ input, meta }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Auditor Usergroups
                             </label>
                           </Col>
@@ -870,15 +1036,66 @@ const SecurityZoneForm = (props) => {
                                   ? "isError"
                                   : "auditUserGroups"
                               }
-                              defaultOptions
-                              loadOptions={fetchGroups}
+                              cacheOptions
+                              loadOptions={fetchGroupsData}
+                              onFocus={() => {
+                                onFocusGroupSelect();
+                              }}
+                              defaultOptions={defaultGroupOptions}
+                              noOptionsMessage={() =>
+                                groupLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Group"
+                            />
+                          </Col>
+                        </Row>
+                      )}
+                    />
+
+                    <Field
+                      name="auditRoles"
+                      render={({ input, meta }) => (
+                        <Row className="form-group">
+                          <Col xs={3}>
+                            <label className="form-label float-end">
+                              Auditor Roles
+                            </label>
+                          </Col>
+                          <Col xs={4}>
+                            <AsyncSelect
+                              {...input}
+                              styles={
+                                meta.error && meta.touched
+                                  ? selectCustomStyles
+                                  : ""
+                              }
+                              id={
+                                meta.error && meta.touched
+                                  ? "isError"
+                                  : "auditRoles"
+                              }
+                              cacheOptions
+                              loadOptions={fetchRolesData}
+                              onFocus={() => {
+                                onFocusRoleSelect();
+                              }}
+                              defaultOptions={defaultRoleOptions}
+                              noOptionsMessage={() =>
+                                roleLoading ? "Loading..." : "No options"
+                              }
+                              isMulti
+                              components={{
+                                DropdownIndicator: () => null,
+                                IndicatorSeparator: () => null
+                              }}
+                              isClearable={true}
+                              placeholder="Select Role"
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
@@ -889,51 +1106,54 @@ const SecurityZoneForm = (props) => {
                         </Row>
                       )}
                     />
+
                     <p className="form-header">Services:</p>
                     <Field
                       name="tagServices"
                       render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
+                            <label className="form-label float-end">
                               Select Tag Services
                             </label>
                           </Col>
                           <Col xs={6}>
                             <AsyncSelect
                               {...input}
-                              defaultOptions
+                              cacheOptions
                               loadOptions={fetchTagServices}
+                              onFocus={() => {
+                                onFocusTagServiceSelect();
+                              }}
+                              defaultOptions={defaultTagServiceOptions}
+                              noOptionsMessage={() =>
+                                tagServiceLoading ? "Loading..." : "No options"
+                              }
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
                                 IndicatorSeparator: () => null
                               }}
-                              isClearable={false}
+                              isClearable={true}
                               placeholder="Select Tag Services"
                             />
                           </Col>
                         </Row>
                       )}
                     />
+
                     <Field
                       name="resourceServices"
-                      render={({ input, meta }) => (
+                      render={({ input }) => (
                         <Row className="form-group">
                           <Col xs={3}>
-                            <label className="form-label pull-right">
-                              Select Resource Services *
+                            <label className="form-label float-end">
+                              Select Resource Services
                             </label>
                           </Col>
                           <Col xs={6}>
                             <Select
                               {...input}
-                              styles={
-                                meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
-                              }
-                              id={meta.error && meta.touched ? "isError" : ""}
                               onChange={(values, e) =>
                                 resourceServicesOnChange(
                                   e,
@@ -953,16 +1173,12 @@ const SecurityZoneForm = (props) => {
                               isSearchable={true}
                               placeholder="Select Service Name"
                             />
-                            {meta.error && meta.touched && (
-                              <span className="invalid-field">
-                                {meta.error.text}
-                              </span>
-                            )}
                           </Col>
                         </Row>
                       )}
                     />
-                    <Table striped bordered>
+
+                    <Table bordered>
                       <thead>
                         <tr>
                           <th className="p-3 mb-2 bg-white text-dark  align-middle text-center">
@@ -986,7 +1202,7 @@ const SecurityZoneForm = (props) => {
                                     {fields.value[index].serviceName}
                                   </td>
                                   <td className="align-middle" width="20%">
-                                    {fields.value[index].serviceType.toString()}
+                                    {fields.value[index].serviceType}
                                   </td>
                                   <td
                                     className="text-center"
@@ -1001,16 +1217,19 @@ const SecurityZoneForm = (props) => {
                                           {input.input.value &&
                                           input.input.value.length > 0
                                             ? input.input.value.map(
-                                                (obj, idx) => (
+                                                (
+                                                  resourceObj,
+                                                  resourceIndex
+                                                ) => (
                                                   <div
                                                     className="resource-group text-break"
-                                                    key={idx}
+                                                    key={resourceIndex}
                                                   >
                                                     <Row>
                                                       <Col xs={9}>
                                                         <span className="m-t-xs">
                                                           {showResources(
-                                                            obj,
+                                                            resourceObj,
                                                             fields.value[index]
                                                               .serviceType
                                                           )}
@@ -1023,11 +1242,11 @@ const SecurityZoneForm = (props) => {
                                                           size="sm"
                                                           onClick={() =>
                                                             editResourcesModal(
-                                                              idx,
+                                                              resourceIndex,
                                                               input,
                                                               fields.value[
                                                                 index
-                                                              ].serviceType
+                                                              ]
                                                             )
                                                           }
                                                           data-action="editResource"
@@ -1041,7 +1260,7 @@ const SecurityZoneForm = (props) => {
                                                           size="sm"
                                                           onClick={() =>
                                                             handleRemove(
-                                                              idx,
+                                                              resourceIndex,
                                                               input
                                                             )
                                                           }
@@ -1066,7 +1285,6 @@ const SecurityZoneForm = (props) => {
                                                 renderResourcesModal(
                                                   input,
                                                   fields.value[index]
-                                                    .serviceType
                                                 )
                                               }
                                               data-action="addResource"
@@ -1095,6 +1313,7 @@ const SecurityZoneForm = (props) => {
                         </FieldArray>
                       </tbody>
                     </Table>
+
                     <Row className="form-actions">
                       <Col sm={{ span: 9, offset: 3 }}>
                         <Button
@@ -1151,7 +1370,6 @@ const SecurityZoneForm = (props) => {
                     modelState={modelState}
                     handleSave={handleSave}
                     handleClose={handleClose}
-                    policyItem={true}
                   />
                 </Col>
               </Row>

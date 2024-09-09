@@ -24,6 +24,7 @@
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
@@ -47,6 +49,8 @@ public abstract class BaseDao<T> {
 	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
 	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
 	private static       int    BATCH_DELETE_BATCH_SIZE;
+	private static final String NOT_AVAILABLE = "Not Available";
+	private static final String GDS_TABLES = "x_gds_";
 
 	static {
 		try {
@@ -118,7 +122,7 @@ public abstract class BaseDao<T> {
 
 		for (int n = 0; n < obj.size(); ++n) {
 			em.persist(obj.get(n));
-			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.batchPersistSize == 0)) {
+			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.BATCH_PERSIST_SIZE == 0)) {
 				em.flush();
 			}
 		}
@@ -337,8 +341,10 @@ public abstract class BaseDao<T> {
 
 		String tableName = table.name();
 
-		try {
-			entityMgr.unwrap(Connection.class).createStatement().execute("SET IDENTITY_INSERT " + tableName + " " + identityInsertStr);
+		try (PreparedStatement st = entityMgr.unwrap(Connection.class).prepareStatement("SET IDENTITY_INSERT  ?   ?" )) {
+			st.setString(1, tableName);
+			st.setString(2, identityInsertStr);
+			st.execute();
 		} catch (SQLException e) {
 			logger.error("Error while settion identity_insert " + identityInsertStr, e);
 		}
@@ -348,41 +354,31 @@ public abstract class BaseDao<T> {
 		Table table = tClass.getAnnotation(Table.class);
 		if(table != null) {
 			String tableName = table.name();
-			String query = "update " + tableName + " set " + paramName+"=null"
-					+ " where " +paramName+"=" + oldID;
+			String updatedValue = tableName.contains(GDS_TABLES) ? "1" : "null";
+			String query = "update " + tableName + " set " + paramName+"=" + updatedValue + " where " +paramName+"=" + oldID;
+
 			int count=getEntityManager().createNativeQuery(query).executeUpdate();
 			if(count>0){
-				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=null where " + paramName + "=" + oldID);
+				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "="+ updatedValue + " where " + paramName + "=" + oldID);
 			}
 		}else{
 			logger.warn("Required annotation `Table` not found");
 		}
 	}
 
-	public String getDBVersion(){
-		String dbVersion="Not Available";
-		int dbFlavor = RangerBizUtil.getDBFlavor();
-		String query ="SELECT 1";
-		try{
-			if(dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
-				query="SELECT version()";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_ORACLE){
-				query="SELECT banner from v$version where rownum<2";
-				dbVersion = (String)getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_POSTGRES){
-				query="SELECT version()";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER){
-				query="SELECT @@version";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE){
-				query="SELECT @@version";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
+	public String getDBVersion() {
+		String dbVersion = NOT_AVAILABLE;
+		int    dbFlavor  = RangerBizUtil.getDBFlavor();
+		String query     = RangerBizUtil.getDBVersionQuery(dbFlavor);
+
+		if (StringUtils.isNotBlank(query)) {
+			try {
+				dbVersion = (String) getEntityManager().createNativeQuery(query).getSingleResult();
+			} catch (Exception ex) {
+				logger.error("Error occurred while fetching the DB version.", ex);
 			}
-		}catch(Exception ex){
-			logger.error("Error occurred while fetching the DB version.", ex);
 		}
+
 		return dbVersion;
 	}
 }

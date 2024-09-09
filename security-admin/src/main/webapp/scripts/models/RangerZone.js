@@ -145,14 +145,13 @@ define(function(require) {
                         ]
                     },
                 })
-
             },
-            getPluginAttr: function(typeGroup, $select) {
+            getPluginAttr: function(typeGroup, selectVal) {
                 var that = this,
-                    tags = [],
+                    tags = [],  selectedVals = [],
                     placeholder = (typeGroup) ? 'Select Group' : 'Select User',
                     searchUrl = (typeGroup) ? "service/xusers/lookup/groups" : "service/xusers/lookup/users";
-                _.each(this.get($select), function(name) {
+                _.each(this.get(selectVal), function(name) {
                     tags.push({
                         'id': _.escape(name),
                         'text': _.escape(name)
@@ -161,9 +160,8 @@ define(function(require) {
                 return {
                     closeOnSelect: true,
                     placeholder: placeholder,
-                    // width: '500px',
-                    tokenSeparators: [",", " "],
-                    tags: true,
+                    separator:"@-undefined-@",
+                    multiple: true,
                     initSelection: function(element, callback) {
                         callback(tags);
                     },
@@ -178,9 +176,8 @@ define(function(require) {
                         },
                         results: function(data, page) {
                             var results = [],
-                                selectedVals = [];
                             //Get selected values of groups/users dropdown
-                            // selectedVals = that.getSelectedValues(typeGroup);
+                            selectedVals = that.getSelectedValues(data.vXStrings, selectVal);
                             if (data.totalCount != "0") {
                                 if (typeGroup) {
                                     results = data.vXStrings.map(function(m) {
@@ -227,6 +224,11 @@ define(function(require) {
                         return typeGroup ? 'No group found.' : 'No user found.';
                     }
 
+                }
+            },
+            getSelectedValues : function(list, fieldNameKey){
+                if(!_.isEmpty(this.attributes[fieldNameKey])){
+                    return this.attributes[fieldNameKey]
                 }
             },
             toString : function(){

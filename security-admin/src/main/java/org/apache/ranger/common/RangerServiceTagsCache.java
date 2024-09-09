@@ -22,6 +22,7 @@ package org.apache.ranger.common;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.plugin.store.TagStore;
 
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
@@ -376,7 +377,8 @@ public class RangerServiceTagsCache {
 							LOG.debug("Retrieved tag-deltas from database. These will be applied on top of ServiceTags version:[" + cachedServiceTagsVersion + "], tag-deltas:[" + serviceTagsFromDb.getTagVersion() + "]");
 						}
 
-						this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb);
+						boolean supportsTagsDedeup = TagDBStore.isSupportsTagsDedup();
+						this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb, supportsTagsDedeup);
 						this.deltaCache  = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
 					}
 				} else {

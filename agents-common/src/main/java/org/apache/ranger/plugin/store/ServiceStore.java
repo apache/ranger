@@ -59,6 +59,8 @@ public interface ServiceStore {
 
 	void deleteService(Long id) throws Exception;
 
+	boolean serviceExists(String name) throws Exception;
+
 	RangerService getService(Long id) throws Exception;
 
 	RangerService getServiceByName(String name) throws Exception;

@@ -28,6 +28,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -44,6 +45,7 @@ import org.apache.ranger.plugin.store.RolePredicateUtil;
 import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerBaseModelService;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
@@ -53,14 +55,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_ROLE;
 
 @Component
 public class RoleDBStore implements RoleStore {
     private static final Logger LOG = LoggerFactory.getLogger(RoleDBStore.class);
-
-    private static final String RANGER_ROLE_GLOBAL_STATE_NAME = "RangerRole";
 
     @Autowired
     RangerRoleService roleService;
@@ -78,17 +78,17 @@ public class RoleDBStore implements RoleStore {
 	RoleRefUpdater roleRefUpdater;
 
     @Autowired
-    RangerBizUtil bizUtil;
-    
-    @Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
 	ServiceDBStore svcStore;
 
+	@Autowired
+	GdsDBStore gdsStore;
+
     RangerAdminConfig config;
 
-    private Boolean populateExistingBaseFields = true;
+    private Boolean populateExistingBaseFields = false;
 
     AbstractPredicateUtil predicateUtil = null;
 
@@ -111,7 +111,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception {
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleDBStore.createRole()");
         }
@@ -131,15 +131,14 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroup);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole);
 
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(createdRole, null, "create");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
         return createdRole;
     }
 
     @Override
-    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception {
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
         if (xxRole == null) {
             throw restErrorUtil.createRESTException("role with id: " + role.getId() + " does not exist");
@@ -148,9 +147,11 @@ public class RoleDBStore implements RoleStore {
 		if (!role.getName().equals(xxRole.getName())) { // ensure only if role name is changed
 			ensureRoleNameUpdateAllowed(xxRole.getName());
 		}
+        RangerRole oldRole = null;
+        if(StringUtils.isNotEmpty(xxRole.getRoleText())) {
+            oldRole = JsonUtils.jsonToObject(xxRole.getRoleText(), RangerRole.class);
+        }
 
-        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        RangerRole oldRole = gsonBuilder.fromJson(xxRole.getRoleText(), RangerRole.class);
 
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
@@ -160,7 +161,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroup);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
@@ -168,8 +169,7 @@ public class RoleDBStore implements RoleStore {
             roleService.updateRoleVersions(updatedRole.getId());
         }
 
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(updatedRole, oldRole, "update");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(updatedRole, oldRole, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
         return role;
     }
 
@@ -200,19 +200,7 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
         }
 
-        ensureRoleDeleteAllowed(roleName);
-
-        Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
-        transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
-
-        RangerRole role = roleService.read(xxRole.getId());
-        roleRefUpdater.cleanupRefTables(role);
-		// delete role from audit filter configs
-		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
-        roleService.delete(role);
-
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        deleteRole(xxRole.getId());
     }
 
     @Override
@@ -227,9 +215,12 @@ public class RoleDBStore implements RoleStore {
         roleRefUpdater.cleanupRefTables(role);
 		// delete role from audit filter configs
 		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
+
+		// delete gdsObject mapping of role
+		gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.ROLE.toString(), role.getName());
+
         roleService.delete(role);
-        List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        roleService.createTransactionLog(role, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     private void ensureRoleDeleteAllowed(String roleName) throws Exception {
@@ -400,7 +391,7 @@ public class RoleDBStore implements RoleStore {
             XXServiceVersionInfo xxServiceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
             ret = (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion() : null;
         } else {
-            ret = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
+            ret = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_ROLE);
         }
 
         return ret;
@@ -493,9 +484,9 @@ public class RoleDBStore implements RoleStore {
     	@Override
     	public void run() {
     		try {
-    			this.daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
+    			this.daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_ROLE);
     		} catch (Exception e) {
-    			LOG.error("Cannot update GlobalState version for state:[" + RANGER_ROLE_GLOBAL_STATE_NAME + "]", e);
+    			LOG.error("Cannot update GlobalState version for state:[" + RANGER_GLOBAL_STATE_NAME_ROLE + "]", e);
     		}
     	}
     }

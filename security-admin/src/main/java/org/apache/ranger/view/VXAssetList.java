@@ -27,19 +27,14 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAssetList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXAsset> vXAssets = new ArrayList<VXAsset>();
@@ -56,6 +51,7 @@ public class VXAssetList extends VList {
     /**
      * @return the vXAssets
      */
+    @JsonProperty("vXAssets")
     public List<VXAsset> getVXAssets() {
 	return vXAssets;
     }
@@ -64,6 +60,7 @@ public class VXAssetList extends VList {
      * @param vXAssets
      *            the vXAssets to set
      */
+    @JsonProperty("vXAssets")
     public void setVXAssets(List<VXAsset> vXAssets) {
 	this.vXAssets = vXAssets;
     }

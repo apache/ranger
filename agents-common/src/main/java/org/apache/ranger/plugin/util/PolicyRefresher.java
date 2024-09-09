@@ -20,10 +20,15 @@
 package org.apache.ranger.plugin.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,14 +37,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 
 public class PolicyRefresher extends Thread {
 	private static final Logger LOG = LoggerFactory.getLogger(PolicyRefresher.class);
@@ -54,7 +56,6 @@ public class PolicyRefresher extends Thread {
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
-	private final Gson                           gson;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -84,19 +85,11 @@ public class PolicyRefresher extends Thread {
 
 		this.cacheFileName = cacheFilename;
 
-		Gson gson = null;
-		try {
-			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-		} catch(Throwable excp) {
-			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
-		}
-
 		RangerPluginContext pluginContext  = plugIn.getPluginContext();
 		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
 		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
-		this.gson                          = gson;
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
-		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000L);
 
 		setName("PolicyRefresher(serviceName=" + serviceName + ")-" + getId());
 
@@ -366,7 +359,7 @@ public class PolicyRefresher extends Thread {
     		try {
 	        	reader = new FileReader(cacheFile);
 
-		        policies = gson.fromJson(reader, ServicePolicies.class);
+				policies = JsonUtils.jsonToObject(reader, ServicePolicies.class);
 
 		        if(policies != null) {
 		        	if(!StringUtils.equals(serviceName, policies.getServiceName())) {
@@ -444,19 +437,19 @@ public class PolicyRefresher extends Thread {
 	
 				try {
 					writer = new FileWriter(cacheFile);
-	
-			        gson.toJson(policies, writer);
+					JsonUtils.objectToWriter(writer, policies);
 		        } catch (Exception excp) {
 		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 		        } finally {
-		        	if(writer != null) {
-		        		try {
-		        			writer.close();
-		        		} catch(Exception excp) {
-		        			LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-		        		}
-		        	}
-		        }
+					if (writer != null) {
+						try {
+							writer.close();
+							deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
+						} catch (Exception excp) {
+							LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+						}
+					}
+				}
 
 				RangerPerfTracer.log(perf);
 
@@ -472,7 +465,7 @@ public class PolicyRefresher extends Thread {
 					}
 
 					try (Writer writer = new FileWriter(backupCacheFile)) {
-						gson.toJson(policies, writer);
+						JsonUtils.objectToWriter(writer, policies);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
 					}
@@ -487,6 +480,51 @@ public class PolicyRefresher extends Thread {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
+		}
+	}
+
+	private void deleteOldestVersionCacheFileInCacheDirectory(File cacheDirectory) {
+		int maxVersionsToPreserve = plugIn.getConfig().getInt(plugIn.getConfig().getPropertyPrefix() + "max.versions.to.preserve", 1);
+		FileFilter logFileFilter = (file) -> file.getName().matches(".+json_.+");
+
+		File[] filesInParent = cacheDirectory.listFiles(logFileFilter);
+		List<Long> policyVersions = new ArrayList<>();
+
+		if (filesInParent != null && filesInParent.length > 0) {
+			for (File f : filesInParent) {
+				String fileName = f.getName();
+				// Extract the part after json_
+				int policyVersionIdx = fileName.lastIndexOf("json_");
+				String policyVersionStr = fileName.substring(policyVersionIdx + 5);
+				Long policyVersion = Long.valueOf(policyVersionStr);
+				policyVersions.add(policyVersion);
+			}
+		} else {
+			LOG.info("No files matching '.+json_*' found");
+		}
+
+		if (!policyVersions.isEmpty()) {
+			policyVersions.sort(new Comparator<Long>() {
+				@Override
+				public int compare(Long o1, Long o2) {
+					if (o1.equals(o2)) return 0;
+					return o1 < o2 ? -1 : 1;
+				}
+			});
+		}
+
+		if (policyVersions.size() > maxVersionsToPreserve) {
+			String fileName = this.cacheFileName + "_" + Long.toString(policyVersions.get(0));
+			String pathName = cacheDirectory.getAbsolutePath() + File.separator + fileName;
+			File toDelete = new File(pathName);
+			if (toDelete.exists()) {
+				boolean isDeleted = toDelete.delete();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("file :[" + pathName + "] is deleted" + isDeleted);
+				}
+			} else {
+				LOG.info("File: " + pathName + " does not exist!");
+			}
 		}
 	}
 

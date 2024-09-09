@@ -116,7 +116,7 @@ public class PatchForOzoneDefaultPoliciesUpdate_J10044 extends BaseLoader {
 					policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
 					policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
 					policyItemOwner.setDelegateAdmin(true);
-					policy.getPolicyItems().add(policyItemOwner);
+					policy.addPolicyItem(policyItemOwner);
 				}
 				svcDBStore.updatePolicy(policy);
 			}

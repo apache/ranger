@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useRef } from "react";
-import { Badge, Button, Table } from "react-bootstrap";
+import { Button, Table } from "react-bootstrap";
 import { Field } from "react-final-form";
 import { FieldArray } from "react-final-form-arrays";
 import Select from "react-select";
@@ -26,7 +26,7 @@ import AsyncSelect from "react-select/async";
 import Editable from "Components/Editable";
 import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "../Resources/ModalResourceComp";
-import { uniq, map, join, isEmpty, find, toUpper } from "lodash";
+import { uniq, map, join, isEmpty, isArray } from "lodash";
 import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
 import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
@@ -105,30 +105,32 @@ export default function ServiceAuditFilter(props) {
         return (
           <div className="resource-filter" key={index}>
             <div>
-              <span className="bold mr-1">
+              <span className="bold me-1">
                 {resourceData[`resourceName-${level}`].name}
               </span>
               :
-              <span className="ml-1">
-                {join(map(resourceData[`value-${level}`], "value"), ", ")}
+              <span className="ms-1">
+                {isArray(resourceData[`value-${level}`])
+                  ? join(map(resourceData[`value-${level}`], "value"), ", ")
+                  : [resourceData[`value-${level}`].value]}
               </span>
             </div>
             <div>
               {excludesSupported && (
                 <h6 className="text-center">
                   {resourceData[`isExcludesSupport-${level}`] == false ? (
-                    <span className="badge badge-dark">Exclude</span>
+                    <span className="badge bg-dark">Exclude</span>
                   ) : (
-                    <span className="badge badge-dark">Include</span>
+                    <span className="badge bg-dark">Include</span>
                   )}
                 </h6>
               )}
               {recursiveSupported && (
                 <h6 className="text-center">
                   {resourceData[`isRecursiveSupport-${level}`] == false ? (
-                    <span className="badge badge-dark">Non Recursive</span>
+                    <span className="badge bg-dark">Non Recursive</span>
                   ) : (
-                    <span className="badge badge-dark">Recursive</span>
+                    <span className="badge bg-dark">Recursive</span>
                   )}
                 </h6>
               )}
@@ -156,16 +158,6 @@ export default function ServiceAuditFilter(props) {
       label,
       value
     }));
-  };
-
-  const getTagAccessType = (value) => {
-    return value.map((obj, index) => {
-      return (
-        <h6 className="d-inline mr-1" key={index}>
-          <Badge variant="info">{toUpper(obj.serviceName)}</Badge>
-        </h6>
-      );
-    });
   };
 
   const permList = [
@@ -272,12 +264,13 @@ export default function ServiceAuditFilter(props) {
                             className="form-control"
                             name={`${name}.accessResult`}
                           >
-                            {({ input, meta }) => (
+                            {({ input }) => (
                               <div style={{ minWidth: "195px" }}>
                                 <Select
                                   {...input}
                                   menuPortalTarget={document.body}
-                                  isClearable={false}
+                                  isClearable={true}
+                                  isSearchable={false}
                                   options={[
                                     { value: "DENIED", label: "DENIED" },
                                     { value: "ALLOWED", label: "ALLOWED" },
@@ -308,7 +301,7 @@ export default function ServiceAuditFilter(props) {
                                   </div>
 
                                   <Button
-                                    className="mr-1 btn-mini"
+                                    className="me-1 btn-mini"
                                     variant="primary"
                                     size="sm"
                                     onClick={() => renderResourcesModal(input)}
@@ -320,7 +313,7 @@ export default function ServiceAuditFilter(props) {
                                     ></i>
                                   </Button>
                                   <Button
-                                    className="mr-1 btn-mini"
+                                    className="me-1 btn-mini"
                                     variant="danger"
                                     size="sm"
                                     onClick={() => handleRemove(input)}
@@ -345,7 +338,7 @@ export default function ServiceAuditFilter(props) {
                             className="form-control"
                             name={`${name}.actions`}
                           >
-                            {({ input, meta }) => (
+                            {({ input }) => (
                               <CreatableField
                                 actionValues={input.value}
                                 creatableOnChange={(value) =>
@@ -408,7 +401,7 @@ export default function ServiceAuditFilter(props) {
                           <Field
                             className="form-control"
                             name={`${name}.roles`}
-                            render={({ input, meta }) => (
+                            render={({ input }) => (
                               <div
                                 style={{
                                   minWidth: "150px",
@@ -446,7 +439,7 @@ export default function ServiceAuditFilter(props) {
                           <Field
                             className="form-control"
                             name={`${name}.groups`}
-                            render={({ input, meta }) => (
+                            render={({ input }) => (
                               <div
                                 style={{
                                   minWidth: "150px",
@@ -484,7 +477,7 @@ export default function ServiceAuditFilter(props) {
                           <Field
                             className="form-control"
                             name={`${name}.users`}
-                            render={({ input, meta }) => (
+                            render={({ input }) => (
                               <div
                                 style={{
                                   minWidth: "150px",
@@ -558,7 +551,6 @@ export default function ServiceAuditFilter(props) {
         handleSave={handleSave}
         modelState={modelState}
         handleClose={handleClose}
-        policyItem={false}
       />
     </div>
   );

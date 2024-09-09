@@ -18,14 +18,17 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import errorIcon from "Images/error-404-icon.png";
 import { Button } from "react-bootstrap";
+import { getLandingPageURl } from "../utils/XAUtils";
 
 export const ErrorPage = (props) => {
   const [errorCode, setErrorCode] = useState(null);
   const [errorInfo, setErrorInfo] = useState(null);
   let navigate = useNavigate();
+  let currentURLObj = useLocation();
+  let customURL = ["/dataNotFound", "/pageNotFound", "/forbidden"];
 
   useEffect(() => {
     if (props.errorCode == "401") {
@@ -86,14 +89,16 @@ export const ErrorPage = (props) => {
           <Button
             size="sm"
             onClick={() =>
-              props.errorCode == "checkSSOTrue" ? navigate(-1) : navigate(-2)
+              customURL.indexOf(currentURLObj.pathname) >= 0
+                ? navigate(-2)
+                : navigate(-1)
             }
-            className="mr-1"
+            className="me-1"
           >
             <i className="fa-fw fa fa-long-arrow-left"></i> Go back
           </Button>
           {props.errorCode !== "checkSSOTrue" && (
-            <Button href="#/policymanager/resource" size="sm">
+            <Button size="sm" onClick={() => navigate(getLandingPageURl())}>
               Home
             </Button>
           )}

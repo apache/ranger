@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
@@ -34,6 +35,7 @@ public abstract class RangerChainedPlugin {
     protected final String           serviceType;
     protected final String           serviceName;
     protected final RangerBasePlugin plugin;
+    protected final boolean          skipAccessCheckIfAlreadyDetermined;
 
     protected RangerChainedPlugin(RangerBasePlugin rootPlugin, String serviceType, String serviceName) {
         LOG.info("RangerChainedPlugin(" + serviceType + ", " + serviceName + ")");
@@ -42,6 +44,8 @@ public abstract class RangerChainedPlugin {
         this.serviceType = serviceType;
         this.serviceName = serviceName;
         this.plugin      = buildChainedPlugin(serviceType, serviceName, rootPlugin.getAppId());
+        RangerPluginConfig rootPluginConfig = rootPlugin.getPluginContext().getConfig();
+        skipAccessCheckIfAlreadyDetermined = rootPluginConfig.getBoolean(rootPluginConfig.getPropertyPrefix() + ".bypass.chained.plugin.evaluation.if.access.is.determined", false);
     }
 
     public void init() {

@@ -69,15 +69,15 @@
           <include>com.sun.jersey:jersey-bundle</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>commons-io:commons-io</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.codehaus.jackson:jackson-core-asl</include>
-          <include>org.codehaus.jackson:jackson-jaxrs</include>
-          <include>org.codehaus.jackson:jackson-mapper-asl</include>
-          <include>org.codehaus.jackson:jackson-xc</include>
+          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-databind:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>commons-codec:commons-codec</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
@@ -95,6 +95,11 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -120,12 +125,12 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
           <include>org.apache.ranger:credentialbuilder</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

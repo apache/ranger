@@ -17,36 +17,46 @@
 
 package org.apache.ranger.plugin.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RangerServiceHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     private String  name;
+    private String  displayName;
+    private String  type;
     private Boolean isTagService;
+    private Boolean isGdsService;
 
     public RangerServiceHeaderInfo() {
-        super();
-        setId(-1L);
-        setName("");
-        setIsTagService(false);
+        this(-1L, "", false, false);
     }
 
     public RangerServiceHeaderInfo(Long id, String name, boolean isTagService) {
+        this(id, name, isTagService, false);
+    }
+
+    public RangerServiceHeaderInfo(Long id, String name, boolean isTagService, boolean isGdsService) {
         super();
         setId(id);
         setName(name);
         setIsTagService(isTagService);
+        setIsGdsService(isGdsService);
+    }
+
+    public RangerServiceHeaderInfo(Long id, String name, String displayName, String type) {
+        super();
+        setId(id);
+        setName(name);
+        setDisplayName(displayName);
+        setType(type);
+        setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
     }
 
     public String getName() {
@@ -57,11 +67,35 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
         this.name = name;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public Boolean getIsTagService() {
         return isTagService;
     }
 
     public void setIsTagService(Boolean isTagService) {
         this.isTagService = isTagService;
+    }
+
+    public Boolean getIsGdsService() {
+        return isGdsService;
+    }
+
+    public void setIsGdsService(Boolean isGdsService) {
+        this.isGdsService = isGdsService;
     }
 }

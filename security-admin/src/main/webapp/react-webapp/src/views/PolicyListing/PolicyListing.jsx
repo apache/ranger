@@ -57,11 +57,11 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isUser,
-  parseSearchFilter
+  parseSearchFilter,
+  getResourcesDefVal
 } from "../../utils/XAUtils";
 import {
   alertMessage,
-  RangerPolicyType,
   ResourcesOverrideInfoMsg,
   ServerAttrName
 } from "../../utils/XAEnums";
@@ -72,7 +72,6 @@ import {
 } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
-  //const { serviceDef, serviceData } = props;
   const { serviceDef, serviceData, serviceZone } = props;
   const { state } = useLocation();
   const [policyListingData, setPolicyData] = useState([]);
@@ -145,7 +144,7 @@ function PolicyListing(props) {
     }
 
     // Updating the states for search params, search filter and default search filter
-    setSearchParams({ ...currentParams, ...searchParam });
+    setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -229,7 +228,7 @@ function PolicyListing(props) {
         setLoader(false);
       }
     },
-    [updateTable, searchFilterParams, serviceData]
+    [updateTable, searchFilterParams]
   );
 
   const toggleConfirmModalForDelete = (policyID, policyName) => {
@@ -451,13 +450,13 @@ function PolicyListing(props) {
           if (rawValue.value)
             return (
               <h6>
-                <Badge variant="success">Enabled</Badge>
+                <Badge bg="success">Enabled</Badge>
               </h6>
             );
           else
             return (
               <h6>
-                <Badge variant="danger">Disabled</Badge>
+                <Badge bg="danger">Disabled</Badge>
               </h6>
             );
         },
@@ -471,13 +470,13 @@ function PolicyListing(props) {
           if (rawValue.value) {
             return (
               <h6>
-                <Badge variant="success">Enabled</Badge>
+                <Badge bg="success">Enabled</Badge>
               </h6>
             );
           } else
             return (
               <h6>
-                <Badge variant="danger">Disabled</Badge>
+                <Badge bg="danger">Disabled</Badge>
               </h6>
             );
         },
@@ -547,7 +546,7 @@ function PolicyListing(props) {
               <Button
                 variant="outline-dark"
                 size="sm"
-                className="mr-2"
+                className="me-2"
                 title="View"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -561,7 +560,7 @@ function PolicyListing(props) {
               {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
                 <>
                   <Link
-                    className="btn btn-outline-dark btn-sm mr-2"
+                    className="btn btn-outline-dark btn-sm me-2"
                     title="Edit"
                     to={`/service/${serviceId}/policies/${original.id}/edit`}
                   >
@@ -646,7 +645,10 @@ function PolicyListing(props) {
     let currentServiceDef = serviceDef;
 
     if (currentServiceDef !== undefined) {
-      let serviceDefResource = currentServiceDef.resources;
+      let serviceDefResource = getResourcesDefVal(
+        currentServiceDef,
+        policyType
+      );
 
       let serviceDefResourceOption = serviceDefResource?.map((obj) => ({
         category: "resource:" + obj.name,
@@ -668,15 +670,8 @@ function PolicyListing(props) {
     let resourceSearchOpt = [];
     let serverRsrcAttrName = [];
     let policySearchInfoMsg = [];
-    if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
-      resources = serviceDef.dataMaskDef?.resources || [];
-    } else if (
-      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
-    ) {
-      resources = serviceDef.rowFilterDef?.resources || [];
-    } else {
-      resources = serviceDef?.resources || [];
-    }
+
+    resources = getResourcesDefVal(serviceDef, policyType);
 
     resourceSearchOpt = map(resources, function (resource) {
       return {
@@ -706,7 +701,7 @@ function PolicyListing(props) {
         {policySearchInfoMsg?.map((m, index) => {
           return (
             <p className="m-0" key={index}>
-              <span className="font-weight-bold">{m.text}: </span>
+              <span className="fw-bold">{m.text}: </span>
               <span>{m.info}</span>
             </p>
           );
@@ -722,7 +717,7 @@ function PolicyListing(props) {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
 
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
@@ -731,26 +726,25 @@ function PolicyListing(props) {
 
   return (
     <div className="wrap">
-      {(props.serviceData.type == "hdfs" || props.serviceData.type == "yarn") &&
-        show && (
-          <Alert variant="warning" onClose={() => setShow(false)} dismissible>
-            <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
-            <p className="pd-l-10 d-inline">
-              {`By default, fallback to ${
-                alertMessage[props.serviceData.type].label
-              } ACLs are enabled. If access cannot be
+      {(serviceData.type == "hdfs" || serviceData.type == "yarn") && show && (
+        <Alert variant="warning" onClose={() => setShow(false)} dismissible>
+          <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
+          <p className="pd-l-10 d-inline">
+            {`By default, fallback to ${
+              alertMessage[serviceData.type].label
+            } ACLs are enabled. If access cannot be
               determined by Ranger policies, authorization will fall back to
               ${
-                alertMessage[props.serviceData.type].label
+                alertMessage[serviceData.type].label
               } ACLs. If this behavior needs to be changed, modify ${
-                alertMessage[props.serviceData.type].label
-              }
+              alertMessage[serviceData.type].label
+            }
               plugin config - ${
-                alertMessage[props.serviceData.type].configs
+                alertMessage[serviceData.type].configs
               }-authorization.`}
-            </p>
-          </Alert>
-        )}
+          </p>
+        </Alert>
+      )}
       {pageLoader ? (
         <Loader />
       ) : (
@@ -781,7 +775,7 @@ function PolicyListing(props) {
                 </div>
               </Col>
               <Col sm={2}>
-                <div className="pull-right mb-1">
+                <div className="float-end mb-1">
                   {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
                     <Button
                       variant="primary"
@@ -814,8 +808,8 @@ function PolicyListing(props) {
           <Modal show={deletePolicyModal.showPopup} onHide={toggleClose}>
             <Modal.Header closeButton>
               <span className="text-word-break">
-                Are you sure you want to delete policy&nbsp;"
-                <b>{deletePolicyModal?.policyDetails?.policyName}</b>" ?
+                Are you sure you want to delete policy&nbsp;&quot;
+                <b>{deletePolicyModal?.policyDetails?.policyName}</b>&quot; ?
               </span>
             </Modal.Header>
             <Modal.Footer>
@@ -848,7 +842,7 @@ function PolicyListing(props) {
               />
             </Modal.Body>
             <Modal.Footer>
-              <div className="policy-version text-left">
+              <div className="policy-version text-start">
                 <span>
                   <i
                     className={

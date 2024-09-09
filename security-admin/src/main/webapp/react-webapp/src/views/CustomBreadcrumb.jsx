@@ -51,25 +51,28 @@ export const CustomBreadcrumb = (props) => {
                     }
                   >
                     {isEmpty(link) ? (
-                      <Link to="#" onClick={(e) => e.preventDefault()}>
+                      <Link
+                        to="#"
+                        onClick={(e) => e.preventDefault()}
+                        className="text-decoration-none"
+                      >
                         <p
-                          className="trim-containt-breadcrumb"
+                          className="trim-breadcrumb-content"
                           title={data[index][obj].text}
                         >
                           {data[index][obj].text}
                         </p>
                       </Link>
                     ) : (
-                      <Link to={link}>
+                      <Link to={link} className="text-decoration-none">
                         <p
-                          className="trim-containt-breadcrumb"
+                          className="trim-breadcrumb-content"
                           title={data[index][obj].text}
                         >
                           {data[index][obj].text}
                         </p>
                       </Link>
                     )}
-                    {/* <i className="fa fa-chevron-right"></i> */}
                     <img src={chevronIcon} className="breadcrumb-chevron" />
                   </li>
                 </React.Fragment>

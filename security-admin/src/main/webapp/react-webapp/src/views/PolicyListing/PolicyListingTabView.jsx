@@ -31,7 +31,7 @@ import {
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
-import { compact, has, map, sortBy, includes, filter } from "lodash";
+import { cloneDeep, isEmpty, map, sortBy } from "lodash";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
@@ -56,7 +56,7 @@ function reducer(state, action) {
 
 export const PolicyListingTabView = () => {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const serviceDefs = getServiceDef();
+  const serviceDefs = cloneDeep(getServiceDef());
   const navigate = useNavigate();
   const params = useParams();
   const [policyState, dispatch] = useReducer(reducer, {
@@ -66,14 +66,17 @@ export const PolicyListingTabView = () => {
     allServicesData: []
   });
   const { loader, serviceDefData, serviceData, allServicesData } = policyState;
-  //const [zoneServicesData, setZoneServicesData] = useState([]);
   const [zones, setZones] = useState([]);
 
   let localStorageZoneDetails = localStorage.getItem("zoneDetails");
 
   useEffect(() => {
     fetchServiceDetails();
-  }, [params?.serviceId, JSON.parse(localStorageZoneDetails)?.value]);
+  }, [
+    params?.serviceId,
+    params?.policyType,
+    JSON.parse(localStorageZoneDetails)?.value
+  ]);
 
   const fetchServiceDetails = async () => {
     document
@@ -105,87 +108,58 @@ export const PolicyListingTabView = () => {
         return serviceDef.name == getServiceData?.data?.type;
       });
 
-      isTagView =
-        getServiceDefData?.name !== undefined &&
-        getServiceDefData?.name === "tag"
-          ? true
-          : false;
-
-      updateTagActive(isTagView);
-
       if (!isKMSRole) {
         getZones = await fetchApi({
-          url: `zones/zones`
+          url: `public/v2/api/zones/zone-headers/for-service/${params.serviceId}`,
+          params: {
+            isTagService: getServiceData.data?.type == "tag" ? true : false
+          }
         });
       }
+    } catch (error) {
+      console.error(`Error occurred while fetching service details ! ${error}`);
+    }
 
-      setZones(getZones?.data?.securityZones || []);
+    isTagView =
+      getServiceDefData?.name !== undefined && getServiceDefData?.name === "tag"
+        ? true
+        : false;
 
-      dispatch({
-        type: "SERVICES_DATA",
-        allServicesData: getAllServicesData?.data?.services,
-        serviceData: getServiceData?.data,
-        serviceDefData: getServiceDefData
-      });
+    updateTagActive(isTagView);
 
-      /* zoneServices(
-        getServiceData.data,
-        getAllServicesData.data.services,
-        getZones?.data?.securityZones || []
-      ); */
+    setZones(getZones?.data || []);
 
+    dispatch({
+      type: "SERVICES_DATA",
+      allServicesData: getAllServicesData?.data?.services,
+      serviceData: getServiceData?.data,
+      serviceDefData: getServiceDefData
+    });
+    if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
       dispatch({
         type: "SET_LOADER",
         loader: false
       });
-
-      document
-        .getElementById("resourceSelectedZone")
-        ?.classList?.remove("disabledEvents");
-      document
-        .getElementById("tagSelectedZone")
-        ?.classList?.remove("disabledEvents");
-    } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
     }
+    document
+      .getElementById("resourceSelectedZone")
+      ?.classList?.remove("disabledEvents");
+    document
+      .getElementById("tagSelectedZone")
+      ?.classList?.remove("disabledEvents");
   };
 
-  /* const zoneServices = (serviceData, servicesData, zonesData) => {
-    let filterZoneService = [];
-    if (
-      localStorageZoneDetails !== undefined &&
-      localStorageZoneDetails !== null
-    ) {
-      let filterZones = find(zonesData, {
-        name: JSON.parse(localStorageZoneDetails)?.label
-      });
-
-      if (serviceData.type !== "tag") {
-        filterZoneService =
-          filterZones !== undefined ? Object.keys(filterZones.services) : [];
-      } else {
-        filterZoneService =
-          filterZones !== undefined ? filterZones?.tagServices : [];
-      }
-
-      let zoneServices = filterZoneService?.map((zoneService) => {
-        return servicesData?.filter((service) => {
-          return service.name === zoneService;
-        });
-      });
-
-      setZoneServicesData(zoneServices?.flat());
-    }
-  }; */
-
   const getServices = (services) => {
-    return sortBy(
-      services?.map(({ displayName }) => ({
-        label: displayName,
-        value: displayName
-      })),
+    let filterService = [];
+
+    filterService = sortBy(
+      map(services, function ({ displayName }) {
+        return { label: displayName, value: displayName };
+      }),
       "label"
     );
+
+    return filterService;
   };
 
   const handleServiceChange = async (e) => {
@@ -196,10 +170,7 @@ export const PolicyListingTabView = () => {
         }
       });
       navigate(
-        `/service/${selectedServiceData?.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-        {
-          replace: true
-        }
+        `/service/${selectedServiceData?.id}/policies/${params.policyType}`
       );
       localStorage.removeItem("zoneDetails");
     }
@@ -208,35 +179,14 @@ export const PolicyListingTabView = () => {
   const getZones = (zones) => {
     let filterZones = [];
 
-    if (serviceData.type !== "tag") {
-      filterZones = compact(
-        zones?.map((zone) => {
-          if (has(zone?.services, serviceData?.name)) {
-            return { label: zone.name, value: zone.id };
-          }
-        })
-      );
-    } else {
-      filterZones = zones
-        ?.map((zone) => {
-          return compact(
-            zone?.tagServices?.map((tagService) => {
-              if (tagService === serviceData?.name) {
-                return { label: zone.name, value: zone.id };
-              }
-            })
-          );
-        })
-        ?.flat();
-    }
-
-    return sortBy(
-      filterZones?.map((zone) => ({
-        label: zone.label,
-        value: zone.value
-      })),
+    filterZones = sortBy(
+      map(zones, function (zone) {
+        return { label: zone.name, value: zone.id };
+      }),
       "label"
     );
+
+    return filterZones;
   };
 
   const handleZoneChange = async (e) => {
@@ -248,12 +198,7 @@ export const PolicyListingTabView = () => {
     } else {
       localStorage.removeItem("zoneDetails");
     }
-    navigate(
-      `/service/${params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
-      {
-        replace: true
-      }
-    );
+    navigate(`/service/${params.serviceId}/policies/${params.policyType}`);
   };
 
   const getServiceZone = () => {
@@ -263,39 +208,18 @@ export const PolicyListingTabView = () => {
       localStorageZoneDetails !== undefined &&
       localStorageZoneDetails !== null
     ) {
-      if (serviceData.type !== "tag") {
-        zoneName = compact(
-          map(zones, function (zone) {
-            if (
-              zone.name === JSON.parse(localStorageZoneDetails)?.label &&
-              has(zone?.services, serviceData?.name)
-            ) {
-              return { label: zone.name, value: zone.id };
-            }
-          })
-        );
-
-        zoneName = zoneName.length == 1 ? zoneName[0] : null;
-      } else {
-        zoneName = filter(zones, {
-          name: JSON.parse(localStorageZoneDetails)?.label
-        });
-
-        zoneName =
-          zoneName.length == 1 &&
-          includes(zoneName[0]?.tagServices, serviceData?.name)
-            ? { label: zoneName[0].name, value: zoneName[0].id }
-            : null;
+      for (const zone of zones) {
+        if (zone.name === JSON.parse(localStorageZoneDetails)?.label) {
+          zoneName = { label: zone.name, value: zone.id };
+          break;
+        }
       }
     }
-
     return zoneName;
   };
 
   const tabChange = (tabName) => {
-    navigate(`/service/${params?.serviceId}/policies/${tabName}`, {
-      replace: true
-    });
+    navigate(`/service/${params?.serviceId}/policies/${tabName}`);
   };
 
   return (
@@ -311,7 +235,6 @@ export const PolicyListingTabView = () => {
         handleZoneChange={handleZoneChange}
         getZones={getZones}
         allZonesData={zones}
-        //zoneServicesData={zoneServicesData}
       />
       {loader ? (
         <Loader />

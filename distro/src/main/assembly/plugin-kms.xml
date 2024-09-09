@@ -59,7 +59,6 @@
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
@@ -69,6 +68,11 @@
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -94,7 +98,6 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
@@ -102,6 +105,7 @@
           <include>org.apache.ranger:credentialbuilder</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

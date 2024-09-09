@@ -88,41 +88,48 @@
 		{
 			"itemId": 1,
 			"name": "read",
-			"label": "Read"
+			"label": "Read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 2,
 			"name": "write",
-			"label": "Write"
+			"label": "Write",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "create",
-			"label": "Create"
+			"label": "Create",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 4,
 			"name": "list",
-			"label": "List"
+			"label": "List",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 5,
 			"name": "delete",
-			"label": "Delete"
+			"label": "Delete",
+			"category": "DELETE"
 		},
 		{
 			"itemId": 6,
 			"name": "read_acl",
-			"label": "Read_ACL"
+			"label": "Read_ACL",
+			"category": "READ"
 		},
 		{
 			"itemId": 7,
 			"name": "write_acl",
-			"label": "Write_ACL"
+			"label": "Write_ACL",
+			"category": "UPDATE"
 		}
 	],
 
@@ -254,9 +261,9 @@
 			"evaluatorOptions": { },
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
 			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"description": "IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 
 	]

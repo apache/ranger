@@ -129,7 +129,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 					policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_READ)));
 					policyItemForLookupUser.setDelegateAdmin(false);
-					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+					defaultPolicy.addPolicyItem(policyItemForLookupUser);
 				}
 
 				RangerPolicy.RangerPolicyResource pathPolicyResource = defaultPolicy.getResources().get(pathResourceName);

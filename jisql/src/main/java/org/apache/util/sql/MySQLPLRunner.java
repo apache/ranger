@@ -135,14 +135,9 @@ public class MySQLPLRunner {
                 }
                 String trimmedLine = line.trim();
 
-                if (trimmedLine.length() < 1 || trimmedLine.startsWith("--")
-                    || trimmedLine.startsWith("//")) { //NOPMD
-                    //println(trimmedLine);
+                if (trimmedLine.length() < 1 || trimmedLine.startsWith("--") || trimmedLine.startsWith("//")) { //NOPMD
                     // Do nothing
-                } else if (!fullLineDelimiter
-                        && trimmedLine.endsWith(getDelimiter())
-                        || fullLineDelimiter
-                        && trimmedLine.equals(getDelimiter())) {
+                } else if (!fullLineDelimiter && trimmedLine.endsWith(getDelimiter()) || fullLineDelimiter && trimmedLine.equals(getDelimiter())) {
 
 
                     Pattern pattern = Pattern.compile(DELIMITER_LINE_REGEX);
@@ -157,86 +152,87 @@ public class MySQLPLRunner {
                         trimmedLine = line.trim();*/
                     }
 
-                    if(line!=null && line.endsWith(getDelimiter()) && !DEFAULT_DELIMITER.equalsIgnoreCase(getDelimiter())){
-                    	 command.append(line.substring(0, line.lastIndexOf(getDelimiter())));
-                    }else{
-                    	command.append(line);
+                    if (line != null && line.endsWith(getDelimiter()) && !DEFAULT_DELIMITER.equalsIgnoreCase(getDelimiter())) {
+                        command.append(line.substring(0, line.lastIndexOf(getDelimiter())));
+                    } else {
+                        command.append(line);
                     }
 
                     command.append(" ");
-                    Statement statement = conn.createStatement();
-                    if(printDebug)
-                    	println(command);
-                    //System.out.println(getDelimiter());
-                    boolean hasResults = false;
-                    if (stopOnError) {
-                        hasResults = statement.execute(command.toString());
-                    } else {
-                        try {
-                            statement.execute(command.toString());
-                        } catch (SQLException e) {
-                            e.fillInStackTrace();
-                            printlnError("Error executing: " + command);
-                            printlnError(e);
+                    try (Statement statement = conn.createStatement()) {
+                        if (printDebug)
+                            println(command);
+                        //System.out.println(getDelimiter());
+                        boolean hasResults = false;
+                        if (stopOnError) {
+                            hasResults = statement.execute(command.toString());
+                        } else {
+                            try {
+                                statement.execute(command.toString());
+                            } catch (SQLException e) {
+                                e.fillInStackTrace();
+                                printlnError("Error executing: " + command);
+                                printlnError(e);
+                            }
                         }
-                    }
 
-                    if (autoCommit && !conn.getAutoCommit()) {
-                        conn.commit();
-                    }
-
-                    ResultSet rs = statement.getResultSet();
-                    if (hasResults && rs != null) {
-                        ResultSetMetaData md = rs.getMetaData();
-                        int cols = md.getColumnCount();
-                        for (int i = 1; i <= cols; i++) {
-                            String name = md.getColumnLabel(i);
-                            print(name + "\t");
+                        if (autoCommit && !conn.getAutoCommit()) {
+                            conn.commit();
                         }
-                        println("");
-                        while (rs.next()) {
+
+                        ResultSet rs = statement.getResultSet();
+                        if (hasResults && rs != null) {
+                            ResultSetMetaData md   = rs.getMetaData();
+                            int               cols = md.getColumnCount();
                             for (int i = 1; i <= cols; i++) {
-                                String value = rs.getString(i);
-                                print(value + "\t");
+                                String name = md.getColumnLabel(i);
+                                print(name + "\t");
                             }
                             println("");
+                            while (rs.next()) {
+                                for (int i = 1; i <= cols; i++) {
+                                    String value = rs.getString(i);
+                                    print(value + "\t");
+                                }
+                                println("");
+                            }
                         }
-                    }
 
-                    command = null;
-                    try {
-                    	if(rs!=null){
-                        rs.close();
-                    	}
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        command = null;
+                        try {
+                            if (rs != null) {
+                                rs.close();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            statement.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            // Ignore to workaround a bug in Jakarta DBCP
+                        }
+                        Thread.yield();
                     }
-                    try {
-                        statement.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        // Ignore to workaround a bug in Jakarta DBCP
-                    }
-                    Thread.yield();
-                } else {
-                    Pattern pattern = Pattern.compile(DELIMITER_LINE_REGEX);
-                    Matcher matcher = pattern.matcher(trimmedLine);
-                    if (matcher.matches()) {
-                        setDelimiter(trimmedLine.split(DELIMITER_LINE_SPLIT_REGEX)[1].trim(), fullLineDelimiter);
-                        continue;
+                    } else{
+                        Pattern pattern = Pattern.compile(DELIMITER_LINE_REGEX);
+                        Matcher matcher = pattern.matcher(trimmedLine);
+                        if (matcher.matches()) {
+                            setDelimiter(trimmedLine.split(DELIMITER_LINE_SPLIT_REGEX)[1].trim(), fullLineDelimiter);
+                            continue;
                         /*line = lineReader.readLine();
                         if (line == null) {
                             break;
                         }
                         trimmedLine = line.trim();*/
+                        }
+                        command.append(line);
+                        command.append(" ");
                     }
-                    command.append(line);
-                    command.append(" ");
+                } if (!autoCommit) {
+                    conn.commit();
                 }
-            }
-            if (!autoCommit) {
-                conn.commit();
-            }
+
         } catch (SQLException e) {
             e.fillInStackTrace();
             printlnError("Error executing: " + command);

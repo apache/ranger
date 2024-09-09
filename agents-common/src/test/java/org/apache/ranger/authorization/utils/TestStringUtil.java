@@ -19,10 +19,15 @@
 
 package org.apache.ranger.authorization.utils;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.plugin.util.RangerSecurityZoneHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -197,6 +202,24 @@ public class TestStringUtil {
         }
     }
 
+    @Test
+    public void testJsonCompression() throws IOException {
+        int[] sizeFactors = new int[] { 1, 10, 50, 100, 250, 300, 400, 500 };
+
+        for (int sizeFactor : sizeFactors) {
+            RangerSecurityZone zone         = generateLargeSecurityZone(sizeFactor);
+            String             json         = JsonUtils.objectToJson(zone);
+            String             compressed   = StringUtil.compressString(json);
+            String             deCompressed = StringUtil.decompressString(compressed);
+
+            System.out.println(String.format("%d: resourceCount=%d: len(json)=%,d, len(compressed)=%,d, savings=(%,d == %.03f%%)", sizeFactor, getResourceCount(zone), json.length(), compressed.length(), (json.length() - compressed.length()), ((json.length() - compressed.length()) / (float) json.length()) * 100));
+
+            Assert.assertTrue(compressed.length() < deCompressed.length());
+
+            Assert.assertEquals(json, deCompressed);
+        }
+    }
+
     private boolean containsInstance(Collection<String> coll, String key) {
         boolean ret = false;
 
@@ -215,5 +238,64 @@ public class TestStringUtil {
 
     private String getString(String str) {
         return str == null ? str : new String(str);
+    }
+
+    private RangerSecurityZone generateLargeSecurityZone(int sizeFactor) {
+        RangerSecurityZone zone          = new RangerSecurityZone();
+        int                svcCount      = sizeFactor;
+        int                resourceCount = sizeFactor;
+        int                resNameLen    = (sizeFactor / 10) + 1;
+
+        zone.setName("test-zone");
+        zone.setDescription("this is a test zone");
+        zone.setTagServices(generateStrings("tag-service-", 25, 1));
+        zone.setAdminUsers(generateStrings("admin-", 20, 10));
+        zone.setAdminUserGroups(generateStrings("admin-group-", 20, 5));
+        zone.setAdminRoles(generateStrings("admin-role-", 20, 5));
+        zone.setAuditUsers(generateStrings("audit-", 20, 10));
+        zone.setAuditUserGroups(generateStrings("audit-group-", 20, 5));
+        zone.setAuditRoles(generateStrings("audit-role-", 20, 5));
+
+        for (int i = 0; i < svcCount; i++) {
+            RangerSecurityZoneService svc = new RangerSecurityZoneService();
+
+            for (int j = 0; j < resourceCount; j++) {
+                HashMap<String, List<String>> resource = new HashMap<>();
+
+                resource.put("database", generateStrings("db-", resNameLen, 1));
+                resource.put("table", generateStrings("tbl-", resNameLen, 2));
+                resource.put("column", generateStrings("col-", resNameLen, 3));
+
+                svc.getResources().add(resource);
+            }
+
+            zone.getServices().put("service-" + i, svc);
+        }
+
+        return new RangerSecurityZoneHelper(zone, "testUser").getZone(); // add resourcesBaseInfo
+    }
+
+    private int getResourceCount(RangerSecurityZone zone) {
+        int ret = 0;
+
+        for (RangerSecurityZone.RangerSecurityZoneService svc : zone.getServices().values()) {
+            ret += svc.getResources().size();
+        }
+
+        return ret;
+    }
+
+    private List<String> generateStrings(String prefix, int maxLen, int count) {
+        List<String> ret = new ArrayList<>(count);
+
+        for (int i = 0; i < count; i++) {
+            ret.add(generateResourceName(prefix, maxLen));
+        }
+
+        return ret;
+    }
+
+    private String generateResourceName(String prefix, int maxLen) {
+        return prefix.length() < maxLen ? (prefix + RandomStringUtils.random(maxLen - prefix.length(), true, true)) : prefix;
     }
 }

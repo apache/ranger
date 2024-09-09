@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-kms
       args:
-        - RANGER_VERSION=${RANGER_VERSION}
+        - KMS_VERSION=${KMS_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger-kms:latest
     container_name: ranger-kms
@@ -20,7 +20,7 @@ services:
       ranger:
         condition: service_started
     environment:
-      - RANGER_VERSION
+      - KMS_VERSION
       - RANGER_DB_TYPE
     command:
       - /home/ranger/scripts/ranger-kms.sh

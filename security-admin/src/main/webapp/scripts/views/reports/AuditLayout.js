@@ -927,6 +927,31 @@ define(function(require) {
 								userName :self.model.get('owner'),
 								action : action
 							});
+						} else if(self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP_USER.value){
+							var actionType = action == "create" ? "Created" : "Deleted"
+							var fieldVal = action == "create" ? 'User <b>'+_.escape(self.model.get('objectName'))+'</b> added to group <b>'+_.escape(self.model.get('parentObjectName'))+ '</b>'
+									 : 'User <b>'+_.escape(self.model.get('objectName'))+'</b> removed from group <b>'+ _.escape(self.model.get('parentObjectName')) + '</b>';
+
+							var view = '<div class="diff-content">\
+											<div class="no-margin label-size13-weightbold">Name: '+self.model.get('objectName')+'</div>\
+											<div class="no-margin label-size13-weightbold">Date: '+objectCreatedDate+'</div>\
+											<div class="no-margin label-size13-weightbold">'+actionType+' By: '+self.model.get('owner')+'</div>\
+											<h5 class="bold wrap-header m-t-sm">User Details:</h5>\
+											<div class="diff">\
+												<div class="diff-left">\
+													<h3>Fields</h3>\
+														<ol class="attr">\
+															<li class="change-row">Group</li>\
+														</ol>\
+												</div>\
+												<div class="diff-right">\
+												<h3>Value</h3>\
+													<ol class="list-unstyled data">\
+														<li class="change-row">'+fieldVal+'</li>\
+													</ol>\
+												</div>\
+											</div>\
+										</div>'
 						} else {
 							var view = new vOperationDiffDetail({
 								collection : fullTrxLogListForTrxId,
@@ -1025,7 +1050,8 @@ define(function(require) {
 							rawValue = model.get('objectClassType');
 							var action = model.get('action'), name = _.escape(model.get('objectName')),
 								label = XAUtils.enumValueToLabel(XAEnums.ClassTypes,rawValue), html = '',
-								hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"];
+								hasAction = ["EXPORT JSON", "EXPORT EXCEL", "EXPORT CSV", "IMPORT START", "IMPORT END"],
+								parentObjectName =  _.escape(model.get('parentObjectName'));
 							if($.inArray(action,hasAction)>=0){
 								if(action == "EXPORT JSON" || action == "EXPORT EXCEL" || action == "EXPORT CSV")
                                                                         return 'Exported policies';
@@ -1046,8 +1072,12 @@ define(function(require) {
 									 html = 	'User profile '+action+'d '+'<b>'+name+'</b>';
 								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value)
 									 html =     'Security Zone '+action+'d '+'<b>'+name+'</b>';
-                                                                else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value)
-                                                                         html =     'Role '+action+'d '+'<b>'+name+'</b>';
+                                 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_RANGER_ROLE.value)
+									 html =     'Role '+action+'d '+'<b>'+name+'</b>';
+								 else if(rawValue  == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP_USER.value){
+									 html = action == "create" ? 'User <b>'+name+'</b> added to group <b>'+ parentObjectName + '</b>'
+									 : 'User <b>'+name+'</b> removed from group <b>'+ parentObjectName + '</b>';
+								       }
 								 return html;
 						    }
 						}

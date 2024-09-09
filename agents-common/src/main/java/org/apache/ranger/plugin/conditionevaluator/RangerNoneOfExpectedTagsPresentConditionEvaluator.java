@@ -19,12 +19,12 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -62,13 +62,17 @@ public class RangerNoneOfExpectedTagsPresentConditionEvaluator extends RangerAbs
 			LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched(" + request + ")");
 		}
 
-		boolean                      matched      = true;
-		RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
-		Set<String>                  resourceTags = evaluator.getAllTagTypes();
+		boolean               matched      = true;
+		Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 		if (resourceTags != null) {
 			// check if resource Tags does not contain any tags in the policy condition
-			matched = (Collections.disjoint(resourceTags, policyConditionTags));
+			for (RangerTagForEval tag : resourceTags) {
+				if (policyConditionTags.contains(tag.getType())) {
+					matched = false;
+					break;
+				}
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

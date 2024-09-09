@@ -18,9 +18,13 @@ package org.apache.ranger.rest;
 
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.*;
+import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.db.*;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
@@ -41,7 +45,13 @@ import org.mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import com.sun.jersey.core.header.FormDataContentDisposition;
 
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -51,6 +61,9 @@ public class TestRoleREST {
     private static final Long userId = 8L;
     private static final Long roleId = 9L;
     private static final String adminLoginID = "admin";
+    private static final JSON_FILE_NAME_TYPE ROLE = JSON_FILE_NAME_TYPE.ROLE;
+    String importRoleTestFilePath = "./src/test/java/org/apache/ranger/rest/importRole/import_role_test_file.json";
+    private static Long Id = 7L;
 
     @Mock
     RangerRole role;
@@ -804,6 +817,387 @@ public class TestRoleREST {
         }
     }
 
+	// empty request roles (requestParamRoles = 0, dbRoles = 5, return = all dbRoles)
+	@Test
+	public void test18GetRolesInJson() throws Exception {
+		// pre-requisites
+		List<RangerRole> rangerRolesProcessed = new ArrayList<>();
+
+		rangerRolesProcessed.add(createRangerRole("role1", true));
+		rangerRolesProcessed.add(createRangerRole("role2", false));
+		rangerRolesProcessed.add(createRangerRole("role3", false));
+		rangerRolesProcessed.add(createRangerRole("adm", true));
+		rangerRolesProcessed.add(createRangerRole("user", false));
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
+
+		// stubs
+		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
+
+		// test
+		roleRest.getRolesInJson(requestMock, responseMock);
+		Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+	}
+
+	// non-empty request roles (requestParamRoles = 2, dbRoles = 5, return = 2 requestParamRoles)
+	@Test
+	public void test18bGetRolesInJson() throws Exception {
+		// pre-requisites
+		List<RangerRole> rangerRolesProcessed = new ArrayList<>();
+
+		RangerRole admRole = createRangerRole("adm", true);
+		RangerRole userRole = createRangerRole("user", false);
+
+		rangerRolesProcessed.add(admRole);
+		rangerRolesProcessed.add(userRole);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
+
+		// stubs
+		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
+
+		// test
+		roleRest.getRolesInJson(requestMock, responseMock);
+		Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+	}
+
+	// non-empty request roles (requestParamRoles = 3, dbRoles = 0, return = 0 dbRoles)
+	@Test
+	public void test18cGetRolesInJson() throws Exception {
+		// pre-requisites
+		List<RangerRole> rangerRolesProcessed = new ArrayList<>();
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
+
+		// stubs
+		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
+
+		// test
+		roleRest.getRolesInJson(requestMock, responseMock);
+		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+	}
+
+	// getAllFilteredRoleList throws Exception
+	@Test(expected = Throwable.class)
+	public void test18dGetRolesInJson() throws Exception {
+		// pre-requisites
+		List<RangerRole> rangerRolesProcessed = new ArrayList<>();
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
+
+		// stubs
+		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenThrow(new Throwable());
+
+		// test
+		Assert.assertThrows(Throwable.class, () -> roleRest.getRolesInJson(requestMock, responseMock));
+		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString());
+	}
+
+	// full match: requestParamRoles = 0, dbRoles = 5, return = all dbRoles
+	@Test
+	public void test19GetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = "";
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = new ArrayList<>();
+
+		rangerRolesDb.add(createRangerRole("role1", true));
+		rangerRolesDb.add(createRangerRole("role2", false));
+		rangerRolesDb.add(createRangerRole("role3", false));
+		rangerRolesDb.add(createRangerRole("adm", true));
+		rangerRolesDb.add(createRangerRole("user", false));
+
+		rangerRolesProcessedExpected.addAll(rangerRolesDb);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// partial match: requestParamRoles = 2, dbRoles = 5, match = 2
+	@Test
+	public void test19bGetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = "adm,user";
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = new ArrayList<>();
+
+		rangerRolesDb.add(createRangerRole("role1", true));
+		rangerRolesDb.add(createRangerRole("role2", false));
+		rangerRolesDb.add(createRangerRole("role3", false));
+
+		RangerRole admRole = createRangerRole("adm", true);
+		RangerRole userRole = createRangerRole("user", false);
+
+		rangerRolesDb.add(admRole);
+		rangerRolesDb.add(userRole);
+
+		rangerRolesProcessedExpected.add(admRole);
+		rangerRolesProcessedExpected.add(userRole);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// partial match: requestParamRoles = 4, dbRoles = 5, match = 2
+	@Test
+	public void test19cGetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = "adm,key-adm,delegate-adm,user";
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = new ArrayList<>();
+
+		rangerRolesDb.add(createRangerRole("role1", true));
+		rangerRolesDb.add(createRangerRole("role2", false));
+		rangerRolesDb.add(createRangerRole("role3", false));
+
+		RangerRole admRole = createRangerRole("adm", true);
+		RangerRole userRole = createRangerRole("user", false);
+
+		rangerRolesDb.add(admRole);
+		rangerRolesDb.add(userRole);
+
+		rangerRolesProcessedExpected.add(admRole);
+		rangerRolesProcessedExpected.add(userRole);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// no match: requestParamRoles = 3, dbRoles = 5, match = 0
+	@Test
+	public void test19dGetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = "sys-adm,key-adm,delegate-adm";
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = new ArrayList<>();
+
+		rangerRolesDb.add(createRangerRole("role1", true));
+		rangerRolesDb.add(createRangerRole("role2", false));
+		rangerRolesDb.add(createRangerRole("role3", false));
+
+		RangerRole admRole = createRangerRole("adm", true);
+		RangerRole userRole = createRangerRole("user", false);
+
+		rangerRolesDb.add(admRole);
+		rangerRolesDb.add(userRole);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// no match: requestParamRoles = 3, dbRoles = 0, match = 0
+	@Test
+	public void test19eGetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = "sys-adm,key-adm,delegate-adm";
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = Collections.emptyList();
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// full match: requestParamRoles = null, dbRoles = 5, return = all dbRoles
+	@Test
+	public void test19fGetAllFilteredRoleList() throws Exception {
+		// pre-requisites
+		String requestParamRoles = null;
+		List<RangerRole> rangerRolesDb = new ArrayList<>();
+		List<RangerRole> rangerRolesProcessedExpected = new ArrayList<>();
+
+		rangerRolesDb.add(createRangerRole("role1", true));
+		rangerRolesDb.add(createRangerRole("role2", false));
+		rangerRolesDb.add(createRangerRole("role3", false));
+		rangerRolesDb.add(createRangerRole("adm", true));
+		rangerRolesDb.add(createRangerRole("user", false));
+
+		rangerRolesProcessedExpected.addAll(rangerRolesDb);
+
+		// mock
+		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
+
+		// stubs
+		Mockito.when(requestMock.getParameter(RoleREST.PARAM_ROLE_NAME)).thenReturn(requestParamRoles);
+		Mockito.when(roleStore.getRoles(Mockito.any(SearchFilter.class))).thenReturn(rangerRolesDb);
+
+		// test
+		List<RangerRole> rangerRolesProcessedActual = roleRest.getAllFilteredRoleList(requestMock);
+		Assert.assertNotNull(rangerRolesProcessedActual);
+		Assert.assertEquals(rangerRolesProcessedActual.size(), rangerRolesProcessedExpected.size());
+		Assert.assertEquals(rangerRolesProcessedActual, rangerRolesProcessedExpected);
+	}
+
+	// import role with updateIfExists=false and createNonExistUserGroupRole=false
+	@SuppressWarnings("unchecked")
+	@Test
+	public void test20importRolesFromFile() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		List<String> roleList = createRoleList();
+		RangerRole rangerRole = createRole();
+
+		SearchFilter filter = new SearchFilter();
+
+		File jsonRoleFile = new File(importRoleTestFilePath);
+		InputStream uploadedInputStream = new FileInputStream(jsonRoleFile);
+		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file").fileName(jsonRoleFile.getName())
+				.size(uploadedInputStream.toString().length()).build();
+		boolean updateIfExists = false;
+		boolean createNonExistUserGroupRole = false;
+
+		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
+		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+				.thenReturn(rangerRole);
+
+		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
+				createNonExistUserGroupRole);
+		Assert.assertNotNull(resp);
+		Assert.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
+		Assert.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Unchanged = 1");
+	}
+
+	// import role with updateIfExists=false and createNonExistUserGroupRole=true
+	@SuppressWarnings("unchecked")
+	@Test
+	public void test20bimportRolesFromFile() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		List<String> roleList = createRoleList();
+		RangerRole rangerRole = createRoleWithUsersAndGroups();
+
+		SearchFilter filter = new SearchFilter();
+
+		File jsonRoleFile = new File(importRoleTestFilePath);
+		InputStream uploadedInputStream = new FileInputStream(jsonRoleFile);
+		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file").fileName(jsonRoleFile.getName())
+				.size(uploadedInputStream.toString().length()).build();
+		boolean updateIfExists = false;
+		boolean createNonExistUserGroupRole = true;
+
+		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
+		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+				.thenReturn(rangerRole);
+
+		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
+				createNonExistUserGroupRole);
+		Assert.assertNotNull(resp);
+		Assert.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
+		Assert.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Unchanged = 1");
+	}
+
+	// import role with updateIfExists=true and createNonExistUserGroupRole=true
+	@SuppressWarnings("unchecked")
+	@Test
+	public void test20cimportRolesFromFileWithUpdate() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		List<String> roleList = createRoleList();
+		RangerRole rangerRole = createRole();
+
+		SearchFilter filter = new SearchFilter();
+
+		File jsonRoleFile = new File(importRoleTestFilePath);
+		InputStream uploadedInputStream = new FileInputStream(jsonRoleFile);
+		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file").fileName(jsonRoleFile.getName())
+				.size(uploadedInputStream.toString().length()).build();
+		boolean updateIfExists = true;
+		boolean createNonExistUserGroupRole = true;
+
+		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
+		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
+		Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+				.thenReturn(rangerRole);
+
+		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
+				createNonExistUserGroupRole);
+		Assert.assertNotNull(resp);
+		Assert.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
+		Assert.assertEquals(resp.getMsgDesc(),
+				"Total Role Created = 6 , Total Role Updated = 1 , Total Role Unchanged = 0");
+	}
+
+	// import role throws exceptions
+	@SuppressWarnings("unchecked")
+	@Test(expected = Throwable.class)
+	public void test20dimportRolesFromFileWithUpdate() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		File jsonRoleFile = new File(importRoleTestFilePath);
+		InputStream uploadedInputStream = new FileInputStream(jsonRoleFile);
+		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file").fileName(jsonRoleFile.getName())
+				.size(uploadedInputStream.toString().length()).build();
+		boolean updateIfExists = false;
+		boolean createNonExistUserGroupRole = false;
+
+		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenThrow(new Throwable());
+
+		Assert.assertThrows(Throwable.class, () -> roleRest.importRolesFromFile(request, uploadedInputStream,
+				fileDetail, updateIfExists, createNonExistUserGroupRole));
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString());
+	}
+
     private RangerRole createRole(){
         String name = "test-role";
         String name2 = "admin";
@@ -929,5 +1323,82 @@ public class TestRoleREST {
         roleRequest.setGrantor("admin");
         roleRequest.setTargetRoles(new HashSet<>(Arrays.asList("role1","role2")));
         return roleRequest;
+    }
+
+    private RangerRole createRangerRole(String name, boolean isAdmin) {
+        RangerRole.RoleMember roleMember = new RangerRole.RoleMember(name, isAdmin);
+        List<RangerRole.RoleMember> usersList = Collections.singletonList(roleMember);
+        RangerRole rangerRole = new RangerRole(name, name, null, usersList, null);
+        rangerRole.setCreatedByUser(name);
+        rangerRole.setId(roleId);
+        return rangerRole;
+    }
+
+    @Test(expected = Throwable.class)
+    public void test21deleteRoleWithinPolicy() {
+        RangerRole rangerRole = createRole();
+        rangerPolicy(rangerRole);
+        try {
+            Mockito.doThrow(new Throwable()).when(roleStore).deleteRole(Mockito.anyLong());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            Assert.assertThrows(Throwable.class, () -> roleRest.deleteRole(rangerRole.getId()));
+            Mockito.verify(restErrorUtil, Mockito.times(1)).createRESTException(Mockito.anyString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test(expected = Throwable.class)
+    public void test22deleteRoleWithValidationError() {
+        RangerRole rangerRole = createRole();
+        try {
+            Mockito.when(validatorFactory.getRangerRoleValidator(roleStore)).thenThrow(new Exception());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            Assert.assertThrows(Throwable.class,() -> roleRest.deleteRole(rangerRole.getId()));
+            Mockito.verify(restErrorUtil, Mockito.times(1)).createRESTException(Mockito.anyString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+     private RangerPolicy rangerPolicy(RangerRole rangerRole) {
+         List<String> roles = new ArrayList<>();
+         roles.add(rangerRole.getName());
+
+         List<RangerPolicyItem> policyItems = new ArrayList<>();
+
+         policyItems.add(new RangerPolicyItem(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), roles, new ArrayList<>(), false));
+
+         Map<String, RangerPolicyResource> policyResource = new HashMap<>();
+
+         policyResource.put("resource", new RangerPolicyResource("1", true, true));
+
+         return getRangerPolicy(policyItems, policyResource);
+     }
+
+    private static RangerPolicy getRangerPolicy(List<RangerPolicyItem> policyItems, Map<String, RangerPolicyResource> policyResource) {
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(Id);
+        policy.setCreateTime(new Date());
+        policy.setDescription("policy");
+        policy.setGuid("policyguid");
+        policy.setIsEnabled(true);
+        policy.setName("HDFS_1-1-20150316062453");
+        policy.setUpdatedBy("Admin");
+        policy.setUpdateTime(new Date());
+        policy.setService("HDFS_1-1-20150316062453");
+        policy.setIsAuditEnabled(true);
+        policy.setPolicyItems(policyItems);
+        policy.setResources(policyResource);
+        policy.setService("HDFS_1");
+        return policy;
     }
 }

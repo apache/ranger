@@ -21,7 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.ws.rs.WebApplicationException;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -46,16 +49,20 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerServiceResourceWithTags;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.apache.ranger.service.RangerServiceResourceWithTagsService;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
+import org.apache.ranger.view.RangerServiceResourceWithTagsList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -86,6 +93,9 @@ public class TestTagDBStore {
 
     @Mock
     RangerServiceResourceService rangerServiceResourceService;
+
+    @Mock
+    RangerServiceResourceWithTagsService rangerServiceResourceWithTagsService;
 
     @Mock
     RangerTagResourceMapService rangerTagResourceMapService;
@@ -1123,6 +1133,7 @@ public class TestTagDBStore {
         serviceVersionInfoDbObj.setRoleVersion(lastKnownVersion);
         serviceVersionInfoDbObj.setPolicyVersion(lastKnownVersion);
         serviceVersionInfoDbObj.setTagVersion(lastKnownVersion);
+        serviceVersionInfoDbObj.setGdsVersion(lastKnownVersion);
 
         return serviceVersionInfoDbObj;
     }
@@ -1183,5 +1194,70 @@ public class TestTagDBStore {
         xxTagResourceMap.setGuid(gId);
 
         return xxTagResourceMap;
+    }
+
+    @Test
+    public void tesGetPaginatedServiceResourcesWithTags() throws Exception {
+        RangerServiceResourceWithTagsList rangerServiceResourceViewList = createRangerServiceResourceWithTagsViewList();
+        SearchFilter                      searchFilter                  = new SearchFilter();
+
+        Mockito.when(rangerServiceResourceWithTagsService.searchServiceResourcesWithTags(searchFilter)).thenReturn(rangerServiceResourceViewList);
+
+        RangerServiceResourceWithTagsList returnedRangerServiceResourcePList = tagDBStore.getPaginatedServiceResourcesWithTags(searchFilter);
+
+        Assert.assertNotNull(returnedRangerServiceResourcePList);
+        Assert.assertEquals(returnedRangerServiceResourcePList.getList().size(), 1);
+
+        RangerServiceResourceWithTags returnedRangerServiceResource = returnedRangerServiceResourcePList.getResourceList().get(0);
+
+        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assert.assertNotNull(returnedRangerServiceResource.getAssociatedTags());
+        Assert.assertEquals(rangerServiceResourceViewList.getResourceList().get(0).getAssociatedTags().size(), returnedRangerServiceResource.getAssociatedTags().size());
+    }
+
+    private  RangerServiceResourceWithTagsList createRangerServiceResourceWithTagsViewList() {
+        RangerServiceResourceWithTagsList   rangerServiceResourceViewList = new RangerServiceResourceWithTagsList();
+        List<RangerServiceResourceWithTags> rangerServiceResourceList     = new ArrayList<>();
+        RangerServiceResourceWithTags       rangerServiceResource         = new RangerServiceResourceWithTags();
+        List<RangerTag>                     associatedTags                = new ArrayList<>();
+
+        associatedTags.add(createRangerTag());
+
+        rangerServiceResource.setId(id);
+        rangerServiceResource.setCreateTime(new Date());
+        rangerServiceResource.setGuid(gId);
+        rangerServiceResource.setVersion(lastKnownVersion);
+        rangerServiceResource.setServiceName(serviceName);
+        rangerServiceResource.setAssociatedTags(associatedTags);
+
+        rangerServiceResourceList.add(rangerServiceResource);
+
+        rangerServiceResourceViewList.setResourceList(rangerServiceResourceList);
+        rangerServiceResourceViewList.setPageSize(0);
+        rangerServiceResourceViewList.setResultSize(1);
+        rangerServiceResourceViewList.setSortBy("asc");
+        rangerServiceResourceViewList.setSortType("1");
+        rangerServiceResourceViewList.setStartIndex(0);
+        rangerServiceResourceViewList.setTotalCount(1);
+
+        return rangerServiceResourceViewList;
+    }
+
+    @Test
+    public void testToRangerServiceResource() {
+        Map<String, String[]>             resourceMap      = new HashMap<>();
+        Map<String, RangerPolicyResource> resourceElements = new HashMap<>();
+
+        resourceMap.put("database",             new String[] { "db1" });
+        resourceMap.put("database.isExcludes",  new String[] { "false" });
+        resourceMap.put("database.isRecursive", new String[] { "false" });
+
+        resourceElements.put("database", new RangerPolicyResource("db1", false, false));
+
+        RangerServiceResource expectedResource = new RangerServiceResource(serviceName, resourceElements);
+        RangerServiceResource actualResource   = tagDBStore.toRangerServiceResource(serviceName, resourceMap);
+
+        Assert.assertEquals(expectedResource.getResourceElements(), actualResource.getResourceElements());
     }
 }

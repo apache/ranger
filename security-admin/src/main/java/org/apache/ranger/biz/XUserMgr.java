@@ -44,8 +44,11 @@ import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.UserInfo;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.service.*;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
@@ -79,7 +82,7 @@ import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,19 +101,17 @@ import org.apache.ranger.entity.XXPortalUserRole;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_USER_GROUP;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_DELETE_CONTEXT;
+
 @Component
 public class XUserMgr extends XUserMgrBase {
 
-	private static final String RANGER_USER_GROUP_GLOBAL_STATE_NAME = "RangerUserStore";
 	private static final String USER = "User";
 	private static final String GROUP = "Group";
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
-
-	@Autowired
-	XUserService xUserService;
-
-	@Autowired
-	XGroupService xGroupService;
 
 	@Autowired
 	RangerBizUtil msBizUtil;
@@ -123,15 +124,6 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	RangerBizUtil xaBizUtil;
-
-	@Autowired
-	XModuleDefService xModuleDefService;
-
-	@Autowired
-	XUserPermissionService xUserPermissionService;
-
-	@Autowired
-	XGroupPermissionService xGroupPermissionService;
 
 	@Autowired
 	XPortalUserService xPortalUserService;
@@ -155,19 +147,20 @@ public class XUserMgr extends XUserMgrBase {
 	XUgsyncAuditInfoService xUgsyncAuditInfoService;
 
 	@Autowired
-	XGroupUserService xGroupUserService;
-
-	@Autowired
 	StringUtil stringUtil;
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
+	GdsDBStore gdsStore;
+
+	@Autowired
 	@Qualifier(value = "transactionManager")
 	PlatformTransactionManager txManager;
 
 	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
+	static final Set<String> roleAssignmentUpdatedUsers = new HashSet<>();
 
 	public VXUser getXUserByUserName(String userName) {
 		VXUser vXUser=null;
@@ -248,8 +241,7 @@ public class XUserMgr extends XUserMgrBase {
 		VXUser createdXUser = xUserService.createResource(vXUser);
 
 		createdXUser.setPassword(actualPassword);
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(
-				createdXUser, "create");
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
 
 		String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		createdXUser.setPassword(hiddenPassword);
@@ -269,8 +261,15 @@ public class XUserMgr extends XUserMgrBase {
 		createdXUser.setGroupIdList(groupIdList);
 		createdXUser.setGroupNameList(groupNamesList);
 		for (VXGroupUser vXGroupUser : vXGroupUsers) {
-			trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser,
-					"create"));
+			List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+
+			if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+				if (trxLogList == null) {
+					trxLogList = new ArrayList<>();
+				}
+
+				trxLogList.addAll(groupUserTrxLogs);
+			}
 		}
 		//
 		xaBizUtil.createTrxLog(trxLogList);
@@ -295,6 +294,7 @@ public class XUserMgr extends XUserMgrBase {
 					} else {
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
+						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_GOVERNED_DATA_SHARING), isCreate);
 
 						if (role.equals(RangerConstants.ROLE_SYS_ADMIN) || role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
 
@@ -433,6 +433,7 @@ public class XUserMgr extends XUserMgrBase {
 			vXPortalUser.setPassword(password);
 		}
 		Collection<Long> groupIdList = vXUser.getGroupIdList();
+		VXUser existing = xUserService.readResource(vXUser.getId());
 		XXPortalUser xXPortalUser = new XXPortalUser();
 		xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
 		//update permissions start
@@ -492,22 +493,33 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
-				oldUserProfile, "update");
+		if(password == null) {
+		vXUser.setPassword(hiddenPasswordString); //To stop Auditing Password transaction log, when it is not edited.
+		}
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
 		List<Long> groupUsersToRemove = new ArrayList<Long>();
-		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
+		List<XXTrxLogV2> groupUserTrxLogs = createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove);
+
+		if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+			if (trxLogList == null) {
+				trxLogList = new ArrayList<>();
+			}
+
+			trxLogList.addAll(groupUserTrxLogs);
+		}
+
 		xaBizUtil.createTrxLog(trxLogList);
 
 		updateUserStoreVersion("updateXUser(" + vXUser.getName() + ")");
 
 		return vXUser;
 	}
-	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
+	private List<XXTrxLogV2> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
 		Collection<String> groupNamesSet = new HashSet<String>();
-		List<XXTrxLog> trxLogList = new ArrayList<>();
+		List<XXTrxLogV2> trxLogList = new ArrayList<>();
 		if (groupIdList != null) {
 			SearchCriteria searchCriteria = new SearchCriteria();
 			searchCriteria.addParam("xUserId", userId);
@@ -530,7 +542,10 @@ public class XUserMgr extends XUserMgrBase {
 					}
 					if (!found) {
 						VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+						List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+						if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+							trxLogList.addAll(groupUserTrxLogs);
+						}
 						groupNamesSet.add(vXGroupUser.getName());
 					}
 				}
@@ -540,14 +555,20 @@ public class XUserMgr extends XUserMgrBase {
 					boolean found = false;
 					for (Long groupId : groupIdList) {
 						if (groupId.equals(vXGroupUser.getParentGroupId())) {
-							trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "update"));
+							List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_UPDATE_CONTEXT);
+							if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+								trxLogList.addAll(groupUserTrxLogs);
+							}
 							found = true;
 							break;
 						}
 					}
 					if (!found) {
 						// TODO I've to get the transaction log from here.
-						trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "delete"));
+						List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_DELETE_CONTEXT);
+						if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+							trxLogList.addAll(groupUserTrxLogs);
+						}
 						groupUsersToRemove.add(vXGroupUser.getId());
 						// xGroupUserService.deleteResource(vXGroupUser.getId());
 						groupNamesSet.remove(vXGroupUser.getName());
@@ -557,7 +578,10 @@ public class XUserMgr extends XUserMgrBase {
 			} else {
 				for (Long groupId : groupIdList) {
 					VXGroupUser vXGroupUser = createXGroupUser(userId, groupId);
-					trxLogList.addAll(xGroupUserService.getTransactionLog(vXGroupUser, "create"));
+					List<XXTrxLogV2> groupUserTrxLogs = xGroupUserService.getTransactionLog(vXGroupUser, null, OPERATION_CREATE_CONTEXT);
+					if (CollectionUtils.isNotEmpty(groupUserTrxLogs)) {
+						trxLogList.addAll(groupUserTrxLogs);
+					}
 					groupNamesSet.add(vXGroupUser.getName());
 				}
 			}
@@ -739,9 +763,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		vXGroup = xGroupService.createResource(vXGroup);
-		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
-				"create");
-		xaBizUtil.createTrxLog(trxLogList);
+		xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT);
 
 		updateUserStoreVersion("createXGroup(" + vXGroup.getName() + ")");
 
@@ -981,8 +1003,8 @@ public class XUserMgr extends XUserMgrBase {
 					"group name updates are not allowed.",
 					MessageEnums.INVALID_INPUT_DATA);
 		}
-		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
-				xGroup, "update");
+		VXGroup existing = xGroup != null ? xGroupService.populateViewBean(xGroup) : null;
+		List<XXTrxLogV2> trxLogList = xGroupService.getTransactionLog(vXGroup, existing, OPERATION_UPDATE_CONTEXT);
 		xaBizUtil.createTrxLog(trxLogList);
 		vXGroup = (VXGroup) xGroupService.updateResource(vXGroup);
 		if (vXGroup != null) {
@@ -2010,6 +2032,16 @@ public class XUserMgr extends XUserMgrBase {
 		return listMasked;
 	}
 
+	public List<RangerPrincipal> getRangerPrincipals(SearchCriteria searchCriteria){
+		String searchString = (String) searchCriteria.getParamValue("name");
+		int    startIdx     = searchCriteria.getStartIndex();
+		int    maxRows      = searchCriteria.getMaxRows();
+
+		List<RangerPrincipal> ret = daoManager.getXXUser().lookupPrincipalByName(searchString, startIdx, maxRows);
+
+		return ret;
+	}
+
 	public boolean hasAccessToModule(String moduleName){
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 		if (userSession != null && userSession.getLoginId()!=null){
@@ -2134,12 +2166,37 @@ public class XUserMgr extends XUserMgrBase {
 				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
 
 				try {
-					svcStore.updatePolicy(rangerPolicy);
+					if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+						Map<String, RangerPolicyResource> resources = rangerPolicy.getResources();
+
+						if (MapUtils.isEmpty(resources)) {
+							continue;
+						}
+
+						if (resources.containsKey(GdsDBStore.RESOURCE_NAME_DATASET_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_DATASET_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateDatasetPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						} else if (resources.containsKey(GdsDBStore.RESOURCE_NAME_PROJECT_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_PROJECT_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateProjectPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						}
+					} else {
+						svcStore.updatePolicy(rangerPolicy);
+					}
 				} catch (Throwable excp) {
 					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
 					restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+
 			if(CollectionUtils.isNotEmpty(xXGroupPermissions)){
 				for (XXGroupPermission xXGroupPermission : xXGroupPermissions) {
 					if(xXGroupPermission!=null){
@@ -2153,12 +2210,12 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			//delete group from audit filter configs
 			svcStore.updateServiceAuditConfig(vXGroup.getName(), REMOVE_REF_TYPE.GROUP);
+			// delete group from dataset,datashare,project
+			gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.GROUP.toString(), vXGroup.getName());
 			//delete XXGroup
 			xXGroupDao.remove(id);
 			//Create XXTrxLog
-			List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
-					"delete");
-			xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+			xGroupService.createTransactionLog(xGroupService.populateViewBean(xXGroup), null, OPERATION_DELETE_CONTEXT);
 		} else {
 			boolean hasReferences=false;
 
@@ -2190,9 +2247,7 @@ public class XUserMgr extends XUserMgrBase {
 				//delete XXGroup
 				xXGroupDao.remove(id);
 				//Create XXTrxLog
-				List<XXTrxLog> xXTrxLogsXXGroup = xGroupService.getTransactionLog(xGroupService.populateViewBean(xXGroup),
-						"delete");
-				xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
+				xGroupService.createTransactionLog(xGroupService.populateViewBean(xXGroup), null, OPERATION_DELETE_CONTEXT);
 			}
 		}
 	}
@@ -2368,25 +2423,49 @@ public class XUserMgr extends XUserMgrBase {
 				rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
 
 				try{
-					svcStore.updatePolicy(rangerPolicy);
-				}catch(Throwable excp) {
+					if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+						Map<String, RangerPolicyResource> resources = rangerPolicy.getResources();
+
+						if (MapUtils.isEmpty(resources)) {
+							continue;
+						}
+
+						if (resources.containsKey(GdsDBStore.RESOURCE_NAME_DATASET_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_DATASET_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateDatasetPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						} else if (resources.containsKey(GdsDBStore.RESOURCE_NAME_PROJECT_ID)) {
+							RangerPolicyResource policyRes = resources.get(GdsDBStore.RESOURCE_NAME_PROJECT_ID);
+							List<String>         resValues = policyRes != null ? policyRes.getValues() : null;
+
+							if (CollectionUtils.isNotEmpty(resValues)) {
+								gdsStore.updateProjectPolicy(Long.valueOf(resValues.get(0)), rangerPolicy);
+							}
+						}
+					} else {
+						svcStore.updatePolicy(rangerPolicy);
+					}
+				} catch(Throwable excp) {
 					logger.error("updatePolicy(" + rangerPolicy + ") failed", excp);
 					throw restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+
 			//delete user from audit filter configs
 			svcStore.updateServiceAuditConfig(vXUser.getName(), REMOVE_REF_TYPE.USER);
+			//delete gdsObject mapping of user
+			gdsStore.deletePrincipalFromGdsAcl(REMOVE_REF_TYPE.USER.toString(),vXUser.getName());
 			//delete XXUser entry of user
 			xXUserDao.remove(id);
 			//delete XXPortal entry of user
 			logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
 			xXPortalUserDao.remove(xXPortalUserId);
-			List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
-			xaBizUtil.createTrxLog(trxLogList);
+			xUserService.createTransactionLog(xUserService.populateViewBean(xXUser), null, OPERATION_DELETE_CONTEXT);
 			if (xXPortalUser != null) {
-				trxLogList=xPortalUserService
-						.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
+				xPortalUserService.createTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), null, OPERATION_DELETE_CONTEXT);
 			}
 		} else {
 			boolean hasReferences=false;
@@ -2425,10 +2504,8 @@ public class XUserMgr extends XUserMgrBase {
 				//delete XXPortal entry of user
 				logger.warn("Deleting Portal User : "+vXPortalUser.getLoginId());
 				xXPortalUserDao.remove(xXPortalUserId);
-				List<XXTrxLog> trxLogList =xUserService.getTransactionLog(xUserService.populateViewBean(xXUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
-				trxLogList=xPortalUserService.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
-				xaBizUtil.createTrxLog(trxLogList);
+				xUserService.createTransactionLog(xUserService.populateViewBean(xXUser), null, OPERATION_DELETE_CONTEXT);
+				xPortalUserService.createTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), null, OPERATION_DELETE_CONTEXT);
 			}
 		}
 	}
@@ -2523,10 +2600,10 @@ public class XUserMgr extends XUserMgrBase {
 		List<T> itemsToRemove = null;
 		for(T policyItem : policyItems) {
 			if(StringUtils.isNotEmpty(user)) {
-				policyItem.getUsers().remove(user);
+				policyItem.removeUser(user);
 			}
 			if(StringUtils.isNotEmpty(group)) {
-				policyItem.getGroups().remove(group);
+				policyItem.removeGroup(group);
 			}
 			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty() && policyItem.getRoles().isEmpty()) {
 				if(itemsToRemove == null) {
@@ -2641,7 +2718,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public Long getUserStoreVersion() {
-		return daoManager.getXXGlobalState().getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		return daoManager.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 	}
 
 	public Set<UserInfo> getUsers() {
@@ -2744,7 +2821,7 @@ public class XUserMgr extends XUserMgrBase {
 					do {
 						noOfRetries++;
 						try {
-							daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+							daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 							if (logger.isDebugEnabled()) {
 								logger.debug("createOrUpdateXGroups(): Successfully updated x_ranger_global_state table");
 							}
@@ -2829,13 +2906,11 @@ public class XUserMgr extends XUserMgrBase {
 			vXUser = xUserService.populateViewBean(xUser);
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(
-				vXUser, "create");
+		 xUserService.createTransactionLog(vXUser, null, OPERATION_CREATE_CONTEXT);
 
 		if (vXPortalUser != null) {
 			assignPermissionToUser(vXPortalUser.getUserRoleList(), vXPortalUser.getId(), vXUser.getId(), true);
 		}
-		xaBizUtil.createTrxLog(trxLogList);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Done creating user: " + username);
 		}
@@ -2954,27 +3029,35 @@ public class XUserMgr extends XUserMgrBase {
 			}
 
 			if (!vXPortalUser.getUserRoleList().contains(userRole)) {
-				//Update the role of the user only if newly computed role is different from the existing role.
 				if (logger.isDebugEnabled()) {
-					logger.debug("Updating role for " + userName + " to " + userRole);
+					logger.debug(String.format("Updating role for %s to %s", userName, userRole));
 				}
+				//Update the role of the user only if newly computed role is different from the existing role.
 				String updatedUser = setRolesByUserName(userName, Collections.singletonList(userRole));
 				if (updatedUser != null) {
 					updatedUsers.add(updatedUser);
 				}
+			} else {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Role for %s unchanged: %s", userName, userRole));
+				}
+			}
+
+			if (ugRoleAssignments.isReset()) { // use below data structure only when reset is true
+				roleAssignmentUpdatedUsers.add(userName);
 			}
 		}
 
 		// Reset the role of any other users that are not part of the updated role assignments rules
-		if (ugRoleAssignments.isReset()) {
-			List<String> exitingNonUserRoleUsers = daoManager.getXXPortalUser().getNonUserRoleExternalUsers();
+		if (ugRoleAssignments.isReset() && ugRoleAssignments.isLastPage()) {
+			List<String> externalUsersWithNonUserRole = daoManager.getXXPortalUser().getNonUserRoleExternalUsers();
 			if (logger.isDebugEnabled()) {
-				logger.debug("Existing non user role users = " + exitingNonUserRoleUsers);
+				logger.debug("Existing external users with roles excluding ROLE_USER role: " + externalUsersWithNonUserRole);
 			}
-			for (String userName : exitingNonUserRoleUsers) {
-				if (!requestedUsers.contains(userName)) {
+			for (String userName : externalUsersWithNonUserRole) {
+				if (!roleAssignmentUpdatedUsers.contains(userName)) {
 					if (logger.isDebugEnabled()) {
-						logger.debug("Resetting to User role for " + userName);
+						logger.debug(String.format("Resetting to ROLE_USER for %s", userName));
 					}
 					String updatedUser = setRolesByUserName(userName, Collections.singletonList(RangerConstants.ROLE_USER));
 					if (updatedUser != null) {
@@ -2982,8 +3065,8 @@ public class XUserMgr extends XUserMgrBase {
 					}
 				}
 			}
+			roleAssignmentUpdatedUsers.clear();
 		}
-
 		return updatedUsers;
 	}
 
@@ -3169,6 +3252,9 @@ public class XUserMgr extends XUserMgrBase {
 			logger.warn("Could not find corresponding xUser for username: [" + vXPortalUser.getLoginId() + "], So not updating this user");
 			return vXUser;
 		}
+
+		VXUser existing = xUserService.populateViewBean(xUser);
+
 		logger.info("xUser.getName() = " + xUser.getName() + " vXUser.getName() = " + vXUser.getName());
 		vXUser.setId(xUser.getId());
 		try {
@@ -3189,8 +3275,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		List<XXTrxLog> trxLogList = xUserService.getTransactionLog(vXUser,
-				oldUserProfile, "update");
+		List<XXTrxLogV2> trxLogList = xUserService.getTransactionLog(vXUser, existing, OPERATION_UPDATE_CONTEXT);
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
@@ -3304,10 +3389,9 @@ public class XUserMgr extends XUserMgrBase {
 				logger.info("User created: " + createdXUser.getName());
 				try {
 					createdXUser.setPassword(actualPassword);
-					List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, "create");
+					xUserService.createTransactionLog(createdXUser, null, OPERATION_CREATE_CONTEXT);
 					String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 					createdXUser.setPassword(hiddenPassword);
-					xaBizUtil.createTrxLog(trxLogList);
 				} catch (Exception ex) {
 					throw new RuntimeException("Error while creating trx logs for user: " + createdXUser.getName(), ex);
 				}
@@ -3330,7 +3414,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	private void updateUserStoreVersion(String label) {
 		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 		} catch (Exception excp) {
 			logger.error(label + ": userStore version update failed", excp);
 		}

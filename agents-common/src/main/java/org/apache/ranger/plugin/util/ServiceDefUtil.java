@@ -23,6 +23,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -34,12 +36,14 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
@@ -50,14 +54,45 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ServiceDefUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceDefUtil.class);
 
+    public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR = RangerScriptConditionEvaluator.class.getCanonicalName();
+    public static final String IMPLICIT_CONDITION_EXPRESSION_NAME      = "_expression";
+    public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL     = "Enter boolean expression";
+    public static final String IMPLICIT_CONDITION_EXPRESSION_DESC      = "Boolean expression";
+    public static final String IMPLICIT_GDS_ENRICHER_NAME              = "gdsInfoEnricher";
+
     private static final String USER_STORE_ENRICHER = RangerUserStoreEnricher.class.getCanonicalName();
+    private static final String GDSINFO_ENRICHER    = RangerGdsEnricher.class.getCanonicalName();
+
+
+    public static final String ACCESS_TYPE_MARKER_CREATE = "_CREATE";
+    public static final String ACCESS_TYPE_MARKER_READ   = "_READ";
+    public static final String ACCESS_TYPE_MARKER_UPDATE = "_UPDATE";
+    public static final String ACCESS_TYPE_MARKER_DELETE = "_DELETE";
+    public static final String ACCESS_TYPE_MARKER_MANAGE = "_MANAGE";
+    public static final String ACCESS_TYPE_MARKER_ALL    = "_ALL";
+    public static final Set<String> ACCESS_TYPE_MARKERS;
+
+    static {
+        Set<String> typeMarkers = new LinkedHashSet<>();
+
+        typeMarkers.add(ACCESS_TYPE_MARKER_CREATE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_READ);
+        typeMarkers.add(ACCESS_TYPE_MARKER_UPDATE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_DELETE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_MANAGE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_ALL);
+
+        ACCESS_TYPE_MARKERS = Collections.unmodifiableSet(typeMarkers);
+    }
 
     public static boolean getOption_enableDenyAndExceptionsInPolicies(RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
         boolean ret = false;
@@ -68,6 +103,17 @@ public class ServiceDefUtil {
             boolean defaultValue = enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
             ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, defaultValue);
+        }
+
+        return ret;
+    }
+
+    public static boolean getOption_enableTagBasedPolicies(RangerServiceDef serviceDef, Configuration config) {
+        boolean ret = false;
+
+        if(serviceDef != null) {
+            boolean defaultValue = config == null || config.getBoolean("ranger.servicedef.enableTagBasedPolicies", true);
+            ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, defaultValue);
         }
 
         return ret;
@@ -99,6 +145,22 @@ public class ServiceDefUtil {
         return serviceDef;
     }
 
+    public static RangerPolicyConditionDef getConditionDef(RangerServiceDef serviceDef, String conditionName) {
+        RangerPolicyConditionDef ret = null;
+
+        if (serviceDef != null && serviceDef.getPolicyConditions() != null) {
+            for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
+                if (StringUtils.equals(conditionDef.getName(), conditionName)) {
+                    ret = conditionDef;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
     public static RangerResourceDef getResourceDef(RangerServiceDef serviceDef, String resource) {
         RangerResourceDef ret = null;
 
@@ -127,6 +189,10 @@ public class ServiceDefUtil {
     }
 
     public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource) {
+        return getLeafResourceDef(serviceDef, policyResource, false);
+    }
+
+    public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource, boolean excludeWildcardLeaves) {
         RangerResourceDef ret = null;
 
         if(serviceDef != null && policyResource != null) {
@@ -136,13 +202,28 @@ public class ServiceDefUtil {
                     RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
 
                     if (resourceDef != null && resourceDef.getLevel() != null) {
-                        if (ret == null) {
-                            ret = resourceDef;
-                        } else if(ret.getLevel() < resourceDef.getLevel()) {
-                            ret = resourceDef;
+                        if (ret == null || ret.getLevel() < resourceDef.getLevel()) {
+                            if (StringUtils.isEmpty(resourceDef.getParent())) {
+                                ret = resourceDef;
+                            } else if (!excludeWildcardLeaves || !hasWildcardValue(entry.getValue().getValues())) {
+                                ret = resourceDef;
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean hasWildcardValue(List<String> values) {
+        boolean ret = false;
+
+        for (String strValue : values) {
+            ret = StringUtils.equals(strValue, RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+            if (ret) {
+                break;
             }
         }
 
@@ -206,65 +287,67 @@ public class ServiceDefUtil {
     }
 
     public static RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
-
         if (serviceDef != null && StringUtils.isNotBlank(componentType)) {
+            normalizeAccessTypeDefs(serviceDef.getAccessTypes(), componentType);
+            normalizeAccessTypeDefs(serviceDef.getMarkerAccessTypes(), componentType);
 
-            List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs = serviceDef.getAccessTypes();
+            if (serviceDef.getDataMaskDef() != null) {
+                normalizeAccessTypeDefs(serviceDef.getDataMaskDef().getAccessTypes(), componentType);
+            }
 
-            if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
-
-                String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
-
-                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = null;
-
-                for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
-
-                    String accessType = accessTypeDef.getName();
-
-                    if (StringUtils.startsWith(accessType, prefix)) {
-
-                        String newAccessType = StringUtils.removeStart(accessType, prefix);
-
-                        accessTypeDef.setName(newAccessType);
-
-                        Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
-
-                        if (CollectionUtils.isNotEmpty(impliedGrants)) {
-
-                            Collection<String> newImpliedGrants = null;
-
-                            for (String impliedGrant : impliedGrants) {
-
-                                if (StringUtils.startsWith(impliedGrant, prefix)) {
-
-                                    String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
-
-                                    if (newImpliedGrants == null) {
-                                        newImpliedGrants = new ArrayList<>();
-                                    }
-
-                                    newImpliedGrants.add(newImpliedGrant);
-                                }
-                            }
-                            accessTypeDef.setImpliedGrants(newImpliedGrants);
-
-                        }
-                    } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                        if(unneededAccessTypeDefs == null) {
-                            unneededAccessTypeDefs = new ArrayList<>();
-                        }
-
-                        unneededAccessTypeDefs.add(accessTypeDef);
-                    }
-                }
-
-                if(unneededAccessTypeDefs != null) {
-                    accessTypeDefs.removeAll(unneededAccessTypeDefs);
-                }
+            if (serviceDef.getRowFilterDef() != null) {
+                normalizeAccessTypeDefs(serviceDef.getRowFilterDef().getAccessTypes(), componentType);
             }
         }
 
         return serviceDef;
+    }
+
+    private static void normalizeAccessTypeDefs(List<RangerAccessTypeDef> accessTypeDefs, String componentType) {
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            String                    prefix                 = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
+            List<RangerAccessTypeDef> unneededAccessTypeDefs = null;
+
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                String accessType = accessTypeDef.getName();
+
+                if (StringUtils.startsWith(accessType, prefix)) {
+                    String newAccessType = StringUtils.removeStart(accessType, prefix);
+
+                    accessTypeDef.setName(newAccessType);
+                } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                    if (unneededAccessTypeDefs == null) {
+                        unneededAccessTypeDefs = new ArrayList<>();
+                    }
+
+                    unneededAccessTypeDefs.add(accessTypeDef);
+
+                    continue;
+                }
+
+                Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
+
+                if (CollectionUtils.isNotEmpty(impliedGrants)) {
+                    Set<String> newImpliedGrants = new HashSet<>();
+
+                    for (String impliedGrant : impliedGrants) {
+                        if (StringUtils.startsWith(impliedGrant, prefix)) {
+                            String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
+
+                            newImpliedGrants.add(newImpliedGrant);
+                        } else if (!StringUtils.contains(impliedGrant, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                            newImpliedGrants.add(impliedGrant);
+                        }
+                    }
+
+                    accessTypeDef.setImpliedGrants(newImpliedGrants);
+                }
+            }
+
+            if (unneededAccessTypeDefs != null) {
+                accessTypeDefs.removeAll(unneededAccessTypeDefs);
+            }
+        }
     }
 
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {
@@ -483,6 +566,64 @@ public class ServiceDefUtil {
         return ret;
     }
 
+    public static boolean isGdsInfoEnricherPresent(ServicePolicies policies) {
+        boolean                        ret          = false;
+        RangerServiceDef               serviceDef   = policies != null ? policies.getServiceDef() : null;
+        List<RangerContextEnricherDef> enricherDefs = serviceDef != null ? serviceDef.getContextEnrichers() : null;
+
+        if (enricherDefs != null) {
+            for (RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (StringUtils.equals(enricherDef.getEnricher(), GDSINFO_ENRICHER)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        LOG.debug("isGdsInfoEnricherPresent(service={}): ret={}", policies.getServiceName(), ret);
+
+        return ret;
+    }
+
+    public static boolean addGdsInfoEnricher(ServicePolicies policies, String retrieverClassName, String retrieverPollIntMs) {
+        boolean          ret         = false;
+        RangerServiceDef serviceDef = policies != null ? policies.getServiceDef() : null;
+
+        if (serviceDef != null && !isGdsInfoEnricherPresent(policies)) {
+            List<RangerContextEnricherDef> enricherDefs = serviceDef.getContextEnrichers();
+
+            if (enricherDefs == null) {
+                enricherDefs = new ArrayList<>();
+            }
+
+            long enricherItemId = enricherDefs.size() + 1L;
+
+            for (RangerServiceDef.RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (enricherDef.getItemId() >= enricherItemId) {
+                    enricherItemId = enricherDef.getItemId() + 1;
+                }
+            }
+
+            Map<String, String> enricherOptions = new HashMap<>();
+
+            enricherOptions.put(RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION, retrieverClassName);
+            enricherOptions.put(RangerGdsEnricher.REFRESHER_POLLINGINTERVAL_OPTION, retrieverPollIntMs);
+
+            RangerServiceDef.RangerContextEnricherDef gdsInfoEnricher = new RangerServiceDef.RangerContextEnricherDef(enricherItemId, IMPLICIT_GDS_ENRICHER_NAME, GDSINFO_ENRICHER, enricherOptions);
+
+            enricherDefs.add(gdsInfoEnricher);
+
+            serviceDef.setContextEnrichers(enricherDefs);
+
+            ret = true;
+
+            LOG.info("addGdsInfoEnricher(serviceName={}): added gdsInfoEnricher {}", policies.getServiceName(), gdsInfoEnricher);
+        }
+
+        return ret;
+    }
+
     public static boolean isUserStoreEnricherPresent(ServicePolicies policies) {
         boolean                        ret          = false;
         RangerServiceDef               serviceDef   = policies != null ? policies.getServiceDef() : null;
@@ -535,6 +676,8 @@ public class ServiceDefUtil {
 
             serviceDef.setContextEnrichers(enricherDefs);
 
+            ret = true;
+
             LOG.info("addUserStoreEnricher(serviceName={}): added userStoreEnricher {}", policies.getServiceName(), userStoreEnricher);
         }
 
@@ -581,6 +724,102 @@ public class ServiceDefUtil {
                 addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
 
                 ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    public static List<RangerAccessTypeDef> getMarkerAccessTypes(List<RangerAccessTypeDef> accessTypeDefs) {
+        List<RangerAccessTypeDef> ret              = new ArrayList<>();
+        Map<String, Set<String>>  markerTypeGrants = getMarkerAccessTypeGrants(accessTypeDefs);
+        long                      maxItemId        = getMaxItemId(accessTypeDefs);
+
+        for (String accessTypeMarker : ACCESS_TYPE_MARKERS) {
+            RangerAccessTypeDef accessTypeDef = new RangerAccessTypeDef(++maxItemId, accessTypeMarker, accessTypeMarker, null, markerTypeGrants.get(accessTypeMarker));
+
+            ret.add(accessTypeDef);
+        }
+
+        return ret;
+    }
+
+    public static RangerPolicyConditionDef createImplicitExpressionConditionDef(Long itemId) {
+        RangerPolicyConditionDef ret = new RangerPolicyConditionDef(itemId, IMPLICIT_CONDITION_EXPRESSION_NAME, IMPLICIT_CONDITION_EXPRESSION_EVALUATOR, new HashMap<>());
+
+        ret.getEvaluatorOptions().put("engineName", "JavaScript");
+        ret.getEvaluatorOptions().put("ui.isMultiline", "true");
+        ret.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
+        ret.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
+        ret.setUiHint("{ \"isMultiline\":true }");
+
+        return ret;
+    }
+
+    private static Map<String, Set<String>> getMarkerAccessTypeGrants(List<RangerAccessTypeDef> accessTypeDefs) {
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for (String accessTypeMarker : ACCESS_TYPE_MARKERS) {
+            ret.put(accessTypeMarker, new HashSet<>());
+        }
+
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                if (accessTypeDef == null || StringUtils.isBlank(accessTypeDef.getName()) || ACCESS_TYPE_MARKERS.contains(accessTypeDef.getName())) {
+                    continue;
+                }
+
+                addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_ALL));
+
+                if (accessTypeDef.getCategory() == null) {
+                    continue;
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.CREATE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_CREATE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.READ) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_READ));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.UPDATE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_UPDATE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.DELETE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_DELETE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.MANAGE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_MANAGE));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static void addToMarkerGrants(RangerAccessTypeDef accessTypeDef, Set<String> markerGrants) {
+        markerGrants.add(accessTypeDef.getName());
+
+        if (CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+            markerGrants.addAll(accessTypeDef.getImpliedGrants());
+        }
+    }
+
+    private static long getMaxItemId(List<RangerAccessTypeDef> accessTypeDefs) {
+        long ret = -1;
+
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                if (accessTypeDef.getItemId() != null && ret < accessTypeDef.getItemId()) {
+                    ret = accessTypeDef.getItemId();
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public static long getConditionsMaxItemId(List<RangerPolicyConditionDef> conditions) {
+        long ret = 0;
+
+        if (conditions != null) {
+            for (RangerPolicyConditionDef condition : conditions) {
+                if (condition != null && condition.getItemId() != null && ret < condition.getItemId()) {
+                    ret = condition.getItemId();
+                }
             }
         }
 

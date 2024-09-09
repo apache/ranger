@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Date;
 
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -31,7 +32,6 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.XUserMgr;
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -59,9 +59,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 @Component
 public class MetricUtil extends BaseLoader  {
 	
@@ -83,7 +80,7 @@ public class MetricUtil extends BaseLoader  {
 	
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-	
+
 	public static void main(String[] args) {
 		/* LOG4J2: TODO
 		logger.getRootLogger().setLevel(Level.OFF);
@@ -177,8 +174,7 @@ public class MetricUtil extends BaseLoader  {
                                                 metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
 						metricUserGroupCount.setUserTotalCount(userTotalCount);
 						metricUserGroupCount.setGroupCount(groupCount);
-						Gson gson = new GsonBuilder().create();
-						final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
+						final String jsonUserGroupCount = JsonUtils.objectToJson(metricUserGroupCount);
 						System.out.println(jsonUserGroupCount);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for usergroup : " + e.getMessage());
@@ -234,8 +230,7 @@ public class MetricUtil extends BaseLoader  {
 						long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();	
 						auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
 						
-						Gson gson = new GsonBuilder().create();
-						final String jsonAudit = gson.toJson(auditObj);
+						final String jsonAudit = JsonUtils.objectToJson(auditObj);
 						System.out.println(jsonAudit);
 					}catch (Exception e) {
 						logger.error("Error calculating Metric for audits : "+e.getMessage());
@@ -265,8 +260,7 @@ public class MetricUtil extends BaseLoader  {
 						}
 						vXMetricServiceCount.setServiceBasedCountList(services);
 						vXMetricServiceCount.setTotalCount(totalServiceCount);
-						Gson gson = new GsonBuilder().create();
-						final String jsonServices = gson.toJson(vXMetricServiceCount);
+						final String jsonServices = JsonUtils.objectToJson(vXMetricServiceCount);
 						System.out.println(jsonServices);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for services : " + e.getMessage());
@@ -308,8 +302,7 @@ public class MetricUtil extends BaseLoader  {
 							tagFlag = true;
 						}
 						vXMetricPolicyCount.setPolicyCountList(servicesWithPolicy);
-						Gson gson = new GsonBuilder().create();
-						final String jsonPolicies = gson.toJson(vXMetricPolicyCount);
+						final String jsonPolicies = JsonUtils.objectToJson(vXMetricPolicyCount);
 						System.out.println(jsonPolicies);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for policies : " + e.getMessage());
@@ -317,23 +310,11 @@ public class MetricUtil extends BaseLoader  {
 					break;
 				case "database" :
 					try {
-						int dbFlavor = RangerBizUtil.getDBFlavor();
-						String dbFlavourType = "Unknown";
-						if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
-							dbFlavourType = "MYSQL ";
-						} else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-							dbFlavourType = "ORACLE ";
-						} else if (dbFlavor == AppConstants.DB_FLAVOR_POSTGRES) {
-							dbFlavourType = "POSTGRES ";
-						} else if (dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE) {
-							dbFlavourType = "SQLANYWHERE ";
-						} else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
-							dbFlavourType = "SQLSERVER ";
-						}
+						int    dbFlavor      = RangerBizUtil.getDBFlavor();
+						String dbFlavourType = RangerBizUtil.getDBFlavorType(dbFlavor);
+						String dbDetail      = dbFlavourType + " " + xaBizUtil.getDBVersion();
+						String jsonDBDetail  = JsonUtils.objectToJson(dbDetail);
 
-						String dbDetail = dbFlavourType + xaBizUtil.getDBVersion();
-						Gson gson = new GsonBuilder().create();
-						final String jsonDBDetail = gson.toJson(dbDetail);
 						logger.info("jsonDBDetail:" + jsonDBDetail);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for database : " + e.getMessage());
@@ -357,8 +338,7 @@ public class MetricUtil extends BaseLoader  {
 								}
 							}
 						}
-						Gson gson = new GsonBuilder().create();
-						final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
+						final String jsonContextEnrichers = JsonUtils.objectToJson(serviceWithContextEnrichers);
 						System.out.println(jsonContextEnrichers);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for contextenrichers : " + e.getMessage());
@@ -420,8 +400,7 @@ public class MetricUtil extends BaseLoader  {
 								}
 							}
 						}
-						Gson gson = new GsonBuilder().create();
-						String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
+						String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
 						System.out.println(jsonContextDenyCondtionOn);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for denyconditions : " + e.getMessage());

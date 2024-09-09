@@ -32,12 +32,12 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.zookeeper.data.ACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 /**
  * A factory to create objects related to Curator.
@@ -75,7 +75,7 @@ public class CuratorFactory {
 			synchronized (CuratorFactory.class) {
 				if (instance == null) {
 					try {
-						instance = new CuratorFactory(configuration);
+					instance = new CuratorFactory(configuration);
 					} catch (Exception e) {
 						LOG.error("HA is not enabled so not initialising curator CuratorFactory", e);
 					}
@@ -96,7 +96,7 @@ public class CuratorFactory {
 
 	@VisibleForTesting
 	void enhanceBuilderWithSecurityParameters(HAConfiguration.ZookeeperProperties zookeeperProperties,
-			CuratorFrameworkFactory.Builder builder) {
+											  CuratorFrameworkFactory.Builder builder) {
 
 		ACLProvider aclProvider = getAclProvider(zookeeperProperties);
 
@@ -129,9 +129,9 @@ public class CuratorFactory {
 		ACLProvider aclProvider = null;
 		if (zookeeperProperties.hasAcl()) {
 			final ACL acl = ZookeeperSecurityProperties.parseAcl(zookeeperProperties.getAcl());
-			LOG.info("Setting ACL for id: {} " + " with scheme: {} and perms: {}.",
-					getIdForLogging(acl.getId().getScheme(), acl.getId().getId()), acl.getId().getScheme(),
-					acl.getPerms());
+			LOG.info("Setting ACL for id: {} with scheme: {} and perms: {}.",
+					 getIdForLogging(acl.getId().getScheme(), acl.getId().getId()), acl.getId().getScheme(),
+					 acl.getPerms());
 			LOG.info("Current logged in user: {}", getCurrentUser());
 			final List<ACL> acls = Arrays.asList(acl);
 			aclProvider = new ACLProvider() {
@@ -201,7 +201,7 @@ public class CuratorFactory {
 	public LeaderLatch leaderLatchInstance(String serverId, String zkRoot) {
 		LOG.info("CuratorFactory.leaderLatchInstance() creating LeaderLatch for serverId {} and zkRoot: {}", serverId, zkRoot);
 		return new LeaderLatch(curatorFramework, zkRoot + APACHE_HMS_TO_HDFS_METADATA_SYNC_LEADER_ELECTOR_PATH,
-				serverId);
+							   serverId);
 	}
 
 	public InterProcessMutex lockInstance(String zkRoot) {

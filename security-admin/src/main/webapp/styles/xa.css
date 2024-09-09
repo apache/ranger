@@ -1670,7 +1670,7 @@ body.login {
   border: solid #dedede;
   border-width: 0 0 1px 0;
   height: 30px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   width: 100%;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -2498,6 +2498,27 @@ textarea:read-only{
 } */
 
 /* Security Zone */
+.zone-administration .form-control{
+  height: auto !important;
+}
+.role-form .form-control {
+  height: auto !important;
+}
+.permissions-table .form-control {
+  height: auto !important;
+}
+.groups-permission {
+  min-width: 480px;
+}
+.groups-permission .select2-container{
+  width: 100%;
+}
+.users-permission {
+  min-width: 480px;
+}
+.users-permission .select2-container{
+  width: 100%;
+}
 .security-panel {
   background-color: #fff;
   border-radius: 3px;
@@ -4147,8 +4168,7 @@ ul.tagit{
 }
 
 .addbtngroup .select2-container{
-  width: 300px !important;
-  display: inline-block;
+ display: inline-block;
 }
 
 .dropdown-menu a:hover{
@@ -4738,4 +4758,11 @@ input.textFiledInputPadding:disabled {
 .excludeRecursiveSupport {
   position: absolute;
   top: 30px;
+}
+.password-icon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 15px;
+  cursor: pointer;
 }

@@ -17,8 +17,8 @@
 
 package org.apache.ranger.patch;
 
-import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
@@ -90,12 +90,11 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
 
     public boolean updateSyncSourceForUsers(){
         List<XXUser> users = daoManager.getXXUser().getAll();
-        Gson gson = new Gson();
         for( XXUser xUser: users) {
             String syncSource      = xUser.getSyncSource();
             String otherAttributes = xUser.getOtherAttributes();
             if (StringUtils.isNotEmpty(otherAttributes) && StringUtils.isEmpty(syncSource)){
-                syncSource = (String) gson.fromJson(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
+                syncSource = (String) JsonUtils.jsonToObject(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
                 xUser.setSyncSource(syncSource);
 
                 TransactionTemplate txTemplate = new TransactionTemplate(txManager);
@@ -139,13 +138,12 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
     }
 
     public boolean updateSyncSourceForGroups(){
-        List<XXGroup> groups = daoManager.getXXGroup().getAll();
-        Gson gson = new Gson();
+        List<XXGroup> groups       = daoManager.getXXGroup().getAll();
         for( XXGroup xGroup: groups) {
             String syncSource      = xGroup.getSyncSource();
             String otherAttributes = xGroup.getOtherAttributes();
             if (StringUtils.isNotEmpty(otherAttributes) && StringUtils.isEmpty(syncSource)){
-                syncSource = (String) gson.fromJson(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
+                syncSource = (String) JsonUtils.jsonToObject(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
                 if (StringUtils.isNotEmpty(syncSource) && xGroup.getGroupSource() == 0){
                     xGroup.setGroupSource(1);
                     if (logger.isDebugEnabled()) {

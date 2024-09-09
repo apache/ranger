@@ -36,8 +36,6 @@ BEGIN
 END
 
 GO
-DROP VIEW IF EXISTS dbo.vx_trx_log
-GO
 call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
 GO
 call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
@@ -162,7 +160,7 @@ call dbo.removeForeignKeysAndTable('x_audit_map')
 GO
 call dbo.removeForeignKeysAndTable('x_perm_map')
 GO
-call dbo.removeForeignKeysAndTable('x_trx_log')
+call dbo.removeForeignKeysAndTable('x_trx_log_v2')
 GO
 call dbo.removeForeignKeysAndTable('x_resource')
 GO
@@ -430,27 +428,23 @@ create table dbo.x_resource(
 	CONSTRAINT x_resource_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
-create table dbo.x_trx_log(
+create table dbo.x_trx_log_v2(
 	id bigint IDENTITY NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
 	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
 	class_type int DEFAULT 0 NOT NULL,
 	object_id bigint DEFAULT NULL NULL,
 	parent_object_id bigint DEFAULT NULL NULL,
 	parent_object_class_type int DEFAULT 0 NOT NULL,
 	parent_object_name varchar(1024) DEFAULT NULL NULL,
 	object_name varchar(1024) DEFAULT NULL NULL,
-	attr_name varchar(255) DEFAULT NULL NULL,
-	prev_val text DEFAULT NULL NULL,
-	new_val text DEFAULT NULL NULL,
+	change_info text DEFAULT NULL NULL,
 	trx_id varchar(1024)DEFAULT NULL NULL,
 	action varchar(255) DEFAULT NULL NULL,
 	sess_id varchar(512) DEFAULT NULL NULL,
 	req_id varchar(30) DEFAULT NULL NULL,
 	sess_type varchar(30) DEFAULT NULL NULL,
-	CONSTRAINT x_trx_log_PK_id PRIMARY KEY CLUSTERED(id)
+	CONSTRAINT x_trx_log_v2_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 create table dbo.x_perm_map(
@@ -484,8 +478,6 @@ create table dbo.x_audit_map(
 	audit_type int DEFAULT 0 NOT NULL,
 	CONSTRAINT x_audit_map_PK_id PRIMARY KEY CLUSTERED(id)
 )
-GO
-CREATE VIEW dbo.vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id)
 GO
 create table dbo.x_service_def(
 	id bigint IDENTITY NOT NULL,
@@ -525,6 +517,7 @@ create table dbo.x_service (
 	tag_service bigint DEFAULT NULL NULL,
 	tag_version bigint DEFAULT 0 NOT NULL,
 	tag_update_time datetime DEFAULT NULL NULL,
+	gds_service bigint DEFAULT NULL NULL,
 	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_UK_name UNIQUE NONCLUSTERED (name)
 )
@@ -1021,6 +1014,8 @@ CREATE TABLE dbo.x_service_version_info(
 	tag_update_time datetime DEFAULT NULL NULL,
 	role_version bigint NOT NULL DEFAULT 0,
 	role_update_time datetime DEFAULT NULL NULL,
+	gds_version bigint NOT NULL DEFAULT 0,
+	gds_update_time datetime DEFAULT NULL NULL,
 	version bigint NOT NULL DEFAULT 1,
 	CONSTRAINT x_service_version_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
@@ -1419,10 +1414,6 @@ ALTER TABLE dbo.x_resource ADD CONSTRAINT x_resource_FK_parent_id FOREIGN KEY(pa
 GO
 ALTER TABLE dbo.x_resource ADD CONSTRAINT x_resource_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
-ALTER TABLE dbo.x_trx_log ADD CONSTRAINT x_trx_log_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_trx_log ADD CONSTRAINT x_trx_log_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_user ADD CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_user ADD CONSTRAINT x_user_FK_cred_store_id FOREIGN KEY(cred_store_id) REFERENCES dbo.x_cred_store (id)
@@ -1582,6 +1573,8 @@ GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_service ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY(tag_service) REFERENCES dbo.x_service (id)
+GO
+ALTER TABLE dbo.x_service ADD CONSTRAINT x_service_FK_gds_service FOREIGN KEY(gds_service) REFERENCES dbo.x_service (id)
 GO
 ALTER TABLE dbo.x_datamask_type_def ADD CONSTRAINT x_datamask_type_def_FK_def_id FOREIGN KEY(def_id) REFERENCES dbo.x_service_def (id)
 GO
@@ -1905,13 +1898,11 @@ CREATE NONCLUSTERED INDEX x_resource_FK_upd_by_id ON dbo.x_resource(upd_by_id AS
 GO
 CREATE NONCLUSTERED INDEX x_resource_up_time ON dbo.x_resource(update_time ASC)
 GO
-CREATE NONCLUSTERED INDEX x_trx_log_cr_time ON dbo.x_trx_log(create_time ASC)
+CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_cr_time ON dbo.x_trx_log_v2(create_time ASC)
 GO
-CREATE NONCLUSTERED INDEX x_trx_log_FK_added_by_id ON dbo.x_trx_log(added_by_id ASC)
+CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_added_by_id ON dbo.x_trx_log_v2(added_by_id ASC)
 GO
-CREATE NONCLUSTERED INDEX x_trx_log_FK_upd_by_id ON dbo.x_trx_log(upd_by_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_trx_log_up_time ON dbo.x_trx_log(update_time ASC)
+CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_trx_id ON dbo.x_trx_log_v2(trx_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_user_cr_time ON dbo.x_user(create_time ASC)
 GO
@@ -2436,6 +2427,14 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10055',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10056',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10060',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10061',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10062',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10063',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

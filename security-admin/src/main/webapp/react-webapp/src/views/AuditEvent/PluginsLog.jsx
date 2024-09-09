@@ -18,13 +18,13 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
 import dateFormat from "dateformat";
-import { sortBy, filter } from "lodash";
+import { sortBy, filter, isEmpty } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
 import {
@@ -34,18 +34,21 @@ import {
   parseSearchFilter,
   serverError,
   isKeyAdmin,
-  isKMSAuditor
+  isKMSAuditor,
+  currentTimeZone
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
 
 function Plugins() {
+  const context = useOutletContext();
+  const services = context.services;
   const [pluginsListingData, setPluginsLogs] = useState([]);
   const [loader, setLoader] = useState(true);
   const [pageCount, setPageCount] = React.useState(0);
   const [entries, setEntries] = useState([]);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const fetchIdRef = useRef(0);
-  const [services, setServices] = useState([]);
+  //const [services, setServices] = useState([]);
   const [contentLoader, setContentLoader] = useState(true);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -56,13 +59,11 @@ function Plugins() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
 
   useEffect(() => {
-    fetchServices();
-
     let { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("agent", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     if (
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
@@ -73,7 +74,7 @@ function Plugins() {
     setContentLoader(false);
   }, [searchParams]);
 
-  const fetchServices = async () => {
+  /* const fetchServices = async () => {
     let servicesResp = [];
     try {
       servicesResp = await fetchApi({
@@ -87,7 +88,7 @@ function Plugins() {
 
     setServices(servicesResp.data.services);
     setLoader(false);
-  };
+  }; */
 
   const fetchPluginsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
@@ -107,7 +108,8 @@ function Plugins() {
         try {
           logsResp = await fetchApi({
             url: "assets/exportAudit",
-            params: params
+            params: params,
+            skipNavigate: true
           });
           logs = logsResp.data.vXPolicyExportAudits;
           totalCount = logsResp.data.totalCount;
@@ -134,7 +136,7 @@ function Plugins() {
   const columns = React.useMemo(
     () => [
       {
-        Header: "Export Date ( India Standard Time )",
+        Header: `Export Date  ( ${currentTimeZone()} )`,
         accessor: "createDate",
         Cell: (rawValue) => {
           const formatDateTime = dateFormat(
@@ -168,13 +170,15 @@ function Plugins() {
         Header: "Plugin ID",
         accessor: "agentId",
         Cell: (rawValue) => {
-          return (
+          return !isEmpty(rawValue.value) ? (
             <span
               className="text-truncate text-center d-block"
               title={rawValue.value}
             >
               {rawValue.value}
             </span>
+          ) : (
+            <span className="text-center d-block">--</span>
           );
         },
         disableSortBy: true
@@ -198,13 +202,15 @@ function Plugins() {
         Header: "Cluster Name",
         accessor: "clusterName",
         Cell: (rawValue) => {
-          return (
+          return !isEmpty(rawValue.value) ? (
             <span
               className="text-truncate text-center d-block"
               title={rawValue.value}
             >
               {rawValue.value}
             </span>
+          ) : (
+            <span className="text-center d-block">--</span>
           );
         },
         width: 100,
@@ -216,7 +222,7 @@ function Plugins() {
         Cell: (rawValue) => {
           return (
             <span className="text-center d-block">
-              <Badge variant="success">{rawValue.value}</Badge>
+              <Badge bg="success">{rawValue.value}</Badge>
             </span>
           );
         },
@@ -248,7 +254,7 @@ function Plugins() {
     );
 
     setSearchFilterParams(searchFilterParam);
-    setSearchParams(searchParam);
+    setSearchParams(searchParam, { replace: true });
     localStorage.setItem("agent", JSON.stringify(searchParam));
 
     if (typeof resetPage?.page === "function") {
@@ -265,7 +271,7 @@ function Plugins() {
     });
 
     return sortBy(servicesName, "name")?.map((service) => ({
-      label: service.displayName,
+      label: service.name,
       value: service.name
     }));
   };

@@ -19,26 +19,17 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.view.VTrxLogAttr;
-import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -48,25 +39,7 @@ import org.springframework.util.CollectionUtils;
 public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 
 	private final Long createdByUserId;
-	
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	
-	@Autowired
-	StringUtil stringUtil;
-	
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-		trxLogAttrs.put("name",
-				new VTrxLogAttr("name", "Group Name", false));
-		trxLogAttrs.put("description",
-				new VTrxLogAttr("description", "Group Description", false));
-		trxLogAttrs.put("otherAttributes",
-				new VTrxLogAttr("otherAttributes", "Other Attributes", false));
-		trxLogAttrs.put("syncSource",
-				new VTrxLogAttr("syncSource", "Sync Source", false));
-	}
-	
+
 	public XGroupService() {
 		searchFields.add(new SearchField("name", "obj.name",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
@@ -81,7 +54,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
 
 		searchFields.add(new SearchField("syncSource", "obj.syncSource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
@@ -158,96 +131,6 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 		return view;
 	}
 
-	public List<XXTrxLog> getTransactionLog(VXGroup vResource, String action){
-		return getTransactionLog(vResource, null, action);
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXGroup vObj, XXGroup mObj, String action){
-		if(vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)){
-			return null;
-		}
-		
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		try {
-
-			Field nameField = vObj.getClass().getDeclaredField("name");
-			nameField.setAccessible(true);
-			String objectName = ""+nameField.get(vObj);
-			Field[] fields = vObj.getClass().getDeclaredFields();
-			
-			for(Field field : fields){
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if(!trxLogAttrs.containsKey(fieldName)){
-					continue;
-				}
-				
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-				
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr.getAttribUserFriendlyName());
-				
-				String value = null;
-				boolean isEnum = vTrxLogAttr.isEnum();
-				if(isEnum){
-					String enumName = XXGroup.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer.parseInt(""+field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = ""+field.get(vObj);
-				}
-				
-				if("create".equalsIgnoreCase(action)){
-					if(stringUtil.isEmpty(value)){
-						continue;
-					}
-					xTrxLog.setNewValue(value);
-				} else if("delete".equalsIgnoreCase(action)){
-					xTrxLog.setPreviousValue(value);
-				} else if("update".equalsIgnoreCase(action)){
-					String oldValue = null;
-					Field[] mFields = mObj.getClass().getDeclaredFields();
-					for(Field mField : mFields){
-						mField.setAccessible(true);
-						String mFieldName = mField.getName();
-						if(fieldName.equalsIgnoreCase(mFieldName)){
-							if(isEnum){
-								String enumName = XXAsset.getEnumName(mFieldName);
-								int enumValue = mField.get(mObj) == null ? 0 : Integer.parseInt(""+mField.get(mObj));
-								oldValue = xaEnumUtil.getLabel(enumName, enumValue);
-							} else {
-								oldValue = mField.get(mObj)+"";
-							}
-							break;
-						}
-					}
-					if(value.equalsIgnoreCase(oldValue)){
-						continue;
-					}
-					xTrxLog.setPreviousValue(oldValue);
-					xTrxLog.setNewValue(value);
-				}
-				
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_GROUP);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-				
-			}
-		} catch (IllegalArgumentException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (IllegalAccessException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (NoSuchFieldException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (SecurityException e) {
-			logger.error("Transaction log failure.", e);
-		}
-		
-		return trxLogList;
-	}
-	
 	@Override
 	public VXGroup populateViewBean(XXGroup xGroup) {
 		VXGroup vObj = super.populateViewBean(xGroup);

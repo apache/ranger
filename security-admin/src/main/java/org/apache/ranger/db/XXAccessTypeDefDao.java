@@ -18,6 +18,7 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -59,5 +60,20 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
 		} catch (NoResultException e) {
 			return null;
 		}
+	}
+
+	public List<String> getNamesByServiceName(String serviceName) {
+		List<String> ret = null;
+
+		if (serviceName != null) {
+			try {
+			    ret = getEntityManager().createNamedQuery("XXAccessTypeDef.getNamesByServiceName", String.class)
+			                            .setParameter("serviceName", serviceName).getResultList();
+			} catch (NoResultException excp) {
+			    // ignore
+			}
+		}
+
+		return ret != null ? ret : Collections.emptyList();
 	}
 }

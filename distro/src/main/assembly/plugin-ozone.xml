@@ -56,7 +56,6 @@
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
@@ -65,10 +64,10 @@
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
+                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -103,12 +102,12 @@
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-		            <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 		            <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
@@ -125,6 +124,10 @@
                     <include>org.apache.lucene:lucene-core</include>
                     <include>joda-time:joda-time</include>
                     <include>com.carrotsearch:hppc</include>
+                    <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+                    <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+                    <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+                    <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

@@ -24,11 +24,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.MoreObjects;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.thirdparty.com.google.common.base.MoreObjects;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -159,10 +159,11 @@
             <email>bpatel@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
-                Freestone Infotech
+                Visa Inc
             </organization>
         </developer>
         <developer>
@@ -184,7 +185,6 @@
             <email>coheigea@apache.org</email>
             <timezone>+0</timezone>
             <roles>
-                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -226,6 +226,18 @@
             <organization>
             	Oracle
         	</organization>
+        </developer>
+        <developer>
+            <id>dhavalrajpara</id>
+            <name>Dhaval Rajpara</name>
+            <email>dhavalrajpara@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
         </developer>
         <developer>
             <id>dhavalshah9131</id>
@@ -336,13 +348,25 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Privacera
+                Cloudera
             </organization>
         </developer>
 	    <developer>
             <id>mehul</id>
             <name>Mehul Parikh</name>
             <email>mehul@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+	</developer>
+        <developer>
+            <id>mugdha</id>
+            <name>Mugdha Varadkar</name>
+            <email>mugdha@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
                 <role>Committer</role>
@@ -449,7 +473,7 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Privacera
+                InfoTekies Corp.
             </organization>
         </developer>
         <developer>
@@ -592,10 +616,6 @@
             <organization></organization>
         </contributor>
         <contributor>
-            <name>Dhaval Rajpara</name>
-            <organization>Freestone Infotech</organization>
-        </contributor>
-        <contributor>
             <name>Dongjoon Hyun</name>
             <organization></organization>
         </contributor>
@@ -633,6 +653,10 @@
         </contributor>
         <contributor>
             <name>Grant Henke</name>
+            <organization></organization>
+        </contributor>
+        <contributor>
+            <name>Guru Thejus Arveti</name>
             <organization></organization>
         </contributor>
         <contributor>
@@ -734,10 +758,6 @@
         <contributor>
             <name>Mateen Mansoori</name>
             <organization></organization>
-        </contributor>
-        <contributor>
-            <name>Mugdha Varadkar</name>
-            <organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
             <name>Naoki Takezoe</name>

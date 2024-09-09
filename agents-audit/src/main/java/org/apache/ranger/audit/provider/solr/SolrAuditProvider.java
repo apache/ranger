@@ -290,6 +290,8 @@ public class SolrAuditProvider extends AuditDestination {
 		doc.addField("action", auditEvent.getAction());
 		doc.addField("evtTime", auditEvent.getEventTime());
 		doc.addField("tags", auditEvent.getTags());
+		doc.addField("datasets", auditEvent.getDatasets());
+		doc.addField("projects", auditEvent.getProjects());
 		doc.addField("cluster", auditEvent.getClusterName());
 		doc.addField("zone", auditEvent.getZoneName());
 		doc.addField("agentHost", auditEvent.getAgentHostname());

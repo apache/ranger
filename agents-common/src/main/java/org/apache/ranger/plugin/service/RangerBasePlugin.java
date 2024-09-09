@@ -31,11 +31,14 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.contextenricher.RangerAdminGdsInfoRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
-import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
+import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -49,6 +52,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.*;
@@ -70,7 +74,6 @@ public class RangerBasePlugin {
 	private       RangerAccessResultProcessor resultProcessor;
 	private       RangerRoles                 roles;
 	private final List<RangerChainedPlugin>   chainedPlugins;
-	private final boolean                     enableImplicitUserStoreEnricher;
 	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
 
@@ -87,6 +90,17 @@ public class RangerBasePlugin {
 		this.pluginConfig  = pluginConfig;
 		this.pluginContext = new RangerPluginContext(pluginConfig);
 
+		boolean usePerfDataRecorder  = pluginConfig.getBoolean("ranger.perf.aggregate.data", false);
+		int     perfDataDumpInterval = pluginConfig.getInt("ranger.perf.aggregate.data.dump.interval", 0);
+		boolean usePerfDataLock      = pluginConfig.getBoolean("ranger.perf.aggregate.data.lock.enabled", false);
+		String  nullSafeSupplier     = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".null_safe.supplier", RangerBaseModelObject.NULL_SAFE_SUPPLIER_V2);
+
+		LOG.info(pluginConfig.getPropertyPrefix() + ".null_safe.supplier=" + nullSafeSupplier);
+
+		RangerBaseModelObject.setNullSafeSupplier(nullSafeSupplier);
+
+		PerfDataRecorder.initialize(usePerfDataRecorder, perfDataDumpInterval, usePerfDataLock, null);
+
 		Set<String> superUsers         = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.users"));
 		Set<String> superGroups        = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.groups"));
 		Set<String> auditExcludeUsers  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.users"));
@@ -101,17 +115,19 @@ public class RangerBasePlugin {
 
 		RangerRequestScriptEvaluator.init(pluginConfig);
 
-		this.enableImplicitUserStoreEnricher = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".enable.implicit.userstore.enricher", false);
-		this.dedupStrings                    = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".dedup.strings", true);
-
+		this.dedupStrings   = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".dedup.strings", true);
 		this.chainedPlugins = initChainedPlugins();
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles) {
-		this(pluginConfig, policies, tags, roles, null);
+		this(pluginConfig, policies, tags, roles, null, null);
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore) {
+		this(pluginConfig, policies, tags, roles, userStore, null);
+	}
+
+	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore, ServiceGdsInfo gdsInfo) {
 		this(pluginConfig);
 
 		init();
@@ -136,6 +152,16 @@ public class RangerBasePlugin {
 				userStoreEnricher.setRangerUserStore(userStore);
 			} else {
 				LOG.warn("RangerBasePlugin(userStoreVersion=" + userStore.getUserStoreVersion() + "): no userstore enricher found. Plugin will not enforce user/group attribute-based policies");
+			}
+		}
+
+		if (gdsInfo != null) {
+			RangerGdsEnricher gdsEnricher = getGdsEnricher();
+
+			if (gdsEnricher != null) {
+				gdsEnricher.setGdsInfo(gdsInfo);
+			} else {
+				LOG.warn("RangerBasePlugin(gdsInfo=" + gdsInfo.getGdsVersion() + "): no GDS enricher found. Plugin will not enforce GDS policies");
 			}
 		}
 	}
@@ -283,16 +309,25 @@ public class RangerBasePlugin {
 			LOG.debug("==> setPolicies(" + policies + ")");
 		}
 
-		if (enableImplicitUserStoreEnricher && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
-			String retrieverClassName = getConfig().get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
-			String retrieverPollIntMs = getConfig().get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
+		if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
+			String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
+			String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
 
 			// in case of delta, policies will only have changes; hence add userStoreEnricher if it was implicitly added previous calls to setPolicies()
 			if (RangerPolicyDeltaUtil.hasPolicyDeltas(policies) == Boolean.TRUE && isUserStoreEnricherAddedImplcitly) {
 				ServiceDefUtil.addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
+			} else if (pluginConfig.isUseRangerGroups() || pluginConfig.isConvertEmailToUsername()) {
+				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
 			} else {
 				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricherIfNeeded(policies, retrieverClassName, retrieverPollIntMs);
 			}
+		}
+
+		if (pluginConfig.isEnableImplicitGdsInfoEnricher() && policies != null && !ServiceDefUtil.isGdsInfoEnricherPresent(policies)) {
+			String retrieverClassName = pluginConfig.get(RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION, RangerAdminGdsInfoRetriever.class.getCanonicalName());
+			String retrieverPollIntMs = pluginConfig.get(RangerGdsEnricher.REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
+
+			ServiceDefUtil.addGdsInfoEnricher(policies, retrieverClassName, retrieverPollIntMs);
 		}
 
 		// guard against catastrophic failure during policy engine Initialization or
@@ -354,6 +389,13 @@ public class RangerBasePlugin {
 						if (policies.getPolicies() == null) {
 							policies.setPolicies(new ArrayList<>());
 						}
+						if (MapUtils.isNotEmpty(policies.getSecurityZones())) {
+							for (ServicePolicies.SecurityZoneInfo element : policies.getSecurityZones().values()) {
+								if (element.getPolicies() == null) {
+									element.setPolicies(new ArrayList<>());
+								}
+							}
+						}
 					}
 				}
 			}
@@ -411,7 +453,9 @@ public class RangerBasePlugin {
 						newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
 					}
 
+					LOG.info("Switching policy engine from [" + getPolicyVersion() + "]");
 					this.policyEngine       = newPolicyEngine;
+					LOG.info("Switched policy engine to [" + getPolicyVersion() + "]");
 					this.currentAuthContext = pluginContext.getAuthContext();
 
 					pluginContext.notifyAuthContextChanged();
@@ -489,13 +533,19 @@ public class RangerBasePlugin {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
 		}
 
-		if (ret != null) {
+		if (ret != null && !RangerAccessRequestUtil.getIsSkipChainedPlugins(request.getContext())) {
 			for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("BasePlugin.isAccessAllowed result=[" + ret + "]");
 					LOG.debug("Calling chainedPlugin.isAccessAllowed for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "]");
 				}
-				RangerAccessResult chainedResult = chainedPlugin.isAccessAllowed(request);
+				RangerAccessResult chainedResult;
+
+				if (ret.getIsAccessDetermined() && chainedPlugin.skipAccessCheckIfAlreadyDetermined) {
+					chainedResult = null;
+				} else {
+					chainedResult = chainedPlugin.isAccessAllowed(request);
+				}
 
 				if (chainedResult != null) {
 					if (LOG.isDebugEnabled()) {
@@ -517,7 +567,6 @@ public class RangerBasePlugin {
 		if (resultProcessor != null) {
 			resultProcessor.processResult(ret);
 		}
-
 		return ret;
 	}
 
@@ -685,6 +734,20 @@ public class RangerBasePlugin {
 			} else {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Chained-plugin returned null ACLs!!");
+				}
+			}
+		}
+
+		GdsPolicyEngine gdsPolicyEngine = getGdsPolicyEngine();
+
+		if (gdsPolicyEngine != null) {
+			RangerResourceACLs gdsACLs = gdsPolicyEngine.getResourceACLs(request);
+
+			if (gdsACLs != null) {
+				if (ret != null) {
+					ret = getMergedResourceACLs(ret, gdsACLs);
+				} else {
+					ret = gdsACLs;
 				}
 			}
 		}
@@ -1130,6 +1193,35 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
+	public RangerGdsEnricher getGdsEnricher() {
+		RangerGdsEnricher ret         = null;
+		RangerAuthContext authContext = getCurrentRangerAuthContext();
+
+		if (authContext != null) {
+			Map<RangerContextEnricher, Object> contextEnricherMap = authContext.getRequestContextEnrichers();
+
+			if (MapUtils.isNotEmpty(contextEnricherMap)) {
+				Set<RangerContextEnricher> contextEnrichers = contextEnricherMap.keySet();
+
+				for (RangerContextEnricher enricher : contextEnrichers) {
+					if (enricher instanceof RangerGdsEnricher) {
+						ret = (RangerGdsEnricher) enricher;
+
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public GdsPolicyEngine getGdsPolicyEngine() {
+		RangerGdsEnricher gdsEnricher = getGdsEnricher();
+
+		return gdsEnricher != null ? gdsEnricher.getGdsPolicyEngine() : null;
+	}
+
 	public static RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.getMergedResourceACLs()");
@@ -1140,6 +1232,8 @@ public class RangerBasePlugin {
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.USER);
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.GROUP);
 		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.ROLE);
+		baseACLs.getDatasets().addAll(chainedACLs.getDatasets());
+		baseACLs.getProjects().addAll(chainedACLs.getProjects());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
@@ -1327,5 +1421,9 @@ public class RangerBasePlugin {
 		}
 
 		return ret;
+	}
+
+	public Long getPolicyVersion() {
+		return this.policyEngine == null ? -1L : this.policyEngine.getPolicyVersion();
 	}
 }

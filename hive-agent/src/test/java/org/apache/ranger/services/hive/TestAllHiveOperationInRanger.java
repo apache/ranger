@@ -18,12 +18,12 @@ package org.apache.ranger.services.hive;
  */
 
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestAllHiveOperationInRanger{
 

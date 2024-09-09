@@ -294,6 +294,39 @@
   </property>
    <!--Azure Key Vault END-->
 
+    <!--AWS KMS START-->
+    <property>
+        <name>ranger.kms.awskms.enabled</name>
+        <value>false</value>
+        <description>Flag for AWS KMS</description>
+    </property>
+    <property>
+        <name>ranger.kms.awskms.masterkey.id</name>
+        <value></value>
+        <description>AWS KMS Master key id</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.accesskey</name>
+        <value></value>
+        <description>AWS Client Access Key</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.secretkey</name>
+        <value></value>
+        <description>AWS Client Secret Key</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.secretkey.alias</name>
+        <value>ranger.ks.aws.client.secretkey</value>
+        <description>AWS Client Secret Key Alias</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.region</name>
+        <value></value>
+        <description>AWS Region</description>
+    </property>
+    <!--AWS KMS END-->
+
 	<!-- Google Cloud KMS start -->
 	<property>
 		<name>ranger.kms.gcp.enabled</name>

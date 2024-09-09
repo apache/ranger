@@ -19,15 +19,12 @@
 
  package org.apache.ranger.service;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -35,18 +32,12 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.util.RangerEnumUtil;
-import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -56,39 +47,7 @@ import org.springframework.util.CollectionUtils;
 public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	private final Long createdByUserId;
 
-	@Autowired
-	XPermMapService xPermMapService;
-
-	@Autowired
-	StringUtil stringUtil;
-
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-
-	@Autowired
-	RangerBizUtil xaBizUtil;
-
-	String hiddenPasswordString;
-
-	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
-	static {
-		trxLogAttrs.put("name",
-				new VTrxLogAttr("name", "Login ID", false));
-		trxLogAttrs.put("firstName",
-				new VTrxLogAttr("firstName", "First Name", false));
-		trxLogAttrs.put("lastName",
-				new VTrxLogAttr("lastName", "Last Name", false));
-		trxLogAttrs.put("emailAddress",
-				new VTrxLogAttr("emailAddress", "Email Address", false));
-		trxLogAttrs.put("password",
-				new VTrxLogAttr("password", "Password", false));
-		trxLogAttrs.put("userRoleList",
-				new VTrxLogAttr("userRoleList", "User Role", false));
-		trxLogAttrs.put("otherAttributes",
-				new VTrxLogAttr("otherAttributes", "Other Attributes", false));
-		trxLogAttrs.put("syncSource",
-				new VTrxLogAttr("syncSource", "Sync Source", false));
-	}
+	String hiddenPassword;
 
 	public XUserService() {
 		searchFields.add(new SearchField("name", "obj.name",
@@ -122,11 +81,11 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				"xXPortalUser.id=xXPortalUserRole.userId and xXPortalUser.loginId = obj.name "));
 
 		searchFields.add(new SearchField("syncSource", "obj.syncSource",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
-		hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden","*****");
+		hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 
 		sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 		
@@ -268,129 +227,6 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		}
 	}
 
-	public List<XXTrxLog> getTransactionLog(VXUser vResource, String action) {
-		return getTransactionLog(vResource, null, action);
-	}
-
-	public List<XXTrxLog> getTransactionLog(VXUser vObj, VXPortalUser mObj,
-			String action) {
-
-		if (vObj == null || action == null || ("update".equalsIgnoreCase(action) && mObj == null)) {
-			return null;
-		}
-
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		try {
-			Field nameField = vObj.getClass().getDeclaredField("name");
-			nameField.setAccessible(true);
-			String objectName = "" + nameField.get(vObj);
-			Field[] fields = vObj.getClass().getDeclaredFields();
-
-			for (Field field : fields) {
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				if (!trxLogAttrs.containsKey(fieldName)) {
-					continue;
-				}
-
-				VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
-
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAttributeName(vTrxLogAttr
-						.getAttribUserFriendlyName());
-
-				String value = null;
-				if (vTrxLogAttr.isEnum()) {
-					String enumName = XXUser.getEnumName(fieldName);
-					int enumValue = field.get(vObj) == null ? 0 : Integer
-							.parseInt("" + field.get(vObj));
-					value = xaEnumUtil.getLabel(enumName, enumValue);
-				} else {
-					value = "" + field.get(vObj);
-					if ((value == null || "null".equalsIgnoreCase(value))
-							&& !"update".equalsIgnoreCase(action)) {
-						continue;
-					}
-				}
-
-				if ("password".equalsIgnoreCase(fieldName)) {
-					if (value.equalsIgnoreCase(hiddenPasswordString)) {
-						continue;
-					}
-				}
-
-				if ("create".equalsIgnoreCase(action)) {
-					if (stringUtil.isEmpty(value)
-							|| ("emailAddress".equalsIgnoreCase(fieldName) && !stringUtil
-									.validateEmail(value))) {
-						continue;
-					}
-					xTrxLog.setNewValue(value);
-				} else if ("delete".equalsIgnoreCase(action)) {
-					if ("emailAddress".equalsIgnoreCase(fieldName)
-							&& !stringUtil.validateEmail(value)) {
-						continue;
-					}
-					xTrxLog.setPreviousValue(value);
-				} else if ("update".equalsIgnoreCase(action)) {
-					String oldValue = null;
-					Field[] mFields = mObj.getClass().getDeclaredFields();
-					for (Field mField : mFields) {
-						mField.setAccessible(true);
-						String mFieldName = mField.getName();
-						if ("loginId".equalsIgnoreCase(mFieldName)) {
-							mFieldName = "name";
-						}
-						if (fieldName.equalsIgnoreCase(mFieldName)) {
-							oldValue = mField.get(mObj) + "";
-							break;
-						}
-					}
-					if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
-						continue;
-					}
-					if ("emailAddress".equalsIgnoreCase(fieldName)) {
-						if (stringUtil.validateEmail(oldValue)) {
-							xTrxLog.setPreviousValue(oldValue);
-						}
-						if (stringUtil.validateEmail(value)) {
-							xTrxLog.setNewValue(value);
-						}
-					} else {
-						xTrxLog.setPreviousValue(oldValue);
-						xTrxLog.setNewValue(value);
-					}
-				}
-
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_USER);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setObjectName(objectName);
-
-				trxLogList.add(xTrxLog);
-			}
-
-			if (trxLogList.isEmpty()) {
-				XXTrxLog xTrxLog = new XXTrxLog();
-				xTrxLog.setAction(action);
-				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_XA_USER);
-				xTrxLog.setObjectId(vObj.getId());
-				xTrxLog.setObjectName(objectName);
-				trxLogList.add(xTrxLog);
-			}
-
-		} catch (IllegalArgumentException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (IllegalAccessException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (NoSuchFieldException e) {
-			logger.error("Transaction log failure.", e);
-		} catch (SecurityException e) {
-			logger.error("Transaction log failure.", e);
-		}
-
-		return trxLogList;
-	}
         public Map<Long, XXUser> getXXPortalUserIdXXUserMap(){
                 Map<Long, XXUser> xXPortalUserIdXXUserMap=new HashMap<Long, XXUser>();
                 try{

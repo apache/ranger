@@ -1145,25 +1145,10 @@ public class TestServiceDBStore {
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
 				.mock(XXServiceConfigDefDao.class);
 		XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
-        	XXServiceResourceDao xServiceResourceDao = Mockito.mock(XXServiceResourceDao.class);
 
 		RangerService rangerService = rangerService();
 		Map<String, Object> options = null;
 		String name = "fdfdfds";
-
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		XXTrxLog xTrxLogObj = new XXTrxLog();
-		xTrxLogObj.setAction("create");
-		xTrxLogObj.setAddedByUserId(Id);
-		xTrxLogObj.setAttributeName("User Role");
-		xTrxLogObj.setCreateTime(new Date());
-		xTrxLogObj.setId(Id);
-		xTrxLogObj.setNewValue("admin");
-		xTrxLogObj.setObjectClassType(0);
-		xTrxLogObj.setObjectId(1L);
-		xTrxLogObj.setParentObjectClassType(0);
-		xTrxLogObj.setParentObjectId(Id);
-		trxLogList.add(xTrxLogObj);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
@@ -1176,9 +1161,7 @@ public class TestServiceDBStore {
 		xServiceConfigDefList.add(serviceConfigDefObj);
 		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(
 				xServiceConfigDefDao);
-		Mockito.when(daoManager.getXXServiceResource()).thenReturn(xServiceResourceDao);
 
-		Mockito.when(xServiceResourceDao.countTaggedResourcesInServiceId(xService.getId())).thenReturn(0L);
 		Mockito.when(svcService.update(rangerService))
 				.thenReturn(rangerService);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -1264,20 +1247,6 @@ public class TestServiceDBStore {
 		policiesIds.add(Id);
 
 		List<String> zonesNameList =new ArrayList<String>();
-
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		XXTrxLog xTrxLogObj = new XXTrxLog();
-		xTrxLogObj.setAction("delete");
-		xTrxLogObj.setAddedByUserId(Id);
-		xTrxLogObj.setAttributeName("User Role");
-		xTrxLogObj.setCreateTime(new Date());
-		xTrxLogObj.setId(Id);
-		xTrxLogObj.setNewValue("admin");
-		xTrxLogObj.setObjectClassType(0);
-		xTrxLogObj.setObjectId(1L);
-		xTrxLogObj.setParentObjectClassType(0);
-		xTrxLogObj.setParentObjectId(Id);
-		trxLogList.add(xTrxLogObj);
 
 		List<XXPolicyItem> policyItemList = new ArrayList<XXPolicyItem>();
 		XXPolicyItem policyItem = new XXPolicyItem();
@@ -1386,9 +1355,6 @@ public class TestServiceDBStore {
 		Mockito.when(xPolicyDao.findPolicyIdsByServiceId(rangerService.getId()))
 				.thenReturn(policiesIds);
 		Mockito.when(svcService.delete(rangerService)).thenReturn(true);
-
-		Mockito.when(svcService.getTransactionLog(rangerService, 3))
-				.thenReturn(trxLogList);
 
 		Mockito.when(policyService.read(Id)).thenReturn(rangerPolicy);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -2101,6 +2067,8 @@ public class TestServiceDBStore {
 		xServiceVersionInfo.setPolicyUpdateTime(new Date());
 		xServiceVersionInfo.setTagVersion(1L);
 		xServiceVersionInfo.setTagUpdateTime(new Date());
+		xServiceVersionInfo.setGdsVersion(1L);
+		xServiceVersionInfo.setGdsUpdateTime(new Date());
 
 		String serviceName = "HDFS_1";
 		Long lastKnownVersion = 1l;
@@ -2295,9 +2263,6 @@ public class TestServiceDBStore {
 	Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
 			rangerService);
 
-	XXServiceResourceDao xServiceResourceDao = Mockito.mock(XXServiceResourceDao.class);
-	Mockito.when(daoManager.getXXServiceResource()).thenReturn(xServiceResourceDao);
-	Mockito.when(xServiceResourceDao.countTaggedResourcesInServiceId(xService.getId())).thenReturn(0L);
 	Map<String, Object> options = null;
 	RangerService dbRangerService = serviceDBStore
 			.updateService(rangerService, options);

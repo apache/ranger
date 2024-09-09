@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hadoop;
 
+import static java.util.stream.Collectors.toSet;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.EXECUTE_ACCCESS_TYPE;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.READ_ACCCESS_TYPE;
@@ -29,9 +30,20 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ALL_PERM;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ACCESS_TYPE_MONITOR_HEALTH;
 
+
 import java.net.InetAddress;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -49,6 +61,7 @@ import org.apache.hadoop.hdfs.util.ReadOnlyList;
 import org.apache.hadoop.ipc.CallerContext;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -67,25 +80,42 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerHdfsAuthorizer extends INodeAttributeProvider {
-	public static final String KEY_FILENAME = "FILENAME";
-	public static final String KEY_BASE_FILENAME = "BASE_FILENAME";
-	public static final String DEFAULT_FILENAME_EXTENSION_SEPARATOR = ".";
-
-    public static final String KEY_RESOURCE_PATH = "path";
-
-    public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
-
-	private static final Logger LOG = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
+	private static final Logger LOG                       = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
 	private static final Logger PERF_HDFSAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hdfsauth.request");
 
-	private RangerHdfsPlugin           rangerPlugin            = null;
-	private Map<FsAction, Set<String>> access2ActionListMapper = new HashMap<FsAction, Set<String>>();
-	private final Path                 addlConfigFile;
+	public static final String KEY_FILENAME                             = "FILENAME";
+	public static final String KEY_BASE_FILENAME                        = "BASE_FILENAME";
+	public static final String DEFAULT_FILENAME_EXTENSION_SEPARATOR     = ".";
+	public static final String KEY_RESOURCE_PATH                        = "path";
+	public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
+	public static final String OPERATION_NAME_CREATE                    = "create";
+	public static final String OPERATION_NAME_DELETE                    = "delete";
+	public static final String OPERATION_NAME_RENAME                    = "rename";
+	public static final String OPERATION_NAME_LISTSTATUS                = "listStatus";
+	public static final String OPERATION_NAME_MKDIRS                    = "mkdirs";
+	public static final String OPERATION_NAME_GETEZFORPATH              = "getEZForPath";
+
+	private static final Set<String> OPTIMIZED_OPERATIONS = new HashSet<String>() {{
+		add(OPERATION_NAME_CREATE);
+		add(OPERATION_NAME_DELETE);
+		add(OPERATION_NAME_RENAME);
+		add(OPERATION_NAME_LISTSTATUS);
+		add(OPERATION_NAME_MKDIRS);
+		add(OPERATION_NAME_GETEZFORPATH);
+	}};
+
+	private       RangerHdfsPlugin            rangerPlugin            = null;
+	private final Map<FsAction, Set<String>> access2ActionListMapper = new HashMap<FsAction, Set<String>>();
+	private final Path                        addlConfigFile;
+	private       boolean                    AUTHZ_OPTIMIZATION_ENABLED        = true;
+
+	private final OptimizedAuthzContext      OPT_BYPASS_AUTHZ                  = new OptimizedAuthzContext("", FsAction.NONE, FsAction.NONE, FsAction.NONE, AuthzStatus.ALLOW);
+
+
 
 	public RangerHdfsAuthorizer() {
 		this(null);
@@ -116,16 +146,31 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			LOG.info(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP + " is enabled");
 		}
 
-		access2ActionListMapper.put(FsAction.NONE,          new HashSet<String>());
-		access2ActionListMapper.put(FsAction.ALL,           Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ,          Sets.newHashSet(READ_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_WRITE,    Sets.newHashSet(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.READ_EXECUTE,  Sets.newHashSet(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE,         Sets.newHashSet(WRITE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.WRITE_EXECUTE, Sets.newHashSet(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE));
-		access2ActionListMapper.put(FsAction.EXECUTE,       Sets.newHashSet(EXECUTE_ACCCESS_TYPE));
+		LOG.info("Legacy way of authorizing sub-access requests will " + (plugin.isUseLegacySubAccessAuthorization() ? "" : "not ") + "be used");
+
+		access2ActionListMapper.put(FsAction.NONE,
+									new TreeSet<String>());
+		access2ActionListMapper.put(FsAction.ALL,
+									Stream.of(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ,
+									Stream.of(READ_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ_WRITE,
+									Stream.of(READ_ACCCESS_TYPE, WRITE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.READ_EXECUTE,
+									Stream.of(READ_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.WRITE,
+									Stream.of(WRITE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.WRITE_EXECUTE,
+									Stream.of(WRITE_ACCCESS_TYPE, EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
+		access2ActionListMapper.put(FsAction.EXECUTE,
+									Stream.of(EXECUTE_ACCCESS_TYPE).collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER))));
 
 		rangerPlugin = plugin;
+
+		AUTHZ_OPTIMIZATION_ENABLED        = plugin.getConfig().getBoolean("ranger.hdfs.authz.enable.optimization", false);
+
+		LOG.info("AUTHZ_OPTIMIZATION_ENABLED:[" + AUTHZ_OPTIMIZATION_ENABLED + "]");
+
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHdfsAuthorizer.start()");
@@ -151,32 +196,12 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 	@Override
 	public INodeAttributes getAttributes(String fullPath, INodeAttributes inode) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.getAttributes(" + fullPath + ")");
-		}
-
-		INodeAttributes ret = inode; // return default attributes
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.getAttributes(" + fullPath + "): " + ret);
-		}
-
-		return ret;
+		return inode; // return default attributes
 	}
 
 	@Override
 	public INodeAttributes getAttributes(String[] pathElements, INodeAttributes inode) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.getAttributes(pathElementsCount=" + (pathElements == null ? 0 : pathElements.length) + ")");
-		}
-
-		INodeAttributes ret = inode; // return default attributes
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.getAttributes(pathElementsCount=" + (pathElements == null ? 0 : pathElements.length) + "): " + ret);
-		}
-
-		return ret;
+		return inode;
 	}
 
 	@Override
@@ -202,7 +227,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 	private enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED }
 
 	class RangerAccessControlEnforcer implements AccessControlEnforcer {
-		private INodeAttributeProvider.AccessControlEnforcer defaultEnforcer = null;
+		private final AccessControlEnforcer              defaultEnforcer;
+		private       Map<String, OptimizedAuthzContext> CACHE      = null;
 
 		public RangerAccessControlEnforcer(AccessControlEnforcer defaultEnforcer) {
 			if(LOG.isDebugEnabled()) {
@@ -219,10 +245,14 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 		class SubAccessData {
 			final INodeDirectory    dir;
 			final String            resourcePath;
+			final INode[]           inodes;
+			final INodeAttributes[] iNodeAttributes;
 
-			SubAccessData(INodeDirectory dir, String resourcePath) {
+			SubAccessData(INodeDirectory dir, String resourcePath, INode[] inodes, INodeAttributes[] iNodeAttributes) {
 				this.dir            = dir;
 				this.resourcePath   = resourcePath;
+				this.iNodeAttributes = iNodeAttributes;
+				this.inodes          = inodes;
 			}
 		}
 
@@ -258,7 +288,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			AuthzContext context      = new AuthzContext(rangerPlugin, ugi, operationName, access == null && parentAccess == null && ancestorAccess == null && subAccess == null);
 
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerAccessControlEnforcer.checkPermission("
+				LOG.debug("==> RangerAccessControlEnforcer.checkRangerPermission("
 						+ "fsOwner=" + fsOwner + "; superGroup=" + superGroup + ", inodesCount=" + (inodes != null ? inodes.length : 0)
 						+ ", snapshotId=" + snapshotId + ", user=" + context.user + ", provided-path=" + path + ", ancestorIndex=" + ancestorIndex
 						+ ", doCheckOwner="+ doCheckOwner + ", ancestorAccess=" + ancestorAccess + ", parentAccess=" + parentAccess
@@ -266,10 +296,15 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						+ ", callerContext=" + callerContext +")");
 			}
 
-			RangerPerfTracer perf = null;
+			if (LOG.isDebugEnabled()) {
+				LOG.info("operationName={}, path={}, user={}, ancestorIndex={}, ancestorAccess={}, parentAccess={}, access={}, subAccess={}", context.operationName, path, context.user, ancestorIndex, ancestorAccess, parentAccess, access, subAccess);
+			}
+
+			OptimizedAuthzContext optAuthzContext = null;
+			RangerPerfTracer      perf            = null;
 
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_HDFSAUTH_REQUEST_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_HDFSAUTH_REQUEST_LOG, "RangerHdfsAuthorizer.checkPermission(provided-path=" + path + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_HDFSAUTH_REQUEST_LOG, "RangerHdfsAuthorizer.checkRangerPermission(provided-path=" + path + ")");
 			}
 
 			try {
@@ -283,9 +318,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 				if (context.plugin != null && !ArrayUtils.isEmpty(inodes)) {
 					int sz = inodeAttrs.length;
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Size of INodeAttrs array:[" + sz + "]");
-						LOG.debug("Size of INodes array:[" + inodes.length + "]");
+					if (LOG.isTraceEnabled()) {
+						LOG.trace("Size of INodeAttrs array:[" + sz + "]");
+						LOG.trace("Size of INodes array:[" + inodes.length + "]");
 					}
 					byte[][] components = new byte[sz][];
 
@@ -298,9 +333,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						}
 					}
 					if (i != sz) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Input INodeAttributes array contains null at position " + i);
-							LOG.debug("Will use only first [" + i + "] components");
+						if (LOG.isTraceEnabled()) {
+							LOG.trace("Input INodeAttributes array contains null at position " + i);
+							LOG.trace("Will use only first [" + i + "] components");
 						}
 					}
 
@@ -308,8 +343,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 						doNotGenerateAuditRecord = true;
 
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Using the only inode in the array to figure out path to resource. No audit record will be generated for this authorization request");
+						if (LOG.isTraceEnabled()) {
+							LOG.trace("Using the only inode in the array to figure out path to resource. No audit record will be generated for this authorization request");
 						}
 
 						resourcePath = inodes[0].getFullPathName();
@@ -318,12 +353,12 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 							useDefaultAuthorizerOnly = true;
 
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("path:[" + resourcePath + "] is for a snapshot, id=[" + snapshotId +"], default Authorizer will be used to authorize this request");
+							if (LOG.isTraceEnabled()) {
+								LOG.trace("path:[" + resourcePath + "] is for a snapshot, id=[" + snapshotId +"], default Authorizer will be used to authorize this request");
 							}
 						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("path:[" + resourcePath + "] is not for a snapshot, id=[" + snapshotId +"]. It will be used to authorize this request");
+							if (LOG.isTraceEnabled()) {
+								LOG.trace("path:[" + resourcePath + "] is not for a snapshot, id=[" + snapshotId +"]. It will be used to authorize this request");
 							}
 						}
 					} else {
@@ -331,14 +366,14 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						if (snapshotId != Snapshot.CURRENT_STATE_ID) {
 							resourcePath = DFSUtil.byteArray2PathString(pathByNameArr);
 
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("pathByNameArr array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
+							if (LOG.isTraceEnabled()) {
+								LOG.trace("pathByNameArr array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
 							}
 						} else {
 							resourcePath = DFSUtil.byteArray2PathString(components, 0, i);
 
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("INodeAttributes array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
+							if (LOG.isTraceEnabled()) {
+								LOG.trace("INodeAttributes array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
 							}
 						}
 					}
@@ -349,11 +384,58 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 					for(; ancestorIndex >= 0 && inodes[ancestorIndex] == null; ancestorIndex--);
 
-					authzStatus = useDefaultAuthorizerOnly ? AuthzStatus.NOT_DETERMINED : AuthzStatus.ALLOW;
-
 					ancestor = inodes.length > ancestorIndex && ancestorIndex >= 0 ? inodes[ancestorIndex] : null;
 					parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
 					inode    = inodes[inodes.length - 1]; // could be null while creating a new file
+
+					/*
+						Check if optimization is done
+					 */
+					optAuthzContext = (new OperationOptimizer(operationName, resourcePath, ancestorAccess, parentAccess, access, subAccess, components, inodeAttrs, ancestorIndex, ancestor, parent, inode)).optimize();
+
+					if (optAuthzContext == OPT_BYPASS_AUTHZ) {
+						authzStatus = AuthzStatus.ALLOW;
+
+						return;
+					} else if (optAuthzContext != null && optAuthzContext.authzStatus != null) {
+						authzStatus = optAuthzContext.authzStatus;
+
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("OperationOptimizer.optimize() returned " + authzStatus + ", operationName=" + operationName + " has been pre-computed. Returning without any access evaluation!");
+						}
+
+						if (authzStatus == AuthzStatus.ALLOW) {
+							return;
+						}
+
+						final FsAction action;
+
+						if (access != null) {
+							action = access;
+						} else if(parentAccess != null)  {
+							action = parentAccess;
+						} else if(ancestorAccess != null) {
+							action = ancestorAccess;
+						} else {
+							action = FsAction.EXECUTE;
+						}
+
+						throw new RangerAccessControlException("Permission denied: user=" + context.user + ", access=" + action + ", inode=\"" + resourcePath + "\"");
+					} else {
+						authzStatus = useDefaultAuthorizerOnly ? AuthzStatus.NOT_DETERMINED : AuthzStatus.ALLOW;
+					}
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("OperationOptimizer.optimize() returned null, operationName=" + operationName + " needs to be evaluated!");
+					}
+
+					if (optAuthzContext != null) {
+						access         = optAuthzContext.access;
+						parentAccess   = optAuthzContext.parentAccess;
+						ancestorAccess = optAuthzContext.ancestorAccess;
+					}
+
+					context.isTraverseOnlyCheck = parentAccess == null && ancestorAccess == null && access == null && subAccess == null;
 
 					context.auditHandler = doNotGenerateAuditRecord ? null : new RangerHdfsAuditHandler(providedPath, context.isTraverseOnlyCheck, context.plugin.getHadoopModuleName(), context.plugin.getExcludedUsers(), callerContext != null ? callerContext.toString() : null);
 
@@ -429,7 +511,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					if(authzStatus == AuthzStatus.ALLOW && subAccess != null && inode != null && inode.isDirectory()) {
 						Stack<SubAccessData> directories = new Stack<>();
 
-						for(directories.push(new SubAccessData(inode.asDirectory(), resourcePath)); !directories.isEmpty(); ) {
+						for(directories.push(new SubAccessData(inode.asDirectory(), resourcePath, inodes, inodeAttrs)); !directories.isEmpty(); ) {
 							SubAccessData data = directories.pop();
 							ReadOnlyList<INode> cList = data.dir.getChildrenList(snapshotId);
 
@@ -438,7 +520,75 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 								authzStatus = isAccessAllowed(data.dir, dirAttribs, data.resourcePath, subAccess, context);
 
-								if(authzStatus != AuthzStatus.ALLOW) {
+								INodeDirectory dirINode;
+								int dirAncestorIndex;
+								INodeAttributes[] dirINodeAttrs;
+								INode[] dirINodes;
+								INode dirAncestor;
+								INode dirParent;
+								byte[][] dirComponents;
+
+								if (data.dir.equals(inode)) {
+									dirINode = inode.asDirectory();
+									dirINodeAttrs = inodeAttrs;
+									dirINodes = inodes;
+									dirAncestorIndex = ancestorIndex;
+									dirAncestor = ancestor;
+									dirParent = parent;
+									dirComponents = pathByNameArr;
+								} else {
+									INodeAttributes[] curINodeAttributes;
+									INode[] curINodes;
+
+									dirINode = data.dir;
+									curINodeAttributes = data.iNodeAttributes;
+									curINodes = data.inodes;
+									int idx;
+
+									dirINodes = new INode[curINodes.length + 1];
+									for (idx = 0; idx < curINodes.length; idx++) {
+										dirINodes[idx] = curINodes[idx];
+									}
+									dirINodes[idx] = dirINode;
+
+									dirINodeAttrs = new INodeAttributes[curINodeAttributes.length + 1];
+									for (idx = 0; idx < curINodeAttributes.length; idx++) {
+										dirINodeAttrs[idx] = curINodeAttributes[idx];
+									}
+									dirINodeAttrs[idx] = dirAttribs;
+
+									for (dirAncestorIndex = dirINodes.length - 1; dirAncestorIndex >= 0 && dirINodes[dirAncestorIndex] == null; dirAncestorIndex--)
+										;
+
+									dirAncestor = dirINodes.length > dirAncestorIndex && dirAncestorIndex >= 0 ? dirINodes[dirAncestorIndex] : null;
+									dirParent = dirINodes.length > 1 ? dirINodes[dirINodes.length - 2] : null;
+
+									dirComponents = dirINode.getPathComponents();
+								}
+
+								if (authzStatus == AuthzStatus.NOT_DETERMINED && !rangerPlugin.isUseLegacySubAccessAuthorization()) {
+									if (LOG.isDebugEnabled()) {
+										if (data.dir.equals(inode)) {
+											LOG.debug("Top level directory being processed for default authorizer call, [" + data.resourcePath + "]");
+										} else {
+											LOG.debug("Sub directory being processed for default authorizer call, [" + data.resourcePath + "]");
+										}
+										LOG.debug("Calling default authorizer for hierarchy/subaccess with the following parameters");
+										LOG.debug("fsOwner=" + fsOwner + "; superGroup=" + superGroup + ", inodesCount=" + (dirINodes != null ? dirINodes.length : 0)
+												+ ", snapshotId=" + snapshotId + ", user=" + (ugi != null ? ugi.getShortUserName() : null) + ", provided-path=" + data.resourcePath + ", ancestorIndex=" + dirAncestorIndex
+												+ ", doCheckOwner=" + doCheckOwner + ", ancestorAccess=null" + ", parentAccess=null"
+												+ ", access=null" + ", subAccess=null" + ", ignoreEmptyDir=" + ignoreEmptyDir + ", operationName=" + operationName
+												+ ", callerContext=null");
+									}
+									authzStatus = checkDefaultEnforcer(fsOwner, superGroup, ugi, dirINodeAttrs, dirINodes,
+											dirComponents, snapshotId, data.resourcePath, dirAncestorIndex, doCheckOwner,
+											null, null, null, null, ignoreEmptyDir,
+											dirAncestor, dirParent, dirINode, context);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Default authorizer call returned : [" + authzStatus + "]");
+									}
+								}
+								if (authzStatus != AuthzStatus.ALLOW) {
 									break;
 								}
 
@@ -453,7 +603,11 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 								if (subDirAuthStatus != AuthzStatus.ALLOW) {
 									for(INode child : cList) {
 										if (child.isDirectory()) {
-											directories.push(new SubAccessData(child.asDirectory(), resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
+											if (data.resourcePath.endsWith(Path.SEPARATOR)) {
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + child.getLocalName(), dirINodes, dirINodeAttrs));
+											} else {
+												directories.push(new SubAccessData(child.asDirectory(), data.resourcePath + Path.SEPARATOR_CHAR + child.getLocalName(), dirINodes, dirINodeAttrs));
+											}
 										}
 									}
 								}
@@ -505,10 +659,17 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					context.auditHandler.flushAudit();
 				}
 
+				if (optAuthzContext != null && optAuthzContext != OPT_BYPASS_AUTHZ) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Updating OptimizedAuthzContext:[" + optAuthzContext + "] with authzStatus=" + authzStatus.name() + "]");
+					}
+					optAuthzContext.authzStatus = authzStatus;
+				}
+
 				RangerPerfTracer.log(perf);
 
 				if(LOG.isDebugEnabled()) {
-					LOG.debug("<== RangerAccessControlEnforcer.checkPermission(" + resourcePath + ", " + access + ", user=" + context.user + ") : " + authzStatus);
+					LOG.debug("<== RangerAccessControlEnforcer.checkRangerPermission(" + resourcePath + ", " + access + ", user=" + context.user + ") : " + authzStatus);
 				}
 			}
 		}
@@ -522,7 +683,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerAccessControlEnforcer.traverseOnlyCheck("
-						+ "path=" + path + ", user=" + context.user + ", groups=" + context.userGroups + ")");
+						+ "path=" + path + ", user=" + context.user + ", groups=" + context.userGroups + ", operationName=" + context.operationName + ")");
 			}
 			final AuthzStatus ret;
 
@@ -550,18 +711,18 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						resourcePath = resourcePath.substring(0, resourcePath.length()-1);
 					}
 				}
-				ret = isAccessAllowedForTraversal(nodeToCheck, nodeAttribs, resourcePath, skipAuditOnAllow, context);
+				ret = isAccessAllowedForTraversal(nodeToCheck, nodeAttribs, resourcePath, skipAuditOnAllow, context, context.operationName);
 			} else {
 				ret = AuthzStatus.ALLOW;
 			}
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerAccessControlEnforcer.traverseOnlyCheck("
-						+ "path=" + path + ", resourcePath=" + resourcePath + ", user=" + context.user + ", groups=" + context.userGroups + ") : " + ret);
+						+ "path=" + path + ", resourcePath=" + resourcePath + ", user=" + context.user + ", groups=" + context.userGroups + ", operationName=" + context.operationName + ") : " + ret);
 			}
 			return ret;
 		}
 
-		private AuthzStatus isAccessAllowedForTraversal(INode inode, INodeAttributes inodeAttribs, String path, boolean skipAuditOnAllow, AuthzContext context) {
+		private AuthzStatus isAccessAllowedForTraversal(INode inode, INodeAttributes inodeAttribs, String path, boolean skipAuditOnAllow, AuthzContext context, String operation) {
 			final AuthzStatus ret;
 			String pathOwner = inodeAttribs != null ? inodeAttribs.getUserName() : null;
 			FsAction access = FsAction.EXECUTE;
@@ -575,10 +736,17 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerAccessControlEnforcer.isAccessAllowedForTraversal(" + path + ", " + access + ", " + context.user + ", " + skipAuditOnAllow + ")");
+				LOG.debug("==> RangerAccessControlEnforcer.isAccessAllowedForTraversal(" + path + ", " + access + ", " + context.user + ", " + skipAuditOnAllow + ", " + context.operationName + ")");
 			}
 
-			RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, EXECUTE_ACCCESS_TYPE, context.operationName, context.user, context.userGroups);
+			RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, EXECUTE_ACCCESS_TYPE, operation, context.user, context.userGroups);
+
+			// if the request was already allowed by a Ranger policy (for ancestor/parent/node/child), skip chained plugin evaluations in subsequent calls
+			if (context.isAllowedByRangerPolicies) {
+				LOG.warn("This request is already allowed by Ranger policies. Ensuring that chained-plugins are not evaluated again for this request, request:[" + request + "]");
+
+				RangerAccessRequestUtil.setIsSkipChainedPlugins(request.getContext(), Boolean.TRUE);
+			}
 
 			RangerAccessResult result = context.plugin.isAccessAllowed(request, null);
 
@@ -589,6 +757,13 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			} else {
 				ret = AuthzStatus.ALLOW;
 			}
+			if (ret == AuthzStatus.ALLOW) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("This request is for the first time allowed by Ranger policies. request:[" + request + "]");
+				}
+
+				context.isAllowedByRangerPolicies = true;
+			}
 
 			if (ret == AuthzStatus.DENY || (!skipAuditOnAllow && result != null && result.getIsAccessDetermined())) {
 				if (context.auditHandler != null) {
@@ -597,7 +772,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerAccessControlEnforcer.isAccessAllowedForTraversal(" + path + ", " + access + ", " + context.user + ", " + skipAuditOnAllow + "): " + ret);
+				LOG.debug("<== RangerAccessControlEnforcer.isAccessAllowedForTraversal(" + path + ", " + access + ", " + context.user + ", " + skipAuditOnAllow + ", " + context.operationName + "): " + ret);
 			}
 
 			return ret;
@@ -720,7 +895,17 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
 				if (accessTypes.size() > 1) {
+					Set<Set<String>> allAccessTypeGroups = accessTypes.stream().map(Collections::singleton).collect(toSet());
+
+					RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 					RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
+				}
+
+				// if the request was already allowed by a Ranger policy (for ancestor/parent/node/child), skip chained plugin evaluations in subsequent calls
+				if (context.isAllowedByRangerPolicies) {
+					LOG.warn("This request is already allowed by Ranger policies. Ensuring that chained-plugins are not evaluated again for this request, request:[" + request + "]");
+
+					RangerAccessRequestUtil.setIsSkipChainedPlugins(request.getContext(), Boolean.TRUE);
 				}
 
 				RangerAccessResult result = context.plugin.isAccessAllowed(request, context.auditHandler);
@@ -733,6 +918,13 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					ret = AuthzStatus.DENY;
 				} else { // allowed
 					ret = AuthzStatus.ALLOW;
+				}
+				if (ret == AuthzStatus.ALLOW) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("This request is for the first time allowed by Ranger policies. request:[" + request + "]");
+					}
+
+					context.isAllowedByRangerPolicies = true;
 				}
 			}
 
@@ -783,6 +975,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(null, subDirPath, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
 					if (accessTypes.size() > 1) {
+						Set<Set<String>> allAccessTypeGroups = accessTypes.stream().map(Collections::singleton).collect(toSet());
+
+						RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 						RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
 					}
 
@@ -810,7 +1005,280 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 			return ret;
 		}
+		/*
+			Description	: optimize() checks if the given operation is a candidate for optimizing (reducing) the number of times it is authorized
+			Returns 	: null, if the operation, in its current invocation, cannot be optimized.
+						: OptimizedAuthzContext with the authzStatus set to null, if the operation in its current invocation needs to be authorized. However, the next invocation
+						  for the same user and the resource can be optimized based on the result of the authorization.
+						: OptimizedAuthzContext with the authzStatus set to non-null, if the operation in its current invocation need not be authorized.
+			Algorithm   : The algorithm is based on the specifics of each operation that is potentially optimized.
+						  	1. OPERATION_NAME_COMPLETEFILE:
+						  		 Skipping this authorization check may break semantic equivalence (according to HDFS team). Therefore, no optimization
+						  		is attempted for this operation.
+						  	2. OPERATION_NAME_DELETE:
+						  		Namenode calls this twice when deleting a file. First invocation checks if the user has a EXECUTE access on the parent directory, and second invocation
+						  		checks if the user has a WRITE access on the parent directory as well as ALL access on the directory tree rooted at the parent directory. First invocation
+						  		can be optimized away and the second invocation is authorized with the parent directory access modified from WRITE to a WRITE_EXECUTE.
+						  		Namenode calls this three times when deleting a directory. The optimization code results in eliminating one authorization check out of three.
+							3. OPERATION_NAME_CREATE, OPERATION_NAME_MKDIRS:
+								Namenode calls this twice when creating a new file or a directory. First invocation checks if the user has a EXECUTE access on the parent directory, and second invocation
+								checks if the user has a WRITE access to the parent directory. The optimized code combines these checks into a WRITE_EXECUTE access for the first invocation,
+								and optimizes away the second call.
+								Namenode calls this three times when re-creating an existing file. In addition to two invocations described above, it also checks if the user has
+								a WRITE access to the file itself. This extra call is not optimized.
+							4. OPERATION_NAME_RENAME:
+								Namenode calls this twice when renaming a file for source as well as target directories. For each directory, first invocation checks if the user has a EXECUTE access on the parent directory, and second invocation
+								checks if the user has a WRITE access to the parent (or ancestor when checking target directory) . The optimized code combines these checks into a WRITE_EXECUTE access for the first invocation,
+								and optimizes away the second call.
+							5. 	OPERATION_NAME_LISTSTATUS, OPERATION_NAME_GETEZFORPATH:
+								Namenode calls this twice when listing a directory or getting the encryption zone for the directory. First invocation checks if the user has a EXECUTE access
+								on the directory, and second checks if the user has a READ_EXECUTE access on the directory. The optimized code combines these checks into a READ_EXECUTE access
+								for the first invocation.
+		 */
+
+
+		class OperationOptimizer {
+			private final String            operationName;
+
+			private final byte[][]          components;
+			private final INodeAttributes[] inodeAttrs;
+			private final int               ancestorIndex;
+			private final INode             ancestor;
+			private final INode             parent;
+			private final INode             inode;
+
+			private       String            resourcePath;
+			private       FsAction          ancestorAccess;
+			private       FsAction          parentAccess;
+			private       FsAction          access;
+			private final FsAction          subAccess;
+
+			OperationOptimizer(String operationName, String resourcePath, FsAction ancestorAccess, FsAction parentAccess, FsAction access, FsAction subAccess, byte[][] components, INodeAttributes[] inodeAttrs, int ancestorIndex, INode ancestor, INode parent, INode inode) {
+				this.operationName = operationName;
+
+				this.resourcePath   = resourcePath;
+				this.ancestorAccess = ancestorAccess;
+				this.parentAccess   = parentAccess;
+				this.access         = access;
+				this.subAccess      = subAccess;
+
+				this.components     = components;
+				this.inodeAttrs     = inodeAttrs;
+				this.ancestorIndex  = ancestorIndex;
+				this.ancestor       = ancestor;
+				this.parent         = parent;
+				this.inode          = inode;
+			}
+
+			OptimizedAuthzContext optimize() {
+				if (!AUTHZ_OPTIMIZATION_ENABLED || !OPTIMIZED_OPERATIONS.contains(operationName)) {
+					return null;
+				}
+				return optimizeOp(operationName);
+			}
+
+			OptimizedAuthzContext optimizeOp(String operationName) {
+				switch (operationName) {
+					case OPERATION_NAME_CREATE:
+						return optimizeCreateOp();
+					case OPERATION_NAME_DELETE:
+						return optimizeDeleteOp();
+					case OPERATION_NAME_RENAME:
+						return optimizeRenameOp();
+					case OPERATION_NAME_MKDIRS:
+						return optimizeMkdirsOp();
+					case OPERATION_NAME_LISTSTATUS:
+						return optimizeListStatusOp();
+					case OPERATION_NAME_GETEZFORPATH:
+						return optimizeGetEZForPathOp();
+					default:
+						break;
+				}
+				return null;
+			}
+
+			private OptimizedAuthzContext optimizeCreateOp() {
+				INode nodeToAuthorize = getINodeToAuthorize();
+				if (nodeToAuthorize == null) {
+					return OPT_BYPASS_AUTHZ;
+				}
+
+				if (!nodeToAuthorize.isDirectory() && access == null) {        // If not a directory, the access must be non-null as when recreating existing file
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("nodeToCheck is not a directory and access is null for a create operation! Optimization skipped");
+					}
+					return null;
+				}
+
+				return getOrCreateOptimizedAuthzContext();
+			}
+
+			private OptimizedAuthzContext optimizeDeleteOp() {
+				int numOfRequestedAccesses = 0;
+
+				if (ancestorAccess != null) numOfRequestedAccesses++;
+				if (parentAccess != null) numOfRequestedAccesses++;
+				if (access != null) numOfRequestedAccesses++;
+				if (subAccess != null) numOfRequestedAccesses++;
+
+				if (numOfRequestedAccesses == 0) {
+					return OPT_BYPASS_AUTHZ;
+				} else {
+					parentAccess = FsAction.WRITE_EXECUTE;
+					return getOrCreateOptimizedAuthzContext();
+				}
+			}
+
+			private OptimizedAuthzContext optimizeRenameOp() {
+				INode nodeToAuthorize = getINodeToAuthorize();
+
+				if (nodeToAuthorize == null) {
+					return OPT_BYPASS_AUTHZ;
+				}
+
+				if (!nodeToAuthorize.isDirectory()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("nodeToCheck is not a directory for a rename operation! Optimization skipped");
+					}
+					return null;
+				}
+
+				return getOrCreateOptimizedAuthzContext();
+			}
+
+			private OptimizedAuthzContext optimizeMkdirsOp() {
+				INode nodeToAuthorize = getINodeToAuthorize();
+
+				if (nodeToAuthorize == null) {
+					return OPT_BYPASS_AUTHZ;
+				}
+
+				if (!nodeToAuthorize.isDirectory()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("nodeToCheck is not a directory for a mkdirs operation! Optimization skipped");
+					}
+					return null;
+				}
+
+				return getOrCreateOptimizedAuthzContext();
+			}
+
+			private OptimizedAuthzContext optimizeListStatusOp() {
+				if (inode == null || inode.isFile()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("inode is null or is a file for a listStatus/getEZForPath operation! Optimization skipped");
+					}
+
+					return null;
+				} else {
+					if (resourcePath.length() > 1) {
+						if (resourcePath.endsWith(HDFS_ROOT_FOLDER_PATH)) {
+							resourcePath = resourcePath.substring(0, resourcePath.length() - 1);
+						}
+					}
+					access = FsAction.READ_EXECUTE;
+
+					return getOrCreateOptimizedAuthzContext();
+				}
+			}
+
+			private OptimizedAuthzContext optimizeGetEZForPathOp() {
+				if (inode == null || inode.isFile()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("inode is null or is a file for a listStatus/getEZForPath operation! Optimization skipped");
+					}
+
+					return null;
+				} else {
+					access = FsAction.READ_EXECUTE;
+
+					return getOrCreateOptimizedAuthzContext();
+				}
+			}
+
+			private INode getINodeToAuthorize() {
+				INode ret = null;
+
+				INode nodeToAuthorize = inode;
+
+				if (nodeToAuthorize == null || nodeToAuthorize.isFile()) {
+					// Case where the authorizer is called to authorize re-creation of an existing file. This is to check if the file itself is write-able
+
+					if (StringUtils.equals(operationName, OPERATION_NAME_CREATE) && inode != null && access != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Create operation with non-null access is being authorized. authorize for write access for the file!!");
+						}
+					} else {
+						if (parent != null) {
+							nodeToAuthorize      = parent;
+							resourcePath         = inodeAttrs.length > 0 ? DFSUtil.byteArray2PathString(components, 0, inodeAttrs.length - 1) : HDFS_ROOT_FOLDER_PATH;
+							parentAccess = FsAction.WRITE_EXECUTE;
+						} else if (ancestor != null) {
+							INodeAttributes nodeAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
+
+							nodeToAuthorize        = ancestor;
+							resourcePath           = nodeAttribs != null ? DFSUtil.byteArray2PathString(components, 0, ancestorIndex + 1) : HDFS_ROOT_FOLDER_PATH;
+							ancestorAccess = FsAction.WRITE_EXECUTE;
+						}
+						if (resourcePath.length() > 1) {
+							if (resourcePath.endsWith(HDFS_ROOT_FOLDER_PATH)) {
+								resourcePath = resourcePath.substring(0, resourcePath.length() - 1);
+							}
+						}
+					}
+					ret = nodeToAuthorize;
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("inode is not null and it is not a file for a create/rename/mkdirs operation! Optimization skipped");
+					}
+
+				}
+				return ret;
+			}
+
+			private OptimizedAuthzContext getOrCreateOptimizedAuthzContext() {
+				if (CACHE == null) {
+					CACHE = new HashMap<>();
+				}
+
+				OptimizedAuthzContext opContext = CACHE.get(resourcePath);
+
+				if (opContext == null) {
+					opContext = new OptimizedAuthzContext(resourcePath, ancestorAccess, parentAccess, access, null);
+
+					CACHE.put(resourcePath, opContext);
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Added OptimizedAuthzContext:[" + opContext + "] to cache");
+					}
+				}
+
+				return opContext;
+			}
+		}
 	}
+
+	static class OptimizedAuthzContext {
+		private final String      path;
+		private final FsAction    ancestorAccess;
+		private final FsAction    parentAccess;
+		private final FsAction    access;
+		private       AuthzStatus authzStatus;
+
+		OptimizedAuthzContext(String path, FsAction ancestorAccess, FsAction parentAccess, FsAction access, AuthzStatus authzStatus) {
+			this.path           = path;
+			this.ancestorAccess = ancestorAccess;
+			this.parentAccess   = parentAccess;
+			this.access         = access;
+			this.authzStatus    = authzStatus;
+		}
+
+		@Override
+		public String toString() {
+			return "path=" + path + ", authzStatus=" + authzStatus;
+		}
+	}
+
 }
 
 
@@ -824,6 +1292,7 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	private final String      randomizedWildcardPathName;
 	private final String      hadoopModuleName;
 	private final Set<String> excludeUsers = new HashSet<>();
+	private final boolean     useLegacySubAccessAuthorization;
 
 	public RangerHdfsPlugin(Path addlConfigFile) {
 		super("hdfs", "hdfs");
@@ -846,6 +1315,9 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 		this.hadoopModuleName             = config.get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME);
 
 		String excludeUserList = config.get(RangerHadoopConstants.AUDITLOG_HDFS_EXCLUDE_LIST_PROP, RangerHadoopConstants.AUDITLOG_EMPTY_STRING);
+
+		this.useLegacySubAccessAuthorization = config.getBoolean(RangerHadoopConstants.RANGER_USE_LEGACY_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_USE_LEGACY_SUBACCESS_AUTHORIZATION_DEFAULT);
+
 
 		if (excludeUserList != null && excludeUserList.trim().length() > 0) {
 			for(String excludeUser : excludeUserList.trim().split(",")) {
@@ -895,6 +1367,9 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 	}
 	public String getHadoopModuleName() { return hadoopModuleName; }
 	public Set<String> getExcludedUsers() { return  excludeUsers; }
+	public boolean isUseLegacySubAccessAuthorization() {
+		return useLegacySubAccessAuthorization;
+	}
 }
 
 class RangerHdfsResource extends RangerAccessResourceImpl {
@@ -966,7 +1441,8 @@ class AuthzContext {
 	public final String                 user;
 	public final Set<String>            userGroups;
 	public final String                 operationName;
-	public final boolean                isTraverseOnlyCheck;
+	public       boolean                isTraverseOnlyCheck;
+	public       boolean                isAllowedByRangerPolicies;
 	public       RangerHdfsAuditHandler auditHandler = null;
 	private      RangerAccessResult     lastResult   = null;
 
@@ -1167,4 +1643,3 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		}
 	}
 }
-

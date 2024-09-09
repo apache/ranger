@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -32,7 +33,6 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 
 public class RangerServiceValidator extends RangerValidator {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceValidator.class);
@@ -273,7 +273,16 @@ public class RangerServiceValidator extends RangerValidator {
 				failures.add(new ValidationFailureDetailsBuilder()
 						.field("tag_service")
 						.isSemanticallyIncorrect()
-						.becauseOf("tag service cannot be part of any other service")
+						.becauseOf("tag service cannot be part of a tag service")
+						.build());
+				valid = false;
+			}
+
+			if (StringUtils.isNotBlank(tagServiceName) && StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("tag_service")
+						.isSemanticallyIncorrect()
+						.becauseOf("gds service cannot be linked to a tag service")
 						.build());
 				valid = false;
 			}

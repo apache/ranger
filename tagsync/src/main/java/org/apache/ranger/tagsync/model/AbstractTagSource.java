@@ -19,8 +19,9 @@
 
 package org.apache.ranger.tagsync.model;
 
-import com.google.gson.Gson;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,30 +55,31 @@ public abstract  class AbstractTagSource implements TagSource {
 	}
 
 	protected void updateSink(final ServiceTags toUpload) throws Exception {
-		if (toUpload == null) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("No ServiceTags to upload");
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				String toUploadJSON = new Gson().toJson(toUpload);
-				LOG.debug("Uploading serviceTags=" + toUploadJSON);
-			}
-
-			try {
-				ServiceTags uploaded = tagSink.upload(toUpload);
-
+		try {
+			if (toUpload == null) {
 				if (LOG.isDebugEnabled()) {
-					String uploadedJSON = new Gson().toJson(uploaded);
+					LOG.debug("No ServiceTags to upload");
+				}
+			} else {
+				if (!TagSyncConfig.isTagSyncServiceActive()) {
+					LOG.error("This TagSync server is not in active state. Cannot commit transaction!");
+					throw new RuntimeException("This TagSync server is not in active state. Cannot commit transaction!");
+				}
+				if (LOG.isDebugEnabled()) {
+					String toUploadJSON = JsonUtils.objectToJson(toUpload);
+					LOG.debug("Uploading serviceTags=" + toUploadJSON);
+				}
+				ServiceTags uploaded = tagSink.upload(toUpload);
+				if (LOG.isDebugEnabled()) {
+					String uploadedJSON = JsonUtils.objectToJson(uploaded);
 					LOG.debug("Uploaded serviceTags=" + uploadedJSON);
 				}
-			} catch (Exception exception) {
-				String toUploadJSON = new Gson().toJson(toUpload);
-				LOG.error("Failed to upload serviceTags: " + toUploadJSON);
+			}
+		} catch (Exception exception) {
+				LOG.error("Failed to upload serviceTags: " + JsonUtils.objectToJson(toUpload));
 				LOG.error("Exception : ", exception);
 				throw exception;
 			}
-		}
 	}
 
 }

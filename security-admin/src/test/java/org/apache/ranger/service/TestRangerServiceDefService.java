@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.junit.Assert;
@@ -768,7 +769,7 @@ public class TestRangerServiceDefService {
 		boolean exists = false;
 
 		for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
-			if (StringUtils.equals(conditionDef.getEvaluator(), RangerServiceDefService.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+			if (StringUtils.equals(conditionDef.getEvaluator(), ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
 				exists = true;
 
 				break;

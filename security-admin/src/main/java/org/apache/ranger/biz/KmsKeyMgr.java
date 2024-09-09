@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.plugin.util.PasswordUtils;
@@ -65,9 +66,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
@@ -158,9 +156,9 @@ public class KmsKeyMgr {
 							}
 						});
 					}
-					Gson gson = new GsonBuilder().create();
+
 					logger.debug(" Search Key RESPONSE: [" + response + "]");
-					keys = gson.fromJson(response, List.class);
+					keys = JsonUtils.jsonToListString(response);
 					Collections.sort(keys);
 					VXKmsKeyList vxKmsKeyList2 = new VXKmsKeyList();
 					List<VXKmsKey> vXKeys2 = new ArrayList<VXKmsKey>();
@@ -247,8 +245,7 @@ public class KmsKeyMgr {
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
 				final WebResource r = c.resource(uri);
-				Gson gson = new GsonBuilder().create();
-				final String jsonString = gson.toJson(vXKey);
+				final String jsonString = JsonUtils.objectToJson(vXKey);
 				try {
 					String response = null;
 					if(!isKerberos){
@@ -263,7 +260,7 @@ public class KmsKeyMgr {
 						});
 		            }
 					logger.debug("Roll RESPONSE: [" + response + "]");
-					ret = gson.fromJson(response, VXKmsKey.class);
+					ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					break;
 				} catch (Exception e) {
 					if (e instanceof UniformInterfaceException || i == providers.length - 1)
@@ -354,8 +351,7 @@ public class KmsKeyMgr {
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
 				final WebResource r = c.resource(uri);
-				Gson gson = new GsonBuilder().create();
-				final String jsonString = gson.toJson(vXKey);
+				final String jsonString = JsonUtils.objectToJson(vXKey);
 				try {
 					String response = null;
 					if(!isKerberos){
@@ -370,7 +366,7 @@ public class KmsKeyMgr {
 							});
 					}
 					logger.debug("Create RESPONSE: [" + response + "]");
-					ret = gson.fromJson(response, VXKmsKey.class);
+					ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					return ret;
 				} catch (Exception e) {
 					if (e instanceof UniformInterfaceException || i == providers.length - 1)
@@ -421,9 +417,8 @@ public class KmsKeyMgr {
 							}
 						});
 					}
-					Gson gson = new GsonBuilder().create();
 					logger.debug("RESPONSE: [" + response + "]");
-					VXKmsKey key = gson.fromJson(response, VXKmsKey.class);
+					VXKmsKey key = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					return key;
 				} catch (Exception e) {
 					if (e instanceof UniformInterfaceException || i == providers.length - 1)
@@ -459,9 +454,8 @@ public class KmsKeyMgr {
 				}				
 			});
 		}
-		Gson gson = new GsonBuilder().create();
 		logger.debug("RESPONSE: [" + response + "]");
-		VXKmsKey key = gson.fromJson(response, VXKmsKey.class);
+		VXKmsKey key = JsonUtils.jsonToObject(response, VXKmsKey.class);
 		return key;
 	}
 	
@@ -497,7 +491,7 @@ public class KmsKeyMgr {
 		URL origUrl = new URL(extractKMSPath(providerUri).toString());
 		String authority = origUrl.getAuthority();
 		// 	check for ';' which delimits the backup hosts
-		if (Strings.isNullOrEmpty(authority)) {
+		if (StringUtils.isEmpty(authority)) {
 			throw new IOException("No valid authority in kms uri [" + origUrl+ "]");
 		}
 		// 	Check if port is present in authority

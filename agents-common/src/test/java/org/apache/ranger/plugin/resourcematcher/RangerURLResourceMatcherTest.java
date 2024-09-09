@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import com.google.common.collect.Lists;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
@@ -53,6 +53,60 @@ public class RangerURLResourceMatcherTest {
             { "://apps/warehouse/data/emp.db",                       "hdfs://app/*",              true,  true,  false, "user" }
     };
 
+
+    Object[][] dataForSelfOrPrefixScope = {
+            // { resource, policy, optWildcard, recursive, result
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/app/hive/test.db", true, false, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/app/*/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020*/hive/test.db",    true, false, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/*",                true, false, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/*",                true, false, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/*",                true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/*",                true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/*",                true, false, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/*",                true, false, true, "user" },
+
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/app/hive/test.db", true, true, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/app/*/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020*/hive/test.db",    true, true, true, "user" },
+            { "hdfs://hostname:8020/",                 "hdfs://hostname:8020/",                true, true, true, "user" },
+            { "hdfs://hostname:8020/app",              "hdfs://hostname:8020/",                true, true, true, "user" },
+            { "hdfs://hostname:8020/app/",             "hdfs://hostname:8020/",                true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive",         "hdfs://hostname:8020/",                true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/",        "hdfs://hostname:8020/",                true, true, true, "user" },
+            { "hdfs://hostname:8020/app/hive/test.db", "hdfs://hostname:8020/",                true, true, true, "user" },
+    };
+
     @Test
     public void testIsMatch() throws Exception {
         for (Object[] row : data) {
@@ -68,6 +122,25 @@ public class RangerURLResourceMatcherTest {
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
             assertEquals(getMessage(row), result, matcher.isMatch(resource, ResourceElementMatchingScope.SELF, evalContext));
+        }
+    }
+
+    @Test
+    public void testIsPrefixMatch() {
+        for (Object[] row : dataForSelfOrPrefixScope) {
+            String  resource    = (String)row[0];
+            String  policyValue = (String)row[1];
+            boolean optWildcard = (boolean)row[2];
+            boolean isRecursive = (boolean)row[3];
+            boolean result      = (boolean)row[4];
+            String  user        = (String) row[5];
+
+            Map<String, Object> evalContext = new HashMap<>();
+
+            RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+
+            MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, ResourceElementMatchingScope.SELF_OR_PREFIX, evalContext));
         }
     }
 

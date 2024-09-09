@@ -26,17 +26,23 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupUser;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 
 public abstract class XGroupUserServiceBase<T extends XXGroupUser, V extends VXGroupUser>
-		extends AbstractBaseResourceService<T, V> {
+		extends AbstractAuditedResourceService<T, V> {
 	public static final String NAME = "XGroupUser";
 
 	public XGroupUserServiceBase() {
+		super(AppConstants.CLASS_TYPE_XA_GROUP_USER, AppConstants.CLASS_TYPE_XA_GROUP);
 
+		trxLogAttrs.put("name", new VTrxLogAttr("name", "Group Name"));
 	}
 
 	@Override
@@ -76,4 +82,24 @@ public abstract class XGroupUserServiceBase<T extends XXGroupUser, V extends VXG
 		return returnList;
 	}
 
+	@Override
+	public String getObjectName(V obj) {
+		Long   userId = obj != null ? obj.getUserId() : null;
+		XXUser user   = userId != null ? daoManager.getXXUser().getById(userId) : null;
+
+		return user != null ? user.getName() : null;
+	}
+
+	@Override
+	public String getParentObjectName(V obj, V oldObj) {
+		Long    groupId = getParentObjectId(obj, oldObj);
+		XXGroup group   = groupId != null ? daoManager.getXXGroup().getById(groupId) : null;
+
+		return group != null ? group.getName() : null;
+	}
+
+	@Override
+	public Long getParentObjectId(V obj, V oldObj) {
+		return obj != null ? obj.getParentGroupId() : null;
+	}
 }

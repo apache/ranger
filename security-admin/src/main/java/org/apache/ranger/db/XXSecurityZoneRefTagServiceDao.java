@@ -63,20 +63,21 @@ public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTag
 	}
 
     public List<RangerServiceHeaderInfo> findServiceHeaderInfosByZoneId(Long zoneId) {
-        List<RangerServiceHeaderInfo> serviceHeaderInfos = null;
+        List<RangerServiceHeaderInfo> ret;
 
         if (zoneId != null && zoneId > RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID) {
-            @SuppressWarnings("unchecked")
-            List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId").setParameter("zoneId", zoneId).getResultList();
-            serviceHeaderInfos = new ArrayList<RangerServiceHeaderInfo>(results.size());
+            List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId", Object[].class)
+                                                       .setParameter("zoneId", zoneId).getResultList();
+
+            ret = new ArrayList<>(results.size());
 
             for (Object[] result : results) {
-                serviceHeaderInfos.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], true));
+                ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3]));
             }
         } else {
-            serviceHeaderInfos = Collections.emptyList();
+            ret = Collections.emptyList();
         }
 
-        return serviceHeaderInfos;
+        return ret;
     }
 }

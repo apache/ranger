@@ -27,12 +27,13 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 /*
@@ -49,10 +50,11 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,gds,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
+	public static final String EMBEDDED_SERVICEDEF_GDS_NAME  = "gds";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
@@ -124,13 +126,12 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef nestedStructureServiveDef;
 
 	private RangerServiceDef tagServiceDef;
+	private RangerServiceDef gdsServiceDef;
 
-	private final Gson              gsonBuilder;
 	private final RangerAdminConfig config;
 
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 		config      = RangerAdminConfig.getInstance();
 	}
 
@@ -162,8 +163,6 @@ public class EmbeddedServiceDefsUtil {
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
 			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
-
-			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
 			sqoopServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SQOOP_NAME);
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
@@ -175,8 +174,13 @@ public class EmbeddedServiceDefsUtil {
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
 			nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
 
+			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
+			gdsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_GDS_NAME);
+
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
+
+			getOrCreateService(store, EMBEDDED_SERVICEDEF_GDS_NAME, GdsPolicyEngine.GDS_SERVICE_NAME);
 		} catch(Throwable excp) {
 			LOG.error("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
@@ -247,7 +251,6 @@ public class EmbeddedServiceDefsUtil {
 	public long getElasticsearchServiceDefId() {
 		return getId(elasticsearchServiceDef);
 	}
-	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
 	public long getWasbServiceDefId() { return getId(wasbServiceDef); }
 
@@ -262,6 +265,10 @@ public class EmbeddedServiceDefsUtil {
 	public long getKuduServiceDefId() { return getId(kuduServiceDef); }
 
 	public long getNestedStructureServiceDefId() { return getId(nestedStructureServiveDef); }
+
+	public long getTagServiceDefId() { return getId(tagServiceDef); }
+
+	public long getGdsServiceDefId() { return getId(gdsServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
@@ -336,7 +343,7 @@ public class EmbeddedServiceDefsUtil {
 
 		InputStreamReader reader = new InputStreamReader(inStream);
 
-		ret = gsonBuilder.fromJson(reader, RangerServiceDef.class);
+		ret = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
 
 		//Set DEFAULT displayName if missing
 		if (ret != null && StringUtils.isBlank(ret.getDisplayName())) {
@@ -370,5 +377,39 @@ public class EmbeddedServiceDefsUtil {
 			LOG.error("EmbeddedServiceDefsUtil.getSupportedServiceDef(): failed", ex);
 		}
 		return supportedServiceDef;
+	}
+
+	private RangerService getOrCreateService(ServiceStore store, String serviceType, String serviceName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> EmbeddedServiceDefsUtil.getOrCreateService(" + serviceType + ", " + serviceName + ")");
+		}
+
+		RangerService ret = null;
+
+		try {
+			ret = store.getServiceByName(serviceName);
+
+			if(ret == null) {
+				LOG.info("Creating service " + serviceName + " of type " + serviceType);
+
+				ret = new RangerService();
+
+				ret.setName(serviceName);
+				ret.setDisplayName(serviceName);
+				ret.setType(serviceType);
+
+				ret = store.createService(ret);
+
+				LOG.info("Created service " + serviceName + ". ID=" + (ret != null ? ret.getId() : null));
+			}
+		} catch(Exception excp) {
+			LOG.error("EmbeddedServiceDefsUtil.getOrCreateService(): failed to load/create service " + serviceName, excp);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== EmbeddedServiceDefsUtil.getOrCreateService(" + serviceType + ", " + serviceName + "): " + ret);
+		}
+
+		return ret;
 	}
 }

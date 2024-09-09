@@ -17,9 +17,8 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
+import org.apache.hadoop.thirdparty.com.google.common.base.Stopwatch;
 import org.apache.hadoop.util.KMSUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.classification.InterfaceAudience;

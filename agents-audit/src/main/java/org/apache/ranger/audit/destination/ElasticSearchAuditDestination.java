@@ -32,9 +32,10 @@ import java.util.Properties;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.client.CredentialsProvider;
@@ -74,8 +75,8 @@ public class ElasticSearchAuditDestination extends AuditDestination {
     public static final String CONFIG_PREFIX = "ranger.audit.elasticsearch";
     public static final String DEFAULT_INDEX = "ranger_audits";
 
-    private String index = "index";
-    private volatile RestHighLevelClient client = null;
+    private String index = CONFIG_INDEX;
+    private final AtomicReference<RestHighLevelClient> clientRef = new AtomicReference<>(null);
     private String protocol;
     private String user;
     private int port;
@@ -128,12 +129,12 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             ArrayList<AuditEventBase> eventList = new ArrayList<>(events);
             BulkRequest bulkRequest = new BulkRequest();
             try {
-                for (AuditEventBase event : eventList) {
+                eventList.forEach(event -> {
                     AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
                     String id = authzEvent.getEventId();
                     Map<String, Object> doc = toDoc(authzEvent);
                     bulkRequest.add(new IndexRequest(index).id(id).source(doc));
-                }
+                });
             } catch (Exception ex) {
                 addFailedCount(eventList.size());
                 logFailedEvent(eventList, ex);
@@ -173,7 +174,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
      */
     @Override
     public void flush() {
-
+        // Empty flush method
     }
 
     public boolean isAsync() {
@@ -181,10 +182,13 @@ public class ElasticSearchAuditDestination extends AuditDestination {
     }
 
     synchronized RestHighLevelClient getClient() {
+        RestHighLevelClient client = clientRef.get();
         if (client == null) {
             synchronized (ElasticSearchAuditDestination.class) {
+                client = clientRef.get();
                 if (client == null) {
                     client = newClient();
+                    clientRef.set(client);
                 }
             }
         }
@@ -192,9 +196,10 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
             try {
                 if (new Date().getTime() > ticket.getEndTime().getTime()) {
-                    client = null;
+                    clientRef.set(null);
                     CredentialsProviderUtil.ticketExpireTime80 = 0;
-                    newClient();
+                    client = newClient();
+                    clientRef.set(client);
                 } else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
                     subject = CredentialsProviderUtil.login(user, password);
                 }
@@ -212,7 +217,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         RestClientBuilder restClientBuilder = RestClient.builder(
                 MiscUtil.toArray(urls, ",").stream()
                         .map(x -> new HttpHost(x, port, protocol))
-                        .<HttpHost>toArray(i -> new HttpHost[i])
+                        .toArray(HttpHost[]::new)
         );
         ThreadFactory clientThreadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("ElasticSearch rest client %s")
@@ -258,24 +263,25 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             }
             RestClientBuilder restClientBuilder =
                     getRestClientBuilder(hosts, protocol, user, password, port);
-            RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Initialized client");
-            }
-            boolean exits = false;
-            try {
-                exits = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
-            } catch (Exception e) {
-                LOG.warn("Error validating index " + this.index);
-            }
-            if (exits) {
+            try (RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder)) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Index exists");
+                    LOG.debug("Initialized client");
                 }
-            } else {
-                LOG.info("Index does not exist");
+                boolean exists = false;
+                try {
+                    exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
+                } catch (Exception e) {
+                    LOG.warn("Error validating index " + this.index);
+                }
+                if (exists) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Index exists");
+                    }
+                } else {
+                    LOG.info("Index does not exist");
+                }
+                return restHighLevelClient;
             }
-            return restHighLevelClient;
         } catch (Throwable t) {
             lastLoggedAt.updateAndGet(lastLoggedAt -> {
                 long now = System.currentTimeMillis();
@@ -311,7 +317,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
     }
 
     Map<String, Object> toDoc(AuthzAuditEvent auditEvent) {
-        Map<String, Object> doc = new HashMap<String, Object>();
+        Map<String, Object> doc = new HashMap<>();
         doc.put("id", auditEvent.getEventId());
         doc.put("access", auditEvent.getAccessType());
         doc.put("enforcer", auditEvent.getAclEnforcer());
@@ -334,6 +340,8 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         doc.put("event_count", auditEvent.getEventCount());
         doc.put("event_dur_ms", auditEvent.getEventDurationMS());
         doc.put("tags", auditEvent.getTags());
+        doc.put("datasets", auditEvent.getDatasets());
+        doc.put("projects", auditEvent.getProjects());
         doc.put("cluster", auditEvent.getClusterName());
         doc.put("zoneName", auditEvent.getZoneName());
         doc.put("agentHost", auditEvent.getAgentHostname());

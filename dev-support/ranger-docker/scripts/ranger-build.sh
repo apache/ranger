@@ -84,7 +84,7 @@ else
   done
 fi
 
-mvn ${ARG_PROFILES} ${ARG_SKIPTESTS} -DskipDocs clean package
+mvn ${ARG_PROFILES} ${BUILD_OPTS} ${ARG_SKIPTESTS} -DskipDocs clean package
 
 mv -f target/version /home/ranger/dist/
 mv -f target/ranger-* /home/ranger/dist/

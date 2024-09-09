@@ -163,49 +163,50 @@ public class SolrAuditDestination extends AuditDestination {
 					if (zkHosts != null && !zkHosts.isEmpty()) {
 						LOG.info("Connecting to solr cloud using zkHosts="
 								+ zkHosts);
-						try {
-							// Instantiate
-							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-							SolrHttpClientBuilder kb = krbBuild.getBuilder();
-							HttpClientUtil.setHttpClientBuilder(kb);
+						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+								SolrHttpClientBuilder kb = krbBuild.getBuilder();
+								HttpClientUtil.setHttpClientBuilder(kb);
 
-							final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
-							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
-								@Override
-								public CloudSolrClient run()  throws Exception {
-									CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
-									return solrCloudClient;
-								};
-							});
+								final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
+								final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
+									@Override
+									public CloudSolrClient run() throws Exception {
+										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
+										return solrCloudClient;
+									}
 
-							solrCloudClient.setDefaultCollection(collectionName);
-							me = solrClient = solrCloudClient;
+									;
+								});
+
+								solrCloudClient.setDefaultCollection(collectionName);
+								me = solrClient = solrCloudClient;
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. ZooKeepers="
 									+ zkHosts, t);
 						}
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
-						try {
-							LOG.info("Connecting to Solr using URLs=" + solrURLs);
-							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-							SolrHttpClientBuilder kb = krbBuild.getBuilder();
-							HttpClientUtil.setHttpClientBuilder(kb);
-							final List<String> solrUrls = solrURLs;
-							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
-								@Override
-								public LBHttpSolrClient run()  throws Exception {
-									LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
-									builder.withBaseSolrUrl(solrUrls.get(0));
-									builder.withConnectionTimeout(1000);
-									LBHttpSolrClient lbSolrClient = builder.build();
-									return lbSolrClient;
-								};
-							});
+						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+								LOG.info("Connecting to Solr using URLs=" + solrURLs);
+								SolrHttpClientBuilder kb = krbBuild.getBuilder();
+								HttpClientUtil.setHttpClientBuilder(kb);
+								final List<String> solrUrls = solrURLs;
+								final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
+									@Override
+									public LBHttpSolrClient run() throws Exception {
+										LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
+										builder.withBaseSolrUrl(solrUrls.get(0));
+										builder.withConnectionTimeout(1000);
+										LBHttpSolrClient lbSolrClient = builder.build();
+										return lbSolrClient;
+									}
 
-							for (int i = 1; i < solrURLs.size(); i++) {
-								lbSolrClient.addSolrServer(solrURLs.get(i));
-							}
-							me = solrClient = lbSolrClient;
+									;
+								});
+
+								for (int i = 1; i < solrURLs.size(); i++) {
+									lbSolrClient.addSolrServer(solrURLs.get(i));
+								}
+								me = solrClient = lbSolrClient;
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. URL="
 									+ solrURLs, t);
@@ -294,6 +295,8 @@ public class SolrAuditDestination extends AuditDestination {
 		doc.setField("event_count", auditEvent.getEventCount());
 		doc.setField("event_dur_ms", auditEvent.getEventDurationMS());
 		doc.setField("tags", auditEvent.getTags());
+		doc.addField("datasets", auditEvent.getDatasets());
+		doc.addField("projects", auditEvent.getProjects());
 		doc.setField("cluster", auditEvent.getClusterName());
 		doc.setField("zoneName", auditEvent.getZoneName());
 		doc.setField("agentHost", auditEvent.getAgentHostname());

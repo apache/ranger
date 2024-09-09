@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
@@ -46,10 +48,12 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 
 
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW;
@@ -91,6 +95,8 @@ public interface RangerPolicyEvaluator {
 
 	int getEvalOrder();
 
+	int getPolicyConditionsCount();
+
 	int getCustomConditionsCount();
 
 	int getValidityScheduleEvaluatorsCount();
@@ -98,6 +104,8 @@ public interface RangerPolicyEvaluator {
 	boolean isAuditEnabled();
 
 	void evaluate(RangerAccessRequest request, RangerAccessResult result);
+
+	void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> targetAccessTypes, MatchType matchType, PolicyEngine policyEngine);
 
 	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
@@ -143,7 +151,37 @@ public interface RangerPolicyEvaluator {
 		return false;
 	}
 
-        default boolean hasRoles(final RangerPolicy policy) {
+	default boolean hasReference(Set<String> users, Set<String> groups, Set<String> roles) {
+		RangerPolicy policy = getPolicy();
+
+		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getDenyPolicyItems()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getAllowExceptions()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+
+		for (RangerPolicyItem policyItem : policy.getDenyExceptions()) {
+			if (hasReference(policyItem, users, groups, roles)) {
+				return true;
+			}
+		}
+		return false;
+
+	}
+
+	default boolean hasRoles(final RangerPolicy policy) {
 		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
 			if (hasRoles(policyItem)) {
 				return true;
@@ -181,6 +219,12 @@ public interface RangerPolicyEvaluator {
 		return  CollectionUtils.isNotEmpty(policyItem.getConditions()) || policyItem.getUsers().contains(RangerPolicyEngine.RESOURCE_OWNER); /* || policyItem.getGroups().contains(RangerPolicyEngine.RESOURCE_GROUP_OWNER) */
 	}
 
+	static boolean hasReference(RangerPolicyItem policyItem, Set<String> users, Set<String> groups, Set<String> roles) {
+		return containsAny(policyItem.getUsers(), users) ||
+		       containsAny(policyItem.getGroups(), groups) ||
+		       containsAny(policyItem.getRoles(), roles);
+	}
+
 	static boolean hasRoles(RangerPolicyItem policyItem) {
 		return  CollectionUtils.isNotEmpty(policyItem.getRoles());
 	}
@@ -191,6 +235,10 @@ public interface RangerPolicyEvaluator {
 		} else {
 			return str2 == null ? 1 : str1.compareTo(str2);
 		}
+	}
+
+	static boolean containsAny(Collection<String> coll1, Collection<String> coll2) {
+		return coll1 != null && coll2 != null && CollectionUtils.containsAny(coll1, coll2);
 	}
 
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
@@ -308,7 +356,7 @@ public interface RangerPolicyEvaluator {
 
 		public List<DataMaskResult> getDataMasks() { return dataMasks; }
 
-		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional) {
+		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional, Map<String, Collection<String>> impliedAccessGrants) {
 			final Integer result;
 			final boolean hasContextSensitiveSpecification = CollectionUtils.isNotEmpty(policyItem.getConditions());
 
@@ -335,15 +383,43 @@ public interface RangerPolicyEvaluator {
 			}
 
 			if (result != null) {
-				final List<RangerPolicyItemAccess> accesses;
+				List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+				accesses.addAll(policyItem.getAccesses());
 
 				if (policyItem.getDelegateAdmin()) {
-					accesses = new ArrayList<>();
-
 					accesses.add(new RangerPolicyItemAccess(RangerPolicyEngine.ADMIN_ACCESS, policyItem.getDelegateAdmin()));
-					accesses.addAll(policyItem.getAccesses());
-				} else {
-					accesses = policyItem.getAccesses();
+				}
+
+				if(impliedAccessGrants != null && !impliedAccessGrants.isEmpty()) {
+					if (CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
+
+						// Only one round of 'expansion' is done; multi-level impliedGrants (like shown below) are not handled for now
+						// multi-level impliedGrants: given admin=>write; write=>read: must imply admin=>read,write
+						for (Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
+							String implyingAccessType = e.getKey();
+							Collection<String> impliedGrants = e.getValue();
+
+							RangerPolicyItemAccess access = RangerDefaultPolicyEvaluator.getAccess(policyItem, implyingAccessType);
+
+							if (access == null) {
+								continue;
+							}
+
+							for (String impliedGrant : impliedGrants) {
+								RangerPolicyItemAccess impliedAccess = RangerDefaultPolicyEvaluator.getAccess(policyItem, impliedGrant);
+
+								if (impliedAccess == null) {
+									impliedAccess = new RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
+
+									accesses.add(impliedAccess);
+								} else {
+									if (!impliedAccess.getIsAllowed()) {
+										impliedAccess.setIsAllowed(access.getIsAllowed());
+									}
+								}
+							}
+						}
+					}
 				}
 
 				final List<String> groups         = policyItem.getGroups();

@@ -45,17 +45,18 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.ws.rs.core.Cookie;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.sun.jersey.api.client.filter.ClientFilter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -101,9 +102,8 @@ public class RangerRESTClient {
 	private String mTrustStoreURL;
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
-	private String mTrustStoreType;
-	private Gson   gsonBuilder;
-	private int    mRestClientConnTimeOutMs;
+	private String       mTrustStoreType;
+	private int          mRestClientConnTimeOutMs;
 	private int    mRestClientReadTimeOutMs;
 	private int    maxRetryAttempts;
 	private int    retryIntervalMs;
@@ -112,7 +112,8 @@ public class RangerRESTClient {
 	private final List<String> configuredURLs;
 
 	private volatile Client client;
-
+	private volatile Client cookieAuthClient;
+	private ClientFilter    basicAuthFilter = null;
 
 	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
 		mUrl               = url;
@@ -167,20 +168,22 @@ public class RangerRESTClient {
 	public void setBasicAuthInfo(String username, String password) {
 		mUsername = username;
 		mPassword = password;
+
+		setBasicAuthFilter(username, password);
 	}
 
 	public WebResource getResource(String relativeUrl) {
 		WebResource ret = getClient().resource(getUrl() + relativeUrl);
-		
+
 		return ret;
 	}
 
 	public String toJson(Object obj) {
-		return gsonBuilder.toJson(obj);		
+		return JsonUtils.objectToJson(obj);
 	}
 	
 	public <T> T fromJson(String json, Class<T> cls) {
-		return gsonBuilder.fromJson(json, cls);
+		return JsonUtils.jsonToObject(json, cls);
 	}
 
 	public Client getClient() {
@@ -196,6 +199,28 @@ public class RangerRESTClient {
 		}
 
 		return result;
+	}
+
+	private Client getCookieAuthClient() {
+		Client ret = cookieAuthClient;
+
+		if (ret == null) {
+			synchronized (this) {
+				ret = cookieAuthClient;
+
+				if (ret == null) {
+					cookieAuthClient = buildClient();
+
+					if (basicAuthFilter != null) {
+						cookieAuthClient.removeFilter(basicAuthFilter);
+					}
+
+					ret = cookieAuthClient;
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	private Client buildClient() {
@@ -228,8 +253,8 @@ public class RangerRESTClient {
 			client = Client.create(config);
 		}
 
-		if(StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword)) {
-			client.addFilter(new HTTPBasicAuthFilter(mUsername, mPassword));
+		if (basicAuthFilter != null && !client.isFilterPresent(basicAuthFilter)) {
+			client.addFilter(basicAuthFilter);
 		}
 
 		// Set Connection Timeout and ReadTime for the PolicyRefresh
@@ -239,18 +264,20 @@ public class RangerRESTClient {
 		return client;
 	}
 
+	private void setBasicAuthFilter(String username, String password) {
+		if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
+			basicAuthFilter = new HTTPBasicAuthFilter(username, password);
+		} else {
+			basicAuthFilter = null;
+		}
+	}
+
 	public void resetClient(){
 		client = null;
 	}
 
 	private void init(Configuration config) {
-		try {
-			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
-		} catch(Throwable excp) {
-			LOG.error("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
-		}
-
-		mIsSSL = isSsl(mUrl);
+		mIsSSL = isSslEnabled(mUrl);
 
 		if (mIsSSL) {
 
@@ -279,9 +306,24 @@ public class RangerRESTClient {
 			}
 
 		}
+
+		final String pluginPropertyPrefix;
+
+		if (config instanceof RangerPluginConfig) {
+			pluginPropertyPrefix = ((RangerPluginConfig) config).getPropertyPrefix();
+		} else {
+			pluginPropertyPrefix = "ranger.plugin";
+		}
+
+		String username = config.get(pluginPropertyPrefix + ".policy.rest.client.username");
+		String password = config.get(pluginPropertyPrefix + ".policy.rest.client.password");
+
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+			setBasicAuthFilter(username, password);
+		}
 	}
 
-	private boolean isSsl(String url) {
+	private boolean isSslEnabled(String url) {
 		return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
 	}
 
@@ -463,15 +505,13 @@ public class RangerRESTClient {
 	public ClientResponse get(String relativeUrl, Map<String, String> params) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
+			try {
+				WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
 
 				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 
@@ -493,16 +533,14 @@ public class RangerRESTClient {
 	public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception{
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeUrl);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+			try {
+				WebResource.Builder br = createWebResource(currentIndex, relativeUrl, params, sessionId);
+
 				finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 
 				if (finalResponse != null) {
@@ -523,15 +561,14 @@ public class RangerRESTClient {
 	public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
+			try {
+				WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
+
 				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).post(ClientResponse.class, toJson(obj));
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -551,18 +588,17 @@ public class RangerRESTClient {
 	public ClientResponse post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
 		ClientResponse response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+			try {
+				WebResource.Builder br = createWebResource(currentIndex, relativeURL, params, sessionId);
+
 				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
 						.post(ClientResponse.class, toJson(obj));
+
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -581,15 +617,13 @@ public class RangerRESTClient {
 	public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
+			try {
+				WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
 
 				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).delete(ClientResponse.class);
 				if (finalResponse != null) {
@@ -610,17 +644,16 @@ public class RangerRESTClient {
 	public ClientResponse delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
 		ClientResponse response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+			try {
+				WebResource.Builder br = createWebResource(currentIndex, relativeURL, params, sessionId);
+
 				response = br.delete(ClientResponse.class);
+
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -639,15 +672,14 @@ public class RangerRESTClient {
 	public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
+			try {
+				WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
+
 				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).put(ClientResponse.class, toJson(obj));
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -667,17 +699,17 @@ public class RangerRESTClient {
 	public ClientResponse put(String relativeURL, Object request, Cookie sessionId) throws Exception {
 		ClientResponse response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
 		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
+			int currentIndex = (startIndex + index) % configuredURLs.size();
 
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+			try {
+				WebResource.Builder br = createWebResource(currentIndex, relativeURL, null, sessionId);
+
 				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
 						.put(ClientResponse.class, toJson(request));
+
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -708,11 +740,24 @@ public class RangerRESTClient {
 		this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
 	}
 
-	protected WebResource createWebResourceForCookieAuth(int currentIndex, String relativeURL) {
-		Client cookieClient = getClient();
-		cookieClient.removeAllFilters();
-		WebResource ret = cookieClient.resource(configuredURLs.get(currentIndex) + relativeURL);
-		return ret;
+	protected WebResource.Builder createWebResource(int currentIndex, String relativeURL, Map<String, String> params) {
+		WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeURL);
+
+		webResource = setQueryParams(webResource, params);
+
+		return webResource.getRequestBuilder();
+	}
+
+	protected WebResource.Builder createWebResource(int currentIndex, String relativeURL, Map<String, String> params, Cookie sessionId) {
+		if (sessionId == null) {
+			return createWebResource(currentIndex, relativeURL, params);
+		} else {
+			WebResource webResource = getCookieAuthClient().resource(configuredURLs.get(currentIndex) + relativeURL);
+
+			webResource = setQueryParams(webResource, params);
+
+			return webResource.getRequestBuilder().cookie(sessionId);
+		}
 	}
 
 	protected boolean shouldRetry(String currentUrl, int index, int retryAttemptCount, Exception ex) throws Exception {

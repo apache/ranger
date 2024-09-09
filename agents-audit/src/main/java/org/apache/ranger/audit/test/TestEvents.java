@@ -45,10 +45,11 @@ public class TestEvents {
 
             File propFile = new File(AUDIT_PROPERTIES_FILE);
 
-            if(propFile.exists()) {
+            if(!propFile.exists()) {
                 LOG.info("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
-
-                auditProperties.load(new FileInputStream(propFile));
+                try(FileInputStream fileInputStream = new FileInputStream(propFile)) {
+                    auditProperties.load(fileInputStream);
+                }
             } else {
                 LOG.info("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
 

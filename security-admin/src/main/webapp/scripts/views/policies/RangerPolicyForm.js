@@ -239,7 +239,7 @@ define(function(require){
                     _.each(that.model.get('conditions'), function(val){
                         console.log(that);
                         var conditionName = that.rangerServiceDefModel.get('policyConditions').find(function(m){return m.name == val.type});
-                        $data.push('<tr><td width="40%">'+_.escape(conditionName.label)+'</td><td width="60%">'+(val.values).toString()+'</td></tr>')
+                        $data.push('<tr><td width="40%">'+_.escape(conditionName.label)+'</td><td width="60%">'+_.escape((val.values).toString())+'</td></tr>')
                     });
                     if($data.length > 0){
                         that.$el.find(that.ui.conditionData).html($data);
@@ -454,7 +454,7 @@ define(function(require){
 			}
 
             if(this.model.has('policyLabels')){
-                var policyLabel = _.isEmpty(this.model.get('policyLabels')) ? [] : this.model.get('policyLabels').split(',');
+                var policyLabel = _.isEmpty(this.model.get('policyLabels')) ? [] : this.model.get('policyLabels');
                 this.model.set('policyLabels', policyLabel);
             }
             if(!_.isUndefined(App.vZone) && App.vZone.vZoneName){

@@ -16,23 +16,26 @@
 
 FROM ranger-base:latest
 
-ARG RANGER_VERSION
+ARG USERSYNC_VERSION
 
-COPY ./dist/version                                  /home/ranger/dist/
-COPY ./dist/ranger-${RANGER_VERSION}-usersync.tar.gz /home/ranger/dist/
+COPY ./dist/version                                    /home/ranger/dist/
+COPY ./dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz /home/ranger/dist/
 
 COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
 
-RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
-    ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-usersync ${RANGER_HOME}/usersync && \
-    rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-usersync.tar.gz && \
+RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
+    ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \
+    rm -f /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-usersync-install.properties ${RANGER_HOME}/usersync/install.properties && \
     mkdir -p /var/run/ranger && \
     mkdir -p /var/log/ranger/usersync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     mkdir -p /etc/ranger && \
+    mkdir /etc/init.d || true && \
+    mkdir /etc/rc2.d  || true && \
+    mkdir /etc/rc3.d  || true && \
     touch /etc/init.d/ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/S99ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/K00ranger-usersync && \

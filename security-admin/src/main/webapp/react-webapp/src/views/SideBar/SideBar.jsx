@@ -33,6 +33,7 @@ import auditsIcon from "Images/sidebar/audits.svg";
 import zoneIcon from "Images/sidebar/zone.svg";
 import settingsIcon from "Images/sidebar/settings.svg";
 import accountIcon from "Images/sidebar/account.svg";
+import gdsIcon from "Images/sidebar/governed-data.svg";
 import Collapse from "react-bootstrap/Collapse";
 import { fetchApi } from "Utils/fetchAPI";
 import { getUserProfile, setUserProfile } from "Utils/appState";
@@ -45,12 +46,21 @@ import {
   isKMSAuditor
 } from "Utils/XAUtils";
 import Select from "react-select";
-import { filter, isEmpty, map, sortBy, uniq, upperCase } from "lodash";
+import {
+  cloneDeep,
+  filter,
+  isEmpty,
+  map,
+  sortBy,
+  uniq,
+  upperCase
+} from "lodash";
 import { toast } from "react-toastify";
 import ResourceTagContent from "./ResourceTagContent";
 import { PathAssociateWithModule } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 import { SideBarBody } from "./SideBarBody";
+import { getLandingPageURl } from "../../utils/XAUtils";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -85,7 +95,9 @@ function reducer(state, action) {
 }
 
 export const SideBar = () => {
-  const { allServiceDefs, serviceDefs, tagServiceDefs } = getServiceDef();
+  const { allServiceDefs, serviceDefs, tagServiceDefs } = cloneDeep(
+    getServiceDef()
+  );
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const [keyState, dispatch] = useReducer(reducer, {
     loader: false,
@@ -138,15 +150,6 @@ export const SideBar = () => {
     }
     e?.stopPropagation();
   };
-
-  useEffect(() => {
-    if (
-      location.pathname != "/policymanager/resource" &&
-      location.pathname != "/policymanager/tag"
-    ) {
-      fetchServicesData();
-    }
-  }, []);
 
   useEffect(() => {
     if (!isListenerAttached) {
@@ -242,7 +245,7 @@ export const SideBar = () => {
         <div className="sidebar-header">
           <NavLink
             id="rangerIcon"
-            to="/policymanager/resource"
+            to={getLandingPageURl()}
             onClick={() => {
               setActive(null);
               setDrawer(false);
@@ -304,6 +307,29 @@ export const SideBar = () => {
             </li>
           )}
 
+          {hasAccessToTab("Governed Data Sharing") && (
+            <li
+              className={
+                isActive !== null && isActive === "gdsCollapse"
+                  ? "selected"
+                  : undefined
+              }
+            >
+              <Button
+                id="gdsButton"
+                className={activeClass("GDS")}
+                onClick={() => {
+                  setActive("gdsCollapse");
+                  setAccountDrawer(false);
+                  setDrawer(true);
+                }}
+              >
+                <img src={gdsIcon} />
+                <span>Governed Data Sharing</span>
+              </Button>
+            </li>
+          )}
+
           {hasAccessToTab("Reports") && (
             <li>
               <NavLink
@@ -345,7 +371,7 @@ export const SideBar = () => {
 
           {hasAccessToTab("Security Zone") && (
             <React.Fragment>
-              {!isKeyAdmin() && (
+              {!isKMSRole && (
                 <li>
                   <NavLink
                     className={activeClass("Security Zone")}
@@ -366,22 +392,20 @@ export const SideBar = () => {
 
           {hasAccessToTab("Key Manager") && (
             <React.Fragment>
-              {(isKeyAdmin() || isKMSAuditor()) && (
-                <li>
-                  <NavLink
-                    className={activeClass("Key Manager")}
-                    to="/kms/keys/new/manage/service"
-                    onClick={() => {
-                      setActive(null);
-                      setDrawer(false);
-                      setAccountDrawer(false);
-                    }}
-                  >
-                    <i className="fa fa-fw fa-key"></i>
-                    <span>Key Manager</span>
-                  </NavLink>
-                </li>
-              )}
+              <li>
+                <NavLink
+                  className={activeClass("Key Manager")}
+                  to="/kms/keys/new/manage/service"
+                  onClick={() => {
+                    setActive(null);
+                    setDrawer(false);
+                    setAccountDrawer(false);
+                  }}
+                >
+                  <i className="fa fa-fw fa-key"></i>
+                  <span>Key Manager</span>
+                </NavLink>
+              </li>
             </React.Fragment>
           )}
 

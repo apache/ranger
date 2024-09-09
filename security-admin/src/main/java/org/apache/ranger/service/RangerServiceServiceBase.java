@@ -21,13 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.common.GUIDUtil;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.*;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
@@ -37,13 +35,20 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerBaseModelService<T, V> {
+public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerAuditedModelService<T, V> {
 	
 	@Autowired
 	GUIDUtil guidUtil;
 	
 	public RangerServiceServiceBase() {
-		super();
+		super(AppConstants.CLASS_TYPE_XA_SERVICE, AppConstants.CLASS_TYPE_XA_SERVICE_DEF);
+
+		trxLogAttrs.put("name",        new VTrxLogAttr("name", "Service Name", false, true));
+		trxLogAttrs.put("displayName", new VTrxLogAttr("displayName", "Service Display Name"));
+		trxLogAttrs.put("description", new VTrxLogAttr("description", "Service Description"));
+		trxLogAttrs.put("isEnabled",   new VTrxLogAttr("isEnabled", "Service Status"));
+		trxLogAttrs.put("configs",     new VTrxLogAttr("configs", "Connection Configurations"));
+		trxLogAttrs.put("tagService",  new VTrxLogAttr("tagService", "Tag Service Name"));
 
 		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING,
 				SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
@@ -72,6 +77,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 		xObj.setGuid(guid);
 		
 		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(vObj.getType());
+
 		if(xServiceDef == null) {
 			throw restErrorUtil.createRESTException(
 					"No ServiceDefinition found with name :" + vObj.getType(),
@@ -144,7 +150,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 
 		for (T xSvc : xSvcList) {
 			if(bizUtil.hasAccess(xSvc, null)){
-				permittedServices.add(xSvc);
+				if (!bizUtil.isGdsService(xSvc)) {
+					permittedServices.add(xSvc);
+				}
 			}
 		}
 

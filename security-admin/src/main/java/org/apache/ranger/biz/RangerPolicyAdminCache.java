@@ -68,6 +68,20 @@ public class RangerPolicyAdminCache {
 			return null;
 		}
 
+		try {
+			if (!svcStore.serviceExists(serviceName)) {
+				LOG.warn("Service:[" + serviceName + "] does not exist in service-store. Returning null policy-engine!");
+
+				policyAdminCache.remove(serviceName);
+
+				return null;
+			}
+		} catch (Exception exception) {
+			LOG.error("Failed to check if service:[" + serviceName + "] exists in service-store", exception);
+
+			return null;
+		}
+
 		long        policyVersion;
 		long        roleVersion;
 		RangerRoles roles;

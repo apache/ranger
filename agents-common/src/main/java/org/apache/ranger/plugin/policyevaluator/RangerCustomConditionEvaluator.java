@@ -21,160 +21,156 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
+//
+// this class should have been named RangerConditionEvaluatorFactory
+//
 public class RangerCustomConditionEvaluator {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RangerCustomConditionEvaluator.class);
-    private static final Logger PERF_POLICY_INIT_LOG = RangerPerfTracer.getPerfLogger("policy.init");
-    private static final Logger PERF_POLICYITEM_INIT_LOG = RangerPerfTracer.getPerfLogger("policyitem.init");
+    private static final Logger LOG                           = LoggerFactory.getLogger(RangerCustomConditionEvaluator.class);
+    private static final Logger PERF_POLICY_INIT_LOG          = RangerPerfTracer.getPerfLogger("policy.init");
+    private static final Logger PERF_POLICYITEM_INIT_LOG      = RangerPerfTracer.getPerfLogger("policyitem.init");
     private static final Logger PERF_POLICYCONDITION_INIT_LOG = RangerPerfTracer.getPerfLogger("policycondition.init");
 
-    public List<RangerConditionEvaluator> getRangerPolicyConditionEvaluator(RangerPolicy policy,
-                                                                                  RangerServiceDef serviceDef,
-                                                                                  RangerPolicyEngineOptions options) {
-        List<RangerConditionEvaluator> conditionEvaluators = new ArrayList<>();
+    private static final RangerPolicyConditionDef EXPRESSION_CONDITION_DEF = ServiceDefUtil.createImplicitExpressionConditionDef(-1L);
 
-        if (!getConditionsDisabledOption(options) && CollectionUtils.isNotEmpty(policy.getConditions())) {
 
-            RangerPerfTracer perf = null;
+    public static RangerCustomConditionEvaluator getInstance() {
+        return RangerCustomConditionEvaluator.SingletonHolder.s_instance;
+    }
 
-            long policyId = policy.getId();
+    private RangerCustomConditionEvaluator() {
+    }
 
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_INIT_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_INIT_LOG, "RangerCustomConditionEvaluator.init(policyId=" + policyId + ")");
-            }
+    public List<RangerConditionEvaluator> getPolicyConditionEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
+        RangerPerfTracer perf     = null;
+        String           parentId = "policyId=" + policy.getId() ;
 
-            for (RangerPolicy.RangerPolicyItemCondition condition : policy.getConditions()) {
-                RangerServiceDef.RangerPolicyConditionDef conditionDef = getConditionDef(condition.getType(),serviceDef);
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_INIT_LOG, "RangerPolicyEvaluator.getPolicyConditionEvaluators(" + parentId + ")");
+        }
+
+        List<RangerConditionEvaluator> ret = getConditionEvaluators(parentId, policy.getConditions(), serviceDef, options);
+
+        RangerPerfTracer.log(perf);
+
+        return ret;
+    }
+
+    public List<RangerConditionEvaluator> getPolicyItemConditionEvaluators(RangerPolicy policy, RangerPolicyItem policyItem, RangerServiceDef serviceDef, RangerPolicyEngineOptions options, int policyItemIndex) {
+        RangerPerfTracer perf     = null;
+        String           parentId = "policyId=" + policy.getId() + ", policyItemIndex=" + policyItemIndex;
+
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYITEM_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYITEM_INIT_LOG, "RangerPolicyItemEvaluator.getPolicyItemConditionEvaluators(" + parentId + ")");
+        }
+
+        List<RangerConditionEvaluator> ret = getConditionEvaluators(parentId, policyItem.getConditions(), serviceDef, options);
+
+        RangerPerfTracer.log(perf);
+
+        return ret;
+    }
+
+    public List<RangerConditionEvaluator> getConditionEvaluators(String parentId, List<RangerPolicyItemCondition> conditions, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
+        final List<RangerConditionEvaluator> ret;
+
+        if (!getConditionsDisabledOption(options) && CollectionUtils.isNotEmpty(conditions)) {
+            ret = new ArrayList<>(conditions.size());
+
+            for (RangerPolicyItemCondition condition : conditions) {
+                RangerPolicyConditionDef conditionDef = ServiceDefUtil.getConditionDef(serviceDef, condition.getType());
 
                 if (conditionDef == null) {
-                    LOG.error("RangerCustomConditionEvaluator.getRangerPolicyConditionEvaluator(policyId=" + policyId + "): conditionDef '" + condition.getType() + "' not found. Ignoring the condition");
+                    LOG.error("RangerCustomConditionEvaluator.getConditionEvaluators(" + parentId + "): conditionDef '" + condition.getType() + "' not found. Ignoring the condition");
 
                     continue;
                 }
 
-                RangerConditionEvaluator conditionEvaluator = newConditionEvaluator(conditionDef.getEvaluator());
+                RangerConditionEvaluator conditionEvaluator = getConditionEvaluator(parentId, condition, conditionDef, serviceDef, options);
 
                 if (conditionEvaluator != null) {
-                    conditionEvaluator.setServiceDef(serviceDef);
-                    conditionEvaluator.setConditionDef(conditionDef);
-                    conditionEvaluator.setPolicyItemCondition(condition);
-
-                    RangerPerfTracer perfConditionInit = null;
-
-                    if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYCONDITION_INIT_LOG)) {
-                        perfConditionInit = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_INIT_LOG, "RangerConditionEvaluator.init(policyId=" + policyId + "policyConditionType=" + condition.getType() + ")");
-                    }
-
-                    conditionEvaluator.init();
-
-                    RangerPerfTracer.log(perfConditionInit);
-
-                    conditionEvaluators.add(conditionEvaluator);
-                } else {
-                    LOG.error("RangerCustomConditionEvaluator.getRangerPolicyConditionEvaluator(policyId=" + policyId + "): failed to init Policy ConditionEvaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
+                    ret.add(conditionEvaluator);
                 }
             }
-
-            RangerPerfTracer.log(perf);
+        } else {
+            ret = Collections.emptyList();
         }
-        return conditionEvaluators;
+
+        return  ret;
     }
 
+    public RangerConditionEvaluator getConditionEvaluator(String parentId, RangerPolicyItemCondition condition, RangerPolicyConditionDef conditionDef, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
+        final RangerConditionEvaluator ret;
 
-    public List<RangerConditionEvaluator> getPolicyItemConditionEvaluator(RangerPolicy policy,
-                                                                           RangerPolicyItem policyItem,
-                                                                           RangerServiceDef serviceDef,
-                                                                           RangerPolicyEngineOptions options,
-                                                                           int policyItemIndex) {
+        if (condition != null && conditionDef != null && !getConditionsDisabledOption(options)) {
+            ret = newConditionEvaluator(conditionDef.getEvaluator());
 
-        List<RangerConditionEvaluator> conditionEvaluators = new ArrayList<>();
+            if (ret != null) {
+                ret.setServiceDef(serviceDef);
+                ret.setConditionDef(conditionDef);
+                ret.setPolicyItemCondition(condition);
 
-        if (!getConditionsDisabledOption(options) && CollectionUtils.isNotEmpty(policyItem.getConditions())) {
+                RangerPerfTracer perf = null;
 
-            RangerPerfTracer perf = null;
-
-            Long policyId = policy.getId();
-
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYITEM_INIT_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_POLICYITEM_INIT_LOG, "RangerPolicyItemEvaluator.getRangerPolicyConditionEvaluator(policyId=" + policyId + ",policyItemIndex=" + policyItemIndex + ")");
-            }
-
-            for (RangerPolicyItemCondition condition : policyItem.getConditions()) {
-                RangerServiceDef.RangerPolicyConditionDef conditionDef = getConditionDef(condition.getType(), serviceDef);
-
-                if (conditionDef == null) {
-                    LOG.error("RangerCustomConditionEvaluator.getPolicyItemConditionEvaluator(policyId=" + policyId + "): conditionDef '" + condition.getType() + "' not found. Ignoring the condition");
-
-                    continue;
+                if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYCONDITION_INIT_LOG)) {
+                    perf = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_INIT_LOG, "RangerConditionEvaluator.init(" + parentId + ", policyConditionType=" + condition.getType() + ")");
                 }
 
-                RangerConditionEvaluator conditionEvaluator = newConditionEvaluator(conditionDef.getEvaluator());
+                ret.init();
 
-                if (conditionEvaluator != null) {
-                    conditionEvaluator.setServiceDef(serviceDef);
-                    conditionEvaluator.setConditionDef(conditionDef);
-                    conditionEvaluator.setPolicyItemCondition(condition);
-
-                    RangerPerfTracer perfConditionInit = null;
-
-                    if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYCONDITION_INIT_LOG)) {
-                        perfConditionInit = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_INIT_LOG, "RangerConditionEvaluator.init(policyId=" + policyId + ",policyItemIndex=" + policyItemIndex + ",policyConditionType=" + condition.getType() + ")");
-                    }
-
-                    conditionEvaluator.init();
-
-                    RangerPerfTracer.log(perfConditionInit);
-
-                    conditionEvaluators.add(conditionEvaluator);
-                } else {
-                    LOG.error("RangerCustomConditionEvaluator.getPolicyItemConditionEvaluator(policyId=" + policyId + "): failed to init PolicyItem ConditionEvaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
-                }
+                RangerPerfTracer.log(perf);
+            } else {
+                LOG.error("RangerCustomConditionEvaluator.getConditionEvaluator(" + parentId + "): failed to init ConditionEvaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
             }
-            RangerPerfTracer.log(perf);
-        }
-        return  conditionEvaluators;
-    }
-
-    private RangerServiceDef.RangerPolicyConditionDef getConditionDef(String conditionName, RangerServiceDef serviceDef) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerCustomConditionEvaluator.getConditionDef(" + conditionName + ")");
-        }
-
-        RangerServiceDef.RangerPolicyConditionDef ret = null;
-
-        if (serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getPolicyConditions())) {
-            for(RangerServiceDef.RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
-                if(StringUtils.equals(conditionName, conditionDef.getName())) {
-                    ret = conditionDef;
-                    break;
-                }
-            }
-        }
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerCustomConditionEvaluator.getConditionDef(" + conditionName + "): " + ret);
+        } else {
+            ret = null;
         }
 
         return ret;
     }
 
+    public RangerConditionEvaluator getExpressionEvaluator(String expression, RangerServiceDef serviceDef) {
+        final RangerConditionEvaluator ret;
+
+        if (StringUtils.isNotBlank(expression)) {
+            ret = newConditionEvaluator(EXPRESSION_CONDITION_DEF.getEvaluator());
+
+            if (ret != null) {
+                ret.setServiceDef(serviceDef);
+                ret.setConditionDef(EXPRESSION_CONDITION_DEF);
+                ret.setPolicyItemCondition(new RangerPolicyItemCondition(EXPRESSION_CONDITION_DEF.getName(), Collections.singletonList(expression)));
+
+                RangerPerfTracer perf = RangerPerfTracer.getPerfTracer(PERF_POLICYCONDITION_INIT_LOG, "RangerConditionEvaluator.init(_expression)");
+
+                ret.init();
+
+                RangerPerfTracer.log(perf);
+            }
+        } else {
+            ret = null;
+        }
+
+        return ret;
+    }
 
     private RangerConditionEvaluator newConditionEvaluator(String className) {
-        if(LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerCustomConditionEvaluator.newConditionEvaluator(" + className + ")");
         }
 
@@ -182,14 +178,14 @@ public class RangerCustomConditionEvaluator {
 
         try {
             @SuppressWarnings("unchecked")
-            Class<org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator> matcherClass = (Class<org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator>)Class.forName(className);
+            Class<RangerConditionEvaluator> evaluatorClass = (Class<RangerConditionEvaluator>)Class.forName(className);
 
-            evaluator = matcherClass.newInstance();
-        } catch(Throwable t) {
+            evaluator = evaluatorClass.newInstance();
+        } catch (Throwable t) {
             LOG.error("RangerCustomConditionEvaluator.newConditionEvaluator(" + className + "): error instantiating evaluator", t);
         }
 
-        if(LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerCustomConditionEvaluator.newConditionEvaluator(" + className + "): " + evaluator);
         }
 
@@ -198,5 +194,9 @@ public class RangerCustomConditionEvaluator {
 
     private boolean getConditionsDisabledOption(RangerPolicyEngineOptions options) {
         return options != null && options.disableCustomConditions;
+    }
+
+    private static class SingletonHolder {
+        private static final RangerCustomConditionEvaluator s_instance = new RangerCustomConditionEvaluator();
     }
 }

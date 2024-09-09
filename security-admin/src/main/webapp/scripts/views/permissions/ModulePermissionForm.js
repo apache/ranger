@@ -95,13 +95,13 @@ define(function(require) {
 				},
 				selectGroups : {
 					type : 'Select2Remote',
-					editorAttrs  : {'placeholder' :'Select Group','tokenSeparators': [",", " "],multiple:true},
+					editorAttrs  : {'placeholder' :'Select Group',multiple:true},
                                         pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/groups",'idKey':'groupId','textKey':'groupName'}),
 					title : localization.tt('lbl.selectGroup')+' *'
 				},
 				selectUsers : {
 					type : 'Select2Remote',
-					editorAttrs  : {'placeholder' :'Select User','tokenSeparators': [",", " "],multiple:true},
+					editorAttrs  : {'placeholder' :'Select User',multiple:true},
                                         pluginAttr: this.getPlugginAttr(true,{'lookupURL':"service/xusers/users",'idKey':'userId','textKey':'userName'}),
 					title : localization.tt('lbl.selectUser')+' *',
 				},
@@ -138,13 +138,13 @@ define(function(require) {
             if(userListData &&!_.isEmpty(userListData)) {
                 var i , j;
                 for(var i=0,j=0; i<=j+200 && userListData.length > i; i++){
-                    that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+userListData[i].userName+'</span>')
+                    that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+_.escape(userListData[i].userName)+'</span>')
                 }
                 that.$el.find('.selectedUserList').scroll(function(position) {
                     if (position.currentTarget.scrollHeight <= (position.currentTarget.clientHeight + position.currentTarget.scrollTop) + 10) {
                         j = i;
                         for(i; i<=j+200 && userListData.length > i; i++){
-                            that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+userListData[i].userName+'</span>')
+                            that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+_.escape(userListData[i].userName)+'</span>')
                         }
                         that.$el.find('[data-js="selectedUserList"] span i').on('click', that.removeUser.bind(that));
                     }
@@ -157,13 +157,13 @@ define(function(require) {
             if (groupListData && !_.isEmpty(groupListData)) {
                 var m , n;
                 for(var m=0,n=0; m<=n+200 && groupListData.length > m; m++){
-                    that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+groupListData[m].groupName+'</span>')
+                    that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+_.escape(groupListData[m].groupName)+'</span>')
                 }
                 that.$el.find('.selectedGroupList').scroll(function(position) {
                     if (position.currentTarget.scrollHeight <= (position.currentTarget.clientHeight + position.currentTarget.scrollTop) + 10) {
                         n = m;
                         for(m; m<=n+200 && groupListData.length > m; m++){
-                            that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+groupListData[m].groupName+'</span>')
+                            that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+_.escape(groupListData[m].groupName)+'</span>')
                         }
                         that.$el.find('[data-js="selectedGroupList"] span i').on('click', that.removeGroup.bind(that));
                     }
@@ -253,7 +253,7 @@ define(function(require) {
 			var vals = [],selectedVals = [];
                         var added = options.textKey == 'groupName' ? this.addedGroups : this.addedUsers;
                         if(!_.isEmpty(added)){
-                                selectedVals = _.map(added, function(obj){ return obj.text; });
+                                selectedVals = _.map(added, function(obj){ return _.escape(obj.text); });
 			}
 			vals.push.apply(vals , selectedVals);
 			return vals;

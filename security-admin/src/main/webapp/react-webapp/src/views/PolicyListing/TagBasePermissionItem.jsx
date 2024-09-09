@@ -30,15 +30,24 @@ import {
   findIndex,
   isEmpty,
   includes,
-  difference
+  difference,
+  map,
+  every,
+  cloneDeep
 } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
 export default function TagBasePermissionItem(props) {
-  const serviceDefs = getServiceDef();
-  const { options, inputVal, formValues, serviceCompDetails, dataMaskIndex } =
-    props;
+  const serviceDefs = cloneDeep(getServiceDef());
+  const {
+    options,
+    inputVal,
+    formValues,
+    serviceCompDetails,
+    dataMaskIndex,
+    attrName
+  } = props;
   const [showTagPermissionItem, tagPermissionItem] = useState(false);
 
   const msgStyles = {
@@ -133,39 +142,47 @@ export default function TagBasePermissionItem(props) {
         }));
       }
     } else {
-      let enableDenyAndExceptions = [];
-      let filterAccessOptions = [];
-      enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
-        (access) => {
-          if (
-            includes(
-              serviceDefs?.allServiceDefs
-                ?.map((servicedef) => {
-                  if (
-                    servicedef?.options?.enableDenyAndExceptionsInPolicies ==
-                    "false"
-                  ) {
-                    return servicedef.name;
-                  }
-                })
-                .filter(Boolean),
-              access.name.substr(0, access.name.indexOf(":"))
-            )
-          ) {
-            return access;
-          }
-        }
-      );
-      filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
-        let val = obj.name;
-        return val.substr(0, val.indexOf(":"));
-      });
-      return difference(keys(tagServicePerms), keys(filterAccessOptions))?.map(
-        (m) => ({
+      if (attrName === "policyItems") {
+        return map(keys(tagServicePerms), (m) => ({
           value: m,
           label: m.toUpperCase()
-        })
-      );
+        }));
+      } else {
+        let enableDenyAndExceptions = [];
+        let filterAccessOptions = [];
+        enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
+          (access) => {
+            if (
+              includes(
+                serviceDefs?.allServiceDefs
+                  ?.map((servicedef) => {
+                    if (
+                      servicedef?.options?.enableDenyAndExceptionsInPolicies ==
+                      "false"
+                    ) {
+                      return servicedef.name;
+                    }
+                  })
+                  .filter(Boolean),
+                access.name.substr(0, access.name.indexOf(":"))
+              )
+            ) {
+              return access;
+            }
+          }
+        );
+        filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
+          let val = obj.name;
+          return val.substr(0, val.indexOf(":"));
+        });
+        return difference(
+          keys(tagServicePerms),
+          keys(filterAccessOptions)
+        )?.map((m) => ({
+          value: m,
+          label: m.toUpperCase()
+        }));
+      }
     }
   };
 
@@ -180,6 +197,15 @@ export default function TagBasePermissionItem(props) {
       fieldObj?.permission?.length > 0 &&
       fieldObj?.permission?.length === objVal?.length
     );
+  };
+
+  const isSelectAllChecked = (values) => {
+    let fieldValues = !isEmpty(values) ? [...values] : [];
+    return !isEmpty(fieldValues)
+      ? every(fieldValues, (p) => {
+          return p?.permission?.length == tagServicePerms[p.serviceName].length;
+        })
+      : false;
   };
 
   const handleChange = (e, value, input) => {
@@ -202,7 +228,22 @@ export default function TagBasePermissionItem(props) {
     fieldVal.permission = val;
     fields.update(index, fieldVal);
   };
+  const selectAllPermissions = (e, values, form) => {
+    const { checked } = e.target;
+    const fieldValues = cloneDeep(values?.tableList);
+    if (!isEmpty(fieldValues)) {
+      fieldValues.filter((p) => {
+        let val = [];
+        val = tagServicePerms[p.serviceName].map(({ value }) => value);
+        p.permission = checked ? val : [];
+      });
 
+      form.batch(() => {
+        form.change("selectAll", checked);
+        form.change("tableList", fieldValues);
+      });
+    }
+  };
   const formInitialData = () => {
     let formData = {};
     if (inputVal?.value?.tableList?.length > 0) {
@@ -221,8 +262,8 @@ export default function TagBasePermissionItem(props) {
   const tagAccessTypeDisplayVal = (val) => {
     return val.map((m, index) => {
       return (
-        <h6 className="d-inline mr-1 mb-1" key={index}>
-          <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
+        <h6 className="d-inline me-1 mb-1" key={index}>
+          <Badge bg="info">{m.serviceName.toUpperCase()}</Badge>
         </h6>
       );
     });
@@ -292,8 +333,7 @@ export default function TagBasePermissionItem(props) {
             form: {
               mutators: { push, remove }
             },
-            submitting,
-            pristine,
+            form,
             values
           }) => (
             <form onSubmit={handleSubmit}>
@@ -303,7 +343,7 @@ export default function TagBasePermissionItem(props) {
               <Modal.Body>
                 <Field
                   name="servicesDefType"
-                  render={({ input, meta }) => (
+                  render={({ input }) => (
                     <FormB.Group className="mb-3">
                       <b>Select Component:</b>
                       <Select
@@ -333,23 +373,43 @@ export default function TagBasePermissionItem(props) {
                     </FormB.Group>
                   )}
                 />
-                <Table striped bordered>
+                <Table bordered>
                   <thead>
                     <tr>
-                      <th className="bg-white text-dark  align-middle text-center">
-                        Component
+                      <th className="bg-white text-dark  align-middle">
+                        <FormB.Group className="d-flex align-items-center mb-0">
+                          <Field
+                            name="selectAll"
+                            type="checkbox"
+                            render={({ input }) => (
+                              <>
+                                <input
+                                  {...input}
+                                  className="me-1"
+                                  checked={isSelectAllChecked(
+                                    values?.tableList
+                                  )}
+                                  onChange={(e) => {
+                                    selectAllPermissions(e, values, form);
+                                  }}
+                                />
+                                Component
+                              </>
+                            )}
+                          />
+                        </FormB.Group>
                       </th>
-                      <th className="bg-white text-dark align-middle text-center">
+                      <th className="bg-white text-dark align-middle">
                         Permission
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     <FieldArray name="tableList">
-                      {({ fields, value }) =>
+                      {({ fields }) =>
                         fields.map((name, index) => (
                           <tr className="bg-white" key={index}>
-                            <td className="align-middle">
+                            <td className="align-middle td-padding-modal">
                               <h6>
                                 <FormB.Group className="d-inline">
                                   <FormB.Check
@@ -378,16 +438,15 @@ export default function TagBasePermissionItem(props) {
                               <Field
                                 className="form-control"
                                 name={`${name}.permission`}
-                                render={({ input, meta }) => (
+                                render={({ input }) => (
                                   <div>
                                     {tagServicePerms[
                                       fields.value[index].serviceName
-                                    ].map((obj, index) => (
-                                      <h6 className="d-inline" key={index}>
+                                    ].map((obj) => (
+                                      <h6 className="d-inline" key={obj.value}>
                                         <FormB.Group
                                           className="d-inline"
-                                          controlId={obj.label}
-                                          key={obj.label}
+                                          controlId={obj.value}
                                         >
                                           <FormB.Check
                                             inline

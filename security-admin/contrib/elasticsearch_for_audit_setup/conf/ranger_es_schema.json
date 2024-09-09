@@ -111,6 +111,12 @@
     "tags_str": {
       "type": "text"
     },
+    "datasets": {
+      "type": "keyword"
+    },
+    "projects": {
+      "type": "keyword"
+    },
     "text": {
       "type": "text"
     },

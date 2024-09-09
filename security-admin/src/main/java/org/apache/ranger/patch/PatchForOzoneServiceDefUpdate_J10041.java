@@ -147,8 +147,8 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 				jsonPreUpdate = xXServiceDefObj.getDefOptions();
 				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
 			} else {
-				logger.error("Ozone service-definition does not exist in the Ranger DAO.");
-				return false;
+				logger.error("Ozone service-definition does not exist in the Ranger DAO. No patching is needed!!");
+				return true;
 			}
 			dbOzoneServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
@@ -265,11 +265,9 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 				List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
 				if (CollectionUtils.isNotEmpty(policyItems)) {
 					for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-						List<RangerPolicy.RangerPolicyItemAccess> policyItemAccesses = policyItem.getAccesses();
 						// Add new access types
-						policyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
-						policyItemAccesses.add(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
-						policyItem.setAccesses(policyItemAccesses);
+						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
+						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
 					}
 				}
 				Map<String, RangerPolicy.RangerPolicyResource> policyResources = policy.getResources();

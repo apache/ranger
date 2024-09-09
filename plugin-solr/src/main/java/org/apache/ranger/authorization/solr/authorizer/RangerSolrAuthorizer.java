@@ -32,10 +32,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashSet;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;

@@ -24,7 +24,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +130,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		if (isWildcardPresent) {
 			ret = new RecursiveWildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, RangerPathResourceMatcher::isRecursiveWildCardMatch, optIgnoreCase ? 8 : 7);
 		} else {
-			ret = new RecursivePathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 8 : 7);
+			ret = new RecursivePathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, optIgnoreCase ? 8 : 7);
 		}
 
 		if (optReplaceTokens) {
@@ -189,8 +188,12 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 					sb.append(pathSeparatorChar);
 					pathElementIndex++;
 				}
-				if (useStringMatching && pathElements.length == wildcardPathElements.length) { // Loop finished normally and all sub-paths string-matched..
-					ret = true;
+				if (useStringMatching) {
+					if (pathElements.length == wildcardPathElements.length) { // Loop finished normally and all sub-paths string-matched..
+						ret = true;
+					} else if (pathToCheck.charAt(pathToCheck.length() - 1) == pathSeparatorChar) { // pathToCheck ends with separator, like /home/
+						ret = pathElements.length == (wildcardPathElements.length - 1) && WILDCARD_ASTERISK.equals(wildcardPathElements[wildcardPathElements.length - 1]);
+					}
 				}
 
 				sb = null;
@@ -260,15 +263,15 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		if (needWildcardMatch) { // test?, test*a*, test*a*b, *test*a
 			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else if (wildcardStartIdx == -1) { // test, testa, testab
-			ret = new PathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? 2 : 1, !optIgnoreCase);
+			ret = new PathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, !optIgnoreCase, optIgnoreCase ? 2 : 1);
 		} else if (wildcardStartIdx == 0) { // *test, **test, *testa, *testab
 			String matchStr = policyValue.substring(wildcardEndIdx + 1);
-			ret = new PathResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::endsWithIgnoreCase : StringUtils::endsWith, optIgnoreCase ? 4 : 3, !optIgnoreCase);
+			ret = new PathEndsWithResourceMatcher(matchStr, getOptions(), pathSeparatorChar, !optIgnoreCase, optIgnoreCase ? 4 : 3);
 		} else if (wildcardEndIdx != (len - 1)) { // test*a, test*ab
 			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else { // test*, test**, testa*, testab*
 			String matchStr = policyValue.substring(0, wildcardStartIdx);
-			ret = new PathResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 4 : 3, !optIgnoreCase);
+			ret = new PathStartsWithResourceMatcher(matchStr, getOptions(), pathSeparatorChar, !optIgnoreCase, optIgnoreCase ? 4 : 3);
 		}
 
 		if (optReplaceTokens) {
@@ -295,7 +298,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final int     priority;
 		final boolean isCaseSensitive;
 
-		AbstractPathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, int priority, boolean isCaseSensitive) {
+		AbstractPathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean isCaseSensitive, int priority) {
 			super(value, options);
 
 			this.pathSeparatorChar = pathSeparatorChar;
@@ -305,19 +308,13 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		int getPriority() {
 			return priority + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
 		}
-
-		@Override
-		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-			return isCaseSensitive ? StringUtils.startsWith(getExpandedValue(evalContext), resourceValue)
-			                       : StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
-		}
 	}
 
 	static class PathResourceMatcher extends AbstractPathResourceMatcher {
 		final BiFunction<String, String, Boolean> function;
 
-		PathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> function, int priority, boolean isCaseSensitive) {
-			super(value, options, pathSeparatorChar, priority, isCaseSensitive);
+		PathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> function, boolean isCaseSensitive, int priority) {
+			super(value, options, pathSeparatorChar, isCaseSensitive, priority);
 
 			this.function = function;
 		}
@@ -325,21 +322,42 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> PathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+				LOG.debug("==> PathResourceMatcher.isMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
 			}
 
 			String  expandedValue = getExpandedValue(evalContext);
 			boolean ret           = function.apply(resourceValue, expandedValue);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== PathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
+				LOG.debug("<== PathResourceMatcher.isMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
 			}
 
 			return ret;
 		}
 
 		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathResourceMatcher.isPrefixMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret = isCaseSensitive ? StringUtils.startsWith(getExpandedValue(evalContext), resourceValue)
+			                              : StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathResourceMatcher.isPrefixMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
+			}
+
+			return ret;
+
+		}
+
+		@Override
 		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathResourceMatcher.isChildMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
 			boolean ret                     = false;
 			String  expandedValue           = getExpandedValue(evalContext);
 			int     lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
@@ -354,9 +372,143 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				ret = function.apply(resourceValue, shorterExpandedValue);
 			}
 
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathResourceMatcher.isChildMatch(resourceValue={}, lastLevelSeparatorIndex={}): ret={}", resourceValue, lastLevelSeparatorIndex, ret );
+			}
+
+			return ret;
+		}
+	}
+
+	static class PathStartsWithResourceMatcher extends AbstractPathResourceMatcher {
+		PathStartsWithResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean isCaseSensitive, int priority) {
+			super(value, options, pathSeparatorChar, isCaseSensitive, priority);
+		}
+
+		@Override
+		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathStartsWithResourceMatcher.isMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret = isCaseSensitive ? StringUtils.startsWith(resourceValue, getExpandedValue(evalContext))
+			                              : StringUtils.startsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathStartsWithResourceMatcher.isMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
+			}
+
 			return ret;
 		}
 
+		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathStartsWithResourceMatcher.isPrefixMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret = isCaseSensitive ? StringUtils.startsWith(getExpandedValue(evalContext), resourceValue)
+			                              : StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathStartsWithResourceMatcher.isPrefixMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
+			}
+
+			return ret;
+		}
+
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathStartsWithResourceMatcher.isChildMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret                     = false;
+			String  expandedValue           = getExpandedValue(evalContext);
+			int     lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length()-1);
+				}
+
+				ret = isCaseSensitive ? StringUtils.startsWith(resourceValue, shorterExpandedValue)
+				                      : StringUtils.startsWithIgnoreCase(resourceValue, shorterExpandedValue);
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathStartsWithResourceMatcher.isChildMatch(resourceValue={}, lastLevelSeparatorIndex={}): ret={}", resourceValue, lastLevelSeparatorIndex, ret );
+			}
+
+			return ret;
+		}
+	}
+
+	static class PathEndsWithResourceMatcher extends AbstractPathResourceMatcher {
+		PathEndsWithResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean isCaseSensitive, int priority) {
+			super(value, options, pathSeparatorChar, isCaseSensitive, priority);
+		}
+
+		@Override
+		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathEndsWithResourceMatcher.isMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret = isCaseSensitive ? StringUtils.endsWith(resourceValue, getExpandedValue(evalContext))
+			                              : StringUtils.endsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathEndsWithResourceMatcher.isMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
+			}
+
+			return ret;
+		}
+
+		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathEndsWithResourceMatcher.isPrefixMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret = true; // isPrefixMatch() is always true for endsWith
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathEndsWithResourceMatcher.isPrefixMatch(resourceValue={}, expandedValue={}): ret={}", resourceValue, getExpandedValue(evalContext) , ret );
+			}
+
+			return ret;
+		}
+
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> PathEndsWithResourceMatcher.isChildMatch(resourceValue={}, evalContext={})", resourceValue, evalContext);
+			}
+
+			boolean ret                     = false;
+			String  expandedValue           = getExpandedValue(evalContext);
+			int     lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length()-1);
+				}
+
+				ret = isCaseSensitive ? StringUtils.endsWith(resourceValue, shorterExpandedValue)
+				                      : StringUtils.endsWithIgnoreCase(resourceValue, shorterExpandedValue);
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== PathEndsWithResourceMatcher.isChildMatch(resourceValue={}, lastLevelSeparatorIndex={}): ret={}", resourceValue, lastLevelSeparatorIndex, ret );
+			}
+
+			return ret;
+		}
 	}
 
 	static class WildcardResourceMatcher extends AbstractPathResourceMatcher {
@@ -364,14 +516,14 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final IOCase                                       ioCase;
 
 		WildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, TriFunction<String, String, IOCase, Boolean> function, int priority) {
-			super(value, options, pathSeparatorChar, priority, !optIgnoreCase);
+			super(value, options, pathSeparatorChar, !optIgnoreCase, priority);
 
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
 		}
 
 		@Override
-		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		public boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
 			}
@@ -381,6 +533,20 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
+			}
+			return ret;
+		}
+
+		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> WildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
+
+			boolean ret = ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), ioCase);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== WildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", expandedValue=" + getExpandedValue(evalContext) + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
@@ -411,7 +577,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		String[] wildcardPathElements;
 
 		RecursiveWildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, QuintFunction<String, String, Character, IOCase, Boolean, String[]> function, int priority) {
-			super(value, options, pathSeparatorChar, priority, !optIgnoreCase);
+			super(value, options, pathSeparatorChar, !optIgnoreCase, priority);
 
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
@@ -442,6 +608,20 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 
 		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RecursiveWildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
+
+			boolean ret = ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), ioCase);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RecursiveWildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", expandedValue=" + getExpandedValue(evalContext) + ") : result:[" + ret + "]");
+			}
+			return ret;
+		}
+
+		@Override
 		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
 			boolean ret = false;
 			String expandedValue = getExpandedValue(evalContext);
@@ -467,14 +647,16 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		String valueWithoutSeparator;
 		String valueWithSeparator;
 
+		final IOCase                              ioCase;
 		final BiFunction<String, String, Boolean> primaryFunction;
 		final BiFunction<String, String, Boolean> fallbackFunction;
 
-		RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> primaryFunction, BiFunction<String, String, Boolean> fallbackFunction, int priority) {
-			super(value, options, pathSeparatorChar, priority, true);
+		RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, int priority) {
+			super(value, options, pathSeparatorChar, true, priority);
 
-			this.primaryFunction    = primaryFunction;
-			this.fallbackFunction   = fallbackFunction;
+			this.ioCase           = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
+			this.primaryFunction  = optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals;
+			this.fallbackFunction = optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith;
 		}
 
 		String getStringToCompare(String policyValue) {
@@ -518,6 +700,20 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 
 		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RecursiveWildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
+
+			boolean ret = ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), ioCase);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RecursiveWildcardResourceMatcher.isPrefixMatch(resourceValue=" + resourceValue + ", expandedValue=" + getExpandedValue(evalContext) + ") : result:[" + ret + "]");
+			}
+			return ret;
+		}
+
+		@Override
 		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
 			boolean ret = false;
 			final String noSeparator;
@@ -531,7 +727,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				}
 				noSeparator = valueWithoutSeparator;
 			}
-			final int lastLevelSeparatorIndex = noSeparator.lastIndexOf(pathSeparatorChar);
+			final int lastLevelSeparatorIndex = noSeparator != null ? noSeparator.lastIndexOf(pathSeparatorChar) : -1;
 
 			if (lastLevelSeparatorIndex != -1) {
 				final String shorterExpandedValue = noSeparator.substring(0, lastLevelSeparatorIndex);

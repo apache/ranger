@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.resourcematcher;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
 
 import java.util.Map;
 
@@ -33,6 +34,8 @@ public interface RangerResourceMatcher {
 	void init();
 
 	boolean isMatchAny();
+
+	ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
 
 	boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
 

@@ -19,7 +19,7 @@ package org.apache.ranger.audit.utils;
  * under the License.
  */
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -123,11 +123,6 @@ public class ORCFileUtil {
 
         if (logger.isDebugEnabled()) {
             logger.debug("==> ORCFileUtil.log() : EventSize: " + eventBatchSize + "ORC bufferSize:" + orcBufferSize );
-        }
-
-        //increase the batch size according to event size, so it can accomodate all the events.
-        if (eventBatchSize > orcBufferSize) {
-            batch  = schema.createRowBatch(orcBufferSize);
         }
 
         try {
@@ -280,7 +275,7 @@ public class ORCFileUtil {
         Long ret = 0l;
         try {
             if (object instanceof Long)
-                ret = ((Long) object).longValue();
+                ret = ((Long) object);
             else if (object instanceof Integer) {
                 ret = ((Integer) object).longValue();
             } else if (object instanceof String) {
@@ -316,7 +311,7 @@ public class ORCFileUtil {
 
         Class auditEventClass = AuthzAuditEvent.class;
         for(Field fld: auditEventClass.getDeclaredFields()) {
-            if (fld.isAnnotationPresent(SerializedName.class)) {
+            if (fld.isAnnotationPresent(JsonProperty.class)) {
                 String field     = fld.getName();
                 String fieldType = getShortFieldType(fld.getType().getName());
                 if (fieldType == null) {
@@ -404,7 +399,7 @@ public class ORCFileUtil {
             case "lzo":
                 ret = CompressionKind.LZO;
                 break;
-            case "zlip":
+            case "zlib":
                 ret = CompressionKind.ZLIB;
                 break;
             case "none":

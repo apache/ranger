@@ -19,12 +19,12 @@
 
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Col, Modal, Row, Table } from "react-bootstrap";
+import { Alert, Badge, Button, Col, Modal, Table } from "react-bootstrap";
 import { difference, isEmpty, keys, map, omit, pick } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import ExportPolicy from "./ExportPolicy";
 import ImportPolicy from "./ImportPolicy";
-import folderLogo from "Images/folder-grey.png";
+import { getServiceDefIcon } from "../../utils/XAUtils";
 
 class ServiceDefinition extends Component {
   constructor(props) {
@@ -148,16 +148,16 @@ class ServiceDefinition extends Component {
       let val = resources[key].values;
       return (
         <div key={index} className="clearfix mb-2">
-          <span className="float-left">
+          <span className="float-start">
             <b>{key}: </b>
             {val.join()}
           </span>
           {resources[key].isExcludes !== undefined ? (
             <h6 className="d-inline">
               {resources[key].isExcludes ? (
-                <span className="badge badge-dark float-right">Include</span>
+                <span className="badge bg-dark float-end">Include</span>
               ) : (
-                <span className="badge badge-dark float-right">Exclude</span>
+                <span className="badge bg-dark float-end">Exclude</span>
               )}
             </h6>
           ) : (
@@ -166,11 +166,9 @@ class ServiceDefinition extends Component {
           {resources[key].isRecursive !== undefined ? (
             <h6 className="d-inline">
               {resources[key].isRecursive ? (
-                <span className="badge badge-dark float-right">Recursive</span>
+                <span className="badge bg-dark float-end">Recursive</span>
               ) : (
-                <span className="badge badge-dark float-right">
-                  Non Recursive
-                </span>
+                <span className="badge bg-dark float-end">Non Recursive</span>
               )}
             </h6>
           ) : (
@@ -193,9 +191,22 @@ class ServiceDefinition extends Component {
       return tableRow;
     }
 
-    auditFilters = JSON.parse(
-      auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
-    );
+    try {
+      auditFilters = JSON.parse(
+        auditFilters["ranger.plugin.audit.filters"].replace(/'/g, '"')
+      );
+    } catch (error) {
+      tableRow.push(
+        <tr key="error-service-audit-filter">
+          <td className="text-center" colSpan="8">
+            <Alert variant="danger">
+              Error occured while parsing service audit filter!
+            </Alert>
+          </td>
+        </tr>
+      );
+      return tableRow;
+    }
 
     auditFilters.map((a, index) =>
       tableRow.push(
@@ -203,18 +214,18 @@ class ServiceDefinition extends Component {
           <td className="text-center">
             {a.isAudited == true ? (
               <h6>
-                <Badge variant="info">Yes</Badge>
+                <Badge bg="info">Yes</Badge>
               </h6>
             ) : (
               <h6>
-                <Badge variant="info">No</Badge>
+                <Badge bg="info">No</Badge>
               </h6>
             )}
           </td>
           <td className="text-center">
             {a.accessResult !== undefined ? (
               <h6>
-                <Badge variant="info">{a.accessResult}</Badge>
+                <Badge bg="info">{a.accessResult}</Badge>
               </h6>
             ) : (
               "--"
@@ -233,7 +244,7 @@ class ServiceDefinition extends Component {
             {a.actions !== undefined
               ? a.actions.map((action) => (
                   <h6 key={action}>
-                    <Badge variant="info">{action}</Badge>
+                    <Badge bg="info">{action}</Badge>
                   </h6>
                 ))
               : "--"}
@@ -242,7 +253,7 @@ class ServiceDefinition extends Component {
             {a.accessTypes !== undefined && a.accessTypes.length > 0
               ? a.accessTypes.map((accessType) => (
                   <h6 key={accessType}>
-                    <Badge variant="info">{accessType}</Badge>
+                    <Badge bg="info">{accessType}</Badge>
                   </h6>
                 ))
               : "--"}
@@ -252,7 +263,7 @@ class ServiceDefinition extends Component {
               ? a.users.map((user) => (
                   <h6 key={user}>
                     <Badge
-                      variant="info"
+                      bg="info"
                       className="m-1 text-truncate more-less-width"
                       title={user}
                       key={user}
@@ -268,7 +279,7 @@ class ServiceDefinition extends Component {
               ? a.groups.map((group) => (
                   <h6 key={group}>
                     <Badge
-                      variant="info"
+                      bg="info"
                       className="m-1 text-truncate more-less-width"
                       title={group}
                       key={group}
@@ -283,7 +294,7 @@ class ServiceDefinition extends Component {
             {a.roles !== undefined
               ? a.roles.map((role) => (
                   <h6 key={role}>
-                    <Badge variant="info">{role}</Badge>
+                    <Badge bg="info">{role}</Badge>
                   </h6>
                 ))
               : "--"}
@@ -300,21 +311,18 @@ class ServiceDefinition extends Component {
     return (
       <Col sm={4}>
         <div className="position-relative">
-          <Table striped bordered hover size="sm">
+          <Table bordered hover size="sm">
             <thead>
               <tr>
                 <th>
                   <div className="policy-title clearfix">
-                    <span className="float-left">
-                      <img
-                        src={folderLogo}
-                        alt="Folder logo"
-                        className="m-r-5"
-                      />
+                    <span className="float-start">
+                      {getServiceDefIcon(serviceDef.name)}
                       {serviceDef.displayName}
                     </span>
+
                     {this.props.isAdminRole && (
-                      <span className="float-right">
+                      <span className="float-end">
                         {isEmpty(this.props.selectedZone) ? (
                           <Link
                             to={`/service/${serviceDef.id}/create`}
@@ -384,7 +392,7 @@ class ServiceDefinition extends Component {
                 <tr key={s.id} className="d-table w-100">
                   <td>
                     <div className="clearfix">
-                      <span className="float-left">
+                      <span className="float-start">
                         {!s.isEnabled && (
                           <i
                             className="fa-fw fa fa-ban text-color-red fa-lg"
@@ -401,7 +409,7 @@ class ServiceDefinition extends Component {
                           {s.displayName !== undefined ? s.displayName : s.name}
                         </Link>
                       </span>
-                      <span className="float-right">
+                      <span className="float-end">
                         {!this.props.isUserRole && (
                           <Button
                             variant="outline-dark"
@@ -426,91 +434,95 @@ class ServiceDefinition extends Component {
                             <Modal.Title>Service Details</Modal.Title>
                           </Modal.Header>
                           <Modal.Body>
-                            <Row>
-                              <Col sm={12}>
-                                <p className="form-header">Service Details :</p>
-                                <Table bordered size="sm">
-                                  <tbody className="service-details">
-                                    <tr>
-                                      <td>Service Name</td>
-                                      <td>{s.name}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>Display Name</td>
-                                      <td>{s.displayName}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>Description</td>
-                                      <td>
-                                        {s.description ? s.description : "--"}
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <td>Active Status</td>
-                                      <td>
+                            <p className="form-header">Service Details :</p>
+                            <div className="overflow-auto">
+                              <Table bordered size="sm">
+                                <tbody className="service-details">
+                                  <tr>
+                                    <td className="text-nowrap">
+                                      Service Name
+                                    </td>
+                                    <td className="text-break">{s.name}</td>
+                                  </tr>
+                                  <tr>
+                                    <td className="text-nowrap">
+                                      Display Name
+                                    </td>
+                                    <td className="text-break">
+                                      {s.displayName}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="text-nowrap">Description</td>
+                                    <td className="text-break">
+                                      {s.description ? s.description : "--"}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="text-nowrap">
+                                      Active Status
+                                    </td>
+                                    <td>
+                                      <h6>
+                                        <Badge bg="info">
+                                          {s.isEnabled ? `Enabled` : `Disabled`}
+                                        </Badge>
+                                      </h6>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="text-nowrap">Tag Service</td>
+                                    <td className="text-break">
+                                      {s.tagService ? (
                                         <h6>
-                                          <Badge variant="info">
-                                            {s.isEnabled
-                                              ? `Enabled`
-                                              : `Disabled`}
+                                          <Badge bg="info">
+                                            {s.tagService}
                                           </Badge>
                                         </h6>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <td>Tag Service</td>
-                                      <td>
-                                        {s.tagService ? (
-                                          <h6>
-                                            <Badge variant="info">
-                                              {s.tagService}
-                                            </Badge>
-                                          </h6>
-                                        ) : (
-                                          "--"
-                                        )}
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </Table>
-                                <p className="form-header">
-                                  Config Properties :
-                                </p>
-                                <Table bordered size="sm">
-                                  <tbody className="service-config">
-                                    {s?.configs &&
-                                      this.getServiceConfigs(
-                                        this.state.serviceDef,
-                                        s.configs
+                                      ) : (
+                                        "--"
                                       )}
-                                  </tbody>
-                                </Table>
-                                <p className="form-header">Audit Filter :</p>
-                                <div className="table-responsive">
-                                  <Table
-                                    bordered
-                                    size="sm"
-                                    className="table-audit-filter-ready-only"
-                                  >
-                                    <thead>
-                                      <tr>
-                                        <th>Is Audited</th>
-                                        <th>Access Result</th>
-                                        <th>Resources</th>
-                                        <th>Operations</th>
-                                        <th>Permissions</th>
-                                        <th>Users</th>
-                                        <th>Groups</th>
-                                        <th>Roles</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="service-audit">
-                                      {this.getAuditFilters(s.configs)}
-                                    </tbody>
-                                  </Table>
-                                </div>
-                              </Col>
-                            </Row>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </Table>
+                            </div>
+                            <p className="form-header">Config Properties :</p>
+                            <div className="table-responsive">
+                              <Table bordered size="sm">
+                                <tbody className="service-config">
+                                  {s?.configs &&
+                                    this.getServiceConfigs(
+                                      this.state.serviceDef,
+                                      s.configs
+                                    )}
+                                </tbody>
+                              </Table>
+                            </div>
+                            <p className="form-header">Audit Filter :</p>
+                            <div className="table-responsive">
+                              <Table
+                                bordered
+                                size="sm"
+                                className="table-audit-filter-ready-only"
+                              >
+                                <thead>
+                                  <tr>
+                                    <th>Is Audited</th>
+                                    <th>Access Result</th>
+                                    <th>Resources</th>
+                                    <th>Operations</th>
+                                    <th>Permissions</th>
+                                    <th>Users</th>
+                                    <th>Groups</th>
+                                    <th>Roles</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="service-audit">
+                                  {this.getAuditFilters(s.configs)}
+                                </tbody>
+                              </Table>
+                            </div>
                           </Modal.Body>
                           <Modal.Footer>
                             <Button
@@ -551,8 +563,9 @@ class ServiceDefinition extends Component {
                             >
                               <Modal.Header closeButton>
                                 <span className="text-word-break">
-                                  Are you sure want to delete service&nbsp;"
-                                  <b>{`${s?.displayName}`}</b>" ?
+                                  Are you sure want to delete
+                                  service&nbsp;&quot;
+                                  <b>{`${s?.displayName}`}</b>&quot; ?
                                 </span>
                               </Modal.Header>
                               <Modal.Footer>

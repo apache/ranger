@@ -49,6 +49,12 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>${HikariCP.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.glassfish.hk2.external</groupId>
@@ -170,11 +176,6 @@
             <version>${javax.persistence.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${google.guava.version}</version>
-        </dependency>
-        <dependency>
             <groupId>net.htmlparser.jericho</groupId>
             <artifactId>jericho-html</artifactId>
             <version>${jericho.html.version}</version>
@@ -239,11 +240,23 @@
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
             <version>${jersey-bundle.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-core</artifactId>
             <version>${jersey-core.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
@@ -310,6 +323,14 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>javax.ws.rs-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -320,6 +341,22 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jakarta.activation</groupId>
+                    <artifactId>jakarta.activation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-base</artifactId>
             <version>${fasterxml.jackson.version}</version>
         </dependency>
         <dependency>
@@ -373,16 +410,12 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+               <exclusion>
+                   <groupId>org.apache.zookeeper</groupId>
+                   <artifactId>zookeeper-jute</artifactId>
+               </exclusion>
           </exclusions>
         </dependency> 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.googlecode.log4jdbc</groupId>
             <artifactId>log4jdbc</artifactId>
@@ -409,6 +442,12 @@
             <groupId>org.springframework.ldap</groupId>
             <artifactId>spring-ldap-core</artifactId>
             <version>${spring-ldap-core.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -439,6 +478,12 @@
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
             <version>${velocity.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -446,30 +491,9 @@
             <version>${javax.servlet.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-            <version>${codehaus.jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>${codehaus.jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
-            <version>${codehaus.jackson.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-util</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.thrift</groupId>
-            <artifactId>libfb303</artifactId>
-            <version>${libfb303.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
@@ -480,6 +504,10 @@
                     <groupId>org.apache.tomcat.embed</groupId>
                     <artifactId>tomcat-embed-core</artifactId>
                  </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -639,11 +667,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>${springframework.test.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>${nimbus-jose-jwt.version}</version>
@@ -672,12 +695,6 @@
         <dependency>
             <groupId>com.webcohesion.enunciate</groupId>
             <artifactId>enunciate-core-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>${fasterxml.jackson.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase.thirdparty</groupId>
@@ -715,6 +732,10 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -744,7 +765,7 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-bundle</artifactId>
+            <artifactId>aws-java-sdk-logs</artifactId>
             <version>${aws-java-sdk.version}</version>
         </dependency>
         <dependency>
@@ -777,6 +798,30 @@
             <artifactId>ranger-metrics</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${springframework.test.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
@@ -801,344 +846,29 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-    </build>
 
-    <profiles>
-        <profile>
-            <id>security-admin-backbone</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <version>2.6</version>
-                        <executions>
-                            <execution>
-                                <id>prepare</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>exploded</goal>
-                                </goals>
-                                <configuration>
-                                    <warSourceExcludes>react-webapp/**</warSourceExcludes>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>default-war</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>war</goal>
-                                </goals>
-                                <configuration>
-                                    <packagingExcludes>
-                                        WEB-INF/lib/spring-*.SEC03.jar,
-                                        WEB-INF/lib/spring-*.RC3.jar,
-                                        WEB-INF/lib/spring-2.*.jar,
-                                        WEB-INF/lib/jetty-*.jar
-                                    </packagingExcludes>
-                                    <warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.google.code.maven-replacer-plugin</groupId>
-                        <artifactId>replacer</artifactId>
-                        <version>1.5.3</version>
-                        <executions>
-                            <execution>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>replace</goal>
-                                </goals>
-                                <configuration>
-                                    <basedir>${project.build.directory}/${project.build.finalName}</basedir>
-                                    <includes>
-                                        <include>index.html</include>
-                                        <include>scripts/Init.js</include>
-                                    </includes>
-                                    <replacements>
-                                        <replacement>
-                                            <token>build.version</token>
-                                            <value>${project.version}</value>
-                                        </replacement>
-                                        <replacement>
-                                            <token>(?m)\&lt;\!-- *dev *--\>(.*)$</token>
-                                            <value>\&lt;\!-- dev $1 --\></value>
-                                        </replacement>
-                                        <replacement>
-                                            <token>\&lt;\!-- *prod *(.*) *--\></token>
-                                            <value>\&lt;\!-- prod --\>$1</value>
-                                        </replacement>
-                                    </replacements>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.webcohesion.enunciate</groupId>
-                        <artifactId>enunciate-maven-plugin</artifactId>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>prepare</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>exploded</goal>
+                        </goals>
                         <configuration>
-                            <configFile>${basedir}/../enunciate.xml</configFile>
-                            <docsDir>${basedir}/../docs/target/</docsDir>
+                            <warSourceExcludes>react-webapp/**</warSourceExcludes>
                         </configuration>
-                        <dependencies>
-                            <!-- dependency management version doesn't apply here, need to repeat the version numbers -->
-                            <dependency>
-                                <groupId>javax.xml.bind</groupId>
-                                <artifactId>jaxb-api</artifactId>
-                                <version>${jaxb.api.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>javax.jws</groupId>
-                                <artifactId>javax.jws-api</artifactId>
-                                <version>1.1</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>2.7</version>
-                        <executions>
-                            <execution>
-                                <id>copy-resources</id>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/jsmain</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/src/main/webapp</directory>
-                                            <includes>
-                                                <include>package.json</include>
-                                                <include>package-lock.json</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-js-test-resources</id>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/jstest</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/src/test/javascript</directory>
-                                            <includes>
-                                                <include>package.json</include>
-                                                <include>package-lock.json</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <version>1.12.1</version>
-                        <configuration>
-                            <workingDirectory>${project.build.directory}</workingDirectory>
-                            <installDirectory>${project.build.directory}</installDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>process-resources</phase>
-                                <id>install node and npm</id>
-                                <goals>
-                                    <goal>install-node-and-npm</goal>
-                                </goals>
-                                <configuration>
-                                    <nodeVersion>v8.12.0</nodeVersion>
-                                    <npmVersion>6.4.1</npmVersion>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <phase>prepare-package</phase>
-                                <id>npm install for packaging</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
-                                    <arguments>install</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <phase>prepare-package</phase>
-                                <id>npm run r.js</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
-                                    <arguments>run r.js -- -o ../${project.build.finalName}/minify.build.js</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <phase>test</phase>
-                                <id>npm install for tests</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <skip>${skipJSTests}</skip>
-                                    <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                                    <arguments>install</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <phase>test</phase>
-                                <id>karma dev</id>
-                                <goals>
-                                    <goal>karma</goal>
-                                </goals>
-                                <configuration>
-                                    <skip>${skipJSTests}</skip>
-                                    <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                                    <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <phase>integration-test</phase>
-                                <id>karma prd</id>
-                                <goals>
-                                    <goal>karma</goal>
-                                </goals>
-                                <configuration>
-                                    <environmentVariables>
-                                        <buildDir>${project.build.finalName}</buildDir>
-                                    </environmentVariables>
-                                    <skip>${skipJSTests}</skip>
-                                    <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                                    <karmaConfPath>../../src/test/javascript/karma-prd.conf.js</karmaConfPath>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- duplicate SQL patch file version validator plugin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>1.4.1</version>
-                        <executions>
-                            <execution>
-                                <id>duplicate-sql-patch-file-version-validator</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <rules>
-                                        <evaluateBeanshell>
-                                            <message>Looks like there are multiple SQL files with same version number prefix. Update prefix and build again.</message>
-                                            <condition>
-                                                List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/db"), "**/*.sql", null, false);
-                                                Map sqlFileMap    = new HashMap();
-                                                Boolean noDupPrfx = true;
-
-                                                for (Iterator it = sqlFilePaths.iterator(); it.hasNext();) {
-                                                    String currentSqlFilePath = it.next();
-
-                                                    if (currentSqlFilePath.contains("patches")) {
-                                                        String [] array      = currentSqlFilePath.split("/");
-                                                        String db            = array[0];
-                                                        String patch         = array[(array.length - 1)];
-                                                        Boolean prfxWithNums = java.util.regex.Pattern.matches("^[0-9]{3}-([a-zA-Z]+[-_]*)+.sql$", patch);
-
-                                                        if (prfxWithNums) {
-                                                            String sqlFile = sqlFileMap.get(db + "-" + patch.split("-")[0]);
-
-                                                            if (sqlFile == null) {
-                                                                sqlFileMap.put(db + "-" + patch.split("-")[0], currentSqlFilePath);
-                                                            } else {
-                                                                print("Multiple SQL files with combination: [DB=" + db + "] [VersionPrefix=" + patch.split("-")[0] + "] found, hence triggering build failure.");
-                                                                print("Review prefixs for following files.");
-                                                                print("1. " + sqlFile);
-                                                                print("2. " + currentSqlFilePath);
-                                                                noDupPrfx = false;
-                                                            };
-                                                        };
-                                                    };
-                                                };
-
-                                                noDupPrfx
-                                            </condition>
-                                        </evaluateBeanshell>
-                                    </rules>
-                                    <fail>true</fail>
-                                </configuration>
-                            </execution>
-
-                            <!-- duplicate JAVA patch file version validator plugin -->
-                            <execution>
-                                <id>duplicate-java-patch-file-version-validator</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <rules>
-                                        <evaluateBeanshell>
-                                            <message>Looks like there are multiple JAVA files with same version number suffix. Update suffix and build again.</message>
-                                            <condition>
-                                                List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
-                                                Map javaFileMap     = new HashMap();
-                                                Boolean noDupSuffix = true;
-
-                                                for (Iterator it = javaFilePaths.iterator(); it.hasNext();) {
-                                                    String currentJavaFilePath = it.next();
-
-                                                    if (currentJavaFilePath.startsWith("Patch")) {
-                                                        String versionSuffix = currentJavaFilePath.split("_J")[1];
-                                                        String javaFile      = javaFileMap.get(versionSuffix);
-
-                                                        if (javaFile == null) {
-                                                            javaFileMap.put(versionSuffix, currentJavaFilePath);
-                                                        } else {
-                                                            print("Multiple JAVA files with suffix: " + versionSuffix + " found, hence triggering build failure.");
-                                                            print("Review suffixes for following files.");
-                                                            print("1. " + javaFile);
-                                                            print("2. " + currentJavaFilePath);
-                                                            noDupSuffix = false;
-                                                        };
-                                                    };
-                                                };
-
-                                                noDupSuffix
-                                            </condition>
-                                        </evaluateBeanshell>
-                                    </rules>
-                                    <fail>true</fail>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>security-admin-react</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <version>2.6</version>
+                    </execution>
+                    <execution>
+                        <id>default-war</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
                         <configuration>
                             <packagingExcludes>
                                 WEB-INF/lib/spring-*.SEC03.jar,
@@ -1148,359 +878,420 @@
                             </packagingExcludes>
                             <warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
                         </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.webcohesion.enunciate</groupId>
-                        <artifactId>enunciate-maven-plugin</artifactId>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
                         <configuration>
-                            <configFile>${basedir}/../enunciate.xml</configFile>
-                            <docsDir>${basedir}/../docs/target/</docsDir>
+                            <basedir>${project.build.directory}/${project.build.finalName}</basedir>
+                            <includes>
+                                <include>backbone-index.html</include>
+                                <include>scripts/Init.js</include>
+                            </includes>
+                            <replacements>
+                                <replacement>
+                                    <token>build.version</token>
+                                    <value>${project.version}</value>
+                                </replacement>
+                                <replacement>
+                                    <token>(?m)\&lt;\!-- *dev *--\>(.*)$</token>
+                                    <value>\&lt;\!-- dev $1 --\></value>
+                                </replacement>
+                                <replacement>
+                                    <token>\&lt;\!-- *prod *(.*) *--\></token>
+                                    <value>\&lt;\!-- prod --\>$1</value>
+                                </replacement>
+                            </replacements>
                         </configuration>
-                        <dependencies>
-                            <!-- dependency management version doesn't apply here, need to repeat the version numbers -->
-                            <dependency>
-                                <groupId>javax.xml.bind</groupId>
-                                <artifactId>jaxb-api</artifactId>
-                                <version>${jaxb.api.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>javax.jws</groupId>
-                                <artifactId>javax.jws-api</artifactId>
-                                <version>1.1</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>2.7</version>
-                        <executions>
-                            <!-- react-webapp copy-resources execution start -->
-                            <execution>
-                                <id>copy-resources-react-webapp</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/react-webapp</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/react-webapp/</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-dist</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/react-webapp/dist/</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-WEB-INF</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/WEB-INF/</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-META-INF</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/META-INF</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/META-INF/</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp</directory>
-                                            <includes>
-                                                <include>login.jsp</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp-styles</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/styles</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/styles</directory>
-                                            <includes>
-                                                <include>bootstrap.min.css</include>
-                                                <include>font-awesome.min.css</include>
-                                                <include>xa.css</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp-images</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/images</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/images</directory>
-                                            <includes>
-                                                <include>ranger_logo.png</include>
-                                                <include>favicon.ico</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp-jquery-js</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/libs/bower/jquery/js</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/libs/bower/jquery/js</directory>
-                                            <includes>
-                                                <include>jquery-3.5.1.js</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp-prelogin-js</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/scripts/prelogin</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/scripts/prelogin</directory>
-                                            <includes>
-                                                <include>XAPrelogin.js</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-resources-react-webapp-login-jsp-fonts</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${project.build.finalName}/fonts</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/src/main/webapp/fonts</directory>
-                                            <includes>
-                                                <include>fontawesome-webfont.eot</include>
-                                                <include>fontawesome-webfont.ttf</include>
-                                                <include>fontawesome-webfont.woff</include>
-                                                <include>fontawesome-webfont.woff2</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <!-- react-webapp copy-resources execution end -->
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <version>1.12.1</version>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.webcohesion.enunciate</groupId>
+                <artifactId>enunciate-maven-plugin</artifactId>
+                <configuration>
+                    <configFile>${basedir}/../enunciate.xml</configFile>
+                    <docsDir>${basedir}/../docs/target/</docsDir>
+                </configuration>
+                <dependencies>
+                    <!-- dependency management version doesn't apply here, need to repeat the version numbers -->
+                    <dependency>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                        <version>${jaxb.api.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>javax.jws</groupId>
+                        <artifactId>javax.jws-api</artifactId>
+                        <version>1.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jsmain</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/src/main/webapp</directory>
+                                    <includes>
+                                        <include>package.json</include>
+                                        <include>package-lock.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-js-test-resources</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jstest</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/src/test/javascript</directory>
+                                    <includes>
+                                        <include>package.json</include>
+                                        <include>package-lock.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- react-webapp copy-resources execution start -->
+                    <execution>
+                        <id>copy-resources-react-webapp</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/react-webapp</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/webapp/react-webapp/</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-react-webapp-dist</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/react-webapp/dist/</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-react-webapp-index-html</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/webapp/react-webapp/src/</directory>
+                                    <includes>
+                                        <include>index.html</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-react-webapp-login-jsp-styles</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/styles</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/webapp/styles</directory>
+                                    <includes>
+                                        <include>bootstrap.min.css</include>
+                                        <include>font-awesome.min.css</include>
+                                        <include>xa.css</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-react-webapp-login-jsp-images</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/images</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/webapp/images</directory>
+                                    <includes>
+                                        <include>ranger_logo.png</include>
+                                        <include>favicon.ico</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- react-webapp copy-resources execution end -->
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.12.1</version>
+                <configuration>
+                    <workingDirectory>${project.build.directory}</workingDirectory>
+                    <installDirectory>${project.build.directory}</installDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v8.12.0</nodeVersion>
+                            <npmVersion>6.4.1</npmVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <id>npm install for packaging</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <id>npm run r.js</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
+                            <arguments>run r.js -- -o ../${project.build.finalName}/minify.build.js</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <id>npm install for tests</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <id>karma dev</id>
+                        <goals>
+                            <goal>karma</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>integration-test</phase>
+                        <id>karma prd</id>
+                        <goals>
+                            <goal>karma</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <buildDir>${project.build.finalName}</buildDir>
+                            </environmentVariables>
+                            <skip>${skipJSTests}</skip>
+                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
+                            <karmaConfPath>../../src/test/javascript/karma-prd.conf.js</karmaConfPath>
+                        </configuration>
+                    </execution>
+                    <!-- react-webapp frontend-maven-plugin start -->
+                    <execution>
+                        <id>install node and npm for react-webapp</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
                             <installDirectory>${project.build.directory}/react-build</installDirectory>
+                            <nodeVersion>v16.0.0</nodeVersion>
+                            <npmVersion>7.10.0</npmVersion>
                         </configuration>
-                        <executions>
-                            <!-- react-webapp frontend-maven-plugin start -->
-                            <execution>
-                                <id>install node and npm for react-webapp</id>
-                                <goals>
-                                    <goal>install-node-and-npm</goal>
-                                </goals>
-                                <phase>generate-resources</phase>
-                                <configuration>
-                                    <nodeVersion>v16.0.0</nodeVersion>
-                                    <npmVersion>7.10.0</npmVersion>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>run npm ci for react-webapp</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <phase>generate-resources</phase>
-                                <configuration>
-                                    <arguments>ci</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>webpack build for react-webapp</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <phase>generate-resources</phase>
-                                <configuration>
-                                    <arguments>run build</arguments>
-                                </configuration>
-                            </execution>
-                            <!-- react-webapp frontend-maven-plugin end -->
-                        </executions>
-                    </plugin>
+                    </execution>
+                    <execution>
+                        <id>run npm ci for react-webapp</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
+                            <installDirectory>${project.build.directory}/react-build</installDirectory>
+                            <arguments>ci</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>webpack build for react-webapp</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
+                            <installDirectory>${project.build.directory}/react-build</installDirectory>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                    <!-- react-webapp frontend-maven-plugin end -->
+                </executions>
+            </plugin>
 
-                    <!-- duplicate SQL patch file version validator plugin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>1.4.1</version>
-                        <executions>
-                            <execution>
-                                <id>duplicate-sql-patch-file-version-validator</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <rules>
-                                        <evaluateBeanshell>
-                                            <message>Looks like there are multiple SQL files with same version number prefix. Update prefix and build again.</message>
-                                            <condition>
-                                                List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/db"), "**/*.sql", null, false);
-                                                Map sqlFileMap    = new HashMap();
-                                                Boolean noDupPrfx = true;
+            <!-- duplicate SQL patch file version validator plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>duplicate-sql-patch-file-version-validator</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <evaluateBeanshell>
+                                    <message>Looks like there are multiple SQL files with same version number prefix. Update prefix and build again.</message>
+                                    <condition>
+                                        List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/db"), "**/*.sql", null, false);
+                                        Map sqlFileMap    = new HashMap();
+                                        Boolean noDupPrfx = true;
 
-                                                for (Iterator it = sqlFilePaths.iterator(); it.hasNext();) {
-                                                    String currentSqlFilePath = it.next();
+                                        for (Iterator it = sqlFilePaths.iterator(); it.hasNext();) {
+                                            String currentSqlFilePath = it.next();
 
-                                                    if (currentSqlFilePath.contains("patches")) {
-                                                        String [] array      = currentSqlFilePath.split("/");
-                                                        String db            = array[0];
-                                                        String patch         = array[(array.length - 1)];
-                                                        Boolean prfxWithNums = java.util.regex.Pattern.matches("^[0-9]{3}-([a-zA-Z]+[-_]*)+.sql$", patch);
+                                            if (currentSqlFilePath.contains("patches")) {
+                                                String [] array      = currentSqlFilePath.split("/");
+                                                String db            = array[0];
+                                                String patch         = array[(array.length - 1)];
+                                                Boolean prfxWithNums = java.util.regex.Pattern.matches("^[0-9]{3}-([a-zA-Z]+[-_]*)+.sql$", patch);
 
-                                                        if (prfxWithNums) {
-                                                            String sqlFile = sqlFileMap.get(db + "-" + patch.split("-")[0]);
+                                                if (prfxWithNums) {
+                                                    String sqlFile = sqlFileMap.get(db + "-" + patch.split("-")[0]);
 
-                                                            if (sqlFile == null) {
-                                                                sqlFileMap.put(db + "-" + patch.split("-")[0], currentSqlFilePath);
-                                                            } else {
-                                                                print("Multiple SQL files with combination: [DB=" + db + "] [VersionPrefix=" + patch.split("-")[0] + "] found, hence triggering build failure.");
-                                                                print("Review prefixs for following files.");
-                                                                print("1. " + sqlFile);
-                                                                print("2. " + currentSqlFilePath);
-                                                                noDupPrfx = false;
-                                                            };
-                                                        };
+                                                    if (sqlFile == null) {
+                                                        sqlFileMap.put(db + "-" + patch.split("-")[0], currentSqlFilePath);
+                                                    } else {
+                                                        print("Multiple SQL files with combination: [DB=" + db + "] [VersionPrefix=" + patch.split("-")[0] + "] found, hence triggering build failure.");
+                                                        print("Review prefixs for following files.");
+                                                        print("1. " + sqlFile);
+                                                        print("2. " + currentSqlFilePath);
+                                                        noDupPrfx = false;
                                                     };
                                                 };
+                                            };
+                                        };
 
-                                                noDupPrfx
-                                            </condition>
-                                        </evaluateBeanshell>
-                                    </rules>
-                                    <fail>true</fail>
-                                </configuration>
-                            </execution>
+                                        noDupPrfx
+                                    </condition>
+                                </evaluateBeanshell>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
 
-                            <!-- duplicate JAVA patch file version validator plugin -->
-                            <execution>
-                                <id>duplicate-java-patch-file-version-validator</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <phase>validate</phase>
-                                <configuration>
-                                    <rules>
-                                        <evaluateBeanshell>
-                                            <message>Looks like there are multiple JAVA files with same version number suffix. Update suffix and build again.</message>
-                                            <condition>
-                                                List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
-                                                Map javaFileMap     = new HashMap();
-                                                Boolean noDupSuffix = true;
+                    <!-- duplicate JAVA patch file version validator plugin -->
+                    <execution>
+                        <id>duplicate-java-patch-file-version-validator</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <evaluateBeanshell>
+                                    <message>Looks like there are multiple JAVA files with same version number suffix. Update suffix and build again.</message>
+                                    <condition>
+                                        List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
+                                        Map javaFileMap     = new HashMap();
+                                        Boolean noDupSuffix = true;
 
-                                                for (Iterator it = javaFilePaths.iterator(); it.hasNext();) {
-                                                    String currentJavaFilePath = it.next();
+                                        for (Iterator it = javaFilePaths.iterator(); it.hasNext();) {
+                                            String currentJavaFilePath = it.next();
 
-                                                    if (currentJavaFilePath.startsWith("Patch")) {
-                                                        String versionSuffix = currentJavaFilePath.split("_J")[1];
-                                                        String javaFile      = javaFileMap.get(versionSuffix);
+                                            if (currentJavaFilePath.startsWith("Patch")) {
+                                                String versionSuffix = currentJavaFilePath.split("_J")[1];
+                                                String javaFile      = javaFileMap.get(versionSuffix);
 
-                                                        if (javaFile == null) {
-                                                            javaFileMap.put(versionSuffix, currentJavaFilePath);
-                                                        } else {
-                                                            print("Multiple JAVA files with suffix: " + versionSuffix + " found, hence triggering build failure.");
-                                                            print("Review suffixes for following files.");
-                                                            print("1. " + javaFile);
-                                                            print("2. " + currentJavaFilePath);
-                                                            noDupSuffix = false;
-                                                        };
-                                                    };
+                                                if (javaFile == null) {
+                                                    javaFileMap.put(versionSuffix, currentJavaFilePath);
+                                                } else {
+                                                    print("Multiple JAVA files with suffix: " + versionSuffix + " found, hence triggering build failure.");
+                                                    print("Review suffixes for following files.");
+                                                    print("1. " + javaFile);
+                                                    print("2. " + currentJavaFilePath);
+                                                    noDupSuffix = false;
                                                 };
+                                            };
+                                        };
 
-                                                noDupSuffix
-                                            </condition>
-                                        </evaluateBeanshell>
-                                    </rules>
-                                    <fail>true</fail>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+                                        noDupSuffix
+                                    </condition>
+                                </evaluateBeanshell>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

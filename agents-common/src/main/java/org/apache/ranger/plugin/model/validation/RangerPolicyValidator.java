@@ -226,18 +226,14 @@ public class RangerPolicyValidator extends RangerValidator {
 							.errorCode(error.getErrorCode())
 							.build());
 					valid = false;
-				}
-				List<String> tagSvcList = zone.getTagServices();
-				Set<String> svcNameSet = zone.getServices().keySet();
-				if(!svcNameSet.contains(serviceName) && !tagSvcList.contains(serviceName)){
-					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE;
-					failures.add(new ValidationFailureDetailsBuilder()
-							.field("zoneName")
-							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(serviceName, zoneName))
-							.errorCode(error.getErrorCode())
-							.build());
-					valid = false;
+				} else {
+					List<String> tagSvcList = zone.getTagServices();
+					Set<String>  svcNameSet = zone.getServices().keySet();
+					if (!svcNameSet.contains(serviceName) && !tagSvcList.contains(serviceName)) {
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE;
+						failures.add(new ValidationFailureDetailsBuilder().field("zoneName").isSemanticallyIncorrect().becauseOf(error.getMessage(serviceName, zoneName)).errorCode(error.getErrorCode()).build());
+						valid = false;
+					}
 				}
 			}
 
@@ -415,6 +411,18 @@ public class RangerPolicyValidator extends RangerValidator {
 					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getRowFilterDef().getAccessTypes()){
 						rowFilterAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
 					}
+
+					if (serviceDef.getMarkerAccessTypes() != null) {
+						for (RangerAccessTypeDef accessTypeDef : serviceDef.getMarkerAccessTypes()) {
+							if (accessTypeDef == null || accessTypeDef.getImpliedGrants() == null) {
+								continue;
+							}
+
+							if (CollectionUtils.containsAny(accessTypeDef.getImpliedGrants(), rowFilterAccessTypeDefNames)) {
+								rowFilterAccessTypeDefNames.add(accessTypeDef.getName());
+							}
+						}
+					}
 				}
 			}
 
@@ -444,6 +452,18 @@ public class RangerPolicyValidator extends RangerValidator {
 				if(!CollectionUtils.isEmpty(serviceDef.getDataMaskDef().getAccessTypes())){
 					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getDataMaskDef().getAccessTypes()){
 						dataMaskAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
+					}
+
+					if (serviceDef.getMarkerAccessTypes() != null) {
+						for (RangerAccessTypeDef accessTypeDef : serviceDef.getMarkerAccessTypes()) {
+							if (accessTypeDef == null || accessTypeDef.getImpliedGrants() == null) {
+								continue;
+							}
+
+							if (CollectionUtils.containsAny(accessTypeDef.getImpliedGrants(), dataMaskAccessTypeDefNames)) {
+								dataMaskAccessTypeDefNames.add(accessTypeDef.getName());
+							}
+						}
 					}
 				}
 			}
@@ -859,15 +879,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			String name = entry.getKey();
 			RangerPolicyResource policyResource = entry.getValue();
 			if(policyResource != null) {
-				if(CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					Set<String> resources = new HashSet<>(policyResource.getValues());
-					for (String aValue : resources) {
-						if (StringUtils.isBlank(aValue)) {
-							policyResource.getValues().remove(aValue);
-						}
-					}
-				}
-
+				policyResource.getValues().removeIf(StringUtils::isBlank);
 				if(CollectionUtils.isEmpty(policyResource.getValues())){
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_RESOURCE_LIST;
 					if(LOG.isDebugEnabled()) {
@@ -882,23 +894,40 @@ public class RangerPolicyValidator extends RangerValidator {
 						.build());
 					valid=false;
 				}
-
-				if (validationRegExMap.containsKey(name) && CollectionUtils.isNotEmpty(policyResource.getValues())) {
-					String regEx = validationRegExMap.get(name);
-					for (String aValue : policyResource.getValues()) {
-						if (!aValue.matches(regEx)) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug(String.format("Resource failed regex check: value[%s], resource-name[%s], regEx[%s], service-def-name[%s]", aValue, name, regEx, serviceDef.getName()));
-							}
-							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
-							failures.add(new ValidationFailureDetailsBuilder()
+				else{
+					String duplicateValue = getDuplicate(policyResource.getValues());
+					if (!StringUtils.isBlank(duplicateValue)){
+						ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE;
+						if (LOG.isDebugEnabled()){
+							LOG.debug(String.format("Duplicate values found for the resource name[%s] value[%s] service-def-name[%s]",name, duplicateValue,serviceDef.getName()));
+						}
+						failures.add(new ValidationFailureDetailsBuilder()
 								.field("resource-values")
 								.subField(name)
 								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(aValue, name))
+								.becauseOf(error.getMessage(name, duplicateValue))
 								.errorCode(error.getErrorCode())
-								.build());
-							valid = false;
+								.build()
+						);
+						valid = false;
+					}
+					if (validationRegExMap.containsKey(name)) {
+						String regEx = validationRegExMap.get(name);
+						for (String aValue : policyResource.getValues()) {
+							if (!aValue.matches(regEx)) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug(String.format("Resource failed regex check: value[%s], resource-name[%s], regEx[%s], service-def-name[%s]", aValue, name, regEx, serviceDef.getName()));
+								}
+								ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_RESOURCE_VALUE_REGEX;
+								failures.add(new ValidationFailureDetailsBuilder()
+									.field("resource-values")
+									.subField(name)
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(aValue, name))
+									.errorCode(error.getErrorCode())
+									.build());
+								valid = false;
+							}
 						}
 					}
 				}
@@ -909,6 +938,28 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceValues(%s, %s, %s): %s", resourceMap, failures, serviceDef, valid));
 		}
 		return valid;
+	}
+
+	private String getDuplicate(List<String> values) {
+		String duplicate = "";
+		if (values!=null) {
+			HashSet<String> set = new HashSet<>();
+			for (String val:values){
+				if (set.contains(val)){
+					duplicate = val;
+					break;
+				}
+				set.add(val);
+			}
+		}
+		return duplicate;
+	}
+	private static void removeDuplicates(List<String> values){
+		if (values==null || values.isEmpty()){
+			return;
+		}
+		HashSet<String> uniqueElements = new HashSet<>();
+		values.removeIf(e -> !uniqueElements.add(e));
 	}
 
 	boolean isValidPolicyItems(List<RangerPolicyItem> policyItems, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
@@ -947,7 +998,9 @@ public class RangerPolicyValidator extends RangerValidator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerPolicyValidator.isValid(%s, %s, %s)", policyItem, failures, serviceDef));
 		}
-		
+
+		List<String> invalidItems = new ArrayList<String>(Arrays.asList("null", "NULL", "Null", null));
+
 		boolean valid = true;
 		if (policyItem == null) {
 			LOG.debug("policy item was null!");
@@ -973,12 +1026,46 @@ public class RangerPolicyValidator extends RangerValidator {
 			if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) {
 				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS;
 				failures.add(new ValidationFailureDetailsBuilder()
-					.field("policy item users/user-groups/roles")
-					.isMissing()
-					.becauseOf(error.getMessage())
-					.errorCode(error.getErrorCode())
-					.build());
+						.field("policy item users/user-groups/roles")
+						.isMissing()
+						.becauseOf(error.getMessage())
+						.errorCode(error.getErrorCode())
+						.build());
 				valid = false;
+			} else {
+				removeDuplicates(policyItem.getUsers());
+				removeDuplicates(policyItem.getGroups());
+				removeDuplicates(policyItem.getRoles());
+				if (CollectionUtils.isNotEmpty(policyItem.getUsers()) && CollectionUtils.containsAny(policyItem.getUsers(), invalidItems)) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policy item users")
+							.isMissing()
+							.becauseOf(error.getMessage())
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+				if (CollectionUtils.isNotEmpty(policyItem.getGroups()) && CollectionUtils.containsAny(policyItem.getGroups(), invalidItems)) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policy item groups")
+							.isMissing()
+							.becauseOf(error.getMessage())
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
+				if (CollectionUtils.isNotEmpty(policyItem.getRoles()) && CollectionUtils.containsAny(policyItem.getRoles(), invalidItems)) {
+					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("policy item roles")
+							.isMissing()
+							.becauseOf(error.getMessage())
+							.errorCode(error.getErrorCode())
+							.build());
+					valid = false;
+				}
 			}
 		}
 

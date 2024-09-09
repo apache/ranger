@@ -31,7 +31,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.entity.XXSecurityZone;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -64,9 +63,6 @@ public class TestSecurityZoneDBStore {
 
 	@Mock
 	RangerDaoManager daoManager;
-	
-	@Mock
-	RangerBizUtil bizUtil;
 
 	@Mock
 	ServicePredicateUtil predicateUtil;
@@ -93,9 +89,7 @@ public class TestSecurityZoneDBStore {
 
 		Mockito.when(securityZoneService.create(securityZone)).thenReturn(createdSecurityZone);
 		Mockito.doNothing().when(securityZoneRefUpdater).createNewZoneMappingForRefTable(createdSecurityZone);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.doNothing().when(bizUtil).createTrxLog(trxLogList);
-		
+
 		RangerSecurityZone expectedSecurityZone = securityZoneDBStore.createSecurityZone(securityZone);
 
 		Assert.assertNull(xxSecurityZone);
@@ -114,25 +108,18 @@ public class TestSecurityZoneDBStore {
 		RangerSecurityZone updateSecurityZone = new RangerSecurityZone();
 		updateSecurityZone.setId(2L);
 
-		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
 		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
-
-		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
-		Mockito.when(xXSecurityZoneDao.findByZoneId(securityZone.getId())).thenReturn(xxSecurityZone);
 
 		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xXGlobalStateDao);
 		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
 		Mockito.when(securityZoneService.update(securityZone)).thenReturn(updateSecurityZone);
 		Mockito.doNothing().when(securityZoneRefUpdater).createNewZoneMappingForRefTable(updateSecurityZone);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.doNothing().when(bizUtil).createTrxLog(trxLogList);
 
 		RangerSecurityZone expectedSecurityZone = securityZoneDBStore.updateSecurityZoneById(securityZone);
 
 		Assert.assertNotNull(xxSecurityZone);
 		Assert.assertEquals(updateSecurityZone.getId(), expectedSecurityZone.getId());
-		Mockito.verify(daoManager).getXXSecurityZoneDao();
 		Mockito.verify(daoManager).getXXGlobalState();
 		Mockito.verify(securityZoneService).update(securityZone);
 	}
@@ -155,8 +142,6 @@ public class TestSecurityZoneDBStore {
 		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 		Mockito.when(securityZoneRefUpdater.cleanupRefTables(securityZone)).thenReturn(true);
 		Mockito.when(securityZoneService.delete(securityZone)).thenReturn(true);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.doNothing().when(bizUtil).createTrxLog(trxLogList);
 
 		securityZoneDBStore.deleteSecurityZoneByName(securityZone.getName());
 
@@ -177,8 +162,6 @@ public class TestSecurityZoneDBStore {
 		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 		Mockito.when(securityZoneRefUpdater.cleanupRefTables(securityZone)).thenReturn(true);
 		Mockito.when(securityZoneService.delete(securityZone)).thenReturn(true);
-		List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-		Mockito.doNothing().when(bizUtil).createTrxLog(trxLogList);
 
 		securityZoneDBStore.deleteSecurityZoneById(securityZone.getId());
 	}
@@ -304,10 +287,12 @@ public class TestSecurityZoneDBStore {
 		securityZoneToUpdate.setId(2L);
 
 		XXSecurityZoneDao xXSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
-		Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
-		Mockito.when(xXSecurityZoneDao.findByZoneId(securityZoneToUpdate.getId())).thenReturn(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
+
+		XXGlobalStateDao xXGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
+		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xXGlobalStateDao);
+		Mockito.doNothing().when(xXGlobalStateDao).onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
 		securityZoneDBStore.updateSecurityZoneById(securityZoneToUpdate);
 		Mockito.verify(daoManager, times(1)).getXXSecurityZoneDao();

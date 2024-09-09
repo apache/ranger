@@ -30,8 +30,11 @@ import {
   differenceWith,
   forEach,
   filter,
-  map
+  map,
+  includes,
+  split
 } from "lodash";
+import { currentTimeZone } from "../../../utils/XAUtils";
 
 export const PolicyLogs = ({ data, reportdata }) => {
   const {
@@ -175,6 +178,29 @@ export const PolicyLogs = ({ data, reportdata }) => {
   );
   const createMaskPolicyNew = createMaskPolicy.map((newval) => newval.newValue);
 
+  const getDataMaskType = (dataMaskLabel, dataMaskInfo) => {
+    let maskType = dataMaskInfo?.dataMaskType;
+
+    if (!isEmpty(dataMaskLabel)) {
+      if (dataMaskLabel == "Custom") {
+        maskType = dataMaskLabel + " : " + dataMaskInfo?.valueExpr;
+      } else {
+        maskType = dataMaskLabel;
+      }
+    } else {
+      if (includes(dataMaskInfo.dataMaskType, "CUSTOM")) {
+        maskType =
+          split(dataMaskInfo.dataMaskType, ":").pop() +
+          " : " +
+          dataMaskInfo?.valueExpr;
+      } else {
+        maskType = split(dataMaskInfo.dataMaskType, ":").pop();
+      }
+    }
+
+    return maskType;
+  };
+
   /* CREATE END */
 
   /* UPDATE LOGS VARIABLES */
@@ -241,7 +267,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
     return obj.attributeName == "Policy Resources" && obj.action == "update";
   });
 
-  /*UPDATESS*/
+  /* UPDATES */
 
   const policyDetailsUpdate = (details, resources) => {
     let tablerow = [];
@@ -334,10 +360,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     return (
                       <>
                         <h6 className="d-inline">
-                          <Badge
-                            className="d-inline-flex mr-1"
-                            variant="danger"
-                          >
+                          <Badge className="d-inline-flex me-1" bg="danger">
                             {obj}
                           </Badge>
                         </h6>
@@ -376,10 +399,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     return (
                       <>
                         <h6 className="d-inline">
-                          <Badge
-                            className="d-inline-flex mr-1"
-                            variant="success"
-                          >
+                          <Badge className="d-inline-flex me-1" bg="success">
                             {obj}
                           </Badge>
                         </h6>
@@ -425,7 +445,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="danger">
+                    <Badge className="d-inline-flex me-1" bg="danger">
                       {oldVal[key]?.isExcludes === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -433,7 +453,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning  text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="success">
+                    <Badge className="d-inline-flex me-1" bg="success">
                       {newVal[key]?.isExcludes === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -448,7 +468,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning  text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="danger">
+                    <Badge className="d-inline-flex me-1" bg="danger">
                       {oldVal[key]?.isRecursive === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -456,7 +476,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning text-nowrap  policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="success">
+                    <Badge className="d-inline-flex me-1" bg="success">
                       {newVal[key]?.isRecursive === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -482,7 +502,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                 {newVal[key] && !isEmpty(newVal[key].values) && (
                   <td className="table-warning policyitem-field">
                     {newVal[key].values?.map((values) => (
-                      <Badge className="d-inline-flex mr-1" variant="success">
+                      <Badge className="d-inline-flex me-1" bg="success">
                         {values}
                       </Badge>
                     ))}
@@ -498,7 +518,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                 <td className="table-warning  policyitem-field">--</td>
                 <td className="table-warning text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="success">
+                    <Badge className="d-inline-flex me-1" bg="success">
                       {newVal[key]?.isExcludes === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -513,7 +533,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                 <td className="table-warning  policyitem-field">--</td>
                 <td className="table-warning  text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="success">
+                    <Badge className="d-inline-flex me-1" bg="success">
                       {newVal[key]?.isRecursive === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -533,7 +553,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                 {oldVal[key] && !isEmpty(oldVal[key].values) && (
                   <td className="table-warning policyitem-field">
                     {oldVal[key]?.values?.map((values) => (
-                      <Badge className="d-inline-flex mr-1" variant="danger">
+                      <Badge className="d-inline-flex me-1" bg="danger">
                         {values}
                       </Badge>
                     ))}
@@ -550,7 +570,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="danger">
+                    <Badge className="d-inline-flex me-1" bg="danger">
                       {oldVal[key]?.isExcludes === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -566,7 +586,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                 <td className="table-warning  text-nowrap policyitem-field">
                   <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="danger">
+                    <Badge className="d-inline-flex me-1" bg="danger">
                       {oldVal[key]?.isRecursive === false ? "false" : "true"}
                     </Badge>
                   </h6>
@@ -708,7 +728,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
       return !isEmpty(added[index] && added[index].startTime) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="success">
+          <Badge className="d-inline-flex me-1" bg="success">
             {added[index] && added[index].startTime}
           </Badge>
         </h6>
@@ -721,7 +741,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
       return !isEmpty(added[index] && added[index].endTime) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="success">
+          <Badge className="d-inline-flex me-1" bg="success">
             {added[index] && added[index].endTime}
           </Badge>
         </h6>
@@ -734,7 +754,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
       return !isEmpty(added[index] && added[index].timeZone) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="success">
+          <Badge className="d-inline-flex me-1" bg="success">
             {added[index] && added[index].timeZone}
           </Badge>
         </h6>
@@ -818,7 +838,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
       var removed = diffVal(oldPolicyItemsDiff, newPolicyItemsDiff);
       return !isEmpty(removed[index] && removed[index].startTime) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="danger">
+          <Badge className="d-inline-flex me-1" bg="danger">
             {removed[index] && removed[index].startTime}
           </Badge>
         </h6>
@@ -831,7 +851,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
       return !isEmpty(removed[index] && removed[index].endTime) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="danger">
+          <Badge className="d-inline-flex me-1" bg="danger">
             {removed[index] && removed[index].endTime}
           </Badge>
         </h6>
@@ -844,7 +864,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
       return !isEmpty(removed[index] && removed[index].timeZone) ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="danger">
+          <Badge className="d-inline-flex me-1" bg="danger">
             {removed[index] && removed[index].timeZone}
           </Badge>
         </h6>
@@ -954,7 +974,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             added.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="success">
+                  <Badge className="d-inline-flex me-1" bg="success">
                     {obj}
                   </Badge>
                 </h6>
@@ -979,7 +999,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             added.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="success">
+                  <Badge className="d-inline-flex me-1" bg="success">
                     {obj}
                   </Badge>
                 </h6>
@@ -1003,7 +1023,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             added.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="success">
+                  <Badge className="d-inline-flex me-1" bg="success">
                     {obj}
                   </Badge>
                 </h6>
@@ -1031,7 +1051,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             added.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="success">
+                  <Badge className="d-inline-flex me-1" bg="success">
                     {obj}
                   </Badge>
                 </h6>
@@ -1044,43 +1064,22 @@ export const PolicyLogs = ({ data, reportdata }) => {
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {
-      if (DataMasklabel) {
-        if (
-          !isEqual(
-            newPolicyItemsDiff[index] &&
-              newPolicyItemsDiff[index].DataMasklabel,
-            oldPolicyItemsDiff[index] && oldPolicyItemsDiff[index].DataMasklabel
-          )
-        ) {
-          return (
-            <h6 className="d-inline">
-              <Badge className="d-inline-flex mr-1" variant="success">
-                {DataMasklabel}
-              </Badge>
-            </h6>
-          );
-        } else {
-          return DataMasklabel;
-        }
-      }
       if (dataMaskInfo) {
         if (
           !isEqual(
-            newPolicyItemsDiff[index] &&
-              newPolicyItemsDiff[index].dataMaskInfo.dataMaskType,
-            oldPolicyItemsDiff[index] &&
-              oldPolicyItemsDiff[index].dataMaskInfo.dataMaskType
+            newPolicyItemsDiff[index] && newPolicyItemsDiff[index].dataMaskInfo,
+            oldPolicyItemsDiff[index] && oldPolicyItemsDiff[index].dataMaskInfo
           )
         ) {
           return (
             <h6 className="d-inline">
-              <Badge className="d-inline-flex mr-1" variant="success">
-                {dataMaskInfo.dataMaskType}
+              <Badge className="d-inline-flex me-1" bg="success">
+                {getDataMaskType(DataMasklabel, dataMaskInfo)}
               </Badge>
             </h6>
           );
         } else {
-          return dataMaskInfo.dataMaskType;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
     };
@@ -1093,7 +1092,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
       );
       return !added ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="success">
+          <Badge className="d-inline-flex me-1" bg="success">
             {rowFilter}
           </Badge>
         </h6>
@@ -1106,18 +1105,16 @@ export const PolicyLogs = ({ data, reportdata }) => {
         oldPolicyItemsDiff[index] &&
           oldPolicyItemsDiff[index]?.conditions?.map((obj) => obj.values),
         newPolicyItemsDiff[index] &&
-          newPolicyItemsDiff[index]?.conditions?.map((obj) => {
-            obj.values;
-          })
+          newPolicyItemsDiff[index]?.conditions?.map((obj) => obj.values)
       );
       return !added ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="success">
+          <Badge className="d-inline-flex me-1" bg="success">
             {`${conditions.type}: ${conditions.values.join(", ")}`}
           </Badge>
         </h6>
       ) : (
-        `${conditions.type}: ${conditions.values.join(", ")}`
+        `${conditions.type}: ${conditions.values.join(", ")} `
       );
     };
     tableRow.push(
@@ -1208,6 +1205,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   </td>
                 </tr>
               )}
+              {newPolicyItemsDiff.length - 1 != index && (
+                <tr>
+                  <td>
+                    <br />
+                  </td>
+                </tr>
+              )}
             </tbody>
           )
         )
@@ -1289,7 +1293,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             removed.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="danger">
+                  <Badge className="d-inline-flex me-1" bg="danger">
                     {obj}
                   </Badge>
                 </h6>
@@ -1313,7 +1317,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             removed.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="danger">
+                  <Badge className="d-inline-flex me-1" bg="danger">
                     {obj}
                   </Badge>
                 </h6>
@@ -1337,7 +1341,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             removed.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="danger">
+                  <Badge className="d-inline-flex me-1" bg="danger">
                     {obj}
                   </Badge>
                 </h6>
@@ -1365,7 +1369,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             removed.map((obj) => {
               return (
                 <h6 className="d-inline">
-                  <Badge className="d-inline-flex mr-1" variant="danger">
+                  <Badge className="d-inline-flex me-1" bg="danger">
                     {obj}
                   </Badge>
                 </h6>
@@ -1378,43 +1382,22 @@ export const PolicyLogs = ({ data, reportdata }) => {
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {
-      if (DataMasklabel) {
-        if (
-          !isEqual(
-            oldPolicyItemsDiff[index] &&
-              oldPolicyItemsDiff[index].DataMasklabel,
-            newPolicyItemsDiff[index] && newPolicyItemsDiff[index].DataMasklabel
-          )
-        ) {
-          return (
-            <h6 className="d-inline">
-              <Badge className="d-inline-flex mr-1" variant="danger">
-                {DataMasklabel}
-              </Badge>
-            </h6>
-          );
-        } else {
-          return DataMasklabel;
-        }
-      }
       if (dataMaskInfo) {
         if (
           !isEqual(
-            oldPolicyItemsDiff[index] &&
-              oldPolicyItemsDiff[index].dataMaskInfo.dataMaskType,
-            newPolicyItemsDiff[index] &&
-              newPolicyItemsDiff[index].dataMaskInfo.dataMaskType
+            oldPolicyItemsDiff[index] && oldPolicyItemsDiff[index].dataMaskInfo,
+            newPolicyItemsDiff[index] && newPolicyItemsDiff[index].dataMaskInfo
           )
         ) {
           return (
             <h6 className="d-inline">
-              <Badge className="d-inline-flex mr-1" variant="danger">
-                {dataMaskInfo.dataMaskType}
+              <Badge className="d-inline-flex me-1" bg="danger">
+                {getDataMaskType(DataMasklabel, dataMaskInfo)}
               </Badge>
             </h6>
           );
         } else {
-          return dataMaskInfo.dataMaskType;
+          return getDataMaskType(DataMasklabel, dataMaskInfo);
         }
       }
     };
@@ -1427,7 +1410,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
       );
       return !removed ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="danger">
+          <Badge className="d-inline-flex me-1" bg="danger">
             {rowFilter}
           </Badge>
         </h6>
@@ -1438,20 +1421,18 @@ export const PolicyLogs = ({ data, reportdata }) => {
     const getCondition = (conditions, index) => {
       var removed = isEqual(
         newPolicyItemsDiff[index] &&
-          newPolicyItemsDiff[index]?.conditions?.map((obj) => {
-            obj.values;
-          }),
+          newPolicyItemsDiff[index]?.conditions?.map((obj) => obj.values),
         oldPolicyItemsDiff[index] &&
           oldPolicyItemsDiff[index]?.conditions?.map((obj) => obj.values)
       );
       return !removed ? (
         <h6 className="d-inline">
-          <Badge className="d-inline-flex mr-1" variant="danger">
+          <Badge className="d-inline-flex me-1" bg="danger">
             {`${conditions.type}: ${conditions.values.join(", ")}`}
           </Badge>
         </h6>
       ) : (
-        `${conditions.type}: ${conditions.values.join(", ")}`
+        `${conditions.type}: ${conditions.values.join(", ")} `
       );
     };
     tableRow.push(
@@ -1525,7 +1506,6 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </td>
                   </tr>
                 )}
-
               {policy.attributeName == "Masked Policy Items" && (
                 <tr>
                   <td className="table-warning text-nowrap policyitem-field">
@@ -1541,6 +1521,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {!isEmpty(rowFilterInfo)
                       ? getRowLevelFilter(rowFilterInfo.filterExpr, index)
                       : "--"}
+                  </td>
+                </tr>
+              )}
+              {oldPolicyItemsDiff.length - 1 != index && (
+                <tr>
+                  <td>
+                    <br />
                   </td>
                 </tr>
               )}
@@ -1621,7 +1608,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
         <>
           <tr key={index}>
             <td className="table-warning">{key}</td>
-            <td className="table-warning"> {keynew[key].values}</td>
+            <td className="table-warning">
+              {!isEmpty(keynew[key].values)
+                ? keynew[key].values.join(", ")
+                : "--"}
+            </td>
           </tr>
           <tr>
             <td className="table-warning">{key + " " + "exclude"}</td>
@@ -1739,7 +1730,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let keynew = {};
     resources.map((obj) => {
-      keynew = !isEmpty(ovj.previousValue) && JSON.parse(obj.previousValue);
+      keynew = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
     });
 
     Object.keys(keynew).map((key, index) => {
@@ -1827,7 +1818,14 @@ export const PolicyLogs = ({ data, reportdata }) => {
   const importdelmaskpolicyold = importdelmaskPolicyItem.map(
     (obj) => obj.previousValue
   );
-
+  const importDeleteRowPolicyItem = reportdata.filter(
+    (obj) =>
+      obj.attributeName == "Row level filter Policy Items" &&
+      obj.action == "Import Delete"
+  );
+  const importDeleteRowPolicyOld = importDeleteRowPolicyItem.map(
+    (obj) => obj.previousValue
+  );
   /*IMPORT DELETE END*/
 
   /* IMPORT END LOGS*/
@@ -1860,22 +1858,21 @@ export const PolicyLogs = ({ data, reportdata }) => {
       {action == "create" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
-            <div className="font-weight-bolder">
+            <div className="fw-bolder">
               Policy ID :{" "}
-              <Badge className="d-inline-flex mr-1" variant="info">
+              <Badge className="d-inline-flex me-1" bg="info">
                 {objectId}
               </Badge>
             </div>
-            <div className="font-weight-bolder">Policy Name: {objectName}</div>
-            <div className="font-weight-bolder">Service Name: {owner}</div>
-            <div className="font-weight-bolder">
-              Created Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
-              India Standard Time
+            <div className="fw-bolder">Policy Name: {objectName}</div>
+            <div className="fw-bolder">Service Name: {parentObjectName}</div>
+            <div className="fw-bolder">
+              Created Date: {currentTimeZone(createDate)}
             </div>
-            <div className="font-weight-bolder">Created By: {owner}</div>
+            <div className="fw-bolder">Created By: {owner}</div>
             <h5 className="bold wrap-header mt-3">Policy Details:</h5>
 
-            <Table className="table table-striped table-bordered w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -1894,7 +1891,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               createValidityNew != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Validity Period:</h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -1939,12 +1936,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
             {action == "create" &&
               !isEmpty(createConditionNew) &&
               !isUndefined(createConditionNew) &&
-              createConditionNew != 0 && (
+              createConditionNew != 0 &&
+              createConditionNew != "[]" && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
                     Policy Conditions:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-25">
+                  <Table className="table table-bordered w-25">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -1986,7 +1984,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Allow PolicyItems:
                   </h5>
-                  <Table className="table table-striped  table-bordered w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2076,7 +2074,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Row Level Filter Policy Items:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2086,7 +2084,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {createRowMaskNew.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning text-nowrap policyitem-field">
@@ -2128,7 +2126,17 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   : "<empty>"}
                               </td>
                             </tr>
-
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
                             <tr>
                               <td className="table-warning text-nowrap policyitem-field">
                                 <i>{`Row Level Filter`}</i>
@@ -2137,6 +2145,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   : "<empty>"}
                               </td>
                             </tr>
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -2152,7 +2167,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               createExceptionNew != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Allow Exceptions:</h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2243,7 +2258,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               createDenyPolicyNew != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Deny PolicyItems:</h5>
-                  <Table className="table table-striped  table-bordered  w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2336,7 +2351,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Deny Exception PolicyItems:
                   </h5>
-                  <Table className="table table-striped  table-bordered  w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2426,7 +2441,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Masking Policy Items:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-auto ">
+                  <Table className="table table-bordered w-auto ">
                     <thead className="thead-light">
                       <tr>
                         <th>New Value</th>
@@ -2436,7 +2451,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {createMaskPolicyNew.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning text-nowrap policyitem-field">
@@ -2478,7 +2493,17 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   : "<empty>"}
                               </td>
                             </tr>
-
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
                             <tr>
                               {policy.delegateAdmin == true && (
                                 <td className="table-warning text-nowrap policyitem-field">
@@ -2492,16 +2517,23 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               )}
                             </tr>
                             <tr>
-                              {!isEmpty(policy.DataMasklabel) && (
+                              {!isEmpty(policy.dataMaskInfo) && (
                                 <td className="table-warning text-nowrap policyitem-field">
-                                  <i>{`Data Mask Types`}</i>
-                                  {!isEmpty(policy.DataMasklabel)
-                                    ? `: ${policy.DataMasklabel} `
-                                    : "<empty>"}
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
                                 </td>
                               )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -2519,26 +2551,22 @@ export const PolicyLogs = ({ data, reportdata }) => {
           <div>
             <div className="row">
               <div className="col-md-6">
-                <div className="font-weight-bolder">
+                <div className="fw-bolder">
                   Policy ID :{" "}
-                  <Badge className="d-inline-flex mr-1" variant="info">
+                  <Badge className="d-inline-flex me-1" bg="info">
                     {objectId}
                   </Badge>
                 </div>
-                <div className="font-weight-bolder">
-                  Policy Name: {objectName}
-                </div>
-                <div className="font-weight-bolder">
+                <div className="fw-bolder">Policy Name: {objectName}</div>
+                <div className="fw-bolder">
                   Service Name: {parentObjectName}
                 </div>
-                <div className="font-weight-bolder">
-                  Updated Date:{" "}
-                  {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")} India
-                  Standard Time
+                <div className="fw-bolder">
+                  Updated Date: {currentTimeZone(createDate)}
                 </div>
-                <div className="font-weight-bolder">Updated By: {owner} </div>
+                <div className="fw-bolder">Updated By: {owner} </div>
               </div>
-              <div className="col-md-6 text-right">
+              <div className="col-md-6 text-end">
                 <div className="bg-success legend"></div> {" Added "}
                 <div className="bg-danger legend"></div> {" Deleted "}
               </div>
@@ -2549,7 +2577,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               !isEmpty(updatePolicyResources)) && (
               <>
                 <h5 className="bold wrap-header m-t-sm">Policy details</h5>
-                <Table className="table table-striped table-bordered w-auto">
+                <Table className="table table-bordered w-auto">
                   <thead className="thead-light">
                     <tr>
                       <th>Fields</th>
@@ -2589,7 +2617,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th>Old Value</th>
@@ -2602,7 +2630,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th>New Value</th>
@@ -2630,7 +2658,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th>Old Value</th>
@@ -2643,7 +2671,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th>New Value</th>
@@ -2656,7 +2684,6 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                   </Row>
-
                   <br />
                 </>
               )}
@@ -2667,12 +2694,12 @@ export const PolicyLogs = ({ data, reportdata }) => {
               updateMaskPolicy != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
-                    Mask Policy Items:
+                    Masking Policy Items:
                   </h5>
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">Old Value</th>
@@ -2685,7 +2712,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">New Value</th>
@@ -2713,7 +2740,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">Old Value</th>
@@ -2726,7 +2753,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">New Value</th>
@@ -2739,7 +2766,6 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                   </Row>
-
                   <br />
                 </>
               )}
@@ -2754,7 +2780,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">Old Value</th>
@@ -2767,7 +2793,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">New Value</th>
@@ -2780,7 +2806,6 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                   </Row>
-
                   <br />
                 </>
               )}
@@ -2793,7 +2818,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">Old Value</th>
@@ -2806,7 +2831,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">New Value</th>
@@ -2833,7 +2858,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
                   <Row className="d-flex flex-nowrap">
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">Old Value</th>
@@ -2846,7 +2871,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </Table>
                     </Col>
                     <Col className="d-table" xs={6} md={4}>
-                      <Table className="table table-striped table-bordered w-auto">
+                      <Table className="table table-bordered w-auto">
                         <thead className="thead-light">
                           <tr>
                             <th className="text-nowrap">New Value</th>
@@ -2869,25 +2894,22 @@ export const PolicyLogs = ({ data, reportdata }) => {
       {action == "delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
-            <div className="font-weight-bolder">
+            <div className="fw-bolder">
               Policy ID :{" "}
-              <Badge className="d-inline-flex mr-1" variant="info">
+              <Badge className="d-inline-flex me-1" bg="info">
                 {objectId}
               </Badge>
             </div>
-            <div className="font-weight-bolder">Policy Name: {objectName}</div>
-            <div className="font-weight-bolder">
-              Service Name: {parentObjectName}
+            <div className="fw-bolder">Policy Name: {objectName}</div>
+            <div className="fw-bolder">Service Name: {parentObjectName}</div>
+            <div className="fw-bolder">
+              Deleted Date:{currentTimeZone(createDate)}
             </div>
-            <div className="font-weight-bolder">
-              Deleted Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}{" "}
-              India Standard Time
-            </div>
-            <div className="font-weight-bolder">Deleted By: {owner} </div>
+            <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Policy Details:</h5>
 
-            <Table className="table table-striped table-bordered w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -2907,7 +2929,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               deleteValidityOld != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Validity Period:</h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>old Value</th>
@@ -2965,7 +2987,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Policy Conditions:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-25">
+                  <Table className="table table-bordered w-25">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -2999,7 +3021,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Row Level Filter Policy Items:
                   </h5>
-                  <Table className="table table-striped  table-bordered  table-responsive w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3009,84 +3031,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {deleteRowMaskOld.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
-                          <tbody>
-                            <tr>
-                              <td className="table-warning policyitem-field">
-                                <i>{`Roles`}</i>
-                                {`: ${
-                                  !isEmpty(policy.roles)
-                                    ? policy.roles.join(", ")
-                                    : "<empty>"
-                                } `}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="table-warning policyitem-field">
-                                <i>{`Groups`}</i>
-                                {`: ${
-                                  !isEmpty(policy.groups)
-                                    ? policy.groups.join(", ")
-                                    : "<empty>"
-                                } `}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="table-warning policyitem-field">
-                                <i>{`Users`}</i>
-                                {`: ${
-                                  !isEmpty(policy.suers)
-                                    ? policy.suers.join(", ")
-                                    : "<empty>"
-                                } `}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="table-warning policyitem-field">
-                                <i>{`Accesses`}</i>
-                                {!isEmpty(policy.accesses)
-                                  ? `: ${policy.accesses
-                                      .map((obj) => obj.type)
-                                      .join(", ")} `
-                                  : "<empty>"}
-                              </td>
-                            </tr>
-
-                            <tr>
-                              <td className="table-warning policyitem-field">
-                                <i>{`Row Level Filter`}</i>
-                                {!isEmpty(policy.rowFilterInfo.filterExpr)
-                                  ? `: ${policy.rowFilterInfo.filterExpr}`
-                                  : "<empty>"}
-                              </td>
-                            </tr>
-                          </tbody>
-                        ))
-                      );
-                    })}
-                    <br />
-                  </Table>
-                </>
-              )}
-            {action == "delete" &&
-              !isEmpty(deletemaskPolicyOld) &&
-              !isUndefined(deletemaskPolicyOld) &&
-              deletemaskPolicyOld != 0 && (
-                <>
-                  <h5 className="bold wrap-header m-t-sm">
-                    Masking Policy Items:
-                  </h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
-                    <thead className="thead-light">
-                      <tr>
-                        <th>Old Value</th>
-                      </tr>
-                    </thead>
-
-                    {deletemaskPolicyOld.map((policyitem) => {
-                      return (
-                        !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning policyitem-field">
@@ -3128,7 +3073,111 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   : "<empty>"}
                               </td>
                             </tr>
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Row Level Filter`}</i>
+                                {!isEmpty(policy.rowFilterInfo.filterExpr)
+                                  ? `: ${policy.rowFilterInfo.filterExpr}`
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        ))
+                      );
+                    })}
+                  </Table>
+                  <br />
+                </>
+              )}
+            {action == "delete" &&
+              !isEmpty(deletemaskPolicyOld) &&
+              !isUndefined(deletemaskPolicyOld) &&
+              deletemaskPolicyOld != 0 && (
+                <>
+                  <h5 className="bold wrap-header m-t-sm">
+                    Masking Policy Items:
+                  </h5>
+                  <Table className="table table-bordered w-auto">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Old Value</th>
+                      </tr>
+                    </thead>
 
+                    {deletemaskPolicyOld.map((policyitem) => {
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy, index) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
                             <tr>
                               {policy.delegateAdmin == true && (
                                 <td className="table-warning policyitem-field">
@@ -3142,15 +3191,23 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               )}
                             </tr>
                             <tr>
-                              {policy.DataMasklabel &&
-                                policy.DataMasklabel.length > 0 && (
-                                  <td className="table-warning policyitem-field">
-                                    <i>{`Data Mask Types`}</i>
-                                    {`: ${policy.DataMasklabel} `}
-                                  </td>
-                                )}
+                              {!isEmpty(policy.dataMaskInfo) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
+                                </td>
+                              )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -3166,7 +3223,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Allow PolicyItems:
                   </h5>
-                  <Table className="table table-striped  table-bordered  w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3258,7 +3315,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Allow Exception PolicyItems:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3348,7 +3405,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               deleteDenyPolicyOld != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Deny PolicyItems:</h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3441,7 +3498,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Deny Exception PolicyItems:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3533,7 +3590,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
             <h5 className="bold wrap-header m-t-sm">Details:</h5>
-            <Table className="table table-striped table-bordered w-50">
+            <Table className="table table-bordered w-50">
               {importEnd.map(
                 (c) =>
                   !isEmpty(c.previousValue) &&
@@ -3568,7 +3625,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <>
             <h5 className="bold wrap-header m-t-sm">Details:</h5>
-            <Table className="table table-striped table-bordered w-50">
+            <Table className="table table-bordered w-50">
               {exportVal.map(
                 (c) =>
                   !isEmpty(c.previousValue) &&
@@ -3596,21 +3653,20 @@ export const PolicyLogs = ({ data, reportdata }) => {
       {action == "Import Delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
-            <div className="font-weight-bolder">
+            <div className="fw-bolder">
               Policy ID :{" "}
-              <Badge className="d-inline-flex mr-1" variant="info">
+              <Badge className="d-inline-flex me-1" bg="info">
                 {objectId}
               </Badge>
             </div>
-            <div className="font-weight-bolder">Policy Name: {objectName}</div>
-            <div className="font-weight-bolder">
-              Deleted Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}{" "}
-              India Standard Time
+            <div className="fw-bolder">Policy Name: {objectName}</div>
+            <div className="fw-bolder">
+              Deleted Date: {currentTimeZone(createDate)}
             </div>
-            <div className="font-weight-bolder">Deleted By: {owner} </div>
+            <div className="fw-bolder">Deleted By: {owner} </div>
             <br />
             <h5 className="bold wrap-header m-t-sm">Policy Details:</h5>
-            <Table className="table table-striped table-bordered w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Fields</th>
@@ -3633,7 +3689,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               importDelValidityOld != 0 && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">Validity Period:</h5>
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>old Value</th>
@@ -3692,7 +3748,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     Masking Policy Items:
                   </h5>
 
-                  <Table className="table table-striped  table-bordered   w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3702,7 +3758,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     {importdelmaskpolicyold.map((policyitem) => {
                       return (
                         !isEmpty(policyitem) &&
-                        JSON.parse(policyitem).map((policy) => (
+                        JSON.parse(policyitem).map((policy, index) => (
                           <tbody>
                             <tr>
                               <td className="table-warning policyitem-field">
@@ -3744,7 +3800,128 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   : "<empty>"}
                               </td>
                             </tr>
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
+                            <tr>
+                              {policy.delegateAdmin == true && (
+                                <td className="table-warning policyitem-field">
+                                  <i>{`Delegate Admin`}</i>
+                                  {`: ${
+                                    policy.delegateAdmin == true
+                                      ? "enabled"
+                                      : "disabled"
+                                  } `}
+                                </td>
+                              )}
+                            </tr>
+                            <tr>
+                              {!isEmpty(policy.dataMaskInfo) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Data Mask Types: `}</i>
+                                  {getDataMaskType(
+                                    policy.DataMasklabel,
+                                    policy.dataMaskInfo
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        ))
+                      );
+                    })}
+                  </Table>
+                  <br />
+                </>
+              )}
 
+            {action == "Import Delete" &&
+              !isEmpty(importDeleteRowPolicyOld) &&
+              !isUndefined(importDeleteRowPolicyOld) &&
+              importDeleteRowPolicyOld != 0 && (
+                <>
+                  <h5 className="bold wrap-header m-t-sm">
+                    Row Level Filter Policy Items:
+                  </h5>
+
+                  <Table className="table table-striped  table-bordered   w-auto">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Old Value</th>
+                      </tr>
+                    </thead>
+
+                    {importDeleteRowPolicyOld.map((policyitem) => {
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy, index) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {!isEmpty(policy.conditions) && (
+                                <td className="table-warning policyitem-field">
+                                  <i>{`Conditions`}</i>
+                                  {`: ${policy.conditions.map(
+                                    (type) =>
+                                      `${type.type} : ${type.values.join(", ")}`
+                                  )} `}
+                                </td>
+                              )}
+                            </tr>
                             <tr>
                               {policy.delegateAdmin == true && (
                                 <td className="table-warning policyitem-field">
@@ -3766,7 +3943,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
                                   </td>
                                 )}
                             </tr>
-                            <br />
+                            {JSON.parse(policyitem).length - 1 != index && (
+                              <tr>
+                                <td>
+                                  <br />
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         ))
                       );
@@ -3779,12 +3962,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
             {action == "Import Delete" &&
               !isEmpty(importPolicyConditionOld) &&
               !isUndefined(importPolicyConditionOld) &&
-              importPolicyConditionOld != 0 && (
+              importPolicyConditionOld != 0 &&
+              importPolicyConditionOld != "[]" && (
                 <>
                   <h5 className="bold wrap-header m-t-sm">
                     Policy Conditions:
                   </h5>
-                  <Table className="table table-striped  table-bordered   w-25">
+                  <Table className="table table-bordered w-25">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3807,6 +3991,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <br />
                 </>
               )}
+
             {action == "Import Delete" &&
               !isEmpty(importDeleteItemsOld) &&
               !isUndefined(importDeleteItemsOld) &&
@@ -3815,7 +4000,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   <h5 className="bold wrap-header m-t-sm">
                     Allow PolicyItems:
                   </h5>
-                  <Table className="table table-striped table-bordered w-auto">
+                  <Table className="table table-bordered w-auto">
                     <thead className="thead-light">
                       <tr>
                         <th>Old Value</th>
@@ -3910,7 +4095,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             <h5 className="bold wrap-header m-t-sm">
               Allow Exception PolicyItems:
             </h5>
-            <Table className="table table-striped  table-bordered   w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Old Value</th>
@@ -3997,7 +4182,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         importdeldenyPolicyold != 0 && (
           <>
             <h5 className="bold wrap-header m-t-sm">Deny PolicyItems:</h5>
-            <Table className="table table-striped  table-bordered  w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Old Value</th>
@@ -4086,7 +4271,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
             <h5 className="bold wrap-header m-t-sm">
               Deny Exception PolicyItems:
             </h5>
-            <Table className="table table-striped  table-bordered w-auto">
+            <Table className="table table-bordered w-auto">
               <thead className="thead-light">
                 <tr>
                   <th>Old Value</th>

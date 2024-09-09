@@ -31,6 +31,8 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.AfterClass;
@@ -62,6 +64,27 @@ public class TestTagEnricher {
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
+    }
+
+    @Test
+    public void testRangerTagsForEvalSort() {
+        List<MatchType> matchTypes = new ArrayList<>();
+
+        matchTypes.add(null);
+        matchTypes.add(MatchType.NONE);
+        matchTypes.add(MatchType.DESCENDANT);
+        matchTypes.add(MatchType.ANCESTOR);
+        matchTypes.add(MatchType.SELF_AND_ALL_DESCENDANTS);
+        matchTypes.add(MatchType.SELF);
+
+        matchTypes.sort(RangerPolicyResourceMatcher.MATCH_TYPE_COMPARATOR);
+
+        assertEquals(matchTypes.get(0), MatchType.SELF);
+        assertEquals(matchTypes.get(1), MatchType.SELF_AND_ALL_DESCENDANTS);
+        assertEquals(matchTypes.get(2), MatchType.ANCESTOR);
+        assertEquals(matchTypes.get(3), MatchType.DESCENDANT);
+        assertEquals(matchTypes.get(4), MatchType.NONE);
+        assertEquals(matchTypes.get(5), null);
     }
 
     @Test
@@ -105,6 +128,7 @@ public class TestTagEnricher {
         for (TestData test : testCase.tests) {
             RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null, null);
 
+            ((RangerMutableResource)request.getResource()).setServiceDef(testCase.serviceDef);
             tagEnricher.enrich(request);
 
             List<RangerTag> expected = test.result;

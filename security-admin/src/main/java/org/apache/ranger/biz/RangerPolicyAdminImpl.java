@@ -646,7 +646,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         requestProcessor.preProcess(request);
 
-        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(resource);
+        Set<String> zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
 
         if (CollectionUtils.isEmpty(zoneNames)) {
             getMatchingPoliciesForZone(request, null, ret);
@@ -796,40 +796,34 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
                 for (RangerPolicy.RangerPolicyItem item : policy.getPolicyItems()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
                 for (RangerPolicy.RangerPolicyItem item : policy.getDenyPolicyItems()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
                 for (RangerPolicy.RangerPolicyItem item : policy.getAllowExceptions()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
                 for (RangerPolicy.RangerPolicyItem item : policy.getDenyExceptions()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
             } else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
                 for (RangerPolicy.RangerPolicyItem item : policy.getDataMaskPolicyItems()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
             } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 for (RangerPolicy.RangerPolicyItem item : policy.getRowFilterPolicyItems()) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
@@ -894,10 +888,9 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
         for (RangerPolicy.RangerPolicyItem item : policyItems) {
 
-            List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
             Set<String> accessTypes = new HashSet<>();
 
-            for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+            for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                 accessTypes.addAll(expandedAccesses.get(access.getType()));
             }
 

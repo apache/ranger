@@ -135,7 +135,7 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
 					accesses.add(new RangerPolicy.RangerPolicyItemAccess("execute", true));
 					policyItemForHBase.setAccesses(accesses);
 					policyItemForHBase.setDelegateAdmin(true);
-					policy.getPolicyItems().add(policyItemForHBase);
+					policy.addPolicyItem(policyItemForHBase);
 					svcDBStore.updatePolicy(policy);
 					break;
 				}

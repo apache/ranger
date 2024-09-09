@@ -75,6 +75,7 @@ public class EmbeddedServer {
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	private static final String KMS_SERVER_NAME   = "rangerkms";
+	private static final String ACCESS_LOG_ENABLED = "ranger.accesslog.enabled";
 	private static final String ACCESS_LOG_PREFIX = "ranger.accesslog.prefix";
 	private static final String ACCESS_LOG_DATE_FORMAT = "ranger.accesslog.dateformat";
 	private static final String ACCESS_LOG_PATTERN = "ranger.accesslog.pattern";
@@ -86,6 +87,9 @@ public class EmbeddedServer {
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
+
+
+	private static EmbeddedServerMetricsCollector serverMetricsCollector;
 
 	public static void main(String[] args) {
 		new EmbeddedServer(args).start();
@@ -194,7 +198,7 @@ public class EmbeddedServer {
 		valve.setRotatable(true);
 		valve.setAsyncSupported(true);
 		valve.setBuffered(false);
-		valve.setEnabled(true);
+		valve.setEnabled(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ENABLED, true));
 		valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX,"access-" + hostName));
 		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "-yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
@@ -342,6 +346,8 @@ public class EmbeddedServer {
 					}
 				}
 			}
+
+			serverMetricsCollector = new EmbeddedServerMetricsCollector(server);
 			server.start();
 			server.getServer().await();
 			shutdownServer();
@@ -571,6 +577,15 @@ public class EmbeddedServer {
 				LOG.log(Level.SEVERE, "Error while closing file: [" + filename + "]", excp);
 			}
 		}
+	}
+
+	public static EmbeddedServerMetricsCollector getServerMetricsCollector(){
+
+		EmbeddedServerMetricsCollector embeddedServerMetricsCollector = EmbeddedServer.serverMetricsCollector;
+		if( null != embeddedServerMetricsCollector ){
+			LOG.info("Selected Tomcat protocolHandler: "+ embeddedServerMetricsCollector.getProtocolHandlerName());
+		}
+		return embeddedServerMetricsCollector;
 	}
 
 }

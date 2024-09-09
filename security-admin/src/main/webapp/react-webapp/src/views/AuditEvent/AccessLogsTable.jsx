@@ -23,7 +23,6 @@ import dateFormat from "dateformat";
 import { isEmpty } from "lodash";
 import { toast } from "react-toastify";
 import {
-  ServiceType,
   ServiceRequestDataRangerAcl,
   ServiceRequestDataHadoopAcl
 } from "../../utils/XAEnums";
@@ -52,7 +51,9 @@ export const AccessLogsTable = ({ data = {} }) => {
     eventCount,
     zoneName,
     requestData,
-    tags
+    tags,
+    datasets,
+    projects
   } = data;
 
   const copyText = (val) => {
@@ -118,7 +119,7 @@ export const AccessLogsTable = ({ data = {} }) => {
                 {!isEmpty(requestData) ? (
                   <>
                     <Button
-                      className="pull-right link-tag query-icon btn btn-sm"
+                      className="float-end link-tag query-icon btn btn-sm"
                       size="sm"
                       variant="link"
                       title="Copy"
@@ -145,7 +146,7 @@ export const AccessLogsTable = ({ data = {} }) => {
                 {!isEmpty(requestData) ? (
                   <>
                     <Button
-                      className="pull-right link-tag query-icon btn btn-sm"
+                      className="float-end link-tag query-icon btn btn-sm"
                       size="sm"
                       variant="link"
                       title="Copy"
@@ -173,7 +174,13 @@ export const AccessLogsTable = ({ data = {} }) => {
         </tr>
         <tr>
           <td>Result</td>
-          <td>{accessResult == 1 ? "Allowed" : "Denied"}</td>
+          <td>
+            {accessResult !== undefined
+              ? accessResult == 1
+                ? "Allowed"
+                : "Denied"
+              : "--"}
+          </td>
         </tr>
         <tr>
           <td className="text-nowrap">Access Enforcer</td>
@@ -207,6 +214,26 @@ export const AccessLogsTable = ({ data = {} }) => {
                   .map((val) => {
                     return val.type;
                   })
+                  .sort()
+                  .join(", ")
+              : "--"}
+          </td>
+        </tr>
+        <tr>
+          <td>Datasets</td>
+          <td>
+            {!isEmpty(datasets)
+              ? JSON.parse(datasets)
+                  .sort()
+                  .join(", ")
+              : "--"}
+          </td>
+        </tr>
+        <tr>
+          <td>Projects</td>
+          <td>
+            {!isEmpty(projects)
+              ? JSON.parse(projects)
                   .sort()
                   .join(", ")
               : "--"}

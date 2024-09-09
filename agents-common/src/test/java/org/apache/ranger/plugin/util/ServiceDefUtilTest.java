@@ -17,6 +17,9 @@
 
 package org.apache.ranger.plugin.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
@@ -28,17 +31,28 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import static org.apache.ranger.plugin.util.ServiceDefUtil.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ServiceDefUtilTest {
@@ -68,6 +82,13 @@ public class ServiceDefUtilTest {
 			REF_USER_ATTR_NAMES_CSV_F, REF_USER_ATTR_NAMES_Q_CSV_F
 	};
 
+	static Gson gsonBuilder;
+
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ").setPrettyPrinting().create();
+	}
+
 	@Test
 	public void testNoUserGroupAttrRef() {
 		ServicePolicies svcPolicies = getServicePolicies();
@@ -76,7 +97,7 @@ public class ServiceDefUtilTest {
 		svcPolicies.getPolicies().add(policy);
 		assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
 
-		policy.getResources().put("database", new RangerPolicyResource("/departments/USER.dept/")); // expressions must be within ${{}}
+		policy.setResource("database", new RangerPolicyResource("/departments/USER.dept/")); // expressions must be within ${{}}
 		assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
 
 		policy.getRowFilterPolicyItems().get(0).getRowFilterInfo().setFilterExpr("dept in USER.dept"); // expressions must be within ${{}}
@@ -90,7 +111,7 @@ public class ServiceDefUtilTest {
 			ServicePolicies svcPolicies = getServicePolicies();
 			RangerPolicy    policy      = getPolicy(svcPolicies);
 
-			policy.getResources().put("database", new RangerPolicyResource(resource));
+			policy.setResource("database", new RangerPolicyResource(resource));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policy resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -120,7 +141,7 @@ public class ServiceDefUtilTest {
 			ServicePolicies svcPolicies = getServicePolicies();
 			RangerPolicy    policy      = getPolicy(svcPolicies);
 
-			policy.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
+			policy.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policy condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -191,7 +212,7 @@ public class ServiceDefUtilTest {
 				break;
 			}
 
-			policyItems.get(0).getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
+			policyItems.get(0).addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
 			svcPolicies.getPolicies().add(policy);
 			assertTrue("policyItem condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
@@ -253,6 +274,131 @@ public class ServiceDefUtilTest {
 	}
 
 	@Test
+	public void testNormalizeAccessTypeDefs() throws Exception {
+		try (InputStream inStream = this.getClass().getResourceAsStream("/test_servicedef-normalize.json")) {
+			InputStreamReader reader   = new InputStreamReader(inStream);
+			ServicePolicies   policies = gsonBuilder.fromJson(reader, ServicePolicies.class);
+
+			RangerAccessTypeDef serviceMarkerAll = getAccessType(policies.getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
+			RangerAccessTypeDef tagMarkerAll     = getAccessType(policies.getTagPolicies().getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
+
+			assertNotEquals("accessType count", policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size());
+			assertNotEquals("impliedGrants: _ALL", new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()));
+			assertNotEquals("dataMask.accessType count", policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size());
+			assertNotEquals("rowFilter.accessType count", policies.getServiceDef().getRowFilterDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size());
+
+			ServiceDefUtil.normalizeAccessTypeDefs(policies.getTagPolicies().getServiceDef(), policies.getServiceDef().getName());
+
+			serviceMarkerAll = getAccessType(policies.getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
+			tagMarkerAll     = getAccessType(policies.getTagPolicies().getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
+
+			assertEquals("accessType count", policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size());
+			assertEquals("impliedGrants: _ALL", new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()));
+			assertEquals("dataMask.accessType count", policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size());
+			assertEquals("rowFilter.accessType count", 0, policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size());
+		}
+	}
+
+	private RangerAccessTypeDef getAccessType(List<RangerAccessTypeDef> accessTypeDefs, String accessType) {
+		RangerAccessTypeDef ret = null;
+
+		if (accessTypeDefs != null) {
+			for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+				if (StringUtils.equals(accessTypeDef.getName(), accessType)) {
+					ret = accessTypeDef;
+
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	@Test
+	public void testAccessTypeMarkers() {
+		RangerAccessTypeDef create   = new RangerAccessTypeDef(1L, "create",  "create",  null, null, AccessTypeCategory.CREATE);
+		RangerAccessTypeDef select   = new RangerAccessTypeDef(2L, "select",  "select",  null, null, AccessTypeCategory.READ);
+		RangerAccessTypeDef update   = new RangerAccessTypeDef(3L, "update",  "update",  null, null, AccessTypeCategory.UPDATE);
+		RangerAccessTypeDef delete   = new RangerAccessTypeDef(4L, "delete",  "delete",  null, null, AccessTypeCategory.DELETE);
+		RangerAccessTypeDef manage   = new RangerAccessTypeDef(5L, "manage",  "manage",  null, null, AccessTypeCategory.MANAGE);
+		RangerAccessTypeDef read     = new RangerAccessTypeDef(6L, "read",    "read",    null, null, AccessTypeCategory.READ);
+		RangerAccessTypeDef write    = new RangerAccessTypeDef(7L, "write",   "write",   null, null, AccessTypeCategory.UPDATE);
+		RangerAccessTypeDef execute  = new RangerAccessTypeDef(8L, "execute", "execute", null, null, null);
+		Set<String>         allNames = toSet(create.getName(), select.getName(), update.getName(), delete.getName(), manage.getName(), read.getName(), write.getName(), execute.getName());
+
+		// 6 marker access-types should be populated with impliedGrants
+		List<RangerAccessTypeDef> accessTypeDefs = Arrays.asList(create, select, update, delete, manage, read, write, execute);
+		List<RangerAccessTypeDef> markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
+		assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ,   toSet(select.getName(), read.getName()),  getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, toSet(update.getName(), write.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, toSet(delete.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, toSet(manage.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL,    allNames, getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+
+		// 2 marker access-types should be populated with impliedGrants: _CREATE, _ALL
+		accessTypeDefs = new ArrayList<>(Collections.singleton(create));
+		markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
+		assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ,   Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL,    toSet(create.getName()),  getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+
+		// 2 marker access-types should be populated with impliedGrants: _READ, _ALL
+		accessTypeDefs = new ArrayList<>(Arrays.asList(select, read));
+		markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
+		assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ,   toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL,  toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+
+		// accessTypes with no category should be added to _ALL
+		accessTypeDefs = new ArrayList<>(Collections.singleton(execute));
+		markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
+		assertEquals("markerTypeDefs count", 6, markerTypeDefs.size()); // 1 marker access-types should be added: _ALL
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ,   Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
+		assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL, toSet(execute.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+	}
+
+	private Set<String> getImpliedGrants(List<RangerAccessTypeDef> accessTypeDefs, String accessType) {
+		Set<String> ret = null;
+
+		if (accessTypeDefs != null) {
+			for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+				if (StringUtils.equals(accessTypeDef.getName(), accessType)) {
+					ret = new HashSet<>(accessTypeDef.getImpliedGrants());
+
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	private Set<String> toSet(String...values) {
+		Set<String> ret = new HashSet<>();
+
+		if (values != null) {
+			for (String value : values) {
+				ret.add(value);
+			}
+		}
+
+		return ret;
+	}
 	public void testPolicyItemDataMaskExprUserGroupRef() {
 		for (String attrExpr : UGA_ATTR_EXPRESSIONS) {
 			String          filterExpr  = "${{" + attrExpr + "}}";
@@ -325,14 +471,14 @@ public class ServiceDefUtilTest {
 
 		ret.setService(svcPolicies.getServiceName());
 		ret.setServiceType(svcPolicies.getServiceDef().getName());
-		ret.getResources().put("database", new RangerPolicyResource("testdb"));
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
-		ret.getPolicyItems().add(getPolicyItem());
-		ret.getAllowExceptions().add(getPolicyItem());
-		ret.getDenyPolicyItems().add(getPolicyItem());
-		ret.getDenyExceptions().add(getPolicyItem());
-		ret.getDataMaskPolicyItems().add(getDataMaskPolicyItem());
-		ret.getRowFilterPolicyItems().add(getRowFilterPolicyItem());
+		ret.setResource("database", new RangerPolicyResource("testdb"));
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addPolicyItem(getPolicyItem());
+		ret.addAllowException(getPolicyItem());
+		ret.addDenyPolicyItem(getPolicyItem());
+		ret.addDenyException(getPolicyItem());
+		ret.addDataMaskPolicyItem(getDataMaskPolicyItem());
+		ret.addRowFilterPolicyItem(getRowFilterPolicyItem());
 
 		return ret;
 	}
@@ -340,10 +486,10 @@ public class ServiceDefUtilTest {
 	private RangerPolicyItem getPolicyItem() {
 		RangerPolicyItem ret = new RangerPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 
 		return ret;
 	}
@@ -351,10 +497,10 @@ public class ServiceDefUtilTest {
 	private RangerDataMaskPolicyItem getDataMaskPolicyItem() {
 		RangerDataMaskPolicyItem ret = new RangerDataMaskPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 		ret.setDataMaskInfo(new RangerPolicyItemDataMaskInfo("MASK_NULL", null, null));
 
 		return ret;
@@ -363,10 +509,10 @@ public class ServiceDefUtilTest {
 	private RangerRowFilterPolicyItem getRowFilterPolicyItem() {
 		RangerRowFilterPolicyItem ret = new RangerRowFilterPolicyItem();
 
-		ret.getUsers().add("testUser");
-		ret.getGroups().add("testGroup");
-		ret.getRoles().add("testRole");
-		ret.getConditions().add(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
+		ret.addUser("testUser");
+		ret.addGroup("testGroup");
+		ret.addRole("testRole");
+		ret.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList("TAG.attr1 == 'value1'")));
 		ret.setRowFilterInfo(new RangerPolicyItemRowFilterInfo("dept in ('dept1','dept2')"));
 
 		return ret;

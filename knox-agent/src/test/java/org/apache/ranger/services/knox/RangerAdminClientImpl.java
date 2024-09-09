@@ -22,11 +22,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 
-import com.google.common.base.Charsets;
 
 /**
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them

@@ -22,12 +22,15 @@ package org.apache.ranger.authorization.hive.authorizer;
 import java.util.Date;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+
+import static org.apache.ranger.authorization.hive.authorizer.RangerHiveAuditHandler.ACTION_TYPE_METADATA_OPERATION;
 
 public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 	private HiveAccessType accessType = HiveAccessType.NONE;
@@ -56,6 +59,15 @@ public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
 			this.setRequestData(context.getCommandString());
 			this.setForwardedAddresses(context.getForwardedAddresses());
 			this.setRemoteIPAddress(context.getIpAddress());
+			String requestData = context.getCommandString();
+			if (StringUtils.isEmpty(requestData) && ACTION_TYPE_METADATA_OPERATION.equals(hiveOpTypeName)) {
+				String resourceType = resource.getObjectType().name();
+				if (resourceType.equalsIgnoreCase("DATABASE")) {
+					this.setRequestData("show databases");
+				} else if (resourceType.equalsIgnoreCase("TABLE")) {
+					this.setRequestData("show tables / views");
+				}
+			}
 		}
 
 		if(sessionContext != null) {

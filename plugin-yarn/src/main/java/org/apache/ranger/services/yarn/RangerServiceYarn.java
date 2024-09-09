@@ -113,7 +113,7 @@ public class RangerServiceYarn extends RangerBaseService {
 					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 					policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_SUBMIT_APP)));
 					policyItemForLookupUser.setDelegateAdmin(false);
-					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+					defaultPolicy.addPolicyItem(policyItemForLookupUser);
 				}
 
 				if (queuePolicyResource != null) {

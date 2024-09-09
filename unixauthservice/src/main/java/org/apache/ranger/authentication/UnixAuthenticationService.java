@@ -312,56 +312,56 @@ public class UnixAuthenticationService {
 		
 		SSLServerSocketFactory sf = context.getServerSocketFactory();
 
-		ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) );
-		
-		if (SSLEnabled) {
-			SSLServerSocket secureSocket = (SSLServerSocket) socket;
-			String[] protocols = secureSocket.getEnabledProtocols();
-			Set<String> allowedProtocols = new HashSet<String>();
-			for(String ep : protocols) {
-				if (enabledProtocolsList.contains(ep.toUpperCase())){
-					LOG.info("Enabling Protocol: [" + ep + "]");
-					allowedProtocols.add(ep);
-				}
-				else {
-					LOG.info("Disabling Protocol: [" + ep + "]");
-				}
-			}
-			
-			if (!allowedProtocols.isEmpty()) {
-				secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
-			}
-			String[] enabledCipherSuites = secureSocket.getEnabledCipherSuites();
-			Set<String> allowedCipherSuites = new HashSet<String>();
-			for(String enabledCipherSuite : enabledCipherSuites) {
-				if (enabledCipherSuiteList.contains(enabledCipherSuite)) {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Enabling CipherSuite : [" + enabledCipherSuite + "]");
-					}
-					allowedCipherSuites.add(enabledCipherSuite);
-				} else {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Disabling CipherSuite : [" + enabledCipherSuite + "]");
+		try(ServerSocket socket = (SSLEnabled ? sf.createServerSocket(portNum) :  new ServerSocket(portNum) )) {
+
+			if (SSLEnabled) {
+				SSLServerSocket secureSocket     = (SSLServerSocket) socket;
+				String[]        protocols        = secureSocket.getEnabledProtocols();
+				Set<String>     allowedProtocols = new HashSet<String>();
+				for (String ep : protocols) {
+					if (enabledProtocolsList.contains(ep.toUpperCase())) {
+						LOG.info("Enabling Protocol: [" + ep + "]");
+						allowedProtocols.add(ep);
+					} else {
+						LOG.info("Disabling Protocol: [" + ep + "]");
 					}
 				}
+
+				if (!allowedProtocols.isEmpty()) {
+					secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
+				}
+				String[]    enabledCipherSuites = secureSocket.getEnabledCipherSuites();
+				Set<String> allowedCipherSuites = new HashSet<String>();
+				for (String enabledCipherSuite : enabledCipherSuites) {
+					if (enabledCipherSuiteList.contains(enabledCipherSuite)) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Enabling CipherSuite : [" + enabledCipherSuite + "]");
+						}
+						allowedCipherSuites.add(enabledCipherSuite);
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Disabling CipherSuite : [" + enabledCipherSuite + "]");
+						}
+					}
+				}
+				if (!allowedCipherSuites.isEmpty()) {
+					secureSocket.setEnabledCipherSuites(allowedCipherSuites.toArray(new String[0]));
+				}
 			}
-			if (!allowedCipherSuites.isEmpty()) {
-				secureSocket.setEnabledCipherSuites(allowedCipherSuites.toArray(new String[0]));
+
+
+			Socket client = null;
+
+			try {
+
+				while ((client = socket.accept()) != null) {
+					Thread clientValidatorThread = new Thread(new PasswordValidator(client));
+					clientValidatorThread.start();
+				}
+			} catch (IOException e) {
+				socket.close();
+				throw (e);
 			}
-		}
-		
-				
-		Socket client = null;
-		
-		try {
-		
-			while ( (client = socket.accept()) != null ) {
-				Thread clientValidatorThread = new Thread(new PasswordValidator(client));
-				clientValidatorThread.start();
-			}
-		} catch (IOException e) {
-			socket.close();
-			throw(e);
 		}
 
 	}

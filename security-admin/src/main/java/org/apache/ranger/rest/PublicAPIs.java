@@ -78,6 +78,9 @@ public class PublicAPIs {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
+
+	@Autowired
+	AssetREST assetREST;
 	
 	@GET
 	@Path("/api/repository/{id}")
@@ -217,16 +220,13 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.countRepositories()");
 		}
 
-		VXRepositoryList repositories = searchRepositories(request);
+		VXLong ret = assetREST.countXAssets(request);
 
-		VXLong ret = new VXLong();
-		ret.setValue(repositories == null ? 0 : repositories.getResultSize());
-
-        if(logger.isDebugEnabled()) {
+		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIs.countRepositories(): count=" + ret);
 		}
 
-        return ret;
+		return ret;
 	}	
 	
 
@@ -392,16 +392,13 @@ public class PublicAPIs {
 			logger.debug("==> PublicAPIs.countPolicies(): ");
 		}
 
-		VXPolicyList policies = searchPolicies(request);
-
-		VXLong vXlong = new VXLong();
-		vXlong.setValue(policies == null ? 0 : policies.getResultSize());
+		VXLong ret = assetREST.countXResources(request);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIs.countPolicies(): "  + request );
+			logger.debug("<== PublicAPIs.countPolicies(): "  + ret);
 		}
 
-		return vXlong;
+		return ret;
 	}
 
 }

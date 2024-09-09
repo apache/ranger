@@ -50,11 +50,11 @@
         <includes>
           <include>com.google.code.gson:gson</include>
           <include>com.sun.jersey:jersey-bundle</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
-          <include>org.codehaus.jackson:jackson-core-asl</include>
-          <include>org.codehaus.jackson:jackson-jaxrs</include>
-          <include>org.codehaus.jackson:jackson-mapper-asl</include>
-          <include>org.codehaus.jackson:jackson-xc</include>
+          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -70,6 +70,10 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -92,7 +96,6 @@
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
@@ -101,7 +104,7 @@
           <include>org.apache.ranger:ranger-solr-plugin</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
-          <include>org.apache.htrace:htrace-core4</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

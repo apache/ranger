@@ -21,13 +21,15 @@
 
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.ranger.ugsyncutil.model.XGroupInfo;
 
+@JsonSerialize
 public class GetXGroupListResponse {
 	private int totalCount;
 
-	@SerializedName("vXGroups")
+	@JsonProperty("vXGroups")
 	List<XGroupInfo> xgroupInfoList;
 
 	public int getTotalCount() {

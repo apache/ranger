@@ -42,11 +42,10 @@
             <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
             <include>commons-io:commons-io:jar:${commons.io.version}</include>
             <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
-            <include>com.google.guava:guava:jar:${google.guava.version}</include>
-            <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.storm.version}</include>
-            <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.storm.version}</include>
-            <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.storm.version}</include>
-            <include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.storm.version}</include>
+            <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+            <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+            <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+            <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
             <include>org.slf4j:slf4j-api</include>
             <include>log4j:log4j</include>
             <include>com.sun.jersey:jersey-bundle</include>

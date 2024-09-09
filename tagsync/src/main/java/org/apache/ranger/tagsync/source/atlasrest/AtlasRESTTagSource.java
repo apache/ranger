@@ -19,8 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlasrest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.atlas.exception.AtlasBaseException;
@@ -43,6 +41,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
@@ -58,7 +57,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
 
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTTagSource.class);
@@ -189,15 +195,23 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> AtlasRESTTagSource.run()");
         }
-        while (true) {
-            try {
-                synchUp();
+            while (true) {
+                try {
+                    if (TagSyncConfig.isTagSyncServiceActive()) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
+                        }
+                        synchUp();
+                    }else{
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("==> This server is running passive mode");
+                        }
+                    }
+                    LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
 
-                LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+                    Thread.sleep(sleepTimeBetweenCycleInMillis);
 
-                Thread.sleep(sleepTimeBetweenCycleInMillis);
-
-            } catch (InterruptedException exception) {
+                } catch (InterruptedException exception) {
                 LOG.error("Interrupted..: ", exception);
                 return;
             } catch (Exception e) {
@@ -208,7 +222,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     }
 
 	public void synchUp() throws Exception {
-
 		List<RangerAtlasEntityWithTags> rangerAtlasEntities = getAtlasActiveEntities();
 
 		if (CollectionUtils.isNotEmpty(rangerAtlasEntities)) {
@@ -222,12 +235,12 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 			if (MapUtils.isNotEmpty(serviceTagsMap)) {
 				for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
 					if (LOG.isDebugEnabled()) {
-						Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-								.setPrettyPrinting()
-								.create();
-						String serviceTagsString = gsonBuilder.toJson(entry.getValue());
-
-						LOG.debug("serviceTags=" + serviceTagsString);
+                        try {
+                            String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
+                            LOG.debug("serviceTags=" + serviceTagsString);
+                        }catch (Exception e) {
+                            LOG.error("An error occurred while conveting serviceTags to string", e);
+                        }
 					}
 					updateSink(entry.getValue());
 				}

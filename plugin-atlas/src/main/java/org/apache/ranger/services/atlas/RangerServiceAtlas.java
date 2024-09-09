@@ -169,7 +169,9 @@ public class RangerServiceAtlas extends RangerBaseService {
 
             // 1. add adminUser to every policyItem
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-                defaultPolicyItem.getUsers().add(adminUser);
+                if(!defaultPolicyItem.getUsers().contains(adminUser)) {
+                    defaultPolicyItem.addUser(adminUser);
+                }
             }
 
             // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
@@ -180,14 +182,14 @@ public class RangerServiceAtlas extends RangerBaseService {
                 policyItemForTagSyncUser.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
                 policyItemForTagSyncUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
 
-                defaultPolicy.getPolicyItems().add(policyItemForTagSyncUser);
+                defaultPolicy.addPolicyItem(policyItemForTagSyncUser);
             }
 
             if (relationshipTypeAllowPublic) {
                 // 3. add 'public' group in the policy for 'relationship-type',
                 if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_RELATIONSHIP_TYPE)) {
                     for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-                        defaultPolicyItem.getGroups().add(RangerPolicyEngine.GROUP_PUBLIC);
+                        defaultPolicyItem.addGroup(RangerPolicyEngine.GROUP_PUBLIC);
                     }
                 }
             }
@@ -199,7 +201,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
 				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				defaultPolicy.addPolicyItem(policyItemForLookupUser);
 			}
 
 			//  add a policy-item for rangertagsync user with 'type-read' permission in the policy for 'type-category'
@@ -207,7 +209,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 				RangerPolicyItem policyItemTypeReadForAll = new RangerPolicyItem();
 				policyItemTypeReadForAll.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
 				policyItemTypeReadForAll.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_TYPE_READ)));
-				defaultPolicy.getPolicyItems().add(policyItemTypeReadForAll);
+				defaultPolicy.addPolicyItem(policyItemTypeReadForAll);
 			}
         }
 

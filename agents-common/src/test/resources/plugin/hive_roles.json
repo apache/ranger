@@ -1,0 +1,15 @@
+{
+  "serviceName":    "dev_hive",
+  "rangerRoles": [
+    {
+      "name": "role-1",
+      "users": [
+        { "name": "user-1", "isAdmin": false },
+        { "name": "user-2", "usAdmin": false }
+      ],
+      "groups": [ ],
+      "roles": [ ]
+    }
+  ],
+  "roleVersion":    1
+}

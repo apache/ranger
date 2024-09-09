@@ -46,7 +46,7 @@ call spdropsequence('X_POLICY_EXPORT_SEQ');
 call spdropsequence('X_PORTAL_USER_SEQ');
 call spdropsequence('X_PORTAL_USER_ROLE_SEQ');
 call spdropsequence('X_RESOURCE_SEQ');
-call spdropsequence('X_TRX_LOG_SEQ');
+call spdropsequence('X_TRX_LOG_V2_SEQ');
 call spdropsequence('X_USER_SEQ');
 call spdropsequence('V_TRX_LOG_SEQ');
 call spdropsequence('XA_ACCESS_AUDIT_SEQ');
@@ -116,7 +116,7 @@ CREATE SEQUENCE X_POLICY_EXPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_PORTAL_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_PORTAL_USER_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_TRX_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_TRX_LOG_V2_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE V_TRX_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE XA_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -203,7 +203,6 @@ BEGIN
 END;/
 /
 
-call spdropview('vx_trx_log');
 call spdroptable('X_RMS_MAPPING_PROVIDER');
 call spdroptable('X_RMS_RESOURCE_MAPPING');
 call spdroptable('X_RMS_NOTIFICATION');
@@ -266,7 +265,7 @@ call spdroptable('x_service');
 call spdroptable('x_service_def');
 call spdroptable('x_audit_map');
 call spdroptable('x_perm_map');
-call spdroptable('x_trx_log');
+call spdroptable('x_trx_log_v2');
 call spdroptable('x_resource');
 call spdroptable('x_policy_export_audit');
 call spdroptable('x_group_users');
@@ -555,31 +554,24 @@ CREATE TABLE x_resource (
         CONSTRAINT x_resource_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-
-CREATE TABLE x_trx_log (
+CREATE TABLE x_trx_log_v2 (
         id NUMBER(20) NOT NULL,
         create_time DATE DEFAULT NULL NULL ,
-        update_time DATE DEFAULT NULL NULL ,
         added_by_id NUMBER(20) DEFAULT NULL NULL ,
-        upd_by_id NUMBER(20) DEFAULT NULL NULL ,
         class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         parent_object_name VARCHAR(1024) DEFAULT NULL NULL ,
-        object_name VARCHAR(1024) DEFAULT NULL NULL ,
-        attr_name VARCHAR(255) DEFAULT NULL NULL ,
-        prev_val CLOB DEFAULT NULL NULL ,
-        new_val CLOB DEFAULT NULL NULL ,
+        change_info CLOB DEFAULT NULL NULL ,
         trx_id VARCHAR(1024) DEFAULT NULL NULL ,
         action VARCHAR(255) DEFAULT NULL NULL ,
         sess_id VARCHAR(512) DEFAULT NULL NULL ,
         req_id VARCHAR(30) DEFAULT NULL NULL ,
         sess_type VARCHAR(30) DEFAULT NULL NULL ,
-        PRIMARY KEY (id),
-        CONSTRAINT x_trx_log_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-        CONSTRAINT x_trx_log_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+        PRIMARY KEY (id)
 );
+
 CREATE TABLE x_perm_map (
         id NUMBER(20) NOT NULL,
         create_time DATE DEFAULT NULL NULL ,
@@ -662,12 +654,14 @@ is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 tag_service NUMBER(20) DEFAULT NULL NULL,
 tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
+gds_service NUMBER(20) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_service_name UNIQUE (name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_type FOREIGN KEY (type) REFERENCES x_service_def (id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id),
+CONSTRAINT x_service_FK_gds_service FOREIGN KEY (gds_service) REFERENCES x_service(id)
 );
 
 CREATE TABLE x_security_zone (
@@ -1325,6 +1319,8 @@ tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
 role_version NUMBER(20) DEFAULT 0 NOT NULL,
 role_update_time DATE DEFAULT NULL NULL,
+gds_version NUMBER(20) DEFAULT 0 NOT NULL,
+gds_update_time DATE DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT 1 NOT NULL,
 primary key (id),
 CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)
@@ -1659,9 +1655,6 @@ CONSTRAINT x_sz_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
 );
 commit;
 
-CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
-commit;
-
 CREATE INDEX xa_access_audit_added_by_id ON  xa_access_audit(added_by_id);
 CREATE INDEX xa_access_audit_upd_by_id ON  xa_access_audit(upd_by_id);
 CREATE INDEX xa_access_audit_cr_time ON  xa_access_audit(create_time);
@@ -1735,10 +1728,9 @@ CREATE INDEX x_resource_FK_asset_id ON x_resource (asset_id);
 CREATE INDEX x_resource_FK_parent_id ON x_resource (parent_id);
 CREATE INDEX x_resource_cr_time ON  x_resource(create_time);
 CREATE INDEX x_resource_up_time ON x_resource (update_time);
-CREATE INDEX x_trx_log_FK_added_by_id ON x_trx_log (added_by_id);
-CREATE INDEX x_trx_log_FK_upd_by_id ON  x_trx_log(upd_by_id);
-CREATE INDEX x_trx_log_cr_time ON x_trx_log (create_time);
-CREATE INDEX x_trx_log_up_time ON x_trx_log (update_time);
+CREATE INDEX x_trx_log_v2_FK_added_by_id ON x_trx_log_v2 (added_by_id);
+CREATE INDEX x_trx_log_v2_cr_time ON x_trx_log_v2 (create_time);
+CREATE INDEX x_trx_log_v2_trx_id ON x_trx_log_v2 (trx_id);
 CREATE INDEX x_user_FK_added_by_id ON x_user (added_by_id);
 CREATE INDEX x_user_FK_upd_by_id ON x_user (upd_by_id);
 CREATE INDEX x_user_FK_cred_store_id ON x_user (cred_store_id);
@@ -2068,5 +2060,9 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10054',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10055',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10056',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10060',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10061',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10062',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10063',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'JAVA_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 commit;

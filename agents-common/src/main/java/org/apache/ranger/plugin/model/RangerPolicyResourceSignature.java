@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.commons.lang.StringUtils;
@@ -56,6 +58,20 @@ public class RangerPolicyResourceSignature {
 			_hash = DigestUtils.sha256Hex(_string);
 		}
 	}
+
+	public RangerPolicyResourceSignature(RangerSharedResource resource) {
+		this(toSignatureString(resource));
+	}
+
+	public RangerPolicyResourceSignature(Map<String, RangerPolicyResource> resources) {
+		this(toSignatureString(resources));
+	}
+
+	// alternate to constructor that takes Map<String, List<String>>
+	public static RangerPolicyResourceSignature from(Map<String, List<String>> resources) {
+		return new RangerPolicyResourceSignature(toPolicyResources(resources));
+	}
+
 
 	/**
 	 * Only added for testability.  Do not make public
@@ -199,6 +215,36 @@ public class RangerPolicyResourceSignature {
 			Collections.sort(signatures);
 
 			ret = signatures.toString();
+		}
+
+		return ret;
+	}
+
+	public static String toSignatureString(RangerSharedResource resource) {
+		final Map<String, RangerPolicyResource> policyResource;
+
+		if (StringUtils.isNotBlank(resource.getSubResourceType()) && resource.getSubResource() != null && CollectionUtils.isNotEmpty(resource.getSubResource().getValues())) {
+			policyResource = new HashMap<>(resource.getResource());
+
+			policyResource.put(resource.getSubResourceType(), resource.getSubResource());
+		} else {
+			policyResource = resource.getResource();
+		}
+
+		String signature = toSignatureString(policyResource);
+
+		if (StringUtils.isNotEmpty(resource.getConditionExpr())) {
+			signature += resource.getConditionExpr();
+		}
+
+		return String.format("{version=%d,ret=%s}", _SignatureVersion, signature);
+	}
+
+	private static Map<String, RangerPolicyResource> toPolicyResources(Map<String, List<String>> resources) {
+		Map<String, RangerPolicyResource> ret = new TreeMap<>();
+
+		for (Map.Entry<String, List<String>> entry : resources.entrySet()) {
+			ret.put(entry.getKey(), new RangerPolicyResource(entry.getValue(), false, false));
 		}
 
 		return ret;

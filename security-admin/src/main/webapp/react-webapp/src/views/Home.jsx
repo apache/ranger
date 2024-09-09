@@ -23,7 +23,6 @@ import { Tab, Tabs } from "react-bootstrap";
 import withRouter from "Hooks/withRouter";
 import { hasAccessToTab } from "../utils/XAUtils";
 import CustomBreadcrumb from "./CustomBreadcrumb";
-import { isEmpty } from "lodash";
 
 class Home extends Component {
   constructor(props) {
@@ -34,9 +33,11 @@ class Home extends Component {
       loader: false
     };
   }
+
   tabChange = (tabName) => {
-    this.props.navigate(`/policymanager/${tabName}`, { replace: true });
+    this.props.navigate(`/policymanager/${tabName}`);
   };
+
   componentDidUpdate(nextProps, prevState) {
     let activeTabVal = this.activeTab();
 
@@ -44,6 +45,7 @@ class Home extends Component {
       this.setState({ activeKey: this.activeTab() });
     }
   }
+
   activeTab = () => {
     let activeTabVal;
     if (this.props.location.pathname) {
@@ -57,40 +59,28 @@ class Home extends Component {
   };
 
   disableTabs = (loader) => {
-    loader == true &&
-      document
-        .getElementById("resourceSelectedZone")
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document
-        .getElementById("tagSelectedZone")
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document
-        .getElementsByClassName("sidebar-header")?.[0]
-        ?.classList?.add("disabledEvents");
-    loader == true &&
-      document.getElementById("rangerIcon")?.classList?.add("disabledCursor");
+    const elements = [
+      { id: "resourceSelectedZone", className: "disabledEvents" },
+      { id: "tagSelectedZone", className: "disabledEvents" },
+      { selector: "sidebar-header", className: "disabledEvents" },
+      { id: "rangerIcon", className: "disabledCursor" }
+    ];
+    elements.forEach((element) => {
+      const target = element.id
+        ? document.getElementById(element.id)
+        : document.getElementsByClassName(element.selector)?.[0];
 
+      if (target) {
+        if (loader) {
+          target.classList.add(element.className);
+        } else {
+          target.classList.remove(element.className);
+        }
+      }
+    });
     this.setState({ loader: loader });
-    loader == false &&
-      document
-        .getElementsByClassName("sidebar-header")?.[0]
-        ?.classList.remove("disabledEvents");
-    loader == false &&
-      document
-        .getElementById("rangerIcon")
-        ?.classList?.remove("disabledCursor");
-
-    loader == false &&
-      document
-        .getElementById("resourceSelectedZone")
-        ?.classList?.remove("disabledEvents");
-    loader == false &&
-      document
-        .getElementById("tagSelectedZone")
-        ?.classList?.remove("disabledEvents");
   };
+
   render() {
     return (
       <>
@@ -114,10 +104,6 @@ class Home extends Component {
                 <ServiceDefinitions
                   isTagView={this.state.isTagView}
                   disableTabs={this.disableTabs}
-                  key={
-                    !isEmpty(localStorage.getItem("zoneDetails")) &&
-                    JSON.parse(localStorage.getItem("zoneDetails"))?.value
-                  }
                 ></ServiceDefinitions>
               )}
             </Tab>
@@ -132,10 +118,6 @@ class Home extends Component {
                 <ServiceDefinitions
                   isTagView={this.state.isTagView}
                   disableTabs={this.disableTabs}
-                  key={
-                    !isEmpty(localStorage.getItem("zoneDetails")) &&
-                    JSON.parse(localStorage.getItem("zoneDetails"))?.value
-                  }
                 ></ServiceDefinitions>
               )}
             </Tab>

@@ -17,8 +17,8 @@
  */
 package org.apache.ranger.common;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.hadoop.util.HttpExceptionUtils;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.stereotype.Component;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

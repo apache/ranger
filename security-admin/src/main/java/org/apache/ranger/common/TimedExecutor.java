@@ -35,14 +35,16 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.service.RangerDefaultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 @Service
 @Scope("singleton")
@@ -93,8 +95,12 @@ public class TimedExecutor {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(String.format("TimedExecutor: Caught exception[%s] for callable[%s]: detail[%s].  Re-throwing...", e.getClass().getName(), callable, e.getMessage()));
 				}
-				HadoopException he = generateHadoopException(e);
-				throw he;
+
+				if (StringUtils.contains(e.getMessage(), RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED)) {
+					throw e;
+				} else {
+					throw generateHadoopException(e);
+				}
 			} catch (TimeoutException e) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(String.format("TimedExecutor: Timed out waiting for callable[%s] to finish.  Cancelling the task.", callable));

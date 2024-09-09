@@ -21,18 +21,21 @@ import React, { Component } from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import withRouter from "Hooks/withRouter";
 import { Outlet } from "react-router-dom";
+import { fetchApi } from "Utils/fetchAPI";
 
 class AuditLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeKey: this.activeTab()
+      activeKey: this.activeTab(),
+      services: null,
+      servicesAvailable: null
     };
   }
 
   tabChange = (tabName) => {
     this.setState({ activeKey: tabName });
-    this.props.navigate(`/reports/audit/${tabName}`, { replace: true });
+    this.props.navigate(`/reports/audit/${tabName}`);
   };
 
   componentDidUpdate(nextProps, prevState) {
@@ -42,6 +45,32 @@ class AuditLayout extends Component {
       this.setState({ activeKey: this.activeTab() });
     }
   }
+
+  componentDidMount() {
+    this.fetchServices();
+  }
+
+  fetchServices = async () => {
+    let servicesResp = [];
+    try {
+      const response = await fetchApi({
+        url: "plugins/services"
+      });
+      servicesResp = response?.data?.services || [];
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching Services or CSRF headers! ${error}`
+      );
+    }
+
+    this.setState({
+      services: servicesResp,
+      servicesAvailable:
+        servicesResp.length === 0
+          ? "SERVICES_NOT_AVAILABLE"
+          : "SERVICES_AVAILABLE"
+    });
+  };
 
   activeTab = () => {
     let activeTabVal;
@@ -85,7 +114,12 @@ class AuditLayout extends Component {
           <Tab eventKey="pluginStatus" title="Plugin Status" />
           <Tab eventKey="userSync" title="User Sync" />
         </Tabs>
-        <Outlet />
+        <Outlet
+          context={{
+            services: this.state.services,
+            servicesAvailable: this.state.servicesAvailable
+          }}
+        />
       </>
     );
   }

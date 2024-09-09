@@ -19,10 +19,9 @@
 
 package org.apache.ranger.tagsync.source.file;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.TagSink;
@@ -45,7 +44,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	private URL serviceTagsFileURL;
 	private long lastModifiedTimeInMillis = -1L;
 
-	private Gson gsonBuilder;
 	private long fileModTimeCheckIntervalInMs;
 
 	private Thread myThread = null;
@@ -111,8 +109,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		} else {
 			properties = props;
 		}
-
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
 		boolean ret = true;
 
@@ -216,7 +212,12 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 		while (true) {
 			try {
-				synchUp();
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> FileTagSource is running as server is active");
+					}
+					synchUp();
+				}
 			} catch (Exception e) {
 				LOG.error("Caught exception..", e);
 			} finally {
@@ -287,9 +288,8 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 		if (serviceTagsFileURL != null) {
 			try (InputStream inputStream = serviceTagsFileURL.openStream();
-			     Reader      reader      = new InputStreamReader(inputStream, Charset.forName("UTF-8"))) {
-
-				ret = gsonBuilder.fromJson(reader, ServiceTags.class);
+				 Reader      reader      = new InputStreamReader(inputStream, Charset.forName("UTF-8"))) {
+				 ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
 			} catch (IOException e) {
 				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName, e);
 			}

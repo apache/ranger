@@ -32,7 +32,7 @@ import { Loader } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
-import { cloneDeep, find, findIndex, reverse } from "lodash";
+import { cloneDeep, find, findIndex, isEmpty, map, reverse } from "lodash";
 import { AccessResult } from "Utils/XAEnums";
 import {
   CustomInfinteScroll,
@@ -88,7 +88,7 @@ function reducer(state, action) {
       throw new Error();
   }
 }
-const EditPermission = (props) => {
+const EditPermission = () => {
   let { permissionId } = useParams();
   const navigate = useNavigate();
   const toastId = useRef(null);
@@ -211,18 +211,27 @@ const EditPermission = (props) => {
   };
 
   const fetchGroups = async (inputValue) => {
-    let params = {};
+    let params = { isVisible: 1 };
+    let groupsOp = [];
+
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const groupResp = await fetchApi({
-      url: "xusers/groups",
-      params: params
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/groups",
+        params: params
+      });
+      groupsOp = groupResp.data?.vXGroups;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
+      serverError(error);
+    }
+
+    return map(groupsOp, function (group) {
+      return { label: group.name, value: group.id };
     });
-    return groupResp.data.vXGroups.map(({ name, id }) => ({
-      label: name,
-      value: id
-    }));
   };
 
   const filterGrpOp = ({ data }) => {
@@ -255,19 +264,32 @@ const EditPermission = (props) => {
   };
 
   const fetchUsers = async (inputValue) => {
-    let params = {};
+    let params = { isVisible: 1 };
+    let usersOp = [];
+    let notAllowedRoles = ["ROLE_KEY_ADMIN", "ROLE_KEY_ADMIN_AUDITOR"];
     if (inputValue) {
       params["name"] = inputValue || "";
     }
-    const userResp = await fetchApi({
-      url: "xusers/users",
-      params: params
-    });
 
-    return userResp.data.vXUsers.map(({ name, id }) => ({
-      label: name,
-      value: id
-    }));
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/users",
+        params: params
+      });
+      usersOp =
+        permissionData.module == "Tag Based Policies"
+          ? userResp.data?.vXUsers.filter(
+              (users) => !notAllowedRoles.includes(users.userRoleList[0])
+            )
+          : userResp.data?.vXUsers;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
+      serverError(error);
+    }
+
+    return map(usersOp, function (user) {
+      return { label: user.name, value: user.id };
+    });
   };
 
   const filterUsrOp = ({ data }) => {
@@ -319,8 +341,7 @@ const EditPermission = (props) => {
           render={({ handleSubmit, submitting, values }) => (
             <form onSubmit={handleSubmit}>
               <div className="form-horizontal">
-                <header>Module Details:</header>
-                <hr className="zoneheader" />
+                <p className="form-header">Module Details:</p>
 
                 <div>
                   <Field
@@ -332,7 +353,7 @@ const EditPermission = (props) => {
                         className="mb-3"
                         controlId="moduleName"
                       >
-                        <FormB.Label column sm="3" className="text-right">
+                        <FormB.Label column sm="3" className="text-end">
                           <strong>Module Name *</strong>
                         </FormB.Label>
                         <Col sm="4">
@@ -346,8 +367,7 @@ const EditPermission = (props) => {
               <br />
               <br />
               <div className="form-horizontal">
-                <header>User and Group Permissions:</header>
-                <hr className="zoneheader" />
+                <p className="form-header">User and Group Permissions:</p>
 
                 <Field
                   className="form-control"
@@ -358,11 +378,11 @@ const EditPermission = (props) => {
                       className="mb-3"
                       controlId="formPlaintextEmail"
                     >
-                      <FormB.Label className="text-right" column sm="2">
+                      <FormB.Label className="text-end" column sm="2">
                         Permissions
                       </FormB.Label>
                       <Col sm="10">
-                        <Table striped bordered>
+                        <Table bordered>
                           <thead className="table-edit-permission">
                             <tr>
                               <th width="49%">Select and Add Group</th>
@@ -375,7 +395,7 @@ const EditPermission = (props) => {
                                 <Field
                                   className="form-control"
                                   name="selectGroups"
-                                  render={({ input, meta }) => (
+                                  render={({ input }) => (
                                     <div>
                                       {" "}
                                       <AsyncSelect
@@ -395,7 +415,7 @@ const EditPermission = (props) => {
                                       />
                                       <Button
                                         size="sm"
-                                        className="ml-2  m-r-sm"
+                                        className="ms-2  m-r-sm"
                                         variant="outline-secondary"
                                         onClick={() => {
                                           if (
@@ -443,7 +463,7 @@ const EditPermission = (props) => {
 
                                       <Button
                                         size="sm"
-                                        className="ml-2  m-r-sm"
+                                        className="ms-2  m-r-sm"
                                         variant="outline-secondary"
                                         onClick={() => {
                                           if (
@@ -469,7 +489,7 @@ const EditPermission = (props) => {
                               </td>
                             </tr>
                             <tr>
-                              {!_.isEmpty(selectedGrp) ? (
+                              {!isEmpty(selectedGrp) ? (
                                 <td>
                                   {grploading ? (
                                     <div className="permission-infinite-scroll text-center">
@@ -495,7 +515,7 @@ const EditPermission = (props) => {
                                 </td>
                               )}
 
-                              {!_.isEmpty(selectedUsr) ? (
+                              {!isEmpty(selectedUsr) ? (
                                 <td>
                                   {usrloading ? (
                                     <div className="permission-infinite-scroll text-center">
@@ -529,11 +549,8 @@ const EditPermission = (props) => {
                 />
               </div>
 
-              <br />
-              <hr />
-              <div className="text-center">
+              <div className="text-center form-actions">
                 <Button
-                  className="mr-2"
                   type="submit"
                   variant="primary"
                   size="sm"

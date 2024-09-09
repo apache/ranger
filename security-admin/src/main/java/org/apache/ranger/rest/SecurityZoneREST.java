@@ -43,7 +43,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.QueryParam;
 
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
@@ -58,11 +61,19 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
+import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.util.RangerSecurityZoneHelper;
+import org.apache.ranger.plugin.util.RangerSecurityZoneHelper.RangerSecurityZoneServiceHelper;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneChangeRequest;
+import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneResource;
 import org.apache.ranger.view.RangerSecurityZoneList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.slf4j.Logger;
@@ -73,7 +84,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Sets;
 
 @Path("zones")
 @Component
@@ -101,10 +111,10 @@ public class SecurityZoneREST {
 
     @Autowired
     RangerValidatorFactory validatorFactory;
-    
+
     @Autowired
     RangerBizUtil bizUtil;
-    
+
 	@Autowired
 	ServiceREST serviceRest;
 
@@ -113,7 +123,6 @@ public class SecurityZoneREST {
 
 	@Autowired
 	ServiceMgr serviceMgr;
-
 
     @POST
     @Path("/zones")
@@ -126,6 +135,10 @@ public class SecurityZoneREST {
 
         RangerSecurityZone ret;
         try {
+            RangerSecurityZoneHelper zoneHelper = new RangerSecurityZoneHelper(securityZone, bizUtil.getCurrentUserLoginId()); // this populates resourcesBaseInfo
+
+            securityZone = zoneHelper.getZone();
+
             ensureAdminAccess(securityZone);
             removeEmptyEntries(securityZone);
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
@@ -161,6 +174,10 @@ public class SecurityZoneREST {
         if (zoneId != null && zoneId.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
             throw restErrorUtil.createRESTException("Cannot update unzoned zone");
         }
+
+        RangerSecurityZoneHelper zoneHelper = new RangerSecurityZoneHelper(securityZone, bizUtil.getCurrentUserLoginId()); // this populates resourcesBaseInfo
+
+        securityZone = zoneHelper.getZone();
 
         ensureUserAllowOperationOnServiceForZone(securityZone);
         removeEmptyEntries(securityZone);
@@ -241,7 +258,10 @@ public class SecurityZoneREST {
         } catch(Throwable excp) {
             LOG.error("deleteSecurityZone(" + zoneId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(excp.getMessage());
+            throw restErrorUtil.createRESTException(
+					"Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, zoneId, null,
+					"readResource : No Object found with given id.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteSecurityZone(id=" + zoneId + ")");
@@ -377,7 +397,181 @@ public class SecurityZoneREST {
         return ret;
     }
 
-	private void ensureAdminAccess(){
+    @GET
+    @Path("/zones/zone-headers/for-service/{serviceId}")
+    @Produces({ "application/json" })
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(@PathParam("serviceId") Long serviceId,
+                                                                                       @DefaultValue("false") @QueryParam ("isTagService") Boolean isTagService,
+                                                                                       @Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId() serviceId:{}, isTagService:{}",serviceId,isTagService);
+        }
+
+        List<RangerSecurityZoneHeaderInfo> ret;
+
+        try {
+            ret = securityZoneStore.getSecurityZoneHeaderInfoListByServiceId(serviceId, isTagService, request);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId() failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== SecurityZoneREST.getSecurityZoneHeaderInfoListByServiceId():" + ret);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path("/summary")
+    @Produces({ "application/json" })
+    public PList<SecurityZoneSummary> getZonesSummary(@Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getZonesSummary()");
+        }
+
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        PList<SecurityZoneSummary>   ret    = null;
+        SearchFilter                 filter = searchUtil.getSearchFilter(request, securityZoneService.sortFields);
+        try {
+            ret = securityZoneStore.getZonesSummary(filter);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getZonesSummary() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getZonesSummary():" + ret);
+        }
+        return ret;
+    }
+
+    public RangerSecurityZoneV2 createSecurityZone(RangerSecurityZoneV2 securityZone) {
+        LOG.debug("==> createSecurityZone({})", securityZone);
+
+        RangerSecurityZone   retV1 = createSecurityZone(securityZone.toV1());
+        RangerSecurityZoneV2 ret   = retV1 != null ? new RangerSecurityZoneV2(retV1) : null;
+
+        LOG.debug("<== createSecurityZone({}): ret={}", securityZone, ret);
+
+        return ret;
+    }
+
+    public RangerSecurityZoneV2 updateSecurityZone(Long zoneId, RangerSecurityZoneV2 securityZone) {
+        LOG.debug("==> updateSecurityZone({}, {})", zoneId, securityZone);
+
+        RangerSecurityZone   retV1 = updateSecurityZone(zoneId, securityZone.toV1());
+        RangerSecurityZoneV2 ret   = retV1 != null ? new RangerSecurityZoneV2(retV1) : null;
+
+        LOG.debug("<== updateSecurityZone({}, {}): ret={}", zoneId, securityZone, ret);
+
+        return ret;
+    }
+
+    public Boolean updateSecurityZone(Long zoneId, RangerSecurityZoneChangeRequest changeData) {
+        LOG.debug("==> updateSecurityZone({}, {})", zoneId, changeData);
+
+        Boolean ret;
+
+        try {
+            RangerSecurityZone       zone        = getSecurityZone(zoneId);
+            RangerSecurityZoneHelper zoneHelper  = new RangerSecurityZoneHelper(zone, bizUtil.getCurrentUserLoginId());
+            RangerSecurityZone       updatedZone = zoneHelper.updateZone(changeData);
+
+            RangerSecurityZone retV1 = updateSecurityZone(zoneId, updatedZone);
+            ret = retV1 != null;
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateSecurityZone({}, {})", zoneId, changeData, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        LOG.debug("<== updateSecurityZone({}, {}): ret={}", zoneId, changeData, ret);
+
+        return ret;
+    }
+
+    public RangerSecurityZoneV2 getSecurityZoneV2(String zoneName) {
+        LOG.debug("==> getSecurityZoneV2({})", zoneName);
+
+        RangerSecurityZone   retV1 = getSecurityZone(zoneName);
+        RangerSecurityZoneV2 ret   = retV1 != null ? new RangerSecurityZoneV2(retV1) : null;
+
+        LOG.debug("<== getSecurityZoneV2({}): ret={}", zoneName, ret);
+
+        return ret;
+    }
+
+    public RangerSecurityZoneV2 getSecurityZoneV2(Long zoneId) {
+        LOG.debug("==> getSecurityZoneV2({})", zoneId);
+
+        RangerSecurityZone   retV1 = getSecurityZone(zoneId);
+        RangerSecurityZoneV2 ret   = retV1 != null ? new RangerSecurityZoneV2(retV1) : null;
+
+        LOG.debug("<== getSecurityZoneV2({}): ret={}", zoneId, ret);
+
+        return ret;
+    }
+
+    public PList<RangerSecurityZoneResource> getResources(Long zoneId, String serviceName, HttpServletRequest request) {
+        LOG.debug("==> getResources(zoneId={}, serviceName={})", zoneId, serviceName);
+
+        PList<RangerSecurityZoneResource> ret = getResources(getSecurityZone(zoneId), serviceName, request);
+
+        LOG.debug("<== getResources(zoneId={}, serviceName={}): ret={}", zoneId, serviceName, ret);
+
+        return ret;
+    }
+
+    public PList<RangerSecurityZoneResource> getResources(String zoneName, String serviceName, HttpServletRequest request) {
+        LOG.debug("==> getResources(zoneName={}, serviceName={})", zoneName, serviceName);
+
+        PList<RangerSecurityZoneResource> ret = getResources(getSecurityZone(zoneName), serviceName, request);
+
+        LOG.debug("<== getResources(zoneName={}, serviceName={}): ret={}", zoneName, serviceName, ret);
+
+        return ret;
+    }
+
+    public PList<RangerSecurityZoneV2> getAllZonesV2(HttpServletRequest request) {
+        LOG.debug("==> getAllZonesV2()");
+
+        PList<RangerSecurityZoneV2> ret     = new PList<>();
+        RangerSecurityZoneList      retList = getAllZones(request);
+
+        if (retList != null) {
+            ret.setList(new ArrayList<>(retList.getListSize()));
+            ret.setPageSize(retList.getPageSize());
+            ret.setStartIndex(retList.getStartIndex());
+            ret.setResultSize(retList.getResultSize());
+            ret.setTotalCount(retList.getTotalCount());
+            ret.setSortBy(retList.getSortBy());
+            ret.setSortType(retList.getSortType());
+
+            if (retList.getSecurityZones() != null) {
+                for (RangerSecurityZone zone : retList.getSecurityZones()) {
+                    ret.getList().add(new RangerSecurityZoneV2(zone));
+                }
+            }
+        }
+
+        LOG.debug("<== getAllZonesV2(): ret={}", ret);
+
+        return ret;
+    }
+
+    private void ensureAdminAccess(){
 		if(!bizUtil.isAdmin()){
 			String userName = bizUtil.getCurrentUserLoginId();
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Ranger Security Zone is not accessible for user '" + userName + "'.", true);
@@ -526,7 +720,7 @@ public class SecurityZoneREST {
 
 		}
 	}
-	
+
 	private void throwRestError(String message){
 		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, message, true);
 	}
@@ -592,4 +786,19 @@ public class SecurityZoneREST {
 			}
 		}
 	}
+
+    private PList<RangerSecurityZoneResource> getResources(RangerSecurityZone zone, String serviceName, @Context HttpServletRequest request) {
+        RangerSecurityZoneHelper          zoneHelper        = new RangerSecurityZoneHelper(zone, bizUtil.getCurrentUserLoginId());
+        RangerSecurityZoneServiceHelper   zoneServiceHelper = zoneHelper.getZoneService(serviceName);
+        PList<RangerSecurityZoneResource> ret               = null;
+
+        if (zoneServiceHelper != null) {
+            SearchFilter                     filter = searchUtil.getSearchFilter(request, Collections.emptyList());
+            List<RangerSecurityZoneResource> result = zoneServiceHelper.getResources(filter.getStartIndex(), filter.getMaxRows());
+
+            ret = new PList<>(result, filter.getStartIndex(), filter.getMaxRows(), zoneServiceHelper.getResourceCount(), result.size(), null, null);
+        }
+
+        return ret;
+    }
 }

@@ -19,6 +19,10 @@
 
  package org.apache.ranger.authorization.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -31,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -38,8 +44,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public class StringUtil {
-
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+
 
     public static boolean equals(String str1, String str2) {
 		boolean ret = false;
@@ -510,5 +516,60 @@ public class StringUtil {
 		String ret = str != null ? strTbl.putIfAbsent(str, str) : null;
 
 		return ret == null ? str : ret;
+	}
+
+	public static String compressString(String input) throws IOException {
+		final String ret;
+
+		if (StringUtils.isEmpty(input)) {
+			ret = input;
+		} else {
+			ret = new String(gzipCompress(input), StandardCharsets.ISO_8859_1);
+		}
+
+		return ret;
+	}
+
+	public static String decompressString(String input) throws IOException {
+		final String ret;
+
+		if (StringUtils.isEmpty(input)) {
+			ret = input;
+		} else {
+			ret = gzipDecompress(input.getBytes(StandardCharsets.ISO_8859_1));
+		}
+
+		return ret;
+	}
+
+	public static byte[] gzipCompress(String input) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		GZIPOutputStream      gos = new GZIPOutputStream(out);
+
+		gos.write(input.getBytes(StandardCharsets.ISO_8859_1));
+		gos.close();
+
+		return out.toByteArray();
+	}
+
+	public static String gzipDecompress(byte[] input) throws IOException {
+		ByteArrayInputStream  in  = new ByteArrayInputStream(input);
+		GZIPInputStream       gis = new GZIPInputStream(in);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[]                buf = new byte[1024];
+
+		while (true) {
+			int bytesRead = gis.read(buf, 0, buf.length);
+
+			if (bytesRead == -1) {
+				break;
+			}
+
+			out.write(buf, 0, bytesRead);
+		}
+
+		gis.close();
+
+		return new String(out.toByteArray(), StandardCharsets.ISO_8859_1);
 	}
 }

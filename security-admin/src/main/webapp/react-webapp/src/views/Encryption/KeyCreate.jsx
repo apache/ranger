@@ -30,10 +30,11 @@ import {
   scrollToError
 } from "../../components/CommonComponents";
 import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
-import { isEmpty, values } from "lodash";
+import { cloneDeep, find, isEmpty, values } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
+import { getServiceDef } from "../../utils/appState";
 
 const initialState = {
   service: {},
@@ -74,6 +75,7 @@ function KeyCreate(props) {
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
   const toastId = useRef(null);
+  const { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     fetchInitialData();
@@ -107,7 +109,6 @@ function KeyCreate(props) {
         }
     }
 
-    let apiError = "Error occurred while creating Key";
     serviceJson.name = values.name;
     serviceJson.cipher = values.cipher;
     serviceJson.length = values.length;
@@ -149,7 +150,6 @@ function KeyCreate(props) {
   };
   const fetchKmsServices = async () => {
     let serviceResp;
-    let kmsDefinition;
     dispatch({
       type: "SET_LOADER",
       loader: true
@@ -161,20 +161,11 @@ function KeyCreate(props) {
     } catch (error) {
       console.error(`Error occurred while fetching Services! ${error}`);
     }
-    try {
-      kmsDefinition = await fetchApi({
-        url: `plugins/definitions/name/${
-          serviceResp.data && serviceResp.data.type
-        }`
-      });
-    } catch (error) {
-      console.error(`Error occurred while fetching Definitions! ${error}`);
-    }
 
     dispatch({
       type: "SET_DATA",
       service: serviceResp,
-      definition: kmsDefinition,
+      definition: find(allServiceDefs, { name: "kms" }),
       loader: false
     });
   };
@@ -194,7 +185,7 @@ function KeyCreate(props) {
   };
   const keyCreateBreadcrumb = () => {
     let serviceDetails = {};
-    serviceDetails["serviceDefId"] = definition.data && definition.data.id;
+    serviceDetails["serviceDefId"] = definition && definition?.id;
     serviceDetails["serviceId"] = service.data && service.data.id;
     serviceDetails["serviceName"] = props.params.serviceName;
     return commonBreadcrumb(
@@ -226,7 +217,6 @@ function KeyCreate(props) {
           handleSubmit,
           form,
           submitting,
-          pristine,
           invalid,
           errors,
           dirty,
@@ -245,9 +235,7 @@ function KeyCreate(props) {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
-                        Key Name *
-                      </label>
+                      <label className="form-label float-end">Key Name *</label>
                     </Col>
                     <Col xs={4}>
                       <input
@@ -274,7 +262,7 @@ function KeyCreate(props) {
                 {({ input }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">Cipher</label>
+                      <label className="form-label float-end">Cipher</label>
                     </Col>
                     <Col xs={4}>
                       <input
@@ -293,7 +281,7 @@ function KeyCreate(props) {
                 {({ input }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">Length</label>
+                      <label className="form-label float-end">Length</label>
                     </Col>
                     <Col xs={4}>
                       <input
@@ -311,7 +299,7 @@ function KeyCreate(props) {
                 {({ input }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         Description
                       </label>
                     </Col>
@@ -327,7 +315,7 @@ function KeyCreate(props) {
               </Field>
               <Row className="form-group">
                 <Col xs={3}>
-                  <label className="form-label pull-right">Attributes</label>
+                  <label className="form-label float-end">Attributes</label>
                 </Col>
                 <Col xs={6}>
                   <Table bordered size="sm" className="no-bg-color w-75">
@@ -380,7 +368,7 @@ function KeyCreate(props) {
               </Row>
               <Row className="form-group">
                 <Col xs={3}>
-                  <label className="form-label pull-right"></label>
+                  <label className="form-label float-end"></label>
                 </Col>
                 <Col xs={6}>
                   <Button
@@ -398,7 +386,6 @@ function KeyCreate(props) {
                 <Col sm={{ span: 9, offset: 3 }}>
                   <Button
                     variant="primary"
-                    // type="submit"
                     onClick={() => {
                       if (invalid) {
                         let selector =

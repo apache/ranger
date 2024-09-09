@@ -17,25 +17,20 @@
 
 package org.apache.ranger.services.yarn.client.json.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class YarnSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -54,11 +49,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     }
 
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown=true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
     public static class YarnScheduler implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -73,11 +66,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
     }
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown=true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
     public static class YarnSchedulerInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -101,11 +92,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
     }
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown=true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
     public static class YarnQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 

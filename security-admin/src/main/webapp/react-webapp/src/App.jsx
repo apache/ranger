@@ -21,15 +21,15 @@ import React, { Suspense, lazy, Component } from "react";
 import { Route, Routes, HashRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
-
+import { hasAccessToTab, isUser } from "./utils/XAUtils";
 import ErrorBoundary from "Views/ErrorBoundary";
 import ErrorPage from "./views/ErrorPage";
 import { CommonScrollButton, Loader } from "../src/components/CommonComponents";
 import history from "Utils/history";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { setUserProfile, setServiceDef } from "Utils/appState";
 import LayoutComp from "Views/Layout";
-import { getServiceDef, setServiceDef } from "./utils/appState";
-import { filter, sortBy } from "lodash";
+import { filter, sortBy, has } from "lodash";
+import { fetchApi, fetchCSRFConf } from "Utils/fetchAPI";
 
 const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
@@ -92,6 +92,42 @@ const AccesLogDetailComp = lazy(() =>
 const UserAccessLayoutComp = lazy(() =>
   import("Views/Reports/UserAccessLayout")
 );
+const MyDatasetListingComp = lazy(() =>
+  import("Views/GovernedData/Dataset/MyDatasetListing")
+);
+const CreateDatasetComp = lazy(() =>
+  import("Views/GovernedData/Dataset/AddDatasetView")
+);
+const DatasetDetailLayoutComp = lazy(() =>
+  import("Views/GovernedData/Dataset/DatasetDetailLayout")
+);
+const DatasetDetailFullViewComp = lazy(() =>
+  import("Views/GovernedData/Dataset/DatasetDetailFullView")
+);
+const AccessGrantFormComp = lazy(() =>
+  import("Views/GovernedData/Dataset/AccessGrantForm")
+);
+const MyDatashareListingComp = lazy(() =>
+  import("Views/GovernedData/Datashare/MyDatashareListing")
+);
+const CreateDatashareComp = lazy(() =>
+  import("Views/GovernedData/Datashare/AddDatashareView")
+);
+const DatashareDetailLayoutComp = lazy(() =>
+  import("Views/GovernedData/Datashare/DatashareDetailLayout")
+);
+const DatashareDetailFullView = lazy(() =>
+  import("Views/GovernedData/Datashare/DatashareDetailFullView")
+);
+const DatashareAddSharedResourceComp = lazy(() =>
+  import("Views/GovernedData/Datashare/AddSharedResourceComp")
+);
+const GDSRequestListingComp = lazy(() =>
+  import("Views/GovernedData/Request/RequestListing")
+);
+const GDSRequestDetailComp = lazy(() =>
+  import("Views/GovernedData/Request/RequestDetailView")
+);
 
 export default class App extends Component {
   constructor(props) {
@@ -110,14 +146,7 @@ export default class App extends Component {
         window.location.hostname +
         (window.location.port ? ":" + window.location.port : "");
     }
-    // Proxy URL for Ranger UI doesn't work without trailing slash so add slash
-    // let pathName = /\/[\w-]+.(jsp|html)/;
-    // if (
-    //   !pathName.test(window.location.pathname) &&
-    //   window.location.pathname.slice(-1) !== "/"
-    // ) {
-    //   window.location.pathname += "/";
-    // }
+
     let baseUrl =
       window.location.origin +
       window.location.pathname.substr(
@@ -139,8 +168,9 @@ export default class App extends Component {
     let getServiceDefData = [];
     let resourceServiceDef = [];
     let tagServiceDef = [];
+    let gdsServiceDef = {};
+
     try {
-      const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
       fetchCSRFConf();
       const profResp = await fetchApi({
         url: "users/profile"
@@ -153,35 +183,53 @@ export default class App extends Component {
         `Error occurred while fetching profile or CSRF headers! ${error}`
       );
     }
+
+    let serviceDefUrl = hasAccessToTab("Resource Based Policies")
+      ? "plugins/definitions"
+      : hasAccessToTab("Tag Based Policies") && isUser()
+      ? "plugins/definitions/name/tag"
+      : "plugins/definitions";
+
     try {
-      const { fetchApi } = await import("Utils/fetchAPI");
       getServiceDefData = await fetchApi({
-        url: `plugins/definitions`
+        url: serviceDefUrl
       });
 
-      tagServiceDef = sortBy(
-        filter(getServiceDefData.data.serviceDefs, ["name", "tag"]),
-        "id"
-      );
+      if (has(getServiceDefData.data, "serviceDefs")) {
+        getServiceDefData = getServiceDefData.data.serviceDefs;
+      } else {
+        getServiceDefData = [getServiceDefData.data];
+      }
+
+      tagServiceDef = sortBy(filter(getServiceDefData, ["name", "tag"]), "id");
 
       resourceServiceDef = sortBy(
-        filter(
-          getServiceDefData.data.serviceDefs,
-          (serviceDef) => serviceDef.name !== "tag"
-        ),
+        filter(getServiceDefData, (serviceDef) => serviceDef.name !== "tag"),
         "id"
-      );
-
-      setServiceDef(
-        resourceServiceDef,
-        tagServiceDef,
-        getServiceDefData.data.serviceDefs
       );
     } catch (error) {
       console.error(
         `Error occurred while fetching serviceDef details ! ${error}`
       );
     }
+
+    try {
+      let resp = await fetchApi({
+        url: `plugins/definitions/name/gds`
+      });
+      gdsServiceDef = resp.data;
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
+      );
+    }
+
+    setServiceDef(
+      resourceServiceDef,
+      tagServiceDef,
+      gdsServiceDef,
+      getServiceDefData
+    );
     this.setState({
       loader: false
     });
@@ -342,6 +390,62 @@ export default class App extends Component {
                   <Route path="/locallogin" element={<Loader />} />
                   {/* NOT FOUND ROUTE */}
                   <Route path="*" />
+                  {/* GDS */}
+                  <Route path="/gds">
+                    <Route
+                      path="mydatasetlisting"
+                      element={<MyDatasetListingComp />}
+                    />
+                    <Route path="create" element={<CreateDatasetComp />} />
+                    <Route
+                      path="dataset/:datasetId/detail"
+                      element={<DatasetDetailLayoutComp />}
+                    />
+                    <Route
+                      path="dataset/:datasetId/accessGrant"
+                      element={<AccessGrantFormComp />}
+                    />
+                    <Route
+                      path="mydatasharelisting"
+                      element={<MyDatashareListingComp />}
+                    />
+                    <Route
+                      path="dataset/:datasetId/fullview"
+                      element={<DatasetDetailFullViewComp />}
+                    />
+                    <Route
+                      path="datashare/create"
+                      element={<CreateDatashareComp />}
+                    />
+                    <Route
+                      path="datashare/:datashareId/detail"
+                      element={<DatashareDetailLayoutComp />}
+                    />
+                    <Route
+                      path="datashare/:datashareId/fullview"
+                      element={<DatashareDetailFullView />}
+                    />
+                    <Route
+                      path="datashare/resource/:datashareId"
+                      element={<DatashareAddSharedResourceComp />}
+                    />
+                    <Route
+                      path="request/list"
+                      element={<GDSRequestListingComp />}
+                    />
+                    <Route
+                      path="request/detail/:requestId"
+                      element={<GDSRequestDetailComp />}
+                    />
+                    <Route
+                      path="datasetlisting"
+                      element={<MyDatasetListingComp />}
+                    />
+                    <Route
+                      path="datasharelisting"
+                      element={<MyDatashareListingComp />}
+                    />
+                  </Route>
                 </Route>
               </Routes>
             </HashRouter>

@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 
 
@@ -41,7 +42,13 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
 		if (rowFilterInfo != null && rowFilterInfo.getFilterExpr() != null) {
-			rowFilterExpr = rowFilterInfo.getFilterExpr();
+			String rowFilterExpr = rowFilterInfo.getFilterExpr();
+
+			if (JavaScriptEdits.hasDoubleBrackets(rowFilterExpr)) {
+				rowFilterExpr = JavaScriptEdits.replaceDoubleBrackets(rowFilterExpr);
+			}
+
+			this.rowFilterExpr = rowFilterExpr;
 		} else {
 			rowFilterExpr = null;
 		}

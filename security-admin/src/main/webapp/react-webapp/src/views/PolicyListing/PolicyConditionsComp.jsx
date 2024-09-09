@@ -17,12 +17,12 @@
  * under the License.
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { Col, Form as FormB, Row, Modal, Button } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { find, omit } from "lodash";
+import { find, isEmpty } from "lodash";
 import { InfoIcon } from "../../utils/XAUtils";
 import { RegexMessage } from "../../utils/XAMessages";
 const esprima = require("esprima");
@@ -39,7 +39,7 @@ export default function PolicyConditionsComp(props) {
   const handleSubmit = (values) => {
     for (let val in values.conditions) {
       if (values.conditions[val] == null || values.conditions[val] == "") {
-        omit(values.conditions, val);
+        delete values.conditions[val];
       }
     }
     inputVal.onChange(values.conditions);
@@ -79,17 +79,17 @@ export default function PolicyConditionsComp(props) {
   };
 
   const handleChange = (val, input) => {
-    let value = null;
+    let value = [];
     if (val) {
-      value = val.map((m) => m.value).join(",");
+      value = val.map((m) => m.value);
     }
     input.onChange(value);
   };
 
   const ipRangeVal = (val) => {
-    let value = null;
-    if (val) {
-      value = val.split(",").map((m) => ({ label: m, value: m }));
+    let value = [];
+    if (!isEmpty(val)) {
+      value = val.map((m) => ({ label: m, value: m }));
     }
     return value;
   };
@@ -118,108 +118,120 @@ export default function PolicyConditionsComp(props) {
         <Form
           onSubmit={handleSubmit}
           initialValues={formInitialData}
-          render={({ handleSubmit, form, submitting, pristine, values }) => (
+          render={({ handleSubmit }) => (
             <form onSubmit={handleSubmit}>
               <Modal.Header closeButton>
                 <Modal.Title>Policy Condition</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {policyConditionDetails?.length > 0 &&
-                  policyConditionDetails.map((m, index) => {
-                    if (m.name == "accessed-after-expiry") {
-                      return (
-                        <FormB.Group className="mb-3">
-                          <b>{m.label}:</b>
+                  policyConditionDetails.map((m) => {
+                    let uiHintAttb =
+                      m.uiHint != undefined && m.uiHint != ""
+                        ? JSON.parse(m.uiHint)
+                        : "";
+                    if (uiHintAttb != "") {
+                      if (uiHintAttb?.singleValue) {
+                        return (
+                          <div key={m.name}>
+                            <FormB.Group className="mb-3">
+                              <b>{m.label}:</b>
 
-                          <Field
-                            className="form-control"
-                            name={`conditions.${m.name}`}
-                            render={({ input }) => (
-                              <Select
-                                {...input}
-                                options={accessedOpt}
-                                isClearable
-                                value={accessedVal(input.value)}
-                                onChange={(val) => accessedOnChange(val, input)}
+                              <Field
+                                className="form-control"
+                                name={`conditions.${m.name}`}
+                                render={({ input }) => (
+                                  <Select
+                                    {...input}
+                                    options={accessedOpt}
+                                    isClearable
+                                    value={accessedVal(input.value)}
+                                    onChange={(val) =>
+                                      accessedOnChange(val, input)
+                                    }
+                                  />
+                                )}
                               />
-                            )}
-                          />
-                        </FormB.Group>
-                      );
-                    }
-                    if (m.name == "expression") {
-                      return (
-                        <>
-                          <FormB.Group className="mb-3">
-                            <Row>
-                              <Col>
-                                <b>{m.label}:</b>
-                                <InfoIcon
-                                  position="right"
-                                  message={
-                                    <p className="pd-10">
-                                      {
-                                        RegexMessage.MESSAGE
-                                          .policyconditioninfoicon
-                                      }
-                                    </p>
-                                  }
-                                />
-                              </Col>
-                            </Row>
-                            <Row>
-                              <Col>
-                                <Field
-                                  name={`conditions.${m.name}`}
-                                  validate={validater}
-                                  render={({ input, meta }) => (
-                                    <>
-                                      <FormB.Control
-                                        {...input}
-                                        className={
-                                          meta.error
-                                            ? "form-control border border-danger"
-                                            : "form-control"
+                            </FormB.Group>
+                          </div>
+                        );
+                      }
+                      if (uiHintAttb?.isMultiline) {
+                        return (
+                          <div key={m.name}>
+                            <FormB.Group className="mb-3">
+                              <Row>
+                                <Col>
+                                  <b>{m.label}:</b>
+                                  <InfoIcon
+                                    position="right"
+                                    message={
+                                      <p className="pd-10">
+                                        {
+                                          RegexMessage.MESSAGE
+                                            .policyConditionInfoIcon
                                         }
-                                        as="textarea"
-                                        rows={3}
-                                      />
-                                      {meta.error && (
-                                        <span className="invalid-field">
-                                          {meta.error}
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
-                                />
-                              </Col>
-                            </Row>
-                          </FormB.Group>
-                        </>
-                      );
-                    }
-                    if (m.name == "ip-range") {
-                      return (
-                        <FormB.Group className="mb-3">
-                          <b>{m.label}:</b>
+                                      </p>
+                                    }
+                                  />
+                                </Col>
+                              </Row>
+                              <Row>
+                                <Col>
+                                  <Field
+                                    name={`conditions.${m.name}`}
+                                    validate={validater}
+                                    render={({ input, meta }) => (
+                                      <>
+                                        <FormB.Control
+                                          {...input}
+                                          className={
+                                            meta.error
+                                              ? "form-control border border-danger"
+                                              : "form-control"
+                                          }
+                                          as="textarea"
+                                          rows={3}
+                                        />
+                                        {meta.error && (
+                                          <span className="invalid-field">
+                                            {meta.error}
+                                          </span>
+                                        )}
+                                      </>
+                                    )}
+                                  />
+                                </Col>
+                              </Row>
+                            </FormB.Group>
+                          </div>
+                        );
+                      }
+                      if (uiHintAttb?.isMultiValue) {
+                        return (
+                          <div key={m.name}>
+                            <FormB.Group className="mb-3">
+                              <b>{m.label}:</b>
 
-                          <Field
-                            className="form-control"
-                            name={`conditions.${m.name}`}
-                            render={({ input }) => (
-                              <CreatableSelect
-                                {...input}
-                                isMulti
-                                isClearable
-                                placeholder="enter expression"
-                                width="500px"
-                                value={ipRangeVal(input.value)}
-                                onChange={(e) => handleChange(e, input)}
+                              <Field
+                                className="form-control"
+                                name={`conditions.${m.name}`}
+                                render={({ input }) => (
+                                  <CreatableSelect
+                                    {...input}
+                                    isMulti
+                                    isClearable
+                                    placeholder="enter expression"
+                                    width="500px"
+                                    value={ipRangeVal(input.value)}
+                                    onChange={(e) => handleChange(e, input)}
+                                  />
+                                )}
                               />
-                            )}
-                          />
-                        </FormB.Group>
-                      );
+                            </FormB.Group>
+                          </div>
+                        );
+                      }
                     }
                   })}
               </Modal.Body>

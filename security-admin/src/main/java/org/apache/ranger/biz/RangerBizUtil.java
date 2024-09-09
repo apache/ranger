@@ -43,11 +43,13 @@ import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXDBBaseDao;
+import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXGroup;
@@ -56,7 +58,7 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
@@ -103,19 +105,18 @@ public class RangerBizUtil {
 
 	private int maxFirstNameLength;
 	int maxDisplayNameLength = 150;
-	public final String EMPTY_CONTENT_DISPLAY_NAME = "...";
 	boolean enableResourceAccessControl;
         private SecureRandom random;
 	private static final String PATH_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst0123456789-_.";
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
 	public static final String AUDIT_STORE_RDBMS = "DB";
-	public static final String AUDIT_STORE_SOLR = "solr";
-	public static final String AUDIT_STORE_ElasticSearch = "elasticSearch";
-	public static final String AUDIT_STORE_CloudWatch = "cloudwatch";
-	public static final boolean batchClearEnabled = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
-	public static final int policyBatchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
-	public static final int batchPersistSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
+	public static final String AUDIT_STORE_SOLR           = "solr";
+	public static final String  AUDIT_STORE_ELASTIC_SEARCH = "elasticSearch";
+	public static final String  AUDIT_STORE_CLOUD_WATCH = "cloudwatch";
+	public static final boolean BATCH_CLEAR_ENABLED = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
+	public static final int POLICY_BATCH_SIZE  = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
+	public static final int BATCH_PERSIST_SIZE = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
 	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
@@ -133,7 +134,7 @@ public class RangerBizUtil {
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
 
-		groupEditableClasses = new HashSet<Class<?>>(
+		groupEditableClasses = new HashSet<>(
 				Arrays.asList(groupEditableClassesList));
 		enableResourceAccessControl = PropertiesUtil.getBooleanProperty("ranger.resource.accessControl.enabled", true);
 
@@ -183,7 +184,7 @@ public class RangerBizUtil {
 			return null;
 		}
 
-		List<VXString> vStringList = new ArrayList<VXString>();
+		List<VXString> vStringList = new ArrayList<>();
 		for (String str : stringList) {
 			VXString vXString = new VXString();
 			vXString.setValue(str);
@@ -228,8 +229,7 @@ public class RangerBizUtil {
 		Long xUserId = getXUserId();
 		Long assetId = vXResource.getAssetId();
 		List<XXResource> xResourceList = daoManager.getXXResource()
-				.findByAssetIdAndResourceStatus(assetId,
-						AppConstants.STATUS_ENABLED);
+				.findByAssetIdAndResourceStatus(assetId, RangerCommonEnums.STATUS_ENABLED);
 
 		XXAsset xAsset = daoManager.getXXAsset().getById(assetId);
 		int assetType = xAsset.getAssetType();
@@ -272,8 +272,8 @@ public class RangerBizUtil {
 			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
 			return vXResponse;
 		} else if (assetType == AppConstants.ASSET_HBASE) {
-			String[] requestResNameList = resourceNames.split(",");
-			for (String resourceName : requestResNameList) {
+		String[] requestResNameList = resourceNames.split(",");
+		for (String resourceName : requestResNameList) {
 				boolean matchFound = matchHbasePolicy(resourceName,
 						xResourceList, vXResponse, xUserId, permission);
 				if (!matchFound) {
@@ -290,7 +290,7 @@ public class RangerBizUtil {
 			for (String resourceName : requestResNameList) {
 				boolean matchFound = matchHdfsPolicy(resourceName,
 						xResourceList, xUserId, permission);
-				if (!matchFound) {
+			if (!matchFound) {
 					vXResponse.setMsgDesc("You're not permitted to perform "
 							+ "the action for resource path : " + resourceName);
 					vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
@@ -321,13 +321,13 @@ public class RangerBizUtil {
 				if (!matchFound) {
 					vXResponse.setMsgDesc("You're not permitted to perform "
 							+ "the action for resource path : " + resourceName);
-					vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
-					return vXResponse;
-				}
+				vXResponse.setStatusCode(VXResponse.STATUS_ERROR);
+				return vXResponse;
 			}
-			vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
-			return vXResponse;
 		}
+		vXResponse.setStatusCode(VXResponse.STATUS_SUCCESS);
+		return vXResponse;
+	}
 		return vXResponse;
 	}
 
@@ -427,7 +427,7 @@ public class RangerBizUtil {
 		resourceName = replaceMetaChars(resourceName);
 
 		for (XXResource xResource : xResourceList) {
-			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+			if (xResource.getResourceStatus() != RangerCommonEnums.STATUS_ENABLED) {
 				continue;
 			}
 			Long resourceId = xResource.getId();
@@ -440,7 +440,7 @@ public class RangerBizUtil {
 					if (comparePathsForExactMatch(resourceName, dbResourceName)) {
 						matchFound = true;
 					} else {
-						if (xResource.getIsRecursive() == AppConstants.BOOL_TRUE) {
+						if (xResource.getIsRecursive() == RangerCommonEnums.BOOL_TRUE) {
 							matchFound = isRecursiveWildCardMatch(resourceName,
 									dbResourceName);
 						} else {
@@ -463,10 +463,8 @@ public class RangerBizUtil {
 	public void failUnauthenticatedIfNotAllowed() throws Exception {
 		if (UserGroupInformation.isSecurityEnabled()) {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-			if (currentUserSession == null) {
-				if (!allowUnauthenticatedAccessInSecureEnvironment) {
+			if (currentUserSession == null && !allowUnauthenticatedAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
-				}
 			}
 		}
 	}
@@ -474,10 +472,8 @@ public class RangerBizUtil {
 	public void failUnauthenticatedDownloadIfNotAllowed() throws Exception {
 		if (UserGroupInformation.isSecurityEnabled()) {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-			if (currentUserSession == null) {
-				if (!allowUnauthenticatedDownloadAccessInSecureEnvironment) {
+			if (currentUserSession == null && !allowUnauthenticatedDownloadAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
-				}
 			}
 		}
 	}
@@ -608,7 +604,7 @@ public class RangerBizUtil {
 
 		boolean policyMatched = false;
 		for (XXResource xResource : xResourceList) {
-			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+			if (xResource.getResourceStatus() != RangerCommonEnums.STATUS_ENABLED) {
 				continue;
 			}
 
@@ -712,7 +708,7 @@ public class RangerBizUtil {
 		// check all resources whether Knox policy is enabled in any resource
 		// of provided resource list
 		for (XXResource xResource : xResourceList) {
-			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+			if (xResource.getResourceStatus() != RangerCommonEnums.STATUS_ENABLED) {
 				continue;
 			}
 			Long resourceId = xResource.getId();
@@ -799,7 +795,7 @@ public class RangerBizUtil {
 		// check all resources whether Knox policy is enabled in any resource
 		// of provided resource list
 		for (XXResource xResource : xResourceList) {
-			if (xResource.getResourceStatus() != AppConstants.STATUS_ENABLED) {
+			if (xResource.getResourceStatus() != RangerCommonEnums.STATUS_ENABLED) {
 				continue;
 			}
 			Long resourceId = xResource.getId();
@@ -811,11 +807,6 @@ public class RangerBizUtil {
 				String[] xTopologies = (xResource.getTopologies() == null || "".equalsIgnoreCase(xResource
 						.getTopologies())) ? null
 						: stringUtil.split(xResource.getTopologies(), ",");
-				/*
-				 * String[] xServices = (xResource.getServices() == null ||
-				 * xResource .getServices().equalsIgnoreCase("")) ? null :
-				 * stringUtil.split(xResource.getServices(), ",");
-				 */
 
 				boolean matchFound = false;
 
@@ -823,24 +814,16 @@ public class RangerBizUtil {
 					matchFound = false;
 					// check whether given table resource matches with any
 					// existing topology resource
-					if (index == 0) {
-						if (xTopologies != null) {
-							for (String xTopology : xTopologies) {
-								if (matchPath(splittedResources[index],
-										xTopology)) {
-									matchFound = true;
-									continue;
-								}
+					if (index == 0 && xTopologies != null) {
+						for (String xTopology : xTopologies) {
+							if (matchPath(splittedResources[index],
+									xTopology)) {
+								matchFound = true;
+								continue;
 							}
 						}
 					} // check whether given service resource matches with
 						// any existing service resource
-					/*
-					 * else if (index == 1) { if(xServices!=null){ for (String
-					 * xService : xServices) { if
-					 * (matchPath(splittedResources[index], xService)) {
-					 * matchFound = true; continue; } } } }
-					 */
 				}
 				if (matchFound) {
 					policyMatched = true;
@@ -1008,7 +991,7 @@ public class RangerBizUtil {
 	 */
 	public List<Integer> getResorceTypeParentHirearchy(int resourceType,
 			int assetType) {
-		List<Integer> resourceTypeList = new ArrayList<Integer>();
+		List<Integer> resourceTypeList = new ArrayList<>();
 
 		if (assetType == AppConstants.ASSET_HDFS) {
 			resourceTypeList.add(AppConstants.RESOURCE_PATH);
@@ -1066,8 +1049,8 @@ public class RangerBizUtil {
 			String wildcardPath) {
 		if (pathToCheck != null && wildcardPath != null) {
 
-			List<String> pathToCheckArray = new ArrayList<String>();
-			List<String> wildcardPathArray = new ArrayList<String>();
+			List<String> pathToCheckArray = new ArrayList<>();
+			List<String> wildcardPathArray = new ArrayList<>();
 
 			Collections.addAll(pathToCheckArray, pathToCheck.split(fileSeparator));
 			Collections.addAll(wildcardPathArray, wildcardPath.split(fileSeparator));
@@ -1151,43 +1134,33 @@ public class RangerBizUtil {
 		return true;
 	}
 
-	public void createTrxLog(List<XXTrxLog> trxLogList) {
-		if (trxLogList == null) {
+	public void createTrxLog(List<XXTrxLogV2> trxLogList) {
+		if (trxLogList == null || trxLogList.size() == 0) {
 			return;
 		}
 
-		UserSessionBase usb = ContextUtil.getCurrentUserSession();
-		Long authSessionId = null;
-		if (usb != null) {
-			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
+		if (guidUtil == null) {
+			// log a warning
+			return;
 		}
-		if(guidUtil != null){
-		Long trxId = guidUtil.genLong();
-		for (XXTrxLog xTrxLog : trxLogList) {
-			if (xTrxLog != null) {
-				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
-					if (xTrxLog.getPreviousValue() != null
-							&& !xTrxLog.getPreviousValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog
-									.getPreviousValue().trim())) {
-						xTrxLog.setPreviousValue(AppConstants.Masked_String);
-					}
-					if (xTrxLog.getNewValue() != null
-							&& !xTrxLog.getNewValue().trim().isEmpty()
-							&& !"null".equalsIgnoreCase(xTrxLog.getNewValue()
-									.trim())) {
-						xTrxLog.setNewValue(AppConstants.Masked_String);
-					}
-				}
-				xTrxLog.setTransactionId(trxId.toString());
-				if (authSessionId != null) {
-					xTrxLog.setSessionId("" + authSessionId);
-				}
-				xTrxLog.setSessionType("Spring Authenticated Session");
-				xTrxLog.setRequestId(trxId.toString());
-				daoManager.getXXTrxLog().create(xTrxLog);
+
+		XXTrxLogV2Dao   dao       = daoManager.getXXTrxLogV2();
+		String          trxId     = Long.toString(guidUtil.genLong());
+		UserSessionBase usb       = ContextUtil.getCurrentUserSession();
+		String          sessionId = usb != null && usb.getSessionId() != null ? usb.getSessionId().toString() : null;
+		Long            userId    = usb != null ? usb.getUserId() : null;
+
+		for (XXTrxLogV2 xTrxLog : trxLogList) {
+			xTrxLog.setTransactionId(trxId);
+			xTrxLog.setSessionId(sessionId);
+			xTrxLog.setSessionType("Spring Authenticated Session");
+			xTrxLog.setRequestId(trxId);
+
+			if (xTrxLog.getAddedByUserId() == null) {
+				xTrxLog.setAddedByUserId(userId);
 			}
-		}
+
+			dao.create(xTrxLog);
 		}
 	}
 
@@ -1231,6 +1204,57 @@ public class RangerBizUtil {
 		return AppConstants.DB_FLAVOR_UNKNOWN;
 	}
 
+	public static String getDBFlavorType(int dbFlavor) {
+		final String dbFlavourType;
+
+		switch (dbFlavor) {
+			case AppConstants.DB_FLAVOR_MYSQL:
+				dbFlavourType = "MYSQL";
+				break;
+			case AppConstants.DB_FLAVOR_ORACLE:
+				dbFlavourType = "ORACLE";
+				break;
+			case AppConstants.DB_FLAVOR_POSTGRES:
+				dbFlavourType = "POSTGRES";
+				break;
+			case AppConstants.DB_FLAVOR_SQLANYWHERE:
+				dbFlavourType = "SQLANYWHERE";
+				break;
+			case AppConstants.DB_FLAVOR_SQLSERVER:
+				dbFlavourType = "SQLSERVER";
+				break;
+			default:
+				dbFlavourType = "Unknown";
+				break;
+		}
+
+		return dbFlavourType;
+	}
+
+	public static String getDBVersionQuery(int dbFlavor){
+		final String dbQuery;
+
+		switch (dbFlavor) {
+			case AppConstants.DB_FLAVOR_ORACLE:
+				dbQuery = "SELECT banner from v$version where rownum<2";
+				break;
+			case AppConstants.DB_FLAVOR_MYSQL:
+			case AppConstants.DB_FLAVOR_POSTGRES:
+				dbQuery = "SELECT version()";
+				break;
+			case AppConstants.DB_FLAVOR_SQLANYWHERE:
+			case AppConstants.DB_FLAVOR_SQLSERVER:
+				dbQuery = "SELECT @@version";
+				break;
+			default:
+				dbQuery = null;
+				break;
+		}
+
+		return dbQuery;
+	}
+
+
 	public String getDBVersion(){
 		return daoManager.getXXUser().getDBVersion();
     }
@@ -1255,10 +1279,7 @@ public class RangerBizUtil {
 			return false;
 		}
 
-		if (currentUserSession.isKeyAdmin()) {
-			return true;
-		}
-		return false;
+		return currentUserSession.isKeyAdmin();
 	}
     public boolean isAuditKeyAdmin() {
         UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
@@ -1266,10 +1287,7 @@ public class RangerBizUtil {
                 logger.debug("Unable to find session.");
                 return false;
         }
-        if (currentUserSession.isAuditKeyAdmin()) {
-                return true;
-        }
-        return false;
+        return (currentUserSession.isAuditKeyAdmin());
     }
 
 	/**
@@ -1290,45 +1308,47 @@ public class RangerBizUtil {
 		boolean isSysAdmin = session.isUserAdmin();
 		boolean isAuditor =  session.isAuditUserAdmin();
 		boolean isAuditorKeyAdmin = session.isAuditKeyAdmin();
-		boolean isUser = false;
-
-		List<String> roleList = session.getUserRoleList();
-		if (roleList.contains(RangerConstants.ROLE_USER) ) {
-			isUser = true;
-		}
+		boolean isUser = session.getUserRoleList().contains(RangerConstants.ROLE_USER);
 
 		if (xxDbBase != null && xxDbBase instanceof XXServiceDef) {
-			XXServiceDef xServiceDef = (XXServiceDef) xxDbBase;
-			final String implClass = xServiceDef.getImplclassname();
-			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				// KMS case
-				return isKeyAdmin || isAuditorKeyAdmin;
-			} else {
-				// Other cases - implClass can be null!
-				return isSysAdmin || isUser || isAuditor;
-			}
+			return hasAccessToXXServiceDef((XXServiceDef) xxDbBase, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
 		}
 
 		if (xxDbBase != null && xxDbBase instanceof XXService) {
-
-			// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
-			// services including KMS
-			if (isSysAdmin || isAuditor) {
-				return true;
-			}
-
-			XXService xService = (XXService) xxDbBase;
-			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-			String implClass = xServiceDef.getImplclassname();
-			if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
-				// KMS case
-				return isKeyAdmin || isAuditorKeyAdmin;
-			} else {
-				// Other cases - implClass can be null!
-				return isUser;
-			}
+			return hasAccessToXXService((XXService) xxDbBase, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
 		}
 		return false;
+	}
+
+	private Boolean hasAccessToXXServiceDef(XXServiceDef xxDbBase, boolean isKeyAdmin, boolean isSysAdmin, boolean isAuditor, boolean isAuditorKeyAdmin, boolean isUser) {
+		XXServiceDef xServiceDef = xxDbBase;
+		final String implClass = xServiceDef.getImplclassname();
+		if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+			// KMS case
+			return isKeyAdmin || isAuditorKeyAdmin;
+		} else {
+			// Other cases - implClass can be null!
+			return isSysAdmin || isUser || isAuditor;
+		}
+	}
+
+	private Boolean hasAccessToXXService(XXService xxDbBase, boolean isKeyAdmin, boolean isSysAdmin, boolean isAuditor, boolean isAuditorKeyAdmin, boolean isUser) {
+		// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
+		// services including KMS
+		if (isSysAdmin || isAuditor) {
+			return true;
+		}
+
+		XXService xService = xxDbBase;
+		XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+		String implClass = xServiceDef.getImplclassname();
+		if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+			// KMS case
+			return isKeyAdmin || isAuditorKeyAdmin;
+		} else {
+			// Other cases - implClass can be null!
+			return isUser;
+		}
 	}
 
 	public void hasAdminPermissions(String objType) {
@@ -1553,14 +1573,8 @@ public class RangerBizUtil {
 	}
 
 	public static boolean setBulkMode(boolean val) {
-		if(RangerContextHolder.getOpContext()!=null){
-			RangerContextHolder.getOpContext().setBulkModeContext(val);
-		}
-		else {
-			  RangerAdminOpContext opContext = new RangerAdminOpContext();
-			  opContext.setBulkModeContext(val);
-			  RangerContextHolder.setOpContext(opContext);
-		}
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(val);
+
 		return isBulkMode();
 	}
 
@@ -1568,12 +1582,12 @@ public class RangerBizUtil {
 		RangerAdminOpContext opContext = RangerContextHolder.getOpContext();
 		Boolean              ret       = opContext != null ? opContext.getCreatePrincipalsIfAbsent() : null;
 
-		return ret != null ? ret : false;
+		return ret != null && ret;
 	}
 
 	//should be used only in bulk operation like importPolicies, policies delete.
 	public void bulkModeOnlyFlushAndClear() {
-		if (batchClearEnabled) {
+		if (BATCH_CLEAR_ENABLED) {
 			XXDBBaseDao xXDBBaseDao = daoManager.getXXDBBase();
 			if (xXDBBaseDao != null) {
 				xXDBBaseDao.flush();
@@ -1592,5 +1606,13 @@ public class RangerBizUtil {
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
+	}
+
+	public boolean isGdsServiceDef(XXDBBase xxdbBase) {
+		return (xxdbBase instanceof XXServiceDef) && EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(((XXServiceDef) xxdbBase).getName());
+	}
+
+	public boolean isGdsService(XXDBBase xxdbBase) {
+		return (xxdbBase instanceof XXService) && EmbeddedServiceDefsUtil.instance().getGdsServiceDefId() == ((XXService) xxdbBase).getType();
 	}
 }

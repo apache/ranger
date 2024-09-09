@@ -38,26 +38,26 @@ public class TestRangerPolicy {
         List<RangerPolicyItem> policyItemList = getList(new RangerPolicyItem());
 
         Assert.assertEquals("RangerPolicy.getPolicyItems()", 0, policy.getPolicyItems().size());
-        policy.getPolicyItems().add(new RangerPolicyItem());
-        Assert.assertEquals("RangerPolicy.getPolicyItems().add()", 1, policy.getPolicyItems().size());
+        policy.addPolicyItem(new RangerPolicyItem());
+        Assert.assertEquals("RangerPolicy.addPolicyItem()", 1, policy.getPolicyItems().size());
         policy.setPolicyItems(policyItemList);
         Assert.assertEquals("RangerPolicy.setPolicyItems()", policyItemList.size(), policy.getPolicyItems().size());
 
         Assert.assertEquals("RangerPolicy.getDenyPolicyItems()", 0, policy.getDenyPolicyItems().size());
-        policy.getDenyPolicyItems().add(new RangerPolicyItem());
-        Assert.assertEquals("RangerPolicy.getDenyPolicyItems().add()", 1, policy.getDenyPolicyItems().size());
+        policy.addDenyPolicyItem(new RangerPolicyItem());
+        Assert.assertEquals("RangerPolicy.addDenyPolicyItem()", 1, policy.getDenyPolicyItems().size());
         policy.setDenyPolicyItems(policyItemList);
         Assert.assertEquals("RangerPolicy.setDenyPolicyItems()", policyItemList.size(), policy.getDenyPolicyItems().size());
 
         Assert.assertEquals("RangerPolicy.getAllowExceptions()", 0, policy.getAllowExceptions().size());
-        policy.getAllowExceptions().add(new RangerPolicyItem());
-        Assert.assertEquals("RangerPolicy.getAllowExceptions().add()", 1, policy.getAllowExceptions().size());
+        policy.addAllowException(new RangerPolicyItem());
+        Assert.assertEquals("RangerPolicy.addAllowException()", 1, policy.getAllowExceptions().size());
         policy.setAllowExceptions(policyItemList);
         Assert.assertEquals("RangerPolicy.setAllowExceptions()", policyItemList.size(), policy.getAllowExceptions().size());
 
         Assert.assertEquals("RangerPolicy.getDenyExceptions()", 0, policy.getDenyExceptions().size());
-        policy.getDenyExceptions().add(new RangerPolicyItem());
-        Assert.assertEquals("RangerPolicy.getDenyExceptions().add()", 1, policy.getDenyExceptions().size());
+        policy.addDenyException(new RangerPolicyItem());
+        Assert.assertEquals("RangerPolicy.addDenyException()", 1, policy.getDenyExceptions().size());
         policy.setDenyExceptions(policyItemList);
         Assert.assertEquals("RangerPolicy.setDenyExceptions()", policyItemList.size(), policy.getDenyExceptions().size());
     }
@@ -72,26 +72,26 @@ public class TestRangerPolicy {
 
 
         Assert.assertEquals("RangerPolicyItem.getAccesses()", 0, policyItem.getAccesses().size());
-        policyItem.getAccesses().add(new RangerPolicyItemAccess());
-        Assert.assertEquals("RangerPolicyItem.getAccesses().add()", 1, policyItem.getAccesses().size());
+        policyItem.addAccess(new RangerPolicyItemAccess());
+        Assert.assertEquals("RangerPolicyItem.addAccess()", 1, policyItem.getAccesses().size());
         policyItem.setAccesses(accesses);
         Assert.assertEquals("RangerPolicyItem.setAccesses()", accesses.size(), policyItem.getAccesses().size());
 
         Assert.assertEquals("RangerPolicyItem.getUsers()", 0, policyItem.getUsers().size());
-        policyItem.getUsers().add(new String());
-        Assert.assertEquals("RangerPolicyItem.getUsers().add()", 1, policyItem.getUsers().size());
+        policyItem.addUser(new String());
+        Assert.assertEquals("RangerPolicyItem.addUser()", 1, policyItem.getUsers().size());
         policyItem.setUsers(users);
         Assert.assertEquals("RangerPolicyItem.setUsers()", users.size(), policyItem.getUsers().size());
 
         Assert.assertEquals("RangerPolicyItem.getGroups()", 0, policyItem.getGroups().size());
-        policyItem.getGroups().add(new String());
-        Assert.assertEquals("RangerPolicyItem.getGroups().add()", 1, policyItem.getGroups().size());
+        policyItem.addGroup(new String());
+        Assert.assertEquals("RangerPolicyItem.addGroup()", 1, policyItem.getGroups().size());
         policyItem.setGroups(groups);
         Assert.assertEquals("RangerPolicyItem.setGroups()", groups.size(), policyItem.getGroups().size());
 
         Assert.assertEquals("RangerPolicyItem.getConditions()", 0, policyItem.getConditions().size());
-        policyItem.getConditions().add(new RangerPolicyItemCondition());
-        Assert.assertEquals("RangerPolicyItem.getConditions().add()", 1, policyItem.getConditions().size());
+        policyItem.addCondition(new RangerPolicyItemCondition());
+        Assert.assertEquals("RangerPolicyItem.addCondition()", 1, policyItem.getConditions().size());
         policyItem.setConditions(conditions);
         Assert.assertEquals("RangerPolicyItem.setConditions()", conditions.size(), policyItem.getConditions().size());
     }
@@ -102,8 +102,8 @@ public class TestRangerPolicy {
         List<String>         values         = getList("value");
 
         Assert.assertEquals("RangerPolicyResource.getValues()", 0, policyResource.getValues().size());
-        policyResource.getValues().add(new String());
-        Assert.assertEquals("RangerPolicyResource.getValues().add()", 1, policyResource.getValues().size());
+        policyResource.addValue(new String());
+        Assert.assertEquals("RangerPolicyResource.addValue()", 1, policyResource.getValues().size());
         policyResource.setValues(values);
         Assert.assertEquals("RangerPolicyResource.setValues()", values.size(), policyResource.getValues().size());
     }
@@ -114,8 +114,8 @@ public class TestRangerPolicy {
         List<String>              values              = getList("value");
 
         Assert.assertEquals("RangerPolicyItemCondition.getValues()", 0, policyItemCondition.getValues().size());
-        policyItemCondition.getValues().add(new String());
-        Assert.assertEquals("RangerPolicyItemCondition.getValues().add()", 1, policyItemCondition.getValues().size());
+        policyItemCondition.addValue(new String());
+        Assert.assertEquals("RangerPolicyItemCondition.addValue()", 1, policyItemCondition.getValues().size());
         policyItemCondition.setValues(values);
         Assert.assertEquals("RangerPolicyItemCondition.setValues()", values.size(), policyItemCondition.getValues().size());
     }

@@ -1,0 +1,28 @@
+version: '3'
+services:
+  trino:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-trino
+      args:
+        - TRINO_PLUGIN_VERSION=${TRINO_PLUGIN_VERSION}
+        - TRINO_VERSION=${TRINO_VERSION}
+    image: ranger-trino
+    hostname: ranger-trino
+    container_name: ranger-trino
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - 8080:8080
+    depends_on:
+      ranger:
+        condition: service_started
+    environment:
+      - TRINO_PLUGIN_VERSION
+      - TRINO_VERSION
+
+networks:
+  ranger:
+    name: rangernw

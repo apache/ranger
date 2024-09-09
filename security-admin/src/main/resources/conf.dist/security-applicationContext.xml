@@ -43,12 +43,14 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
+	<security:http pattern="/service/gds/download/*" security="none"/>
 	<security:http pattern="/service/plugins/policies/download/*" security="none"/>
 	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
 	<security:http pattern="/service/tags/download/*" security="none"/>
 	<security:http pattern="/service/roles/download/*" security="none"/>
 	<security:http pattern="/service/xusers/download/*" security="none"/>
+	<security:http pattern="/service/actuator/health" security="none" />
 	<security:http pattern="/service/metrics/**" security="none" />
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<csrf disabled="true"/>
@@ -58,7 +60,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 			<security:content-type-options/>
 			<security:xss-protection/>
 			<security:hsts/>
-			<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'"/>
+			<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
 		</security:headers>
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/**" access="isAuthenticated()"/>

@@ -19,17 +19,16 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 // Policy Condition to check if resource Tags does contain any of the policy Condition Tags
-
 public class RangerAnyOfExpectedTagsPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAnyOfExpectedTagsPresentConditionEvaluator.class);
@@ -62,14 +61,17 @@ public class RangerAnyOfExpectedTagsPresentConditionEvaluator extends RangerAbst
 			LOG.debug("==> RangerAnyOfExpectedTagsPresentConditionEvaluator.isMatched(" + request + ")");
 		}
 
-		boolean matched = false;
-
-		RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
-		Set<String>                  resourceTags = evaluator.getAllTagTypes();
+		boolean               matched      = false;
+		Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
 		if (resourceTags != null) {
 			// check if resource Tags does contain any of the policy Condition Tags
-			matched = (!Collections.disjoint(resourceTags, policyConditionTags));
+			for (RangerTagForEval tag : resourceTags) {
+				if (policyConditionTags.contains(tag.getType())) {
+					matched = true;
+					break;
+				}
+			}
 		}
 
 

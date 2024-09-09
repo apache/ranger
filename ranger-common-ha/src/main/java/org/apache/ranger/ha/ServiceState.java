@@ -22,10 +22,10 @@ package org.apache.ranger.ha;
 
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 
 /**
  * A class that maintains the state of this instance.
@@ -42,7 +42,7 @@ public class ServiceState {
 
 	private Configuration configuration;
 	private volatile ServiceStateValue state;
-	private static ServiceState instance;
+	private static volatile ServiceState instance;
 
 	private ServiceState() throws Exception {}
 

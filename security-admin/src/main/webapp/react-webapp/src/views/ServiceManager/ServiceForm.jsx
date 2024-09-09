@@ -56,7 +56,9 @@ import {
   has,
   split,
   without,
-  maxBy
+  maxBy,
+  isArray,
+  cloneDeep
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { RangerPolicyType } from "../../utils/XAEnums";
@@ -65,7 +67,7 @@ import { getServiceDef } from "../../utils/appState";
 class ServiceForm extends Component {
   constructor(props) {
     super(props);
-    this.serviceDefData = getServiceDef();
+    this.serviceDefData = cloneDeep(getServiceDef());
     this.configsJson = {};
     this.initialValuesObj = {
       isEnabled: "true",
@@ -78,9 +80,6 @@ class ServiceForm extends Component {
       service: {},
       tagService: [],
       editInitialValues: {},
-      usersDataRef: null,
-      groupsDataRef: null,
-      rolesDataRef: null,
       showDelete: false,
       loader: true,
       blockUI: false,
@@ -105,7 +104,7 @@ class ServiceForm extends Component {
     });
 
     if (servicedefs == undefined) {
-      return navigateTo.navigate("/pageNotFound", { replace: true });
+      return navigateTo.navigate("/pageNotFound");
     }
     this.fetchServiceDef();
   }
@@ -191,7 +190,8 @@ class ServiceForm extends Component {
 
     if (values?.customConfigs !== undefined) {
       values.customConfigs?.map((config) => {
-        config !== undefined &&
+        config?.name !== undefined &&
+          config?.value !== undefined &&
           (serviceJson["configs"][config.name] = config.value);
       });
     }
@@ -219,8 +219,8 @@ class ServiceForm extends Component {
             obj.isAudited = value === "true";
           }
 
-          if (key === "accessResult") {
-            obj.accessResult = value.value;
+          if (key === "accessResult" && !isEmpty(value)) {
+            obj.accessResult = value?.value;
           }
 
           if (key === "resources" && !isEmpty(value)) {
@@ -238,7 +238,9 @@ class ServiceForm extends Component {
                 value[`value-${level}`] !== undefined
               ) {
                 obj.resources[value[`resourceName-${level}`].name] = {
-                  values: map(value[`value-${level}`], "value")
+                  values: isArray(value[`value-${level}`])
+                    ? map(value[`value-${level}`], "value")
+                    : [value[`value-${level}`].value]
                 };
 
                 if (
@@ -468,8 +470,6 @@ class ServiceForm extends Component {
     });
   };
   deleteService = async (serviceId) => {
-    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
-    let zonesResp = [];
     this.hideDeleteModal();
     try {
       this.setState({ blockUI: true });
@@ -477,20 +477,6 @@ class ServiceForm extends Component {
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
-      if (
-        localStorageZoneDetails !== undefined &&
-        localStorageZoneDetails !== null
-      ) {
-        zonesResp = await fetchApi({
-          url: `public/v2/api/zones/${
-            JSON.parse(localStorageZoneDetails)?.value
-          }/service-headers`
-        });
-
-        if (isEmpty(zonesResp?.data)) {
-          localStorage.removeItem("zoneDetails");
-        }
-      }
       this.setState({ blockUI: false });
       toast.success("Successfully deleted the service");
       this.props.navigate(
@@ -650,7 +636,7 @@ class ServiceForm extends Component {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         {configParam.label !== undefined
                           ? configParam.label
                           : configParam.name}
@@ -677,7 +663,7 @@ class ServiceForm extends Component {
                       />
                     </Col>
                     {configInfo.length === 1 && (
-                      <span className="service-config-info-icon">
+                      <span className="col-5">
                         <CustomPopover
                           title=""
                           content={configInfo}
@@ -698,7 +684,7 @@ class ServiceForm extends Component {
               </Field>
             );
             break;
-          case "enum":
+          case "enum": {
             const paramEnum = serviceDef.enums.find(
               (e) => e.name == configParam.subType
             );
@@ -708,10 +694,10 @@ class ServiceForm extends Component {
                 key={configParam.itemId}
                 validate={this.validateRequired(configParam.mandatory)}
               >
-                {({ input, meta }) => (
+                {({ input }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         {configParam.label !== undefined
                           ? configParam.label
                           : configParam.name}
@@ -721,16 +707,8 @@ class ServiceForm extends Component {
                     <Col xs={4}>
                       <select
                         {...input}
-                        id={
-                          meta.error && meta.touched
-                            ? "isError"
-                            : "configs." + this.configsJson[configParam.name]
-                        }
-                        className={
-                          meta.error && meta.touched
-                            ? "form-control border-danger"
-                            : "form-control"
-                        }
+                        id={"configs." + this.configsJson[configParam.name]}
+                        className={"form-control form-select"}
                       >
                         {this.enumOptions(paramEnum)}
                       </select>
@@ -746,16 +724,12 @@ class ServiceForm extends Component {
                         />
                       </span>
                     )}
-                    {meta.error && meta.touched && (
-                      <span className="col-sm-6 offset-sm-3 invalid-field">
-                        {meta.error}
-                      </span>
-                    )}
                   </Row>
                 )}
               </Field>
             );
             break;
+          }
           case "bool":
             formField.push(
               <Field
@@ -763,10 +737,10 @@ class ServiceForm extends Component {
                 key={configParam.itemId}
                 validate={this.validateRequired(configParam.mandatory)}
               >
-                {({ input, meta }) => (
+                {({ input }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         {configParam.label !== undefined
                           ? configParam.label
                           : configParam.name}
@@ -776,16 +750,8 @@ class ServiceForm extends Component {
                     <Col xs={4}>
                       <select
                         {...input}
-                        id={
-                          meta.error && meta.touched
-                            ? "isError"
-                            : "configs." + this.configsJson[configParam.name]
-                        }
-                        className={
-                          meta.error && meta.touched
-                            ? "form-control border-danger"
-                            : "form-control"
-                        }
+                        id={"configs." + this.configsJson[configParam.name]}
+                        className={"form-control"}
                         data-js="isAudited"
                         data-cy="isAudited"
                       >
@@ -803,11 +769,6 @@ class ServiceForm extends Component {
                         />
                       </span>
                     )}
-                    {meta.error && meta.touched && (
-                      <span className="col-sm-6 offset-sm-3 invalid-field">
-                        {meta.error}
-                      </span>
-                    )}
                   </Row>
                 )}
               </Field>
@@ -823,7 +784,7 @@ class ServiceForm extends Component {
                 {({ input, meta }) => (
                   <Row className="form-group">
                     <Col xs={3}>
-                      <label className="form-label pull-right">
+                      <label className="form-label float-end">
                         {configParam.label !== undefined
                           ? configParam.label
                           : configParam.name}
@@ -908,6 +869,11 @@ class ServiceForm extends Component {
       ? RegexValidation.NAME_VALIDATION.serviceNameValidationMessage
       : undefined;
 
+  validateDisplayName = (value) =>
+  !RegexValidation.NAME_VALIDATION.regexforNameValidation.test(value)
+  ? RegexValidation.NAME_VALIDATION.regexforNameValidationMessage
+  : undefined;
+
   composeValidators =
     (...validators) =>
     (value) =>
@@ -927,52 +893,58 @@ class ServiceForm extends Component {
   fetchUsers = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    const userResp = await fetchApi({
-      url: "xusers/lookup/users",
-      params: params
-    });
-    op = userResp?.data?.vXStrings;
 
-    return op?.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    try {
+      const userResp = await fetchApi({
+        url: "xusers/lookup/users",
+        params: params
+      });
+      op = userResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Users ! ${error}`);
+    }
+
+    return map(op, function (obj) {
+      return { value: obj.value, label: obj.value };
+    });
   };
 
   fetchGroups = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    const userResp = await fetchApi({
-      url: "xusers/lookup/groups",
-      params: params
-    });
-    op = userResp?.data?.vXStrings;
-    if (!inputValue) {
-      this.state.groupsDataRef = op;
+
+    try {
+      const groupResp = await fetchApi({
+        url: "xusers/lookup/groups",
+        params: params
+      });
+      op = groupResp.data?.vXStrings;
+    } catch (error) {
+      console.error(`Error occurred while fetching Groups ! ${error}`);
     }
 
-    return op?.map((obj) => ({
-      label: obj.value,
-      value: obj.value
-    }));
+    return map(op, function (obj) {
+      return { label: obj.value, value: obj.value };
+    });
   };
 
   fetchRoles = async (inputValue) => {
-    let params = { roleNamePartial: inputValue || "", isVisible: 1 };
+    let params = { roleNamePartial: inputValue || "" };
     let op = [];
-    const roleResp = await fetchApi({
-      url: "roles/roles",
-      params: params
-    });
-    op = roleResp.data.roles;
-    if (!inputValue) {
-      this.state.rolesDataRef = op;
+
+    try {
+      const roleResp = await fetchApi({
+        url: "roles/roles",
+        params: params
+      });
+      op = roleResp.data?.roles;
+    } catch (error) {
+      console.error(`Error occurred while fetching Roles ! ${error}`);
     }
 
-    return op.map((obj) => ({
-      label: obj.name,
-      value: obj.name
-    }));
+    return map(op, function (obj) {
+      return { label: obj.name, value: obj.name };
+    });
   };
   ServiceDefnBreadcrumb = () => {
     let serviceDetails = {};
@@ -1030,13 +1002,12 @@ class ServiceForm extends Component {
                   }
                   render={({
                     handleSubmit,
-                    form,
                     submitting,
                     values,
                     invalid,
                     errors,
                     form: {
-                      mutators: { push: addItem, pop: removeItem }
+                      mutators: { push: addItem }
                     }
                   }) => (
                     <form
@@ -1080,7 +1051,7 @@ class ServiceForm extends Component {
                             {({ input, meta }) => (
                               <Row className="form-group">
                                 <Col xs={3}>
-                                  <label className="form-label pull-right">
+                                  <label className="form-label float-end">
                                     Service Name *
                                   </label>
                                 </Col>
@@ -1109,11 +1080,14 @@ class ServiceForm extends Component {
                               </Row>
                             )}
                           </Field>
-                          <Field name="displayName">
+                          <Field
+                          name="displayName"
+                          validate={this.composeValidators(
+                            this.validateDisplayName)}>
                             {({ input, meta }) => (
                               <Row className="form-group">
                                 <Col xs={3}>
-                                  <label className="form-label pull-right">
+                                  <label className="form-label float-end">
                                     Display Name
                                   </label>
                                 </Col>
@@ -1141,7 +1115,7 @@ class ServiceForm extends Component {
                             {({ input, meta }) => (
                               <Row className="form-group">
                                 <Col xs={3}>
-                                  <label className="form-label pull-right">
+                                  <label className="form-label float-end">
                                     Description
                                   </label>
                                 </Col>
@@ -1166,39 +1140,33 @@ class ServiceForm extends Component {
                           </Field>
                           <Row className="form-group">
                             <Col xs={3}>
-                              <label className="form-label pull-right">
+                              <label className="form-label float-end">
                                 Active Status
                               </label>
                             </Col>
                             <Col xs={4}>
                               <span>
                                 <div className="form-control border-0">
-                                  <div className="form-check form-check-inline">
+                                  <div className="form-check-inline">
                                     <Field
                                       name="isEnabled"
                                       component="input"
                                       type="radio"
-                                      className="form-check-input"
                                       value="true"
                                       data-cy="isEnabled"
                                     />
-                                    <label className="form-check-label">
-                                      Enabled
-                                    </label>
+                                    &nbsp;Enabled
                                   </div>
-                                  <div className="form-check form-check-inline">
+                                  <div className="form-check-inline">
                                     {" "}
                                     <Field
                                       name="isEnabled"
-                                      className="form-check-input"
                                       component="input"
                                       type="radio"
                                       value="false"
                                       data-cy="isEnabled"
                                     />
-                                    <label className="form-check-label">
-                                      Disabled
-                                    </label>
+                                    &nbsp;Disabled
                                   </div>
                                 </div>
                               </span>
@@ -1207,7 +1175,7 @@ class ServiceForm extends Component {
                           {this.state?.serviceDef?.name !== "tag" && (
                             <Row className="form-group">
                               <Col xs={3}>
-                                <label className="form-label pull-right">
+                                <label className="form-label float-end">
                                   Select Tag Service
                                 </label>
                               </Col>
@@ -1236,7 +1204,7 @@ class ServiceForm extends Component {
                           {this.getServiceConfigs(this.state.serviceDef)}
                           <Row className="form-group">
                             <Col xs={3}>
-                              <label className="form-label pull-right">
+                              <label className="form-label float-end">
                                 Add New Configurations
                               </label>
                             </Col>
@@ -1316,7 +1284,7 @@ class ServiceForm extends Component {
                       <div className="row">
                         <div className="col-sm-12">
                           <div className="form-group row form-header p-0">
-                            <label className="col-sm-1 col-form-label form-check-label mr-2">
+                            <label className="col-sm-1 col-form-label form-check-label">
                               Audit Filter :
                             </label>
                             <div className="col-sm-10 mt-2">
@@ -1324,7 +1292,6 @@ class ServiceForm extends Component {
                                 name="isAuditFilter"
                                 component="input"
                                 type="checkbox"
-                                className="form-check-input"
                               />
                             </div>
                           </div>
@@ -1343,7 +1310,7 @@ class ServiceForm extends Component {
                               </Condition>
                             </div>
                           </div>
-                          <div className="form-group row mt-2 text-right">
+                          <div className="form-group row mt-2 text-end">
                             <div className="col-sm-3 col-form-label">
                               {!isEmpty(this.state.serviceDef) && (
                                 <TestConnection
@@ -1426,9 +1393,9 @@ class ServiceForm extends Component {
                           >
                             <Modal.Header closeButton>
                               <span className="text-word-break">
-                                Are you sure want to delete service&nbsp;"
-                                <b>{`${this?.state?.service?.displayName}`}</b>"
-                                ?
+                                Are you sure want to delete service&nbsp;&quot;
+                                <b>{`${this?.state?.service?.displayName}`}</b>
+                                &quot; ?
                               </span>
                             </Modal.Header>
                             <Modal.Footer>

@@ -122,4 +122,27 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
 
         return securityZoneList;
     }
+
+    public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfosByServiceId(Long serviceId, Boolean isTagService) {
+        if(serviceId == null){
+            return  Collections.emptyList();
+        }
+        List<Object[]> results = null;
+        if(isTagService){
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByTagServiceId")
+                                    .setParameter("tagServiceId", serviceId)
+                                    .getResultList();
+        }else{
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByServiceId")
+                                    .setParameter("serviceId", serviceId)
+                                    .getResultList();
+        }
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<RangerSecurityZoneHeaderInfo>(results.size());
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
 }

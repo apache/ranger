@@ -19,11 +19,10 @@
 package org.apache.ranger.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_access_type_def")
 public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -83,6 +82,12 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	 */
 	@Column(name = "rb_key_label")
 	protected String rbKeyLabel;
+
+	/**
+	 * category of the XXAccessTypeDef
+	 */
+	@Column(name = "category")
+	protected Short category;
 
 	/**
 	 * order of the XXAccessTypeDef
@@ -231,6 +236,14 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 		return this.rbKeyLabel;
 	}
 
+	public Short getCategory() {
+		return category;
+	}
+
+	public void setCategory(Short category) {
+		this.category = category;
+	}
+
 	/**
 	 * This method sets the value to the member attribute <b> order</b> . You
 	 * cannot set null to the attribute.
@@ -270,83 +283,26 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
 		if (this == obj) {
 			return true;
-		}
-		if (!super.equals(obj)) {
+		} else if (getClass() != obj.getClass()) {
+			return false;
+		} else if (!super.equals(obj)) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+
 		XXAccessTypeDef other = (XXAccessTypeDef) obj;
-		if (defId == null) {
-			if (other.defId != null) {
-				return false;
-			}
-		} else if (!defId.equals(other.defId)) {
-			return false;
-		}
-		if (itemId == null) {
-			if (other.itemId != null) {
-				return false;
-			}
-		} else if (!itemId.equals(other.itemId)) {
-			return false;
-		}
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (label == null) {
-			if (other.label != null) {
-				return false;
-			}
-		} else if (!label.equals(other.label)) {
-			return false;
-		}
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		if (order == null) {
-			if (other.order != null) {
-				return false;
-			}
-		} else if (!order.equals(other.order)) {
-			return false;
-		}
-		if (rbKeyLabel == null) {
-			if (other.rbKeyLabel != null) {
-				return false;
-			}
-		} else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-			return false;
-		}
-		if (dataMaskOptions == null) {
-			if (other.dataMaskOptions != null) {
-				return false;
-			}
-		} else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
-			return false;
-		}
-		if (rowFilterOptions == null) {
-			if (other.rowFilterOptions != null) {
-				return false;
-			}
-		} else if (!rowFilterOptions.equals(other.rowFilterOptions)) {
-			return false;
-		}
-		return true;
+
+		return Objects.equals(defId, other.defId) &&
+		       Objects.equals(itemId, other.itemId) &&
+		       Objects.equals(id, other.id) &&
+		       Objects.equals(name, other.name) &&
+		       Objects.equals(label, other.label) &&
+		       Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+		       Objects.equals(category, other.category) &&
+		       Objects.equals(dataMaskOptions, other.dataMaskOptions) &&
+		       Objects.equals(rowFilterOptions, other.rowFilterOptions) &&
+		       Objects.equals(order, other.order);
 	}
 
 	/*
@@ -358,7 +314,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
 	public String toString() {
 		return "XXAccessTypeDef [" + super.toString() + " id=" + id
 				+ ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
-				+ ", rbKeyLabel=" + rbKeyLabel + ", dataMaskOptions=" + dataMaskOptions
+				+ ", rbKeyLabel=" + rbKeyLabel + ", category=" + category + ", dataMaskOptions=" + dataMaskOptions
 				+ ", rowFilterOptions=" + rowFilterOptions + ", order=" + order + "]";
 	}
 

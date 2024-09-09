@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useRef, useState, useCallback } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import {
   OverlayTrigger,
   Popover,
@@ -27,13 +27,14 @@ import {
   Col,
   Badge
 } from "react-bootstrap";
-import { findIndex, isArray } from "lodash";
+import { find, findIndex, isArray, isEmpty, sortBy } from "lodash";
 import { isObject } from "Utils/XAUtils";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
 import { InfoIcon } from "../utils/XAUtils";
 import { RegexMessage } from "../utils/XAMessages";
 
+const esprima = require("esprima");
 const TYPE_SELECT = "select";
 const TYPE_CHECKBOX = "checkbox";
 const TYPE_INPUT = "input";
@@ -56,7 +57,7 @@ const CheckboxComp = (props) => {
     setVal(val);
   };
 
-  const handleAllChekced = (e) => {
+  const handleAllChecked = (e) => {
     let val = [];
     if (e.target.checked) {
       val = [...options];
@@ -85,13 +86,13 @@ const CheckboxComp = (props) => {
           />
         </Form.Group>
       ))}
-      {showSelectAll && (
-        <Form.Group className="mb-3">
+      {showSelectAll && options?.length > 1 && (
+        <Form.Group className="mb-3" controlId={selectAllLabel}>
           <Form.Check
             checked={isAllChecked()}
             type="checkbox"
             label={selectAllLabel}
-            onChange={(e) => handleAllChekced(e)}
+            onChange={(e) => handleAllChecked(e)}
           />
         </Form.Group>
       )}
@@ -125,7 +126,7 @@ const RadioBtnComp = (props) => {
   ));
 };
 
-const InputboxComp = (props) => {
+const InputBoxComp = (props) => {
   const { value = "", valRef } = props;
   const [selectedInputVal, setInputVal] = useState(value);
   const handleChange = (e) => {
@@ -146,147 +147,172 @@ const InputboxComp = (props) => {
   );
 };
 
-const CreatableSelectNew = (props) => {
-  const { value, valRef, conditionDefVal, selectProps } = props;
-  const [selectedInputVal, setSelectVal] = useState(value);
-  const handleChange = (e) => {
-    valRef.current = e;
-    setSelectVal(e);
-  };
-
-  return (
-    <>
-      <Form.Group className="mb-3" controlId="Ip-range">
-        <b>{conditionDefVal.label}:</b>
-        <CreatableSelect
-          {...selectProps}
-          defaultValue={
-            selectedInputVal == ""
-              ? null
-              : !isArray(selectedInputVal)
-                ? selectedInputVal["ip-range"]
-                  .split(", ")
-                  .map((obj) => ({ label: obj, value: obj }))
-                : selectedInputVal
-          }
-          onChange={(e) => handleChange(e)}
-          placeholder="enter expression"
-          width="500px"
-        />
-      </Form.Group>
-    </>
-  );
-};
-
 const CustomCondition = (props) => {
-  const { value, valRef, conditionDefVal, selectProps } = props;
-  const accessedOpt = [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" }
-  ];
-  const [selectedCondVal, setCondSelect] = useState(
-    value?.["accessed-after-expiry"] || value
-  );
-  const [selectedJSCondVal, setJSCondVal] = useState(
-    value?.expression || value
-  );
+  const { value, valRef, conditionDefVal, selectProps, validExpression } =
+    props;
   const tagAccessData = (val, key) => {
     if (!isObject(valRef.current)) {
       valRef.current = {};
     }
     valRef.current[key] = val;
   };
-  const selectHandleChange = (e, name) => {
-      setCondSelect(e);
-    tagAccessData(e?.value || null, name);
-  };
-  const textAreaHandleChange = (e, name) => {
-    setJSCondVal(e.target.value);
-    tagAccessData(e.target.value, name);
-  };
-  const accessedVal = (val) => {
-    let value = null;
-    if (val) {
-      let opObj = accessedOpt.filter((m) => {
-        if (m.value == val) {
-          return m;
-        }
-      });
-      if (opObj) {
-        value = opObj;
-      }
-    }
-    return value;
-  };
-  const expressionVal = (val) => {
-    let value = null;
-   if(val?.expression !== undefined){
-    return value = val.expression;
-   }
-   if(val != "" && typeof(val) != "object"){
-    return value = val
-   }
-    return value;
-  };
+
   return (
     <>
       {conditionDefVal?.length > 0 &&
-        conditionDefVal.map((m, index) => {
-          if (m.name == "accessed-after-expiry") {
-            return (
-              <Form.Group className="mb-3">
-                <b>{m.label}:</b>
-                <Select
-                  options={accessedOpt}
-                  isClearable
-                  onChange={(e) => selectHandleChange(e, m.name)}
-                  value={
-                    selectedCondVal?.value
-                      ? accessedVal(selectedCondVal.value)
-                      : accessedVal(selectedCondVal)
+        conditionDefVal.map((m) => {
+          let uiHintAttb =
+            m.uiHint != undefined && m.uiHint != "" ? JSON.parse(m.uiHint) : "";
+          if (uiHintAttb != "") {
+            if (uiHintAttb?.singleValue) {
+              const [selectedCondVal, setCondSelect] = useState(
+                value?.[m.name] || value
+              );
+              const accessedOpt = [
+                { value: "yes", label: "Yes" },
+                { value: "no", label: "No" }
+              ];
+              const accessedVal = (val) => {
+                let value = null;
+                if (val) {
+                  let opObj = accessedOpt?.filter((m) => {
+                    if (m.value == (val[0]?.value || val)) {
+                      return m;
+                    }
+                  });
+                  if (opObj) {
+                    value = opObj;
                   }
-                />
-              </Form.Group>
-            );
-          }
-          if (m.name == "expression") {
-            return (
-              <>
-                <Form.Group className="mb-3">
-                  <Row>
-                    <Col>
-                      <b>{m.label}:</b>
-                      <InfoIcon
-                        position="right"
-                        message={
-                          <p className="pd-10">
-                            {RegexMessage.MESSAGE.policyconditioninfoicon}
-                          </p>
-                        }
-                      />
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        // value={selectedJSCondVal?.expression !== undefined ? selectedJSCondVal.expression : selectedJSCondVal}
-                        value={expressionVal(selectedJSCondVal)}
-                        onChange={(e) => textAreaHandleChange(e, m.name)}
-                      />
-                    </Col>
-                  </Row>
-                </Form.Group>
-              </>
-            );
+                }
+                return value;
+              };
+              const selectHandleChange = (e, name) => {
+                let filterVal = accessedOpt?.filter((m) => {
+                  if (m.value != e[0]?.value) {
+                    return m;
+                  }
+                });
+                setCondSelect(
+                  !isEmpty(e) ? (e?.length > 1 ? filterVal : e) : null
+                );
+                tagAccessData(
+                  !isEmpty(e)
+                    ? e?.length > 1
+                      ? filterVal[0].value
+                      : e[0].value
+                    : null,
+                  name
+                );
+              };
+              return (
+                <div key={m.name}>
+                  <Form.Group className="mb-3">
+                    <b>{m.label}:</b>
+                    <Select
+                      options={accessedOpt}
+                      onChange={(e) => selectHandleChange(e, m.name)}
+                      value={
+                        selectedCondVal?.value
+                          ? accessedVal(selectedCondVal.value)
+                          : accessedVal(selectedCondVal)
+                      }
+                      isMulti={true}
+                      isClearable={false}
+                    />
+                  </Form.Group>
+                </div>
+              );
+            }
+            if (uiHintAttb?.isMultiline) {
+              const [selectedJSCondVal, setJSCondVal] = useState(
+                value?.[m.name] || value
+              );
+              const expressionVal = (val) => {
+                let value = null;
+                if (val != "" && typeof val != "object") {
+                  valRef.current[m.name] = val;
+                  return (value = val);
+                }
+                return value !== null ? value : "";
+              };
+              const textAreaHandleChange = (e, name) => {
+                setJSCondVal(e.target.value);
+                tagAccessData(e.target.value, name);
+              };
+              return (
+                <div key={m.name}>
+                  <Form.Group className="mb-3">
+                    <Row>
+                      <Col>
+                        <b>{m.label}:</b>
+                        <InfoIcon
+                          position="right"
+                          message={
+                            <p className="pd-10">
+                              {RegexMessage.MESSAGE.policyConditionInfoIcon}
+                            </p>
+                          }
+                        />
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          key={m.name}
+                          value={expressionVal(selectedJSCondVal)}
+                          onChange={(e) => textAreaHandleChange(e, m.name)}
+                          isInvalid={validExpression.state}
+                        />
+                        {validExpression.state && (
+                          <div className="text-danger">
+                            {validExpression.errorMSG}
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+                  </Form.Group>
+                </div>
+              );
+            }
+            if (uiHintAttb?.isMultiValue) {
+              const [selectedInputVal, setSelectVal] = useState(
+                value?.[m.name] || []
+              );
+              const handleChange = (e, name) => {
+                setSelectVal(e);
+                tagAccessData(e, name);
+              };
+              return (
+                <div key={m.name}>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="Ip-range"
+                    key={m.name}
+                  >
+                    <b>{m.label}:</b>
+                    <CreatableSelect
+                      {...selectProps}
+                      defaultValue={
+                        selectedInputVal == "" ? null : selectedInputVal
+                      }
+                      onChange={(e) => handleChange(e, m.name)}
+                      placeholder="enter expression"
+                      width="500px"
+                      isClearable={false}
+                    />
+                  </Form.Group>
+                </div>
+              );
+            }
           }
         })}
     </>
   );
 };
 
-const innitialState = (props) => {
+const initialState = (props) => {
   const { type, selectProps, value } = props;
   let val = value;
   if (!val) {
@@ -333,41 +359,82 @@ const Editable = (props) => {
     onChange,
     options = [],
     conditionDefVal,
-    servicedefName
+    servicedefName,
+    isGDS
   } = props;
 
   const initialLoad = useRef(true);
   const popoverRef = useRef(null);
   const selectValRef = useRef(null);
-  const [state, dispatch] = useReducer(reducer, props, innitialState);
+  const [validExpression, setValidated] = useState({
+    state: false,
+    errorMSG: ""
+  });
+  const [state, dispatch] = useReducer(reducer, props, initialState);
   const { show, value, target } = state;
   let isListenerAttached = false;
-  
+
   const handleClickOutside = (e) => {
-    if (document.getElementById("popover-basic")?.contains(e?.target) == false) {
-          dispatch({
-            type: "SET_POPOVER",
-            show: false,
-            target:null
-          });
-        }
-        e?.stopPropagation()
+    if (
+      document.getElementById("popover-basic")?.contains(e?.target) == false
+    ) {
+      dispatch({
+        type: "SET_POPOVER",
+        show: false,
+        target: null
+      });
+    }
+    e?.stopPropagation();
   };
-  
+
   useEffect(() => {
-    if(!isListenerAttached){
-      document?.addEventListener('mousedown', handleClickOutside);
+    if (!isListenerAttached) {
+      document?.addEventListener("mousedown", handleClickOutside);
       isListenerAttached = true;
       return;
-  }
-      return () => {
-      document?.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document?.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const displayValue = () => {
     let val = "--";
     const selectVal = value;
+    const policyConditionDisplayValue = () => {
+      let ipRangVal, uiHintVal;
+      if (selectVal) {
+        return sortBy(Object.keys(selectVal)).map((property, index) => {
+          let conditionObj = find(conditionDefVal, function (m) {
+            if (m.name == property) {
+              return m;
+            }
+          });
+          if (conditionObj?.uiHint && conditionObj?.uiHint != "") {
+            uiHintVal = JSON.parse(conditionObj.uiHint);
+          }
+          if (isArray(selectVal[property])) {
+            ipRangVal = selectVal[property]
+              ?.map(function (m) {
+                return m.value;
+              })
+              .join(", ");
+          }
+          return (
+            <div
+              key={property}
+              className={`${
+                uiHintVal?.isMultiline ? "editable-label" : "badge bg-dark"
+              }`}
+            >
+              {`${conditionObj.label}: ${
+                isArray(selectVal[property]) ? ipRangVal : selectVal[property]
+              }`}
+            </div>
+          );
+        });
+      }
+    };
     if (displayFormat) {
       val = displayFormat(selectVal);
     } else {
@@ -377,12 +444,12 @@ const Editable = (props) => {
             servicedefName == "knox" && !isArray(selectVal)
               ? selectVal["ip-range"]
               : selectVal
-                .map(function (m) {
-                  return m.value;
-                })
-                .join(", ");
+                  .map(function (m) {
+                    return m.value;
+                  })
+                  .join(", ");
           val = (
-            <h6 className="d-inline mr-1">
+            <h6 className="d-inline me-1">
               <span
                 className="editable-edit-text badge bg-dark"
                 style={{ display: "block" }}
@@ -420,20 +487,20 @@ const Editable = (props) => {
           selectVal && selectVal?.length > 0 ? (
             <>
               <span className="editable-edit-text">
-              {selectVal.map((op, index) => (
-                  <h6 className="d-inline mr-1" key={index}>
-                  <Badge variant="info">{op.label}</Badge>
+                {selectVal.map((op, index) => (
+                  <h6 className="d-inline me-1" key={index}>
+                    <Badge bg="info">{op.label}</Badge>
                   </h6>
-                 ))}
+                ))}
               </span>
-                <Button
-                  className="mg-10 mx-auto d-block btn-mini"
-                  variant="outline-dark"
-                  size="sm"
-                  type="button"
-                >
-                  <i className="fa-fw fa fa-pencil"></i>
-                </Button>
+              <Button
+                className="mg-10 mx-auto d-block btn-mini"
+                variant="outline-dark"
+                size="sm"
+                type="button"
+              >
+                <i className="fa-fw fa fa-pencil"></i>
+              </Button>
             </>
           ) : (
             <div className="text-center">
@@ -442,7 +509,7 @@ const Editable = (props) => {
                 data-js="permissions"
                 data-cy="permissions"
               >
-                Add Permission
+                Add Permissions
               </span>
               <Button
                 className="mg-10 mx-auto d-block btn-mini"
@@ -458,20 +525,21 @@ const Editable = (props) => {
       } else if (type === TYPE_INPUT) {
         val =
           selectVal && selectVal !== "" ? (
-           <>
-             <span className="editable-edit-text">
-                <h6 className="d-inline mr-1">
-                    <Badge variant="info">{selectVal}</Badge>
+            <>
+              <span className="editable-edit-text">
+                <h6 className="d-inline me-1">
+                  <Badge bg="info">{selectVal}</Badge>
                 </h6>
-             </span>
-             <Button
-             className="mg-10 mx-auto d-block btn-mini"
-             variant="outline-dark"
-             size="sm"
-             type="button">
-                  <i className="fa-fw fa fa-pencil"></i>
-            </Button>
-          </>
+              </span>
+              <Button
+                className="mg-10 mx-auto d-block btn-mini"
+                variant="outline-dark"
+                size="sm"
+                type="button"
+              >
+                <i className="fa-fw fa fa-pencil"></i>
+              </Button>
+            </>
           ) : (
             <div className="text-center">
               <span className="editable-add-text">Add Row Filter</span>
@@ -488,12 +556,12 @@ const Editable = (props) => {
       } else if (type === TYPE_RADIO) {
         val =
           selectVal && selectVal?.label ? (
-             <>
-             <span className="editable-edit-text">
-                <h6 className="d-inline mr-1">
-                <Badge variant="info">{selectVal.label}</Badge>
+            <>
+              <span className="editable-edit-text">
+                <h6 className="d-inline me-1">
+                  <Badge bg="info">{selectVal.label}</Badge>
                 </h6>
-             </span>
+              </span>
               <Button
                 className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
@@ -502,7 +570,7 @@ const Editable = (props) => {
               >
                 <i className="fa-fw fa fa-pencil"></i>
               </Button>
-               </>
+            </>
           ) : (
             <div className="text-center">
               <span className="editable-add-text">Select Masking Option</span>
@@ -517,38 +585,41 @@ const Editable = (props) => {
             </div>
           );
       } else if (type === TYPE_CUSTOM) {
-        if (selectVal?.["accessed-after-expiry"] || selectVal?.expression) {
+        for (const key in selectVal) {
+          if (selectVal[key] == null || selectVal[key] == "") {
+            delete selectVal[key];
+          }
+        }
+        if (Object.keys(selectVal).length != 0) {
           val = (
             <h6>
-              {(selectVal?.["accessed-after-expiry"] !== undefined && selectVal?.["accessed-after-expiry"] !== null) &&
-              <div className="badge badge-dark">
-                {`Accessed after expiry_date (yes/no) : ${selectVal?.["accessed-after-expiry"]}`}
-              </div>}
-              {(selectVal?.expression !==  undefined && selectVal?.expression !== "") &&
-              <div className="editable-label">{`Boolean expression : ${selectVal?.expression}`}
-              </div>}
-              <Button
-                className="mg-10 mx-auto d-block btn-mini"
-                variant="outline-dark"
-                size="sm"
-                type="button"
-              >
-                <i className="fa-fw fa fa-pencil"></i>
-              </Button>
+              {policyConditionDisplayValue()}
+              {!isGDS && (
+                <Button
+                  className="mg-10 mx-auto d-block btn-mini"
+                  variant="outline-dark"
+                  size="sm"
+                  type="button"
+                >
+                  <i className="fa-fw fa fa-pencil"></i>
+                </Button>
+              )}
             </h6>
           );
         } else {
           val = (
             <div className="text-center">
               <span className="editable-add-text">Add Conditions</span>
-              <Button
-                className="mg-10 mx-auto d-block btn-mini"
-                variant="outline-dark"
-                size="sm"
-                type="button"
-              >
-                <i className="fa-fw fa fa-plus"></i>
-              </Button>
+              {!isGDS && (
+                <Button
+                  className="mg-10 mx-auto d-block btn-mini"
+                  variant="outline-dark"
+                  size="sm"
+                  type="button"
+                >
+                  <i className="fa-fw fa fa-plus"></i>
+                </Button>
+              )}
             </div>
           );
         }
@@ -571,21 +642,54 @@ const Editable = (props) => {
     } else {
       initialLoad.current = false;
     }
-    type === TYPE_CUSTOM  ? selectValRef.current = {...editableValue} :
-    selectValRef.current = editableValue;
+    type === TYPE_CUSTOM
+      ? (selectValRef.current = { ...editableValue })
+      : (selectValRef.current = editableValue);
   }, [editableValue]);
 
-  const handleApply = () => {
-    dispatch({
-      type: "SET_VALUE",
-      value: selectValRef.current,
-      show: !show,
-      target: null
-    });
-    onChange(selectValRef.current);
+  const handleApply = (e) => {
+    let errors, uiHintVal;
+    if (selectValRef?.current) {
+      sortBy(Object.keys(selectValRef.current)).map((property) => {
+        let conditionObj = find(conditionDefVal, function (m) {
+          if (m.name == property) {
+            return m;
+          }
+        });
+        if (conditionObj != undefined && conditionObj?.uiHint != "") {
+          uiHintVal = JSON.parse(conditionObj.uiHint);
+          if (
+            uiHintVal?.isMultiline &&
+            selectValRef.current[conditionObj.name] != "" &&
+            selectValRef.current[conditionObj.name] != undefined
+          ) {
+            try {
+              let t = esprima.parseScript(
+                selectValRef.current[conditionObj.name]
+              );
+            } catch (e) {
+              errors = e.message;
+            }
+          }
+        }
+      });
+    }
+    if (errors) {
+      setValidated({ state: true, errorMSG: errors });
+    } else {
+      setValidated({ state: false, errorMSG: "" });
+      dispatch({
+        type: "SET_VALUE",
+        value: selectValRef.current,
+        show: !show,
+        target: null
+      });
+      onChange(selectValRef.current);
+    }
   };
 
   const handleClose = () => {
+    setValidated({ state: false, errorMSG: "" });
     dispatch({
       type: "SET_POPOVER",
       show: !show,
@@ -596,13 +700,14 @@ const Editable = (props) => {
   const popoverComp = (
     <Popover
       id="popover-basic"
-      className={`editable-popover ${type === TYPE_CHECKBOX && "popover-maxHeight"
-        }`}
+      className={`editable-popover ${
+        type === TYPE_CHECKBOX && "popover-maxHeight popover-minHeight"
+      }`}
     >
-      <Popover.Title>
+      <Popover.Header>
         {type === TYPE_CHECKBOX ? "Select" : "Enter"}
-      </Popover.Title>
-      <Popover.Content>
+      </Popover.Header>
+      <Popover.Body>
         {type === TYPE_CHECKBOX ? (
           <CheckboxComp
             value={value}
@@ -614,29 +719,23 @@ const Editable = (props) => {
         ) : type === TYPE_RADIO ? (
           <RadioBtnComp value={value} options={options} valRef={selectValRef} />
         ) : type === TYPE_INPUT ? (
-          <InputboxComp value={value} valRef={selectValRef} />
-        ) : type === TYPE_SELECT ? (
-          <CreatableSelectNew
-            value={value}
-            valRef={selectValRef}
-            conditionDefVal={props.conditionDefVal}
-            selectProps={props.selectProps}
-          />
+          <InputBoxComp value={value} valRef={selectValRef} />
         ) : type === TYPE_CUSTOM ? (
           <CustomCondition
             value={value}
             valRef={selectValRef}
             conditionDefVal={props.conditionDefVal}
             selectProps={props.selectProps}
+            validExpression={validExpression}
           />
         ) : null}
-      </Popover.Content>
+      </Popover.Body>
       <div className="popover-footer-buttons">
         <Button
           variant="success"
           size="sm"
           onClick={handleApply}
-          className="mr-2 btn-mini ml-2"
+          className="me-2 btn-mini ms-2"
         >
           <i className="fa fa-fw fa-check"></i>
         </Button>
@@ -653,6 +752,7 @@ const Editable = (props) => {
   );
 
   const handleClick = (e) => {
+    setValidated({ state: false, errorMSG: "" });
     let display = !show;
     dispatch({
       type: "SET_POPOVER",
@@ -660,7 +760,7 @@ const Editable = (props) => {
       target: e.target
     });
   };
-  
+
   return (
     <div ref={popoverRef}>
       <OverlayTrigger

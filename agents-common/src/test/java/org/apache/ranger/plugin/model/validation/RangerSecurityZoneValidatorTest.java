@@ -481,6 +481,39 @@ public class RangerSecurityZoneValidatorTest {
 		}
 	}
 
+	@Test
+	public void testValidateDuplicateResourceEntries() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+
+		RangerServiceDef          svcDef       = getHiveServiceDef();
+		RangerService             svc          = getHiveService();
+		RangerSecurityZoneService zone1HiveSvc = new RangerSecurityZoneService(zone1Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(zone1.getId())).thenReturn(zone1);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone1, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String  failureMessage           = excp.getMessage();
+			boolean hasResourceConflictError = StringUtils.contains(failureMessage, ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY.getErrorCode() + ". Failure message: " + excp.getMessage(), hasResourceConflictError);
+		}
+	}
+
 	private RangerService getRangerService() {
 		Map<String, String> configs = new HashMap<String, String>();
 		configs.put("username", "servicemgr");

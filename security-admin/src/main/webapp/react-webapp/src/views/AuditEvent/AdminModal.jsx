@@ -22,9 +22,9 @@ import { useSearchParams } from "react-router-dom";
 import { fetchApi } from "Utils/fetchAPI";
 import { AuthStatus, AuthType } from "../../utils/XAEnums";
 import { Modal, Table, Button } from "react-bootstrap";
-import dateFormat from "dateformat";
 import { has } from "lodash";
 import { ModalLoader } from "../../components/CommonComponents";
+import { currentTimeZone } from "../../utils/XAUtils";
 
 export const AdminModal = (props) => {
   const [authSession, setAuthSession] = useState([]);
@@ -39,6 +39,7 @@ export const AdminModal = (props) => {
   const handleShow = async () => {
     let authlogs = [];
     try {
+      setLoader(true);
       const authResp = await fetchApi({
         url: "xusers/authSessions",
         params: {
@@ -47,8 +48,9 @@ export const AdminModal = (props) => {
       });
       authlogs = authResp.data.vXAuthSessions;
       setAuthSession(authlogs);
-      authlogs ? setLoader(false) : setLoader(true);
+      setLoader(false);
     } catch (error) {
+      setLoader(false);
       console.error(`Error occurred while fetching Admin logs! ${error}`);
     }
   };
@@ -70,7 +72,7 @@ export const AdminModal = (props) => {
         {loader ? (
           <ModalLoader />
         ) : (
-          <Table striped bordered hover>
+          <Table bordered hover>
             <tbody>
               <tr>
                 <th>Login ID</th>
@@ -135,10 +137,7 @@ export const AdminModal = (props) => {
                 <th>Login Time</th>
                 <td>
                   {authSession.map((obj) => {
-                    return (
-                      dateFormat(obj.authTime, "mm/dd/yyyy hh:MM:ss TT ") +
-                      " India Standard Time"
-                    );
+                    return currentTimeZone(obj.authTime);
                   })}
                 </td>
               </tr>

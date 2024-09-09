@@ -26,8 +26,10 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-trino-plugin-shim</include>
-                <include>org.apache.ranger:ranger-plugin-classloader</include>
+                <include>org.apache.ranger:ranger-plugins-audit</include>
+                <include>org.apache.ranger:ranger-plugins-cred</include>
+                <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ranger-trino-plugin</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
@@ -37,7 +39,6 @@
                 <fileMode>644</fileMode>
                 <includes>
                     <include>com.google.inject:guice:jar:${trino.guice.version}</include>
-                    <include>com.google.guava:guava:jar:${trino.guava.version}</include>
                     <include>io.airlift:bootstrap:jar:${trino.airlift.version}</include>
                     <include>io.airlift:log:jar:${trino.airlift.version}</include>
                     <include>io.airlift:log-manager:jar:${trino.airlift.version}</include>
@@ -48,26 +49,9 @@
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.slf4j:slf4j-simple:jar:${slf4j.version}</include>
                     <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api}</include>
-                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-                </includes>
-            </binaries>
-        </moduleSet>
+                    <include>com.fasterxml.jackson.core:jackson-core</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind</include>
 
-        <moduleSet>
-            <useAllReactorProjects>true</useAllReactorProjects>
-            <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-trino-plugin</include>
-            </includes>
-            <binaries>
-                <outputDirectory>lib/ranger-trino-plugin-impl</outputDirectory>
-                <includeDependencies>true</includeDependencies>
-                <unpack>false</unpack>
-                <directoryMode>755</directoryMode>
-                <fileMode>644</fileMode>
-                <includes>
                     <include>com.google.code.gson:gson*</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
@@ -84,13 +68,11 @@
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                     <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.slf4j:jcl-over-slf4j:jar:${slf4j.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>com.google.re2j:re2j:jar:${trino.re2j.version}</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -102,13 +84,13 @@
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>com.sun.jersey:jersey-json</include>
-                    <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -126,6 +108,11 @@
                     <include>joda-time:joda-time</include>
                     <include>com.carrotsearch:hppc</include>
                     <include>dnsjava:dnsjava:jar:${dnsjava.version}</include>
+                    <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+                    <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+                    <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+                    <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -143,21 +130,18 @@
                 <includes>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
-                    <include>com.google.guava:guava:jar:${trino.guava.version}</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>org.apache.htrace:htrace-core4</include>
+                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -197,13 +181,13 @@
     <!-- enable/disable script for Plugin -->
     <files>
         <file>
-            <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
+            <source>${project.parent.basedir}/plugin-trino/scripts/enable-trino-plugin.sh</source>
             <outputDirectory></outputDirectory>
             <destName>enable-trino-plugin.sh</destName>
             <fileMode>755</fileMode>
         </file>
         <file>
-            <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
+            <source>${project.parent.basedir}/plugin-trino/scripts/enable-trino-plugin.sh</source>
             <outputDirectory></outputDirectory>
             <destName>disable-trino-plugin.sh</destName>
             <fileMode>755</fileMode>

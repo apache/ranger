@@ -71,3 +71,27 @@ class RangerBaseModelObject(RangerBase):
         self.createTime = attrs.get('createTime')
         self.updateTime = attrs.get('updateTime')
         self.version    = attrs.get('version')
+
+class PList(RangerBase):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBase.__init__(self, attrs)
+
+        self.startIndex  = attrs.get('startIndex')
+        self.pageSize    = attrs.get('pageSize')
+        self.totalCount  = attrs.get('totalCount')
+        self.resultSize  = attrs.get('resultSize')
+        self.sortType    = attrs.get('sortType')
+        self.sortBy      = attrs.get('sortBy')
+        self.queryTimeMS = attrs.get('queryTimeMS')
+        self.list        = attrs.get('list')
+
+    def type_coerce_attrs(self):
+        super(PList, self).type_coerce_attrs()
+
+    def type_coerce_list(self, elemType):
+        self.list = type_coerce_list(self.list, elemType)
+
+        return self

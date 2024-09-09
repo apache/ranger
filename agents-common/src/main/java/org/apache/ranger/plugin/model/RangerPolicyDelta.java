@@ -19,23 +19,17 @@
 
 package org.apache.ranger.plugin.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicyDelta implements java.io.Serializable {
 
     public static final int CHANGE_TYPE_POLICY_CREATE       = 0;
@@ -47,8 +41,9 @@ public class RangerPolicyDelta implements java.io.Serializable {
     public static final int CHANGE_TYPE_LOG_ERROR           = 6;
     public static final int CHANGE_TYPE_INVALIDATE_POLICY_DELTAS = 7;
     public static final int CHANGE_TYPE_ROLE_UPDATE         = 8;
+    public static final int CHANGE_TYPE_GDS_UPDATE          = 9;
 
-    private static String[] changeTypeNames = { "POLICY_CREATE", "POLICY_UPDATE", "POLICY_DELETE", "SERVICE_CHANGE", "SERVICE_DEF_CHANGE", "RANGER_ADMIN_START", "LOG_ERROR", "INVALIDATE_POLICY_DELTAS", "ROLE_UPDATE" };
+    private static String[] changeTypeNames = { "POLICY_CREATE", "POLICY_UPDATE", "POLICY_DELETE", "SERVICE_CHANGE", "SERVICE_DEF_CHANGE", "RANGER_ADMIN_START", "LOG_ERROR", "INVALIDATE_POLICY_DELTAS", "ROLE_UPDATE", "GDS_UPDATE" };
 
     private Long                id;
     private Integer             changeType;

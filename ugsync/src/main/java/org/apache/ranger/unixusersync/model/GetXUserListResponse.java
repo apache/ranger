@@ -21,14 +21,16 @@
 
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.ranger.ugsyncutil.model.XUserInfo;
 
+@JsonSerialize
 public class GetXUserListResponse {
 
 	private int totalCount;
 
-	@SerializedName("vXUsers")
+	@JsonProperty("vXUsers")
 	List<XUserInfo> xuserInfoList;
 	
 	public int getTotalCount() {

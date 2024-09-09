@@ -96,12 +96,14 @@
 		{
 			"itemId":100,
 			"name":"query",
-			"label":"Query"
+			"label":"Query",
+			"category": "READ"
 		},
 		{
 			"itemId":200,
 			"name":"update",
-			"label":"Update"
+			"label":"Update",
+			"category": "UPDATE"
 		}
 	],
 	"configs":[
@@ -188,9 +190,9 @@
 			},
 			"validationRegEx":"",
 			"validationMessage":"",
-			"uiHint":"",
 			"label":"IP Address Range",
-			"description":"IP Address Range"
+			"description":"IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 		
 	]

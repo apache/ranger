@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyresourcematcher;
 
+import java.util.Comparator;
 import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -27,11 +28,14 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 public interface RangerPolicyResourceMatcher {
 	enum MatchScope { SELF, SELF_OR_DESCENDANT, SELF_OR_ANCESTOR, DESCENDANT, ANCESTOR, ANY, SELF_AND_ALL_DESCENDANTS}
 	enum MatchType { NONE, SELF, DESCENDANT, ANCESTOR, SELF_AND_ALL_DESCENDANTS}
+
+	Comparator<MatchType> MATCH_TYPE_COMPARATOR = new MatchTypeComparator();
 
 	void init();
 
@@ -44,6 +48,8 @@ public interface RangerPolicyResourceMatcher {
 	void setPolicyResources(Map<String, RangerPolicyResource> policyResources, int policyType);
 
 	void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper);
+
+	void setPluginContext(RangerPluginContext pluginContext);
 
 	RangerServiceDef getServiceDef();
 
@@ -76,4 +82,45 @@ public interface RangerPolicyResourceMatcher {
 	boolean getNeedsDynamicEval();
 
 	StringBuilder toString(StringBuilder sb);
+
+	// order: SELF, SELF_AND_ALL_DESCENDANTS, ANCESTOR, DESCENDANT, NONE
+	class MatchTypeComparator implements Comparator<MatchType> {
+		@Override
+		public int compare(MatchType o1, MatchType o2) {
+			final int ret;
+
+			if (o1 == o2) {
+				ret = 0;
+			} else if (o1 == null) {
+				return 1;
+			} else if (o2 == null) {
+				return -1;
+			} else {
+				switch (o1) {
+					case SELF:
+						ret = -1;
+					break;
+
+					case SELF_AND_ALL_DESCENDANTS:
+						ret = o2 == MatchType.SELF ? 1 : -1;
+					break;
+
+					case ANCESTOR:
+						ret = (o2 == MatchType.SELF || o2 == MatchType.SELF_AND_ALL_DESCENDANTS) ? 1 : -1;
+					break;
+
+					case DESCENDANT:
+						ret = o2 == MatchType.NONE ? -1 : 1;
+					break;
+
+					case NONE:
+					default:
+						ret = 1;
+					break;
+				}
+			}
+
+			return ret;
+		}
+	}
 }

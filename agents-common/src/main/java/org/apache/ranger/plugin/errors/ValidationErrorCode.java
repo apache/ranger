@@ -66,7 +66,7 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_INVALID_DEFAULT_INDEX(2019, "default index[{0}] for enum [{1}] is invalid"),
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT(2020, "An enum element in enum element collection of enum [{0}] is null"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS(2021, "Resource-def levels are not in increasing order in an hierarchy"),
-	SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
+    SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_MANADORY_VALUE_FOR_SERVICE_RESOURCE(2023, "{0} cannot be mandatory because {1}(parent) is not mandatory"),
 
     // POLICY VALIDATION
@@ -104,6 +104,10 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
     POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
     POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE(3049, "Deny or deny-exceptions are not supported if policy has isDenyAllElse flag set to true"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER(3053, "policy items user was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP(3054, "policy items group was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
+    POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE(3056, "Values for the resource={0} contained a duplicate value={1}. Ensure all values for a resource are unique"),
     POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
 
     // SECURITY_ZONE Validations
@@ -121,6 +125,7 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
     SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
+    SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY(3052, "Resource [{0}] specified more than once in service [{1}]"),
 
     //RANGER ROLE Validations
     ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT(4001, "Internal error: RangerRole object passed in was null"),
@@ -132,7 +137,38 @@ public enum ValidationErrorCode {
     ROLE_VALIDATION_ERR_INVALID_ROLE_NAME(4007, "No RangerRole found for name[{0}]"),
     ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION(4008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
 
-
+    GDS_VALIDATION_ERR_NON_EXISTING_USER(4101, "User [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_GROUP(4102, "Group [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_ROLE(4103, "Role [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_SERVICE(4104, "Service [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_ZONE(4105, "Zone [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NOT_ADMIN(4106, "User [{0}] is not an admin for {1} [{2}]"),
+    GDS_VALIDATION_ERR_SERVICE_NAME_MISSING(4107, "Service name not provided"),
+    GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT(4108, "Dataset with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_DATASET_NAME_NOT_FOUND(4109, "Dataset with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND(4110, "Dataset with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_PROJECT_NAME_CONFLICT(4111, "Project with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_PROJECT_NAME_NOT_FOUND(4112, "Project with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND(4113, "Project with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NAME_CONFLICT(4114, "Data share with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NAME_NOT_FOUND(4115, "Data share with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND(4116, "Data share with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_ADMIN(4117, "Not a admin for service [{0}]"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_OR_ZONE_ADMIN(4118, "Not a admin for service [{0}] or zone [{1}]"),
+    GDS_VALIDATION_ERR_INVALID_ACCESS_TYPE(4119, "Not a valid access-type [{0}]"),
+    GDS_VALIDATION_ERR_INVALID_MASK_TYPE(4120, "Not a valid mask-type [{0}]"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT(4121, "Shared resource with name [{0}] already exists in data share [{1}]. ID=[{2}]"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_ID_NOT_FOUND(4122, "Shared resource with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_ADD_DATA_SHARE_IN_DATASET_INVALID_STATUS(4123, "[{0}]: invalid status while adding data share into a dataset"),
+    GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND(4124, "Data share-in-dataset with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE(4125, "invalid status change from [{0}] to [{1}]"),
+    GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD(4126, "[{0}] can't be updated"),
+    GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND(4127, "Dataset-in-project with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT(4128, "Shared resource with resources [{0}] already exists for data share [{1}]"),
+    GDS_DATASET_NAME_TOO_LONG(4129, "Invalid dataset name=[{0}]. Dataset name should not be longer than 512 characters"),
+    GDS_DATASHARE_NAME_TOO_LONG(4130, "Invalid datashare name=[{0}]. Datashare name should not be longer than 512 characters"),
+    GDS_PROJECT_NAME_TOO_LONG(4131, "Invalid project name=[{0}]. Project name should not be longer than 512 characters"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL(4132, "Resource value in SharedResource [{0}] is null"),
     ;
 
 
