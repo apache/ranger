@@ -95,8 +95,7 @@ jobs:
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          chmod +x download-archives.sh && source download-archives.sh
-          download_hadoop; download_hbase; download_hive; download_kafka; download_knox; download_ozone
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
       
       - name: Build all ranger-service images
         run: |
@@ -117,11 +116,11 @@ jobs:
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml build
+
       - name: Bring up containers
         run: |
           cd dev-support/ranger-docker
-          source download-archives.sh
-          setup_ozone
+          ./scripts/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
