@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,17 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG OZONE_RUNNER_IMAGE
-ARG OZONE_RUNNER_VERSION
-FROM ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
+source .env
 
-ARG OZONE_HOME
-ARG OZONE_PLUGIN_VERSION
+if [ ! -d dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin ]
+then
+  tar xvfz dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin.tar.gz --directory=dist/
+fi
 
-USER root
-
-RUN useradd -g hadoop -ms /bin/bash ozone
-RUN mkdir -p -m 755 /var/log/ozone
-
-# Required to locate the plugin jars and the config files
-ENV OZONE_MANAGER_CLASSPATH="${OZONE_HOME}/ranger-ozone-plugin/lib/libext/*:${OZONE_HOME}/ranger-ozone-plugin/conf"
+cp -f config/ozone/ranger-ozone-plugin-install.properties dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/install.properties
+cp -f config/ozone/ranger-ozone-setup.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
+cp -f config/ozone/enable-ozone-plugin.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
+chmod +x dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/ranger-ozone-setup.sh

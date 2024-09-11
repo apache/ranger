@@ -19,27 +19,25 @@ under the License.
 
 ## Overview
 
-Docker files in this folder create docker images and run them to build Apache Ranger, deploy Apache Ranger and dependent services in containers.
+Use Dockerfiles in this directory to create docker images and run them to build Apache Ranger, deploy Apache Ranger and dependent services in containers.
 
-## Usage
+### Environment Setup
 
-1. Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine 20.10.5, Compose 1.28.5).
+- Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine 20.10.5, Compose 1.28.5).
    Make sure to configure docker with at least 6gb of memory.
 
-2. Update environment variables in ```.env``` file, if necessary
+- Update environment variables in ```.env``` file, if necessary
 
-3. Set ```dev-support/ranger-docker``` as your working directory.
+- Set ```dev-support/ranger-docker``` as your working directory.
 
-4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox/Ozone services:
+- Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox/Ozone services:
    ~~~
    chmod +x download-archives.sh
-   source download-archives.sh
-   
    # use a subset of the below to download specific services
-   download_hadoop; download_hbase; download_hive; download_kafka; download_knox; download_ozone
+   ./download-archives.sh hadoop hive hbase kafka knox ozone
    ~~~
 
-5. Execute following commands to set environment variables to build Apache Ranger docker containers:
+- Execute following commands to set environment variables to build Apache Ranger docker containers:
    ~~~
    export DOCKER_BUILDKIT=1
    export COMPOSE_DOCKER_CLI_BUILD=1
@@ -99,8 +97,7 @@ docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB
 ~~~
 #### Bring up ozone containers
 ~~~
-source download-archives.sh
-setup_ozone
+./scripts/ozone-plugin-docker-setup.sh
 docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 #### Bring up trino container (requires docker build with jdk 11):
