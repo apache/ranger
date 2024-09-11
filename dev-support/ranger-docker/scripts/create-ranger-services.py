@@ -58,7 +58,14 @@ trino = RangerService({'name': 'dev_trino',
                            'jdbc.url': 'jdbc:trino://ranger-trino:8080',
                        }})
 
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino]
+ozone = RangerService({'name': 'dev_ozone',
+                       'type': 'ozone',
+                       'displayName': 'dev_ozone',
+                       'configs': {'username': 'hdfs', 'password': 'hdfs',
+                                   'ozone.om.http-address': 'http://om:9874',
+                                   'hadoop.security.authentication': 'simple'}})
+
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone]
 for service in services:
     try:
         if service_not_exists(service):
@@ -66,4 +73,3 @@ for service in services:
             print(f" {service.name} service created!")
     except Exception as e:
         print(f"An exception occured: {e}")
-

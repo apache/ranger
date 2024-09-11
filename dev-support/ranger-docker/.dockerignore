@@ -12,5 +12,6 @@
 !dist/ranger-*-kafka-plugin.tar.gz
 !dist/ranger-*-knox-plugin.tar.gz
 !dist/ranger-*-trino-plugin.tar.gz
+!dist/ranger-*-ozone-plugin.tar.gz
 !downloads/*
 !scripts/*
