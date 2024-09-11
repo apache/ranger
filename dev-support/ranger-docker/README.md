@@ -19,71 +19,94 @@ under the License.
 
 ## Overview
 
-Docker files in this folder create docker images and run them to build Apache Ranger, deploy Apache Ranger and dependent services in containers.
+Use Dockerfiles in this directory to create docker images and run them to build Apache Ranger, deploy Apache Ranger and dependent services in containers.
 
-## Usage
+### Environment Setup
 
-1. Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine 20.10.5, Compose 1.28.5).
+- Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine 20.10.5, Compose 1.28.5).
    Make sure to configure docker with at least 6gb of memory.
 
-2. Update environment variables in ```.env``` file, if necessary
+- Update environment variables in ```.env``` file, if necessary
 
-3. Set ```dev-support/ranger-docker``` as your working directory.
+- Set ```dev-support/ranger-docker``` as your working directory.
 
-4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox services:
+- Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox/Ozone services:
    ~~~
-   chmod +x download-archives.sh && ./download-archives.sh
+   chmod +x download-archives.sh
+   # use a subset of the below to download specific services
+   ./download-archives.sh hadoop hive hbase kafka knox ozone
    ~~~
 
-5. Execute following commands to set environment variables to build Apache Ranger docker containers:
+- Execute following commands to set environment variables to build Apache Ranger docker containers:
    ~~~
    export DOCKER_BUILDKIT=1
    export COMPOSE_DOCKER_CLI_BUILD=1
    export RANGER_DB_TYPE=postgres
    ~~~
 
-6. Build Apache Ranger in containers using docker-compose
+### Apache Ranger Build
 
-   1. Execute following command to build Apache Ranger:
-      ~~~
-      docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
-      ~~~
+#### In containers using docker-compose
 
-      Time taken to complete the build might vary (upto an hour), depending on status of ```${HOME}/.m2``` directory cache.
+Execute following command to build Apache Ranger:
+~~~
+docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+~~~
+Time taken to complete the build might vary (upto an hour), depending on status of ```${HOME}/.m2``` directory cache.  
 
-   2. Alternatively, the following commands can be executed from the parent directory
-      1. To generate tarballs:```mvn clean package -DskipTests```
 
-      2. Copy the tarballs and version file to ```dev-support/ranger-docker/dist```
-         ~~~
-         cp target/ranger-* dev-support/ranger-docker/dist/
-         cp target/version dev-support/ranger-docker/dist/
-         ~~~
+#### OR
+#### Regular build
 
-      3. Build the ranger-base image:
-         ~~~
-         # ubuntu base image:
-         docker-compose -f docker-compose.ranger-base.yml build --no-cache
-         # OR
-         # ubi base image:
-         docker-compose -f docker-compose.ranger-base-ubi.yml build --no-cache
-         ~~~
-7. To enable file based sync source for usersync execute: ```export ENABLE_FILE_SYNC_SOURCE=true```
+~~~
+cd ./../../
+mvn clean package -DskipTests
+cp target/ranger-* dev-support/ranger-docker/dist/
+cp target/version dev-support/ranger-docker/dist/
+cd dev-support/ranger-docker
+~~~
 
-8. Execute following command to start Ranger, Ranger Usersync, Ranger Tagsync, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
-   ~~~
-   docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml up -d
-   ~~~
+### Docker Image Build
 
-	- valid values for RANGER_DB_TYPE: mysql or postgres
-9. To run ranger enabled Trino in containers (Requires docker build with JDK 11):
-   ~~~
-   docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-trino.yml up -d
-   ~~~
+#### Prerequisite: ranger-base image build
+~~~
+# ubuntu base image:
+docker-compose -f docker-compose.ranger-base.yml build --no-cache
+# OR
+# ubi base image:
+docker-compose -f docker-compose.ranger-base-ubi.yml build --no-cache
+~~~
+#### Bring up ranger, usersync and tagsync containers
+~~~
+# To enable file based sync source for usersync do:
+# export ENABLE_FILE_SYNC_SOURCE=true
 
-10. To rebuild specific images and start containers with the new image, use following command:
-   ~~~
-   docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
-   ~~~
+# valid values for RANGER_DB_TYPE: mysql/postgres
 
-9. Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml up -d
+
+# Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
+~~~
+#### Bring up hive container
+~~~
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d
+~~~
+#### Bring up hbase container
+~~~
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
+~~~
+#### Bring up ozone containers
+~~~
+./scripts/ozone-plugin-docker-setup.sh
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-ozone.yml up -d
+~~~
+#### Bring up trino container (requires docker build with jdk 11):
+~~~
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-trino.yml up -d
+~~~
+Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
+
+#### To rebuild specific images and start containers with the new image:
+~~~
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
+~~~
