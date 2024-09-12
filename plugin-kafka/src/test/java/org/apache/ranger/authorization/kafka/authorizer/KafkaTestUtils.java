@@ -28,6 +28,7 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
@@ -85,6 +86,14 @@ public final class KafkaTestUtils {
 					new NewTopic("test", 1, (short) 1),
 					new NewTopic("dev", 1, (short) 1)
 			));
+		}
+	}
+
+	static void createTopic(Properties adminProps, String topic) {
+		try (AdminClient adminClient = AdminClient.create(adminProps)) {
+			adminClient.createTopics(Collections.singletonList(
+          new NewTopic(topic, 1, (short) 1)
+      ));
 		}
 	}
 }

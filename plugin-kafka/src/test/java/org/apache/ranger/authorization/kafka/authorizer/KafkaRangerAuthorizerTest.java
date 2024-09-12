@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
@@ -27,7 +28,12 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.Future;
 
 import kafka.server.KafkaServer;
@@ -77,7 +83,19 @@ public class KafkaRangerAuthorizerTest {
     private static String clientKeystorePath;
     private static String truststorePath;
     private static Path tempDir;
-    
+
+    private static final String userWithComma = "CN=superUser,O=Apache";
+    private static final String userWithSpace = "CN=super user";
+    private static final String nonSuperUser = "CN=nonSuperUser";
+    private static final String invalidPrincipal = "CN=invalidPrincipal";
+
+    private static final String CLIENT_KEYSTORE_PW = "keystorepass";
+    private static final String CLIENT_KEY_PW = "keypass";
+
+    private static final Map<String, String> keyStorePaths = new HashMap<>();
+
+    private static final Properties adminProps = new Properties();
+
     @BeforeAll
     public static void setup() throws Exception {
     	// Create keys
@@ -94,7 +112,14 @@ public class KafkaRangerAuthorizerTest {
     	clientKeystorePath = 
     			KafkaTestUtils.createAndStoreKey(clientDN, clientDN, BigInteger.valueOf(31), 
     					"cspass", "myclientkey", "ckpass", keystore);
-    	
+
+      List<String> usersForSuperUserTest = Arrays.asList(userWithComma, userWithSpace, nonSuperUser, invalidPrincipal);
+      for (String user : usersForSuperUserTest) {
+          keyStorePaths.put(user, KafkaTestUtils.createAndStoreKey(user, user,
+              BigInteger.valueOf(new Random().nextLong()), CLIENT_KEYSTORE_PW,
+              "key_" + user, CLIENT_KEY_PW, keystore));
+      }
+
     	File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
     	try (OutputStream output = new FileOutputStream(truststoreFile)) {
     		keystore.store(output, "security".toCharArray());
@@ -109,7 +134,7 @@ public class KafkaRangerAuthorizerTest {
 			Assertions.assertNotNull(serverSocket) ;
 			port = serverSocket.getLocalPort() ;
 			Assertions.assertTrue(port > 0) ;
-		} catch (java.io.IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException("Local socket port not available", e) ;
 		}
 
@@ -137,6 +162,12 @@ public class KafkaRangerAuthorizerTest {
 
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
+        String superUsersConfig = String.format("User:%s;" + // User with space should be valid super user
+                "User:%s  ;" +   // Space between username and separator should be trimmed, also comma should be valid character
+                "user:%s;" +     // User key is case sensitive, this user should not be super user
+                "%s",            // Invalid principal string (not in the User:name format) should not be super user
+            userWithSpace, userWithComma, nonSuperUser, invalidPrincipal);
+        props.put("super.users", superUsersConfig);
         
         // Create users for testing
         UserGroupInformation.createUserForTesting(clientDN, new String[] {"public"});
@@ -147,7 +178,6 @@ public class KafkaRangerAuthorizerTest {
         kafkaServer.startup();
 
         // Create some topics
-        final Properties adminProps = new Properties();
         adminProps.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
         adminProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         // ssl
@@ -167,7 +197,13 @@ public class KafkaRangerAuthorizerTest {
         if (zkServer != null) {
             zkServer.stop();
         }
-        
+
+        for (String keyStorePath : keyStorePaths.values()) {
+            File keystoreFile = new File(keyStorePath);
+            if (keystoreFile.exists()) {
+                FileUtils.forceDelete(keystoreFile);
+            }
+        }
         File clientKeystoreFile = new File(clientKeystorePath);
         if (clientKeystoreFile.exists()) {
         	FileUtils.forceDelete(clientKeystoreFile);
@@ -189,36 +225,10 @@ public class KafkaRangerAuthorizerTest {
     @Test
     public void testAuthorizedRead() throws Exception {
         // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
-        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
-        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties producerProps = getProducerProps(serviceKeystorePath, "sspass", "skpass");
         
         // Create the Consumer
-        Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:" + port);
-        consumerProps.put("group.id", "test");
-        consumerProps.put("enable.auto.commit", "true");
-        consumerProps.put("auto.offset.reset", "earliest");
-        consumerProps.put("auto.commit.interval.ms", "1000");
-        consumerProps.put("session.timeout.ms", "30000");
-        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
-        consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "ckpass");
-        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties consumerProps = getConsumerProps(clientKeystorePath, "cspass", "ckpass");
 
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
             consumer.subscribe(Arrays.asList("test"));
@@ -249,18 +259,7 @@ public class KafkaRangerAuthorizerTest {
     @Test
     public void testAuthorizedWrite() throws Exception {
         // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
-        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
-        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties producerProps = getProducerProps(serviceKeystorePath, "sspass", "skpass");
 
         try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
             // Send a message
@@ -274,18 +273,7 @@ public class KafkaRangerAuthorizerTest {
     @Test
     public void testUnauthorizedWrite() throws Exception {
         // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
-        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
-        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "ckpass");
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties producerProps = getProducerProps(clientKeystorePath, "cspass", "ckpass");
 
         try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
             // Send a message
@@ -308,36 +296,10 @@ public class KafkaRangerAuthorizerTest {
     @Test
     public void testAuthorizedReadUsingTagPolicy() throws Exception {
         // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
-        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
-        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties producerProps = getProducerProps(serviceKeystorePath, "sspass", "skpass");
 
         // Create the Consumer
-        Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:" + port);
-        consumerProps.put("group.id", "test");
-        consumerProps.put("enable.auto.commit", "true");
-        consumerProps.put("auto.offset.reset", "earliest");
-        consumerProps.put("auto.commit.interval.ms", "1000");
-        consumerProps.put("session.timeout.ms", "30000");
-        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
-        consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
-        consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "ckpass");
-        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
-        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        Properties consumerProps = getConsumerProps(clientKeystorePath, "cspass", "ckpass");
 
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
             consumer.subscribe(Arrays.asList("messages"));
@@ -364,4 +326,149 @@ public class KafkaRangerAuthorizerTest {
         }
     }
 
+    // User with space should be valid super user
+    @Test
+    public void testSuperUserWithInternalSpace() throws Exception {
+        String topic = "topic-user-space";
+        testUserCanReadWrite(userWithSpace, topic);
+    }
+
+    // Space between username and separator should be trimmed, also comma should be valid character in user name
+    @Test
+    public void testSuperUserWithCommaAndTrailingSpaceTrimmed() throws Exception {
+        String topic = "topic-user-comma";
+        testUserCanReadWrite(userWithComma, topic);
+    }
+
+    // User key is case sensitive in the config, this user should not be super user as it was added with the wrong key
+    @Test
+    public void testUserWithWrongKeyShouldNotBeSuperUser() {
+        String topic = "topic-non-super-user";
+        testUserCanNotWrite(nonSuperUser, topic);
+    }
+
+    // Invalid principal string (not User:string) should not be super user
+    @Test
+    public void testInvalidPrincipalStringShouldNotBeSuperUser() {
+        String topic = "topic-invalid-principal";
+        testUserCanNotRead(invalidPrincipal, topic);
+    }
+
+    private void testUserCanReadWrite(String user, String topic) throws Exception {
+        KafkaTestUtils.createTopic(adminProps, topic);
+
+        Properties producerProps = getProducerProps(keyStorePaths.get(user), CLIENT_KEYSTORE_PW, CLIENT_KEY_PW);
+
+        Properties consumerProps = getConsumerProps(keyStorePaths.get(user), CLIENT_KEYSTORE_PW, CLIENT_KEY_PW);
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
+            consumer.subscribe(Collections.singletonList(topic));
+
+            try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+                // Send a message
+                Future<RecordMetadata> record = producer.send(new ProducerRecord<>(topic, "somekey", "somevalue"));
+                producer.flush();
+                record.get();
+            }
+
+            // Poll until we consume it
+            ConsumerRecord<String, String> record = null;
+            for (int i = 0; i < 1000; i++) {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                if (records.count() > 0) {
+                    record = records.iterator().next();
+                    break;
+                }
+                Thread.sleep(1000);
+            }
+
+            Assertions.assertNotNull(record);
+            Assertions.assertEquals("somevalue", record.value());
+        }
+    }
+
+    private void testUserCanNotRead(String user, String topic) {
+        KafkaTestUtils.createTopic(adminProps, topic);
+
+        Properties producerProps = getProducerProps(serviceKeystorePath, "sspass", "skpass");
+
+        Properties consumerProps = getConsumerProps(keyStorePaths.get(user), CLIENT_KEYSTORE_PW, CLIENT_KEY_PW);
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
+            try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+                // Send a message
+                producer.send(new ProducerRecord<>(topic, "somekey", "somevalue"));
+                producer.flush();
+            }
+
+            try {
+                consumer.subscribe(Collections.singletonList(topic));
+                for (int i = 0; i < 1000; i++) {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                    if (records.count() > 0) {
+                        records.iterator().next();
+                        break;
+                    }
+                    Thread.sleep(1000);
+                }
+                Assertions.fail(String.format("User \"%s\" should have been unauthorized to consume from topic \"%s\"",
+                    user, topic));
+            } catch (Exception ex) {
+                Assertions.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
+            }
+        }
+    }
+
+    private void testUserCanNotWrite(String user, String topic) {
+        KafkaTestUtils.createTopic(adminProps, topic);
+
+        // Create the Producer
+        Properties producerProps = getProducerProps(keyStorePaths.get(user), CLIENT_KEYSTORE_PW, CLIENT_KEY_PW);
+
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            try {
+                Future<RecordMetadata> record = producer.send(new ProducerRecord<>(topic, "somekey", "somevalue"));
+                producer.flush();
+                record.get();
+            } catch (Exception ex) {
+                Assertions.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
+            }
+        }
+    }
+
+    private static Properties getProducerProps(String keyStorePath, String keyStorePw, String keyPw) {
+        Properties producerProps = new Properties();
+        producerProps.put("bootstrap.servers", "localhost:" + port);
+        producerProps.put("acks", "all");
+        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
+        producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStorePath);
+        producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keyStorePw);
+        producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, keyPw);
+        producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
+        producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        return producerProps;
+    }
+
+    private static Properties getConsumerProps(String keyStorePath, String keyStorePw, String keyPw) {
+        Properties consumerProps = new Properties();
+        consumerProps.put("bootstrap.servers", "localhost:" + port);
+        consumerProps.put("group.id", "test");
+        consumerProps.put("enable.auto.commit", "true");
+        consumerProps.put("auto.offset.reset", "earliest");
+        consumerProps.put("auto.commit.interval.ms", "1000");
+        consumerProps.put("session.timeout.ms", "30000");
+        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
+        consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStorePath);
+        consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keyStorePw);
+        consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, keyPw);
+        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
+        consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        return consumerProps;
+    }
 }
