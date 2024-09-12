@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 	private static final Logger LOG = LoggerFactory.getLogger(AtlasOzoneResourceMapper.class);
@@ -51,8 +52,31 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 	private static final int    IDX_CLUSTER_NAME           = 3;
 	private static final int    RESOURCE_COUNT             = 4;
 
+	// This flag results in ofs atlas qualifiedName to parse paths similar to o3fs
+	public static final String PROP_LEGACY_PARSING       = "ranger.tagsync.atlas.ozone.legacy.parsing.enabled";
+	public static final String PROP_OFS_KEY_DELIMITER    = "ranger.tagsync.atlas.ozone.ofs.key_entity.separator";
+	public static final String PROP_OFS_BUCKET_DELIMITER = "ranger.tagsync.atlas.ozone.ofs.bucket_entity.separator";
+
+	private String ofsKeyDelimiter       = "/";
+	private String ofsBucketDelimiter    = "\\.";
+	private boolean legacyParsingEnabled = false;
+
 	public AtlasOzoneResourceMapper() {
 		super("ozone", SUPPORTED_ENTITY_TYPES);
+	}
+	@Override
+	public void initialize(Properties properties) {
+		super.initialize(properties);
+
+		if (this.properties != null) {
+			this.legacyParsingEnabled = Boolean.parseBoolean((String) this.properties.getOrDefault(PROP_LEGACY_PARSING, Boolean.toString(legacyParsingEnabled)));
+			this.ofsKeyDelimiter      = (String) this.properties.getOrDefault(PROP_OFS_KEY_DELIMITER, this.ofsKeyDelimiter);
+			this.ofsBucketDelimiter   = (String) this.properties.getOrDefault(PROP_OFS_BUCKET_DELIMITER, this.ofsBucketDelimiter);
+		}
+
+		LOG.info("ofsKeyDelimiter={}", this.ofsKeyDelimiter);
+		LOG.info("ofsBucketDelimiter={}", this.ofsBucketDelimiter);
+		LOG.info("legacyParsingEnabled={}",this.legacyParsingEnabled);
 	}
 
 	@Override
@@ -134,8 +158,33 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 	 * o3fs://<volume name>@cm (ozone_key)
 	 * o3fs://<volume name>.<bucket name>@<clusterName> (ozone_bucket)
 	 * o3fs://<bucket name>.<volume name>.<ozone service id>/<key path>@<clusterName> (ozone_key)
+	 * ofs://myvolume@cl1
+	 * ofs://myvolume.mybucket@cl1
+	 * ofs://ozone1/myvolume/mybucket/key1@cl1
+	 * ofs://ozone1/myvolume/mybucket/mykey/key1/@cl1
 	 */
 	private String[] parseQualifiedName(String qualifiedName, String entityType) {
+		int    idxProtocolSep = qualifiedName.indexOf(SEP_PROTOCOL);
+		String prefix         = idxProtocolSep != -1 ? qualifiedName.substring(0, idxProtocolSep) : "";
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Prefix for qualifiedName={} is {}", qualifiedName, prefix);
+		}
+
+		if (this.legacyParsingEnabled){
+			return parseQualifiedNameO3FS(qualifiedName, entityType);
+		} else if (prefix.equals("ofs")) {
+			return parseQualifiedNameOFS(qualifiedName, entityType);
+		} else {
+			return parseQualifiedNameO3FS(qualifiedName, entityType);
+		}
+	}
+
+	private String[] parseQualifiedNameOFS(String qualifiedName, String entityType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> parseQualifiedNameOFS(qualifiedName={}, entityType={})", qualifiedName, entityType);
+		}
+
 		String[] ret = new String[RESOURCE_COUNT];
 
 		if(StringUtils.isNotBlank(qualifiedName)) {
@@ -147,24 +196,86 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 				int idxProtocolSep = qualifiedName.indexOf(SEP_PROTOCOL);
 
 				if (idxProtocolSep != -1) {
-					int idxResourceStart       = idxProtocolSep + SEP_PROTOCOL.length();
-					if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_VOLUME)) {
+					int idxResourceStart = idxProtocolSep + SEP_PROTOCOL.length();
+
+					if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_VOLUME)) { // ofs://vol1@cl1
 						ret[IDX_VOLUME] = qualifiedName.substring(idxResourceStart, idxClusterNameSep);
-					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_BUCKET)) {
+					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_BUCKET)) { // ofs://vol1.buck1@cl1
+						// anything before first "." is volume name, after that is bucket name. So, "." in volume name is invalid when tagging buckets
+						String[] resources = qualifiedName.substring(idxResourceStart, idxClusterNameSep).split(this.ofsBucketDelimiter,2);
+
+						ret[IDX_VOLUME] = resources.length > 0 ? resources[0] : null;
+						ret[IDX_BUCKET] = resources.length > 1 ? resources[1] : null;
+					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_KEY)) { // ofs://svcid/vol1/buck1/d1/d2/key1@cl1
+						// This is a special case wherein the delimiter is a "/" instead of a "." in the qualifiedName in ofs path
+						idxResourceStart = qualifiedName.indexOf(this.ofsKeyDelimiter, idxProtocolSep + SEP_PROTOCOL.length()) + 1;
+
+						String   resourceString = qualifiedName.substring(idxResourceStart, idxClusterNameSep);
+						String[] resources      = resourceString.split(this.ofsKeyDelimiter, 3);
+
+						ret[IDX_VOLUME] = resources.length > 0 ? resources[0] : null;
+						ret[IDX_BUCKET] = resources.length > 1 ? resources[1] : null;
+						ret[IDX_KEY]    = resources.length > 2 ? resources[2] : null;
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== parseQualifiedNameOFS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
+		}
+
+		return ret;
+	}
+
+	private String[] parseQualifiedNameO3FS(String qualifiedName, String entityType){
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> parseQualifiedNameO3FS(qualifiedName={}, entityType={})", qualifiedName, entityType);
+		}
+
+		String[] ret = new String[RESOURCE_COUNT];
+
+		if(StringUtils.isNotBlank(qualifiedName)) {
+			int idxClusterNameSep = qualifiedName.lastIndexOf(CLUSTER_DELIMITER);
+
+			if (idxClusterNameSep != -1) {
+				ret[IDX_CLUSTER_NAME] = qualifiedName.substring(idxClusterNameSep + CLUSTER_DELIMITER.length());
+
+				int idxProtocolSep = qualifiedName.indexOf(SEP_PROTOCOL);
+
+				if (idxProtocolSep != -1) {
+					int idxResourceStart = idxProtocolSep + SEP_PROTOCOL.length();
+
+					if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_VOLUME)) { // o3fs://vol1@cl1
+						ret[IDX_VOLUME] = qualifiedName.substring(idxResourceStart, idxClusterNameSep);
+					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_BUCKET)) { // o3fs://vol1.buck1@cl1
 						String[] resources = qualifiedName.substring(idxResourceStart, idxClusterNameSep).split(QUALIFIED_NAME_DELIMITER);
-						ret[IDX_VOLUME]      = resources.length > 0 ? resources[0] : null;
-						ret[IDX_BUCKET]     = resources.length > 1 ? resources[1] : null;
-					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_KEY)) {
-						String[] resources = qualifiedName.substring(idxResourceStart, idxClusterNameSep).split(QUALIFIED_NAME_DELIMITER);
-						ret[IDX_BUCKET]      = resources.length > 0 ? resources[0] : null;
-						ret[IDX_VOLUME]     = resources.length > 1 ? resources[1] : null;
-						int idxRelativePath = qualifiedName.indexOf(SEP_RELATIVE_PATH, idxResourceStart);
-						if (idxRelativePath != -1) {
-							ret[IDX_KEY] = qualifiedName.substring(idxRelativePath+1, idxClusterNameSep);
+
+						ret[IDX_VOLUME] = resources.length > 0 ? resources[0] : null;
+						ret[IDX_BUCKET] = resources.length > 1 ? resources[1] : null;
+					} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_KEY)) { // o3fs://buck1.vol1.svc1/d1/d2/key1@cl1
+						String[] resources = qualifiedName.substring(idxResourceStart, idxClusterNameSep).split(QUALIFIED_NAME_DELIMITER, 3);
+
+						ret[IDX_BUCKET] = resources.length > 0 ? resources[0] : null;
+						ret[IDX_VOLUME] = resources.length > 1 ? resources[1] : null;
+						ret[IDX_KEY]    = resources.length > 2 ? resources[2] : null;
+
+						if (ret[IDX_KEY] != null) { // skip svcid
+							int idxKeySep = ret[IDX_KEY].indexOf(SEP_RELATIVE_PATH);
+
+							if (idxKeySep != -1) {
+								ret[IDX_KEY] = ret[IDX_KEY].substring(idxKeySep + SEP_RELATIVE_PATH.length());
+							} else {
+								ret[IDX_KEY] = null;
+							}
 						}
 					}
 				}
 			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== parseQualifiedNameO3FS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
 		}
 
 		return ret;
