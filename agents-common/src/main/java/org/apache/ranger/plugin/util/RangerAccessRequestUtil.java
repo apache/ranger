@@ -34,29 +34,30 @@ import org.slf4j.LoggerFactory;
 public class RangerAccessRequestUtil {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
 
-	public static final String KEY_CONTEXT_TAGS					= "TAGS";
-	public static final String KEY_CONTEXT_TAG_OBJECT			= "TAG_OBJECT";
-	public static final String KEY_CONTEXT_RESOURCE 			= "RESOURCE";
-	public static final String KEY_CONTEXT_REQUESTED_RESOURCES 	= "REQUESTED_RESOURCES";
-	public static final String KEY_CONTEXT_USERSTORE 			= "USERSTORE";
-	public static final String KEY_TOKEN_NAMESPACE 				= "token:";
-	public static final String KEY_USER 						= "USER";
-	public static final String KEY_OWNER 						= "OWNER";
-	public static final String KEY_ROLES 						= "ROLES";
-	public static final String KEY_CONTEXT_IS_ANY_ACCESS 		= "ISANYACCESS";
-	public static final String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS = "ALLACCESSTYPEGROUPS";
-	public static final String KEY_CONTEXT_ALL_ACCESSTYPES 		= "ALLACCESSTYPES";
-	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS 	= "ALL_ACCESS_TYPE_RESULTS";
-	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS 	= "ALL_ACCESS_TYPE_ACL_RESULTS";
+	public static final String KEY_CONTEXT_TAGS                             = "TAGS";
+	public static final String KEY_CONTEXT_TAG_OBJECT                       = "TAG_OBJECT";
+	public static final String KEY_CONTEXT_RESOURCE                         = "RESOURCE";
+	public static final String KEY_CONTEXT_REQUESTED_RESOURCES              = "REQUESTED_RESOURCES";
+	public static final String KEY_CONTEXT_USERSTORE                        = "USERSTORE";
+	public static final String KEY_TOKEN_NAMESPACE                          = "token:";
+	public static final String KEY_USER                                     = "USER";
+	public static final String KEY_OWNER                                    = "OWNER";
+	public static final String KEY_ROLES                                    = "ROLES";
+	public static final String KEY_CONTEXT_IS_ANY_ACCESS                    = "ISANYACCESS";
+	public static final String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS            = "ALLACCESSTYPEGROUPS";
+	public static final String KEY_CONTEXT_ALL_ACCESSTYPES                  = "ALLACCESSTYPES";
+	public static final String KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES = "IGNOREIFNOTDENIEDACCESSTYPES";
+	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS          = "ALL_ACCESS_TYPE_RESULTS";
+	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS      = "ALL_ACCESS_TYPE_ACL_RESULTS";
 
-	public static final String KEY_CONTEXT_REQUEST 				= "_REQUEST";
-	public static final String KEY_CONTEXT_GDS_RESULT    = "_GDS_RESULT";
-	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED 	= "ISREQUESTPREPROCESSED";
-	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES 		= "RESOURCE_ZONE_NAMES";
-	public static final String KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS 	= "_IS_SKIP_CHAINED_PLUGINS";
+	public static final String KEY_CONTEXT_REQUEST                 = "_REQUEST";
+	public static final String KEY_CONTEXT_GDS_RESULT              = "_GDS_RESULT";
+	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED = "ISREQUESTPREPROCESSED";
+	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES     = "RESOURCE_ZONE_NAMES";
+	public static final String KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS = "_IS_SKIP_CHAINED_PLUGINS";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
-		if(CollectionUtils.isEmpty(tags)) {
+		if (CollectionUtils.isEmpty(tags)) {
 			context.remove(KEY_CONTEXT_TAGS);
 		} else {
 			context.put(KEY_CONTEXT_TAGS, tags);
@@ -65,12 +66,11 @@ public class RangerAccessRequestUtil {
 
 	public static Set<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
 		Set<RangerTagForEval> ret = null;
-		Object          val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
+		Object                val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
 		if (val instanceof Set<?>) {
 			try {
-				@SuppressWarnings("unchecked")
-				Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
+				@SuppressWarnings("unchecked") Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
 
 				ret = tags;
 			} catch (Throwable t) {
@@ -87,10 +87,10 @@ public class RangerAccessRequestUtil {
 
 	public static RangerTagForEval getCurrentTagFromContext(Map<String, Object> context) {
 		RangerTagForEval ret = null;
-		Object    val = context.get(KEY_CONTEXT_TAG_OBJECT);
+		Object           val = context.get(KEY_CONTEXT_TAG_OBJECT);
 
-		if(val instanceof RangerTagForEval) {
-			ret = (RangerTagForEval)val;
+		if (val instanceof RangerTagForEval) {
+			ret = (RangerTagForEval) val;
 		}
 
 		return ret;
@@ -104,8 +104,8 @@ public class RangerAccessRequestUtil {
 		RangerRequestedResources ret = null;
 		Object                   val = context.get(KEY_CONTEXT_REQUESTED_RESOURCES);
 
-		if(val instanceof RangerRequestedResources) {
-			ret = (RangerRequestedResources)val;
+		if (val instanceof RangerRequestedResources) {
+			ret = (RangerRequestedResources) val;
 		}
 
 		return ret;
@@ -119,8 +119,8 @@ public class RangerAccessRequestUtil {
 		RangerAccessResource ret = null;
 		Object               val = MapUtils.isNotEmpty(context) ? context.get(KEY_CONTEXT_RESOURCE) : null;
 
-		if(val instanceof RangerAccessResource) {
-			ret = (RangerAccessResource)val;
+		if (val instanceof RangerAccessResource) {
+			ret = (RangerAccessResource) val;
 		}
 
 		return ret;
@@ -129,7 +129,7 @@ public class RangerAccessRequestUtil {
 	public static Map<String, Object> copyContext(Map<String, Object> context) {
 		final Map<String, Object> ret;
 
-		if(MapUtils.isEmpty(context)) {
+		if (MapUtils.isEmpty(context)) {
 			ret = new HashMap<>();
 		} else {
 			ret = new HashMap<>(context);
@@ -145,6 +145,7 @@ public class RangerAccessRequestUtil {
 			ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
 			ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
 			ret.remove(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+			ret.remove(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES);
 			// don't remove REQUESTED_RESOURCES
 		}
 
@@ -154,9 +155,11 @@ public class RangerAccessRequestUtil {
 	public static void setCurrentUserInContext(Map<String, Object> context, String user) {
 		setTokenInContext(context, KEY_USER, user);
 	}
+
 	public static void setOwnerInContext(Map<String, Object> context, String owner) {
 		setTokenInContext(context, KEY_OWNER, owner);
 	}
+
 	public static String getCurrentUserFromContext(Map<String, Object> context) {
 		Object ret = getTokenFromContext(context, KEY_USER);
 		return ret != null ? ret.toString() : "";
@@ -166,21 +169,22 @@ public class RangerAccessRequestUtil {
 		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
 		context.put(tokenNameWithNamespace, tokenValue);
 	}
+
 	public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
 		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
 		return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
 	}
 
-    public static void setCurrentUserRolesInContext(Map<String, Object> context, Set<String> roles) {
-        setTokenInContext(context, KEY_ROLES, roles);
-    }
+	public static void setCurrentUserRolesInContext(Map<String, Object> context, Set<String> roles) {
+		setTokenInContext(context, KEY_ROLES, roles);
+	}
 
-    public static Set<String> getCurrentUserRolesFromContext(Map<String, Object> context) {
-        Object ret = getTokenFromContext(context, KEY_ROLES);
-        return ret != null ? (Set<String>) ret : Collections.EMPTY_SET;
-    }
+	public static Set<String> getCurrentUserRolesFromContext(Map<String, Object> context) {
+		Object ret = getTokenFromContext(context, KEY_ROLES);
+		return ret != null ? (Set<String>) ret : Collections.EMPTY_SET;
+	}
 
-    public static Set<String> getUserRoles(RangerAccessRequest request) {
+	public static Set<String> getUserRoles(RangerAccessRequest request) {
 		Set<String> ret = Collections.EMPTY_SET;
 
 		if (request != null) {
@@ -200,9 +204,9 @@ public class RangerAccessRequestUtil {
 
 	public static RangerUserStore getRequestUserStoreFromContext(Map<String, Object> context) {
 		RangerUserStore ret = null;
-		Object    val = context.get(KEY_CONTEXT_USERSTORE);
+		Object          val = context.get(KEY_CONTEXT_USERSTORE);
 
-		if(val instanceof RangerUserStore) {
+		if (val instanceof RangerUserStore) {
 			ret = (RangerUserStore) val;
 		}
 
@@ -214,7 +218,7 @@ public class RangerAccessRequestUtil {
 	}
 
 	public static boolean getIsAnyAccessInContext(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+		Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_ANY_ACCESS);
 		return value != null && value;
 	}
 
@@ -223,13 +227,35 @@ public class RangerAccessRequestUtil {
 	}
 
 	public static boolean getIsRequestPreprocessed(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+		Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
 		return value != null && value;
 	}
 
 	public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
 		context.put(KEY_CONTEXT_ALL_ACCESSTYPES, accessTypes);
 	}
+
+	public static void setIgnoreIfNotDeniedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
+		context.put(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES, accessTypes);
+	}
+
+	public static Set<String> getIgnoreIfNotDeniedAccessTypes(RangerAccessRequest request) {
+		Set<String> ret = Collections.emptySet();
+
+		Object val = request.getContext().get(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES);
+
+		if (val != null) {
+			if (val instanceof Set<?>) {
+				ret = (Set<String>) val;
+			} else if (val instanceof List<?>) {
+				ret = new TreeSet<>((List<String>) val);
+			} else {
+				LOG.error("getNotDeniedRequestedAccessTypes(): failed to get NOTDENIEDACCESSTYPES from context");
+			}
+		}
+		return ret;
+	}
+
 
 	@SuppressWarnings("unchecked")
 	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
@@ -251,7 +277,7 @@ public class RangerAccessRequestUtil {
 	}
 
 	public static Set<Set<String>> getAllRequestedAccessTypeGroups(RangerAccessRequest request) {
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
+		Object val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
 		return (Set<Set<String>>) val;
 	}
 
@@ -265,7 +291,7 @@ public class RangerAccessRequestUtil {
 
 	public static Map<String, RangerAccessResult> getAccessTypeResults(RangerAccessRequest request) {
 		Map<String, RangerAccessResult> ret;
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+		Object                          val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
 		if (val == null) {
 			ret = new HashMap<>();
 			request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, ret);
@@ -277,7 +303,7 @@ public class RangerAccessRequestUtil {
 
 	public static Map<String, Integer> getAccessTypeACLResults(RangerAccessRequest request) {
 		Map<String, Integer> ret;
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
+		Object               val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
 		if (val == null) {
 			ret = new HashMap<>();
 			request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS, ret);
@@ -400,7 +426,7 @@ public class RangerAccessRequestUtil {
 		if (context != null) {
 			Object o = context.get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
 			if (o != null) {
-				ret = (Map<String, RangerAccessResult>)o;
+				ret = (Map<String, RangerAccessResult>) o;
 			}
 		}
 
@@ -426,7 +452,7 @@ public class RangerAccessRequestUtil {
 	}
 
 	public static boolean getIsSkipChainedPlugins(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS);
+		Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS);
 		return value != null && value;
 	}
 }

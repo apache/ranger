@@ -899,6 +899,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 					RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 					RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
+					if (accessTypes.contains(EXECUTE_ACCCESS_TYPE)) {
+						RangerAccessRequestUtil.setIgnoreIfNotDeniedAccessTypes(request.getContext(), access2ActionListMapper.get(FsAction.EXECUTE));
+					}
 				}
 
 				// if the request was already allowed by a Ranger policy (for ancestor/parent/node/child), skip chained plugin evaluations in subsequent calls
@@ -979,6 +982,9 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 						RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, allAccessTypeGroups);
 						RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
+						if (accessTypes.contains(EXECUTE_ACCCESS_TYPE)) {
+							RangerAccessRequestUtil.setIgnoreIfNotDeniedAccessTypes(request.getContext(), access2ActionListMapper.get(FsAction.EXECUTE));
+						}
 					}
 
 					RangerAccessResult result = context.plugin.isAccessAllowed(request, null);
