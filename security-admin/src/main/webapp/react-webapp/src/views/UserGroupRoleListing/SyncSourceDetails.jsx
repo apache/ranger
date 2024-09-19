@@ -19,7 +19,7 @@
 
 import React from "react";
 import { Table } from "react-bootstrap";
-import { UsersyncDetailsKeyDisplayMap } from "../../utils/XAEnums";
+import { UsersyncDetailsKeyDisplayMap } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 
 export function SyncSourceDetails(props) {

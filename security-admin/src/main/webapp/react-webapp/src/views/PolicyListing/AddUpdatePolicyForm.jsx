@@ -62,19 +62,20 @@ import PolicyPermissionItem from "../PolicyListing/PolicyPermissionItem";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
-import { getAllTimeZoneList, policyConditionUpdatedJSON } from "Utils/XAUtils";
 import moment from "moment";
 import {
   InfoIcon,
   commonBreadcrumb,
   isPolicyExpired,
-  getResourcesDefVal
+  getResourcesDefVal,
+  getAllTimeZoneList,
+  policyConditionUpdatedJSON,
+  policyInfo
 } from "Utils/XAUtils";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "Utils/XAMessages";
-import { policyInfo } from "Utils/XAUtils";
 import { getServiceDef } from "Utils/appState";
 import { FieldArray } from "react-final-form-arrays";
 
@@ -926,14 +927,17 @@ export default function AddUpdatePolicyForm() {
           method: "POST",
           data
         });
-        let tblpageData = {};
+        let tablePageData = {};
         if (state && state != null) {
-          tblpageData = state.tblpageData;
-          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          tablePageData = state.tablePageData;
+          if (
+            state.tablePageData.pageRecords % state.tablePageData.pageSize ==
+            0
+          ) {
+            tablePageData["totalPage"] = state.tablePageData.totalPage + 1;
           } else {
-            if (tblpageData !== undefined) {
-              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            if (tablePageData !== undefined) {
+              tablePageData["totalPage"] = state.tablePageData.totalPage;
             }
           }
         }
@@ -943,7 +947,7 @@ export default function AddUpdatePolicyForm() {
         navigate(`/service/${serviceId}/policies/${policyType}`, {
           state: {
             showLastPage: true,
-            addPageData: tblpageData
+            addPageData: tablePageData
           }
         });
       } catch (error) {

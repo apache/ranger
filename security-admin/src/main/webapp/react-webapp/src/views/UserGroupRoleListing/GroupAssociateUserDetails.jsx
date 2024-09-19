@@ -22,11 +22,11 @@ import { fetchApi } from "Utils/fetchAPI";
 import { Button, Row, Col, Alert } from "react-bootstrap";
 import { isAuditor, isKMSAuditor, serverError } from "Utils/XAUtils";
 import { toast } from "react-toastify";
-import { ModalLoader } from "../../components/CommonComponents";
+import { ModalLoader } from "Components/CommonComponents";
 import { map } from "lodash";
 
 function GroupAssociateUserDetails(props) {
-  const { groupID } = props;
+  const { groupId } = props;
   const [userListData, setUserDataList] = useState([]);
   const [filterUserListData, setFilterUserDataList] = useState({
     searchUser: null,
@@ -48,7 +48,7 @@ function GroupAssociateUserDetails(props) {
     let userList;
     try {
       userList = await fetchApi({
-        url: `xusers/${groupID}/users`,
+        url: `xusers/${groupId}/users`,
         method: "GET",
         params: {
           pageSize: totalCount || 100,
@@ -192,7 +192,7 @@ function GroupAssociateUserDetails(props) {
       ) : (
         <>
           <center className="text-muted">
-            No user associate with this group.!!
+            No users are associated with this group !!
           </center>
         </>
       )}

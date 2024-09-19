@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useReducer, useCallback, useEffect, useState } from "react";
+import React, { useReducer, useCallback, useEffect } from "react";
 import {
   useNavigate,
   useParams,
@@ -37,27 +37,31 @@ import { isKeyAdmin, parseSearchFilter } from "Utils/XAUtils";
 import { BlockUi } from "Components/CommonComponents";
 import CustomBreadcrumb from "Views/CustomBreadcrumb";
 
-function init(props) {
+function INITIAL_STATE(initialArg) {
   return {
     loader: true,
-    selcServicesData: [],
-    keydata: [],
-    onchangeval:
-      props.params.kmsManagePage == "new"
+    keyData: [],
+    onChangeValue:
+      initialArg.params.kmsManagePage == "new"
         ? null
         : {
-            value: props.params.kmsServiceName,
-            label: props.params.kmsServiceName
+            value: initialArg.params.kmsServiceName,
+            label: initialArg.params.kmsServiceName
           },
-    deleteshowmodal: false,
-    editshowmodal: false,
-    filterdata: null,
-    pagecount: 0,
+    deleteShowModal: false,
+    editShowModal: false,
+    filterData: null,
+    pageCount: 0,
     kmsservice: {},
-    updatetable: moment.now(),
+    updateTable: moment.now(),
     currentPageIndex: 0,
     currentPageSize: 25,
-    resetPage: { page: 0 }
+    resetPage: { page: 0 },
+    totalCount: 0,
+    searchFilterParams: [],
+    defaultSearchFilterParams: [],
+    refreshTableData: moment.now(),
+    blockUi: false
   };
 }
 
@@ -71,42 +75,42 @@ function reducer(state, action) {
     case "SET_SEL_SERVICE":
       return {
         ...state,
-        selcServicesData: action.selcservicesData,
-        keydata: action.keydatalist,
-        pagecount: action.pagecount
+        keyData: action.keyDataList,
+        pageCount: action.pageCount,
+        totalCount: action.totalCount
       };
     case "SET_ONCHANGE_SERVICE":
       return {
         ...state,
         loader: action.loader,
-        onchangeval: action.onchangeval
+        onChangeValue: action.onChangeValue
       };
     case "SET_DELETE_MODAL":
       return {
         ...state,
-        deleteshowmodal: action.deleteshowmodal,
-        filterdata: action.filterdata
+        deleteShowModal: action.deleteShowModal,
+        filterData: action.filterData
       };
     case "SET_DELETE_MODAL_CLOSE":
       return {
         ...state,
-        deleteshowmodal: action.deleteshowmodal
+        deleteShowModal: action.deleteShowModal
       };
     case "SET_EDIT_MODAL":
       return {
         ...state,
-        editshowmodal: action.editshowmodal,
-        filterdata: action.filterdata
+        editShowModal: action.editShowModal,
+        filterData: action.filterData
       };
     case "SET_EDIT_MODAL_CLOSE":
       return {
         ...state,
-        editshowmodal: action.editshowmodal
+        editShowModal: action.editShowModal
       };
     case "SET_UPDATE_TABLE":
       return {
         ...state,
-        updatetable: action.updatetable
+        updateTable: action.updateTable
       };
     case "SET_CURRENT_PAGE_INDEX":
       return {
@@ -123,39 +127,55 @@ function reducer(state, action) {
         ...state,
         resetPage: action.resetPage
       };
+    case "SET_SEARCH_FILTER_PARAMS":
+      return {
+        ...state,
+        searchFilterParams: action.searchFilterParams,
+        refreshTableData: action.refreshTableData
+      };
+    case "SET_DEFAULT_SEARCH_FILTER_PARAMS":
+      return {
+        ...state,
+        defaultSearchFilterParams: action.defaultSearchFilterParams
+      };
+    case "SET_BLOCK_UI":
+      return {
+        ...state,
+        blockUi: action.blockUi
+      };
     default:
       throw new Error();
   }
 }
 
 const KeyManager = () => {
-  const navigate = useNavigate();
-  const { state } = useLocation();
   const params = useParams();
-  let stateAndParams = { params: params, state: state };
-  const [keyState, dispatch] = useReducer(reducer, stateAndParams, init);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
+  const navigate = useNavigate();
+  const { state: navigateState, search } = useLocation();
 
-  const [totalCount, setTotalCount] = useState(0);
-  const [blockUI, setBlockUI] = useState(false);
+  let initialArg = { params: params, navigateState: navigateState };
+  const [state, dispatch] = useReducer(reducer, initialArg, INITIAL_STATE);
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
     loader,
-    keydata,
-    filterdata,
-    onchangeval,
-    deleteshowmodal,
-    editshowmodal,
+    keyData,
+    filterData,
+    onChangeValue,
+    deleteShowModal,
+    editShowModal,
     currentPageIndex,
     currentPageSize,
-    pagecount,
-    updatetable,
-    resetPage
-  } = keyState;
+    pageCount,
+    updateTable,
+    resetPage,
+    totalCount,
+    searchFilterParams,
+    defaultSearchFilterParams,
+    refreshTableData,
+    blockUi
+  } = state;
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -194,10 +214,17 @@ const KeyManager = () => {
       (!isEmpty(searchFilterParams) || !isEmpty(searchFilterParam)) &&
       JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: "SET_SEARCH_FILTER_PARAMS",
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-  }, [searchParams]);
+    dispatch({
+      type: "SET_DEFAULT_SEARCH_FILTER_PARAMS",
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+  }, [search]);
 
   const fetchServices = async (inputValue) => {
     const allParams = {
@@ -219,7 +246,7 @@ const KeyManager = () => {
         errorMsg = `Error! ${error.response.data.msgDesc}`;
       }
       toast.error(errorMsg);
-      console.error(`Error occurred while fetching Services! ${error}`);
+      console.error(`Error occurred while fetching services : ${error}`);
     }
 
     serviceOptions = servicesData.map((obj) => ({
@@ -230,117 +257,117 @@ const KeyManager = () => {
     return serviceOptions;
   };
 
-  const selconChange = (e) => {
+  const selectOnchange = (e) => {
     dispatch({
       type: "SET_ONCHANGE_SERVICE",
-      onchangeval: e,
-      loader: false
+      loader: false,
+      onChangeValue: e
     });
   };
 
-  const handleConfirmClick = () => {
-    handleDeleteClick();
+  const confirmKeyDelete = () => {
+    handleKeyDelete();
     dispatch({
       type: "SET_DELETE_MODAL",
-      deleteshowmodal: false
+      deleteShowModal: false
     });
   };
 
   const deleteModal = (name) => {
     dispatch({
       type: "SET_DELETE_MODAL",
-      deleteshowmodal: true,
-      filterdata: name
+      deleteShowModal: true,
+      filterData: name
     });
   };
 
   const editModal = (name) => {
     dispatch({
       type: "SET_EDIT_MODAL",
-      editshowmodal: true,
-      filterdata: name
+      editShowModal: true,
+      filterData: name
     });
   };
 
   const closeEditModal = () => {
     dispatch({
       type: "SET_EDIT_MODAL_CLOSE",
-      editshowmodal: false
+      editShowModal: false
     });
   };
 
-  const EditConfirmClick = () => {
-    handleEditClick();
+  const confirmKeyEdit = () => {
+    handleKeyEdit();
     dispatch({
       type: "SET_EDIT_MODAL_CLOSE",
-      editshowmodal: false
+      editShowModal: false
     });
   };
 
-  const handleEditClick = useCallback(async () => {
+  const handleKeyEdit = useCallback(async () => {
     let keyEdit = {};
-    keyEdit.name = filterdata ? filterdata : "";
+    keyEdit.name = filterData ? filterData : "";
     try {
-      setBlockUI(true);
+      dispatch({ type: "SET_BLOCK_UI", blockUi: true });
       await fetchApi({
         url: `/keys/key`,
         method: "PUT",
-        params: { provider: onchangeval ? onchangeval.label : "" },
+        params: { provider: onChangeValue ? onChangeValue.label : "" },
         data: keyEdit
       });
-      setBlockUI(false);
+      dispatch({ type: "SET_BLOCK_UI", blockUi: false });
       toast.success(`Success! Key rollover successfully`);
       dispatch({
         type: "SET_UPDATE_TABLE",
-        updatetable: moment.now()
+        updateTable: moment.now()
       });
     } catch (error) {
-      setBlockUI(false);
-      let errorMsg = `Error occurred during editing Key` + "\n";
+      dispatch({ type: "SET_BLOCK_UI", blockUi: false });
+      let errorMsg = `Error occurred during editing key` + "\n";
       if (error?.response?.data?.msgDesc) {
         errorMsg = "Error! " + error.response.data.msgDesc + "\n";
       }
       toast.error(errorMsg);
-      console.error(`Error occurred during editing Key! ${error}`);
+      console.error(`Error occurred during editing key : ${error}`);
     }
-  }, [filterdata]);
+  }, [filterData]);
 
-  const handleDeleteClick = useCallback(async () => {
+  const handleKeyDelete = useCallback(async () => {
     try {
-      setBlockUI(true);
+      dispatch({ type: "SET_BLOCK_UI", blockUi: true });
       await fetchApi({
-        url: `/keys/key/${filterdata}`,
+        url: `/keys/key/${filterData}`,
         method: "DELETE",
-        params: { provider: onchangeval ? onchangeval.label : "" }
+        params: { provider: onChangeValue ? onChangeValue.label : "" }
       });
-      setBlockUI(false);
+      dispatch({ type: "SET_BLOCK_UI", blockUi: false });
       toast.success(`Success! Key deleted successfully`);
-      if (keydata.length == 1 && currentPageIndex > 1) {
+      if (keyData.length == 1 && currentPageIndex > 1) {
         if (typeof resetPage?.page === "function") {
           resetPage.page(0);
         }
       } else {
         dispatch({
           type: "SET_UPDATE_TABLE",
-          updatetable: moment.now()
+          updateTable: moment.now()
         });
       }
     } catch (error) {
-      setBlockUI(false);
+      dispatch({ type: "SET_BLOCK_UI", blockUi: false });
       let errorMsg = "";
       if (error?.response?.data?.msgDesc) {
         errorMsg = toast.error("Error! " + error.response.data.msgDesc + "\n");
       } else {
-        errorMsg = `Error occurred during deleting Key` + "\n";
+        errorMsg = `Error occurred during deleting key` + "\n";
       }
       console.error(errorMsg);
     }
-  }, [filterdata]);
+  }, [filterData]);
 
   const closeModal = () => {
     dispatch({
       type: "SET_DELETE_MODAL_CLOSE",
-      deleteshowmodal: false
+      deleteShowModal: false
     });
   };
 
@@ -350,39 +377,42 @@ const KeyManager = () => {
         type: "SET_LOADER",
         loader: true
       });
-      let selservicesResp = [];
-      let selcservicesdata = null;
+      let selectedServicesResponse = [];
+      let selectedServicesData = null;
       let totalCount = 0;
       let page = pageIndex;
       let params = { ...searchFilterParams };
+
       params["page"] = page;
       params["startIndex"] = pageIndex * pageSize;
       params["pageSize"] = pageSize;
-      params["provider"] = onchangeval && onchangeval.label;
+      params["provider"] = onChangeValue && onChangeValue.label;
 
       try {
-        selservicesResp = await fetchApi({
+        selectedServicesResponse = await fetchApi({
           url: "/keys/keys",
           params: params
         });
-        selcservicesdata = selservicesResp.data.vXKeys;
-        totalCount = selservicesResp.data.totalCount;
+        selectedServicesData = selectedServicesResponse.data.vXKeys;
+        totalCount = selectedServicesResponse.data.totalCount;
       } catch (error) {
         let errorMsg = `Error occurred while fetching Services`;
         if (error?.response?.data?.msgDesc) {
           errorMsg = "Error! " + error.response.data.msgDesc;
         }
         toast.error(errorMsg);
-        console.error(`Error occurred while fetching Services! ${error}`);
+        console.error(`Error occurred while fetching keys : ${error}`);
       }
 
-      if (state) {
-        state["showLastPage"] = false;
+      if (navigateState) {
+        navigateState["showLastPage"] = false;
       }
+
       dispatch({
         type: "SET_SEL_SERVICE",
-        keydatalist: selcservicesdata,
-        pagecount: Math.ceil(totalCount / pageSize)
+        keyDataList: selectedServicesData,
+        pageCount: Math.ceil(totalCount / pageSize),
+        totalCount: totalCount
       });
       dispatch({
         type: "SET_CURRENT_PAGE_INDEX",
@@ -400,15 +430,14 @@ const KeyManager = () => {
         type: "SET_LOADER",
         loader: false
       });
-      setTotalCount(totalCount);
     },
-    [onchangeval, updatetable, searchFilterParams]
+    [onChangeValue, updateTable, refreshTableData]
   );
 
   const addKey = () => {
-    navigate(`/kms/keys/${onchangeval.label}/create`, {
+    navigate(`/kms/keys/${onChangeValue.label}/create`, {
       state: {
-        detail: onchangeval.label
+        detail: onChangeValue.label
       }
     });
   };
@@ -524,7 +553,7 @@ const KeyManager = () => {
         width: 80
       }
     ],
-    [updatetable]
+    [updateTable]
   );
 
   const searchFilterOptions = [
@@ -537,12 +566,17 @@ const KeyManager = () => {
   ];
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: "SET_SEARCH_FILTER_PARAMS",
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
   };
 
@@ -554,19 +588,19 @@ const KeyManager = () => {
       </div>
 
       <div className="wrap">
-        <BlockUi isUiBlock={blockUI} />
+        <BlockUi isUiBlock={blockUi} />
         <Row>
           <Col sm={12}>
             <div className="formHeader pb-3 mb-3">
               Select Service:
               <AsyncSelect
-                value={onchangeval}
+                value={onChangeValue}
                 className="w-25"
                 isClearable
                 components={{
                   IndicatorSeparator: () => null
                 }}
-                onChange={selconChange}
+                onChange={selectOnchange}
                 loadOptions={fetchServices}
                 placeholder="Please select KMS service"
                 defaultOptions
@@ -588,8 +622,8 @@ const KeyManager = () => {
           {isKeyAdmin() && (
             <Col sm={2} className="text-end">
               <Button
-                className={onchangeval !== null ? "" : "button-disabled"}
-                disabled={onchangeval != null ? false : true}
+                className={onChangeValue !== null ? "" : "button-disabled"}
+                disabled={onChangeValue != null ? false : true}
                 onClick={addKey}
                 data-id="addNewKey"
                 data-cy="addNewKey"
@@ -602,37 +636,37 @@ const KeyManager = () => {
 
         <XATableLayout
           loading={loader}
-          data={keydata || []}
+          data={keyData || []}
           columns={
             isKeyAdmin() ? columns : reject(columns, ["Header", "Action"])
           }
           fetchData={selectServices}
-          pageCount={pagecount}
+          pageCount={pageCount}
           currentPageIndex={currentPageIndex}
           currentPageSize={currentPageSize}
           totalCount={totalCount}
         />
 
-        <Modal show={editshowmodal} onHide={closeEditModal}>
+        <Modal show={editShowModal} onHide={closeEditModal}>
           <Modal.Body>{`Are you sure want to rollover ?`}</Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={closeEditModal}>
               Close
             </Button>
-            <Button variant="primary" onClick={EditConfirmClick}>
-              Ok
+            <Button variant="primary" onClick={confirmKeyEdit}>
+              OK
             </Button>
           </Modal.Footer>
         </Modal>
 
-        <Modal show={deleteshowmodal} onHide={closeModal}>
+        <Modal show={deleteShowModal} onHide={closeModal}>
           <Modal.Body>{`Are you sure you want to delete ?`}</Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={closeModal}>
               Close
             </Button>
-            <Button variant="primary" onClick={handleConfirmClick}>
-              Ok
+            <Button variant="primary" onClick={confirmKeyDelete}>
+              OK
             </Button>
           </Modal.Footer>
         </Modal>

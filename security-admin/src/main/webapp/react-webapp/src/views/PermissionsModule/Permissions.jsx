@@ -17,32 +17,26 @@
  * under the License.
  */
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useReducer } from "react";
 import { Row, Col } from "react-bootstrap";
-import { Link, useSearchParams } from "react-router-dom";
-import XATableLayout from "Components/XATableLayout";
-import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
-import { MoreLess } from "Components/CommonComponents";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { isEmpty, reject, find, isUndefined, sortBy } from "lodash";
+import moment from "moment-timezone";
+import XATableLayout from "Components/XATableLayout";
+import { isSystemAdmin, isKeyAdmin, parseSearchFilter } from "Utils/XAUtils";
+import { Loader, MoreLess } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
-import { commonBreadcrumb, parseSearchFilter } from "../../utils/XAUtils";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
-import { Loader } from "../../components/CommonComponents";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
+import { ACTIONS } from "./action";
+import { reducer, INITIAL_STATE } from "./reducer";
 
 function Permissions() {
-  const [permissionslistData, setPermissions] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageLoader, setPageLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const fetchIdRef = useRef(0);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+
+  const location = useLocation();
+
   const [isAdminRole] = useState(isSystemAdmin() || isKeyAdmin());
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -51,6 +45,7 @@ function Permissions() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
+
     for (const param in currentParams) {
       let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
@@ -78,41 +73,56 @@ function Permissions() {
     // Updating the states for search params, search filter and default search filter
     setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    setPageLoader(false);
-  }, [searchParams]);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+  }, [location.search]);
 
   const fetchPermissions = useCallback(
     async ({ pageSize, pageIndex }) => {
-      setLoader(true);
-      let permissionsdata = [];
-      let totalCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["pageSize"] = pageSize;
-        params["startIndex"] = pageIndex * pageSize;
-        try {
-          const permissionResp = await fetchApi({
-            url: "xusers/permission",
-            params: params
-          });
-          permissionsdata = permissionResp.data.vXModuleDef;
-          totalCount = permissionResp.data.totalCount;
-        } catch (error) {
-          console.error(`Error occurred while fetching Group list! ${error}`);
-        }
-        setPermissions(permissionsdata);
-        setTotalCount(totalCount);
-        setPageCount(Math.ceil(totalCount / pageSize));
-        setLoader(false);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+
+      const params = {
+        ...state.searchFilterParams,
+        pageSize,
+        startIndex: pageIndex * pageSize
+      };
+
+      try {
+        const response = await fetchApi({
+          url: "xusers/permission",
+          params: params
+        });
+
+        const permissionsData = response.data?.vXModuleDef || [];
+        const totalCount = response.data?.totalCount || 0;
+
+        dispatch({
+          type: ACTIONS.SET_TABLE_DATA,
+          tableListingData: permissionsData,
+          pageCount: Math.ceil(totalCount / pageSize),
+          totalCount: totalCount
+        });
+      } catch (error) {
+        console.error(
+          `Error occurred while fetching users permission ! ${error}`
+        );
       }
+
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [searchFilterParams]
+    [state.refreshTableData]
   );
 
   const columns = React.useMemo(
@@ -140,7 +150,6 @@ function Permissions() {
       },
       {
         Header: "Groups",
-        accessor: "groupPermList",
         accessor: (raw) => {
           const Groups = raw.groupPermList.map((group) => {
             return group.groupName;
@@ -155,7 +164,6 @@ function Permissions() {
       },
       {
         Header: "Users",
-        accessor: "userPermList",
         accessor: (raw) => {
           const Users = raw.userPermList.map((user) => {
             return user.userName;
@@ -211,23 +219,27 @@ function Permissions() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="header-wraper">
         <h3 className="wrap-header bold">Permissions</h3>
-        <CustomBreadcrumb />
       </div>
       <div className="wrap">
-        {pageLoader ? (
+        {state.contentLoader ? (
           <Loader />
         ) : (
           <React.Fragment>
@@ -238,24 +250,25 @@ function Permissions() {
                   placeholder="Search for permissions..."
                   options={sortBy(searchFilterOptions, ["label"])}
                   onChange={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
+                  defaultSelected={state.defaultSearchFilterParams}
                 />
               </Col>
             </Row>
+
             <XATableLayout
-              data={permissionslistData}
+              data={state.tableListingData}
               columns={
                 isAdminRole ? columns : reject(columns, ["Header", "Action"])
               }
-              totalCount={totalCount}
-              loading={loader}
+              totalCount={state.totalCount}
+              loading={state.loader}
               fetchData={fetchPermissions}
-              pageCount={pageCount}
+              pageCount={state.pageCount}
             />
           </React.Fragment>
         )}
       </div>
-    </>
+    </React.Fragment>
   );
 }
 

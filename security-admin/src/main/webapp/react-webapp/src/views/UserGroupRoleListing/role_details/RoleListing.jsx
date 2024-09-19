@@ -17,10 +17,15 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, useReducer } from "react";
 import { Button, Row, Col, Modal } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
-import { MoreLess, scrollToNewData } from "Components/CommonComponents";
+import {
+  BlockUi,
+  Loader,
+  MoreLess,
+  scrollToNewData
+} from "Components/CommonComponents";
 import {
   useNavigate,
   Link,
@@ -28,7 +33,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import moment from "moment-timezone";
-import { find, isEmpty, map } from "lodash";
+import { find, isEmpty, isUndefined, map } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
 import {
@@ -39,44 +44,21 @@ import {
   serverError,
   parseSearchFilter
 } from "Utils/XAUtils";
-import { isUndefined } from "lodash";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import { Loader } from "../../../components/CommonComponents";
-import { BlockUi } from "../../../components/CommonComponents";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
+import { ACTIONS } from "./action";
+import { reducer, INITIAL_STATE } from "./reducer";
 
-function Roles() {
+function RoleListing() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const [roleListingData, setRoleData] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageLoader, setPageLoader] = useState(true);
+  const { state: navigateState, search } = useLocation();
 
-  const [totalCount, setTotalCount] = useState(0);
-  const fetchIdRef = useRef(0);
-  const selectedRows = useRef([]);
-  const [showModal, setConfirmModal] = useState(false);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [pageCount, setPageCount] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage : 0
-  );
-  const [currentpageIndex, setCurrentPageIndex] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage - 1 : 0
-  );
-  const [currentpageSize, setCurrentPageSize] = useState(
-    state && state.showLastPage ? state.addPageData.pageSize : 25
-  );
-  const [resetPage, setResetPage] = useState({ page: 0 });
-  const [tblpageData, setTblPageData] = useState({
-    totalPage: 0,
-    pageRecords: 0,
-    pageSize: 25
-  });
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
+  let initialArg = { navigateState: navigateState };
+
+  const [state, dispatch] = useReducer(reducer, initialArg, INITIAL_STATE);
+
   const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [blockUI, setBlockUI] = useState(false);
+
+  const selectedRows = useRef([]);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -112,109 +94,126 @@ function Roles() {
     // Updating the states for search params, search filter and default search filter
     setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    setPageLoader(false);
-    localStorage.setItem("newDataAdded", state && state.showLastPage);
-  }, [searchParams]);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+    localStorage.setItem(
+      "newDataAdded",
+      navigateState && navigateState.showLastPage
+    );
+  }, [search]);
 
   useEffect(() => {
     if (localStorage.getItem("newDataAdded") == "true") {
-      scrollToNewData(roleListingData);
+      scrollToNewData(state.tableListingData);
     }
-  }, [totalCount]);
+  }, [state.totalCount]);
 
-  const fetchRoleInfo = useCallback(
+  const fetchRoles = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
-      setLoader(true);
-      let roleData = [],
-        roleResp = [];
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+      let roleData = [];
       let totalCount = 0;
       let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
+        navigateState && navigateState.showLastPage
+          ? navigateState.addPageData.totalPage - 1
           : pageIndex;
       let totalPageCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["page"] = page;
-        params["startIndex"] =
-          state && state.showLastPage
-            ? (state.addPageData.totalPage - 1) * pageSize
-            : pageIndex * pageSize;
-        params["pageSize"] = pageSize;
-        try {
-          roleResp = await fetchApi({
-            url: "roles/lookup/roles",
-            params: params
-          });
-          roleData = roleResp.data.roles;
-          totalCount = roleResp.data.totalCount;
-          totalPageCount = Math.ceil(totalCount / pageSize);
-        } catch (error) {
-          serverError(error);
-          console.error(`Error occurred while fetching User list! ${error}`);
-        }
-        if (state) {
-          state["showLastPage"] = false;
-        }
-        setTblPageData({
-          totalPage: totalPageCount,
-          pageRecords: roleResp && roleResp.data && roleResp.data.totalCount,
-          pageSize: 25
+      let params = { ...state.searchFilterParams };
+
+      params["page"] = page;
+      params["startIndex"] =
+        navigateState && navigateState.showLastPage
+          ? (navigateState.addPageData.totalPage - 1) * pageSize
+          : pageIndex * pageSize;
+      params["pageSize"] = pageSize;
+
+      try {
+        const response = await fetchApi({
+          url: "roles/lookup/roles",
+          params: params
         });
-        setRoleData(roleData);
-        setTotalCount(totalCount);
-        setPageCount(totalPageCount);
-        setCurrentPageIndex(page);
-        setCurrentPageSize(pageSize);
-        setResetPage({ page: gotoPage });
-        setLoader(false);
+        roleData = response.data.roles || [];
+        totalCount = response.data.totalCount || 0;
+        totalPageCount = Math.ceil(totalCount / pageSize);
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching roles ! ${error}`);
       }
+
+      if (navigateState) {
+        navigateState["showLastPage"] = false;
+      }
+
+      dispatch({
+        type: ACTIONS.SET_TABLE_DATA,
+        tableListingData: roleData,
+        totalCount: totalCount,
+        pageCount: totalPageCount,
+        currentPageIndex: page,
+        currentPageSize: pageSize,
+        resetPage: { page: gotoPage },
+        tablePageData: {
+          totalPage: totalPageCount,
+          pageRecords: totalCount,
+          pageSize: pageSize
+        }
+      });
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
-  const handleDeleteBtnClick = () => {
+  const roleDelete = () => {
     if (selectedRows.current.length > 0) {
-      toggleConfirmModal();
+      toggleRoleDeleteModal();
     } else {
-      toast.warning("Please select atleast one role!!");
+      toast.warning("Please select atleast one role !!");
     }
   };
 
-  const toggleConfirmModal = () => {
-    setConfirmModal((state) => !state);
+  const toggleRoleDeleteModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_DELETE_MODAL,
+      showDeleteModal: !state.showDeleteModal
+    });
   };
 
-  const handleConfirmClick = () => {
-    handleDeleteClick();
+  const confirmRoleDelete = () => {
+    handleRoleDelete();
   };
 
-  const handleDeleteClick = async () => {
+  const handleRoleDelete = async () => {
     const selectedData = selectedRows.current;
     let errorMsg = "";
     if (selectedData.length > 0) {
-      toggleConfirmModal();
+      toggleRoleDeleteModal();
       for (const { original } of selectedData) {
         try {
-          setBlockUI(true);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: true });
           await fetchApi({
             url: `roles/roles/${original.id}`,
             method: "DELETE"
           });
-          setBlockUI(false);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
         } catch (error) {
-          setBlockUI(false);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
           if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
-              `Error occurred during deleting Role: ${original.name}` + "\n";
+              `Error occurred during deleting role: ${original.name}` + "\n";
           }
           console.error(errorMsg);
         }
@@ -222,20 +221,30 @@ function Roles() {
       if (errorMsg) {
         toast.error(errorMsg);
       } else {
-        toast.success("Role deleted successfully!");
+        toast.success("Role deleted successfully !");
         if (
-          (roleListingData.length == 1 ||
-            roleListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 0
+          (state.tableListingData.length == 1 ||
+            state.tableListingData.length == selectedRows.current.length) &&
+          state.currentPageIndex > 0
         ) {
-          if (typeof resetPage?.page === "function") {
-            resetPage.page(0);
+          if (typeof state.resetPage?.page === "function") {
+            state.resetPage.page(0);
           }
         } else {
-          setUpdateTable(moment.now());
+          dispatch({
+            type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+            searchFilterParams: state.searchFilterParams,
+            refreshTableData: moment.now()
+          });
         }
       }
     }
+  };
+
+  const addRole = () => {
+    navigate("/roles/create", {
+      state: { tablePageData: state.tablePageData }
+    });
   };
 
   const columns = React.useMemo(
@@ -265,7 +274,6 @@ function Roles() {
       },
       {
         Header: "Users",
-        accessor: "users",
         accessor: (raw) => {
           let usersList = map(raw.users, "name");
           return !isEmpty(usersList) ? (
@@ -277,7 +285,6 @@ function Roles() {
       },
       {
         Header: "Groups",
-        accessor: "groups",
         accessor: (raw) => {
           let groupsList = map(raw.groups, "name");
           return !isEmpty(groupsList) ? (
@@ -289,7 +296,6 @@ function Roles() {
       },
       {
         Header: "Roles",
-        accessor: "roles",
         accessor: (raw) => {
           let rolesList = map(raw.roles, "name");
 
@@ -303,10 +309,6 @@ function Roles() {
     ],
     []
   );
-
-  const addRole = () => {
-    navigate("/roles/create", { state: { tblpageData: tblpageData } });
-  };
 
   const searchFilterOptions = [
     {
@@ -330,25 +332,31 @@ function Roles() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
-    setSearchFilterParams(searchFilterParam);
+
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
   return (
     <div className="wrap">
-      {pageLoader ? (
+      {state.contentLoader ? (
         <Loader />
       ) : (
         <React.Fragment>
-          <BlockUi isUiBlock={blockUI} />
+          <BlockUi isUiBlock={state.blockUi} />
           <Row className="mb-4">
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter
@@ -356,7 +364,7 @@ function Roles() {
                 placeholder="Search for your roles..."
                 options={searchFilterOptions}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </Col>
             {isSystemAdmin() && (
@@ -375,7 +383,7 @@ function Roles() {
                   variant="danger"
                   size="sm"
                   title="Delete"
-                  onClick={handleDeleteBtnClick}
+                  onClick={roleDelete}
                   data-id="deleteUserGroup"
                   data-cy="deleteUserGroup"
                 >
@@ -386,15 +394,15 @@ function Roles() {
           </Row>
 
           <XATableLayout
-            data={roleListingData}
+            data={state.tableListingData}
             columns={columns}
-            fetchData={fetchRoleInfo}
-            totalCount={totalCount}
-            pageCount={pageCount}
-            currentpageIndex={currentpageIndex}
-            currentpageSize={currentpageSize}
+            fetchData={fetchRoles}
+            totalCount={state.totalCount}
+            pageCount={state.pageCount}
+            currentpageIndex={state.currentPageIndex}
+            currentpageSize={state.currentPageSize}
             pagination
-            loading={loader}
+            loading={state.loader}
             rowSelectOp={
               (isSystemAdmin() || isKeyAdmin()) && {
                 position: "first",
@@ -403,7 +411,7 @@ function Roles() {
             }
           />
 
-          <Modal show={showModal} onHide={toggleConfirmModal}>
+          <Modal show={state.showDeleteModal} onHide={toggleRoleDeleteModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
                 Are you sure you want to delete the&nbsp;
@@ -423,11 +431,11 @@ function Roles() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={toggleConfirmModal}
+                onClick={toggleRoleDeleteModal}
               >
                 Close
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmClick}>
+              <Button variant="primary" size="sm" onClick={confirmRoleDelete}>
                 OK
               </Button>
             </Modal.Footer>
@@ -438,4 +446,4 @@ function Roles() {
   );
 }
 
-export default Roles;
+export default RoleListing;
