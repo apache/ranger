@@ -53,13 +53,20 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 	private static final int    RESOURCE_COUNT             = 4;
 
 	// This flag results in ofs atlas qualifiedName to parse paths similar to o3fs
-	public static final String PROP_LEGACY_PARSING       = "ranger.tagsync.atlas.ozone.legacy.parsing.enabled";
-	public static final String PROP_OFS_KEY_DELIMITER    = "ranger.tagsync.atlas.ozone.ofs.key_entity.separator";
-	public static final String PROP_OFS_BUCKET_DELIMITER = "ranger.tagsync.atlas.ozone.ofs.bucket_entity.separator";
+	public static final String PROP_LEGACY_PARSING       			= "ranger.tagsync.atlas.ozone.legacy.parsing.enabled";
+	public static final String PROP_OFS_KEY_DELIMITER    			= "ranger.tagsync.atlas.ozone.ofs.key_entity.separator";
+	public static final String PROP_OFS_BUCKET_DELIMITER 			= "ranger.tagsync.atlas.ozone.ofs.bucket_entity.separator";
 
-	private String ofsKeyDelimiter       = "/";
-	private String ofsBucketDelimiter    = "\\.";
-	private boolean legacyParsingEnabled = false;
+	public static final String PROP_OFS_KEY_RECURSIVE_ENABLED  = "ranger.tagsync.atlas.ozone.ofs.key.is.recursive.enabled";
+	public static final String PROP_O3FS_KEY_RECURSIVE_ENABLED = "ranger.tagsync.atlas.ozone.o3fs.key.is.recursive.enabled";
+
+	private String ofsKeyDelimiter            = "/";
+	private String ofsBucketDelimiter         = "\\.";
+	private boolean legacyParsingEnabled 			= false;
+	// keeping it true for ofs since it is new support from tagsync
+	private boolean isRecursiveEnabledOFSKey  = true;
+	// Setting to true by default. Causes behavior change for customer with existing deployments. Configurable if required otherwise
+	private boolean isRecursiveEnabledO3FSKey = true;
 
 	public AtlasOzoneResourceMapper() {
 		super("ozone", SUPPORTED_ENTITY_TYPES);
@@ -72,16 +79,18 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 			this.legacyParsingEnabled = Boolean.parseBoolean((String) this.properties.getOrDefault(PROP_LEGACY_PARSING, Boolean.toString(legacyParsingEnabled)));
 			this.ofsKeyDelimiter      = (String) this.properties.getOrDefault(PROP_OFS_KEY_DELIMITER, this.ofsKeyDelimiter);
 			this.ofsBucketDelimiter   = (String) this.properties.getOrDefault(PROP_OFS_BUCKET_DELIMITER, this.ofsBucketDelimiter);
+			this.isRecursiveEnabledOFSKey = Boolean.parseBoolean((String) this.properties.getOrDefault(PROP_OFS_KEY_RECURSIVE_ENABLED, Boolean.toString(isRecursiveEnabledOFSKey)));
+			this.isRecursiveEnabledO3FSKey = Boolean.parseBoolean((String) this.properties.getOrDefault(PROP_O3FS_KEY_RECURSIVE_ENABLED, Boolean.toString(isRecursiveEnabledO3FSKey)));
 		}
 
 		LOG.info("ofsKeyDelimiter={}", this.ofsKeyDelimiter);
 		LOG.info("ofsBucketDelimiter={}", this.ofsBucketDelimiter);
 		LOG.info("legacyParsingEnabled={}",this.legacyParsingEnabled);
 	}
-
 	@Override
 	public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
 		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+
 		if (StringUtils.isEmpty(qualifiedName)) {
 			throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
 		}
@@ -92,7 +101,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 
 		String   entityType  = entity.getTypeName();
 		String   entityGuid  = entity.getGuid();
-
 		String[] resources   = parseQualifiedName(qualifiedName, entityType);
 		String   volName     = resources[IDX_VOLUME];
 		String   bktName     = resources[IDX_BUCKET];
@@ -106,46 +114,45 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 		if (StringUtils.isEmpty(clusterName)) {
 			throwExceptionWithMessage("cluster-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 		}
-		String   serviceName = getRangerServiceName(clusterName);
 
-		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();
+		String                            serviceName = getRangerServiceName(clusterName);
+		Map<String, RangerPolicyResource> elements    = new HashMap<>();
 
 		if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_VOLUME)) {
-			if (StringUtils.isNotEmpty(volName)) {
-				elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
-			} else {
-				throwExceptionWithMessage("volume-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
+			if (StringUtils.isEmpty(volName)) {
+				throwExceptionWithMessage("volume-name not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 			}
+
+			elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
 		} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_BUCKET)) {
-			if (StringUtils.isNotEmpty(volName) && StringUtils.isNotEmpty(bktName)) {
-				elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
-				elements.put(RANGER_TYPE_OZONE_BUCKET, new RangerPolicyResource(bktName));
-			} else {
-				if (StringUtils.isEmpty(volName)) {
-					throwExceptionWithMessage("volume-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-				} else if (StringUtils.isEmpty(bktName)) {
-					throwExceptionWithMessage("bucket-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-				}
+			if (StringUtils.isEmpty(volName)) {
+				throwExceptionWithMessage("volume-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
+			} else if (StringUtils.isEmpty(bktName)) {
+				throwExceptionWithMessage("bucket-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 			}
+
+			elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
+			elements.put(RANGER_TYPE_OZONE_BUCKET, new RangerPolicyResource(bktName));
 		} else if (StringUtils.equals(entityType, ENTITY_TYPE_OZONE_KEY)) {
-			if (StringUtils.isNotEmpty(volName) && StringUtils.isNotEmpty(bktName) && StringUtils.isNotEmpty(keyName)) {
-				elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
-				elements.put(RANGER_TYPE_OZONE_BUCKET, new RangerPolicyResource(bktName));
-				elements.put(RANGER_TYPE_OZONE_KEY, new RangerPolicyResource(keyName));
-			} else {
-				if (StringUtils.isEmpty(volName)) {
-					throwExceptionWithMessage("volume-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-				} else if (StringUtils.isEmpty(bktName)) {
-					throwExceptionWithMessage("bucket-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-				} else if (StringUtils.isEmpty(keyName)) {
-					throwExceptionWithMessage("key-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-				}
+			if (StringUtils.isEmpty(volName)) {
+				throwExceptionWithMessage("volume-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
+			} else if (StringUtils.isEmpty(bktName)) {
+				throwExceptionWithMessage("bucket-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
+			} else if (StringUtils.isEmpty(keyName)) {
+				throwExceptionWithMessage("key-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 			}
+			boolean isRecursive = isRecursiveEnabledO3FSKey;
+			if (qualifiedName.startsWith("ofs://")){
+				isRecursive = isRecursiveEnabledOFSKey;
+			}
+			elements.put(RANGER_TYPE_OZONE_VOLUME, new RangerPolicyResource(volName));
+			elements.put(RANGER_TYPE_OZONE_BUCKET, new RangerPolicyResource(bktName));
+			elements.put(RANGER_TYPE_OZONE_KEY, new RangerPolicyResource(keyName, false, isRecursive));
 		} else {
 			throwExceptionWithMessage("unrecognized entity-type: " + entityType);
 		}
 
-		if(elements.isEmpty()) {
+		if (elements.isEmpty()) {
 			throwExceptionWithMessage("invalid qualifiedName for entity-type '" + entityType + "': " + qualifiedName);
 		}
 
