@@ -47,7 +47,7 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                 'provider': 'http://ranger-kms:9292'}})
+                                 'provider': 'dbks://http@ranger-kms:9292/kms'}})
 
 trino = RangerService({'name': 'dev_trino',
                        'type': 'trino',
