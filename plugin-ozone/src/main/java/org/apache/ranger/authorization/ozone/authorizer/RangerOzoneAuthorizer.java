@@ -60,11 +60,23 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	RangerDefaultAuditHandler auditHandler = null;
 
 	public RangerOzoneAuthorizer() {
-		rangerPlugin = new RangerBasePlugin("ozone", "ozone");
+		RangerBasePlugin plugin = rangerPlugin;
 
-		rangerPlugin.init(); // this will initialize policy engine and policy refresher
-		auditHandler = new RangerDefaultAuditHandler();
-		rangerPlugin.setResultProcessor(auditHandler);
+		if (plugin == null) {
+			synchronized (RangerOzoneAuthorizer.class) {
+				plugin = rangerPlugin;
+
+				if (plugin == null) {
+					plugin = new RangerBasePlugin("ozone", "ozone");
+					plugin.init(); // this will initialize policy engine and policy refresher
+
+					auditHandler = new RangerDefaultAuditHandler();
+					plugin.setResultProcessor(auditHandler);
+
+					rangerPlugin = plugin;
+				}
+			}
+		}
 	}
 
 	@Override
