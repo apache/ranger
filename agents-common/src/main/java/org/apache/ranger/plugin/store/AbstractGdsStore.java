@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.util.SearchFilter;
 
+import java.util.List;
 
 public abstract class AbstractGdsStore implements GdsStore {
     @Override
@@ -90,13 +91,13 @@ public abstract class AbstractGdsStore implements GdsStore {
 
 
     @Override
-    public RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception { return null; }
+    public List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) throws Exception { return null; }
 
     @Override
     public RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception { return null; }
 
     @Override
-    public void removeSharedResource(Long sharedResourceId) throws Exception { }
+    public void removeSharedResources(List<Long> sharedResourceIds) throws Exception { }
 
     @Override
     public RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception { return null; }
