@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -63,6 +64,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import java.util.Arrays;
 import java.util.List;
 
 @Path("gds")
@@ -72,6 +74,12 @@ import java.util.List;
 public class GdsREST {
     private static final Logger LOG      = LoggerFactory.getLogger(GdsREST.class);
     private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.GdsREST");
+
+    private final RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+    private final int SHARED_RESOURCES_MAX_BATCH_SIZE = config.getInt("ranger.admin.rest.gds.shared.resources.max.batch.size", 100);
+
+    public static final String EMPTY_STRING = "";
 
     @Autowired
     GdsDBStore gdsStore;
@@ -1045,7 +1053,9 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addSharedResource(" + resource + ")");
             }
 
-            ret = gdsStore.addSharedResource(resource);
+            List<RangerSharedResource> sharedResources = gdsStore.addSharedResources(Arrays.asList(resource));
+
+            ret = CollectionUtils.isNotEmpty(sharedResources) ? sharedResources.get(0) : null;
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -1057,6 +1067,42 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.addSharedResource({}): {}", resource, ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path("/resources")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ADD_SHARED_RESOURCES + "\")")
+    public List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) {
+        LOG.debug("==> GdsREST.addSharedResources({})", resources);
+
+        List<RangerSharedResource> ret;
+        RangerPerfTracer           perf = null;
+
+        try {
+            if (resources.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
+                throw new Exception("addSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
+            }
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addSharedResources(" + resources + ")");
+            }
+
+            ret = gdsStore.addSharedResources(resources);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("addSharedResources({}) failed", resources, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addSharedResources({}): {}", resources, ret);
 
         return ret;
     }
@@ -1109,7 +1155,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.removeSharedResource(" + resourceId + ")");
             }
 
-            gdsStore.removeSharedResource(resourceId);
+            gdsStore.removeSharedResources(Arrays.asList(resourceId));
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -1121,6 +1167,37 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.removeSharedResource({})", resourceId);
+    }
+
+    @DELETE
+    @Path("/resources")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.REMOVE_SHARED_RESOURCES + "\")")
+    public void removeSharedResources(List<Long> resourceIds) {
+        LOG.debug("==> GdsREST.removeSharedResources({})", resourceIds);
+
+        RangerPerfTracer perf = null;
+
+        try {
+            if (resourceIds.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
+                throw new Exception("removeSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
+            }
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.removeSharedResources(" + resourceIds + ")");
+            }
+
+            gdsStore.removeSharedResources(resourceIds);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("removeSharedResources({}) failed", resourceIds, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.removeSharedResources({})", resourceIds);
     }
 
     @GET

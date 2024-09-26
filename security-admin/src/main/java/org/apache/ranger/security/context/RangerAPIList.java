@@ -241,8 +241,10 @@ public class RangerAPIList {
 	public static final String GET_DATA_SHARE_SUMMARY = "GdsREST.getDataShareSummary";
 
 	public static final String ADD_SHARED_RESOURCE     = "GdsREST.addSharedResource";
+	public static final String ADD_SHARED_RESOURCES     = "GdsREST.addSharedResources";
 	public static final String UPDATE_SHARED_RESOURCE  = "GdsREST.updateSharedResource";
 	public static final String REMOVE_SHARED_RESOURCE  = "GdsREST.removeSharedResource";
+	public static final String REMOVE_SHARED_RESOURCES  = "GdsREST.removeSharedResources";
 	public static final String GET_SHARED_RESOURCE     = "GdsREST.getSharedResource";
 	public static final String SEARCH_SHARED_RESOURCES = "GdsREST.searchSharedResources";
 

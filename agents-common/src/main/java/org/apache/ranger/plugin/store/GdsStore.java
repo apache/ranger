@@ -101,11 +101,11 @@ public interface GdsStore {
     PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception;
 
 
-    RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception;
+    List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) throws Exception;
 
     RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception;
 
-    void removeSharedResource(Long sharedResourceId) throws Exception;
+    void removeSharedResources(List<Long> sharedResourceIds) throws Exception;
 
     RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception;
 
