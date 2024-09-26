@@ -18,6 +18,10 @@
 
 echo "export JAVA_HOME=${JAVA_HOME}" >> ${HBASE_HOME}/conf/hbase-env.sh
 
+if [[ "${RANGER_BASE_JAVA_VERSION}" == "17" ]]; then
+   echo "export HBASE_OPTS=\"${HBASE_OPTS} --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED\"" >> ${HBASE_HOME}/conf/hbase-env.sh
+fi
+
 cat <<EOF > /etc/ssh/ssh_config
 Host *
    StrictHostKeyChecking no

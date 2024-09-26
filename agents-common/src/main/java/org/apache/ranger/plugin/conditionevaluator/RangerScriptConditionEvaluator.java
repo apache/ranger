@@ -77,7 +77,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 
 			LOG.error("failed to initialize condition '" + conditionType + "': script engine '" + engineName + "' was not created");
 		} else {
-			LOG.info("ScriptEngine for engineName=[" + engineName + "] is successfully created");
+			LOG.info("ScriptEngine for engineName=[" + engineName + "] is successfully created. javax.script.engine={}", scriptEngine.get("javax.script.engine"));
 		}
 
 		if (LOG.isDebugEnabled()) {

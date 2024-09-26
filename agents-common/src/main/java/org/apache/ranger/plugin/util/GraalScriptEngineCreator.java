@@ -85,7 +85,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
                 ret.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             }
         } catch (Throwable t) {
-            LOG.debug("GraalScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
+            LOG.warn("GraalScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
         }
 
         if (ret == null) {
