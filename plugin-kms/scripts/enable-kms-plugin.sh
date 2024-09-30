@@ -378,8 +378,7 @@ then
 			archivefn="${HCOMPONENT_CONF_DIR}/.${orgfn}.${dt}"
         	newfn="${HCOMPONENT_CONF_DIR}/.${orgfn}-new.${dt}"
           if [ "${KMS_IN_DOCKER}" ]; then
-            TEMP_DIR="${HCOMPONENT_
-            CONF_DIR}"/saved
+            TEMP_DIR="${HCOMPONENT_CONF_DIR}"/saved
             mkdir "${TEMP_DIR}"
             archivefn="${TEMP_DIR}/.${orgfn}.${dt}"
             newfn="${TEMP_DIR}/.${orgfn}-new.${dt}"
