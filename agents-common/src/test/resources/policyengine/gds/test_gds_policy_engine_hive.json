@@ -263,7 +263,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "update", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": null, "projects": null, "isAllowed": false, "isAudited": false, "policyId": -1 }
+      "result": null
     },
 
     {

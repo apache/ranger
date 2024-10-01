@@ -31,7 +31,11 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 
 public class GdsDatasetEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
@@ -85,18 +89,12 @@ public class GdsDatasetEvaluator {
         return name;
     }
 
-    public boolean isInProject(long projectId) {
-        boolean ret = false;
+    public boolean isInProject(Long projectId) {
+        return dipEvaluators.stream().anyMatch(e -> e.getProjectId().equals(projectId) && e.isActive());
+    }
 
-        for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-            if (dipEvaluator.getProjectId().equals(projectId)) {
-                ret = true;
-
-                break;
-            }
-        }
-
-        return ret;
+    public boolean isActive() {
+        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
     public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
@@ -109,9 +107,7 @@ public class GdsDatasetEvaluator {
                 GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
                 RangerAccessResult      datasetResult  = datasetRequest.createAccessResult();
 
-                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                    policyEvaluator.evaluate(datasetRequest, datasetResult);
-                }
+                policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
 
                 if (!result.getIsAllowed()) {
                     if (datasetResult.getIsAllowed()) {
@@ -126,13 +122,7 @@ public class GdsDatasetEvaluator {
                 }
             }
 
-            for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-                if (!projectIds.contains(dipEvaluator.getProjectId())) {
-                    if (dipEvaluator.isAllowed(request)) {
-                        projectIds.add(dipEvaluator.getProjectId());
-                    }
-                }
-            }
+            dipEvaluators.stream().filter(e -> !projectIds.contains(e.getProjectId()) && e.isAllowed(request) && e.getProjectEvaluator().isActive()).map(GdsDipEvaluator::getProjectId).forEach(projectIds::add);
         }
 
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
@@ -172,10 +162,6 @@ public class GdsDatasetEvaluator {
 
     void addDipEvaluator(GdsDipEvaluator dipEvaluator) {
         dipEvaluators.add(dipEvaluator);
-    }
-
-    private boolean isActive() {
-        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
     private static class GdsDatasetAccessRequest extends RangerAccessRequestImpl {

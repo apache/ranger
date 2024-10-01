@@ -57,6 +57,16 @@ public class GdsDipEvaluator {
 
     public GdsProjectEvaluator getProjectEvaluator() { return projectEvaluator; }
 
+    public boolean isActive() {
+        boolean ret = dip.getStatus() == RangerGds.GdsShareStatus.ACTIVE;
+
+        if (ret && scheduleEvaluator != null) {
+            ret = scheduleEvaluator.isApplicable(System.currentTimeMillis());
+        }
+
+        return ret;
+    }
+
     public boolean isAllowed(RangerAccessRequest request) {
         boolean ret = isActive();
 
@@ -75,16 +85,5 @@ public class GdsDipEvaluator {
         projectEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
 
         LOG.debug("<== GdsDipEvaluator.getResourceACLs({}, {})", request, acls);
-    }
-
-
-    private boolean isActive() {
-        boolean ret = dip.getStatus() == RangerGds.GdsShareStatus.ACTIVE;
-
-        if (ret && scheduleEvaluator != null) {
-            ret = scheduleEvaluator.isApplicable(System.currentTimeMillis());
-        }
-
-        return ret;
     }
 }

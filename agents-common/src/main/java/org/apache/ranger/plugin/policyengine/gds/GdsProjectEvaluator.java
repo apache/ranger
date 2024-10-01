@@ -86,6 +86,10 @@ public class GdsProjectEvaluator {
         return name;
     }
 
+    public boolean isActive() {
+        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
+    }
+
     public void evaluate(RangerAccessRequest request, GdsAccessResult result) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
 
@@ -143,10 +147,6 @@ public class GdsProjectEvaluator {
         }
 
         return ret;
-    }
-
-    private boolean isActive() {
-        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
 

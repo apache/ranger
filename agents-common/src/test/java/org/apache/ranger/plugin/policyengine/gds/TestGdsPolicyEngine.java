@@ -88,16 +88,14 @@ public class TestGdsPolicyEngine {
 
                 RangerAccessRequestUtil.setResourceZoneNamesInContext(test.request, zoneNames);
 
-                if (test.result != null) {
-                    GdsAccessResult result = policyEngine.evaluate(test.request);
-
-                    assertEquals(test.name, test.result, result);
-                }
-
                 if (test.acls != null) {
                     RangerResourceACLs acls = policyEngine.getResourceACLs(test.request);
 
                     assertEquals(test.name, test.acls, acls);
+                } else {
+                    GdsAccessResult result = policyEngine.evaluate(test.request);
+
+                    assertEquals(test.name, test.result, result);
                 }
             } else if (test.sharedWith != null) {
                 Set<String> users  = test.sharedWith.get("users");
@@ -116,33 +114,23 @@ public class TestGdsPolicyEngine {
                     assertEquals(test.name, test.projects, projects);
                 }
             } else if (test.resourceIds != null) {
-                Set<Long> resourceIds = new HashSet<>();
+                Iterator<GdsSharedResourceEvaluator> iter;
 
                 if (test.datasetId != null) {
-                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getDatasetResources(test.datasetId);
-
-                    while (iter.hasNext()) {
-                        resourceIds.add(iter.next().getId());
-                    }
+                    iter = policyEngine.getDatasetResources(test.datasetId);
                 } else if (test.projectId != null) {
-                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getProjectResources(test.projectId);
-
-                    while (iter.hasNext()) {
-                        resourceIds.add(iter.next().getId());
-                    }
+                    iter = policyEngine.getProjectResources(test.projectId);
                 } else if (test.dataShareId != null) {
-                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getDataShareResources(test.dataShareId);
-
-                    while (iter.hasNext()) {
-                        resourceIds.add(iter.next().getId());
-                    }
+                    iter = policyEngine.getDataShareResources(test.dataShareId);
                 } else if (test.projectIds != null || test.datasetIds != null || test.dataShareIds != null) {
-                    Iterator<GdsSharedResourceEvaluator> iter = policyEngine.getResources(test.projectIds, test.datasetIds, test.dataShareIds);
-
-                    while (iter.hasNext()) {
-                        resourceIds.add(iter.next().getId());
-                    }
+                    iter = policyEngine.getResources(test.projectIds, test.datasetIds, test.dataShareIds);
+                } else {
+                    iter = Collections.emptyIterator();
                 }
+
+                Set<Long> resourceIds = new HashSet<>();
+
+                iter.forEachRemaining(e -> resourceIds.add(e.getId()));
 
                 assertEquals(test.name, test.resourceIds, resourceIds);
             }

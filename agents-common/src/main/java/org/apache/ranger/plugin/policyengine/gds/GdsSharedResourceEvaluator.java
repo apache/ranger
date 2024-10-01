@@ -42,7 +42,13 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.SharedResourceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsSharedResourceEvaluator.class);
@@ -107,6 +113,8 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
 
     @Override
     public boolean isLeaf(String resourceName) { return StringUtils.equals(leafResourceDef.getName(), resourceName); }
+
+    public Long getDataShareId() { return resource.getDataShareId(); }
 
     public Collection<String> getResourceKeys() {
         return resource != null && resource.getResource() != null ? resource.getResource().keySet() : Collections.emptySet();
