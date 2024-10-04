@@ -335,6 +335,32 @@
 		</query>
 	</named-query>
 
+     <named-query name="XXTrxLog.findByTrxIdForMigration">
+          <query>SELECT obj.id, obj.createTime, obj.addedByUserId,
+                        obj.objectClassType, obj.objectId, obj.objectName,
+                        obj.parentObjectId, obj.parentObjectClassType, obj.parentObjectName,
+                        obj.attributeName, obj.previousValue, obj.newValue,
+                        obj.transactionId, obj.action, obj.requestId, obj.sessionId, obj.sessionType
+                   FROM XXTrxLog obj
+                  WHERE obj.transactionId = :transactionId
+               ORDER BY obj.id
+          </query>
+     </named-query>
+
+	<named-query name="XXTrxLog.findDistinctTrxIds">
+		<query>SELECT obj.transactionId FROM XXTrxLog obj GROUP BY obj.transactionId ORDER BY MIN(obj.id)
+		</query>
+	</named-query>
+
+	<named-query name="XXTrxLog.findDistinctTrxIdsByTimeInterval">
+		<query>
+			SELECT obj.transactionId FROM XXTrxLog obj
+			WHERE obj.createTime BETWEEN :startDate AND :endDate
+			GROUP BY obj.transactionId
+			ORDER BY MIN(obj.id)
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLogV2.findByTrxId">
 		<query>SELECT obj FROM XXTrxLogV2 obj WHERE obj.transactionId = :transactionId order by obj.id</query>
 	</named-query>
