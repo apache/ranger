@@ -25,9 +25,12 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
@@ -39,8 +42,11 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.security.context.RangerAPIList;
@@ -65,7 +71,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Path("gds")
 @Component
@@ -115,6 +124,9 @@ public class GdsREST {
     ServiceUtil serviceUtil;
 
     @Autowired
+    ServiceDBStore serviceDBStore;
+
+    @Autowired
     AssetMgr assetMgr;
 
 
@@ -146,6 +158,44 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.createDataset({}): {}", dataset, ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path("/dataset/{id}/resources/{serviceName}")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ADD_SHARED_RESOURCES + "\")")
+    public List<RangerSharedResource> addDatasetResources(@PathParam("id") Long datasetId,
+                                                          @PathParam("serviceName") String serviceName,
+                                                          @QueryParam("zoneName") @DefaultValue("") String zoneName,
+                                                          List<RangerSharedResource> resources) {
+        LOG.debug("==> GdsREST.addDatasetResources(datasetId={} serviceName={} zoneNam={} resources={})", datasetId, serviceName, zoneName, resources);
+
+        List<RangerSharedResource> ret  = new ArrayList<>();
+        RangerPerfTracer           perf = null;
+
+        try {
+            Long serviceId   = validateAndGetServiceId(serviceName);
+            Long zoneId      = validateAndGetZoneId(zoneName);
+            Long dataShareId = getOrCreateDataShare(datasetId, serviceId, zoneId, serviceName);
+            // Add resources to DataShare
+            for (RangerSharedResource resource : resources) {
+                resource.setDataShareId(dataShareId);
+                RangerSharedResource rangerSharedResource = addSharedResource(resource);
+                ret.add(rangerSharedResource);
+            }
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("GdsREST.addDatasetResources(datasetId={} serviceName={} zoneName={} resources={}) failed!", datasetId, serviceName, zoneName, resources, excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addDatasetResources(RangerSharedResources={})", ret);
 
         return ret;
     }
@@ -1712,6 +1762,111 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{}): ret={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, ret);
+
+        return ret;
+    }
+
+    private Long getOrCreateDataShare(Long datasetId, Long serviceId, Long zoneId, String serviceName) throws Exception {
+        LOG.debug("==> GdsREST.getOrCreateDataShare(dataSetId={} serviceId={} zoneId={} seviceName={})", datasetId);
+
+        Long ret;
+        RangerDataShare rangerDataShare;
+        RangerDataset   rangerDataset = gdsStore.getDataset(datasetId);
+        String          dataShareName = "__dataset_" + datasetId + "__service_" + serviceId + "__zone_" + zoneId;
+
+        SearchFilter filter = new SearchFilter();
+        filter.setParam(SearchFilter.DATA_SHARE_NAME, dataShareName);
+        PList<RangerDataShare> dataSharePList = gdsStore.searchDataShares(filter);
+        List<RangerDataShare> dataShareList = dataSharePList.getList();
+
+        if (CollectionUtils.isNotEmpty(dataShareList)) {
+            List<RangerDataShare> rangerDataShares = dataSharePList.getList();
+            rangerDataShare = rangerDataShares.get(0);
+            ret = rangerDataShare.getId();
+        } else {
+            //Create a DataShare
+            RangerDataShare dataShare = new RangerDataShare();
+            dataShare.setName(dataShareName);
+            dataShare.setDescription(dataShareName);
+            dataShare.setTermsOfUse(rangerDataset.getTermsOfUse());
+            dataShare.setService(serviceName);
+            Set<String> accessTypes = new HashSet<>(CollectionUtils.EMPTY_COLLECTION);
+            dataShare.setDefaultAccessTypes(accessTypes);
+            rangerDataShare = gdsStore.createDataShare(dataShare);
+
+            //Add DataShare to DataSet
+            List<RangerDataShareInDataset> rangerDataShareInDatasets = new ArrayList<>();
+            RangerDataShareInDataset rangerDataShareInDataset = new RangerDataShareInDataset();
+            rangerDataShareInDataset.setDataShareId(rangerDataShare.getId());
+            rangerDataShareInDataset.setDatasetId(rangerDataset.getId());
+            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.ACTIVE);
+            rangerDataShareInDatasets.add(rangerDataShareInDataset);
+            addDataSharesInDataset(rangerDataset.getId(), rangerDataShareInDatasets);
+            ret = rangerDataShare.getId();
+        }
+
+        LOG.debug("<== GdsREST.getOrCreateDataShare(RangerDataShare={})", ret);
+
+        return ret;
+    }
+
+    private Long validateAndGetServiceId(String serviceName){
+        Long ret;
+        if (serviceName == null || serviceName.isEmpty()) {
+            LOG.error("ServiceName not provided");
+            throw restErrorUtil.createRESTException("ServiceName not provided.",
+                    MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        RangerService service;
+
+        try {
+            service = serviceDBStore.getServiceByName(serviceName);
+            ret = service.getId();
+        } catch (Exception e) {
+            LOG.error("Requested Service not found. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        if(service == null){
+            LOG.error("Requested Service not found. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
+                    false);
+        }
+
+        if(!service.getIsEnabled()){
+            LOG.error("Requested Service is disabled. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException("Unauthorized access.",
+                    MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+        }
+
+        return ret;
+    }
+
+    private Long validateAndGetZoneId(String zoneName){
+        Long ret = RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
+
+        if (zoneName == null || zoneName.isEmpty()) {
+            return ret;
+        }
+
+        RangerSecurityZone rangerSecurityZone = null;
+
+        try {
+            rangerSecurityZone = serviceDBStore.getSecurityZone(zoneName);
+            ret = rangerSecurityZone.getId();
+        } catch (Exception e) {
+            LOG.error("Requested Zone not found. ZoneName=" + zoneName);
+            throw restErrorUtil.createRESTException("Zone:" + zoneName + " not found",
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        if(rangerSecurityZone == null){
+            LOG.error("Requested Zone not found. ZoneName=" + zoneName);
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(zoneName),
+                    false);
+        }
 
         return ret;
     }
