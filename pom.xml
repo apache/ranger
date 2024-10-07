@@ -125,7 +125,7 @@
         <ozone.version>1.4.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase.version>2.6.0</hbase.version>
-        <hive.version>3.1.3</hive.version>
+        <hive.version>4.0.0</hive.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <orc.version>1.5.8</orc.version>
         <aircompressor.version>0.27</aircompressor.version>
@@ -145,6 +145,7 @@
         <javax-inject.version>1</javax-inject.version>
         <javax.annotation-api>1.3.2</javax.annotation-api>
         <javax.el.version>3.0.1-b12</javax.el.version>
+        <javax.validation>2.0.1.Final</javax.validation>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
