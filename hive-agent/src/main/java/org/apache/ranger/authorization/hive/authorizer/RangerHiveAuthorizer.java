@@ -1777,7 +1777,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						accessType = HiveAccessType.CREATE;
 					}
 				break;
-
+				case CREATEDATACONNECTOR:
+					if(hiveObj.getType() == HivePrivilegeObjectType.DATACONNECTOR) {
+						accessType = HiveAccessType.CREATE;
+					}
+				break;
 				case CREATEFUNCTION:
 					if(hiveObj.getType() == HivePrivilegeObjectType.FUNCTION) {
 						accessType = HiveAccessType.CREATE;
@@ -1827,6 +1831,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_MERGEFILES:
 				case ALTERTABLE_PARTCOLTYPE:
 				case ALTERTABLE_PROPERTIES:
+				case ALTERTABLE_SETPARTSPEC:
+				case ALTERTABLE_EXECUTE:
+				case ALTERTABLE_CONVERT:
+				case ALTERDATACONNECTOR:
+				case ALTERDATACONNECTOR_OWNER:
+				case ALTERDATACONNECTOR_URL:
 				case ALTERTABLE_PROTECTMODE:
 				case ALTERTABLE_RENAME:
 				case ALTERTABLE_RENAMECOL:
@@ -1840,10 +1850,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_UPDATEPARTSTATS:
 				case ALTERTABLE_UPDATETABLESTATS:
 				case ALTERTABLE_UPDATECOLUMNS:
+				case ALTERTABLE_CREATEBRANCH:
+				case ALTERTABLE_DROPBRANCH:
+				case ALTERTABLE_CREATETAG:
+				case ALTERTABLE_DROPTAG:
 				case ALTERTBLPART_SKEWED_LOCATION:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
 				case ALTER_MATERIALIZED_VIEW_REWRITE:
+				case ALTER_MATERIALIZED_VIEW_REBUILD:
 				// HIVE-22188
 				case MSCK:
 					accessType = HiveAccessType.ALTER;
@@ -1854,6 +1869,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case DROPVIEW:
 				case DROP_MATERIALIZED_VIEW:
 				case DROPDATABASE:
+				case DROPDATACONNECTOR:
 					accessType = HiveAccessType.DROP;
 				break;
 				// HIVE-21968
@@ -1914,9 +1930,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				// any access done for metadata access of actions that have support from hive for filtering
 				case SHOWDATABASES:
+				case SHOWDATACONNECTORS:
 				case SHOW_GRANT:
 				case SWITCHDATABASE:
 				case DESCDATABASE:
+				case DESCDATACONNECTOR:
 				case SHOWTABLES:
 				case SHOWVIEWS:
 					accessType = HiveAccessType.USE;
@@ -1965,6 +1983,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case CREATEMACRO:
 				case CREATEROLE:
 				case DESCFUNCTION:
+				case PREPARE:
+				case EXECUTE:
 				case DFS:
 				case DROPMACRO:
 				case DROPROLE:
@@ -2003,6 +2023,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			break;
 
 			case CREATEDATABASE:
+			case CREATEDATACONNECTOR:
 			case CREATETABLE:
 			case CREATETABLE_AS_SELECT:
 			case CREATEFUNCTION:
@@ -2022,6 +2043,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERTABLE_ARCHIVE:
 			case ALTERTABLE_UNARCHIVE:
 			case ALTERTABLE_PROPERTIES:
+			case ALTERTABLE_SETPARTSPEC:
+			case ALTERTABLE_EXECUTE:
+			case ALTERTABLE_CONVERT:
+			case ALTERDATACONNECTOR:
+			case ALTERDATACONNECTOR_OWNER:
+			case ALTERDATACONNECTOR_URL:
 			case ALTERTABLE_SERIALIZER:
 			case ALTERTABLE_PARTCOLTYPE:
 			case ALTERTABLE_DROPCONSTRAINT:
@@ -2032,6 +2059,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERTABLE_UPDATETABLESTATS:
 			case ALTERTABLE_UPDATEPARTSTATS:
 			case ALTERTABLE_UPDATECOLUMNS:
+			case ALTERTABLE_CREATEBRANCH:
+			case ALTERTABLE_DROPBRANCH:
+			case ALTERTABLE_CREATETAG:
+			case ALTERTABLE_DROPTAG:
 			case ALTERTABLE_PROTECTMODE:
 			case ALTERTABLE_FILEFORMAT:
 			case ALTERTABLE_LOCATION:
@@ -2056,16 +2087,20 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			case EXPLAIN:
 			case DROPDATABASE:
+			case DROPDATACONNECTOR:
 			case SWITCHDATABASE:
 			case LOCKDB:
 			case UNLOCKDB:
 			case DROPTABLE:
 			case DESCTABLE:
 			case DESCFUNCTION:
+			case PREPARE:
+			case EXECUTE:
 			case MSCK:
 			case ANALYZE_TABLE:
 			case CACHE_METADATA:
 			case SHOWDATABASES:
+			case SHOWDATACONNECTORS:
 			case SHOWTABLES:
 			case SHOWCOLUMNS:
 			case SHOW_TABLESTATUS:
@@ -2085,6 +2120,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERVIEW_PROPERTIES:
 			case DROP_MATERIALIZED_VIEW:
 			case ALTER_MATERIALIZED_VIEW_REWRITE:
+			case ALTER_MATERIALIZED_VIEW_REBUILD:
 			case LOCKTABLE:
 			case UNLOCKTABLE:
 			case CREATEROLE:
@@ -2099,11 +2135,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_ROLE_PRINCIPALS:
 			case TRUNCATETABLE:
 			case DESCDATABASE:
+			case DESCDATACONNECTOR:
 			case ALTERVIEW_RENAME:
 			case ALTERVIEW_AS:
 			case SHOW_COMPACTIONS:
 			case SHOW_TRANSACTIONS:
 			case ABORT_TRANSACTIONS:
+			case ABORT_COMPACTION:
 			case SET:
 			case RESET:
 			case DFS:

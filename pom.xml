@@ -125,7 +125,7 @@
         <ozone.version>1.4.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase.version>2.6.0</hbase.version>
-        <hive.version>4.0.0</hive.version>
+        <hive.version>4.0.1</hive.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <orc.version>1.5.8</orc.version>
         <aircompressor.version>0.27</aircompressor.version>
