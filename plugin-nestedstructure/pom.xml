@@ -68,15 +68,20 @@
                 <version>2.9.0</version>
             </dependency>
             <dependency>
-                <groupId>org.openjdk.nashorn</groupId>
-                <artifactId>nashorn-core</artifactId>
-                <version>15.4</version>
-            </dependency>
-            <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.js</groupId>
+                <artifactId>js</artifactId>
+                <version>${graalvm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.js</groupId>
+                <artifactId>js-scriptengine</artifactId>
+                <version>${graalvm.version}</version>
             </dependency>
         </dependencies>
 

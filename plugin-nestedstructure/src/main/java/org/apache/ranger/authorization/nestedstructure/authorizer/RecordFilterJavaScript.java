@@ -20,8 +20,9 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +53,7 @@ public class RecordFilterJavaScript {
      * Helps keep javascript clean of injections.  It also contains other checks to ensure that injected
      * javascript is reasonably safe.
      */
-    static class SecurityFilter implements ClassFilter {
-        @Override
-        public boolean exposeToScripts(String s) {
-            return false;
-        }
+    static class SecurityFilter {
 
         /**
          *
@@ -78,8 +75,16 @@ public class RecordFilterJavaScript {
             throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
         }
 
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
+        ScriptEngine engine = GraalJSScriptEngine.create(null,
+                Context.newBuilder("js")
+                        // disable accesibility from js to host
+                        .allowHostAccess(HostAccess.NONE)
+                        // disable accesibility from js to java code
+                        .allowHostClassLookup(s -> false)
+                        // enable compatibility with Nashorn
+                        .allowExperimentalOptions(true)
+                        .option("js.nashorn-compat", "true")
+                );
 
         if (logger.isDebugEnabled()) {
             logger.debug("filterExpr: " + filterExpr);
