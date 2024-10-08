@@ -25,6 +25,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -55,6 +58,7 @@ public class PolicyRefresher extends Thread {
 	private final RangerRolesProvider            rolesProvider;
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
+        private final String                         cacheTempFileName;
 	private final String                         cacheDir;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
@@ -84,6 +88,11 @@ public class PolicyRefresher extends Thread {
 		cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
 
 		this.cacheFileName = cacheFilename;
+
+                String cacheTempFileName = String.format("%s_%s_temp.json", appId, serviceName);
+                cacheTempFileName = cacheTempFileName.replace(File.separatorChar,  '_');
+                cacheTempFileName = cacheTempFileName.replace(File.pathSeparatorChar,  '_');
+                this.cacheTempFileName = cacheTempFileName;
 
 		RangerPluginContext pluginContext  = plugIn.getPluginContext();
 		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
@@ -393,95 +402,89 @@ public class PolicyRefresher extends Thread {
 
 		return policies;
 	}
-	
-	public void saveToCache(ServicePolicies policies) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
-		}
-		boolean doPreserveDeltas = plugIn.getConfig().getBoolean(plugIn.getConfig().getPropertyPrefix() + ".preserve.deltas", false);
 
-		if(policies != null) {
-			File cacheFile = null;
-			File backupCacheFile = null;
-			if (cacheDir != null) {
-				String realCacheDirName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? cacheDir + File.separator + "deltas" : cacheDir;
-				String backupCacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
-				String realCacheFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheFileName : cacheFileName;
+        public void saveToCache(ServicePolicies policies) {
+                if (policies == null) {
+                        LOG.info("policies is null. Nothing to save in cache");
+                        return;
+                }
 
-				// Create the cacheDir if it doesn't already exist
-				File cacheDirTmp = new File(realCacheDirName);
-				if (cacheDirTmp.exists()) {
-					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-				} else {
-					try {
-						cacheDirTmp.mkdirs();
-						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-					} catch (SecurityException ex) {
-						LOG.error("Cannot create cache directory", ex);
-					}
-				}
-				if (CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
-					backupCacheFile = new File(realCacheDirName + File.separator + backupCacheFileName);
-				}
-			}
-			
-	    	if(cacheFile != null) {
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
+                }
 
-				RangerPerfTracer perf = null;
+                boolean useAtomicMove = plugIn.getConfig().getBoolean(plugIn.getConfig().getPropertyPrefix() + ".atomicmove", false);
+                boolean doPreserveDeltas = plugIn.getConfig().getBoolean(plugIn.getConfig().getPropertyPrefix() + ".preserve.deltas", false);
+                File cacheFile = null;
+                File backupCacheFile = null;
+                File cacheTempFile = null;
+                File backupCacheTempFile = null;
 
-				if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
-					perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
-				}
+                if (cacheDir != null) {
+                        String realCacheDirName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? cacheDir + File.separator + "deltas" : cacheDir;
+                        String backupCacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
+                        String realCacheFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheFileName : cacheFileName;
+                        String backupCacheTempFileName = cacheTempFileName + "_" + policies.getPolicyVersion();
+                        String realCacheTempFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheTempFileName : cacheTempFileName;
+                        File cacheDirTmp = new File(realCacheDirName);
+                        if (!cacheDirTmp.exists()) {
+                                try {
+                                        cacheDirTmp.mkdirs();
+                                } catch (SecurityException ex) {
+                                        LOG.error("Cannot create cache directory", ex);
+                                        return;
+                                }
+                        }
 
-				Writer writer = null;
-	
-				try {
-					writer = new FileWriter(cacheFile);
-					JsonUtils.objectToWriter(writer, policies);
-		        } catch (Exception excp) {
-		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-		        } finally {
-					if (writer != null) {
-						try {
-							writer.close();
-							deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
-						} catch (Exception excp) {
-							LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-						}
-					}
-				}
+                        cacheFile = new File(realCacheDirName + File.separator + realCacheFileName);
+                        if (useAtomicMove) {
+                                cacheTempFile = new File(realCacheDirName + File.separator + realCacheTempFileName);
+                        }
+                        if (CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
+                                backupCacheFile = new File(realCacheDirName + File.separator + backupCacheFileName);
+                                if (useAtomicMove) {
+                                        backupCacheTempFile = new File(realCacheDirName + File.separator + backupCacheTempFileName);
+                                }
+                        }
+                }
 
-				RangerPerfTracer.log(perf);
+                if (cacheFile != null) {
+                        File writeFile = useAtomicMove && cacheTempFile != null ? cacheTempFile : cacheFile;
+                        try (Writer writer = new FileWriter(writeFile)) {
+                                RangerPerfTracer perf = RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG) ?
+                                                RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")") : null;
+                                JsonUtils.objectToWriter(writer, policies);
+                                RangerPerfTracer.log(perf);
+                                if (useAtomicMove && cacheTempFile != null) {
+                                        Files.move(cacheTempFile.toPath(), cacheFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                                }
 
-	    	}
+                                deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
+                        } catch (Exception excp) {
+                                LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+                        }
+                }
 
-			if (doPreserveDeltas) {
-				if (backupCacheFile != null) {
+                if (doPreserveDeltas && backupCacheFile != null) {
+                        File writeBackupFile = useAtomicMove && backupCacheTempFile != null ? backupCacheTempFile : backupCacheFile;
+                        try (Writer writer = new FileWriter(writeBackupFile)) {
+                                RangerPerfTracer perf = RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG) ?
+                                                RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")") : null;
+                                JsonUtils.objectToWriter(writer, policies);
+                                RangerPerfTracer.log(perf);
 
-					RangerPerfTracer perf = null;
+                                if (useAtomicMove && backupCacheTempFile != null) {
+                                        Files.move(backupCacheTempFile.toPath(), backupCacheFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                                }
+                        } catch (Exception excp) {
+                                LOG.error("failed to save policies to backup cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
+                        }
+                }
 
-					if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
-						perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
-					}
-
-					try (Writer writer = new FileWriter(backupCacheFile)) {
-						JsonUtils.objectToWriter(writer, policies);
-					} catch (Exception excp) {
-						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
-					}
-
-					RangerPerfTracer.log(perf);
-
-				}
-			}
-		} else {
-			LOG.info("policies is null. Nothing to save in cache");
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
-		}
-	}
+                if (LOG.isDebugEnabled()) {
+                        LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
+                }
+        }
 
 	private void deleteOldestVersionCacheFileInCacheDirectory(File cacheDirectory) {
 		int maxVersionsToPreserve = plugIn.getConfig().getInt(plugIn.getConfig().getPropertyPrefix() + "max.versions.to.preserve", 1);
