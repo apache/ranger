@@ -261,27 +261,20 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && password.contains("keytab") && new File(password).exists()) {
                 subject = CredentialsProviderUtil.login(user, password);
             }
-            RestClientBuilder restClientBuilder =
-                    getRestClientBuilder(hosts, protocol, user, password, port);
-            try (RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Initialized client");
-                }
-                boolean exists = false;
-                try {
-                    exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
-                } catch (Exception e) {
-                    LOG.warn("Error validating index " + this.index);
-                }
-                if (exists) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Index exists");
-                    }
-                } else {
-                    LOG.info("Index does not exist");
-                }
-                return restHighLevelClient;
+            RestClientBuilder restClientBuilder = getRestClientBuilder(hosts, protocol, user, password, port);
+            RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder);
+            boolean exists = false;
+            try {
+                exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
+            } catch (Exception e) {
+                LOG.warn("Error validating index " + this.index);
             }
+            if (exists) {
+                LOG.debug("Index exists");
+            } else {
+                LOG.info("Index does not exist");
+            }
+            return restHighLevelClient;
         } catch (Throwable t) {
             lastLoggedAt.updateAndGet(lastLoggedAt -> {
                 long now = System.currentTimeMillis();
