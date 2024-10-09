@@ -103,7 +103,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -111,7 +110,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_PERM_MAP);
@@ -119,7 +117,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_USER_BY_USER_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_USER_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -171,7 +168,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -183,7 +179,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_PERM_MAP);
@@ -194,7 +189,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -307,7 +301,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -319,7 +312,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_PERM_MAP);
@@ -330,7 +322,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -385,7 +376,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -393,7 +383,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_PERM_MAP);
@@ -401,7 +390,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_USER_BY_USER_NAME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_USER_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -468,7 +456,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -480,7 +467,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_PERM_MAP);
@@ -491,7 +477,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_PERM_MAPS);

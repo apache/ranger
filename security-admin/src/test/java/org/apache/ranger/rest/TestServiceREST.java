@@ -1285,10 +1285,9 @@ public class TestServiceREST {
 	@Test
 	public void test33getPolicyForVersionNumber() throws Exception {
 		RangerPolicy rangerPolicy = rangerPolicy();
-		Mockito.when(svcStore.getPolicyForVersionNumber(Id, 1)).thenReturn(
-				rangerPolicy);
-		RangerPolicy dbRangerPolicy = serviceREST.getPolicyForVersionNumber(Id,
-				1);
+		Mockito.when(svcStore.getPolicyForVersionNumber(Id, 1)).thenReturn(rangerPolicy);
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		RangerPolicy dbRangerPolicy = serviceREST.getPolicyForVersionNumber(Id, 1);
 		Assert.assertNotNull(dbRangerPolicy);
 		Mockito.verify(svcStore).getPolicyForVersionNumber(Id, 1);
 	}
@@ -2290,7 +2289,7 @@ public class TestServiceREST {
 	}
 
 	public void mockValidateGrantRevokeRequest(){
-		Mockito.when(userMgr.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
+		Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
 		Mockito.when(userMgr.getGroupByGroupName(Mockito.anyString())).thenReturn(Mockito.mock(VXGroup.class));
 		Mockito.when(daoManager.getXXRole().findByRoleName(Mockito.anyString())).thenReturn(Mockito.mock(XXRole.class));
 	}
@@ -2779,6 +2778,7 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
 		Mockito.when(daoManager.getXXPolicy().findPolicy(policyName,serviceName,zoneName)).thenReturn(xxPolicy);
 		Mockito.when(policyService.getPopulatedViewObject(xxPolicy)).thenReturn(rangerPolicy);
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		RangerPolicy dbRangerPolicy = serviceREST.getPolicyByName(serviceName, policyName, zoneName);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
@@ -2797,6 +2797,7 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
 		Mockito.when(daoManager.getXXPolicy().findPolicy(policyName,serviceName,null)).thenReturn(xxPolicy);
 		Mockito.when(policyService.getPopulatedViewObject(xxPolicy)).thenReturn(rangerPolicy);
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		RangerPolicy dbRangerPolicy = serviceREST.getPolicyByName(serviceName, policyName, null);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy, rangerPolicy);

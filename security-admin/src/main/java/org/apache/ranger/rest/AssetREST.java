@@ -19,8 +19,6 @@
 
  package org.apache.ranger.rest;
 
-import java.io.File;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,14 +37,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -61,7 +54,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAssetService;
@@ -251,7 +243,6 @@ public class AssetREST {
 
 		if(services != null) {
 			List<VXAsset> assets = new ArrayList<VXAsset>();
-
 			for(RangerService service : services) {
 				VXAsset asset = serviceUtil.toVXAsset(service);
 				
@@ -261,6 +252,8 @@ public class AssetREST {
 			}
 
 			ret.setVXAssets(assets);
+			ret.setTotalCount(assets.size());
+			ret.setResultSize(assets.size());
 		}
 
 		if(logger.isDebugEnabled()) {
@@ -388,7 +381,6 @@ public class AssetREST {
 
 	@DELETE
 	@Path("/resources/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@RangerAnnotationClassName(class_name = VXResource.class)
 	public void deleteXResource(@PathParam("id") Long id,
 			@Context HttpServletRequest request) {
@@ -419,7 +411,6 @@ public class AssetREST {
 
 		if(policies != null) {
 			List<VXResource> resources = new ArrayList<VXResource>();
-
 			for(RangerPolicy policy : policies) {
 				RangerService service = serviceREST.getServiceByName(policy.getService());
 
@@ -431,6 +422,8 @@ public class AssetREST {
 			}
 
 			ret.setVXResources(resources);
+			ret.setTotalCount(resources.size());
+			ret.setResultSize(resources.size());
 		}
 
 		if(logger.isDebugEnabled()) {
@@ -538,78 +531,6 @@ public class AssetREST {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xCredentialStoreService.sortFields);
 		return assetMgr.getXCredentialStoreSearchCount(searchCriteria);
-	}
-
-	@GET
-	@Path("/resource/{id}")
-	@Produces({ "application/json" })
-	public Response getXResourceFile(@Context HttpServletRequest request,
-			@PathParam("id") Long id) {
-		String fileType = searchUtil.extractString(request,
-				new SearchCriteria(), "fileType", "File type",
-				StringUtil.VALIDATION_TEXT);
-
-		VXResource resource = getXResource(id);
-
-
-		Response response=null;
-		if(resource!=null && StringUtils.isNotEmpty(fileType)){
-			File file = null;
-			file=assetMgr.getXResourceFile(resource, fileType);
-			if(file!=null){
-				response=Response.ok(file, MediaType.APPLICATION_OCTET_STREAM).header("Content-Disposition","attachment;filename=" + file.getName()).build();
-				file=null;
-			}
-		}
-		return response;
-	}
-
-	@GET
-	@Path("/policyList/{repository}")
-	@Produces({ "application/json" })
-	@Encoded
-	public String getResourceJSON(@Context HttpServletRequest request,
-			@PathParam("repository") String repository) {
-		
-		String            epoch       = request.getParameter("epoch");
-		X509Certificate[] certchain   = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-		String            ipAddress   = request.getHeader("X-FORWARDED-FOR");
-		boolean           isSecure    = request.isSecure();
-		String            policyCount = request.getParameter("policyCount");
-		String            agentId     = request.getParameter("agentId");
-		Long              lastKnowPolicyVersion = Long.valueOf(-1);
-		String            capabilityVector = "0";
-
-		if (ipAddress == null) {
-			ipAddress = request.getRemoteAddr();
-		}
-
-		boolean httpEnabled = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true);
-
-		ServicePolicies servicePolicies = null;
-
-		try {
-			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "", "", false, capabilityVector, request);
-		} catch(Exception excp) {
-			logger.error("failed to retrieve policies for repository " + repository, excp);
-		}
-
-		RangerService      service       = serviceUtil.getServiceByName(repository);
-		List<RangerPolicy> policies      = servicePolicies != null ? servicePolicies.getPolicies() : null;
-		long               policyUpdTime = (servicePolicies != null && servicePolicies.getPolicyUpdateTime() != null) ? servicePolicies.getPolicyUpdateTime().getTime() : 0l;
-		VXAsset            vAsset        = serviceUtil.toVXAsset(service);
-		List<VXResource>   vResourceList = new ArrayList<VXResource>();
-		
-		if(policies != null) {
-			for(RangerPolicy policy : policies) {
-				vResourceList.add(serviceUtil.toVXResource(policy, service));
-			}
-		}
-
-		String file = assetMgr.getLatestRepoPolicy(vAsset, vResourceList, policyUpdTime,
-				certchain, httpEnabled, epoch, ipAddress, isSecure, policyCount, agentId);
-		
-		return file;
 	}
 
 	@GET
