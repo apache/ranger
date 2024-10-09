@@ -21,10 +21,10 @@
 
 import java.util.*;
 
-import javax.annotation.Nonnull;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;

@@ -140,11 +140,14 @@
         <httpcomponents.httpmime.version>4.5.13</httpcomponents.httpmime.version>
         <io.opentelemetry.version>1.40.0</io.opentelemetry.version>
         <io.opentelemetry-semconv.version>1.26.0-alpha</io.opentelemetry-semconv.version>
-        <javax.persistence.version>2.1.0</javax.persistence.version>
-        <javax.servlet.version>3.1.0</javax.servlet.version>
-        <javax-inject.version>1</javax-inject.version>
-        <javax.annotation-api>1.3.2</javax.annotation-api>
-        <javax.el.version>3.0.1-b12</javax.el.version>
+        <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
+        <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+        <jakarta-inject.version>2.0.1</jakarta-inject.version>
+        <jakarta.annotation-api>3.0.0</jakarta.annotation-api>
+        <jakarta.el.version>6.0.1</jakarta.el.version>
+        <jakarta.ws.version>4.0.0</jakarta.ws.version>
+        <jakarta.xml.version>4.0.2</jakarta.xml.version>
+        <jakarta.security.version>4.0.0</jakarta.security.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
@@ -200,9 +203,9 @@
         <slf4j.version>2.0.13</slf4j.version>
         <solr.version>8.11.3</solr.version>
         <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
-        <springframework.security.version>5.7.12</springframework.security.version>
-        <springframework.test.version>5.3.39</springframework.test.version>
-        <springframework.version>5.3.39</springframework.version>
+        <springframework.security.version>6.0.0</springframework.security.version>
+        <springframework.test.version>6.0.0</springframework.test.version>
+        <springframework.version>6.0.0</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
@@ -825,7 +828,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>1.4.1</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>enforce-maven</id>
@@ -1053,7 +1056,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
                     <configuration>
-                        <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                        <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"-Dorg.apache.logging.log4j.level=DEBUG</argLine>
                         <skipTests>${skipTests}</skipTests>
                         <encoding>UTF-8</encoding>
                         <systemProperties>
@@ -1139,7 +1142,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>enforce-versions</id>

@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Collections;
 import java.util.Objects;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;

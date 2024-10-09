@@ -20,9 +20,9 @@ package org.apache.ranger.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.WebApplicationException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;

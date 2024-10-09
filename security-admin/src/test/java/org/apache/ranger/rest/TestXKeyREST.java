@@ -16,8 +16,8 @@
  */
 package org.apache.ranger.rest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.WebApplicationException;
 import org.apache.ranger.biz.KmsKeyMgr;
 import org.apache.ranger.biz.XAuditMgr;
 import org.apache.ranger.common.MessageEnums;

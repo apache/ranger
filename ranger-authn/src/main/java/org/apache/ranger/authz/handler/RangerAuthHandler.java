@@ -20,7 +20,7 @@ package org.apache.ranger.authz.handler;
 
 import java.util.Properties;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface RangerAuthHandler {
     void initialize(final Properties config) throws Exception;

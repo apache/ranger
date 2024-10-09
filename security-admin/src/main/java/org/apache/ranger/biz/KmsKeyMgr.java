@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;

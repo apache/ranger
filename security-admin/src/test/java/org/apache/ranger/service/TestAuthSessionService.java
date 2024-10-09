@@ -19,7 +19,7 @@
 
 package org.apache.ranger.service;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.apache.ranger.common.SearchCriteria;
 

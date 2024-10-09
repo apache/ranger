@@ -19,7 +19,7 @@
 
  package org.apache.ranger.db;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;

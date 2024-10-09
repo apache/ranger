@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;

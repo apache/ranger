@@ -22,7 +22,7 @@ package org.apache.ranger.security.context;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.SessionMgr;

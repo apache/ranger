@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.ContextUtil;

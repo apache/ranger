@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;

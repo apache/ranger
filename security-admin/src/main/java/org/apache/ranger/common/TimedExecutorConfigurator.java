@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;

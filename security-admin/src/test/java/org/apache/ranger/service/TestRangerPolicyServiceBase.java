@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;

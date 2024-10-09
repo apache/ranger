@@ -22,7 +22,7 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;

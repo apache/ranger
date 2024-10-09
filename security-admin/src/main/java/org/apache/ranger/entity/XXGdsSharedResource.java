@@ -21,8 +21,8 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Objects;
 

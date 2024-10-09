@@ -528,9 +528,9 @@
             <version>${eclipse.jpa.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>${javax.persistence.version}</version>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>${jakarta.persistence.version}</version>
         </dependency>
         <!-- Transitive dependency for nimbus-jose-jwt. Please re-check this version
             when updating nimbus-jose-jwt. Please read RANGER-2080 for more details. -->

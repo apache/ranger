@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__IS_INTERNAL;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__SYNC_SOURCE;

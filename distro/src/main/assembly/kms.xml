@@ -150,7 +150,7 @@
                     <include>io.grpc:grpc-protobuf</include>
                     <include>io.grpc:grpc-protobuf-lite</include>
                     <include>com.google.api:api-common</include>
-                    <include>javax.annotation:javax.annotation-api</include>
+                    <include>jakarta.annotation:jakarta.annotation-api</include>
                     <include>com.google.auto.value:auto-value-annotations</include>
                     <include>com.google.api.grpc:proto-google-common-protos</include>
                     <include>com.google.api.grpc:proto-google-cloud-kms-v1</include>

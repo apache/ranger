@@ -23,7 +23,7 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.springframework.stereotype.Service;
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import java.util.ArrayList;
 import java.util.Collections;

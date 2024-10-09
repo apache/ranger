@@ -29,11 +29,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;

@@ -21,10 +21,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;

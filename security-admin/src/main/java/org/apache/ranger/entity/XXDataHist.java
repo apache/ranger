@@ -20,7 +20,7 @@ package org.apache.ranger.entity;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.apache.ranger.common.DateUtil;
 

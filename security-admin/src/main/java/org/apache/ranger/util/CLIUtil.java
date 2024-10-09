@@ -24,8 +24,8 @@ package org.apache.ranger.util;
 
 import java.util.Locale;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;

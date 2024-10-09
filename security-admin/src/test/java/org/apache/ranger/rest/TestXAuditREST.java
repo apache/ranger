@@ -18,7 +18,7 @@ package org.apache.ranger.rest;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.ranger.biz.XAuditMgr;
 import org.apache.ranger.common.SearchCriteria;

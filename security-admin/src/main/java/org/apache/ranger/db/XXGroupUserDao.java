@@ -22,7 +22,7 @@
 
 import java.util.*;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;

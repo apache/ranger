@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 

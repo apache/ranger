@@ -34,7 +34,7 @@ import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		extends AbstractAuditedResourceService<T, V> {

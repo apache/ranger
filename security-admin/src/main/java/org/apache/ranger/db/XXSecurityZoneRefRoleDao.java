@@ -22,7 +22,7 @@ package org.apache.ranger.db;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefRole;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.util.Collections;
 import java.util.List;
 

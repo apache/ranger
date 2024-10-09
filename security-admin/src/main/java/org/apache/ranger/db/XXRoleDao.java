@@ -23,7 +23,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRole;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
 

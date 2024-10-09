@@ -95,7 +95,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.springframework.transaction.support.TransactionCallback;

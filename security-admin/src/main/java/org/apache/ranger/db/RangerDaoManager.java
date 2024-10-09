@@ -21,8 +21,8 @@
 
 
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;

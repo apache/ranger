@@ -23,7 +23,7 @@
  import java.util.List;
  import java.util.concurrent.TimeUnit;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;

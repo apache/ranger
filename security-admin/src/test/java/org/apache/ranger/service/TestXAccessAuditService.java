@@ -18,8 +18,8 @@
  */
 package org.apache.ranger.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;

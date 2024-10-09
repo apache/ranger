@@ -17,9 +17,9 @@
 
 package org.apache.ranger.entity;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Version;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 
 @MappedSuperclass
 public abstract class XXPolicyBase extends XXDBBase {

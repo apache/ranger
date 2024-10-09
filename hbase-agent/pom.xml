@@ -211,9 +211,9 @@
             <version>${commons.configuration.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
-            <version>${javax.el.version}</version>
+            <groupId>jakarta.el</groupId>
+            <artifactId>jakarta.el-api</artifactId>
+            <version>${jakarta.el.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>

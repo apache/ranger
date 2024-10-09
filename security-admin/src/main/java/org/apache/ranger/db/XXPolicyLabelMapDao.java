@@ -19,7 +19,7 @@ package org.apache.ranger.db;
 
 import java.util.List;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyLabelMap;

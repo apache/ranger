@@ -19,7 +19,7 @@
 
 package org.apache.ranger.biz;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.common.ContextUtil;

@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.ranger.metrics.source.RangerAdminMetricsSourceContextEnricher;
 import org.apache.ranger.metrics.source.RangerAdminMetricsSourceDenyConditions;
