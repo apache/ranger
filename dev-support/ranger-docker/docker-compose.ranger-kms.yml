@@ -12,6 +12,8 @@ services:
     hostname: ranger-kms.example.com
     stdin_open: true
     tty: true
+    volumes:
+      - ./config/ranger-kms:/opt/ranger/kms/ews/webapp/WEB-INF/classes/conf
     networks:
       - ranger
     ports:
@@ -22,6 +24,7 @@ services:
     environment:
       - KMS_VERSION
       - RANGER_DB_TYPE
+      - KMS_IN_DOCKER=true
     command:
       - /home/ranger/scripts/ranger-kms.sh
 
