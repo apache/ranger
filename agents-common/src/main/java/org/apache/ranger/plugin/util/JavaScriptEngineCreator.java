@@ -43,7 +43,7 @@ public class JavaScriptEngineCreator implements ScriptEngineCreator {
 
             ret = mgr.getEngineByName(ENGINE_NAME);
         } catch (Throwable t) {
-            LOG.debug("JavaScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
+            LOG.warn("JavaScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
         }
 
         if (ret == null) {
