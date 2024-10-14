@@ -60,6 +60,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -71,7 +72,6 @@ import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.service.XAuditMapService;
-import org.apache.ranger.service.XGroupGroupService;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
@@ -130,9 +130,6 @@ public class XUserREST {
 	XGroupUserService xGroupUserService;
 
 	@Autowired
-	XGroupGroupService xGroupGroupService;
-
-	@Autowired
 	XPermMapService xPermMapService;
 
 	@Autowired
@@ -146,16 +143,16 @@ public class XUserREST {
 
 	@Autowired
 	SessionMgr sessionMgr;
-	
+
 	@Autowired
 	AuthSessionService authSessionService;
 
 	@Autowired
 	RangerBizUtil bizUtil;
-	
+
 	@Autowired
 	XResourceService xResourceService;
-	
+
 	@Autowired
 	StringUtil stringUtil;
 
@@ -423,12 +420,23 @@ public class XUserREST {
 		
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 		if (userSession != null && userSession.getLoginId() != null) {
-			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
-					.getLoginId());
-			if (loggedInVXUser != null) {
-				if (loggedInVXUser.getUserRoleList().size() == 1
-						&& loggedInVXUser.getUserRoleList().contains(
-								RangerConstants.ROLE_USER)) {
+			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+			if (loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
+				if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+					boolean hasRole = false;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_SYS_ADMIN) ? userRolesList.add(RangerConstants.ROLE_SYS_ADMIN) : hasRole;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_ADMIN_AUDITOR) : hasRole;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
+					if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
+						hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN) : hasRole;
+						hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
+					}
+				} else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+					boolean hasRole = false;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN) : hasRole;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
+					hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
+				} else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
 					logger.info("Logged-In user having user role will be able to fetch his own user details.");
 					if (!searchCriteria.getParamList().containsKey("name")) {
 						searchCriteria.addParam("name", loggedInVXUser.getName());
@@ -545,6 +553,9 @@ public class XUserREST {
 	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
+		if (vXGroupUser == null || StringUtils.isBlank(vXGroupUser.getName()) || vXGroupUser.getUserId() == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Group name or UserId is empty or null", true);
+		}
 		return xUserMgr.createXGroupUser(vXGroupUser);
 	}
 
@@ -553,6 +564,9 @@ public class XUserREST {
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
 	public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
+		if (vXGroupUser == null || StringUtils.isBlank(vXGroupUser.getName()) || vXGroupUser.getUserId() == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Group name or UserId is empty or null", true);
+		}
 		return xUserMgr.updateXGroupUser(vXGroupUser);
 	}
 
@@ -606,69 +620,6 @@ public class XUserREST {
 				request, xGroupUserService.sortFields);
 
 		return xUserMgr.getXGroupUserSearchCount(searchCriteria);
-	}
-
-	// Handle XGroupGroup
-	@GET
-	@Path("/groupgroups/{id}")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_GROUP + "\")")
-	public VXGroupGroup getXGroupGroup(@PathParam("id") Long id) {
-		return xUserMgr.getXGroupGroup(id);
-	}
-
-	@POST
-	@Path("/groupgroups")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
-	public VXGroupGroup createXGroupGroup(VXGroupGroup vXGroupGroup) {
-		return xUserMgr.createXGroupGroup(vXGroupGroup);
-	}
-
-	@PUT
-	@Path("/groupgroups")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
-	public VXGroupGroup updateXGroupGroup(VXGroupGroup vXGroupGroup) {
-		return xUserMgr.updateXGroupGroup(vXGroupGroup);
-	}
-
-	@DELETE
-	@Path("/groupgroups/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@RangerAnnotationClassName(class_name = VXGroupGroup.class)
-	public void deleteXGroupGroup(@PathParam("id") Long id,
-			@Context HttpServletRequest request) {
-		boolean force = false;
-		xUserMgr.deleteXGroupGroup(id, force);
-	}
-
-	/**
-	 * Implements the traditional search functionalities for XGroupGroups
-	 *
-	 * @param request
-	 * @return
-	 */
-	@GET
-	@Path("/groupgroups")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_GROUP_GROUPS + "\")")
-	public VXGroupGroupList searchXGroupGroups(
-			@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xGroupGroupService.sortFields);
-		return xUserMgr.searchXGroupGroups(searchCriteria);
-	}
-
-	@GET
-	@Path("/groupgroups/count")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_GROUP_GROUPS + "\")")
-	public VXLong countXGroupGroups(@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-				request, xGroupGroupService.sortFields);
-
-		return xUserMgr.getXGroupGroupSearchCount(searchCriteria);
 	}
 
 	// Handle XPermMap
@@ -865,7 +816,25 @@ public class XUserREST {
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_BY_GROUP_NAME + "\")")
 	public VXGroup getXGroupByGroupName(@Context HttpServletRequest request,
 			@PathParam("groupName") String groupName) {
-		return xGroupService.getGroupByGroupName(groupName);
+		VXGroup vXGroup = xGroupService.getGroupByGroupName(groupName);
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null && userSession.getLoginId() != null &&  userSession.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+			boolean isMatch = false;
+			if (loggedInVXUser != null && vXGroup != null) {
+				List<XXGroup> userGroups = xGroupService.getGroupsByUserId(loggedInVXUser.getId());
+				for (XXGroup xXGroup: userGroups) {
+					if (xXGroup != null && StringUtils.equals(xXGroup.getName(), vXGroup.getName())) {
+						isMatch = true;
+						break;
+					}
+				}
+			}
+			if (!isMatch) {
+				vXGroup = null;
+			}
+		}
+		return vXGroup;
 	}
 
 	@DELETE
