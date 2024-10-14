@@ -116,6 +116,9 @@ jobs:
           cd dev-support/ranger-docker
           ./download-archives.sh hadoop hive hbase kafka knox ozone
       
+      - name: Clean up Docker space
+        run: docker system prune --all --force --volumes
+      
       - name: Build all ranger-service images
         run: |
           cd dev-support/ranger-docker
