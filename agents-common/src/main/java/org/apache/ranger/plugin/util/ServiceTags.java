@@ -258,8 +258,8 @@ public class ServiceTags implements java.io.Serializable {
 			MutablePair<Long, Long>    cachedTag   = cachedTags.get(tag);
 
 			if (cachedTag == null) {
-				cachedTags.put(tag, new MutablePair<>(tagId, 0L)); // reference count will be incremented later
-			} else {
+				cachedTags.put(tag, new MutablePair<>(tagId, 1L));
+			} else if (!tagId.equals(cachedTag.left)) {
 				if (tagId < cachedTag.left) {
 					replacedIds.put(cachedTag.left, tagId);
 					tagIdsToRemove.add(cachedTag.left);
@@ -270,6 +270,7 @@ public class ServiceTags implements java.io.Serializable {
 				}
 			}
 		}
+
 		for (Long tagIdToRemove : tagIdsToRemove) {
 			tags.remove(tagIdToRemove);
 		}
@@ -278,22 +279,28 @@ public class ServiceTags implements java.io.Serializable {
 
 		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
 			for (ListIterator<Long> listIter = resourceEntry.getValue().listIterator(); listIter.hasNext(); ) {
-				Long tagId         = listIter.next();
+				final Long tagId       = listIter.next();
+				Long       mappedTagId = null;
 
-				for (Long replacerTagId = replacedIds.get(tagId); replacerTagId != null; replacerTagId = replacedIds.get(tagId)) {
-					tagId = replacerTagId;
+				for (Long replacerTagId = replacedIds.get(tagId); replacerTagId != null; replacerTagId = replacedIds.get(mappedTagId)) {
+					mappedTagId = replacerTagId;
 				}
 
-				listIter.set(tagId);
+				if (mappedTagId == null) {
+					continue;
+				}
 
-				RangerTag tag = tags.get(tagId);
-				if (tag != null) {	// This should always be true
+				listIter.set(mappedTagId);
+
+				RangerTag tag = tags.get(mappedTagId);
+
+				if (tag != null) {    // This should always be true
 					MutablePair<Long, Long> cachedTag = cachedTags.get(tag);
+
 					if (cachedTag != null) { // This should always be true
 						cachedTag.right++;
 					}
 				}
-
 			}
 		}
 
