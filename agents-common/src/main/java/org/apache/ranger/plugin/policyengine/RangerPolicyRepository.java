@@ -1021,17 +1021,19 @@ public class RangerPolicyRepository {
                     }
                 }
 
-                if (!options.disableContextEnrichers) {
-                    RangerServiceDef.RangerContextEnricherDef contextEnricherDef = enricherDef;
-
-                    // Following will be true only if the engine is initialized within ranger-admin
-                    if (options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
-                        contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminTagEnricher", null);
-                    } else if (options.enableUserStoreEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerUserStoreEnricher.class.getName())) {
-                        contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminUserStoreEnricher", null);
+                // Following 2 cases will be true only if the engine is initialized within ranger-admin
+                if (options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
+                    enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminTagEnricher", null);
+                } else if (options.enableUserStoreEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerUserStoreEnricher.class.getName())) {
+                    enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminUserStoreEnricher", null);
+                } else {
+                    if (options.disableContextEnrichers) {
+                        enricherDef = null;
                     }
+                }
 
-                    RangerContextEnricher contextEnricher = buildContextEnricher(contextEnricherDef, options);
+                if (enricherDef != null) {
+                    RangerContextEnricher contextEnricher = buildContextEnricher(enricherDef, options);
 
                     if (contextEnricher != null) {
                         contextEnrichers.add(contextEnricher);
