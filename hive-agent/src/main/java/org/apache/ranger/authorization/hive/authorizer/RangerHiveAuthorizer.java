@@ -1777,7 +1777,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						accessType = HiveAccessType.CREATE;
 					}
 				break;
-
+				case CREATEDATACONNECTOR:
+					if(hiveObj.getType() == HivePrivilegeObjectType.DATACONNECTOR) {
+						accessType = HiveAccessType.CREATE;
+					}
+				break;
 				case CREATEFUNCTION:
 					if(hiveObj.getType() == HivePrivilegeObjectType.FUNCTION) {
 						accessType = HiveAccessType.CREATE;
@@ -1805,8 +1809,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERDATABASE:
 				case ALTERDATABASE_LOCATION:
 				case ALTERDATABASE_OWNER:
-				case ALTERINDEX_PROPS:
-				case ALTERINDEX_REBUILD:
+				// Refer - HIVE-21968
 				case ALTERPARTITION_BUCKETNUM:
 				case ALTERPARTITION_FILEFORMAT:
 				case ALTERPARTITION_LOCATION:
@@ -1828,6 +1831,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_MERGEFILES:
 				case ALTERTABLE_PARTCOLTYPE:
 				case ALTERTABLE_PROPERTIES:
+				case ALTERTABLE_SETPARTSPEC:
+				case ALTERTABLE_EXECUTE:
+				case ALTERTABLE_CONVERT:
+				case ALTERDATACONNECTOR:
+				case ALTERDATACONNECTOR_OWNER:
+				case ALTERDATACONNECTOR_URL:
 				case ALTERTABLE_PROTECTMODE:
 				case ALTERTABLE_RENAME:
 				case ALTERTABLE_RENAMECOL:
@@ -1841,28 +1850,29 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_UPDATEPARTSTATS:
 				case ALTERTABLE_UPDATETABLESTATS:
 				case ALTERTABLE_UPDATECOLUMNS:
+				case ALTERTABLE_CREATEBRANCH:
+				case ALTERTABLE_DROPBRANCH:
+				case ALTERTABLE_CREATETAG:
+				case ALTERTABLE_DROPTAG:
 				case ALTERTBLPART_SKEWED_LOCATION:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
 				case ALTER_MATERIALIZED_VIEW_REWRITE:
-				case DROPVIEW_PROPERTIES:
+				case ALTER_MATERIALIZED_VIEW_REBUILD:
+				// HIVE-22188
 				case MSCK:
 					accessType = HiveAccessType.ALTER;
 				break;
 
 				case DROPFUNCTION:
-				case DROPINDEX:
 				case DROPTABLE:
 				case DROPVIEW:
 				case DROP_MATERIALIZED_VIEW:
 				case DROPDATABASE:
+				case DROPDATACONNECTOR:
 					accessType = HiveAccessType.DROP;
 				break;
-
-				case CREATEINDEX:
-					accessType = HiveAccessType.INDEX;
-				break;
-
+				// HIVE-21968
 				case IMPORT:
 					/*
 					This can happen during hive IMPORT command IFF a table is also being created as part of IMPORT.
@@ -1895,7 +1905,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case QUERY:
 				case SHOW_TABLESTATUS:
 				case SHOW_CREATETABLE:
-				case SHOWINDEXES:
 				case SHOWPARTITIONS:
 				case SHOW_TBLPROPERTIES:
 				case ANALYZE_TABLE:
@@ -1921,9 +1930,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 				// any access done for metadata access of actions that have support from hive for filtering
 				case SHOWDATABASES:
+				case SHOWDATACONNECTORS:
 				case SHOW_GRANT:
 				case SWITCHDATABASE:
 				case DESCDATABASE:
+				case DESCDATACONNECTOR:
 				case SHOWTABLES:
 				case SHOWVIEWS:
 					accessType = HiveAccessType.USE;
@@ -1972,6 +1983,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case CREATEMACRO:
 				case CREATEROLE:
 				case DESCFUNCTION:
+				case PREPARE:
+				case EXECUTE:
 				case DFS:
 				case DROPMACRO:
 				case DROPROLE:
@@ -2010,6 +2023,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			break;
 
 			case CREATEDATABASE:
+			case CREATEDATACONNECTOR:
 			case CREATETABLE:
 			case CREATETABLE_AS_SELECT:
 			case CREATEFUNCTION:
@@ -2029,6 +2043,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERTABLE_ARCHIVE:
 			case ALTERTABLE_UNARCHIVE:
 			case ALTERTABLE_PROPERTIES:
+			case ALTERTABLE_SETPARTSPEC:
+			case ALTERTABLE_EXECUTE:
+			case ALTERTABLE_CONVERT:
+			case ALTERDATACONNECTOR:
+			case ALTERDATACONNECTOR_OWNER:
+			case ALTERDATACONNECTOR_URL:
 			case ALTERTABLE_SERIALIZER:
 			case ALTERTABLE_PARTCOLTYPE:
 			case ALTERTABLE_DROPCONSTRAINT:
@@ -2039,10 +2059,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERTABLE_UPDATETABLESTATS:
 			case ALTERTABLE_UPDATEPARTSTATS:
 			case ALTERTABLE_UPDATECOLUMNS:
+			case ALTERTABLE_CREATEBRANCH:
+			case ALTERTABLE_DROPBRANCH:
+			case ALTERTABLE_CREATETAG:
+			case ALTERTABLE_DROPTAG:
 			case ALTERTABLE_PROTECTMODE:
 			case ALTERTABLE_FILEFORMAT:
 			case ALTERTABLE_LOCATION:
-			case ALTERINDEX_PROPS:
 			case ALTERTABLE_MERGEFILES:
 			case ALTERTABLE_SKEWED:
 			case ALTERTABLE_COMPACT:
@@ -2064,16 +2087,20 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			case EXPLAIN:
 			case DROPDATABASE:
+			case DROPDATACONNECTOR:
 			case SWITCHDATABASE:
 			case LOCKDB:
 			case UNLOCKDB:
 			case DROPTABLE:
 			case DESCTABLE:
 			case DESCFUNCTION:
+			case PREPARE:
+			case EXECUTE:
 			case MSCK:
 			case ANALYZE_TABLE:
 			case CACHE_METADATA:
 			case SHOWDATABASES:
+			case SHOWDATACONNECTORS:
 			case SHOWTABLES:
 			case SHOWCOLUMNS:
 			case SHOW_TABLESTATUS:
@@ -2082,7 +2109,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_CREATETABLE:
 			case SHOWFUNCTIONS:
 			case SHOWVIEWS:
-			case SHOWINDEXES:
 			case SHOWPARTITIONS:
 			case SHOWLOCKS:
 			case SHOWCONF:
@@ -2091,13 +2117,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case CREATEVIEW:
 			case DROPVIEW:
 			case CREATE_MATERIALIZED_VIEW:
-			case CREATEINDEX:
-			case DROPINDEX:
-			case ALTERINDEX_REBUILD:
 			case ALTERVIEW_PROPERTIES:
-			case DROPVIEW_PROPERTIES:
 			case DROP_MATERIALIZED_VIEW:
 			case ALTER_MATERIALIZED_VIEW_REWRITE:
+			case ALTER_MATERIALIZED_VIEW_REBUILD:
 			case LOCKTABLE:
 			case UNLOCKTABLE:
 			case CREATEROLE:
@@ -2112,11 +2135,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_ROLE_PRINCIPALS:
 			case TRUNCATETABLE:
 			case DESCDATABASE:
+			case DESCDATACONNECTOR:
 			case ALTERVIEW_RENAME:
 			case ALTERVIEW_AS:
 			case SHOW_COMPACTIONS:
 			case SHOW_TRANSACTIONS:
 			case ABORT_TRANSACTIONS:
+			case ABORT_COMPACTION:
 			case SET:
 			case RESET:
 			case DFS:
