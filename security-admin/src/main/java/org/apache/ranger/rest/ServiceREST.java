@@ -1113,6 +1113,8 @@ public class ServiceREST {
 				iter.remove();
 			} else if (filterByType && !StringUtils.equals(serviceHeader.getType(), svcType)) {
 				iter.remove();
+			} else if(!bizUtil.hasAccess(null, serviceHeader)) {
+				iter.remove();
 			}
 		}
 

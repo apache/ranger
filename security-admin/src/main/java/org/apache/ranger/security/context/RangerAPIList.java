@@ -260,4 +260,9 @@ public class RangerAPIList {
 	public static final String REMOVE_DATASET_IN_PROJECT = "GdsREST.removeDatasetInProject";
 	public static final String GET_DATASET_IN_PROJECT    = "GdsREST.getDatasetInProject";
 	public static final String SEARCH_DATASET_IN_PROJECT = "GdsREST.searchDatasetInProject";
+
+	/**
+	 * List of APIs for PublicAPIsv2
+	 */
+	public static final String GET_SERVICE_HEADERS = "PublicAPIsv2.getServiceHeaders";
 }
