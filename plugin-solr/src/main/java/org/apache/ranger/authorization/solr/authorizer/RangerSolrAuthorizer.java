@@ -708,7 +708,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 		if (roles != null && !roles.isEmpty()) {
 			StringBuilder builder = new StringBuilder();
 			for (String role : roles) {
-				addDisjunctiveRawClause(builder, role);
+				addDisjunctiveRawClause(builder, "\"" + role + "\"");
 			}
 			if (allRolesToken != null && !allRolesToken.isEmpty()) {
 				addDisjunctiveRawClause(builder, allRolesToken);
