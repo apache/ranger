@@ -18,6 +18,10 @@
 
 echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
 
+if [[ "${RANGER_BASE_JAVA_VERSION}" == "17" ]]; then
+   echo "export HADOOP_OPTS=\"${HADOOP_OPTS} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED\"" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+fi
+
 cat <<EOF > /etc/ssh/ssh_config
 Host *
    StrictHostKeyChecking no
