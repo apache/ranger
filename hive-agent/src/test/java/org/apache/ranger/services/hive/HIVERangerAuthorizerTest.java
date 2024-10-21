@@ -78,7 +78,7 @@ public class HIVERangerAuthorizerTest {
 
         // Warehouse
         File warehouseDir = new File("./target/hdfs/warehouse").getAbsoluteFile();
-        conf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, warehouseDir.getPath());
+        conf.set(HiveConf.getConfVars("hive.metastore.warehouse.dir").varname, warehouseDir.getPath());
 
         // Scratchdir
         File scratchDir = new File("./target/hdfs/scratchdir").getAbsoluteFile();
@@ -90,7 +90,7 @@ public class HIVERangerAuthorizerTest {
 
         // Create a temporary directory for the Hive metastore
         File metastoreDir = new File("./metastore_db/").getAbsoluteFile();
-        conf.set(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname,
+        conf.set(HiveConf.getConfVars("javax.jdo.option.ConnectionURL").varname,
                  String.format("jdbc:derby:;databaseName=%s;create=true",  metastoreDir.getPath()));
 
         conf.set(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
