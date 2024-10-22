@@ -42,8 +42,8 @@
 						<includes>
 							<include>com.101tec:zkclient</include>
 							<include>com.google.code.gson:gson:jar:${gson.version}</include>
-							<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
-							<include>com.sun.jersey.contribs:jersey-multipart:jar:${sun-jersey-bundle.version}</include>
+							<include>org.glassfish.jersey.media:jersey-media-json-binding:jar:${jersey-media.version}</include>
+							<include>org.glassfish.jersey.media:jersey-media-json-binding:jar:${jersey-media.version}</include>
 							<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
 							<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
 							<include>org.apache.atlas:atlas-client-v1:jar:${atlas.version}</include>

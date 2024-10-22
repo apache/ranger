@@ -21,8 +21,8 @@
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.sun.jersey.api.client.ClientResponse;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -33,12 +33,11 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
+import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Cookie;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
@@ -176,7 +175,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 							  + ", response=" + response.getStatus() + ", serviceName=" + serviceName
 							  + ", " + "lastKnownVersion=" + lastKnownVersion
 							  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
@@ -260,7 +259,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 							  + ", response=" + response.getStatus() + ", serviceName=" + serviceName
 							  + ", " + "lastKnownRoleVersion=" + lastKnownRoleVersion
 							  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
@@ -852,7 +851,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 							  + ", " + "lastKnownVersion=" + lastKnownVersion
 							  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
 
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
 		} else {
@@ -985,7 +984,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
 					+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
 					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
@@ -1061,7 +1060,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.error("Error getting GdsInfo - service not found: secureMode={}, user={}, response={}, serviceName={}, lastKnownGdsVersion={},lastActivationTimeInMillis={}",
 					  isSecureMode, user, response.getStatus(), serviceName, lastKnownVersion, lastActivationTimeInMillis);
 
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
@@ -1090,15 +1089,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				int status = response.getStatus();
 
 				if (status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_MODIFIED) {
-					Cookie newCookie = null;
-
-					for (NewCookie cookie : response.getCookies()) {
-						if (cookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
-							newCookie = cookie;
-
-							break;
-						}
-					}
+					Cookie newCookie = response.getCookies().containsKey(rangerAdminCookieName) ?
+												response.getCookies().get(rangerAdminCookieName) :
+												null;
 
 					if (sessionId == null || newCookie != null) {
 						LOG.debug("checkAndResetSessionCookie(): status={}, sessionIdCookie={}, newCookie={}", status, sessionId, newCookie);

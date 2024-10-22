@@ -145,16 +145,19 @@
         <jakarta-inject.version>2.0.1</jakarta-inject.version>
         <jakarta.annotation-api>3.0.0</jakarta.annotation-api>
         <jakarta.el.version>6.0.1</jakarta.el.version>
-        <jakarta.ws.version>4.0.0</jakarta.ws.version>
+        <jakarta.ws.version>3.0.0</jakarta.ws.version>
         <jakarta.xml.version>4.0.2</jakarta.xml.version>
         <jakarta.security.version>4.0.0</jakarta.security.version>
-        <jaxb.api.version>2.3.1</jaxb.api.version>
+        <jaxb.api.version>3.0.2</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
+
+        <jersey-core.version>3.0.16</jersey-core.version>
+        <jersey-media.version>3.0.16</jersey-media.version>
+        <jersey-spring.version>3.0.16</jersey-spring.version>
+        <glassfish.jaxb.version>3.0.2</glassfish.jaxb.version>
+
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
-        <jersey-client.version>2.35</jersey-client.version>
-        <jersey-core.version>1.19.4</jersey-core.version>
         <jersey-server.version>1.19.4</jersey-server.version>
-        <jersey-spring.version>1.19.4</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.5.4</jettison.version>
         <jetty-client.version>9.4.49.v20220914</jetty-client.version>
@@ -971,7 +974,7 @@
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
-                <version>${jersey-client.version}</version>
+                <version>${jersey-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -998,11 +1001,11 @@
                 <artifactId>jsr250-api</artifactId>
                 <version>${jsr250.version}</version>
             </dependency>
-            <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>${jaxb.api.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>javax.xml.bind</groupId>-->
+<!--                <artifactId>jaxb-api</artifactId>-->
+<!--                <version>${jaxb.api.version}</version>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>org.glassfish.jaxb</groupId>
                 <artifactId>jaxb-runtime</artifactId>

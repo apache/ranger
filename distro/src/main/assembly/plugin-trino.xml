@@ -84,7 +84,7 @@
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
                     <include>com.sun.jersey:jersey-json</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>

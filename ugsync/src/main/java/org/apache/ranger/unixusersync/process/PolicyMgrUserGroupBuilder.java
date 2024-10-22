@@ -34,7 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 

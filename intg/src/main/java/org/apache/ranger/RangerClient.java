@@ -24,9 +24,9 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
+import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -34,9 +34,9 @@ import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 
 import java.security.PrivilegedExceptionAction;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.*;
 
@@ -551,7 +551,7 @@ public class RangerClient {
             throw new RangerServiceException(api, null);
         } else if (clientResponse.getStatus() == api.getExpectedStatus().getStatusCode()) {
             return clientResponse;
-        } else if (clientResponse.getStatus() == ClientResponse.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
+        } else if (clientResponse.getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
             LOG.error("Ranger Admin unavailable. HTTP Status: {}", clientResponse.getStatus());
         } else {
             throw new RangerServiceException(api, clientResponse);

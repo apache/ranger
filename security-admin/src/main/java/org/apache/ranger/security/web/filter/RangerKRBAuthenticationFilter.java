@@ -463,10 +463,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		}
 
 		@Override
-		public void log(Exception exception, String msg) {
-		}
-
-		@Override
 		public void log(String msg) {
 		}
 
@@ -476,12 +472,37 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		}
 
 		@Override
-		public SessionCookieConfig getSessionCookieConfig() {
-			return null;
+		public int getSessionTimeout() {
+			return 0;
 		}
 
 		@Override
-		public Enumeration<Servlet> getServlets() {
+		public void setSessionTimeout(int i) {
+
+		}
+
+		@Override
+		public String getRequestCharacterEncoding() {
+			return "";
+		}
+
+		@Override
+		public void setRequestCharacterEncoding(String s) {
+
+		}
+
+		@Override
+		public String getResponseCharacterEncoding() {
+			return "";
+		}
+
+		@Override
+		public void setResponseCharacterEncoding(String s) {
+
+		}
+
+		@Override
+		public SessionCookieConfig getSessionCookieConfig() {
 			return null;
 		}
 
@@ -496,17 +517,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		}
 
 		@Override
-		public Enumeration<String> getServletNames() {
-			return null;
-		}
-
-		@Override
 		public String getServletContextName() {
-			return null;
-		}
-
-		@Override
-		public Servlet getServlet(String name) throws ServletException {
 			return null;
 		}
 
@@ -655,6 +666,11 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		@Override
 		public ServletRegistration.Dynamic addServlet(
 				String servletName, Class<? extends Servlet> servletClass) {
+			return null;
+		}
+
+		@Override
+		public ServletRegistration.Dynamic addJspFile(String s, String s1) {
 			return null;
 		}
 

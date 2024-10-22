@@ -237,26 +237,9 @@
             <version>${springframework.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-bundle</artifactId>
-            <version>${jersey-bundle.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
-            <version>${jersey-core.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-binding</artifactId>
+            <version>${jersey-media.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
@@ -264,8 +247,8 @@
             <version>${jettison.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-spring</artifactId>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring6</artifactId>
             <version>${jersey-spring.version}</version>
             <exclusions>
                 <exclusion>
@@ -365,9 +348,9 @@
             <version>${fasterxml.jackson.databind.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
-            <version>${jersey-core.version}</version>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey-media.version}</version>
         </dependency>
         <dependency>
            <groupId>org.apache.solr</groupId>
@@ -706,11 +689,11 @@
             <artifactId>guice</artifactId>
             <version>3.0</version>
         </dependency>
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>javax.annotation</groupId>-->
+<!--            <artifactId>jsr250-api</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.webcohesion.enunciate</groupId>

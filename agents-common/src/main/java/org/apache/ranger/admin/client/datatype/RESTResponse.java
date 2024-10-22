@@ -26,10 +26,9 @@ import org.apache.ranger.plugin.util.JsonUtilsV2;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sun.jersey.api.client.ClientResponse;
 
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -94,7 +93,7 @@ public class RESTResponse implements java.io.Serializable {
 	public static RESTResponse fromClientResponse(ClientResponse response) {
 		RESTResponse ret = null;
 
-		String jsonString = response == null ? null : response.getEntity(String.class);
+		String jsonString = response == null ? null : response.readEntity(String.class);
 		int    httpStatus = response == null ? 0 : response.getStatus();
 
 		if(! StringUtil.isEmpty(jsonString)) {

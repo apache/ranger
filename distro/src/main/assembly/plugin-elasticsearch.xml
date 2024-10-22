@@ -66,7 +66,7 @@
           <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
-          <include>com.sun.jersey:jersey-bundle</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>commons-io:commons-io</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

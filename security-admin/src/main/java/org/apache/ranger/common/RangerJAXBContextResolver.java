@@ -19,21 +19,21 @@
 
  package org.apache.ranger.common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import jakarta.ws.rs.ext.ContextResolver;
 import jakarta.ws.rs.ext.Provider;
-import jakarta.xml.bind.JAXBContext;
 
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.json.JSONJAXBContext;
 
 /**
  *
  *
  */
 @Provider
-public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
+public class RangerJAXBContextResolver implements ContextResolver<ObjectMapper> {
 
-    private final JAXBContext context;
+    private final ObjectMapper jsonMapper;
+
     private Class<?>[] types = {
 	org.apache.ranger.view.VXAuthSessionList.class,
 	org.apache.ranger.view.VXResponse.class,
@@ -53,16 +53,16 @@ public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
     };
 
     public RangerJAXBContextResolver() throws Exception {
-	JSONConfiguration config = JSONConfiguration.natural().build();
-	context = new JSONJAXBContext(config, types);
+		jsonMapper = new ObjectMapper();
+		jsonMapper.registerModule(new JaxbAnnotationModule());
     }
 
     @Override
-    public JAXBContext getContext(Class<?> objectType) {
+    public ObjectMapper getContext(Class<?> objectType) {
 	// return context;
 	for (Class<?> type : types) {
 	    if (type.getName().equals(objectType.getName())) {
-		return context;
+		return this.jsonMapper;
 	    }
 	}
 	return null;

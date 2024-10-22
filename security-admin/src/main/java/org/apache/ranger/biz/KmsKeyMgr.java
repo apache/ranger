@@ -32,8 +32,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.security.auth.Subject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -61,16 +66,14 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.KeySearchFilter;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import javax.security.auth.Subject;
 
 @Component
 public class KmsKeyMgr {
@@ -142,17 +145,17 @@ public class KmsKeyMgr {
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
 
-				final WebResource r = c.resource(uri);
+				final WebTarget webTarget = c.target(uri);
 				try {
 					String response = null;
 					if(!isKerberos){
-						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+						response = webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(repoName);
 						response = Subject.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
-								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+								return webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 							}
 						});
 					}
@@ -171,7 +174,7 @@ public class KmsKeyMgr {
 					vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
 					break;
 				} catch (Exception e) {
-					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+					if (e instanceof ProcessingException || e instanceof WebApplicationException || i == providers.length - 1)
 						throw e;
 					else
 						continue;
@@ -244,18 +247,18 @@ public class KmsKeyMgr {
 				}else{
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				final WebResource r = c.resource(uri);
+				final WebTarget r = c.target(uri);
 				final String jsonString = JsonUtils.objectToJson(vXKey);
 				try {
 					String response = null;
 					if(!isKerberos){
-					 response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);}
+					 response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.json(jsonString), String.class);}
 					else{
 						Subject sub = getSubjectForKerberos(provider);
 			            response = Subject.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
-		                        return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+		                        return r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.json(jsonString), String.class);
 							}
 						});
 		            }
@@ -263,7 +266,7 @@ public class KmsKeyMgr {
 					ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					break;
 				} catch (Exception e) {
-					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+					if (e instanceof ProcessingException || e instanceof WebApplicationException || i == providers.length - 1)
 						throw e;
 					else
 						continue;
@@ -298,24 +301,24 @@ public class KmsKeyMgr {
 				}else{
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				final WebResource r = c.resource(uri);
+				final WebTarget r = c.target(uri);
 				try {
 					String response = null;
 					if(!isKerberos){
-						response = r.delete(String.class);
+						response = r.request().delete(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(provider);
 						response = Subject.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
-								return r.delete(String.class);
+								return r.request().delete(String.class);
 							}
 						});
 					}
 					logger.debug("delete RESPONSE: [" + response + "]");
 					break;
 				} catch (Exception e) {
-					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+					if (e instanceof ProcessingException || e instanceof WebApplicationException || i == providers.length - 1)
 						throw e;
 					else
 						continue;
@@ -350,18 +353,18 @@ public class KmsKeyMgr {
 				}else{
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				final WebResource r = c.resource(uri);
+				final WebTarget r = c.target(uri);
 				final String jsonString = JsonUtils.objectToJson(vXKey);
 				try {
 					String response = null;
 					if(!isKerberos){
-						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+						response = r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.json(jsonString), String.class);
 					}else{
 							Subject sub = getSubjectForKerberos(provider);
 							response = Subject.doAs(sub, new PrivilegedAction<String>() {
 								@Override
 								public String run() {
-									return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+									return r.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.json(jsonString), String.class);
 								}
 							});
 					}
@@ -369,7 +372,7 @@ public class KmsKeyMgr {
 					ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					return ret;
 				} catch (Exception e) {
-					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+					if (e instanceof ProcessingException || e instanceof WebApplicationException || i == providers.length - 1)
 						throw e;
 					else
 						continue;
@@ -403,17 +406,17 @@ public class KmsKeyMgr {
 				}else{
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
-				final WebResource r = c.resource(uri);
+				final WebTarget r = c.target(uri);
 				try {
 					String response = null;
 					if(!isKerberos){
-						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+						response = r.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(provider);
 						response = Subject.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
-								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+								return r.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 							}
 						});
 					}
@@ -421,7 +424,7 @@ public class KmsKeyMgr {
 					VXKmsKey key = JsonUtils.jsonToObject(response, VXKmsKey.class);
 					return key;
 				} catch (Exception e) {
-					if (e instanceof UniformInterfaceException || i == providers.length - 1)
+					if (e instanceof ProcessingException || e instanceof WebApplicationException || i == providers.length - 1)
 						throw e;
 					else
 						continue;
@@ -441,16 +444,16 @@ public class KmsKeyMgr {
 		}else{
 			uri = uri.concat("?doAs="+currentUserLoginId);
 		}
-		final WebResource r = c.resource(uri);
+		final WebTarget r = c.target(uri);
 		String response = null;
 		if(!isKerberos){
-			response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+			response = r.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		}else{
 			Subject sub = getSubjectForKerberos(repoName);
 			response = Subject.doAs(sub, new PrivilegedAction<String>() {
 				@Override
 				public String run() {
-					return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+					return r.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 				}				
 			});
 		}
@@ -599,9 +602,9 @@ public class KmsKeyMgr {
 
 	private synchronized Client getClient() {
 		Client ret = null;
-		ClientConfig cc = new DefaultClientConfig();
-		cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-		ret = Client.create(cc);	
+		ClientConfig cc = new ClientConfig();
+		cc.property(ClientProperties.FOLLOW_REDIRECTS, true);
+		ret = ClientBuilder.newClient(cc);
 		return ret;
 	}	
 	

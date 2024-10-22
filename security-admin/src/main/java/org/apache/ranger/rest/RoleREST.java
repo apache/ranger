@@ -76,6 +76,8 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,9 +86,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.sun.jersey.multipart.FormDataParam;
-import com.sun.jersey.core.header.FormDataContentDisposition;
 
 @Path("roles")
 @Component

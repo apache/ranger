@@ -572,7 +572,7 @@ public class AssetREST {
 			@PathParam("repository") String repository) {
 		
 		String            epoch       = request.getParameter("epoch");
-		X509Certificate[] certchain   = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+		X509Certificate[] certchain   = (X509Certificate[]) request.getAttribute("jakarta.servlet.request.X509Certificate");
 		String            ipAddress   = request.getHeader("X-FORWARDED-FOR");
 		boolean           isSecure    = request.isSecure();
 		String            policyCount = request.getParameter("policyCount");

@@ -63,8 +63,8 @@ ExceptionMappingAuthenticationFailureHandler {
      *
      * @see org.springframework.security.web.authentication.
      * ExceptionMappingAuthenticationFailureHandler
-     * #onAuthenticationFailure(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse,
+     * #onAuthenticationFailure(jakarta.servlet.http.HttpServletRequest,
+     * jakarta.servlet.http.HttpServletResponse,
      * org.springframework.security.core.AuthenticationException)
      */
     @Override

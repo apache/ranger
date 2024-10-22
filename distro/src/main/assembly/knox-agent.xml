@@ -54,7 +54,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+          <include>org.glassfish.jersey.core:jersey-client:jar:${jersey-core.version}</include>
           <include>org.apache.commons:commons-configuration2</include>
           <include>com.google.code.gson:gson*</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>

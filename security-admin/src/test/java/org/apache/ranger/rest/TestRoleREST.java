@@ -36,6 +36,7 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,7 +52,6 @@ import java.util.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import com.sun.jersey.core.header.FormDataContentDisposition;
 
 import static org.mockito.ArgumentMatchers.eq;
 

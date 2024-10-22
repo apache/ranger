@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.plugin.contextenricher;
 
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -31,10 +30,11 @@ import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.Reader;
 import java.io.Writer;
@@ -58,7 +58,7 @@ public class RangerUserStoreRefresher extends Thread {
 
     private final String cacheFile;
     private boolean          hasProvidedUserStoreToReceiver;
-    private RangerRESTClient rangerRESTClient;
+    private final RangerRESTClient rangerRESTClient;
 
     public RangerUserStoreRefresher(RangerUserStoreRetriever userStoreRetriever, RangerUserStoreEnricher userStoreEnricher,
                              RangerRESTClient restClient, long lastKnownVersion,
@@ -418,7 +418,7 @@ public class RangerUserStoreRefresher extends Thread {
                     + ", response=" + response.getStatus()
                     + ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
                     + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-            String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+            String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
             LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
         } else {
             RESTResponse resp = RESTResponse.fromClientResponse(response);

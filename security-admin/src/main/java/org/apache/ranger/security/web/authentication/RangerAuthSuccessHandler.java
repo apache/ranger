@@ -72,8 +72,8 @@ SavedRequestAwareAuthenticationSuccessHandler {
      *
      * @see org.springframework.security.web.authentication.
      * SavedRequestAwareAuthenticationSuccessHandler
-     * #onAuthenticationSuccess(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse,
+     * #onAuthenticationSuccess(jakarta.servlet.http.HttpServletRequest,
+     * jakarta.servlet.http.HttpServletResponse,
      * org.springframework.security.core.Authentication)
      */
     @Override

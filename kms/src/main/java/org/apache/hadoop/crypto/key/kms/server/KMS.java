@@ -35,7 +35,7 @@ import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.security.token.delegation.web.HttpUserGroupInformation;
 import javax.ws.rs.core.UriBuilder;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;

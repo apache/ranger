@@ -50,7 +50,7 @@ public class RESTErrorUtil {
 
 	public WebApplicationException createRESTException(VXResponse gjResponse) {
 		Response errorResponse = Response
-				.status(javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST)
+				.status(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST)
 				.entity(gjResponse).build();
 
 		WebApplicationException restException = new WebApplicationException(
@@ -100,7 +100,7 @@ public class RESTErrorUtil {
 		resp.setMsgDesc(logMessage);
 
 		Response errorResponse = Response.status(
-				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
+				jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
@@ -138,7 +138,7 @@ public class RESTErrorUtil {
 		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
 		gjResponse.setMessageList(Collections.singletonList(MessageEnums.OPER_NO_PERMISSION.getMessage()));
 
-		Response                errorResponse = Response.status(javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(gjResponse).build();
+		Response                errorResponse = Response.status(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(gjResponse).build();
 		WebApplicationException restException = new WebApplicationException(errorResponse);
 
 		restException.fillInStackTrace();
@@ -158,7 +158,7 @@ public class RESTErrorUtil {
 		resp.setMsgDesc(logMessage);
 
 		Response errorResponse = Response.status(
-				javax.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
+				jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN).entity(resp).build();
 
 		WebApplicationException restException = new WebApplicationException(
 				errorResponse);
@@ -452,7 +452,7 @@ public class RESTErrorUtil {
 		gjResponse.setMessageList(messageList);
 
 		Response errorResponse = Response
-				.status(javax.servlet.http.HttpServletResponse.SC_NOT_FOUND)
+				.status(jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND)
 				.entity(gjResponse).build();
 
 		WebApplicationException restException = new WebApplicationException(

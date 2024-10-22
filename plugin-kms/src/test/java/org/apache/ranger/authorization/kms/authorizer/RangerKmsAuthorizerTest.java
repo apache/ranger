@@ -24,7 +24,7 @@ import java.security.PrivilegedExceptionAction;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextEvent;
 
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;

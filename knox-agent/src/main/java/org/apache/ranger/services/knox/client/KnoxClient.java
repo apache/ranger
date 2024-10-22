@@ -26,18 +26,18 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class KnoxClient {
 
@@ -91,18 +91,17 @@ public class KnoxClient {
 			ClientResponse response = null;
 
 			try {
-				client = Client.create();
-				
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-				WebResource webResource = client.resource(knoxUrl);
-				response = webResource.accept(EXPECTED_MIME_TYPE)
+				client = ClientBuilder.newClient();
+
+				client.register(HttpAuthenticationFeature.basic(userName, decryptedPwd));				WebTarget webTarget = client.target(knoxUrl);
+				response = webTarget.request(EXPECTED_MIME_TYPE)
 					    .get(ClientResponse.class);
-				LOG.debug("Knox topology list response: " + response);
+                LOG.debug("Knox topology list response: {}", response);
 				if (response != null) {
 
 					if (response.getStatus() == 200) {
-						String jsonString = response.getEntity(String.class);
-						LOG.debug("Knox topology list response JSON string: "+ jsonString);
+						String jsonString = response.readEntity(String.class);
+                        LOG.debug("Knox topology list response JSON string: {}", jsonString);
 
 						JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
 						JsonNode topologyNode = rootNode.findValue("topology");
@@ -126,7 +125,7 @@ public class KnoxClient {
 
 						}
 					} else {
-						LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatus());
+                        LOG.error("Got invalid REST response from: {}, responseStatus: {}", knoxUrl, response.getStatus());
 					}
 
 				} else {
@@ -145,7 +144,7 @@ public class KnoxClient {
 					response.close();
 				}
 				if (client != null) {
-					client.destroy();
+					client.close();
 				}
 			}
 		} catch (HadoopException he) {
@@ -196,22 +195,22 @@ public class KnoxClient {
 			ClientResponse response = null;
 
 			try {
-				client = Client.create();
+				client = ClientBuilder.newClient();
 
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
+				client.register(HttpAuthenticationFeature.basic(userName, decryptedPwd));
 
 				for (String topologyName : knoxTopologyList) {
 
-					WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
+					WebTarget webTarget = client.target(knoxUrl + "/" + topologyName);
 
-					response = webResource.accept(EXPECTED_MIME_TYPE)
+					response = webTarget.request(EXPECTED_MIME_TYPE)
 							.get(ClientResponse.class);
-					LOG.debug("Knox service lookup response: " + response);
+                    LOG.debug("Knox service lookup response: {}", response);
 					if (response != null) {
 
 						if (response.getStatus() == 200) {
-							String jsonString = response.getEntity(String.class);
-							LOG.debug("Knox service lookup response JSON string: " + jsonString);
+							String jsonString = response.readEntity(String.class);
+                            LOG.debug("Knox service lookup response JSON string: {}", jsonString);
 
 							JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
 							JsonNode topologyNode = rootNode.findValue("topology");
@@ -224,7 +223,7 @@ public class KnoxClient {
 										JsonNode serviceElement = service.get("role");
 										if (serviceElement != null) {
 											String serviceName = serviceElement.asText();
-											LOG.debug("Knox serviceName: " + serviceName);
+                                            LOG.debug("Knox serviceName: {}", serviceName);
 											if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))){
 												continue;
 											}
@@ -236,7 +235,7 @@ public class KnoxClient {
 								}
 							}
 						} else {
-							LOG.error("Got invalid  REST response from: " + knoxUrl + ", responsStatus: " + response.getStatus());
+                            LOG.error("Got invalid  REST response from: {}, responsStatus: {}", knoxUrl, response.getStatus());
 						}
 
 					} else {
@@ -255,7 +254,7 @@ public class KnoxClient {
 					response.close();
 				}
 				if (client != null) {
-					client.destroy();
+					client.close();
 				}
 			}
 		} catch (HadoopException he) {

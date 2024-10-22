@@ -56,8 +56,8 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      * (non-Javadoc)
      *
      * @see org.springframework.security.web.authentication.rememberme.
-     * RememberMeAuthenticationFilter#doFilter(javax.servlet.ServletRequest,
-     * javax.servlet.ServletResponse, javax.servlet.FilterChain)
+     * RememberMeAuthenticationFilter#doFilter(jakarta.servlet.ServletRequest,
+     * jakarta.servlet.ServletResponse, jakarta.servlet.FilterChain)
      */
     @Override
     public void doFilter(ServletRequest arg0, ServletResponse arg1,
@@ -72,8 +72,8 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      *
      * @see org.springframework.security.web.authentication.rememberme.
      * RememberMeAuthenticationFilter
-     * #onSuccessfulAuthentication(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse,
+     * #onSuccessfulAuthentication(jakarta.servlet.http.HttpServletRequest,
+     * jakarta.servlet.http.HttpServletResponse,
      * org.springframework.security.core.Authentication)
      */
     @Override
@@ -89,8 +89,8 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      *
      * @see org.springframework.security.web.authentication.rememberme.
      * RememberMeAuthenticationFilter
-     * #onUnsuccessfulAuthentication(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse,
+     * #onUnsuccessfulAuthentication(jakarta.servlet.http.HttpServletRequest,
+     * jakarta.servlet.http.HttpServletResponse,
      * org.springframework.security.core.AuthenticationException)
      */
     @Override

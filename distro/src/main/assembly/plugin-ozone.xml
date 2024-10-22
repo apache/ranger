@@ -61,9 +61,9 @@
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-client</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.glassfish.jersey.core:jersey-core</include>
+                    <include>org.glassfish.jersey.core:jersey-client</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -99,9 +99,8 @@
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-client</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.glassfish.jersey.core:jersey-client</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>

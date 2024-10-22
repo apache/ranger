@@ -46,7 +46,7 @@
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
                     <include>com.codahale.metrics:metrics-core</include>
                     <include>org.slf4j:jul-to-slf4j</include>
-                    <include>javax.servlet:servlet-api</include>
+                    <include>jakarta.servlet:jakarta.servlet-api</include>
                     <include>org.mortbay.jetty:jetty</include>
                     <include>org.mortbay.jetty:jetty-util</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
@@ -229,7 +229,7 @@
                     <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
                     <include>com.google.code.gson:gson</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>

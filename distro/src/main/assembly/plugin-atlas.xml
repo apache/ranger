@@ -54,7 +54,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>com.sun.jersey:jersey-bundle</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
           <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
