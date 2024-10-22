@@ -212,4 +212,9 @@ public class RangerAPIList {
 	public static final String GET_USER_ROLES_BY_NAME="XUserREST.getUserRolesByName";
 	public static final String FORCE_DELETE_EXTERNAL_USERS = "XUserREST.forceDeleteExternalUsers";
 	public static final String FORCE_DELETE_EXTERNAL_GROUPS = "XUserREST.forceDeleteExternalGroups";
+
+	/**
+	 * List of APIs for PublicAPIsv2
+	 */
+	public static final String GET_SERVICE_HEADERS = "PublicAPIsv2.getServiceHeaders";
 }

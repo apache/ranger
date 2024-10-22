@@ -56,6 +56,16 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
         setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
     }
 
+    public RangerServiceHeaderInfo(Long id, String name, String displayName, String type, Boolean isEnabled) {
+        super();
+        setId(id);
+        setName(name);
+        setDisplayName(displayName);
+        setType(type);
+        setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
+        setIsEnabled(isEnabled);
+    }
+
     public String getName() {
         return name;
     }

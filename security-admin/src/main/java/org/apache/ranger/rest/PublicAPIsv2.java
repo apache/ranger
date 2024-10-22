@@ -41,6 +41,7 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.security.context.RangerAPIList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -437,7 +438,7 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/service-headers")
 	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_HEADERS + "\")")
 	public List<RangerServiceHeaderInfo> getServiceHeaders(@Context HttpServletRequest request) {
 		return serviceREST.getServiceHeaders(request);
 	}

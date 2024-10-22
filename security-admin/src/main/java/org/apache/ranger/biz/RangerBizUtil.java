@@ -62,6 +62,7 @@ import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.rest.ServiceREST;
 import org.apache.ranger.security.context.RangerAdminOpContext;
@@ -1266,6 +1267,10 @@ public class RangerBizUtil {
 		if (xxDbBase != null && xxDbBase instanceof XXService) {
 			return hasAccessToXXService((XXService) xxDbBase, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
 		}
+
+		if (baseModel != null && baseModel instanceof RangerServiceHeaderInfo) {
+			return hasAccessToRangerServiceHeaderInfo((RangerServiceHeaderInfo) baseModel, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
+		}
 		return false;
 	}
 
@@ -1298,6 +1303,16 @@ public class RangerBizUtil {
 			// Other cases - implClass can be null!
 			return isUser;
 		}
+	}
+
+	private Boolean hasAccessToRangerServiceHeaderInfo(RangerServiceHeaderInfo serviceHeader, boolean isKeyAdmin, boolean isSysAdmin, boolean isAuditor, boolean isAuditorKeyAdmin, boolean isUser) {
+		// TODO: As of now we are allowing SYS_ADMIN to read all the
+		// services including KMS
+		if (isSysAdmin || isAuditor) {
+			return true;
+		}
+
+		return EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME.equals(serviceHeader.getType()) ? (isKeyAdmin || isAuditorKeyAdmin) : isUser;
 	}
 
 	public void hasAdminPermissions(String objType) {

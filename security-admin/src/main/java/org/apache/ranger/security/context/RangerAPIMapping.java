@@ -97,6 +97,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithReports.add(RangerAPIList.LOOKUP_RESOURCE);
 
 		apiAssociatedWithReports.add(RangerAPIList.GET_USER_PROFILE_FOR_USER);
@@ -162,6 +163,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.UPDATE_SERVICE_DEF);
@@ -246,6 +248,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithKeyManager.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithKeyManager.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithKeyManager.add(RangerAPIList.UPDATE_SERVICE_DEF);
@@ -379,6 +382,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithAudit.add(RangerAPIList.LOOKUP_RESOURCE);
 
 		apiAssociatedWithAudit.add(RangerAPIList.GET_USER_PROFILE_FOR_USER);
@@ -459,6 +463,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.UPDATE_SERVICE_DEF);
