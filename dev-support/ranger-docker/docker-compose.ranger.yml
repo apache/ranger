@@ -24,12 +24,29 @@ services:
         condition: service_healthy
       ranger-solr:
         condition: service_started
+      ranger-elasticsearch:
+        condition: service_started
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
       - /home/ranger/scripts/ranger.sh
+
+#  ranger-elasticsearch:
+#    image: elasticsearch:7.17.24
+#    container_name: ranger-elasticsearch
+#    hostname: ranger-elasticsearch.example.com
+#    environment:
+#      - discovery.type=single-node
+#      - http.host=0.0.0.0
+#      - xpack.security.enabled=false
+#    volumes:
+#      - esdata:/usr/share/elasticsearch/data
+#    networks:
+#      - ranger
+#    ports:
+#      - "9200:9200"
 
   ranger-zk:
     build:
@@ -45,23 +62,26 @@ services:
     ports:
       - "2181:2181"
 
-  ranger-solr:
-    build:
-      context: .
-      dockerfile: Dockerfile.ranger-solr
-      args:
-        - SOLR_VERSION=${SOLR_VERSION}
-    image: ranger-solr
-    container_name: ranger-solr
-    hostname: ranger-solr.example.com
-    networks:
-      - ranger
-    ports:
-      - "8983:8983"
-    command:
-      - solr-precreate
-      - ranger_audits
-      - /opt/solr/server/solr/configsets/ranger_audits/
+#  ranger-solr:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.ranger-solr
+#      args:
+#        - SOLR_VERSION=${SOLR_VERSION}
+#    image: ranger-solr
+#    container_name: ranger-solr
+#    hostname: ranger-solr.example.com
+#    networks:
+#      - ranger
+#    ports:
+#      - "8983:8983"
+#    command:
+#      - solr-precreate
+#      - ranger_audits
+#      - /opt/solr/server/solr/configsets/ranger_audits/
+
+volumes:
+  esdata:
 
 networks:
   ranger:

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+FROM elasticsearch:7.17.24
 
-cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
-cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
-su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
-
-mkdir -p /opt/hive/logs
-chown -R hive:hadoop /opt/hive/
-chmod g+w /opt/hive/logs
-
-cd ${RANGER_HOME}/ranger-hive-plugin
-./enable-hive-plugin.sh
+USER elasticsearch
