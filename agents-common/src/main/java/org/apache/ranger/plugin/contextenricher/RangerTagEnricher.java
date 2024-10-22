@@ -852,7 +852,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private boolean excludeDescendantMatches(RangerAccessRequest request) {
 		final boolean ret;
 
-		if (request.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) {
+		if (request.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext()) || request.getResourceMatchingScope().equals(ResourceMatchingScope.SELF_OR_DESCENDANTS)) {
 			ret = false;
 		} else {
 			RangerAccessResource resource = request.getResource();
