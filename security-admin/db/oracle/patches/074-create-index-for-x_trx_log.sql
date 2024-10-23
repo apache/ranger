@@ -12,15 +12,18 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-GO
-IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'x_trx_log_IDX_trx_id' AND object_id = OBJECT_ID('x_trx_log'))
-BEGIN
-	CREATE NONCLUSTERED INDEX [x_trx_log_IDX_trx_id] ON [x_trx_log]
-	(
-		[trx_id] ASC
-	)
-	WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-END
-Go
+-- sync_source_info CLOB NOT NULL,
 
-EXIT;
+DECLARE
+	v_index_exists number:=0;
+	v_table_exists number := 0;
+BEGIN
+	SELECT COUNT(*) INTO v_table_exists FROM USER_TABLES WHERE TABLE_NAME = upper('x_trx_log');
+	IF (v_table_exists > 0) THEN
+		SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_trx_log_IDX_trx_id') AND TABLE_NAME= upper('x_trx_log');
+		IF (v_index_exists = 0) THEN
+			execute IMMEDIATE 'CREATE INDEX x_trx_log_IDX_trx_id ON x_trx_log(trx_id)';
+			commit;
+		END IF;
+	END IF;
+END;/
