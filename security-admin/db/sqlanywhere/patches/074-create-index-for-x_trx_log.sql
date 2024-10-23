@@ -13,7 +13,11 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-CREATE INDEX IF NOT EXISTS x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
+IF EXISTS(select * from SYS.SYSTABLES where tname = 'x_trx_log') THEN
+	IF EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_trx_log' and cname = 'trx_id') THEN
+		CREATE INDEX IF NOT EXISTS x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
+	END IF;
+END IF;
 GO
 
 EXIT
