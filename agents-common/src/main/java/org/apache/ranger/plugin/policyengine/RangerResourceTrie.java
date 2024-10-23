@@ -1101,14 +1101,14 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("==> removeSelfFromTrie(" + this + ")");
             }
-            if (evaluators == null && children.size() == 0) {
+            if (evaluators == null && wildcardEvaluators == null && children.size() == 0) {
                 TrieNode<U> parent = getParent();
                 if (parent != null) {
                     parent.children.remove(str.charAt(0));
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("removeSelfFromTrie(" + this + ") could not remove self from Trie");
+                    LOG.debug("removeSelfFromTrie(" + this + "): node is not removed from Trie : [evaluators:" + evaluators + ", wildcard-evaluators:" + wildcardEvaluators + ", number-of-children-nodes:" + children.size() + "]");
                 }
             }
             if (LOG.isDebugEnabled()) {
