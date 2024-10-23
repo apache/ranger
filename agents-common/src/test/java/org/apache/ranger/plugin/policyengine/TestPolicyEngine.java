@@ -257,6 +257,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hdfs_incremental_update_for_wildcard_evaluators() {
+		String[] hdfsTestResourceFiles = {"/policyengine/test_policyengine_hdfs_incremental_update_for_wildcard_evaluators.json"};
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveForTag() {
 		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_tag_hive.json" };
 
