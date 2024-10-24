@@ -660,6 +660,7 @@
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
