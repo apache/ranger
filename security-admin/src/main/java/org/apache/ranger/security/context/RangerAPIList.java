@@ -160,12 +160,6 @@ public class RangerAPIList {
 	public static final String SEARCH_X_GROUP_USERS = "XUserREST.searchXGroupUsers";
 	public static final String GET_X_GROUP_USERS_BY_GROUP_NAME = "XUserREST.getXGroupUsersByGroupName";
 	public static final String COUNT_X_GROUP_USERS = "XUserREST.countXGroupUsers";
-	public static final String GET_X_GROUP_GROUP = "XUserREST.getXGroupGroup";
-	public static final String CREATE_X_GROUP_GROUP = "XUserREST.createXGroupGroup";
-	public static final String UPDATE_X_GROUP_GROUP = "XUserREST.updateXGroupGroup";
-	public static final String DELETE_X_GROUP_GROUP = "XUserREST.deleteXGroupGroup";
-	public static final String SEARCH_X_GROUP_GROUPS = "XUserREST.searchXGroupGroups";
-	public static final String COUNT_X_GROUP_GROUPS = "XUserREST.countXGroupGroups";
 	public static final String GET_X_PERM_MAP = "XUserREST.getXPermMap";
 	public static final String CREATE_X_PERM_MAP = "XUserREST.createXPermMap";
 	public static final String UPDATE_X_PERM_MAP = "XUserREST.updateXPermMap";

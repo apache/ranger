@@ -19,8 +19,6 @@
 
  package org.apache.ranger.biz;
 
-import java.io.File;
-import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,8 +66,6 @@ import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
 import org.apache.ranger.view.VXTrxLogV2.AttributeChangeInfo;
 import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,53 +159,6 @@ public class AssetMgr extends AssetMgrBase {
 		logger.info("{}={}", PROP_PLUGIN_ACTIVITY_AUDIT_COMMIT_INLINE, pluginActivityAuditCommitInline);
 
 		logger.info("<== AssetMgr.init()");
-	}
-
-	public File getXResourceFile(Long id, String fileType) {
-		VXResource xResource = xResourceService.readResource(id);
-		if (xResource == null) {
-			throw this.restErrorUtil.createRESTException(
-					"serverMsg.datasourceIdEmpty" + "id " + id,
-					MessageEnums.DATA_NOT_FOUND, id, "dataSourceId",
-					"DataSource not found with " + "id " + id);
-		}
-		
-		return getXResourceFile(xResource, fileType);
-	}
-
-	public File getXResourceFile(VXResource xResource, String fileType) {
-		File file = null;
-		try {
-			if (fileType != null) {
-				if ("json".equalsIgnoreCase(fileType)) {
-					file = jsonUtil.writeJsonToFile(xResource,
-							xResource.getName());
-				} else {
-					throw restErrorUtil.createRESTException(
-							"Please send the supported filetype.",
-							MessageEnums.INVALID_INPUT_DATA);
-				}
-			} else {
-				throw restErrorUtil
-						.createRESTException(
-								"Please send the file format in which you want to export.",
-								MessageEnums.DATA_NOT_FOUND);
-			}
-		} catch (JsonGenerationException e) {
-			throw this.restErrorUtil.createRESTException(
-					"serverMsg.jsonGeneration" + " : " + e.getMessage(),
-					MessageEnums.ERROR_SYSTEM);
-		} catch (JsonMappingException e) {
-			throw this.restErrorUtil.createRESTException(
-					"serverMsg.jsonMapping" + " : " + e.getMessage(),
-					MessageEnums.ERROR_SYSTEM);
-		} catch (IOException e) {
-			throw this.restErrorUtil.createRESTException(
-					"serverMsg.ioException" + " : " + e.getMessage(),
-					MessageEnums.ERROR_SYSTEM);
-		}
-
-		return file;
 	}
 
 	public String getLatestRepoPolicy(VXAsset xAsset, List<VXResource> xResourceList, Long updatedTime,
@@ -1396,6 +1345,9 @@ public class AssetMgr extends AssetMgrBase {
 	}
 	
 	public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(String syncSource) {
+		if (!msBizUtil.hasModuleAccess(RangerConstants.MODULE_AUDIT)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the "+RangerConstants.MODULE_AUDIT+" module.", true);
+		}
 		if(syncSource!=null && !syncSource.trim().isEmpty()){
 			return xUgsyncAuditInfoService.searchXUgsyncAuditInfoBySyncSource(syncSource);
 		}else{

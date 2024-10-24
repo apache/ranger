@@ -168,4 +168,8 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	public Long getAllGroupCount() {
 		return daoManager.getXXGroup().getAllCount();
 	}
+
+	public List<XXGroup> getGroupsByUserId(Long userId) {
+		return daoManager.getXXGroup().findByUserId(userId);
+	}
 }

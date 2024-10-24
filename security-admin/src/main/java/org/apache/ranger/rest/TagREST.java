@@ -409,10 +409,14 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.TAGTYPES_RESOURCE)
     @Produces({ "application/json" })
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<String> getTagTypes() {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getTagTypes()");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User don't have permission to perform this action", true);
         }
 
         List<String> ret = null;
@@ -638,10 +642,14 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE)
     @Produces({ "application/json" })
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTag> getAllTags() {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getAllTags()");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User don't have permission to perform this action", true);
         }
 
         List<RangerTag> ret;
@@ -1042,10 +1050,14 @@ public class TagREST {
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
     @Produces({ "application/json" })
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerServiceResource> getAllServiceResources() {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getAllServiceResources()");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User don't have permission to perform this action", true);
         }
 
         List<RangerServiceResource> ret;

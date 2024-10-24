@@ -23,7 +23,6 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.service.XAuditMapService;
-import org.apache.ranger.service.XGroupGroupService;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XGroupUserService;
@@ -34,8 +33,6 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
-import org.apache.ranger.view.VXGroupGroup;
-import org.apache.ranger.view.VXGroupGroupList;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXGroupPermissionList;
 import org.apache.ranger.view.VXGroupUser;
@@ -62,9 +59,6 @@ public class XUserMgrBase {
 
 	@Autowired
 	XGroupUserService xGroupUserService;
-
-	@Autowired
-	XGroupGroupService xGroupGroupService;
 
 	@Autowired
 	XPermMapService xPermMapService;
@@ -177,39 +171,6 @@ public class XUserMgrBase {
 	public VXLong getXGroupUserSearchCount(SearchCriteria searchCriteria) {
 		return xGroupUserService.getSearchCount(searchCriteria,
 				xGroupUserService.searchFields);
-	}
-
-	public VXGroupGroup getXGroupGroup(Long id){
-		return (VXGroupGroup)xGroupGroupService.readResource(id);
-	}
-
-	public VXGroupGroup createXGroupGroup(VXGroupGroup vXGroupGroup){
-		vXGroupGroup =  (VXGroupGroup)xGroupGroupService.createResource(vXGroupGroup);
-		return vXGroupGroup;
-	}
-
-	public VXGroupGroup updateXGroupGroup(VXGroupGroup vXGroupGroup) {
-		vXGroupGroup =  (VXGroupGroup)xGroupGroupService.updateResource(vXGroupGroup);
-		return vXGroupGroup;
-	}
-
-	public void deleteXGroupGroup(Long id, boolean force) {
-		 if (force) {
-			 xGroupGroupService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
-
-	public VXGroupGroupList searchXGroupGroups(SearchCriteria searchCriteria) {
-		return xGroupGroupService.searchXGroupGroups(searchCriteria);
-	}
-
-	public VXLong getXGroupGroupSearchCount(SearchCriteria searchCriteria) {
-		return xGroupGroupService.getSearchCount(searchCriteria,
-				xGroupGroupService.searchFields);
 	}
 
 	public VXPermMap getXPermMap(Long id){
