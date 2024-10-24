@@ -112,6 +112,8 @@ public class SearchFilter {
 	public static final String DATASET_NAME             = "datasetName";          // search, sort
 	public static final String DATASET_NAME_PARTIAL     = "datasetNamePartial";   // search, sort
 	public static final String DATASET_ID               = "datasetId";            // search, sort
+	public static final String DATASET_LABEL            = "datasetLabel";
+	public static final String DATASET_KEYWORD          = "datasetKeyword";
 	public static final String PROJECT_NAME             = "projectName";          // search, sort
 	public static final String PROJECT_NAME_PARTIAL     = "projectNamePartial";   // search, sort
 	public static final String PROJECT_ID               = "projectId";            // search, sort

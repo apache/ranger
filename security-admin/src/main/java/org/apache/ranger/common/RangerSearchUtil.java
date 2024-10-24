@@ -124,6 +124,8 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.DATASET_NAME, request.getParameter(SearchFilter.DATASET_NAME));
 		ret.setParam(SearchFilter.DATASET_NAME_PARTIAL, request.getParameter(SearchFilter.DATASET_NAME_PARTIAL));
 		ret.setParam(SearchFilter.DATASET_ID, request.getParameter(SearchFilter.DATASET_ID));
+		ret.setParam(SearchFilter.DATASET_LABEL, request.getParameter(SearchFilter.DATASET_LABEL));
+		ret.setParam(SearchFilter.DATASET_KEYWORD, request.getParameter(SearchFilter.DATASET_KEYWORD));
 		ret.setParam(SearchFilter.PROJECT_NAME, request.getParameter(SearchFilter.PROJECT_NAME));
 		ret.setParam(SearchFilter.PROJECT_NAME_PARTIAL, request.getParameter(SearchFilter.PROJECT_NAME_PARTIAL));
 		ret.setParam(SearchFilter.PROJECT_ID, request.getParameter(SearchFilter.PROJECT_ID));
@@ -365,7 +367,7 @@ public class RangerSearchUtil extends SearchUtil {
 						whereClause.append(" and ").append(searchField.getCustomCondition());
 					}
 				}
-			} else if (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
+			} else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST || (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STRING)) {
 				List<String> strValueList = new ArrayList<>();
 
 				for (Object value : multiValue) {
@@ -386,8 +388,9 @@ public class RangerSearchUtil extends SearchUtil {
 									whereClause.append(" or ");
 								}
 
-								whereClause.append(searchField.getFieldName()).append("= :")
-								           .append(searchField.getClientFieldName()).append("_").append(count);
+								whereClause.append("LOWER(").append(searchField.getFieldName()).append(")")
+										.append(getSqlOperator(searchField.getSearchType()))
+										.append(":").append(searchField.getClientFieldName()).append("_").append(count);
 							}
 
 							if (strValueList.size() > 1) {
@@ -513,7 +516,7 @@ public class RangerSearchUtil extends SearchUtil {
 						query.setParameter(searchField.getClientFieldName(), intValueList);
 					}
 				}
-			} else if (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
+			} else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST || (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STRING)) {
 				List<String> strValueList = new ArrayList<>();
 
 				for (Object value : multiValue) {
@@ -523,7 +526,11 @@ public class RangerSearchUtil extends SearchUtil {
 				if (!strValueList.isEmpty()) {
 					if (strValueList.size() <= dbMinInListLength) {
 						for (int idx = 0; idx < strValueList.size(); idx++) {
-							query.setParameter(searchField.getClientFieldName() + "_" + idx, strValueList.get(idx));
+							if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
+								query.setParameter(searchField.getClientFieldName() + "_" + idx, strValueList.get(idx).trim().toLowerCase());
+							} else {
+								query.setParameter(searchField.getClientFieldName() + "_" + idx, "%" + strValueList.get(idx).trim().toLowerCase() + "%");
+							}
 						}
 					} else {
 						query.setParameter(searchField.getClientFieldName(), strValueList);
