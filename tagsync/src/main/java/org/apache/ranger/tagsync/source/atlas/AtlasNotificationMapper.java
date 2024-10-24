@@ -69,7 +69,9 @@ public class AtlasNotificationMapper {
                 if (!entityNotification.getIsEntityTypeHandled()) {
                     LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[" + entityNotification.getEntityTypeName() + "]");
                 }
-                LOG.warn("Dropped process entity notification for Atlas-Entity [" + entityNotification.getRangerAtlasEntity() + "]");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Dropped process entity notification for Atlas-Entity [" + entityNotification.getRangerAtlasEntity() + "]");
+                }
             }
 
         }
