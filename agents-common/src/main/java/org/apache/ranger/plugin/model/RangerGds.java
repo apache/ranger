@@ -93,6 +93,8 @@ public class RangerGds {
         private RangerGdsObjectACL     acl;
         private RangerValiditySchedule validitySchedule;
         private String                 termsOfUse;
+        private List<String>           labels;
+        private List<String>           keywords;
 
         public RangerDataset() { }
 
@@ -112,6 +114,22 @@ public class RangerGds {
 
         public void setTermsOfUse(String termsOfUse) { this.termsOfUse = termsOfUse; }
 
+        public List<String> getLabels() {
+            return labels;
+        }
+
+        public void setLabels(List<String> labels) {
+            this.labels = labels;
+        }
+
+        public List<String> getKeywords() {
+            return keywords;
+        }
+
+        public void setKeywords(List<String> keywords) {
+            this.keywords = keywords;
+        }
+
         @Override
         public StringBuilder toString(StringBuilder sb) {
             sb.append("RangerDataset={");
@@ -122,6 +140,8 @@ public class RangerGds {
               .append("acl={").append(acl).append("} ")
               .append("validitySchedule={").append(validitySchedule).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
+              .append("labels={").append(validitySchedule).append("} ")
+              .append("keywords={").append(termsOfUse).append("} ")
               .append("}");
 
             return sb;
@@ -568,6 +588,9 @@ public class RangerGds {
         private Long                            projectsCount;
         private Long                            totalResourceCount;
         private List<DataShareInDatasetSummary> dataShares;
+        private RangerValiditySchedule          validitySchedule;
+        private List<String>                    labels;
+        private List<String>                    keywords;
 
         public DatasetSummary() {
             super();
@@ -631,6 +654,30 @@ public class RangerGds {
             this.aclPrincipalsCount = aclPrincipalsCount;
         }
 
+        public RangerValiditySchedule getValiditySchedule() {
+            return validitySchedule;
+        }
+
+        public void setValiditySchedule(RangerValiditySchedule validitySchedule) {
+            this.validitySchedule = validitySchedule;
+        }
+
+        public List<String> getLabels() {
+            return labels;
+        }
+
+        public void setLabels(List<String> labels) {
+            this.labels = labels;
+        }
+
+        public List<String> getKeywords() {
+            return keywords;
+        }
+
+        public void setKeywords(List<String> keywords) {
+            this.keywords = keywords;
+        }
+
         @Override
         public String toString() {
             return toString(new StringBuilder()).toString();
@@ -649,6 +696,9 @@ public class RangerGds {
               .append("aclPrincipalsCount={").append(aclPrincipalsCount).append("} ")
               .append("totalResourceCount={").append(totalResourceCount).append("} ")
               .append("dataShares={").append(dataShares).append("} ")
+              .append("validitySchedule={").append(totalResourceCount).append("} ")
+              .append("labels={").append(totalResourceCount).append("} ")
+              .append("keywords={").append(totalResourceCount).append("} ")
               .append("}");
 
             return sb;

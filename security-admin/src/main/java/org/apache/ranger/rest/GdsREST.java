@@ -361,6 +361,9 @@ public class GdsREST {
 
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
+            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_LABEL, "Dataset Label List", "datasetLabels", null, null);
+            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_KEYWORD, "Dataset Keyword List", "datasetKeywords", null, null);
+
             ret = gdsStore.searchDatasets(filter);
         } catch(WebApplicationException excp) {
             throw excp;

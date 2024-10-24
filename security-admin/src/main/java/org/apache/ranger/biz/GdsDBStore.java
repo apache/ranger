@@ -1504,6 +1504,9 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetSummary.setGuid(dataset.getGuid());
             datasetSummary.setVersion(dataset.getVersion());
             datasetSummary.setPermissionForCaller(permissionForCaller);
+            datasetSummary.setValiditySchedule(dataset.getValiditySchedule());
+            datasetSummary.setLabels(dataset.getLabels());
+            datasetSummary.setKeywords(dataset.getKeywords());
 
             ret.add(datasetSummary);
 
