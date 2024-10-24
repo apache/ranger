@@ -106,6 +106,7 @@
                                     <skipAssembly>false</skipAssembly>
                                     <descriptors>
                                         <descriptor>src/main/assembly/admin-web.xml</descriptor>
+                                        <descriptor>src/main/assembly/usersync.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
@@ -682,12 +683,28 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hdfs-plugin</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop.thirdparty</groupId>
+                    <artifactId>hadoop-shaded-protobuf_3_7</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.xerial.snappy</groupId>
+                    <artifactId>snappy-java</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hive-plugin-shim</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>dnsjava</groupId>
+                    <artifactId>dnsjava</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -760,6 +777,12 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-kafka-plugin-shim</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.xerial.snappy</groupId>
+                    <artifactId>snappy-java</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -772,6 +795,12 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-solr-plugin-shim</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>http2-common</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
         <dependency>
