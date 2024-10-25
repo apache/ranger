@@ -57,8 +57,8 @@
                     <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
                     <include>com.sun.jersey:jersey-core</include>
@@ -67,7 +67,6 @@
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

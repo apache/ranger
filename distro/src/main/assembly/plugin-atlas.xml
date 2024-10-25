@@ -92,7 +92,6 @@
           <include>org.apache.orc:orc-core:jar:${orc.version}</include>
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -116,8 +115,8 @@
           <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
           <include>org.apache.ranger:credentialbuilder</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
@@ -125,7 +124,6 @@
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

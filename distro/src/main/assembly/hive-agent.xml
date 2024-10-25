@@ -74,7 +74,6 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -99,11 +98,10 @@
           <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>

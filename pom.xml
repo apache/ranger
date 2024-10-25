@@ -120,7 +120,6 @@
         <graalvm.version>22.3.0</graalvm.version>
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
-        <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
         <hadoop.version>3.3.6</hadoop.version>
         <ozone.version>1.4.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
@@ -133,7 +132,6 @@
         <hbase-shaded-netty>4.1.7</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>4.1.7</hbase-shaded-miscellaneous>
         <libthrift.version>0.14.0</libthrift.version>
-        <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpclient.version>4.5.13</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.14</httpcomponents.httpcore.version>
         <httpcomponents.httpasyncclient.version>4.1.4</httpcomponents.httpasyncclient.version>
