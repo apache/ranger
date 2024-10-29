@@ -110,7 +110,7 @@ SavedRequestAwareAuthenticationSuccessHandler {
     		authentication.setAuthenticated(false);
 
 			vXResponse.setStatusCode(HttpServletResponse.SC_PRECONDITION_FAILED);
-			vXResponse.setMsgDesc("Auth Succeeded but user is not synced yet for " + authentication.getName());
+			vXResponse.setMsgDesc("Auth Succeeded but user is not synced yet or federated-user for " + authentication.getName());
 
 			response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
 			response.getWriter().write(jsonUtil.writeObjectAsString(vXResponse));
