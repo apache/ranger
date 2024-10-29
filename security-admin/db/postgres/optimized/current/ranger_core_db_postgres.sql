@@ -1687,20 +1687,23 @@ commit;
 
 CREATE SEQUENCE X_GDS_DATASET_SEQ;
 CREATE TABLE x_gds_dataset (
-    id              BIGINT       NOT NULL DEFAULT nextval('X_GDS_DATASET_SEQ'::regclass)
-  , guid            VARCHAR(64)  NOT NULL
-  , create_time     TIMESTAMP    NULL     DEFAULT NULL
-  , update_time     TIMESTAMP    NULL     DEFAULT NULL
-  , added_by_id     BIGINT       NULL     DEFAULT NULL
-  , upd_by_id       BIGINT       NULL     DEFAULT NULL
-  , version         BIGINT       NOT NULL DEFAULT 1
-  , is_enabled      BOOLEAN      NOT NULL DEFAULT '1'
-  , name            VARCHAR(512) NOT NULL
-  , description     TEXT         NULL     DEFAULT NULL
-  , acl             TEXT         NULL     DEFAULT NULL
-  , terms_of_use    TEXT         NULL     DEFAULT NULL
-  , options         TEXT         NULL     DEFAULT NULL
-  , additional_info TEXT         NULL     DEFAULT NULL
+    id                BIGINT       NOT NULL DEFAULT nextval('X_GDS_DATASET_SEQ'::regclass)
+  , guid              VARCHAR(64)  NOT NULL
+  , create_time       TIMESTAMP    NULL     DEFAULT NULL
+  , update_time       TIMESTAMP    NULL     DEFAULT NULL
+  , added_by_id       BIGINT       NULL     DEFAULT NULL
+  , upd_by_id         BIGINT       NULL     DEFAULT NULL
+  , version           BIGINT       NOT NULL DEFAULT 1
+  , is_enabled        BOOLEAN      NOT NULL DEFAULT '1'
+  , name              VARCHAR(512) NOT NULL
+  , description       TEXT         NULL     DEFAULT NULL
+  , acl               TEXT         NULL     DEFAULT NULL
+  , terms_of_use      TEXT         NULL     DEFAULT NULL
+  , options           TEXT         NULL     DEFAULT NULL
+  , additional_info   TEXT         NULL     DEFAULT NULL
+  , validity_schedule TEXT         NULL     DEFAULT NULL
+  , labels            TEXT         NULL     DEFAULT NULL
+  , keywords          TEXT         NULL     DEFAULT NULL
   , PRIMARY KEY(id)
   , CONSTRAINT x_gds_dataset_UK_name UNIQUE(name)
   , CONSTRAINT x_gds_dataset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id)
