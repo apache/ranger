@@ -75,6 +75,14 @@
       "evaluatorOptions": { "engineName":"JavaScript", "ui.isMultiline":"true" },
       "label":            "Enter boolean expression",
       "description":      "Boolean expression"
+    },
+    {
+      "itemId":      2,
+      "name":        "validitySchedule",
+      "evaluator":   "org.apache.ranger.plugin.conditionevaluator.RangerValidityScheduleConditionEvaluator",
+      "uiHint" :     "{ \"valueType\": \"validitySchedule\" }"
+      "label":       "Validity schedule",
+      "description": "Validity schedule"
     }
   ]
 }
