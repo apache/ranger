@@ -970,12 +970,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         // fetch encryption algo name
         String encrAlgoName = JsonUtilsV2.jsonToMap(secretKeyEntry.attributes).get(KEY_CRYPTO_ALGO_NAME);
-        SupportedPBECryptoAlgo encrAlgo;
-        if (StringUtils.isNotEmpty(encrAlgoName)) {
-            encrAlgo = SupportedPBECryptoAlgo.valueOf(encrAlgoName);
-        } else {
-            encrAlgo = SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES;
-        }
+        SupportedPBECryptoAlgo encrAlgo = StringUtils.isNotEmpty(encrAlgoName) ? SupportedPBECryptoAlgo.valueOf(encrAlgoName) : SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES;
 
         SealedObject sealedKey = secretKeyEntry.sealedKey;
         // Get the AlgorithmParameters from RangerSealedObject
@@ -987,11 +982,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             salt = ((RangerSealedObject) sealedKey).getSalt();
             pbeKeySpec = new PBEKeySpec(password, salt, 20, encrAlgo.getKeyLength());
         } else { // not yet re-encrypted, older algo
-            if (sealedKey instanceof RangerSealedObject) {
-                algorithmParameters = ((RangerSealedObject) sealedKey).getParameters(encrAlgo.getAlgoName());
-            } else {
-                algorithmParameters = new RangerSealedObject(sealedKey).getParameters(encrAlgo.getAlgoName());
-            }
+            algorithmParameters = sealedKey instanceof RangerSealedObject ? ((RangerSealedObject) sealedKey).getParameters(encrAlgo.getAlgoName()) : new RangerSealedObject(sealedKey).getParameters(encrAlgo.getAlgoName());
             pbeKeySpec = new PBEKeySpec(password);
         }
 
