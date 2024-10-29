@@ -482,8 +482,8 @@ public class SessionMgr {
 
 	public boolean isValidXAUser(String loginId) {
 		XXPortalUser pUser = daoManager.getXXPortalUser().findByLoginId(loginId);
-		if (pUser == null) {
-			logger.error("Error getting user for loginId=" + loginId);
+		if (pUser == null || pUser.getUserSource() == RangerCommonEnums.USER_FEDERATED) {
+			logger.error("Error getting user for loginId=" + loginId + " or  federated user");
 			return false;
 		} else {
 			if(logger.isDebugEnabled()) {
