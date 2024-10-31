@@ -314,7 +314,19 @@
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>${hadoop.version}</version>
+            <!--            <scope>compile</scope>-->
+            <scope>system</scope>
+            <systemPath>${shaded.dir}/hadoop-auth-3.3.6-jakarta.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -522,6 +534,8 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+            <scope>system</scope>
+            <systemPath>${shaded.dir}/hadoop-common-3.3.6-jakarta.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>commons-httpclient</groupId>
@@ -651,6 +665,10 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -927,16 +945,16 @@
                 </configuration>
                 <dependencies>
                     <!-- dependency management version doesn't apply here, need to repeat the version numbers -->
-                    <dependency>
-                        <groupId>javax.xml.bind</groupId>
-                        <artifactId>jaxb-api</artifactId>
-                        <version>${jaxb.api.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>javax.jws</groupId>
-                        <artifactId>javax.jws-api</artifactId>
-                        <version>1.1</version>
-                    </dependency>
+<!--                    <dependency>-->
+<!--                        <groupId>javax.xml.bind</groupId>-->
+<!--                        <artifactId>jaxb-api</artifactId>-->
+<!--                        <version>${jaxb.api.version}</version>-->
+<!--                    </dependency>-->
+<!--                    <dependency>-->
+<!--                        <groupId>javax.jws</groupId>-->
+<!--                        <artifactId>javax.jws-api</artifactId>-->
+<!--                        <version>1.1</version>-->
+<!--                    </dependency>-->
                 </dependencies>
             </plugin>
             <plugin>

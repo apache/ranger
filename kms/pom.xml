@@ -56,6 +56,8 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+            <scope>system</scope>
+            <systemPath>${shaded.dir}/hadoop-common-3.3.6-jakarta.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>
@@ -93,7 +95,16 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-annotations</artifactId>
+                </exclusion>
              </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-annotations</artifactId>
+            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -180,7 +191,9 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
             <version>${hadoop.version}</version>
-            <scope>compile</scope>
+<!--            <scope>compile</scope>-->
+            <scope>system</scope>
+            <systemPath>${shaded.dir}/hadoop-auth-3.3.6-jakarta.jar</systemPath>
             <exclusions>
                 <exclusion>
                     <groupId>com.nimbusds</groupId>

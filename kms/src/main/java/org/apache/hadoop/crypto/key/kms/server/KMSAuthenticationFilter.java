@@ -122,13 +122,6 @@ public class KMSAuthenticationFilter
       statusCode = sc;
       super.sendError(sc);
     }
-
-    @Override
-    public void setStatus(int sc, String sm) {
-      statusCode = sc;
-      msg = sm;
-      super.setStatus(sc, sm);
-    }
   }
 
   @Override

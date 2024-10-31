@@ -265,6 +265,9 @@
 
         <!-- Tencent KMS depencies -->
         <com.tencentcloudapi.sdk.version>3.1.322</com.tencentcloudapi.sdk.version>
+
+<!--        <shaded.dir>${basedir}/dev-support/ranger-docker/dist</shaded.dir>-->
+        <shaded.dir>/home/usuario/code/ranger/dev-support/ranger-docker/dist</shaded.dir>
     </properties>
     <profiles>
         <profile>
@@ -1220,6 +1223,7 @@
                         <exclude>.svn/**</exclude>
                         <exclude>.idea/**</exclude>
                         <exclude>dev-support/**</exclude>
+                        <exclude>${shaded.dir}</exclude>
                         <exclude>**/.gitignore/**</exclude>
                         <exclude>**/.project/**</exclude>
                         <exclude>**/.settings/**</exclude>
