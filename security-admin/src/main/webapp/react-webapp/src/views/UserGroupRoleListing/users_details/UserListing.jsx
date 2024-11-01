@@ -29,12 +29,7 @@ import {
 } from "react-bootstrap";
 import moment from "moment-timezone";
 import XATableLayout from "Components/XATableLayout";
-import {
-  UserRoles,
-  UserSource,
-  UserTypes,
-  VisibilityStatus
-} from "Utils/XAEnums";
+import { UserRoles, UserTypes, VisibilityStatus } from "Utils/XAEnums";
 import { MoreLess, scrollToNewData } from "Components/CommonComponents";
 import {
   useNavigate,
@@ -371,19 +366,13 @@ function Users() {
         Header: "User Source",
         accessor: "userSource",
         Cell: (rawValue) => {
-          if (rawValue.value !== null && rawValue.value !== undefined) {
-            if (rawValue.value == UserSource.XA_PORTAL_USER.value)
-              return (
-                <h6 className="text-center">
-                  <Badge bg="success">{UserTypes.USER_INTERNAL.label}</Badge>
-                </h6>
-              );
-            else
-              return (
-                <h6 className="text-center">
-                  <Badge bg="warning">{UserTypes.USER_EXTERNAL.label}</Badge>
-                </h6>
-              );
+          if (rawValue?.value != null) {
+            const userSourceVal = find(UserTypes, { value: rawValue.value });
+            return (
+              <h6 className="text-center">
+                <Badge bg={userSourceVal.variant}>{userSourceVal.label}</Badge>
+              </h6>
+            );
           } else return "--";
         },
         width: 70
