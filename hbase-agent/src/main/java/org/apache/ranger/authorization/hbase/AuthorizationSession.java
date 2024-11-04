@@ -30,11 +30,7 @@ import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.hadoop.thirdparty.com.google.common.base.MoreObjects;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.policyengine.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +43,7 @@ public class AuthorizationSession {
 	final HbaseUserUtils _userUtils = _factory.getUserUtils();
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
 	// immutable state
-	final RangerBasePlugin _authorizer;
+	final RangerHBasePlugin _authorizer;
 	// Mutable state: Use supplied state information
 	String _operation;
 	String _otherInformation;
@@ -68,7 +64,7 @@ public class AuthorizationSession {
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
 	
-	public AuthorizationSession(RangerBasePlugin authorizer) {
+	public AuthorizationSession(RangerHBasePlugin authorizer) {
 		_authorizer = authorizer;
 	}
 
@@ -172,22 +168,21 @@ public class AuthorizationSession {
 				StringUtils.equals(_operation, "getUserPermissionForNamespace");
 	}
 
-	AuthorizationSession buildRequest() {
-
-		verifyBuildable();
-		// session can be reused so reset its state
-		zapAuthorizationState();
+	private RangerAccessResource createHBaseResource(){
 		// TODO get this via a factory instead
 		RangerAccessResourceImpl resource = new RangerHBaseResource();
 		// policy engine should deal sensibly with null/empty values, if any
 		if (isNameSpaceOperation() && StringUtils.isNotBlank(_otherInformation)) {
-				resource.setValue(RangerHBaseResource.KEY_TABLE, _otherInformation + RangerHBaseResource.NAMESPACE_SEPARATOR);
+			resource.setValue(RangerHBaseResource.KEY_TABLE, _otherInformation + RangerHBaseResource.NAMESPACE_SEPARATOR);
 		} else {
 			resource.setValue(RangerHBaseResource.KEY_TABLE, _table);
 		}
 		resource.setValue(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily);
 		resource.setValue(RangerHBaseResource.KEY_COLUMN, _column);
-		
+		return resource;
+	}
+	private RangerAccessRequest createRangerRequest(){
+		RangerAccessResource resource = createHBaseResource();
 		String user = _userUtils.getUserAsString(_user);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups, null);
 		request.setAction(_operation);
@@ -195,14 +190,20 @@ public class AuthorizationSession {
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
 		request.setAccessTime(new Date());
-		
-		_request = request;
+		return request;
+	}
+
+	AuthorizationSession buildRequest() {
+		verifyBuildable();
+		// session can be reused so reset its state
+		zapAuthorizationState();
+		_request = createRangerRequest();
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Built request: " + request.toString());
+			LOG.debug("Built request: " + _request.toString());
 		}
 		return this;
 	}
-	
+
 	AuthorizationSession authorize() {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> AuthorizationSession.authorize: " + getRequestMessage());
@@ -376,5 +377,8 @@ public class AuthorizationSession {
 	AuthorizationSession resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope scope) {
 		_resourceMatchingScope = scope;
 		return this;
+	}
+	public boolean getPropertyIsColumnAuthOptimizationEnabled(){
+		return _authorizer.getPropertyIsColumnAuthOptimizationEnabled();
 	}
 }

@@ -283,13 +283,19 @@ public class TestPolicyEngine {
 
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
+	@Test
+	public void testPolicyEngine_hbase_ResourceMatchingScope_equals_SELF_AND_ALL_DESCENDANTS() {
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_selfandalldescendants.json" };
 
+		runTestsFromResourceFiles(hbaseTestResourceFiles);
+	}
 	@Test
 	public void testPolicyEngine_hbase_namespace() {
 		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_namespace.json" };
 
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
+
 
 	@Test
 	public void testPolicyEngine_hbaseForTag_filebased() {

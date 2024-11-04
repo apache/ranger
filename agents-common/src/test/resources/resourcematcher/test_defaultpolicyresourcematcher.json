@@ -962,6 +962,112 @@
           "result": false
         }
       ]
+    },
+    {
+      "name": "all * in policy, less number of resource elements in request",
+      "policyResources": {
+        "database": {"values": [ "*"] },
+        "table": {"values": ["*"]},
+        "column": {"values": ["*"]}
+      },
+      "tests": [
+        {
+          "name": "descendantMatch: NOT MATCH for database,table in policy",
+          "type": "descendantMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "selfAndAllDescendants: MATCH for database,table in policy",
+          "type": "selfAndAllDescendants",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ]
+    },
+    {
+      "name": "multiple * in policy, less number of resource elements in request",
+      "policyResources": {
+        "database": {"values": [ "finance"] },
+        "table": {"values": ["*"]},
+        "column": {"values": ["*"]}
+      },
+      "tests": [
+        {
+          "name": "descendantMatch: NOT MATCH database,table in policy",
+          "type": "descendantMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+      ,
+        {
+          "name": "selfAndAllDescendants: MATCH for database,table in policy",
+          "type": "selfAndAllDescendants",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ]
+    },
+    {
+      "name": "* in policy, less number of resource elements in request",
+      "policyResources": {
+        "database": {"values": [ "finance"] },
+        "table": {"values": ["tax"]},
+        "column": {"values": ["*"]}
+      },
+      "tests": [
+        {
+          "name": "descendantMatch: NOT MATCH for database,table in policy",
+          "type": "descendantMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": false
+        }
+        ,
+        {
+          "name": "selfAndAllDescendants: MATCH for database,table in policy",
+          "type": "selfAndAllDescendants",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ]
+    },
+    {
+      "name": "no * in policy, less number of resource elements in request",
+      "policyResources": {
+        "database": {"values": [ "finance"] },
+        "table": {"values": ["tax"]},
+        "column": {"values": ["ssn"]}
+      },
+      "tests": [
+        {
+          "name": "descendantMatch: MATCH for database,table in policy",
+          "type": "descendantMatch",
+          "resource": {
+            "elements": {"database": "finance", "table":"tax"}
+          },
+          "evalContext": {},
+          "result": true
+        }
+      ]
     }
   ]
 }

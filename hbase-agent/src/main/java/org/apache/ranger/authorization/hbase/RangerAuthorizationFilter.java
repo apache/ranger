@@ -43,8 +43,10 @@ public class RangerAuthorizationFilter extends FilterBase {
 	final AuthorizationSession _session;
 	final HbaseAuditHandler _auditHandler = HbaseFactory.getInstance().getAuditHandler();
 
+	final Set<String> _familiesFullyAuthorized;
+
 	public RangerAuthorizationFilter(AuthorizationSession session, Set<String> familiesAccessAllowed, Set<String> familiesAccessDenied, Set<String> familiesAccessIndeterminate,
-									 Map<String, Set<String>> columnsAccessAllowed) {
+									 Map<String, Set<String>> columnsAccessAllowed, Set<String> familiesFullyAuthorized) {
 		// the class assumes that all of these can be empty but none of these can be null
 		_familiesAccessAllowed = familiesAccessAllowed;
 		_familiesAccessDenied = familiesAccessDenied;
@@ -54,6 +56,7 @@ public class RangerAuthorizationFilter extends FilterBase {
 		_session = session;
 		// we don't want to audit denial, so we need to make sure the hander is what we need it to be.
 		_session.auditHandler(_auditHandler);
+		_familiesFullyAuthorized = familiesFullyAuthorized;
 	}
 	
 	@Override
@@ -86,9 +89,15 @@ public class RangerAuthorizationFilter extends FilterBase {
 		boolean authCheckNeeded = false;
 		if (family == null) {
 			LOG.warn("filterKeyValue: Unexpected - null/empty family! Access denied!");
-		} else if (_familiesAccessDenied.contains(family)) {
+		}
+		else if (_familiesAccessDenied.contains(family)) {
 			LOG.debug("filterKeyValue: family found in access denied families cache.  Access denied.");
-		} else if (_columnsAccessAllowed.containsKey(family)) {
+		}
+		else if (_session.getPropertyIsColumnAuthOptimizationEnabled() && _familiesFullyAuthorized.contains(family)){
+			LOG.debug("filterKeyValue: ColumnAuthOptimizationEnabled and family found in fully authorized families cache.  Column authorization is not required");
+			result = ReturnCode.INCLUDE;
+		}
+		else if (_columnsAccessAllowed.containsKey(family)) {
 			LOG.debug("filterKeyValue: family found in column level access results cache.");
 			if (_columnsAccessAllowed.get(family).contains(column)) {
 				LOG.debug("filterKeyValue: family/column found in column level access results cache. Access allowed.");
@@ -105,7 +114,6 @@ public class RangerAuthorizationFilter extends FilterBase {
 		} else {
 			LOG.warn("filterKeyValue: Unexpected - alien family encountered that wasn't seen by pre-hook!  Access Denied.!");
 		}
-
 		if (authCheckNeeded) {
 			LOG.debug("filterKeyValue: Checking authorization...");
 			_session.columnFamily(family)
