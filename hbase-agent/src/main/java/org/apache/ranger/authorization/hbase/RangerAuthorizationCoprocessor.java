@@ -104,7 +104,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
 	private static volatile RangerHBasePlugin hbasePlugin = null;
 
-
 	public void setColumnAuthOptimizationEnabled(boolean enable) throws Exception {
 		if (hbasePlugin!=null) {
 			hbasePlugin.setColumnAuthOptimizationEnabled(enable);
@@ -270,13 +269,13 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				if (CollectionUtils.isEmpty(columnCollection)) {
 					// family points to null map, OK.
 					// if column auth disabled, then also empty set is fine
-					if (LOG.isDebugEnabled()){
+					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns are empty. " +
 								"Setting columns to emptySet in familyMap");
 					}
 					result.put(family, Collections.<String> emptySet());
 				} else {
-					if (LOG.isDebugEnabled()){
+					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns exist");
 					}
 					Iterator<String> columnIterator = new ColumnIterator(columnCollection);
@@ -338,7 +337,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	
 	ColumnFamilyAccessResult evaluateAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env,
 											final Map<byte[], ? extends Collection<?>> familyMap, String commandStr) throws AccessDeniedException {
-		if (LOG.isDebugEnabled()){
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled="+hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled());
 		}
 
@@ -443,7 +442,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			if (columns == null || columns.isEmpty()) {
 				// family points to null map, OK.
 				// if column auth disabled, then also empty set is fine
-				if (LOG.isDebugEnabled()){
+				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerAuthorizationCoprocessor evaluateAccess: (No tags found for resource, "+
 							" all policies are * at column level for resource and "+
 							RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION +
@@ -524,7 +523,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 							" Skipping Family level check, will do finer level access check.");
 				}
 				boolean isColumnAuthShortCircuitingEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
-				if (isColumnAuthShortCircuitingEnabled){
+				if (isColumnAuthShortCircuitingEnabled) {
 						session.column(null)
 								.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS)
 								.buildRequest()
@@ -533,10 +532,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 						AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
 						// reset ResourceMatchingScope to SELF
 						session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
-						if (LOG.isDebugEnabled()){
+						if (LOG.isDebugEnabled()) {
 								LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, isColumnFamilyAndDescendantsAuthorized={}",isColumnFamilyAndDescendantsAuthorized);
 						}
-						if (isColumnFamilyAndDescendantsAuthorized){
+						if (isColumnFamilyAndDescendantsAuthorized) {
 								familesFullyAuthorized.add(family);
 								if (auditEvent != null) {
 										if (LOG.isDebugEnabled()) {
@@ -1953,7 +1952,7 @@ class RangerHBasePlugin extends RangerBasePlugin {
 		return ret;
 	}
 	@Override
-	public void setPolicies(ServicePolicies policies){
+	public void setPolicies(ServicePolicies policies) {
 		super.setPolicies(policies);
 		this.serviceConfigs = policies.getServiceConfig();
 		this.isColumnAuthOptimizationEnabled = Boolean.parseBoolean(this.serviceConfigs.get(RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION));

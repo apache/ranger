@@ -247,316 +247,99 @@
       "version": 1
     },
     {
-      "service": "cl1_hbase",
-      "name": "TempPolicyForOptimizedColAuth",
-      "policyType": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "service": "cl1_hbase", "name": "TempPolicyForOptimizedColAuth", "policyType": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "colfam1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "col1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "temp6"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": {"values": ["colfam1"], "isExcludes": false, "isRecursive": false },
+        "column": {"values": ["col1"], "isExcludes": false, "isRecursive": false},
+        "table": {"values": ["temp6"], "isExcludes": false, "isRecursive": false}
       },
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            {"type": "read", "isAllowed": true},
+            {"type": "write", "isAllowed": true},
+            {"type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "IT"
-          ],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": ["IT"], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "id": 101,
-      "isEnabled": true,
-      "version": 1
+      "id": 101, "isEnabled": true, "version": 1
     },
     {
-      "service": "cl1_hbase",
-      "name": "AllowColFamWhenColDeniedForOptimized",
-      "policyType": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "service": "cl1_hbase", "name": "AllowColFamWhenColDeniedForOptimized", "policyType": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "colfam1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "temp7"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": {"values": ["colfam1"], "isExcludes": false, "isRecursive": false},
+        "column": {"values": ["*"], "isExcludes": false, "isRecursive": false},
+        "table": {"values": ["temp7"], "isExcludes": false, "isRecursive": false}
       },
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            {"type": "read", "isAllowed": true},
+            {"type": "write", "isAllowed": true},
+            {"type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "IT"
-          ],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": ["IT"], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "id": 102,
-      "isEnabled": true,
-      "version": 1
+      "id": 102, "isEnabled": true, "version": 1
     },
     {
-      "service": "cl1_hbase",
-      "name": "DenyColWhenColFamAllowedForOptimizedCheck",
-      "policyType": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "service": "cl1_hbase", "name": "DenyColWhenColFamAllowedForOptimizedCheck", "policyType": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "colfam1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "col1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "temp7"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": {"values": ["colfam1"], "isExcludes": false, "isRecursive": false},
+        "column": {"values": ["col1"], "isExcludes": false, "isRecursive": false},
+        "table": {"values": ["temp7"], "isExcludes": false, "isRecursive": false}
       },
-      "policyItems": [
-      ],
       "denyPolicyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            {"type": "read", "isAllowed": true},
+            {"type": "write", "isAllowed": true},
+            {"type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "IT"
-          ],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": ["IT"], "conditions": [], "delegateAdmin": false
         }
       ],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "id": 103,
-      "isEnabled": true,
-      "version": 1
+      "id": 103, "isEnabled": true, "version": 1
     },
     {
-      "service": "cl1_hbase",
-      "name": "PolicyForAllowColumnFamilyForScan",
-      "policyType": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "service": "cl1_hbase", "name": "PolicyForAllowColumnFamilyForScan", "policyType": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "colfam1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "temp8"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": {"values": ["colfam1"], "isExcludes": false, "isRecursive": false},
+        "column": {"values": ["*"], "isExcludes": false, "isRecursive": false},
+        "table": {"values": ["temp8"], "isExcludes": false, "isRecursive": false}
       },
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            {"type": "read", "isAllowed": true},
+            {"type": "write", "isAllowed": true},
+            {"type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "IT","IT2"
-          ],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": ["IT","IT2"], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "id": 104,
-      "isEnabled": true,
-      "version": 1
+      "id": 104, "isEnabled": true, "version": 1
     },
     {
-      "service": "cl1_hbase",
-      "name": "PolicyForDenyColumnForScan",
-      "policyType": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "service": "cl1_hbase", "name": "PolicyForDenyColumnForScan", "policyType": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "colfam1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "col1"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "temp8"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": {"values": ["colfam1"], "isExcludes": false, "isRecursive": false},
+        "column": {"values": ["col1"], "isExcludes": false, "isRecursive": false},
+        "table": {"values": ["temp8"], "isExcludes": false, "isRecursive": false}
       },
-      "policyItems": [
-      ],
       "denyPolicyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            {"type": "read", "isAllowed": true},
+            {"type": "write", "isAllowed": true},
+            {"type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "IT"
-          ],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": ["IT"], "conditions": [], "delegateAdmin": false
         }
       ],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "id": 105,
-      "isEnabled": true,
-      "version": 1
+      "id": 105, "isEnabled": true, "version": 1
     }
   ],
   "serviceDef": {

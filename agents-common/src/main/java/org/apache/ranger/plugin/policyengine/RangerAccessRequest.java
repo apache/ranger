@@ -70,7 +70,7 @@ public interface RangerAccessRequest {
 		return Collections.emptyMap();
 	}
 
-	enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS, SELF_AND_ALL_DESCENDANTS}
+	enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS, SELF_AND_ALL_DESCENDANTS }
 
 	enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
 

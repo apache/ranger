@@ -168,7 +168,7 @@ public class AuthorizationSession {
 				StringUtils.equals(_operation, "getUserPermissionForNamespace");
 	}
 
-	private RangerAccessResource createHBaseResource(){
+	private RangerAccessResource createHBaseResource() {
 		// TODO get this via a factory instead
 		RangerAccessResourceImpl resource = new RangerHBaseResource();
 		// policy engine should deal sensibly with null/empty values, if any
@@ -181,7 +181,7 @@ public class AuthorizationSession {
 		resource.setValue(RangerHBaseResource.KEY_COLUMN, _column);
 		return resource;
 	}
-	private RangerAccessRequest createRangerRequest(){
+	private RangerAccessRequest createRangerRequest() {
 		RangerAccessResource resource = createHBaseResource();
 		String user = _userUtils.getUserAsString(_user);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups, null);
@@ -378,7 +378,7 @@ public class AuthorizationSession {
 		_resourceMatchingScope = scope;
 		return this;
 	}
-	public boolean getPropertyIsColumnAuthOptimizationEnabled(){
+	public boolean getPropertyIsColumnAuthOptimizationEnabled() {
 		return _authorizer.getPropertyIsColumnAuthOptimizationEnabled();
 	}
 }

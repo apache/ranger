@@ -231,10 +231,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 						matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 					}
 
-					final boolean isMatchedResource;
-					isMatchedResource = isMatchForResourceMatchingScope(request.getResourceMatchingScope(), matchType, request.isAccessTypeAny());
-
-					if (isMatchedResource) {
+					final boolean isMatchedResource = isMatchForResourceMatchingScope(request.getResourceMatchingScope(), matchType, request.isAccessTypeAny());
+					if ( isMatchedResource ) {
 						//Evaluate Policy Level Custom Conditions, if any and allowed then go ahead for policyItem level evaluation
 						if (matchPolicyCustomConditions(request)) {
 							if (!result.getIsAuditedDetermined()) {
@@ -260,29 +258,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
             LOG.debug("<== RangerDefaultPolicyEvaluator.evaluate(policyId=" + getPolicyId() + ", " + request + ", " + result + ")");
         }
     }
-	private boolean isMatchForResourceMatchingScope(final RangerAccessRequest.ResourceMatchingScope scope, final RangerPolicyResourceMatcher.MatchType matchType, boolean isAnyMatch) {
-		if (isAnyMatch){
-			return matchType !=  RangerPolicyResourceMatcher.MatchType.NONE;
-		}
-		boolean ret = false;
-		if (scope!=null){
-			switch (scope) {
-				case SELF_OR_DESCENDANTS: {
-					ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-					break;
-				}
-				case SELF_AND_ALL_DESCENDANTS: {
-					ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-					break;
-				}
-				default: {
-					ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
-					break;
-				}
-			}
-		}
-		return ret;
-	}
+
 	@Override
 	public boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
@@ -1528,4 +1504,27 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
+	private boolean isMatchForResourceMatchingScope(final RangerAccessRequest.ResourceMatchingScope scope, final RangerPolicyResourceMatcher.MatchType matchType, boolean isAnyMatch) {
+		boolean ret = false;
+		if (isAnyMatch){
+			ret = matchType !=  RangerPolicyResourceMatcher.MatchType.NONE;
+		}
+		else if (scope!=null) {
+				switch (scope) {
+						case SELF_OR_DESCENDANTS: {
+							ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+							break;
+						}
+						case SELF_AND_ALL_DESCENDANTS: {
+							ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+							break;
+						}
+						default: {
+							ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+							break;
+						}
+				}
+		}
+		return ret;
+	}
 }
