@@ -19,8 +19,7 @@
 package org.apache.ranger.services.nifi.registry.client;
 
 import com.google.common.io.Resources;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import jakarta.ws.rs.client.WebTarget;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +29,7 @@ import org.mockito.Mockito;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -151,15 +151,15 @@ public class TestNiFiRegistryClient {
         }
 
         @Override
-        protected WebResource getWebResource() {
-            return Mockito.mock(WebResource.class);
+        protected WebTarget getWebTarget() {
+            return Mockito.mock(WebTarget.class);
         }
 
         @Override
-        protected ClientResponse getResponse(WebResource resource, String accept) {
-            ClientResponse response = Mockito.mock(ClientResponse.class);
+        protected Response getResponse(WebTarget resource, String accept) {
+            Response response = Mockito.mock(Response.class);
             when(response.getStatus()).thenReturn(statusCode);
-            when(response.getEntityInputStream()).thenReturn(new ByteArrayInputStream(
+            when((InputStream) response.getEntity()).thenReturn(new ByteArrayInputStream(
                     responseEntity.getBytes(StandardCharsets.UTF_8)
             ));
             return response;

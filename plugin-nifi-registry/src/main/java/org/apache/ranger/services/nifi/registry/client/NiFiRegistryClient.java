@@ -18,12 +18,9 @@
  */
 package org.apache.ranger.services.nifi.registry.client;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
@@ -38,6 +35,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -73,8 +72,8 @@ public class NiFiRegistryClient {
         HashMap<String, Object> responseData = new HashMap<>();
 
         try {
-            final WebResource resource = getWebResource();
-            final ClientResponse response = getResponse(resource, "application/json");
+            final WebTarget resource = getWebTarget();
+            final Response response = getResponse(resource, "application/json");
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Got response from NiFi with status code " + response.getStatus());
@@ -107,15 +106,15 @@ public class NiFiRegistryClient {
     }
 
     public List<String> getResources(ResourceLookupContext context) throws Exception {
-        final WebResource resource = getWebResource();
-        final ClientResponse response = getResponse(resource, "application/json");
+        final WebTarget resource = getWebTarget();
+        final Response response = getResponse(resource, "application/json");
 
         if (Response.Status.OK.getStatusCode() != response.getStatus()) {
-            String errorMsg = IOUtils.toString(response.getEntityInputStream());
+            String errorMsg = IOUtils.toString((InputStream) response.getEntity(), StandardCharsets.UTF_8);
             throw new Exception("Unable to retrieve resources from NiFi Registry due to: " + errorMsg);
         }
 
-        JsonNode rootNode = mapper.readTree(response.getEntityInputStream());
+        JsonNode rootNode = mapper.readTree((InputStream) response.getEntity());
         if (rootNode == null) {
             throw new Exception("Unable to retrieve resources from NiFi Registry");
         }
@@ -138,19 +137,18 @@ public class NiFiRegistryClient {
         }
     }
 
-    protected WebResource getWebResource() {
-        final ClientConfig config = new DefaultClientConfig();
+    protected WebTarget getWebTarget() {
+        final ClientBuilder builder = ClientBuilder.newBuilder();
         if (sslContext != null) {
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
-                    new HTTPSProperties(hostnameVerifier, sslContext));
+            builder.sslContext(sslContext).hostnameVerifier(hostnameVerifier);
         }
 
-        final Client client = Client.create(config);
-        return client.resource(url);
+        final Client client = builder.build();
+        return client.target(url);
     }
 
-    protected ClientResponse getResponse(WebResource resource, String accept) {
-        return resource.accept(accept).get(ClientResponse.class);
+    protected Response getResponse(WebTarget resource, String accept) {
+        return resource.request(accept).get(Response.class);
     }
 
     public String getUrl() {
