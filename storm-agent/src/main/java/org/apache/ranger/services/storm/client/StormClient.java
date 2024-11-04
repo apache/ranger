@@ -35,6 +35,7 @@ import javax.security.auth.login.LoginException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.KrbPasswordSaverLoginModule;
@@ -45,7 +46,6 @@ import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.services.storm.client.json.model.Topology;
 import org.apache.ranger.services.storm.client.json.model.TopologyListResponse;
-import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +105,7 @@ public class StormClient {
 				}
 
 				Client client = ClientBuilder.newClient();
-				ClientResponse response = null;
+				Response response = null;
 				for (String currentUrl : stormUIUrls) {
 					if (currentUrl == null || currentUrl.trim().isEmpty()) {
 						continue;
@@ -192,14 +192,14 @@ public class StormClient {
 				return lret;
 			}
 
-			private ClientResponse getTopologyResponse(String url, Client client) {
+			private Response getTopologyResponse(String url, Client client) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("getTopologyResponse():calling " + url);
 				}
 
 				WebTarget webTarget = client.target(url);
 
-				ClientResponse response = webTarget.request(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				Response response = webTarget.request(EXPECTED_MIME_TYPE).get(Response.class);
 
 				if (response != null) {
 					if (LOG.isDebugEnabled()) {

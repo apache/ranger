@@ -21,12 +21,12 @@ package org.apache.ranger.admin.client.datatype;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.ws.rs.core.Response;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +90,7 @@ public class RESTResponse implements java.io.Serializable {
 		return StringUtil.isEmpty(msgDesc) ? ("HTTP " + httpStatusCode) : msgDesc;
 	}
 
-	public static RESTResponse fromClientResponse(ClientResponse response) {
+	public static RESTResponse fromClientResponse(Response response) {
 		RESTResponse ret = null;
 
 		String jsonString = response == null ? null : response.readEntity(String.class);

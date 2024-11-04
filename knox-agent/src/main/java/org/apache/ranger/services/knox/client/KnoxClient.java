@@ -29,12 +29,12 @@ import java.util.concurrent.TimeUnit;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,14 +88,14 @@ public class KnoxClient {
 		try {
 
 			Client client = null;
-			ClientResponse response = null;
+			Response response = null;
 
 			try {
 				client = ClientBuilder.newClient();
 
 				client.register(HttpAuthenticationFeature.basic(userName, decryptedPwd));				WebTarget webTarget = client.target(knoxUrl);
 				response = webTarget.request(EXPECTED_MIME_TYPE)
-					    .get(ClientResponse.class);
+					    .get(Response.class);
                 LOG.debug("Knox topology list response: {}", response);
 				if (response != null) {
 
@@ -192,7 +192,7 @@ public class KnoxClient {
 		try {
 
 			Client client = null;
-			ClientResponse response = null;
+			Response response = null;
 
 			try {
 				client = ClientBuilder.newClient();
@@ -204,7 +204,7 @@ public class KnoxClient {
 					WebTarget webTarget = client.target(knoxUrl + "/" + topologyName);
 
 					response = webTarget.request(EXPECTED_MIME_TYPE)
-							.get(ClientResponse.class);
+							.get(Response.class);
                     LOG.debug("Knox service lookup response: {}", response);
 					if (response != null) {
 

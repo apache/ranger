@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.glassfish.jersey.client.ClientResponse;
+import jakarta.ws.rs.core.Response;
 
 import java.io.Reader;
 import java.io.Serializable;
@@ -88,13 +88,13 @@ public class JsonUtilsV2 {
         return getMapper().writeValueAsString(obj);
     }
 
-    static public <T> T readResponse(ClientResponse response, Class<T> cls) throws Exception {
+    static public <T> T readResponse(Response response, Class<T> cls) throws Exception {
         String jsonStr = response.readEntity(String.class);
 
         return jsonToObj(jsonStr, cls);
     }
 
-    static public <T> T readResponse(ClientResponse response, TypeReference<T> cls) throws Exception {
+    static public <T> T readResponse(Response response, TypeReference<T> cls) throws Exception {
         String jsonStr = response.readEntity(String.class);
 
         return jsonToObj(jsonStr, cls);

@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.plugin.contextenricher;
 
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -30,7 +31,6 @@ import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
-import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -368,7 +368,7 @@ public class RangerUserStoreRefresher extends Thread {
         final RangerUserStore ret;
         final UserGroupInformation user = MiscUtil.getUGILoginUser();
         final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
-        final ClientResponse response;
+        final Response response;
 
         Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
@@ -378,7 +378,7 @@ public class RangerUserStoreRefresher extends Thread {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Checking UserStore updated as user : " + user);
             }
-            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                 try {
                     String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE;
 

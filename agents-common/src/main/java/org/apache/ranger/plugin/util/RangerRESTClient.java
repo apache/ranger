@@ -49,6 +49,7 @@ import jakarta.ws.rs.client.*;
 import jakarta.ws.rs.core.Cookie;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
@@ -59,7 +60,6 @@ import org.apache.ranger.authorization.utils.StringUtil;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 import org.slf4j.Logger;
@@ -76,13 +76,13 @@ public class RangerRESTClient {
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS = "sslKeyStore";
-	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";	
+	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";
 
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE                  = "xasecure.policymgr.clientssl.truststore";
-	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";	
+	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
-	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";	
+	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";
 
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE					 = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE				 = TrustManagerFactory.getDefaultAlgorithm();
@@ -180,7 +180,7 @@ public class RangerRESTClient {
 	public String toJson(Object obj) {
 		return JsonUtils.objectToJson(obj);
 	}
-	
+
 	public <T> T fromJson(String json, Class<T> cls) {
 		return JsonUtils.jsonToObject(json, cls);
 	}
@@ -434,7 +434,7 @@ public class RangerRESTClient {
 				close(in, trustStoreFile);
 			}
 		}
-		
+
 		return tmList;
 	}
 
@@ -498,8 +498,8 @@ public class RangerRESTClient {
 		}
 	}
 
-	public ClientResponse get(String relativeUrl, Map<String, String> params) throws Exception {
-		ClientResponse finalResponse = null;
+	public Response get(String relativeUrl, Map<String, String> params) throws Exception {
+		Response finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -509,7 +509,7 @@ public class RangerRESTClient {
 			try {
 				Invocation.Builder webTarget = createWebTarget(currentIndex, relativeUrl, params);
 
-				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get();
 
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -526,8 +526,8 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
-	public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception{
-		ClientResponse finalResponse = null;
+	public Response get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception{
+		Response finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -537,7 +537,7 @@ public class RangerRESTClient {
 			try {
 				Invocation.Builder br = createWebTarget(currentIndex, relativeUrl, params, sessionId);
 
-				finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
+				finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(Response.class);
 
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -554,8 +554,8 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
-	public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-		ClientResponse finalResponse = null;
+	public Response post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+		Response finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -566,7 +566,7 @@ public class RangerRESTClient {
 				Invocation.Builder webTarget = createWebTarget(currentIndex, relativeUrl, params);
 
 				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE)
-								.post(Entity.json(obj), ClientResponse.class);
+								.post(Entity.json(obj), Response.class);
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -582,8 +582,8 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
-	public ClientResponse post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
+	public Response post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
+		Response response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -594,7 +594,7 @@ public class RangerRESTClient {
 				Invocation.Builder br = createWebTarget(currentIndex, relativeURL, params, sessionId);
 
 				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE)
-								.post(Entity.json(obj), ClientResponse.class);
+								.post(Entity.json(obj), Response.class);
 
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -611,8 +611,8 @@ public class RangerRESTClient {
 		return response;
 	}
 
-	public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
-		ClientResponse finalResponse = null;
+	public Response delete(String relativeUrl, Map<String, String> params) throws Exception {
+		Response finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -622,7 +622,7 @@ public class RangerRESTClient {
 			try {
 				Invocation.Builder webTarget = createWebTarget(currentIndex, relativeUrl, params);
 
-				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).delete(ClientResponse.class);
+				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).delete(Response.class);
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -638,8 +638,8 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
-	public ClientResponse delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
+	public Response delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
+		Response response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -649,7 +649,7 @@ public class RangerRESTClient {
 			try {
 				Invocation.Builder br = createWebTarget(currentIndex, relativeURL, params, sessionId);
 
-				response = br.delete(ClientResponse.class);
+				response = br.delete(Response.class);
 
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
@@ -666,8 +666,8 @@ public class RangerRESTClient {
 		return response;
 	}
 
-	public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-		ClientResponse finalResponse = null;
+	public Response put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+		Response finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -678,7 +678,7 @@ public class RangerRESTClient {
 				Invocation.Builder webTarget = createWebTarget(currentIndex, relativeUrl, params);
 
 				finalResponse = webTarget.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE)
-									.put(Entity.json(obj), ClientResponse.class);
+									.put(Entity.json(obj), Response.class);
 				if (finalResponse != null) {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
@@ -694,8 +694,8 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
-	public ClientResponse put(String relativeURL, Object request, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
+	public Response put(String relativeURL, Object request, Cookie sessionId) throws Exception {
+		Response response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
 
@@ -706,7 +706,7 @@ public class RangerRESTClient {
 				Invocation.Builder br = createWebTarget(currentIndex, relativeURL, null, sessionId);
 
 				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE)
-						.put(Entity.json(request),ClientResponse.class);
+						.put(Entity.json(request),Response.class);
 
 				if (response != null) {
 					setLastKnownActiveUrlIndex(currentIndex);

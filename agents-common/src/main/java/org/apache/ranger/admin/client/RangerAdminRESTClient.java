@@ -23,6 +23,7 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.Response;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -33,7 +34,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
-import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
 		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Cookie               sessionId    = this.sessionId;
-		final ClientResponse       response;
+		final Response			   response;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion));
@@ -133,7 +133,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				LOG.debug("Checking Service policy if updated as user : " + user);
 			}
 
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceNameUrlParam;
 
@@ -204,7 +204,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		final UserGroupInformation user = MiscUtil.getUGILoginUser();
 		final boolean isSecureMode      = isKerberosEnabled(user);
 		final Cookie  sessionId         = this.sessionId;
-		final ClientResponse response;
+		final Response response;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_ROLE_VERSION, Long.toString(lastKnownRoleVersion));
@@ -217,7 +217,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking Roles updated as user : " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
 
@@ -285,7 +285,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		RangerRole ret = null;
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_CREATE_ROLE;
@@ -299,7 +299,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				LOG.debug("create role as user " + user);
 			}
 
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 					try {
 						return restClient.post(relativeURL, queryParams, request, sessionId);
 					} catch (Exception e) {
@@ -341,7 +341,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.dropRole(" + roleName + ")");
 		}
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		Cookie sessionId = this.sessionId;
@@ -356,7 +356,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("drop role as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 					try {
 						return restClient.delete(relativeURL, queryParams, sessionId);
 					} catch (Exception e) {
@@ -397,7 +397,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		List<String> ret = null;
 		String emptyString = "";
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_ROLES + execUser;
@@ -407,7 +407,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("get roles as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.get(relativeURL, null, sessionId);
 				} catch (Exception e) {
@@ -453,7 +453,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		List<String> ret = null;
 		String emptyString = "";
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_ALL_ROLES;
@@ -467,7 +467,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("get roles as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.get(relativeURL, queryParams, sessionId);
 				} catch (Exception e) {
@@ -512,7 +512,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		RangerRole ret = null;
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_ROLE_INFO + roleName;
@@ -526,7 +526,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("get role info as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.get(relativeURL, queryParams, sessionId);
 				} catch (Exception e) {
@@ -571,7 +571,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.grantRole(" + request + ")");
 		}
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GRANT_ROLE + serviceNameUrlParam;
@@ -581,7 +581,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("grant role as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.put(relativeURL, request, sessionId);
 				} catch (Exception e) {
@@ -620,7 +620,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.revokeRole(" + request + ")");
 		}
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_REVOKE_ROLE + serviceNameUrlParam;
@@ -630,7 +630,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("revoke role as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.put(relativeURL, request, sessionId);
 				} catch (Exception e) {
@@ -669,7 +669,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
 		}
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		Cookie sessionId = this.sessionId;
@@ -681,7 +681,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("grantAccess as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_SECURE_SERVICE_GRANT_ACCESS + serviceNameUrlParam;
 
@@ -723,7 +723,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.revokeAccess(" + request + ")");
 		}
 
-		final ClientResponse response;
+		final Response response;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
 		boolean isSecureMode = isKerberosEnabled(user);
 		Cookie sessionId = this.sessionId;
@@ -735,7 +735,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("revokeAccess as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_SECURE_SERVICE_REVOKE_ACCESS + serviceNameUrlParam;
 
@@ -797,7 +797,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		final UserGroupInformation user = MiscUtil.getUGILoginUser();
 		final boolean isSecureMode = isKerberosEnabled(user);
-		final ClientResponse response;
+		final Response response;
 		final Cookie sessionId = this.sessionId;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -811,7 +811,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getServiceTagsIfUpdated as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceNameUrlParam;
 
@@ -884,12 +884,12 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.PATTERN_PARAM, pattern);
 		String relativeURL = RangerRESTUtils.REST_URL_LOOKUP_TAG_NAMES;
 
-		final ClientResponse response;
+		final Response response;
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("getTagTypes as user " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					return restClient.get(relativeURL, queryParams, sessionId);
 				} catch (Exception e) {
@@ -928,7 +928,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		final RangerUserStore ret;
 		final UserGroupInformation user = MiscUtil.getUGILoginUser();
 		final boolean isSecureMode = isKerberosEnabled(user);
-		final ClientResponse response;
+		final Response response;
 		final Cookie sessionId = this.sessionId;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -942,7 +942,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking UserStore updated as user : " + user);
 			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
 
@@ -1010,7 +1010,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
 		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Map<String, String>  queryParams  = new HashMap<>();
-		final ClientResponse       response;
+		final Response       response;
 		Cookie sessionId = this.sessionId;
 
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_GDS_VERSION, Long.toString(lastKnownVersion));
@@ -1022,7 +1022,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		LOG.debug("Checking for updated GdsInfo: secureMode={}, user={}, serviceName={}" , isSecureMode, user, serviceName);
 
 		if (isSecureMode) {
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
 				try {
 					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SECURE_GET_GDSINFO + serviceNameUrlParam;
 
@@ -1079,7 +1079,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return ret;
 	}
 
-	private void checkAndResetSessionCookie(ClientResponse response) {
+	private void checkAndResetSessionCookie(Response response) {
 		if (isRangerCookieEnabled) {
 			if (response == null) {
 				LOG.debug("checkAndResetSessionCookie(): RESETTING sessionId - response is null");
