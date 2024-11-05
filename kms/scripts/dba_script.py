@@ -137,7 +137,7 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_allow_public_key_retrieval):
 		self.host = host.lower()
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -149,6 +149,7 @@ class MysqlConf(BaseDB):
 		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
+		self.db_allow_public_key_retrieval=db_allow_public_key_retrieval.lower()
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
@@ -162,6 +163,11 @@ class MysqlConf(BaseDB):
 					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 				else:
 					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+		else:
+			if "useSSL" not in db_name:
+				db_ssl_param="?useSSL=false"
+		if self.db_allow_public_key_retrieval == 'true':
+                	db_ssl_param += "&allowPublicKeyRetrieval=true" 
 		if is_unix:
 			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
@@ -1395,6 +1401,7 @@ def main(argv):
 	javax_net_ssl_keyStorePassword=''
 	javax_net_ssl_trustStore=''
 	javax_net_ssl_trustStorePassword=''
+	db_allow_public_key_retrieval='false'
 	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "POSTGRES":
 		if 'db_ssl_enabled' in globalDict:
 			db_ssl_enabled=globalDict['db_ssl_enabled'].lower()
@@ -1427,10 +1434,11 @@ def main(argv):
 					if javax_net_ssl_keyStorePassword is None or javax_net_ssl_keyStorePassword =="":
 						log("[E] Invalid ssl keystore password!","error")
 						sys.exit(1)
-
+	if 'db_allow_public_key_retrieval' in globalDict:
+                db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
-		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_allow_public_key_retrieval)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,mysql_core_file)
 
 	elif XA_DB_FLAVOR == "ORACLE":
