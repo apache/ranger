@@ -434,20 +434,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 		for (Map.Entry<byte[], ? extends Collection<?>> anEntry : familyMap.entrySet()) {
 			String family = Bytes.toString(anEntry.getKey());
-			session.columnFamily(family);
+			session.columnFamily(family).
+					column(null).
+					buildRequest(); // zap stale column from prior iteration of this loop, if any
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("evaluateAccess: Processing family: " + family);
 			}
 			Collection<?> columns = anEntry.getValue();
 			if (columns == null || columns.isEmpty()) {
-				// family points to null map, OK.
-				// if column auth disabled, then also empty set is fine
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerAuthorizationCoprocessor evaluateAccess: (No tags found for resource, "+
-							" all policies are * at column level for resource and "+
-							RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION +
-							" is true) or columns are empty. Family level access is desired.");
-				}
+				LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
 				//buildRequest() already done before 'if' condition
 				session.authorize();
 				AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for success
@@ -517,12 +512,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				// Restore the headMatch setting
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
 			} else {
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("evaluateAccess: " + RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION + " is false or " +
-							"tags exist for resource or policies at column level exist or columns collection not empty. " +
-							" Skipping Family level check, will do finer level access check.");
-				}
 				boolean isColumnAuthShortCircuitingEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("evaluateAccess: columns collection not empty." +
+							" Skipping Family level check, will do finer level access check for columns."+);
+					}
 				if (isColumnAuthShortCircuitingEnabled) {
 						session.column(null)
 								.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS)
@@ -539,7 +533,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 								familesFullyAuthorized.add(family);
 								if (auditEvent != null) {
 										if (LOG.isDebugEnabled()) {
-												LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, adding to family-level-access-granted-event-set");
+												LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, adding to familesFullyAuthorized set");
 										}
 										familyLevelAccessEvents.add(auditEvent);
 								}
