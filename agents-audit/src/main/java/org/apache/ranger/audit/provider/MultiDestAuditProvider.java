@@ -87,8 +87,10 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 
 	public void addAuditProvider(AuditHandler provider) {
 		if (provider != null) {
-			LOG.info("MultiDestAuditProvider.addAuditProvider(providerType="
-					+ provider.getClass().getCanonicalName() + ")");
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("MultiDestAuditProvider.addAuditProvider(providerType="
+						+ provider.getClass().getCanonicalName() + ")");
+			}
 
 			mProviders.add(provider);
 			if (provider instanceof BaseAuditHandler) {
