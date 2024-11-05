@@ -1504,7 +1504,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return ret;
 	}
 
-	private boolean isMatchForResourceMatchingScope(final RangerAccessRequest.ResourceMatchingScope scope, final RangerPolicyResourceMatcher.MatchType matchType, boolean isAnyMatch) {
+	private static boolean isMatchForResourceMatchingScope(final RangerAccessRequest.ResourceMatchingScope scope, final RangerPolicyResourceMatcher.MatchType matchType, boolean isAnyMatch) {
 		boolean ret = false;
 		if (isAnyMatch){
 			ret = matchType !=  RangerPolicyResourceMatcher.MatchType.NONE;
