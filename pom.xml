@@ -156,8 +156,6 @@
         <jersey-spring.version>3.0.16</jersey-spring.version>
         <glassfish.jaxb.version>3.0.2</glassfish.jaxb.version>
 
-        <jersey-bundle.version>1.19.4</jersey-bundle.version>
-        <jersey-server.version>1.19.4</jersey-server.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.5.4</jettison.version>
         <jetty-client.version>9.4.49.v20220914</jetty-client.version>

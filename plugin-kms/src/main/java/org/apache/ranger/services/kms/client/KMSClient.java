@@ -32,6 +32,10 @@ import java.util.Map;
 
 import javax.security.auth.Subject;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.HadoopKerberosName;
@@ -40,16 +44,12 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class KMSClient {
 
@@ -158,12 +158,12 @@ public class KMSClient {
 			}
 			String uri = providers[i] + (providers[i].endsWith("/") ? KMS_LIST_API_ENDPOINT : ("/" + KMS_LIST_API_ENDPOINT));
 			Client client = null;
-			ClientResponse response = null;
+			Response response = null;
 			boolean isKerberos = false;
 			try {
-				ClientConfig cc = new DefaultClientConfig();
-				cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-				client = Client.create(cc);
+				client = ClientBuilder.newBuilder()
+						.property(ClientProperties.FOLLOW_REDIRECTS, true)
+						.build();
 							
 				if(authType != null && authType.equalsIgnoreCase(AUTH_TYPE_KERBEROS)){
 					isKerberos = true;
@@ -172,8 +172,8 @@ public class KMSClient {
 				Subject sub = new Subject();
 				if(!isKerberos){
 					uri = uri.concat("?user.name="+username);
-					WebResource webResource = client.resource(uri);
-					response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+					WebTarget webResource = client.target(uri);
+					response = webResource.request(EXPECTED_MIME_TYPE).get(Response.class);
 					LOG.info("Init Login: security not enabled, using username");
 					sub = SecureClientLogin.login(username);					
 				}else{										
@@ -194,11 +194,11 @@ public class KMSClient {
 						sub = SecureClientLogin.loginUserWithPassword(username, decryptedPwd);						
 					}
 				}
-				final WebResource webResource = client.resource(uri);
-				response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
+				final WebTarget webResource = client.target(uri);
+				response = Subject.doAs(sub, new PrivilegedAction<Response>() {
 					@Override
-					public ClientResponse run() {
-						return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+					public Response run() {
+						return webResource.request(EXPECTED_MIME_TYPE).get(Response.class);
 					}
 				});
 				
@@ -211,7 +211,7 @@ public class KMSClient {
 								+ response.getStatus());
 					}
 					if (response.getStatus() == 200) {
-						String jsonString = response.getEntity(String.class);
+						String jsonString = response.readEntity(String.class);
 						Gson gson = new GsonBuilder().setPrettyPrinting()
 								.create();
 						@SuppressWarnings("unchecked")
@@ -239,7 +239,7 @@ public class KMSClient {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
 								+ ", so returning null list");
-						String msgDesc = response.getEntity(String.class);
+						String msgDesc = response.readEntity(String.class);
 						HadoopException hdpException = new HadoopException(msgDesc);
 						hdpException.generateResponseDataMap(false, msgDesc,
 								msgDesc + errMsg, null, null);
@@ -249,7 +249,7 @@ public class KMSClient {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
 								+ ", so returning null list");
-						String msgDesc = response.getEntity(String.class);
+						String msgDesc = response.readEntity(String.class);
 						HadoopException hdpException = new HadoopException(msgDesc);
 						hdpException.generateResponseDataMap(false, msgDesc,
 								msgDesc + errMsg, null, null);
@@ -259,7 +259,7 @@ public class KMSClient {
 						LOG.info("getKeyList():response.getStatus()= "
 								+ response.getStatus() + " for URL " + uri
 								+ ", so returning null list");
-						String jsonString = response.getEntity(String.class);
+						String jsonString = response.readEntity(String.class);
 						LOG.info(jsonString);
 						lret = null;
 					}
@@ -292,7 +292,7 @@ public class KMSClient {
 				}
 
 				if (client != null) {
-					client.destroy();
+					client.close();
 				}
 				
 				if(lret == null){

@@ -19,7 +19,6 @@
 package org.apache.ranger;
 
 import jakarta.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientResponse;
 
 public class RangerServiceException extends Exception {
     private final Response.Status status;
@@ -30,7 +29,7 @@ public class RangerServiceException extends Exception {
         this.status = null;
     }
 
-    public RangerServiceException(RangerClient.API api, ClientResponse response) {
+    public RangerServiceException(RangerClient.API api, Response response) {
         this(api, response == null ? null : Response.Status.fromStatusCode(response.getStatus()), response == null ? null : response.readEntity(String.class));
     }
 

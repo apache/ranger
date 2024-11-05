@@ -20,14 +20,12 @@
 package org.apache.ranger.services.kylin.client;
 
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.security.auth.Subject;
 
+import jakarta.ws.rs.client.*;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -43,10 +41,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class KylinClient extends BaseClient {
 
@@ -104,7 +98,7 @@ public class KylinClient extends BaseClient {
 			@Override
 			public List<String> run() {
 
-				ClientResponse response = getClientResponse(kylinUrl, userName, password);
+				Response response = getClientResponse(kylinUrl, userName, password);
 
 				List<KylinProjectResponse> projectResponses = getKylinProjectResponse(response);
 
@@ -124,16 +118,20 @@ public class KylinClient extends BaseClient {
 		return ret;
 	}
 
-	private static ClientResponse getClientResponse(String kylinUrl, String userName, String password) {
-		ClientResponse response = null;
+	private static Response getClientResponse(String kylinUrl, String userName, String password) {
+		Response response = null;
 		String[] kylinUrls = kylinUrl.trim().split("[,;]");
 		if (ArrayUtils.isEmpty(kylinUrls)) {
 			return null;
 		}
 
-		Client client = Client.create();
+		Client client = ClientBuilder.newClient();
 		String decryptedPwd = PasswordUtils.getDecryptPassword(password);
-		client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
+		client.register((ClientRequestFilter) clientRequestContext -> {
+            String token = userName + ":" + decryptedPwd;
+            String encodedToken = Base64.getEncoder().encodeToString(token.getBytes());
+            clientRequestContext.getHeaders().add("Authorization", "Basic " + encodedToken);
+        });
 
 		for (String currentUrl : kylinUrls) {
 			if (StringUtils.isBlank(currentUrl)) {
@@ -156,17 +154,17 @@ public class KylinClient extends BaseClient {
 				LOG.error(msgDesc, t);
 			}
 		}
-		client.destroy();
+		client.close();
 
 		return response;
 	}
 
-	private List<KylinProjectResponse> getKylinProjectResponse(ClientResponse response) {
+	private List<KylinProjectResponse> getKylinProjectResponse(Response response) {
 		List<KylinProjectResponse> projectResponses = null;
 		try {
 			if (response != null) {
 				if (response.getStatus() == HttpStatus.SC_OK) {
-					String jsonString = response.getEntity(String.class);
+					String jsonString = response.readEntity(String.class);
 					Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 					projectResponses = gson.fromJson(jsonString, new TypeToken<List<KylinProjectResponse>>() {
@@ -206,14 +204,14 @@ public class KylinClient extends BaseClient {
 		return projectResponses;
 	}
 
-	private static ClientResponse getProjectResponse(String url, Client client) {
+	private static Response getProjectResponse(String url, Client client) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("getProjectResponse():calling " + url);
 		}
 
-		WebResource webResource = client.resource(url);
+		WebTarget webResource = client.target(url);
 
-		ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+		Response response = webResource.request(EXPECTED_MIME_TYPE).get(Response.class);
 
 		if (response != null) {
 			if (LOG.isDebugEnabled()) {
@@ -222,7 +220,7 @@ public class KylinClient extends BaseClient {
 			if (response.getStatus() != HttpStatus.SC_OK) {
 				LOG.warn("getProjectResponse():response.getStatus()= " + response.getStatus() + " for URL " + url
 						+ ", failed to get kylin project list.");
-				String jsonString = response.getEntity(String.class);
+				String jsonString = response.readEntity(String.class);
 				LOG.warn(jsonString);
 			}
 		}

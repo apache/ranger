@@ -31,6 +31,9 @@ import java.util.Set;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.MediaType;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -44,8 +47,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
 
 public class ElasticsearchClient extends BaseClient {
 
@@ -101,7 +102,7 @@ public class ElasticsearchClient extends BaseClient {
 				} else {
 					indexApi = ELASTICSEARCH_INDEX_API_ENDPOINT;
 				}
-				ClientResponse response = getClientResponse(elasticsearchUrl, indexApi, userName);
+				Response response = getClientResponse(elasticsearchUrl, indexApi, userName);
 
 				Map<String, Object> index2detailMap = getElasticsearchResourceResponse(response,
 						new TypeToken<HashMap<String, Object>>() {
@@ -125,14 +126,14 @@ public class ElasticsearchClient extends BaseClient {
 		return ret;
 	}
 
-	private static ClientResponse getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
+	private static Response getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
 		String[] elasticsearchUrls = elasticsearchUrl.trim().split("[,;]");
 		if (ArrayUtils.isEmpty(elasticsearchUrls)) {
 			return null;
 		}
 
-		ClientResponse response = null;
-		Client client = Client.create();
+		Response response = null;
+		Client client = ClientBuilder.newClient();
 		for (String currentUrl : elasticsearchUrls) {
 			if (StringUtils.isBlank(currentUrl)) {
 				continue;
@@ -154,18 +155,18 @@ public class ElasticsearchClient extends BaseClient {
 				LOG.error(msgDesc, t);
 			}
 		}
-		client.destroy();
+		client.close();
 
 		return response;
 	}
 
-	private static ClientResponse getClientResponse(String url, Client client, String userName) {
+	private static Response getClientResponse(String url, Client client, String userName) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("getClientResponse():calling " + url);
 		}
 
-		ClientResponse response = client.resource(url).accept(MediaType.APPLICATION_JSON).
-			header("userName", userName).get(ClientResponse.class);
+		Response response = client.target(url).request(MediaType.APPLICATION_JSON).
+			header("userName", userName).get(Response.class);
 
 		if (response != null) {
 			if (LOG.isDebugEnabled()) {
@@ -173,17 +174,17 @@ public class ElasticsearchClient extends BaseClient {
 			}
 			if (response.getStatus() != HttpStatus.SC_OK) {
 				LOG.warn("getClientResponse():response.getStatus()= " + response.getStatus() + " for URL " + url
-						+ ", failed to get elasticsearch resource list, response= " + response.getEntity(String.class));
+						+ ", failed to get elasticsearch resource list, response= " + response.readEntity(String.class));
 			}
 		}
 		return response;
 	}
 
-	private <T> T getElasticsearchResourceResponse(ClientResponse response, Type type) {
+	private <T> T getElasticsearchResourceResponse(Response response, Type type) {
 		T resource = null;
 		try {
 			if (response != null && response.getStatus() == HttpStatus.SC_OK) {
-				String jsonString = response.getEntity(String.class);
+				String jsonString = response.readEntity(String.class);
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 				resource = gson.fromJson(jsonString, type);

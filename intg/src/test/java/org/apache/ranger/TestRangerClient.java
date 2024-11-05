@@ -25,7 +25,6 @@ import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.glassfish.jersey.client.ClientResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,7 +62,7 @@ public class TestRangerClient {
     public void apiGet_Success() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse response   = mock(ClientResponse.class);
+            Response response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
             RangerService    service    = new RangerService("testType", "testService", "MockedService", "testTag", new HashMap<>());
 
@@ -84,7 +83,7 @@ public class TestRangerClient {
     public void apiGet_ServiceUnavailable() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse   response   = mock(ClientResponse.class);
+            Response   response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
 
             when(restClient.get(anyString(), any())).thenReturn(response);
@@ -102,7 +101,7 @@ public class TestRangerClient {
     public void apiGet_FailWithUnexpectedStatusCode() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse   response   = mock(ClientResponse.class);
+            Response   response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
 
             when(restClient.get(anyString(), any())).thenReturn(response);
@@ -164,7 +163,7 @@ public class TestRangerClient {
     @Test
     public void testGetSecurityZoneHeaders() throws Exception {
         RangerRESTClient    restClient = mock(RangerRESTClient.class);
-        ClientResponse      response   = mock(ClientResponse.class);
+        Response      response   = mock(Response.class);
         RangerClient        client     = new RangerClient(restClient);
 
         List<RangerSecurityZoneHeaderInfo> expected = new ArrayList<>();
@@ -189,7 +188,7 @@ public class TestRangerClient {
     @Test
     public void testGetSecurityZoneServiceHeaders() throws Exception {
         RangerRESTClient    restClient = mock(RangerRESTClient.class);
-        ClientResponse      response   = mock(ClientResponse.class);
+        Response      response   = mock(Response.class);
         RangerClient        client     = new RangerClient(restClient);
 
         List<RangerServiceHeaderInfo> expected = new ArrayList<>();

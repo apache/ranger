@@ -28,6 +28,10 @@ import java.util.Map;
 
 import javax.security.auth.Subject;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -47,9 +51,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 public class SqoopClient extends BaseClient {
 
@@ -103,7 +104,7 @@ public class SqoopClient extends BaseClient {
 			@Override
 			public List<String> run() {
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
+				Response response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
 
 				SqoopConnectorsResponse sqoopConnectorsResponse = getSqoopResourceResponse(response,
 						SqoopConnectorsResponse.class);
@@ -143,7 +144,7 @@ public class SqoopClient extends BaseClient {
 			@Override
 			public List<String> run() {
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
+				Response response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
 
 				SqoopLinksResponse sqoopLinksResponse = getSqoopResourceResponse(response, SqoopLinksResponse.class);
 				if (sqoopLinksResponse == null || CollectionUtils.isEmpty(sqoopLinksResponse.getLinks())) {
@@ -182,7 +183,7 @@ public class SqoopClient extends BaseClient {
 			@Override
 			public List<String> run() {
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
+				Response response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
 
 				SqoopJobsResponse sqoopJobsResponse = getSqoopResourceResponse(response, SqoopJobsResponse.class);
 				if (sqoopJobsResponse == null || CollectionUtils.isEmpty(sqoopJobsResponse.getJobs())) {
@@ -207,14 +208,14 @@ public class SqoopClient extends BaseClient {
 		return ret;
 	}
 
-	private static ClientResponse getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
-		ClientResponse response = null;
+	private static Response getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
+		Response response = null;
 		String[] sqoopUrls = sqoopUrl.trim().split("[,;]");
 		if (ArrayUtils.isEmpty(sqoopUrls)) {
 			return null;
 		}
 
-		Client client = Client.create();
+		Client client = ClientBuilder.newClient();
 
 		for (String currentUrl : sqoopUrls) {
 			if (StringUtils.isBlank(currentUrl)) {
@@ -237,19 +238,19 @@ public class SqoopClient extends BaseClient {
 				LOG.error(msgDesc, t);
 			}
 		}
-		client.destroy();
+		client.close();
 
 		return response;
 	}
 
-	private static ClientResponse getClientResponse(String url, Client client) {
+	private static Response getClientResponse(String url, Client client) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("getClientResponse():calling " + url);
 		}
 
-		WebResource webResource = client.resource(url);
+		WebTarget webResource = client.target(url);
 
-		ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+		Response response = webResource.request(EXPECTED_MIME_TYPE).get(Response.class);
 
 		if (response != null) {
 			if (LOG.isDebugEnabled()) {
@@ -258,19 +259,19 @@ public class SqoopClient extends BaseClient {
 			if (response.getStatus() != HttpStatus.SC_OK) {
 				LOG.warn("getClientResponse():response.getStatus()= " + response.getStatus() + " for URL " + url
 						+ ", failed to get sqoop resource list.");
-				String jsonString = response.getEntity(String.class);
+				String jsonString = response.readEntity(String.class);
 				LOG.warn(jsonString);
 			}
 		}
 		return response;
 	}
 
-	private <T> T getSqoopResourceResponse(ClientResponse response, Class<T> classOfT) {
+	private <T> T getSqoopResourceResponse(Response response, Class<T> classOfT) {
 		T resource = null;
 		try {
             if (response != null) {
                 if (response.getStatus() == HttpStatus.SC_OK) {
-                    String jsonString = response.getEntity(String.class);
+                    String jsonString = response.readEntity(String.class);
                     Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
                     resource = gson.fromJson(jsonString, classOfT);

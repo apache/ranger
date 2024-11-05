@@ -25,18 +25,18 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 
+import com.fasterxml.jackson.core.util.JacksonFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
+import java.util.Base64;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 public class RangerUgSyncRESTClient extends RangerRESTClient {
 	private String AUTH_KERBEROS = "kerberos";
@@ -57,19 +57,25 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 			KeyManager[] kmList = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
 			TrustManager[] tmList = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
 			SSLContext sslContext = getSSLContext(kmList, tmList);
-			ClientConfig config = new DefaultClientConfig();
 
-			config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
-			HostnameVerifier hv = new HostnameVerifier() {
-				public boolean verify(String urlHostName, SSLSession session) {
-					return session.getPeerHost().equals(urlHostName);
-				}
-			};
-			config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
+			ClientBuilder builder = ClientBuilder.newBuilder()
+					.sslContext(sslContext)
+					.hostnameVerifier(new HostnameVerifier() {
+						@Override
+						public boolean verify(String hostname, SSLSession session) {
+							return session.getPeerHost().equals(hostname);
+						}
+					})
+					.register(JacksonFeature.class);
 
-			setClient(Client.create(config));
+			setClient(builder.build());
+
 			if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
-				getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
+				getClient().register((ClientRequestFilter) clientRequestContext -> {
+                    String token = getUsername() + ":" + getPassword();
+                    String encodedToken = Base64.getEncoder().encodeToString(token.getBytes());
+                    clientRequestContext.getHeaders().add("Authorization", "Basic " + encodedToken);
+                });
 			}
 		}
 

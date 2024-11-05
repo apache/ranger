@@ -24,7 +24,6 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
-import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -483,8 +482,8 @@ public class RangerClient {
         return callAPI(PURGE_RECORDS, queryParams, null, TYPE_LIST_PURGE_RESULT);
     }
 
-    private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
-        final ClientResponse clientResponse;
+    private Response invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final Response clientResponse;
         try {
             switch (api.getMethod()) {
                 case HttpMethod.POST:
@@ -514,8 +513,8 @@ public class RangerClient {
         return clientResponse;
     }
 
-    private ClientResponse responseHandler(API api, Map<String, String> params, Object request) throws RangerServiceException {
-        final ClientResponse clientResponse;
+    private Response responseHandler(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final Response clientResponse;
 
         if (LOG.isDebugEnabled()){
             LOG.debug("Call         : {} {}", api.getMethod(), api.getNormalizedPath());
@@ -528,7 +527,7 @@ public class RangerClient {
 
         if (isSecureMode) {
             try {
-                clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                     try {
                         return invokeREST(api,params,request);
                     } catch (RangerServiceException e) {
@@ -577,7 +576,7 @@ public class RangerClient {
             LOG.debug("==> callAPI({},{},{})",api, params, request);
             LOG.debug("------------------------------------------------------");
         }
-        final ClientResponse clientResponse = responseHandler(api, params, request);
+        final Response clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
                 ret = JsonUtilsV2.readResponse(clientResponse, responseType);
@@ -600,7 +599,7 @@ public class RangerClient {
             LOG.debug("==> callAPI({},{},{})",api, params, request);
             LOG.debug("------------------------------------------------------");
         }
-        final ClientResponse clientResponse = responseHandler(api, params, request);
+        final Response clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
                 ret = JsonUtilsV2.readResponse(clientResponse, responseType);
