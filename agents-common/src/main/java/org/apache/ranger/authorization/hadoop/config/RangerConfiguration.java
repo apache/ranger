@@ -47,7 +47,9 @@ public class RangerConfiguration extends Configuration {
 
 		URL fUrl = getFileLocation(aResourceName);
 		if (fUrl != null) {
-			LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
+			}
 			try {
 				addResource(fUrl);
 				ret = true;
@@ -58,7 +60,9 @@ public class RangerConfiguration extends Configuration {
 				}
 			}
 		} else {
-			LOG.error("addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

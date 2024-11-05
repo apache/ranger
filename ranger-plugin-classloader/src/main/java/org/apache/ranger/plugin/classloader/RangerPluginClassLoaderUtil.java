@@ -103,12 +103,16 @@ public class RangerPluginClassLoaderUtil {
 					for(File dirFile : dirFiles) {
 						try {
 							if (!dirFile.canRead()) {
-								LOG.error("getFilesInDirectory('" + dirPath + "'): " + dirFile.getAbsolutePath() + " is not readable!");
+								if(LOG.isDebugEnabled()) {
+									LOG.debug("getFilesInDirectory('" + dirPath + "'): " + dirFile.getAbsolutePath() + " is not readable!");
+								}
 							}
 
 							URL jarPath = dirFile.toURI().toURL();
 
-							LOG.info("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());
+							if(LOG.isDebugEnabled()) {
+								LOG.debug("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());
+							}
 
 							files.add(jarPath);
 						} catch(Exception excp) {
@@ -120,7 +124,9 @@ public class RangerPluginClassLoaderUtil {
 				LOG.warn("getFilesInDirectory('" + dirPath + "'): error", excp);
 			}
 		} else {
-				LOG.warn("getFilesInDirectory('" + dirPath + "'): could not find directory in path " + dirPath);
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("getFilesInDirectory('" + dirPath + "'): could not find directory in path " + dirPath);
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
