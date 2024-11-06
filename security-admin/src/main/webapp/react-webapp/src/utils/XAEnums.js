@@ -69,7 +69,7 @@ export const UserTypes = {
     variant: "warning"
   },
   USER_FEDERATED: {
-    value: 2,
+    value: 6,
     label: "Federated",
     variant: "secondary"
   }
