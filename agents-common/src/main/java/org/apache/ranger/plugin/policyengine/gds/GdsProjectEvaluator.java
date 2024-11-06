@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.ProjectInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,8 +101,18 @@ public class GdsProjectEvaluator {
                 GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
                 RangerAccessResult      projectResult  = projectRequest.createAccessResult();
 
-                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                    policyEvaluator.evaluate(projectRequest, projectResult);
+                try {
+                    RangerAccessRequestUtil.setAllRequestedAccessTypes(projectRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
+
+                    policyEvaluators.forEach(e -> e.evaluate(projectRequest, projectResult));
+                } finally {
+                    RangerAccessRequestUtil.setAccessTypeResults(projectRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
+                }
+
+                if (projectResult.getIsAllowed()) {
+                    result.addAllowedByProject(getName());
                 }
 
                 if (!result.getIsAllowed()) {

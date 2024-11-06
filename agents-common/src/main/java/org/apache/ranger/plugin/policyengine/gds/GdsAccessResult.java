@@ -22,39 +22,17 @@ package org.apache.ranger.plugin.policyengine.gds;
 import java.util.*;
 
 public class GdsAccessResult {
-    private Set<String> datasets;
-    private Set<String> projects;
     private boolean     isAllowed;
     private boolean     isAudited;
     private long        policyId = -1;
     private Long        policyVersion;
+    private Set<String> datasets;
+    private Set<String> projects;
+    private Set<String> allowedByDatasets;
+    private Set<String> allowedByProjects;
 
 
     public GdsAccessResult() {
-    }
-
-    public void addDataset(String name) {
-        if (datasets == null) {
-            datasets = new HashSet<>();
-        }
-
-        datasets.add(name);
-    }
-
-    public Set<String> getDatasets() {
-        return datasets;
-    }
-
-    public void addProject(String name) {
-        if (projects == null) {
-            projects = new HashSet<>();
-        }
-
-        projects.add(name);
-    }
-
-    public Set<String> getProjects() {
-        return projects;
     }
 
     public boolean getIsAllowed() {
@@ -89,9 +67,57 @@ public class GdsAccessResult {
         this.policyVersion = policyVersion;
     }
 
+    public Set<String> getDatasets() {
+        return datasets;
+    }
+
+    public Set<String> getProjects() {
+        return projects;
+    }
+
+    public Set<String> getAllowedByDatasets() {
+        return allowedByDatasets;
+    }
+
+    public Set<String> getAllowedByProjects() {
+        return allowedByProjects;
+    }
+
+    public void addDataset(String name) {
+        if (datasets == null) {
+            datasets = new HashSet<>();
+        }
+
+        datasets.add(name);
+    }
+
+    public void addProject(String name) {
+        if (projects == null) {
+            projects = new HashSet<>();
+        }
+
+        projects.add(name);
+    }
+
+    public void addAllowedByDataset(String name) {
+        if (allowedByDatasets == null) {
+            allowedByDatasets = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        }
+
+        allowedByDatasets.add(name);
+    }
+
+    public void addAllowedByProject(String name) {
+        if (allowedByProjects == null) {
+            allowedByProjects = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        }
+
+        allowedByProjects.add(name);
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(datasets, projects, isAllowed, isAudited, policyId, policyVersion);
+        return Objects.hash(isAllowed, isAudited, policyId, policyVersion, datasets, projects, allowedByDatasets, allowedByProjects);
     }
 
     @Override
@@ -103,12 +129,14 @@ public class GdsAccessResult {
         } else {
             GdsAccessResult other = (GdsAccessResult) obj;
 
-            return Objects.equals(datasets, other.datasets) &&
-                   Objects.equals(projects, other.projects) &&
-                   Objects.equals(isAllowed, other.isAllowed) &&
+            return Objects.equals(isAllowed, other.isAllowed) &&
                    Objects.equals(isAudited, other.isAudited) &&
                    Objects.equals(policyId, other.policyId) &&
-                   Objects.equals(policyVersion, other.policyVersion);
+                   Objects.equals(policyVersion, other.policyVersion) &&
+                   Objects.equals(datasets, other.datasets) &&
+                   Objects.equals(projects, other.projects) &&
+                   Objects.equals(allowedByDatasets, other.allowedByDatasets) &&
+                   Objects.equals(allowedByProjects, other.allowedByProjects);
         }
     }
 
@@ -123,12 +151,14 @@ public class GdsAccessResult {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("RangerGdsAccessResult={");
-        sb.append("datasets={").append(datasets).append("}");
-        sb.append(", projects={").append(projects).append("}");
-        sb.append(", isAllowed={").append(isAllowed).append("}");
+        sb.append("isAllowed={").append(isAllowed).append("}");
         sb.append(", isAudited={").append(isAudited).append("}");
         sb.append(", policyId={").append(policyId).append("}");
         sb.append(", policyVersion={").append(policyVersion).append("}");
+        sb.append(", datasets={").append(datasets).append("}");
+        sb.append(", projects={").append(projects).append("}");
+        sb.append(", allowedByDatasets={").append(allowedByDatasets).append("}");
+        sb.append(", allowedByProjects={").append(allowedByProjects).append("}");
         sb.append("}");
 
         return sb;
