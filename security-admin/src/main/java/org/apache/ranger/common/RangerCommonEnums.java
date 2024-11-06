@@ -480,12 +480,12 @@ public class RangerCommonEnums {
 	 */
 	public static final int USER_APP = 0;
 	public static final int USER_EXTERNAL = 1;
-	public static final int USER_FEDERATED= 2;
-	public static final int USER_AD= 3;
-	public static final int USER_LDAP = 4;
-	public static final int USER_UNIX = 5;
-	public static final int USER_REPO = 6;
-	
+	public static final int USER_AD = 2;
+	public static final int USER_LDAP = 3;
+	public static final int USER_UNIX = 4;
+	public static final int USER_REPO = 5;
+	public static final int USER_FEDERATED = 6;
+
 	public static final int GROUP_INTERNAL = 0;
 	public static final int GROUP_EXTERNAL = 1;
 	public static final int GROUP_AD= 2;
