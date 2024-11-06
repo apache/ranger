@@ -27,11 +27,13 @@ import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -97,8 +99,8 @@ public class GdsDatasetEvaluator {
         return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
-        LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
+    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Collection<GdsProjectEvaluator> projectsToEval) {
+        LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
 
         if (isActive()) {
             result.addDataset(getName());
@@ -107,7 +109,19 @@ public class GdsDatasetEvaluator {
                 GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
                 RangerAccessResult      datasetResult  = datasetRequest.createAccessResult();
 
-                policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
+                try {
+                    RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
+
+                    policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
+                } finally {
+                    RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
+                }
+
+                if (datasetResult.getIsAllowed()) {
+                    result.addAllowedByDataset(getName());
+                }
 
                 if (!result.getIsAllowed()) {
                     if (datasetResult.getIsAllowed()) {
@@ -122,10 +136,10 @@ public class GdsDatasetEvaluator {
                 }
             }
 
-            dipEvaluators.stream().filter(e -> !projectIds.contains(e.getProjectId()) && e.isAllowed(request) && e.getProjectEvaluator().isActive()).map(GdsDipEvaluator::getProjectId).forEach(projectIds::add);
+            dipEvaluators.stream().filter(e -> e.isAllowed(request) && e.getProjectEvaluator().isActive()).forEach(dip -> projectsToEval.add(dip.getProjectEvaluator()));
         }
 
-        LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
+        LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {

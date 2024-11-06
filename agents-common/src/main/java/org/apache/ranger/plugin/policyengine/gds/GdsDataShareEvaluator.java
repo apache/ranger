@@ -30,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -75,7 +75,7 @@ public class GdsDataShareEvaluator {
 
     public Set<String> getDefaultAccessTypes() { return dsh.getDefaultAccessTypes(); }
 
-    public Collection<GdsSharedResourceEvaluator> getResourceEvaluators() { return evaluators; }
+    public Set<GdsSharedResourceEvaluator> getResourceEvaluators() { return evaluators; }
 
     public List<GdsDshidEvaluator> getDshidEvaluators() { return dshidEvaluators; }
 
@@ -100,16 +100,16 @@ public class GdsDataShareEvaluator {
         return dshidEvaluators.stream().anyMatch(e -> e.getDatasetEvaluator().isInProject(projectId) && e.isActive());
     }
 
-    public void collectDatasets(RangerAccessRequest request, GdsAccessResult result, Set<Long> datasetIds) {
-        LOG.debug("==> GdsDataShareEvaluator.collectDatasets({}, {})", request, result);
+    public void collectDatasets(RangerAccessRequest request, Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval) {
+        LOG.debug("==> GdsDataShareEvaluator.collectDatasets({}, {})", request, datasetsToEval);
 
         boolean isAllowed = conditionEvaluator == null || conditionEvaluator.isMatched(request);
 
         if (isAllowed) {
-            dshidEvaluators.stream().filter(e -> !datasetIds.contains(e.getDatasetId()) && e.isAllowed(request) && e.getDatasetEvaluator().isActive()).map(GdsDshidEvaluator::getDatasetId).forEach(datasetIds::add);
+            dshidEvaluators.stream().filter(dshid -> dshid.isAllowed(request) && dshid.getDatasetEvaluator().isActive()).forEach(dshid -> datasetsToEval.computeIfAbsent(dshid.getDatasetEvaluator(), s -> new TreeSet<>(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR)).add(this));
         }
 
-        LOG.debug("<== GdsDataShareEvaluator.collectDatasets({}, {})", request, result);
+        LOG.debug("<== GdsDataShareEvaluator.collectDatasets({}, {})", request, datasetsToEval);
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls) {

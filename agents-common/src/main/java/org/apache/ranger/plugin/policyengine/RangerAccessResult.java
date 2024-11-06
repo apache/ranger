@@ -29,12 +29,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerAccessResult {
-	public  final static String KEY_MASK_TYPE      = "maskType";
-	public  final static String KEY_MASK_CONDITION = "maskCondition";
-	public  final static String KEY_MASKED_VALUE   = "maskedValue";
-	private final static String KEY_FILTER_EXPR    = "filterExpr";
-	private final static String KEY_DATASETS       = "datasets";
-	private final static String KEY_PROJECTS       = "projects";
+	public  final static String KEY_MASK_TYPE           = "maskType";
+	public  final static String KEY_MASK_CONDITION      = "maskCondition";
+	public  final static String KEY_MASKED_VALUE        = "maskedValue";
+	private final static String KEY_FILTER_EXPR         = "filterExpr";
+	private final static String KEY_DATASETS            = "datasets";
+	private final static String KEY_PROJECTS            = "projects";
+	private final static String KEY_ALLOWED_BY_DATASETS = "allowedByDatasets";
+	private final static String KEY_ALLOWED_BY_PROJECTS = "allowedByProjects";
 
 	private final String              serviceName;
 	private final RangerServiceDef    serviceDef;
@@ -349,6 +351,30 @@ public class RangerAccessResult {
 			removeAdditionalInfo(KEY_PROJECTS);
 		} else {
 			addAdditionalInfo(KEY_PROJECTS, projects);
+		}
+	}
+
+	public Set<String> getAllowedByDatasets() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_ALLOWED_BY_DATASETS);
+	}
+
+	public void setAllowedByDatasets(Set<String> datasets) {
+		if (datasets == null) {
+			removeAdditionalInfo(KEY_ALLOWED_BY_DATASETS);
+		} else {
+			addAdditionalInfo(KEY_ALLOWED_BY_DATASETS, datasets);
+		}
+	}
+
+	public Set<String> getAllowedByProjects() {
+		return additionalInfo == null ? null : (Set<String>) additionalInfo.get(KEY_ALLOWED_BY_PROJECTS);
+	}
+
+	public void setAllowedByProjects(Set<String> projects) {
+		if (projects == null) {
+			removeAdditionalInfo(KEY_ALLOWED_BY_PROJECTS);
+		} else {
+			addAdditionalInfo(KEY_ALLOWED_BY_PROJECTS, projects);
 		}
 	}
 
