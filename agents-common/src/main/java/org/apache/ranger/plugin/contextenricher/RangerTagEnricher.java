@@ -754,14 +754,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						LOG.debug("resource:[" + resource + ", MatchType:[" + matchType + "]");
 					}
 
-					final boolean isMatched;
+					final ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : ResourceMatchingScope.SELF;
+					final boolean               isMatched;
 
-					if (request.isAccessTypeAny()) {
-						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-					} else if (request.getResourceMatchingScope() == ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+					if (request.isAccessTypeAny() || resourceMatchingScope == ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR || matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
 					} else {
-						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR;
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR || matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
 					}
 
 					if (isMatched) {
