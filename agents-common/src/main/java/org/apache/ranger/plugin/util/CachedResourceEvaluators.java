@@ -92,7 +92,8 @@ public class CachedResourceEvaluators {
             perf = RangerPerfTracer.getPerfTracer(PERF_EVALUATORS_RETRIEVAL_LOG, "CachedResourceEvaluators.getEvaluators(resource=" + resource.getAsString() + ")");
         }
 
-        final Predicate predicate = !(request.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext()) || RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS.equals(request.getResourceMatchingScope())) && excludeDescendantMatches(resource) ? new SelfOrAncestorPredicate(helper.getResourceDef(resource.getLeafName())) : null;
+        final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
+        final Predicate                                 predicate             = !(request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) && excludeDescendantMatches(resource) ? new SelfOrAncestorPredicate(helper.getResourceDef(resource.getLeafName())) : null;
 
         if (predicate != null) {
             ret = cache.getEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes());
