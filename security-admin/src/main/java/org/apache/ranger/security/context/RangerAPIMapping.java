@@ -38,7 +38,7 @@ public class RangerAPIMapping {
 	public static final String TAB_KEY_MANAGER = "Key Manager";
 	public static final String TAB_TAG_BASED_POLICIES = "Tag Based Policies";
 	public static final String TAB_REPORTS = "Reports";
-
+	public static final String TAB_GDS = "Governed Data Sharing";
 	private static HashMap<String, Set<String>> rangerAPIMappingWithUI = null;
 	private static Set<String> tabList = new HashSet<String>();
 	private static Map<String, Set<String>> mapApiToTabs = null;
@@ -62,6 +62,7 @@ public class RangerAPIMapping {
 		mapKeyManagerWithAPIs();
 		mapTagBasedPoliciesWithAPIs();
 		mapReportsWithAPIs();
+		mapGDSWithAPIs();
 
 		if (CollectionUtils.isEmpty(tabList)) {
 			populateAvailableUITabs();
@@ -78,6 +79,7 @@ public class RangerAPIMapping {
 		tabList.add(TAB_KEY_MANAGER);
 		tabList.add(TAB_PERMISSIONS);
 		tabList.add(TAB_USERS_GROUPS);
+		tabList.add(TAB_GDS);
 	}
 
 	private void mapReportsWithAPIs() {
@@ -506,6 +508,70 @@ public class RangerAPIMapping {
 			mapApiToTabs.get(api).add(TAB_RESOURCE_BASED_POLICIES);
 		}
 	}
+
+	private void mapGDSWithAPIs() {
+		Set<String> apiAssociatedWithGDS = new HashSet<String>();
+
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_SUMMARY);
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASETS);
+		apiAssociatedWithGDS.add(RangerAPIList.LIST_DATASET_NAMES);
+		apiAssociatedWithGDS.add(RangerAPIList.DATASET_POLICY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_PROJECTS);
+		apiAssociatedWithGDS.add(RangerAPIList.LIST_PROJECT_NAMES);
+		apiAssociatedWithGDS.add(RangerAPIList.PROJECT_POLICY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATA_SHARES);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATA_SHARE_SUMMARY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCES);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCES);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_SHARED_RESOURCES);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASHARE_IN_DATASET_SUMMARY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASET_IN_PROJECT);
+
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_GRANTS);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET_GRANTS);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_SERVICE_HEADERS);
+
+		rangerAPIMappingWithUI.put(TAB_GDS, apiAssociatedWithGDS);
+
+		for (String api : apiAssociatedWithGDS) {
+			if (mapApiToTabs.get(api) == null) {
+				mapApiToTabs.put(api, new HashSet<String>());
+			}
+			mapApiToTabs.get(api).add(TAB_GDS);
+		}
+	}
+
+
 
 	// * Utility methods starts from here, to retrieve API-UItab mapping information *
 
