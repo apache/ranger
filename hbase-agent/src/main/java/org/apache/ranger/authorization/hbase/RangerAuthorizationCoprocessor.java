@@ -515,7 +515,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				boolean isColumnAuthShortCircuitingEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("evaluateAccess: columns collection not empty." +
-							" Skipping Family level check, will do finer level access check for columns."+);
+							" Skipping Family level check, will do finer level access check for columns.");
 					}
 				if (isColumnAuthShortCircuitingEnabled) {
 						session.column(null)
