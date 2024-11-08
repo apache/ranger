@@ -20,11 +20,11 @@
 package org.apache.ranger.plugin.policyengine.gds;
 
 import com.google.gson.*;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -54,8 +55,18 @@ public class TestGdsPolicyEngine {
     }
 
     @Test
-    public void testGdsPolicyEngineHive() throws Exception {
-        runTestsFromResourceFile("/policyengine/gds/test_gds_policy_engine_hive.json");
+    public void testGdsPolicyHiveAccess() throws Exception {
+        runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_access.json");
+    }
+
+    @Test
+    public void testGdsPolicyHiveDataMask() throws Exception {
+        runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_data_mask.json");
+    }
+
+    @Test
+    public void testGdsPolicyHiveRowFilter() throws Exception {
+        runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_row_filter.json");
     }
 
     private void runTestsFromResourceFile(String resourceFile) throws Exception {
@@ -68,14 +79,35 @@ public class TestGdsPolicyEngine {
     private void runTests(Reader reader, String testName) {
         GdsPolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, GdsPolicyEngineTestCase.class);
 
-        if (StringUtils.isNotBlank(testCase.gdsInfoFilename)) {
-            InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename);
-
-            testCase.gdsInfo = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class);
+        if (testCase.serviceDef == null) {
+            try {
+                testCase.serviceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(testCase.serviceType);
+            } catch (Exception excp) {
+                throw new RuntimeException("failed to load " + testCase.serviceType + " service-def", excp);
+            }
         }
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.gdsInfo != null && testCase.tests != null);
+        if (testCase.gdsInfo == null) {
+            try (InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename)) {
+                testCase.gdsInfo = inStream != null ? gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class) : null;
 
+                if (testCase.gdsInfo != null && testCase.gdsInfo.getGdsServiceDef() == null) {
+                    try {
+                        RangerServiceDef gdsServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+
+                        testCase.gdsInfo.setGdsServiceDef(gdsServiceDef);
+                    } catch (Exception excp) {
+                        throw new RuntimeException("failed to load " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME + " service-def", excp);
+                    }
+                }
+            } catch (IOException excp) {
+                throw new RuntimeException("failed to load gdsInfoFile " + testCase.gdsInfoFilename, excp);
+            }
+        }
+
+        assertTrue("invalid input: " + testName, testCase.gdsInfo != null && testCase.tests != null);
+
+        ServiceDefUtil.normalize(testCase.serviceDef);
         testCase.serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(testCase.serviceDef.getAccessTypes()));
 
         RangerPluginContext       pluginContext = new RangerPluginContext(new RangerPluginConfig(testCase.serviceDef.getName(), null, "hive", "cl1", "on-prem", null));
@@ -84,6 +116,9 @@ public class TestGdsPolicyEngine {
 
         for (TestData test : testCase.tests) {
             if (test.request != null) {
+                // Safe cast
+                ((RangerAccessResourceImpl) test.request.getResource()).setServiceDef(testCase.serviceDef);
+
                 Set<String> zoneNames = zoneMatcher.getZonesForResourceAndChildren(test.request.getResource());
 
                 RangerAccessRequestUtil.setResourceZoneNamesInContext(test.request, zoneNames);
@@ -138,6 +173,7 @@ public class TestGdsPolicyEngine {
     }
 
     static class GdsPolicyEngineTestCase {
+        public String                        serviceType;
         public RangerServiceDef              serviceDef;
         public Map<String, SecurityZoneInfo> securityZones;
         public ServiceGdsInfo                gdsInfo;

@@ -95,6 +95,10 @@ public class GdsDatasetEvaluator {
         return dipEvaluators.stream().anyMatch(e -> e.getProjectId().equals(projectId) && e.isActive());
     }
 
+    public boolean isInAnyProject(Set<String> projectNames) {
+        return dipEvaluators.stream().anyMatch(e -> projectNames.contains(e.getProjectEvaluator().getName()) && e.isActive());
+    }
+
     public boolean isActive() {
         return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }

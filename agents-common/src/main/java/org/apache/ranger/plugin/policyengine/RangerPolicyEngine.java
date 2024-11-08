@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -55,6 +56,8 @@ public interface RangerPolicyEngine {
 	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
 
 	RangerServiceDef getServiceDef();
+
+	RangerServiceDefHelper getServiceDefHelper();
 
 	long getPolicyVersion();
 

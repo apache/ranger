@@ -22,7 +22,9 @@ package org.apache.ranger.plugin.service;
 import com.google.gson.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -58,18 +60,18 @@ public class TestRangerBasePlugin {
 
 
     @Test
-    public void testBasePluginHive() {
+    public void testBasePluginHive() throws Exception {
         runTestsFromResourceFile("/plugin/test_base_plugin_hive.json");
     }
 
-    private void runTestsFromResourceFile(String resourceFile) {
+    private void runTestsFromResourceFile(String resourceFile) throws Exception {
         InputStream       inStream = this.getClass().getResourceAsStream(resourceFile);
         InputStreamReader reader   = new InputStreamReader(inStream);
 
         runTests(reader, resourceFile);
     }
 
-    private void runTests(Reader reader, String testName) {
+    private void runTests(Reader reader, String testName) throws Exception {
         RangerBasePluginTestCase testCase = readTestCase(reader);
 
         assertNotNull("invalid input: " + testName, testCase);
@@ -106,7 +108,7 @@ public class TestRangerBasePlugin {
         }
     }
 
-    private RangerBasePluginTestCase readTestCase(Reader reader) {
+    private RangerBasePluginTestCase readTestCase(Reader reader) throws Exception {
         RangerBasePluginTestCase testCase = gsonBuilder.fromJson(reader, RangerBasePluginTestCase.class);
 
         if (StringUtils.isNotBlank(testCase.policiesFilename)) {
@@ -137,6 +139,12 @@ public class TestRangerBasePlugin {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename);
 
             testCase.gdsInfo = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class);
+
+            if (testCase.gdsInfo != null && testCase.gdsInfo.getGdsServiceDef() == null) {
+                RangerServiceDef gdsServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+
+                testCase.gdsInfo.setGdsServiceDef(gdsServiceDef);
+            }
         }
 
         if (testCase.policies != null && testCase.policies.getServiceDef() != null) {

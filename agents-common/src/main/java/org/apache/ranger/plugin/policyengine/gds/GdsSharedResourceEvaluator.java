@@ -86,6 +86,22 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
                   resource, conditionEvaluator, policyResource, leafResourceDef, allowedAccessTypes);
     }
 
+    private GdsSharedResourceEvaluator(GdsSharedResourceEvaluator other, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext, int policyType) {
+        this.resource           = other.resource;
+        this.conditionEvaluator = other.conditionEvaluator;
+        this.allowedAccessTypes = other.allowedAccessTypes;
+
+        if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER && other.policyResource != other.resource.getResource()) {
+            this.policyResource        = new HashMap<>(resource.getResource()); // ignore resource.subResource
+            this.policyResourceMatcher = initPolicyResourceMatcher(this.policyResource, serviceDefHelper, pluginContext);
+            this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(serviceDefHelper.getServiceDef(), this.policyResource);
+        } else {
+            this.policyResource        = other.policyResource;
+            this.policyResourceMatcher = other.policyResourceMatcher;
+            this.leafResourceDef       = other.leafResourceDef;
+        }
+    }
+
     @Override
     public long getId() {
         return resource.getId();
@@ -179,6 +195,24 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
 
     public RangerPolicyItemDataMaskInfo getDataMask(String subResourceName) {
         return resource.getSubResourceMasks() != null ? resource.getSubResourceMasks().get(subResourceName) : null;
+    }
+
+    GdsSharedResourceEvaluator createDataMaskEvaluator(RangerServiceDefHelper serviceDefHelper) {
+        if (!serviceDefHelper.isDataMaskSupported(policyResource.keySet())) {
+            return null;
+        } else {
+            return this;
+        }
+    }
+
+    GdsSharedResourceEvaluator createRowFilterEvaluator(RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+        if (!serviceDefHelper.isRowFilterSupported(resource.getResource().keySet())) {
+            return null;
+        } else if (policyResource == resource.getResource()) { // no subResource, so current evaluator will work for rowFilter as well
+            return this;
+        } else {
+            return new GdsSharedResourceEvaluator(this, serviceDefHelper, pluginContext, RangerPolicy.POLICY_TYPE_ROWFILTER);
+        }
     }
 
     private static RangerPolicyResourceMatcher initPolicyResourceMatcher(Map<String, RangerPolicyResource> policyResource, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {

@@ -22,6 +22,9 @@ package org.apache.ranger.plugin.policyengine.gds;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerGds;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -70,7 +73,7 @@ public class GdsPolicyEngine {
         LOG.debug("==> RangerGdsPolicyEngine()");
 
         this.gdsInfo        = gdsInfo;
-        this.allAccessTypes = Collections.unmodifiableSet(getAllAccessTypes(serviceDefHelper));
+        this.allAccessTypes = serviceDefHelper.getAllAccessTypes();
 
         init(serviceDefHelper, pluginContext);
 
@@ -85,51 +88,29 @@ public class GdsPolicyEngine {
         LOG.debug("==> RangerGdsPolicyEngine.evaluate({})", request);
 
         final GdsAccessResult ret;
-        final boolean         isAnyAccess = request.isAccessTypeAny();
 
-        try {
-            if (isAnyAccess) {
-                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allAccessTypes);
-                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
+        if (!datasets.isEmpty()) {
+            ret = new GdsAccessResult();
+
+            evaluate(request, RangerPolicy.POLICY_TYPE_ACCESS, ret);
+
+            if (ret.getIsAllowed()) {
+                evaluate(request, RangerPolicy.POLICY_TYPE_DATAMASK, ret);
+                evaluate(request, RangerPolicy.POLICY_TYPE_ROWFILTER, ret);
             }
-
-            Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources = getDataShareResources(request);
-
-            if (!dshResources.isEmpty()) {
-                Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval = new TreeMap<>(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
-
-                dshResources.keySet().forEach(e -> e.collectDatasets(request, datasetsToEval));
-
-                if (!datasetsToEval.isEmpty()) {
-                    ret = new GdsAccessResult();
-
-                    Set<GdsProjectEvaluator> projectsToEval = new TreeSet<>(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR);
-
-                    evaluateDatasetPolicies(datasetsToEval.keySet(), request, ret, projectsToEval);
-
-                    evaluateProjectPolicies(projectsToEval, request, ret);
-                } else {
-                    ret = null;
-                }
-            } else {
-                ret = null;
-            }
-        } finally {
-            if (isAnyAccess) {
-                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), null);
-                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.FALSE);
-            }
+        } else {
+            ret = null;
         }
 
-        LOG.debug("<== RangerGdsPolicyEngine.evaluate({}): {}", request, ret);
+        LOG.debug("<== RangerGdsPolicyEngine.evaluate({}): ret={}", request, ret);
 
-        return ret;
+        return (ret == null || CollectionUtils.isEmpty(ret.getDatasets())) ? null : ret;
     }
 
     public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
         RangerResourceACLs ret = new RangerResourceACLs();
 
-        getDataShareResources(request).keySet().forEach(e -> e.getResourceACLs(request, ret));
+        getDataShareResources(request, RangerPolicy.POLICY_TYPE_ACCESS).keySet().forEach(e -> e.getResourceACLs(request, ret));
 
         ret.finalizeAcls();
 
@@ -215,6 +196,154 @@ public class GdsPolicyEngine {
         return new SharedResourceIter(dshEvaluators);
     }
 
+
+
+    private void evaluate(RangerAccessRequest request, int policyType, GdsAccessResult result) {
+        LOG.debug("==> RangerGdsPolicyEngine.evaluate({}, {}, {})", request, policyType, result);
+
+        final boolean isAnyAccess = request.isAccessTypeAny();
+
+        try {
+            if (isAnyAccess) {
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allAccessTypes);
+                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
+            }
+
+            Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources = getDataShareResources(request, policyType);
+
+            if (!dshResources.isEmpty()) {
+                Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval = new TreeMap<>(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
+
+                dshResources.keySet().forEach(e -> e.collectDatasets(request, datasetsToEval));
+
+                if (!datasetsToEval.isEmpty()) {
+                    Set<GdsProjectEvaluator> projectsToEval = new TreeSet<>(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR);
+
+                    evaluateDatasetPolicies(datasetsToEval.keySet(), request, result, projectsToEval);
+
+                    evaluateProjectPolicies(projectsToEval, request, result);
+
+                    // find mask/row-filters from resources in allowed datasets & projects
+                    if (result.getIsAllowed() && (policyType == RangerPolicy.POLICY_TYPE_DATAMASK || policyType == RangerPolicy.POLICY_TYPE_ROWFILTER)) {
+                        Set<GdsDatasetEvaluator> datasets = new TreeSet<>(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
+
+                        if (result.getAllowedByDatasets() != null) {
+                            datasetsToEval.keySet().stream().filter(dataset -> result.getAllowedByDatasets().contains(dataset.getName())).forEach(datasets::add);
+                        }
+
+                        if (result.getAllowedByProjects() != null) {
+                            datasetsToEval.keySet().stream().filter(dataset -> dataset.isInAnyProject(result.getAllowedByProjects())).forEach(datasets::add);
+                        }
+
+                        datasetsToEval.keySet().retainAll(datasets);
+
+                        if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+                            setDataMask(request, result, datasetsToEval, dshResources);
+                        } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                            setRowFilters(request, result, datasetsToEval, dshResources);
+                        }
+                    }
+                }
+            }
+        } finally {
+            if (isAnyAccess) {
+                RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), null);
+                RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.FALSE);
+            }
+        }
+
+        LOG.debug("<== RangerGdsPolicyEngine.evaluate({}, {}, {})", request, policyType, result);
+    }
+
+    // apply no masking if any shared resource allows unmasked access to the resource
+    // else apply the mask specified in the first resource
+    private void setDataMask(RangerAccessRequest request, GdsAccessResult result, Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
+        LOG.debug("==> RangerGdsPolicyEngine.setDataMask(request={}, result={}, datasetsToEval={}, dshResources={})", request, result, datasetsToEval, dshResources);
+
+        String leafResource = Objects.toString(request.getResource().getValue(request.getResource().getLeafName()));
+
+        RangerPolicyItemDataMaskInfo dataMaskInfo = null;
+
+        for (Set<GdsDataShareEvaluator> dataShares : datasetsToEval.values()) {
+            for (GdsDataShareEvaluator dataShare : dataShares) {
+                RangerPolicyItemDataMaskInfo dshMask = null;
+
+                // find mask specified in resources of this dataShare
+                for (GdsSharedResourceEvaluator resource : dshResources.get(dataShare)) {
+                    RangerPolicyItemDataMaskInfo resourceMask = resource.getDataMask(leafResource);
+
+                    if (resourceMask == null) { // resource allows unmasked access; bailout
+                        dshMask = null;
+
+                        break;
+                    } else if (dshMask == null) { // save mask from the first resource
+                        dshMask = resourceMask;
+                    } // else continue to check if any other resource allows unmasked access
+                }
+
+                if (dshMask == null) { // dataShare allows unmasked access; bailout
+                    dataMaskInfo = null;
+
+                    break;
+                } else if (dataMaskInfo == null) { // save mask from the first dataShare
+                    dataMaskInfo = dshMask;
+                } // else continue to check if any other dataShare allows unmasked access
+            }
+
+            if (dataMaskInfo == null) { // dataset allows unmasked access; bailout
+                break;
+            } // else continue to check if any other dataset allows unmasked access
+        }
+
+        if (dataMaskInfo == null) {
+            result.setMaskType(null);
+            result.setMaskedValue(null);
+            result.setMaskCondition(null);
+        } else {
+            result.setMaskType(dataMaskInfo.getDataMaskType());
+            result.setMaskedValue(dataMaskInfo.getValueExpr());
+            result.setMaskCondition(dataMaskInfo.getConditionExpr());
+        }
+
+        LOG.debug("<== RangerGdsPolicyEngine.setDataMask(request={}, result={}, datasetsToEval={}, dshResources={})", request, result, datasetsToEval, dshResources);
+    }
+
+    private void setRowFilters(RangerAccessRequest request, GdsAccessResult result, Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
+        LOG.debug("==> RangerGdsPolicyEngine.setRowFilters(request={}, result={}, datasetsToEval={}, dshResources={})", request, result, datasetsToEval, dshResources);
+
+        List<String> rowFilters = new ArrayList<>();
+
+        for (Set<GdsDataShareEvaluator> dataShares : datasetsToEval.values()) {
+            for (GdsDataShareEvaluator dataShare : dataShares) {
+                for (GdsSharedResourceEvaluator resource : dshResources.get(dataShare)) {
+                    RangerPolicyItemRowFilterInfo rowFilterInfo = resource.getRowFilter();
+
+                    if (rowFilterInfo == null || StringUtils.isBlank(rowFilterInfo.getFilterExpr())) { // resource allows unfiltered access; bailout
+                        rowFilters = null;
+
+                        break;
+                    } else {
+                        if (!rowFilters.contains(rowFilterInfo.getFilterExpr())) {
+                            rowFilters.add(rowFilterInfo.getFilterExpr());
+                        }
+                    }
+                    // continue to look for more filters
+                }
+
+                if (rowFilters == null) { // dataShare allows unfiltered access; bailout
+                    break;
+                }
+            }
+
+            if (rowFilters == null) { // dataset allows unfiltered access; bailout
+                break;
+            }
+        }
+
+        result.setRowFilters(rowFilters);
+
+        LOG.debug("<== RangerGdsPolicyEngine.setRowFilters(request={}, result={}, datasetsToEval={}, dshResources={})", request, result, datasetsToEval, dshResources);
+    }
 
     private void init(RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         LOG.debug("==> RangerGdsPolicyEngine.init()");
@@ -337,8 +466,8 @@ public class GdsPolicyEngine {
         gdsServiceDef.getAccessTypes().addAll(serviceDefHelper.getServiceDef().getAccessTypes());
     }
 
-    private Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> getDataShareResources(RangerAccessRequest request) {
-        LOG.debug("==> RangerGdsPolicyEngine.getDataShareResources({})", request);
+    private Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> getDataShareResources(RangerAccessRequest request, int policyType) {
+        LOG.debug("==> RangerGdsPolicyEngine.getDataShareResources({}, {})", request, policyType);
 
         final Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> ret;
 
@@ -355,12 +484,12 @@ public class GdsPolicyEngine {
 
             ret = new TreeMap<>(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
 
-            zoneNames.stream().map(zoneResources::get).filter(Objects::nonNull).forEach(zr -> zr.collectDataShareResources(request, ret));
+            zoneNames.stream().map(zoneResources::get).filter(Objects::nonNull).forEach(zr -> zr.collectDataShareResources(request, policyType, ret));
         } else {
             ret = Collections.emptyMap();
         }
 
-        LOG.debug("<== RangerGdsPolicyEngine.getDataShareResources({}): {}", request, ret);
+        LOG.debug("<== RangerGdsPolicyEngine.getDataShareResources({}, {}): {}", request, policyType, ret);
 
         return ret;
     }
@@ -403,23 +532,33 @@ public class GdsPolicyEngine {
         }
     }
 
-    private Set<String> getAllAccessTypes(RangerServiceDefHelper serviceDefHelper) {
-        return serviceDefHelper.getServiceDef().getAccessTypes().stream().map(RangerAccessTypeDef::getName).collect(Collectors.toSet());
-    }
-
     private class GdsZoneResources {
         private final String                                                      zoneName;
-        private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> resourceTries;
+        private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> accessTries;
+        private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> dataMaskTries;
+        private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> rowFilterTries;
 
         public GdsZoneResources(String zoneName, List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
-            this.zoneName      = zoneName;
-            this.resourceTries = createResourceTries(evaluators, serviceDefHelper, pluginContext);
+            this.zoneName       = zoneName;
+            this.accessTries    = createAccessTries(evaluators, serviceDefHelper, pluginContext);
+            this.dataMaskTries  = createDataMaskTries(evaluators, serviceDefHelper, pluginContext);
+            this.rowFilterTries = createRowFilterTries(evaluators, serviceDefHelper, pluginContext);
         }
 
         public String getZoneName() { return zoneName; }
 
-        public void collectDataShareResources(RangerAccessRequest request, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
-            Collection<GdsSharedResourceEvaluator> resources = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
+        public void collectDataShareResources(RangerAccessRequest request, int policyType, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
+            final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> tries;
+
+            if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+                tries = dataMaskTries;
+            } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                tries = rowFilterTries;
+            } else {
+                tries = accessTries;
+            }
+
+            Collection<GdsSharedResourceEvaluator> resources = RangerResourceEvaluatorsRetriever.getEvaluators(tries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
 
             if (resources != null) {
                 for (GdsSharedResourceEvaluator resource : resources) {
@@ -438,7 +577,7 @@ public class GdsPolicyEngine {
             }
         }
 
-        private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createResourceTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+        private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createAccessTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
             Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> ret = new HashMap<>();
 
             for (RangerResourceDef resourceDef : serviceDefHelper.getServiceDef().getResources()) {
@@ -447,6 +586,50 @@ public class GdsPolicyEngine {
 
             return ret;
         }
+
+        private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createDataMaskTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+            final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> ret;
+
+            if (!serviceDefHelper.isDataMaskSupported() || evaluators.isEmpty()) {
+                ret = Collections.emptyMap();
+            } else {
+                List<GdsSharedResourceEvaluator> dataMaskEvaluators = evaluators.stream().map(e -> e.createDataMaskEvaluator(serviceDefHelper)).filter(Objects::nonNull).collect(Collectors.toList());
+
+                if (dataMaskEvaluators.isEmpty()) {
+                    ret = Collections.emptyMap();
+                } else {
+                    ret = new HashMap<>();
+
+                    for (RangerResourceDef resourceDef : serviceDefHelper.getServiceDef().getDataMaskDef().getResources()) {
+                        ret.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, dataMaskEvaluators, true, pluginContext));
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createRowFilterTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+        final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> ret;
+
+        if (!serviceDefHelper.isRowFilterSupported() || evaluators.isEmpty()) {
+            ret = Collections.emptyMap();
+        } else {
+            List<GdsSharedResourceEvaluator> rowFilterEvaluators = evaluators.stream().map(e -> e.createRowFilterEvaluator(serviceDefHelper, pluginContext)).filter(Objects::nonNull).collect(Collectors.toList());
+
+            if (rowFilterEvaluators.isEmpty()) {
+                ret = Collections.emptyMap();
+            } else {
+                ret = new HashMap<>();
+
+                for (RangerResourceDef resourceDef : serviceDefHelper.getServiceDef().getRowFilterDef().getResources()) {
+                    ret.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, rowFilterEvaluators, true, pluginContext));
+                }
+            }
+        }
+
+        return ret;
     }
 
     static class SharedResourceIter implements Iterator<GdsSharedResourceEvaluator> {
