@@ -22,14 +22,18 @@ package org.apache.ranger.plugin.policyengine.gds;
 import java.util.*;
 
 public class GdsAccessResult {
-    private boolean     isAllowed;
-    private boolean     isAudited;
-    private long        policyId = -1;
-    private Long        policyVersion;
-    private Set<String> datasets;
-    private Set<String> projects;
-    private Set<String> allowedByDatasets;
-    private Set<String> allowedByProjects;
+    private boolean      isAllowed;
+    private boolean      isAudited;
+    private long         policyId = -1;
+    private Long         policyVersion;
+    private String       maskType;
+    private String       maskedValue;
+    private String       maskCondition;
+    private List<String> rowFilters;
+    private Set<String>  datasets;
+    private Set<String>  projects;
+    private Set<String>  allowedByDatasets;
+    private Set<String>  allowedByProjects;
 
 
     public GdsAccessResult() {
@@ -65,6 +69,38 @@ public class GdsAccessResult {
 
     public void setPolicyVersion(Long policyVersion) {
         this.policyVersion = policyVersion;
+    }
+
+    public String getMaskType() {
+        return maskType;
+    }
+
+    public void setMaskType(String maskType) {
+        this.maskType = maskType;
+    }
+
+    public String getMaskedValue() {
+        return maskedValue;
+    }
+
+    public void setMaskedValue(String maskedValue) {
+        this.maskedValue = maskedValue;
+    }
+
+    public String getMaskCondition() {
+        return maskCondition;
+    }
+
+    public void setMaskCondition(String maskCondition) {
+        this.maskCondition = maskCondition;
+    }
+
+    public List<String> getRowFilters() {
+        return rowFilters;
+    }
+
+    public void setRowFilters(List<String> rowFilters) {
+        this.rowFilters = rowFilters;
     }
 
     public Set<String> getDatasets() {
@@ -117,7 +153,7 @@ public class GdsAccessResult {
 
     @Override
     public int hashCode() {
-        return Objects.hash(isAllowed, isAudited, policyId, policyVersion, datasets, projects, allowedByDatasets, allowedByProjects);
+        return Objects.hash(isAllowed, isAudited, policyId, policyVersion, maskType, maskedValue, maskCondition, rowFilters, datasets, projects, allowedByDatasets, allowedByProjects);
     }
 
     @Override
@@ -133,6 +169,10 @@ public class GdsAccessResult {
                    Objects.equals(isAudited, other.isAudited) &&
                    Objects.equals(policyId, other.policyId) &&
                    Objects.equals(policyVersion, other.policyVersion) &&
+                   Objects.equals(maskType, other.maskType) &&
+                   Objects.equals(maskedValue, other.maskedValue) &&
+                   Objects.equals(maskCondition, other.maskCondition) &&
+                   Objects.equals(rowFilters, other.rowFilters) &&
                    Objects.equals(datasets, other.datasets) &&
                    Objects.equals(projects, other.projects) &&
                    Objects.equals(allowedByDatasets, other.allowedByDatasets) &&
@@ -155,6 +195,10 @@ public class GdsAccessResult {
         sb.append(", isAudited={").append(isAudited).append("}");
         sb.append(", policyId={").append(policyId).append("}");
         sb.append(", policyVersion={").append(policyVersion).append("}");
+        sb.append(", maskType={").append(maskType).append("}");
+        sb.append(", maskedValue={").append(maskedValue).append("}");
+        sb.append(", maskCondition={").append(maskCondition).append("}");
+        sb.append(", rowFilters={").append(rowFilters).append("}");
         sb.append(", datasets={").append(datasets).append("}");
         sb.append(", projects={").append(projects).append("}");
         sb.append(", allowedByDatasets={").append(allowedByDatasets).append("}");

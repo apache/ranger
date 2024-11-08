@@ -29,6 +29,7 @@ import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
@@ -378,6 +379,21 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public RangerServiceDefHelper getServiceDefHelper() {
+		final RangerServiceDefHelper ret;
+
+		try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
+			if (LOG.isDebugEnabled()) {
+				if (readLock.isLockingEnabled()) {
+					LOG.debug("Acquired lock - " + readLock);
+				}
+			}
+			ret = policyEngine.getServiceDefHelper();
+		}
+		return ret;
+	}
+
+	@Override
 	public long getPolicyVersion() {
 		long ret;
 
@@ -671,14 +687,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		final RangerAccessResult ret;
 
 		if (request.isAccessTypeAny()) {
-			List<RangerServiceDef.RangerAccessTypeDef> allAccessDefs = getServiceDef().getAccessTypes();
-
-			Set<String> allRequestedAccesses = new HashSet<>();
-			for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : allAccessDefs) {
-				String requestedAccess = accessTypeDef.getName();
-				allRequestedAccesses.add(requestedAccess);
-			}
-			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), getServiceDefHelper().getAllAccessTypes());
 			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
 		}
 

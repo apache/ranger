@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -200,6 +201,22 @@ public class RangerServiceDefHelper {
 		return _delegate.getResourceHierarchyKeys(policyType);
 	}
 
+	public boolean isDataMaskSupported() {
+		return _delegate.isDataMaskSupported();
+	}
+
+	public boolean isDataMaskSupported(Set<String> resourceKeys) {
+		return _delegate.isDataMaskSupported(resourceKeys);
+	}
+
+	public boolean isRowFilterSupported() {
+		return _delegate.isRowFilterSupported();
+	}
+
+	public boolean isRowFilterSupported(Set<String> resourceKeys) {
+		return _delegate.isRowFilterSupported(resourceKeys);
+	}
+
 	public Set<List<RangerResourceDef>> filterHierarchies_containsOnlyMandatoryResources(Integer policyType) {
 		Set<List<RangerResourceDef>> hierarchies = getResourceHierarchies(policyType);
 		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
@@ -350,6 +367,10 @@ public class RangerServiceDefHelper {
 		return _delegate.getWildcardEnabledResourceDef(resourceName, policyType);
 	}
 
+	public Set<String> getAllAccessTypes() {
+		return _delegate.getAllAccessTypes();
+	}
+
 	public Map<String, Collection<String>> getImpliedAccessGrants() {
 		return _delegate.getImpliedAccessGrants();
 	}
@@ -394,6 +415,9 @@ public class RangerServiceDefHelper {
 		final boolean _valid;
 		final List<String> _orderedResourceNames;
 		final Map<String, Collection<String>> _impliedGrants;
+		final Set<String> _allAccessTypes;
+		final boolean _isDataMaskSupported;
+		final boolean _isRowFilterSupported;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -433,6 +457,9 @@ public class RangerServiceDefHelper {
 			}
 
 			_impliedGrants = computeImpliedGrants();
+			_allAccessTypes = Collections.unmodifiableSet(serviceDef.getAccessTypes().stream().map(RangerAccessTypeDef::getName).collect(Collectors.toSet()));
+			_isDataMaskSupported = CollectionUtils.isNotEmpty(_hierarchyKeys.get(RangerPolicy.POLICY_TYPE_DATAMASK));
+			_isRowFilterSupported = CollectionUtils.isNotEmpty(_hierarchyKeys.get(RangerPolicy.POLICY_TYPE_ROWFILTER));
 
 			if (isValid) {
 				_orderedResourceNames = buildSortedResourceNames();
@@ -506,6 +533,22 @@ public class RangerServiceDefHelper {
 			Set<Set<String>> ret = _hierarchyKeys.get(policyType);
 
 			return ret != null ? ret : Collections.emptySet();
+		}
+
+		public boolean isDataMaskSupported() {
+			return _isDataMaskSupported;
+		}
+
+		public boolean isDataMaskSupported(Set<String> resourceKeys) {
+			return _isDataMaskSupported && getResourceHierarchyKeys(RangerPolicy.POLICY_TYPE_DATAMASK).contains(resourceKeys);
+		}
+
+		public boolean isRowFilterSupported() {
+			return _isRowFilterSupported;
+		}
+
+		public boolean isRowFilterSupported(Set<String> resourceKeys) {
+			return _isRowFilterSupported && getResourceHierarchyKeys(RangerPolicy.POLICY_TYPE_ROWFILTER).contains(resourceKeys);
 		}
 
 		public String getServiceName() {
@@ -723,6 +766,10 @@ public class RangerServiceDefHelper {
 
 		List<String> getAllOrderedResourceNames() {
 			return this._orderedResourceNames;
+		}
+
+		public Set<String> getAllAccessTypes() {
+			return _allAccessTypes;
 		}
 
 		Map<String, Collection<String>> getImpliedAccessGrants() { return _impliedGrants; }
