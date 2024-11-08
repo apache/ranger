@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-drop procedure if exists add_validity_schedule_labels_keywords_in_x_gds_dataset();
+drop procedure if exists add_validity_schedule_labels_keywords_in_x_gds_dataset;
 
 delimiter ;;
 create procedure add_validity_schedule_labels_keywords_in_x_gds_dataset() begin
