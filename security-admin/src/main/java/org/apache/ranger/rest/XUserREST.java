@@ -389,7 +389,7 @@ public class XUserREST {
 	@Path("/users")
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_USERS + "\")")
-	public VXUserList searchXUsers(@Context HttpServletRequest request) {
+	public VXUserList searchXUsers(@Context HttpServletRequest request, @QueryParam("syncSource") String syncSource, @QueryParam("userRole") String userRole) {
 		String UserRoleParamName = RangerConstants.ROLE_USER;
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xUserService.sortFields);
