@@ -133,12 +133,11 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             ret = request.isAccessTypeAny() ? !allowedAccessTypes.isEmpty() : allowedAccessTypes.contains(request.getAccessType());
 
             if (ret) {
-                MatchType matchType = policyResourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
+                final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
+                final MatchType                                 matchType             = policyResourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 
-                if (request.isAccessTypeAny()) {
-                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-                } else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+                if (request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+                    ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
                 } else {
                     ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
                 }

@@ -308,8 +308,10 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	private boolean isMatch(MatchType matchType, ResourceMatchingScope matchingScope) {
 		final boolean ret;
 
+		matchingScope = matchingScope != null ? matchingScope : ResourceMatchingScope.SELF;
+
 		if (matchingScope == ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-			ret = matchType != MatchType.NONE;
+			ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS || matchType == MatchType.DESCENDANT;
 		} else {
 			ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
 		}
