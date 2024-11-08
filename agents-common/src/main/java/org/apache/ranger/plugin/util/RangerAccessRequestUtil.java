@@ -49,7 +49,6 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_REQUEST                          = "_REQUEST";
 	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED          = "ISREQUESTPREPROCESSED";
 	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
-	public static final String KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS          = "_IS_SKIP_CHAINED_PLUGINS";
 	public static final String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS            = "ALLACCESSTYPEGROUPS";
 	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS      = "ALL_ACCESS_TYPE_ACL_RESULTS";
 
@@ -416,14 +415,5 @@ public class RangerAccessRequestUtil {
 
 			results.putIfAbsent(accessType, result);
 		}
-	}
-
-	public static void setIsSkipChainedPlugins(Map<String, Object> context, Boolean value) {
-		context.put(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS, value);
-	}
-
-	public static boolean getIsSkipChainedPlugins(Map<String, Object> context) {
-		Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS);
-		return value != null && value;
 	}
 }
