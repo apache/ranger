@@ -117,7 +117,7 @@
         <enunciate.version>2.13.2</enunciate.version>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
-        <graalvm.version>21.3.11</graalvm.version>
+        <graalvm.version>21.3.12</graalvm.version>
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
