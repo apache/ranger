@@ -25,7 +25,7 @@
 # source .env file to get versions to download
 #
 source .env
-
+SHADE_SUFFIX="jakarta"
 
 downloadIfNotPresent() {
   local fileName=$1
@@ -43,10 +43,15 @@ downloadIfNotPresent() {
 
 createShaded() {
   local jar_name=$1
-  local suffix="jakarta"
 
   echo "migrating ${jar}"
-  java -jar ./downloads/jakartaee-migration-1.0.8-shaded.jar ./downloads/${jar_name}-${HADOOP_VERSION}.jar ./dist/${jar_name}-${HADOOP_VERSION}-${suffix}.jar
+  java -jar ./downloads/jakartaee-migration-1.0.8-shaded.jar ./downloads/${jar_name}-${HADOOP_VERSION}.jar ./dist/${jar_name}-${HADOOP_VERSION}-${SHADE_SUFFIX}.jar
+}
+
+installInLocalRepo() {
+  local jar_name=$1
+
+  mvn install:install-file -Dfile=./dist/${jar_name}-${HADOOP_VERSION}-${SHADE_SUFFIX}.jar -DgroupId=org.apache.hadoop -DartifactId=${jar_name} -Dversion=${HADOOP_VERSION} -Dpackaging=jar
 }
 
 downloadIfNotPresent jakartaee-migration-1.0.8-shaded.jar https://archive.apache.org/dist/tomcat/jakartaee-migration/v1.0.8/binaries/
@@ -55,3 +60,6 @@ downloadIfNotPresent hadoop-auth-${HADOOP_VERSION}.jar https://repo1.maven.org/m
 
 createShaded hadoop-common
 createShaded hadoop-auth
+
+installInLocalRepo hadoop-common
+installInLocalRepo hadoop-auth
