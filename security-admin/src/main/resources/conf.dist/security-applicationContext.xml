@@ -16,19 +16,19 @@
   limitations under the License.
 -->
 <beans:beans xmlns="http://www.springframework.org/schema/security"
-xmlns:beans="http://www.springframework.org/schema/beans"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:security="http://www.springframework.org/schema/security"
-xmlns:util="http://www.springframework.org/schema/util"
-xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
-xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
-http://www.springframework.org/schema/security
-http://www.springframework.org/schema/security/spring-security-5.7.xsd
-http://www.springframework.org/schema/util
-http://www.springframework.org/schema/util/spring-util-4.3.xsd
-http://www.springframework.org/schema/security/oauth2
-http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
+			xmlns:beans="http://www.springframework.org/schema/beans"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xmlns:security="http://www.springframework.org/schema/security"
+			xmlns:util="http://www.springframework.org/schema/util"
+			xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+			xsi:schemaLocation="http://www.springframework.org/schema/beans
+								http://www.springframework.org/schema/beans/spring-beans.xsd
+								http://www.springframework.org/schema/security
+								http://www.springframework.org/schema/security/spring-security-6.0.xsd
+								http://www.springframework.org/schema/util
+								http://www.springframework.org/schema/util/spring-util.xsd
+								http://www.springframework.org/schema/security/oauth2
+								http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
 	<security:http pattern="/login.jsp" security="none" />
 	<security:http pattern="/dist/**" security="none" />
