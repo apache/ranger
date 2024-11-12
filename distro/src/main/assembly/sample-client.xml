@@ -51,7 +51,7 @@
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.persistence:javax.persistence</include>
+                    <include>org.eclipse.persistence:jakarta.persistence</include>
                     <include>commons-collections:commons-collections</include>
                     <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
                     <include>commons-io:commons-io</include>

@@ -17,7 +17,7 @@
 
 package org.apache.ranger.kms.dao;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

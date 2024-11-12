@@ -16,28 +16,28 @@
   limitations under the License.
 -->
 <beans default-lazy-init="true" xmlns="http://www.springframework.org/schema/beans"
-xmlns:aop="http://www.springframework.org/schema/aop" xmlns:jee="http://www.springframework.org/schema/jee"
-xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
-xmlns:task="http://www.springframework.org/schema/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:util="http://www.springframework.org/schema/util"
-xsi:schemaLocation="http://www.springframework.org/schema/aop
-http://www.springframework.org/schema/aop/spring-aop.xsd
-http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans.xsd
-http://www.springframework.org/schema/context
-http://www.springframework.org/schema/context/spring-context.xsd
-http://www.springframework.org/schema/jee
-http://www.springframework.org/schema/jee/spring-jee.xsd
-http://www.springframework.org/schema/tx
-http://www.springframework.org/schema/tx/spring-tx.xsd
-http://www.springframework.org/schema/task
-http://www.springframework.org/schema/task/spring-task.xsd
-http://www.springframework.org/schema/util
-http://www.springframework.org/schema/util/spring-util.xsd">
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:jee="http://www.springframework.org/schema/jee"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:task="http://www.springframework.org/schema/task"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop.xsd
+							http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/context
+							https://www.springframework.org/schema/context/spring-context.xsd
+							http://www.springframework.org/schema/jee
+							http://www.springframework.org/schema/jee/spring-jee.xsd
+							http://www.springframework.org/schema/tx
+							http://www.springframework.org/schema/tx/spring-tx.xsd
+							http://www.springframework.org/schema/task
+							http://www.springframework.org/schema/task/spring-task.xsd
+							http://www.springframework.org/schema/util
+							http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<context:component-scan base-package="org.apache.ranger" >
-		<!-- context:exclude-filter type="regex" expression="org.apache.ranger\.common\.db\.DaoManager" / -->
-	</context:component-scan>
 	<context:component-scan base-package="org.apache.ranger" />
 	<tx:annotation-driven />
 
@@ -105,36 +105,16 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<!-- Datasource and Connection Pool Configuration https://github.com/brettwooldridge/HikariCP -->
 	<bean id="defaultDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
-		<property name="driverClassName">
-			<value>${ranger.jpa.jdbc.driver}</value>
-		</property>
-		<property name="jdbcUrl">
-			<value>${ranger.jpa.jdbc.url}</value>
-		</property>
-		<property name="username">
-			<value>${ranger.jpa.jdbc.user}</value>
-		</property>
-		<property name="password">
-			<value>${ranger.jpa.jdbc.password}</value>
-		</property>
-		<property name="maximumPoolSize">
-			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
-		</property>
-		<property name="minimumIdle">
-			<value>${ranger.jpa.jdbc.minpoolsize}</value>
-		</property>
-		<property name="idleTimeout">
-			<value>${ranger.jpa.jdbc.idletimeout}</value>
-		</property>
-		<property name="connectionTestQuery">
-			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
-		</property>
-		<property name="maxLifetime">
-			<value>${ranger.jpa.jdbc.maxlifetime}</value>
-		</property>
-		<property name="connectionTimeout">
-			<value>${ranger.jpa.jdbc.connectiontimeout}</value>
-		</property>
+		<property name="driverClassName" value="${ranger.jpa.jdbc.driver}" />
+		<property name="jdbcUrl" value="${ranger.jpa.jdbc.url}" />
+		<property name="username" value="${ranger.jpa.jdbc.user}" />
+		<property name="password" value="${ranger.jpa.jdbc.password}" />
+		<property name="maximumPoolSize" value="${ranger.jpa.jdbc.maxpoolsize}" />
+		<property name="minimumIdle" value="${ranger.jpa.jdbc.minpoolsize}" />
+		<property name="idleTimeout" value="${ranger.jpa.jdbc.idletimeout}" />
+		<property name="connectionTestQuery" value="${ranger.jpa.jdbc.preferredtestquery}" />
+		<property name="maxLifetime" value="${ranger.jpa.jdbc.maxlifetime}" />
+		<property name="connectionTimeout" value="${ranger.jpa.jdbc.connectiontimeout}" />
 	</bean>
 
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
@@ -144,5 +124,5 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			</list>
 		</property>
 	</bean>
-	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate"></bean>
+	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate" />
 </beans>

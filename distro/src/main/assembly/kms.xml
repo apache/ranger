@@ -42,7 +42,7 @@
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.persistence:javax.persistence</include>
+                    <include>org.eclipse.persistence:jakarta.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
                     <include>com.codahale.metrics:metrics-core</include>
                     <include>org.slf4j:jul-to-slf4j</include>
@@ -298,7 +298,7 @@
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                             <include>com.google.code.gson:gson</include>
                             <include>org.eclipse.persistence:eclipselink</include>
-                            <include>org.eclipse.persistence:javax.persistence</include>
+                            <include>org.eclipse.persistence:jakarta.persistence</include>
                             <include>commons-collections:commons-collections</include>
                             <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                             <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

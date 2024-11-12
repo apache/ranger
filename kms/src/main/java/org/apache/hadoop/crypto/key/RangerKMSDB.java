@@ -24,9 +24,9 @@ import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -43,11 +43,11 @@ public class RangerKMSDB {
     private static final String DB_USER         = "jpa.jdbc.user";
     private static final String DB_PASSWORD     = "jpa.jdbc.password";
 
-    private static final String JPA_DB_DIALECT  = "javax.persistence.jdbc.dialect";
-    private static final String JPA_DB_DRIVER   = "javax.persistence.jdbc.driver";
-    private static final String JPA_DB_URL      = "javax.persistence.jdbc.url";
-    private static final String JPA_DB_USER     = "javax.persistence.jdbc.user";
-    private static final String JPA_DB_PASSWORD = "javax.persistence.jdbc.password";
+    private static final String JPA_DB_DIALECT  = "jakarta.persistence.jdbc.dialect";
+    private static final String JPA_DB_DRIVER   = "jakarta.persistence.jdbc.driver";
+    private static final String JPA_DB_URL      = "jakarta.persistence.jdbc.url";
+    private static final String JPA_DB_USER     = "jakarta.persistence.jdbc.user";
+    private static final String JPA_DB_PASSWORD = "jakarta.persistence.jdbc.password";
 
     private static final String DB_SSL_ENABLED                 = "db.ssl.enabled";
     private static final String DB_SSL_REQUIRED                = "db.ssl.required";

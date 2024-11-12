@@ -112,7 +112,7 @@
         <curator.version>5.4.0</curator.version>
         <derby.version>10.14.2.0</derby.version>
         <dnsjava.version>2.1.7</dnsjava.version>
-        <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
+        <eclipse.jpa.version>3.0.4</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.15.0</enunciate.version>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>

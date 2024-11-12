@@ -20,12 +20,12 @@ package org.apache.ranger.kms.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 
 public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
     private static final Logger logger = LoggerFactory.getLogger(RangerKMSDao.class);
@@ -46,7 +46,7 @@ public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
 
     public List<XXRangerKeyStore> getAllKeys() {
         List<XXRangerKeyStore> ret = null;
-        EntityManager          em  = null;
+        EntityManager em  = null;
 
         try {
             em = getEntityManager();

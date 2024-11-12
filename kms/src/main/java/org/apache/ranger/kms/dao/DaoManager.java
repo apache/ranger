@@ -17,9 +17,9 @@
 
 package org.apache.ranger.kms.dao;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 
 public class DaoManager extends DaoManagerBase {
     private final ThreadLocal<EntityManager> entityManagers = new ThreadLocal<>();
