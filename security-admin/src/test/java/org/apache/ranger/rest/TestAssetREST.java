@@ -682,7 +682,7 @@ public class TestAssetREST {
 		Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME))
 				.thenReturn(xServiceDef);
 		Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
-		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request);
+		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
 		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
@@ -738,7 +738,7 @@ public class TestAssetREST {
 		Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME))
 				.thenReturn(xServiceDef);
 		Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
-		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request);
+		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
 		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);

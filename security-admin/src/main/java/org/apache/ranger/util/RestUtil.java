@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.util;
+package org.apache.ranger.util;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Enumeration;
 
 @Component
@@ -38,6 +43,7 @@ public class RestUtil {
 	public static final String TIMEOUT_ACTION = "timeout";
 	private static final String PROXY_RANGER_URL_PATH = "/ranger";
 	public static final String LOCAL_LOGIN_URL = "locallogin";
+	public static final String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
 
 	public static Integer getTimeOffset(HttpServletRequest request) {
 		Integer cookieVal = 0;
@@ -157,6 +163,22 @@ public class RestUtil {
 			return "";
 		} else {
 			return "?" + originalQueryString;
+		}
+	}
+
+	public static String convertToTimeZone(Date date, String timeZone) {
+		try {
+			Instant utcInstant = date.toInstant();
+
+			// Get the ZoneId from the request parameter
+			ZoneId zoneId = ZoneId.of(timeZone);
+			// Convert the UTC date to the specified timezone
+			ZonedDateTime zonedDateTime = utcInstant.atZone(zoneId);
+
+			return zonedDateTime.format(DateTimeFormatter.ofPattern(ZONED_EVENT_TIME_FORMAT));
+		} catch (Exception e) {
+			LOG.info("Exception occurred while converting to timeZone", e);
+			return null;
 		}
 	}
 }
