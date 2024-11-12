@@ -515,7 +515,7 @@ public class TestXUserREST {
 		testVXUserList.setVXUsers(vXUsersList);
 		
 		Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(testVXUserList);
-		VXUserList gotVXUserList=xUserRest.searchXUsers(request);
+		VXUserList gotVXUserList=xUserRest.searchXUsers(request, null, null);
 		
 		Mockito.verify(xUserMgr).searchXUsers(testSearchCriteria);
 		Mockito.verify(searchUtil).extractCommonCriterias((HttpServletRequest)Mockito.any() ,(List<SortField>)Mockito.any());
@@ -1929,7 +1929,7 @@ public class TestXUserREST {
 		Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		xUserRest.searchXUsers(request);
+		xUserRest.searchXUsers(request, null, null);
 	}
 
 	@SuppressWarnings({ "unchecked", "static-access" })
@@ -1979,7 +1979,7 @@ public class TestXUserREST {
 		Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
 		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
 		Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(expecteUserList);
-		VXUserList gotVXUserList=xUserRest.searchXUsers(request);
+		VXUserList gotVXUserList=xUserRest.searchXUsers(request, null, null);
 		
 		assertEquals(gotVXUserList.getList().size(), 1);
 		assertEquals(gotVXUserList.getList().get(0).getId(), expectedUser.getId());

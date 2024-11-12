@@ -495,7 +495,9 @@ public class ServiceMgr {
 						try {
 							URL jarPath = dirFile.toURI().toURL();
 
-							LOG.warn("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());
+							}
 	
 							files.add(jarPath);
 						} catch(Exception excp) {
@@ -507,7 +509,9 @@ public class ServiceMgr {
 				LOG.warn("getFilesInDirectory('" + dirPath + "'): error", excp);
 			}
 		} else {
-				LOG.warn("getFilesInDirectory('" + dirPath + "'): could not find directory in CLASSPATH");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getFilesInDirectory('" + dirPath + "'): could not find directory in CLASSPATH");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

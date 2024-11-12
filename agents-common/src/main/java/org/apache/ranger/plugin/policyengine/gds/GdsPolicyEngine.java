@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -92,23 +93,23 @@ public class GdsPolicyEngine {
                 RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
             }
 
-            Collection<GdsDataShareEvaluator> dataShares = getDataShareEvaluators(request);
+            Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources = getDataShareResources(request);
 
-            if (!dataShares.isEmpty()) {
-                ret = new GdsAccessResult();
+            if (!dshResources.isEmpty()) {
+                Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval = new TreeMap<>(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR);
 
-                Set<Long> datasetIds = new HashSet<>();
+                dshResources.keySet().forEach(e -> e.collectDatasets(request, datasetsToEval));
 
-                dataShares.forEach(e -> e.collectDatasets(request, ret, datasetIds));
+                if (!datasetsToEval.isEmpty()) {
+                    ret = new GdsAccessResult();
 
-                if (!datasetIds.isEmpty()) {
-                    Set<Long> projectIds = new HashSet<>();
+                    Set<GdsProjectEvaluator> projectsToEval = new TreeSet<>(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR);
 
-                    evaluateDatasetPolicies(datasetIds, request, ret, projectIds);
+                    evaluateDatasetPolicies(datasetsToEval.keySet(), request, ret, projectsToEval);
 
-                    if (!projectIds.isEmpty()) {
-                        evaluateProjectPolicies(projectIds, request, ret);
-                    }
+                    evaluateProjectPolicies(projectsToEval, request, ret);
+                } else {
+                    ret = null;
                 }
             } else {
                 ret = null;
@@ -128,7 +129,7 @@ public class GdsPolicyEngine {
     public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
         RangerResourceACLs ret = new RangerResourceACLs();
 
-        getDataShareEvaluators(request).forEach(e -> e.getResourceACLs(request, ret));
+        getDataShareResources(request).keySet().forEach(e -> e.getResourceACLs(request, ret));
 
         ret.finalizeAcls();
 
@@ -336,10 +337,10 @@ public class GdsPolicyEngine {
         gdsServiceDef.getAccessTypes().addAll(serviceDefHelper.getServiceDef().getAccessTypes());
     }
 
-    private Collection<GdsDataShareEvaluator> getDataShareEvaluators(RangerAccessRequest request) {
-        LOG.debug("==> RangerGdsPolicyEngine.getDataShareEvaluators({})", request);
+    private Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> getDataShareResources(RangerAccessRequest request) {
+        LOG.debug("==> RangerGdsPolicyEngine.getDataShareResources({})", request);
 
-        final Collection<GdsDataShareEvaluator> ret;
+        final Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> ret;
 
         if (!dataShares.isEmpty()) {
             Set<String> zoneNames = RangerAccessRequestUtil.getResourceZoneNamesFromContext(request.getContext());
@@ -347,29 +348,29 @@ public class GdsPolicyEngine {
             if (zoneNames == null || zoneNames.isEmpty()) {
                 zoneNames = Collections.singleton(StringUtils.EMPTY); // unzoned
             } else if (zoneNames.size() > 1 && !request.isAccessTypeAny()) {
-                LOG.warn("RangerGdsPolicyEngine.getDataShareEvaluators(): resource matches multiple zones and accessType is not ANY - ignored. resource={}, zones={}", request.getResource(), zoneNames);
+                LOG.warn("RangerGdsPolicyEngine.getDataShareResources(): resource matches multiple zones and accessType is not ANY - ignored. resource={}, zones={}", request.getResource(), zoneNames);
 
                 zoneNames = Collections.emptySet();
             }
 
-            ret = new TreeSet<>(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
+            ret = new TreeMap<>(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR);
 
-            zoneNames.stream().map(zoneResources::get).filter(Objects::nonNull).forEach(zr -> zr.collectMatchingDataShares(request, ret));
+            zoneNames.stream().map(zoneResources::get).filter(Objects::nonNull).forEach(zr -> zr.collectDataShareResources(request, ret));
         } else {
-            ret = Collections.emptyList();
+            ret = Collections.emptyMap();
         }
 
-        LOG.debug("<== RangerGdsPolicyEngine.getDataShareEvaluators({}): {}", request, ret);
+        LOG.debug("<== RangerGdsPolicyEngine.getDataShareResources({}): {}", request, ret);
 
         return ret;
     }
 
-    private void evaluateDatasetPolicies(Set<Long> datasetIds, RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
-        datasetIds.stream().map(datasets::get).filter(Objects::nonNull).sorted(GdsDatasetEvaluator.EVAL_ORDER_COMPARATOR).forEach(e -> e.evaluate(request, result, projectIds));
+    private void evaluateDatasetPolicies(Set<GdsDatasetEvaluator> datasets, RangerAccessRequest request, GdsAccessResult result, Set<GdsProjectEvaluator> projectsToEval) {
+        datasets.forEach(e -> e.evaluate(request, result, projectsToEval));
     }
 
-    private void evaluateProjectPolicies(Set<Long> projectIds, RangerAccessRequest request, GdsAccessResult result) {
-        projectIds.stream().map(projects::get).filter(Objects::nonNull).sorted(GdsProjectEvaluator.EVAL_ORDER_COMPARATOR).forEach(e -> e.evaluate(request, result));
+    private void evaluateProjectPolicies(Set<GdsProjectEvaluator> projects, RangerAccessRequest request, GdsAccessResult result) {
+        projects.forEach(e -> e.evaluate(request, result));
     }
 
     private GdsDatasetEvaluator getDatasetEvaluator(String dsName) {
@@ -417,11 +418,23 @@ public class GdsPolicyEngine {
 
         public String getZoneName() { return zoneName; }
 
-        public void collectMatchingDataShares(RangerAccessRequest request, Collection<GdsDataShareEvaluator> dshEvaluators) {
-            Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
+        public void collectDataShareResources(RangerAccessRequest request, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
+            Collection<GdsSharedResourceEvaluator> resources = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
 
-            if (evaluators != null) {
-                evaluators.stream().filter(e -> e.isAllowed(request)).map(GdsSharedResourceEvaluator::getDataShareId).distinct().map(dataShares::get).filter(Objects::nonNull).forEach(dshEvaluators::add);
+            if (resources != null) {
+                for (GdsSharedResourceEvaluator resource : resources) {
+                    if (!resource.isAllowed(request)) {
+                        continue;
+                    }
+
+                    GdsDataShareEvaluator dataShare = dataShares.get(resource.getDataShareId());
+
+                    if (dataShare == null) {
+                        continue;
+                    }
+
+                    dshResources.computeIfAbsent(dataShare, l -> new TreeSet<>(GdsSharedResourceEvaluator.EVAL_ORDER_COMPARATOR)).add(resource);
+                }
             }
         }
 

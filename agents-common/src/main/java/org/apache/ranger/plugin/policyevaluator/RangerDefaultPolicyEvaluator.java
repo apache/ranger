@@ -220,19 +220,24 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
 
 				if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
-					RangerPolicyResourceMatcher.MatchType matchType;
+					final RangerPolicyResourceMatcher.MatchType matchType;
 
-					if (RangerTagAccessRequest.class.isInstance(request)) {
+					if (request instanceof RangerTagAccessRequest) {
 						matchType = ((RangerTagAccessRequest) request).getMatchType();
-						if (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
-							matchType = RangerPolicyResourceMatcher.MatchType.SELF;
-						}
 					} else {
 						matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
 					}
 
-					final boolean isMatchedResource = isMatchForResourceMatchingScope(request.getResourceMatchingScope(), matchType, request.isAccessTypeAny());
-					if ( isMatchedResource ) {
+					final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
+					final boolean                                   isMatched;
+
+					if (request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS) {
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+					} else {
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+					}
+
+					if (isMatched) {
 						//Evaluate Policy Level Custom Conditions, if any and allowed then go ahead for policyItem level evaluation
 						if (matchPolicyCustomConditions(request)) {
 							if (!result.getIsAuditedDetermined()) {
@@ -540,13 +545,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 		} else {
 			if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
-				if (matchType != RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
-					result.setIsAllowed(true);
-					result.setPolicyPriority(getPolicyPriority());
-					result.setPolicyId(getPolicyId());
-					result.setReason(reason);
-					result.setPolicyVersion(getPolicy().getVersion());
-				}
+				result.setIsAllowed(true);
+				result.setPolicyPriority(getPolicyPriority());
+				result.setPolicyId(getPolicyId());
+				result.setReason(reason);
+				result.setPolicyVersion(getPolicy().getVersion());
 			}
 		}
 		if (LOG.isDebugEnabled()) {
@@ -1501,33 +1504,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		customConditionsCount += ret.size();
 
-		return ret;
-	}
-
-	private static boolean isMatchForResourceMatchingScope(final RangerAccessRequest.ResourceMatchingScope scope, final RangerPolicyResourceMatcher.MatchType matchType, boolean isAnyMatch) {
-		boolean ret = false;
-		if (isAnyMatch){
-			ret = matchType !=  RangerPolicyResourceMatcher.MatchType.NONE;
-		}
-		else if (scope!=null) {
-				switch (scope) {
-						case SELF_OR_DESCENDANTS: {
-							ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-							break;
-						}
-						case SELF_AND_ALL_DESCENDANTS: {
-							ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-							break;
-						}
-						default: {
-							ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
-							break;
-						}
-				}
-		}
-		else {
-			ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
-		}
 		return ret;
 	}
 }

@@ -699,7 +699,7 @@ public class RangerSearchUtil extends SearchUtil {
 	 * @param paramName
 	 * @return
 	 */
-	String[] getParamMultiValues(HttpServletRequest request, String paramName) {
+	public String[] getParamMultiValues(HttpServletRequest request, String paramName) {
 		String[] values = request.getParameterValues(paramName);
 
 		if (values == null || values.length == 0) {
