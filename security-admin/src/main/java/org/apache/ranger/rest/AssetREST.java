@@ -19,6 +19,7 @@
 
  package org.apache.ranger.rest;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +36,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -62,6 +66,7 @@ import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.RangerTrxLogV2Service;
+import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +76,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.apache.ranger.util.RestUtil.convertToTimeZone;
 
 @Path("assets")
 @Component
@@ -600,7 +607,7 @@ public class AssetREST {
 	@Path("/accessAudit")
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_ACCESS_LOGS + "\")")
-	public VXAccessAuditList getAccessLogs(@Context HttpServletRequest request){
+	public VXAccessAuditList getAccessLogs(@Context HttpServletRequest request, @QueryParam("timeZone") String timeZone){
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xAccessAuditService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "accessType",
@@ -654,7 +661,22 @@ public class AssetREST {
 		else if (xxServiceDef != null) {
 			searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
 		}
-		return assetMgr.getAccessLogs(searchCriteria);
+		VXAccessAuditList vxAccessAuditList = assetMgr.getAccessLogs(searchCriteria);
+
+		if (timeZone != null && !StringUtils.isBlank(timeZone)) {
+			vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> {
+				String zonedEventTime = convertToTimeZone(vxAccessAudit.getEventTime(), timeZone);
+				if (zonedEventTime == null || zonedEventTime.isEmpty()) {
+					throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Passed timeZone value is invalid", true);
+				}
+				vxAccessAudit.setZonedEventTime(zonedEventTime);
+			});
+		} else {
+			vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> {
+				vxAccessAudit.setZonedEventTime(new SimpleDateFormat(RestUtil.ZONED_EVENT_TIME_FORMAT).format(vxAccessAudit.getEventTime()));
+			});
+		}
+		return vxAccessAuditList;
 	}
 	
 	@POST
