@@ -47,6 +47,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -150,15 +152,23 @@ public class EmbeddedServer {
 			ssl.setPort(sslPort);
 			ssl.setSecure(true);
 			ssl.setScheme("https");
-			ssl.setAttribute("SSLEnabled", "true");
-			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
-			ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
-			ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+
+//			ssl.setAttribute("SSLEnabled", "true");
+//			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
+//			ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
+//			ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+			SSLHostConfig sslHostConfig = new SSLHostConfig();
+			sslHostConfig.setProtocols(EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
+			sslHostConfig.setTruststoreType(EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+
 			String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
 			if("false".equalsIgnoreCase(clientAuth)){
 				clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.client.auth", "want");
 			}
-			ssl.setAttribute("clientAuth",clientAuth);
+
+//			ssl.setAttribute("clientAuth",clientAuth);
+			sslHostConfig.setCertificateVerification(clientAuth);
+
 			String providerPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
 			String keyAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
 			String keystorePass=null;
@@ -168,16 +178,24 @@ public class EmbeddedServer {
 					keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
 				}
 			}
-			ssl.setAttribute("keyAlias", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin"));
-			ssl.setAttribute("keystorePass", keystorePass);
-			ssl.setAttribute("keystoreFile", getKeystoreFile());
+
+//			ssl.setAttribute("keyAlias", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin"));
+//			ssl.setAttribute("keystorePass", keystorePass);
+//			ssl.setAttribute("keystoreFile", getKeystoreFile());
+			SSLHostConfigCertificate certificate = new SSLHostConfigCertificate(sslHostConfig, SSLHostConfigCertificate.Type.RSA);
+			certificate.setCertificateKeystoreFile(getKeystoreFile());
+			certificate.setCertificateKeystorePassword(keystorePass);
+			certificate.setCertificateKeyAlias(EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin"));
+			sslHostConfig.addCertificate(certificate);
+
+			ssl.addSslHostConfig(sslHostConfig);
 
 			String defaultEnabledProtocols = "TLSv1.2";
 			String enabledProtocols = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
-			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
+//			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 			String ciphers = EmbeddedServerUtil.getConfig("ranger.tomcat.ciphers");
 			if (StringUtils.isNotBlank(ciphers)) {
-				ssl.setAttribute("ciphers", ciphers);
+				sslHostConfig.setCiphers(EmbeddedServerUtil.getConfig("ranger.tomcat.ciphers"));
 			}
 			server.getService().addConnector(ssl);
 
@@ -409,7 +427,7 @@ public class EmbeddedServer {
 		server.getConnector().setParseBodyMethods(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.methods", "POST"));
 		server.getConnector().setURIEncoding(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
 		server.getConnector().setXpoweredBy(false);
-		server.getConnector().setAttribute("server", "Apache Ranger");
+		server.getConnector().setProperty("server", "Apache Ranger");
 		server.getConnector().setProperty("sendReasonPhrase",EmbeddedServerUtil.getConfig("ranger.service.http.connector.property.sendReasonPhrase", "true"));
 		Iterator<Object> iterator = EmbeddedServerUtil.getRangerConfigProperties().keySet().iterator();
 		String key = null;
