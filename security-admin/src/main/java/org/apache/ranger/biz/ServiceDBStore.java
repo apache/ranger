@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,6 +43,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletOutputStream;
@@ -50,6 +52,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -296,7 +299,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RangerPolicyService policyService;
 
 	@Autowired
-        RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
+	RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
 
 	@Autowired
 	XUserService xUserService;
@@ -370,7 +373,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private ServicePredicateUtil predicateUtil = null;
 	private RangerAdminConfig    config = null;
-
 
 	@Override
 	public void init() throws Exception {
@@ -2672,6 +2674,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getPoliciesWithMetaAttributes(List<RangerPolicy> policiesList) {
+		if (CollectionUtils.isNotEmpty(policiesList)) {
+			List<RangerPolicy> policies = new ArrayList<>();
+			for (RangerPolicy policy : policiesList) {
+				RangerPolicy policyCopy = (RangerPolicy) SerializationUtils.clone(policy);
+				policies.add(policyCopy);
+			}
+
+			List<Object[]> policytimeMetaDataList = daoMgr.getXXPolicy().getMetaAttributesForPolicies(policies.stream().map(RangerPolicy::getId).collect(Collectors.toList()));
+			if (CollectionUtils.isNotEmpty(policytimeMetaDataList)) {
+				Map<Long, List<Date>> policyMap = policytimeMetaDataList.stream()
+						.filter(row -> row != null && row.length == 3 && row[0] != null && row[1] != null && row[2] != null)
+						.collect(Collectors.toMap(row -> (Long) row[0], row-> Arrays.asList((Date) row[1], (Date) row[2])));
+
+				for (RangerPolicy policy : policies) {
+					List<Date> timeMetaData = policyMap.get(policy.getId());
+					if (timeMetaData != null && timeMetaData.size() == 2) {
+						policy.setCreateTime(timeMetaData.get(0));
+						policy.setUpdateTime(timeMetaData.get(1));
+					}
+				}
+			}
+			return policies;
+		}
+		return policiesList;
 	}
 
 	private List<RangerPolicy> getServicePolicies(XXService service, SearchFilter filter) throws Exception {

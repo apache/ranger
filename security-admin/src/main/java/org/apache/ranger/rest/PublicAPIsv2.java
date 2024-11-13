@@ -549,10 +549,13 @@ public class PublicAPIsv2 {
 
 		ret = serviceREST.getPolicies(request).getPolicies();
 
+		boolean includeMetaAttributes = Boolean.parseBoolean(request.getParameter("includeMetaAttributes"));
+		if (includeMetaAttributes) {
+			ret = serviceREST.getPoliciesWithMetaAttributes(ret);
+		}
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.getPolicies(Request: " + request.getQueryString() + " Result Size: "  + ret.size() );
 		}
-
 		return ret;
 	}
 

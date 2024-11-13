@@ -3773,6 +3773,10 @@ public class ServiceREST {
 		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, zoneStore,roleDBStore, defaultAdminOptions);
 	}
 
+	public List<RangerPolicy> getPoliciesWithMetaAttributes(List<RangerPolicy> policies) {
+		return svcStore.getPoliciesWithMetaAttributes(policies);
+	}
+
 	@GET
 	@Path("/checksso")
 	@Produces(MediaType.TEXT_PLAIN)
