@@ -76,6 +76,7 @@ public class RangerBasePlugin {
 	private final List<RangerChainedPlugin>   chainedPlugins;
 	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
+	private final RangerPluginAnalytics 			pluginAnalytics;
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -87,6 +88,7 @@ public class RangerBasePlugin {
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig) {
+		this.pluginAnalytics = new RangerPluginAnalytics();
 		this.pluginConfig  = pluginConfig;
 		this.pluginContext = new RangerPluginContext(pluginConfig);
 
@@ -274,6 +276,7 @@ public class RangerBasePlugin {
 		for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 			chainedPlugin.init();
 		}
+		pluginAnalytics.startPluginAnalytics();
 	}
 
 	public long getPoliciesVersion() {
@@ -507,6 +510,7 @@ public class RangerBasePlugin {
 		if (policyEngine != null) {
 			((RangerPolicyEngineImpl) policyEngine).releaseResources(true);
 		}
+		pluginAnalytics.stopPluginAnalytics();
 	}
 
 	public void setResultProcessor(RangerAccessResultProcessor resultProcessor) {
@@ -526,6 +530,7 @@ public class RangerBasePlugin {
 	}
 
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		pluginAnalytics.addIsAccessAllowedCount();
 		RangerAccessResult ret          = null;
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
@@ -571,6 +576,7 @@ public class RangerBasePlugin {
 	}
 
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
+		pluginAnalytics.addIsAccessAllowedCount();
 		Collection<RangerAccessResult> ret          = null;
 		RangerPolicyEngine             policyEngine = this.policyEngine;
 
