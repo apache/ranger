@@ -1825,7 +1825,7 @@ public class GdsREST {
             RangerDataShareInDataset rangerDataShareInDataset = new RangerDataShareInDataset();
             rangerDataShareInDataset.setDataShareId(rangerDataShare.getId());
             rangerDataShareInDataset.setDatasetId(rangerDataset.getId());
-            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.ACTIVE);
+            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.REQUESTED);
             rangerDataShareInDatasets.add(rangerDataShareInDataset);
             addDataSharesInDataset(rangerDataset.getId(), rangerDataShareInDatasets);
             ret = rangerDataShare.getId();
