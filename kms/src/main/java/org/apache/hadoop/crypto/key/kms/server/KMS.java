@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,8 @@ public class KMS {
 
   private static final String KEY_NAME_VALIDATION = "[a-z,A-Z,0-9](?!.*--)(?!.*__)(?!.*-_)(?!.*_-)[\\w\\-\\_]*";
   private static final int    MAX_NUM_PER_BATCH   = 10000;
+
+  private final static String GENERATE_DEK_PATH_CONST = "_dek";
 
   public enum KMSOp {
     CREATE_KEY, DELETE_KEY, ROLL_NEW_VERSION, INVALIDATE_CACHE,
@@ -538,6 +541,58 @@ public class KMS {
         LOG.debug("<== getKeyVersion({})", versionName);
       }
     }
+  }
+  @GET
+  @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + GENERATE_DEK_PATH_CONST)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response generateDataKey(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception{
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("==> generateDataKey(name={}", name);
+    }
+
+    Stopwatch sw = Stopwatch.createStarted();
+
+    try {
+      UserGroupInformation user = HttpUserGroupInformation.get();
+      checkNotEmpty(name, "name");
+
+      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT);
+      assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name,request.getRemoteAddr());
+
+      EncryptedKeyVersion encryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> provider.generateEncryptedKey(name));
+      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
+      kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "generateDataKey execution");
+      sw.reset();
+      sw.start();
+
+      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT);
+      assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, name, request.getRemoteAddr());
+
+      KeyVersion retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
+        KMSEncryptedKeyVersion ekv = new KMSEncryptedKeyVersion(encryptedKeyVersion.getEncryptionKeyName(), encryptedKeyVersion.getEncryptionKeyVersionName(),
+            encryptedKeyVersion.getEncryptedKeyIv(), KeyProviderCryptoExtension.EEK, encryptedKeyVersion.getEncryptedKeyVersion().getMaterial());
+
+        return provider.decryptEncryptedKey(ekv);
+      });
+
+      kmsAudit.ok(user, KMSOp.DECRYPT_EEK, name, "generateDataKey execution");
+      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
+
+      Map<String,Object> response = new HashMap<>();
+      response.put("edek", KMSUtil.toJSON(encryptedKeyVersion));
+      response.put("dek", KMSUtil.toJSON(retKeyVersion));
+
+      return Response.ok().type(MediaType.APPLICATION_JSON).entity(response).build();
+    } catch(Exception e){
+      LOG.error("Exception in generateDataKey:", e);
+      throw new IOException(e);
+    } finally {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("<== generateDataKey(name={}", name);
+      }
+    }
+
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
