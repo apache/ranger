@@ -284,8 +284,8 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
 	@Test
-	public void testPolicyEngine_hbase_ResourceMatchingScope_equals_SELF_AND_ALL_DESCENDANTS() {
-		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_selfandalldescendants.json" };
+	public void testPolicyEngine_hbase_checkForDescendantDenial() {
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_checkForDescendantDenial.json" };
 
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
