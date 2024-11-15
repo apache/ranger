@@ -680,6 +680,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
 			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
+			if (request.getCheckForDescendantDenial()) {
+				Set<Set<String>> accessGroups = new HashSet<>();
+				for (String access : allRequestedAccesses) {
+					Set<String> group = new HashSet<>();
+					group.add(access);
+					accessGroups.add(group);
+				}
+				RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, accessGroups);
+			}
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);

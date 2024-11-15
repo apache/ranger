@@ -536,7 +536,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 		if (!isAllowed) {
 			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT ||
-					(result.getAccessRequest()!=null && result.getAccessRequest().getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS)) {
+					result.getAccessRequest().getCheckForDescendantDenial()) {
 				result.setIsAllowed(false);
 				result.setPolicyPriority(getPolicyPriority());
 				result.setPolicyId(getPolicyId());

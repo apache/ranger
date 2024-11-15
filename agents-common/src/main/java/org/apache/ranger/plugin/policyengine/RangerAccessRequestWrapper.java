@@ -104,5 +104,7 @@ public class RangerAccessRequestWrapper implements RangerAccessRequest {
     @Override
     public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return request.getResourceElementMatchingScopes(); }
 
+    @Override
+    public boolean getCheckForDescendantDenial() { return request.getCheckForDescendantDenial();}
 }
 

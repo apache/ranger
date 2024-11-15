@@ -60,6 +60,8 @@ public class AuthorizationSession {
 	boolean _superUser = false; // is this session for a super user?
 	private RangerAccessRequest.ResourceMatchingScope _resourceMatchingScope = RangerAccessRequest.ResourceMatchingScope.SELF;
 
+	private boolean _checkForDescendantDenial = false;
+
 	// internal state per-authorization
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
@@ -190,6 +192,7 @@ public class AuthorizationSession {
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
 		request.setAccessTime(new Date());
+		request.setCheckForDescendantDenial(_checkForDescendantDenial);
 		return request;
 	}
 
@@ -380,5 +383,10 @@ public class AuthorizationSession {
 	}
 	public boolean getPropertyIsColumnAuthOptimizationEnabled() {
 		return _authorizer.getPropertyIsColumnAuthOptimizationEnabled();
+	}
+
+	AuthorizationSession checkForDescendantDenial(boolean doCheckForDescendant){
+		_checkForDescendantDenial = doCheckForDescendant;
+		return this;
 	}
 }

@@ -463,7 +463,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					LOG.debug("evaluateAccess: family level access for [" + family + "] is evaluated to " + isColumnFamilyAuthorized + ". Checking if [" + family + "] descendants have access.");
 				}
 				//buildRequest again since resourceMatchingScope changed
-				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS)
+				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
+						.checkForDescendantDenial(true)
 						.buildRequest()
 						.authorize();
 				auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
@@ -511,6 +512,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				}
 				// Restore the headMatch setting
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
+				session.checkForDescendantDenial(false);
 			} else {
 				boolean isColumnAuthShortCircuitingEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
 				if(LOG.isDebugEnabled()) {
@@ -519,13 +521,20 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					}
 				if (isColumnAuthShortCircuitingEnabled) {
 						session.column(null)
-								.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_AND_ALL_DESCENDANTS)
 								.buildRequest()
 								.authorize();
-						boolean isColumnFamilyAndDescendantsAuthorized = session.isAuthorized();
+						boolean isColumnFamilyAuthorized = session.isAuthorized();
+						session.column(null)
+								.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
+								.checkForDescendantDenial(true)
+								.buildRequest()
+								.authorize();
+
+						boolean isColumnFamilyAndDescendantsAuthorized = session.isAuthorized() && isColumnFamilyAuthorized;
 						AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
 						// reset ResourceMatchingScope to SELF
 						session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
+						session.checkForDescendantDenial(false);
 						if (LOG.isDebugEnabled()) {
 								LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, isColumnFamilyAndDescendantsAuthorized={}",isColumnFamilyAndDescendantsAuthorized);
 						}

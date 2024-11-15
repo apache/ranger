@@ -53,6 +53,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private Map<String, Object>  context;
 	private String				 clusterName;
 	private String				 clusterType;
+	private Boolean				 checkForDescendantDenial;
 
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
@@ -80,6 +81,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setSessionId(null);
 		setContext(null);
 		setClusterName(null);
+		setCheckForDescendantDenial(null);
 	}
 
 	public RangerAccessRequestImpl(RangerAccessRequest request) {
@@ -101,6 +103,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
 		setClientIPAddress(request.getClientIPAddress());
 		setClusterType(request.getClusterType());
+		setCheckForDescendantDenial(request.getCheckForDescendantDenial());
 	}
 
 	@Override
@@ -112,6 +115,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public String getAccessType() {
 		return accessType;
 	}
+
+	@Override
+	public boolean getCheckForDescendantDenial() { return checkForDescendantDenial != null && checkForDescendantDenial;}
 
 	@Override
 	public String getUser() {
@@ -203,6 +209,8 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		isAccessTypeAny            = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
 		isAccessTypeDelegatedAdmin = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 	}
+
+	public void setCheckForDescendantDenial(Boolean checkForDescendantDenial) { this.checkForDescendantDenial = checkForDescendantDenial != null && checkForDescendantDenial;}
 
 	public void setUser(String user) {
 		this.user = user;
