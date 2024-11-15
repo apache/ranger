@@ -169,6 +169,7 @@ public enum ValidationErrorCode {
     GDS_DATASHARE_NAME_TOO_LONG(4130, "Invalid datashare name=[{0}]. Datashare name should not be longer than 512 characters"),
     GDS_PROJECT_NAME_TOO_LONG(4131, "Invalid project name=[{0}]. Project name should not be longer than 512 characters"),
     GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL(4132, "Resource value in SharedResource [{0}] is null"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE(4133, "Invalid resource: empty or no value provided for {0}"),
     ;
 
 

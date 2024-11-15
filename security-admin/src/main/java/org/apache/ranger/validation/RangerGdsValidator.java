@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.view.VXResponse;
@@ -306,7 +307,7 @@ public class RangerGdsValidator {
             } else if (MapUtils.isEmpty(resource.getResource())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
-                validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(resource, dataShare, result);
 
                 if (result.isSuccess()) {
                     existing = dataProvider.getSharedResourceId(resource.getDataShareId(), new RangerPolicyResourceSignature(resource));
@@ -340,7 +341,7 @@ public class RangerGdsValidator {
             } else if (MapUtils.isEmpty(resource.getResource())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
-                validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(resource, dataShare, result);
 
                 if (result.isSuccess()) {
                     boolean renamed = !StringUtils.equalsIgnoreCase(resource.getName(), existing.getName());
@@ -810,12 +811,29 @@ public class RangerGdsValidator {
         }
     }
 
-    private void validateSharedResourceCreateAndUpdate(RangerDataShare dataShare, ValidationResult result) {
+    private void validateSharedResourceCreateAndUpdate(RangerSharedResource resource, RangerDataShare dataShare, ValidationResult result) {
         if (!dataProvider.isAdminUser()) {
             validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
 
             if (!dataProvider.isServiceAdmin(dataShare.getService()) && !dataProvider.isZoneAdmin(dataShare.getZone())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_OR_ZONE_ADMIN, null, dataShare.getService(), dataShare.getZone()));
+            }
+        }
+        validatePolicyResourceValuesNotEmpty(resource.getResource(), result);
+    }
+
+    private void validatePolicyResourceValuesNotEmpty(Map<String, RangerPolicyResource> resourceMap, ValidationResult result) {
+        for (String resourceName : resourceMap.keySet()) {
+            List<String> resourceValues = resourceMap.get(resourceName).getValues();
+            if (CollectionUtils.isEmpty(resourceValues)) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE, null, resourceName));
+            } else {
+                for (String value : resourceValues) {
+                    if (StringUtils.isEmpty(value) || StringUtils.isBlank(value)) {
+                        result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE, null, resourceName));
+                        break;
+                    }
+                }
             }
         }
     }
