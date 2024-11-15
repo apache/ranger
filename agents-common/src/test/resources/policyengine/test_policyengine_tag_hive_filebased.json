@@ -241,7 +241,7 @@
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
-    {"name":"ALLOW 'select id from employee.personal;' for user1 using EXPIRES_ON tag",
+    {"name":"DENY 'select id from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"id"}},
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select id from employee.personal;' for user1"
