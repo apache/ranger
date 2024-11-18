@@ -1,0 +1,55 @@
+{
+  "serviceName":"hbasedev",
+
+  "serviceDef":{
+    "name":"hbase",
+    "id":2,
+    "resources":[
+      {"name":"table","level":1,"parent":"","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Table","description":"HBase Table"},
+      {"name":"column-family","level":2,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Column-Family","description":"HBase Column-Family"},
+      {"name":"column","level":3,"parent":"column-family","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Column","description":"HBase Column"}
+    ],
+    "accessTypes":[
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"create","label":"Create"},
+      {"name":"admin","label":"Admin","impliedGrants":["read","write","create"]}
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"table=finance; column-family=restricted, column=restricted_column","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"table":{"values":["finance"]},"column-family":{"values":["restricted_cf"]}, "column":{"values":["restricted_column"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+  ,
+    {"id":2,"name":"table=finance; column-family=restricted,column=*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"table":{"values":["finance"]},"column-family":{"values":["restricted_cf"]}, "column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+  ],
+
+  "tests":[
+    {"name":"TEST!!! DENY 'get' for restricted column family when isDescendantDenyIgnored=false",
+      "request":{
+        "resource":{"elements":{"table":"finance","column-family":"restricted_cf"}},
+        "resourceMatchingScope": "SELF_OR_DESCENDANTS","isDescendantDenyIgnored": "false",
+        "accessType":"read","user":"user1","requestData":"deny get as there is a restricted column. Expected behavior for scan"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":1}
+    },
+    {"name":"TEST!!! Allow 'get' for restricted column family when isDescendantDenyIgnored=true",
+      "request":{
+        "resource":{"elements":{"table":"finance","column-family":"restricted_cf"}},
+        "resourceMatchingScope": "SELF_OR_DESCENDANTS",
+        "accessType":"read","user":"user1","requestData":"allow get as restricted column policy not considered. Not expected behavior"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    }
+
+  ]
+}
