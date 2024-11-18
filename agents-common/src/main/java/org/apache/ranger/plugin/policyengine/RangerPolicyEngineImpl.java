@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.plugin.policyengine.PolicyEvaluatorForTag.MATCH_TYPE_COMPARATOR;
 
@@ -680,6 +681,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
 			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
+			if (!request.ignoreDescendantDeny()) {
+				Set<Set<String>> accessGroups = allRequestedAccesses.stream().map(Collections::singleton).collect(Collectors.toSet());
+				RangerAccessRequestUtil.setAllRequestedAccessTypeGroups(request, accessGroups);
+			}
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);

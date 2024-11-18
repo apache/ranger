@@ -539,7 +539,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			LOG.debug("==> RangerDefaultPolicyEvaluator.updateAccessResult(" + result + ", " + matchType +", " + isAllowed + ", " + reason + ", " + getPolicyId() + ")");
 		}
 		if (!isAllowed) {
-			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
+			if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT || !result.getAccessRequest().ignoreDescendantDeny()) {
 				result.setIsAllowed(false);
 				result.setPolicyPriority(getPolicyPriority());
 				result.setPolicyId(getPolicyId());
@@ -876,11 +876,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 							}
 						}
 					}
-					/* At least one access is allowed - this evaluator need not be checked for other accesses as the test below
+					/* At least one access is allowed or denied - this evaluator need not be checked for other accesses as the test below
 					 * implies that there is only one access group in the request
 					 */
 					if (oneRequest.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(oneRequest.getContext())) {
-						if (allowResult != null) {
+						if (oneRequest.ignoreDescendantDeny() && allowResult != null) {
+							break;
+						} else if (!oneRequest.ignoreDescendantDeny() && denyResult != null) {
 							break;
 						}
 					}
