@@ -1826,6 +1826,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void prepareDatasetPolicy(RangerDataset dataset, RangerPolicy policy) {
+        validator.validateCreateOrUpdate(policy);
         policy.setName("DATASET: " + dataset.getName() + GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
         policy.setDescription("Policy for dataset: " + dataset.getName());
         policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);

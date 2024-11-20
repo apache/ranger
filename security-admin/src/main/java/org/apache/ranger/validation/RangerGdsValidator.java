@@ -35,6 +35,8 @@ import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
@@ -688,6 +690,23 @@ public class RangerGdsValidator {
         LOG.debug("<== validateDelete(dipId={}, existing={})", dipId, existing);
     }
 
+    public void validateCreateOrUpdate(RangerPolicy policy) {
+        LOG.debug("==> validateCreateOrUpdate(policy={})", policy);
+        if (policy == null || CollectionUtils.isEmpty(policy.getPolicyItems())) {
+            return;
+        }
+
+        ValidationResult result   = new ValidationResult();
+        List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+
+        validatePolicyItems(policyItems, result);
+
+        if (!result.isSuccess()) {
+            result.throwRESTException();
+        }
+        LOG.debug("<== validateCreateOrUpdate(policy={})", policy);
+    }
+
     public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
         if (dataProvider.isAdminUser()) {
             return GdsPermission.ADMIN;
@@ -836,6 +855,43 @@ public class RangerGdsValidator {
                 }
             }
         }
+    }
+
+    private void validatePolicyItems(List<RangerPolicyItem> policyItems, ValidationResult result) {
+        if (CollectionUtils.isEmpty(policyItems)) {
+            return;
+        }
+
+        for (RangerPolicyItem policyItem : policyItems) {
+            if (policyItem == null) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM);
+                continue;
+            }
+
+            boolean hasNoPrincipals = CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles());
+            boolean hasInvalidUsers = policyItem.getUsers() != null && policyItem.getUsers().stream().anyMatch(StringUtils::isBlank);
+            boolean hasInvalidGroups = policyItem.getGroups() != null && policyItem.getGroups().stream().anyMatch(StringUtils::isBlank);
+            boolean hasInvalidRoles = policyItem.getRoles() != null && policyItem.getRoles().stream().anyMatch(StringUtils::isBlank);
+
+            if (hasNoPrincipals || hasInvalidUsers || hasInvalidGroups || hasInvalidRoles) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS);
+            }
+
+            if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null)) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS);
+                continue;
+            }
+
+            boolean hasInvalidAccesses = policyItem.getAccesses().stream().anyMatch(itemAccess -> StringUtils.isBlank(itemAccess.getType()));
+
+            if (hasInvalidAccesses) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS_TYPE);
+            }
+        }
+    }
+
+    private void addValidationFailure(ValidationResult result, ValidationErrorCode errorCode) {
+        result.addValidationFailure(new ValidationFailureDetails(errorCode, "policy items"));
     }
 
     private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {

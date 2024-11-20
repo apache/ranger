@@ -109,6 +109,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
     POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE(3056, "Values for the resource={0} contained a duplicate value={1}. Ensure all values for a resource are unique"),
     POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS_TYPE(4010, "policy items access object has empty or null values for type"),
 
     // SECURITY_ZONE Validations
     SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),
