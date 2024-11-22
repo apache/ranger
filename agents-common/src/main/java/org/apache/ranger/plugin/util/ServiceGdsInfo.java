@@ -20,9 +20,8 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
-import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -279,12 +278,12 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class DataShareInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long                        id;
-        private String                      name;
-        private String                      zoneName;
-        private String                      conditionExpr;
-        private Set<String>                 defaultAccessTypes;
-        private List<RangerTagDataMaskInfo> defaultTagMasks;
+        private Long                    id;
+        private String                  name;
+        private String                  zoneName;
+        private String                  conditionExpr;
+        private Set<String>             defaultAccessTypes;
+        private List<RangerGdsMaskInfo> defaultTagMasks;
 
         public DataShareInfo() {
         }
@@ -329,11 +328,11 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.defaultAccessTypes = defaultAccessTypes;
         }
 
-        public List<RangerTagDataMaskInfo> getDefaultTagMasks() {
+        public List<RangerGdsMaskInfo> getDefaultTagMasks() {
             return defaultTagMasks;
         }
 
-        public void setDefaultTagMasks(List<RangerTagDataMaskInfo> defaultTagMasks) {
+        public void setDefaultTagMasks(List<RangerGdsMaskInfo> defaultTagMasks) {
             this.defaultTagMasks = defaultTagMasks;
         }
 
@@ -360,7 +359,7 @@ public class ServiceGdsInfo implements java.io.Serializable {
 
             sb.append(", defaultTagMasks=[");
             if (defaultTagMasks != null) {
-                for (RangerTagDataMaskInfo defaultTagMask : defaultTagMasks) {
+                for (RangerGdsMaskInfo defaultTagMask : defaultTagMasks) {
                     defaultTagMask.toString(sb).append(", ");
                 }
             }
@@ -378,17 +377,17 @@ public class ServiceGdsInfo implements java.io.Serializable {
     public static class SharedResourceInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long                                      id;
-        private String                                    name;
-        private Long                                      dataShareId;
-        private Map<String, RangerPolicyResource>         resource;
-        private RangerPolicyResource                      subResource;
-        private String                                    subResourceType;
-        private String                                    conditionExpr;
-        private Set<String>                               accessTypes;
-        private RangerPolicyItemRowFilterInfo             rowFilter;
-        private Map<String, RangerPolicyItemDataMaskInfo> subResourceMasks;
-        private Set<String>                               profiles;
+        private Long                               id;
+        private String                             name;
+        private Long                               dataShareId;
+        private Map<String, RangerPolicyResource>  resource;
+        private RangerPolicyResource               subResource;
+        private String                             subResourceType;
+        private String                             conditionExpr;
+        private Set<String>                        accessTypes;
+        private RangerPolicyItemRowFilterInfo rowFilter;
+        private List<RangerGdsMaskInfo>       subResourceMasks;
+        private Set<String>                   profiles;
 
         public Long getId() {
             return id;
@@ -462,11 +461,11 @@ public class ServiceGdsInfo implements java.io.Serializable {
             this.rowFilter = rowFilter;
         }
 
-        public Map<String, RangerPolicyItemDataMaskInfo> getSubResourceMasks() {
+        public List<RangerGdsMaskInfo> getSubResourceMasks() {
             return subResourceMasks;
         }
 
-        public void setSubResourceMasks(Map<String, RangerPolicyItemDataMaskInfo> subResourceMasks) {
+        public void setSubResourceMasks(List<RangerGdsMaskInfo> subResourceMasks) {
             this.subResourceMasks = subResourceMasks;
         }
 
@@ -506,17 +505,13 @@ public class ServiceGdsInfo implements java.io.Serializable {
                 rowFilter.toString(sb);
             }
 
-            sb.append(", subResourceMasks={").append(subResourceMasks);
+            sb.append(", subResourceMasks=[");
             if (subResourceMasks != null) {
-                for (Map.Entry<String, RangerPolicyItemDataMaskInfo> entry : subResourceMasks.entrySet()) {
-                    String                        subResourceName = entry.getKey();
-                    RangerPolicyItemDataMaskInfo  subResourceMask = entry.getValue();
-
-                    sb.append(subResourceName).append(": ");
-                    subResourceMask.toString(sb).append(", ");
+                for (RangerGdsMaskInfo maskInfo : subResourceMasks) {
+                    maskInfo.toString(sb).append(' ');
                 }
             }
-            sb.append("}");
+            sb.append("]");
 
             sb.append(", profiles=[");
             if (profiles != null) {

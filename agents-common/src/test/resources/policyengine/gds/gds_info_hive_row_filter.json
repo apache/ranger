@@ -133,27 +133,27 @@
     {
       "id": 11, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "prospects" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 12, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "orders" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 21, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "invoices" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 22, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "payments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 31, "dataShareId": 3, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "shipping" ] }, "table": { "values": [ "shipments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 41, "dataShareId": 4, "conditionExpr": "", "accessTypes": [ "select" ],
