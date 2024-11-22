@@ -203,14 +203,14 @@ public class RangerGds {
     public static class RangerDataShare extends RangerGdsBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String                      name;
-        private RangerGdsObjectACL          acl;
-        private String                      service;
-        private String                      zone;
-        private String                      conditionExpr;
-        private Set<String>                 defaultAccessTypes;
-        private List<RangerTagDataMaskInfo> defaultTagMasks;
-        private String                      termsOfUse;
+        private String                  name;
+        private RangerGdsObjectACL      acl;
+        private String                  service;
+        private String                  zone;
+        private String                  conditionExpr;
+        private Set<String>             defaultAccessTypes;
+        private List<RangerGdsMaskInfo> defaultTagMasks;
+        private String                  termsOfUse;
 
         public RangerDataShare() { }
 
@@ -242,11 +242,11 @@ public class RangerGds {
             this.defaultAccessTypes = defaultAccessTypes;
         }
 
-        public List<RangerTagDataMaskInfo> getDefaultTagMasks() {
+        public List<RangerGdsMaskInfo> getDefaultTagMasks() {
             return defaultTagMasks;
         }
 
-        public void setDefaultTagMasks(List<RangerTagDataMaskInfo> defaultTagMasks) {
+        public void setDefaultTagMasks(List<RangerGdsMaskInfo> defaultTagMasks) {
             this.defaultTagMasks = defaultTagMasks;
         }
 
@@ -274,19 +274,24 @@ public class RangerGds {
         }
     }
 
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class RangerSharedResource extends RangerGdsBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String                                    name;
-        private Long                                      dataShareId;
-        private Map<String, RangerPolicyResource>         resource;
-        private RangerPolicyResource                      subResource;
-        private String                                    subResourceType;
-        private String                                    conditionExpr;
-        private Set<String>                               accessTypes;
-        private RangerPolicyItemRowFilterInfo             rowFilter;
-        private Map<String, RangerPolicyItemDataMaskInfo> subResourceMasks;
-        private Set<String>                               profiles;
+        private String                             name;
+        private Long                               dataShareId;
+        private Map<String, RangerPolicyResource>  resource;
+        private RangerPolicyResource               subResource;
+        private String                             subResourceType;
+        private String                             conditionExpr;
+        private Set<String>                        accessTypes;
+        private RangerPolicyItemRowFilterInfo      rowFilter;
+        private List<RangerGdsMaskInfo>            subResourceMasks;
+        private Set<String>                        profiles;
 
         public RangerSharedResource() { }
 
@@ -326,9 +331,9 @@ public class RangerGds {
 
         public void setRowFilter(RangerPolicyItemRowFilterInfo rowFilter) { this.rowFilter = rowFilter; }
 
-        public Map<String, RangerPolicyItemDataMaskInfo> getSubResourceMasks() { return subResourceMasks; }
+        public List<RangerGdsMaskInfo> getSubResourceMasks() { return subResourceMasks; }
 
-        public void setSubResourceMasks(Map<String, RangerPolicyItemDataMaskInfo> subResourceMasks) { this.subResourceMasks = subResourceMasks; }
+        public void setSubResourceMasks(List<RangerGdsMaskInfo> subResourceMasks) {this.subResourceMasks = subResourceMasks; }
 
         public Set<String> getProfiles() { return profiles; }
 
@@ -349,6 +354,49 @@ public class RangerGds {
               .append("rowFilterInfo={").append(rowFilter).append("} ")
               .append("subResourceMasks={").append(subResourceMasks).append("} ")
               .append("profiles={").append(profiles).append("} ")
+              .append("}");
+
+            return sb;
+        }
+    }
+
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerGdsMaskInfo implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private List<String>                 values;
+        private RangerPolicyItemDataMaskInfo maskInfo;
+
+        public List<String> getValues() {
+            return values;
+        }
+
+        public void setValues(List<String> values) {
+            this.values = values;
+        }
+
+        public RangerPolicyItemDataMaskInfo getMaskInfo() {
+            return maskInfo;
+        }
+
+        public void setMaskInfo(RangerPolicyItemDataMaskInfo maskInfo) {
+            this.maskInfo = maskInfo;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("RangerGdsMaskInfo={")
+              .append("values=").append(values).append(" ")
+              .append("maskInfo=").append(maskInfo)
               .append("}");
 
             return sb;
@@ -513,61 +561,6 @@ public class RangerGds {
             sb.append("users={").append(users).append("} ")
               .append("groups={").append(groups).append("} ")
               .append("roles={").append(roles).append("} ")
-              .append("}");
-
-            return sb;
-        }
-    }
-
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class RangerTagDataMaskInfo implements java.io.Serializable {
-        private static final long serialVersionUID = 1L;
-
-        private String                       tagName;
-        private String                       conditionExpr;
-        private RangerPolicyItemDataMaskInfo maskInfo;
-
-        public RangerTagDataMaskInfo() { }
-
-        public String getTagName() {
-            return tagName;
-        }
-
-        public void setTagName(String tagName) {
-            this.tagName = tagName;
-        }
-
-        public String getConditionExpr() {
-            return conditionExpr;
-        }
-
-        public void setConditionExpr(String conditionExpr) {
-            this.conditionExpr = conditionExpr;
-        }
-
-        public RangerPolicyItemDataMaskInfo getMaskInfo() {
-            return maskInfo;
-        }
-
-        public void setMaskInfo(RangerPolicyItemDataMaskInfo maskInfo) {
-            this.maskInfo = maskInfo;
-        }
-
-        @Override
-        public String toString() {
-            return toString(new StringBuilder()).toString();
-        }
-
-        public StringBuilder toString(StringBuilder sb) {
-            sb.append("RangerTagDataMaskInfo={");
-
-            sb.append("tagName={").append(tagName).append("} ")
-              .append("conditionExpr={").append(conditionExpr).append("} ")
-              .append("maskInfo={").append(maskInfo).append("} ")
               .append("}");
 
             return sb;
