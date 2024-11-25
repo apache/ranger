@@ -48,6 +48,9 @@ public class RangerAccessRequestWrapper implements RangerAccessRequest {
     public String getAccessType() { return accessType; }
 
     @Override
+    public boolean ignoreDescendantDeny() { return request.ignoreDescendantDeny(); }
+
+    @Override
     public boolean isAccessTypeAny() { return isAccessTypeAny; }
 
     @Override

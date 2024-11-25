@@ -54,6 +54,9 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	public boolean isAccessTypeAny() { return source.isAccessTypeAny(); }
 
 	@Override
+	public boolean ignoreDescendantDeny() { return source.ignoreDescendantDeny(); }
+
+	@Override
 	public boolean isAccessTypeDelegatedAdmin() { return source.isAccessTypeDelegatedAdmin(); }
 
 	@Override
