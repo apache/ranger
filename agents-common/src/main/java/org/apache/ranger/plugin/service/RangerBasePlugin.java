@@ -76,6 +76,7 @@ public class RangerBasePlugin {
 	private final List<RangerChainedPlugin>   chainedPlugins;
 	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
+	private       Map<String, String>         serviceConfigs;
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -308,7 +309,7 @@ public class RangerBasePlugin {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> setPolicies(" + policies + ")");
 		}
-
+		this.serviceConfigs = (policies != null && policies.getServiceConfig() != null) ? policies.getServiceConfig() : new HashMap<>();
 		if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
 			String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
 			String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
@@ -1239,6 +1240,10 @@ public class RangerBasePlugin {
 			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
 		}
 		return baseACLs;
+	}
+
+	public Map<String, String> getServiceConfigs() {
+		return serviceConfigs;
 	}
 
 	protected RangerPolicyEngine getPolicyEngine() {
