@@ -688,7 +688,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		final RangerAccessResult ret;
 
 		if (request.isAccessTypeAny()) {
-			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), getServiceDefHelper().getAllAccessTypes());
+			Set<String> allRequestedAccesses = getServiceDefHelper().getAllAccessTypes();
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses);
 			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
 			if (!request.ignoreDescendantDeny()) {
 				Set<Set<String>> accessGroups = allRequestedAccesses.stream().map(Collections::singleton).collect(Collectors.toSet());
