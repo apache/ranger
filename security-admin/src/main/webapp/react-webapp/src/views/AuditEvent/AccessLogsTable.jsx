@@ -181,11 +181,11 @@ export const AccessLogsTable = ({ data = {} }) => {
           </td>
         </tr>
         <tr>
-          <td className="text-nowrap">Access Enforcer</td>
+          <td>Access Enforcer</td>
           <td>{!isEmpty(aclEnforcer) ? aclEnforcer : "--"}</td>
         </tr>
         <tr>
-          <td className="text-nowrap">Agent Host Name </td>
+          <td>Agent Host Name </td>
           <td>{!isEmpty(agentHost) ? agentHost : "--"}</td>
         </tr>
         <tr>
