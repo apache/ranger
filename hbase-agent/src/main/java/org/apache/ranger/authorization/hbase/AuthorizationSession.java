@@ -64,6 +64,8 @@ public class AuthorizationSession {
 	boolean _superUser = false; // is this session for a super user?
 	private RangerAccessRequest.ResourceMatchingScope _resourceMatchingScope = RangerAccessRequest.ResourceMatchingScope.SELF;
 
+	private boolean _ignoreDescendantDeny = true;
+
 	// internal state per-authorization
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
@@ -195,7 +197,7 @@ public class AuthorizationSession {
 		request.setClientIPAddress(_remoteAddress);
 		request.setResourceMatchingScope(_resourceMatchingScope);
 		request.setAccessTime(new Date());
-		
+		request.setIgnoreDescendantDeny(_ignoreDescendantDeny);
 		_request = request;
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Built request: " + request.toString());
@@ -375,6 +377,10 @@ public class AuthorizationSession {
 
 	AuthorizationSession resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope scope) {
 		_resourceMatchingScope = scope;
+		return this;
+	}
+	AuthorizationSession ignoreDescendantDeny(boolean ignoreDescendantDeny) {
+		_ignoreDescendantDeny = ignoreDescendantDeny;
 		return this;
 	}
 }

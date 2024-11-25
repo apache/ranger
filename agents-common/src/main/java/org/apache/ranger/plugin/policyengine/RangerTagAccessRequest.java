@@ -61,6 +61,7 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		super.setForwardedAddresses(request.getForwardedAddresses());
 		super.setSessionId(request.getSessionId());
 		super.setResourceMatchingScope(request.getResourceMatchingScope());
+		super.setIgnoreDescendantDeny(request.ignoreDescendantDeny());
 	}
 	public RangerPolicyResourceMatcher.MatchType getMatchType() {
 		return matchType;
