@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-binding</artifactId>
-            <version>${jersey-core.version}</version>
+            <version>${jersey-media.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

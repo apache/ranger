@@ -48,7 +48,6 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.*;
 import jakarta.ws.rs.core.Cookie;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -61,6 +60,8 @@ import org.apache.ranger.authorization.utils.StringUtil;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.jackson.JacksonFeature;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,7 +228,7 @@ public class RangerRESTClient {
 			SSLContext     sslContext = getSSLContext(kmList, tmList);
 			ClientConfig   config     = new ClientConfig();
 
-			config.register(JacksonJsonProvider.class); // to handle List<> unmarshalling
+			config.register(JacksonFeature.class); // to handle List<> unmarshalling
 
 			HostnameVerifier hv = new HostnameVerifier() {
 				public boolean verify(String urlHostName, SSLSession session) {
@@ -241,7 +242,7 @@ public class RangerRESTClient {
 		if(client == null) {
 			ClientConfig config = new ClientConfig();
 
-			config.register(JacksonJsonProvider.class); // to handle List<> unmarshalling
+			config.register(JacksonFeature.class); // to handle List<> unmarshalling
 
 			client = ClientBuilder.newClient(config);
 		}

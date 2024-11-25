@@ -41,7 +41,14 @@
 						<unpack>false</unpack>
 						<includes>
 							<include>com.google.code.gson:gson</include>
+							<include>org.glassfish.jersey.core:jersey-client</include>
+							<include>org.glassfish.jersey.core:jersey-common</include>
+							<include>org.glassfish.jersey.core:jersey-hk2</include>
+							<include>org.glassfish.jersey.core:jersey-server</include>
+							<include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
 							<include>org.glassfish.jersey.media:jersey-media-json-binding</include>
+							<include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+							<include>org.glassfish.jaxb:jaxb-runtime</include>
 							<include>commons-cli:commons-cli</include>
 							<include>commons-collections:commons-collections</include>
 							<include>commons-lang:commons-lang</include>
@@ -74,15 +81,20 @@
 							<include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
 							<include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
 							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
-							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+<!--							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>-->
 							<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+							<include>com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:jar:${fasterxml.jackson.version}</include>
 							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 							<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 							<include>org.apache.commons:commons-lang3</include>
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
 							<include>org.slf4j:log4j-over-slf4j:jar:${${slf4j.version}}</include>
 							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                                                        <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+							<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+							<include>jakarta.annotation:jakarta.annotation-api:jar:${jakarta.annotation-api}</include>
+							<include>jakarta.inject:jakarta.inject-api:jar:${jakarta-inject.version}</include>
+							<include>jakarta.ws.rs:jakarta.ws.rs-api:jar:${jakarta.ws.version}</include>
+							<include>jakarta.xml.bind:jakarta.xml.bind-api:jar:${jakarta.xml.version}</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>
