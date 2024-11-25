@@ -32,6 +32,8 @@ public interface RangerAccessRequest {
 
 	boolean isAccessTypeAny();
 
+	default boolean ignoreDescendantDeny() { return true; }
+
 	boolean isAccessTypeDelegatedAdmin();
 
 	String getUser();

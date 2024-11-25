@@ -441,6 +441,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					LOG.debug("evaluateAccess: family level access for [" + family + "] is evaluated to " + isColumnFamilyAuthorized + ". Checking if [" + family + "] descendants have access.");
 				}
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
+						.ignoreDescendantDeny(false)
 						.buildRequest()
 						.authorize();
 				auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
@@ -488,6 +489,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				}
 				// Restore the headMatch setting
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
+				session.ignoreDescendantDeny(true);
 			} else {
 				LOG.debug("evaluateAccess: columns collection not empty.  Skipping Family level check, will do finer level access check.");
 				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter

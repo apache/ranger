@@ -50,13 +50,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String               action;
 	private String               requestData;
 	private String               sessionId;
-	private Map<String, Object>  context;
-	private String				 clusterName;
-	private String				 clusterType;
+	private Map<String, Object> context;
+	private String              clusterName;
+	private String              clusterType;
+	private Boolean             isDescendantDenyIgnored = true;
 
-	private boolean isAccessTypeAny;
-	private boolean isAccessTypeDelegatedAdmin;
-	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
+	private boolean                                   isAccessTypeAny;
+	private boolean                                   isAccessTypeDelegatedAdmin;
+	private ResourceMatchingScope                     resourceMatchingScope         = ResourceMatchingScope.SELF;
 	private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
 
 	public RangerAccessRequestImpl() {
@@ -80,6 +81,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setSessionId(null);
 		setContext(null);
 		setClusterName(null);
+		setIgnoreDescendantDeny(null);
 	}
 
 	public RangerAccessRequestImpl(RangerAccessRequest request) {
@@ -101,6 +103,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
 		setClientIPAddress(request.getClientIPAddress());
 		setClusterType(request.getClusterType());
+		setIgnoreDescendantDeny(request.ignoreDescendantDeny());
 	}
 
 	@Override
@@ -111,6 +114,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	@Override
 	public String getAccessType() {
 		return accessType;
+	}
+
+	@Override
+	public boolean ignoreDescendantDeny() {
+		return isDescendantDenyIgnored == null || isDescendantDenyIgnored;
 	}
 
 	@Override
@@ -134,7 +142,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public String getClientIPAddress() { return clientIPAddress;}
+	public String getClientIPAddress() {
+		return clientIPAddress;
+	}
 
 	@Override
 	public String getRemoteIPAddress() {
@@ -142,7 +152,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public List<String> getForwardedAddresses() { return forwardedAddresses; }
+	public List<String> getForwardedAddresses() {
+		return forwardedAddresses;
+	}
 
 	@Override
 	public String getClientType() {
@@ -175,7 +187,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return this.resourceElementMatchingScopes; }
+	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+		return this.resourceElementMatchingScopes;
+	}
 
 	@Override
 	public boolean isAccessTypeAny() {
@@ -202,6 +216,10 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.accessType            = accessType;
 		isAccessTypeAny            = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
 		isAccessTypeDelegatedAdmin = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
+	}
+
+	public void setIgnoreDescendantDeny(Boolean isDescendantDenyIgnored) {
+		this.isDescendantDenyIgnored = isDescendantDenyIgnored == null || isDescendantDenyIgnored;
 	}
 
 	public void setUser(String user) {
@@ -247,7 +265,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
 	}
-	
+
 	public String getClusterName() {
 		return clusterName;
 	}
@@ -289,7 +307,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		}
 	}
 
-	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
+	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[] trustedProxyAddresses) {
 		String ip = getRemoteIPAddress();
 		if (ip == null) {
 			ip = getClientIPAddress();
@@ -328,7 +346,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
-	public String toString( ) {
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
 		toString(sb);
@@ -344,16 +362,16 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("user={").append(user).append("} ");
 
 		sb.append("userGroups={");
-		if(userGroups != null) {
-			for(String userGroup : userGroups) {
+		if (userGroups != null) {
+			for (String userGroup : userGroups) {
 				sb.append(userGroup).append(" ");
 			}
 		}
 		sb.append("} ");
 
 		sb.append("userRoles={");
-		if(userRoles != null) {
-			for(String role : userRoles) {
+		if (userRoles != null) {
+			for (String role : userRoles) {
 				sb.append(role).append(" ");
 			}
 		}
@@ -373,8 +391,8 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("clusterType={").append(clusterType).append("} ");
 
 		sb.append("context={");
-		if(context != null) {
-			for(Map.Entry<String, Object> e : context.entrySet()) {
+		if (context != null) {
+			for (Map.Entry<String, Object> e : context.entrySet()) {
 				Object val = e.getValue();
 
 				if (!(val instanceof RangerAccessRequest)) { // to avoid recursive calls
@@ -388,6 +406,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 		return sb;
 	}
+
 	@Override
 	public RangerAccessRequest getReadOnlyCopy() {
 		return new RangerAccessRequestReadOnly(this);
