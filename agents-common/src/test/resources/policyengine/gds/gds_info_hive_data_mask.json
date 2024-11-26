@@ -133,27 +133,27 @@
     {
       "id": 11, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "prospects" ] } },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { "channel": { "dataMaskType": "MASK_NULL" } }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ { "values": [ "channel" ], "maskInfo": { "dataMaskType": "MASK_NULL" } } ]
     },
     {
       "id": 12, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "orders" ] } },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { "amount": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ { "values": [ "amount"], "maskInfo": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } } ]
     },
     {
       "id": 21, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "invoices" ] } },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { "amount": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ { "values": [ "amount" ], "maskInfo": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } } ]
     },
     {
       "id": 22, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "payments" ] } },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { "amount": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ { "values": [ "amount" ], "maskInfo": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } } ]
     },
     {
       "id": 31, "dataShareId": 3, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "shipping" ] }, "table": { "values": [ "shipments" ] } },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { "amount": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } }
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ { "values": [ "amount" ], "maskInfo": { "dataMaskType": "CUSTOM", "valueExpr": "-1" } } ]
     },
     {
       "id": 41, "dataShareId": 4, "conditionExpr": "", "accessTypes": [ "select" ],

@@ -31,10 +31,10 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
-import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
@@ -936,12 +936,12 @@ public class RangerGdsValidator {
         }
     }
 
-    private void validateMaskTypes(String serviceName, String fieldName, List<RangerTagDataMaskInfo> maskTypes, ValidationResult result) {
+    private void validateMaskTypes(String serviceName, String fieldName, List<RangerGdsMaskInfo> maskTypes, ValidationResult result) {
         if (maskTypes != null && !maskTypes.isEmpty()) {
             Set<String> validMaskTypes = dataProvider.getMaskTypes(serviceName);
 
-            for (RangerTagDataMaskInfo tagMaskInfo : maskTypes) {
-                RangerPolicyItemDataMaskInfo maskInfo = tagMaskInfo.getMaskInfo();
+            for (RangerGdsMaskInfo maskType : maskTypes) {
+                RangerPolicyItemDataMaskInfo maskInfo = maskType.getMaskInfo();
                 if (!validMaskTypes.contains(maskInfo.getDataMaskType())) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_MASK_TYPE, fieldName, maskInfo.getDataMaskType()));
                 }

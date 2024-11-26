@@ -26,12 +26,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
-import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +54,7 @@ public class JsonUtils {
     private static final TypeReference TYPE_LIST_AUDIT_FILTER               = new TypeReference<List<AuditFilter>>() {};
     private static final TypeReference TYPE_LIST_RANGER_VALIDITY_RECURRENCE = new TypeReference<List<RangerValidityRecurrence>>() {};
     private static final TypeReference TYPE_LIST_RANGER_PRINCIPAL           = new TypeReference<List<RangerPrincipal>>() {};
-    private static final TypeReference TYPE_LIST_RANGER_TAG_MASK_INFO       = new TypeReference<List<RangerTagDataMaskInfo>>() {};
-    private static final TypeReference TYPE_MAP_RANGER_MASK_INFO            = new TypeReference<Map<String, RangerPolicyItemDataMaskInfo>>() {};
+    private static final TypeReference TYPE_LIST_RANGER_GDS_MASK_INFO       = new TypeReference<List<RangerGdsMaskInfo>>() {};
     private static final TypeReference TYPE_MAP_RANGER_POLICY_RESOURCE      = new TypeReference<Map<String, RangerPolicyResource>>() {};
     private static final TypeReference TYPE_LIST_RANGER_TAG                 = new TypeReference<List<RangerTag>>() {};
 
@@ -263,20 +261,11 @@ public class JsonUtils {
         }
     }
 
-    public static Map<String, RangerPolicyItemDataMaskInfo> jsonToMapMaskInfo(String jsonStr) {
+    public static List<RangerGdsMaskInfo> jsonToListGdsMaskInfo(String jsonStr) {
         try {
-            return (Map<String, RangerPolicyItemDataMaskInfo>) getMapper().readValue(jsonStr, TYPE_MAP_RANGER_MASK_INFO);
+            return (List<RangerGdsMaskInfo>) getMapper().readValue(jsonStr, TYPE_LIST_RANGER_GDS_MASK_INFO);
         } catch (Exception e) {
             LOG.error("Cannot get Map<String, RangerPolicyItemDataMaskInfo> from " + jsonStr, e);
-            return null;
-        }
-    }
-
-    public static List<RangerTagDataMaskInfo> jsonToListTagMaskInfo(String jsonStr) {
-        try {
-            return (List<RangerTagDataMaskInfo>) getMapper().readValue(jsonStr, TYPE_LIST_RANGER_TAG_MASK_INFO);
-        } catch (Exception e) {
-            LOG.error("Cannot get List<RangerTagDataMaskInfo> from " + jsonStr, e);
             return null;
         }
     }

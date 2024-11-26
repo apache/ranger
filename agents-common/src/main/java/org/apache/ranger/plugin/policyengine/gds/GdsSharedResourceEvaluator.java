@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.policyengine.gds;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
@@ -36,12 +37,14 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourc
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
+import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.SharedResourceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,6 +64,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     private final RangerPolicyResourceMatcher       policyResourceMatcher;
     private final RangerResourceDef                 leafResourceDef;
     private final Set<String>                       allowedAccessTypes;
+    private final List<GdsMaskEvaluator>            maskEvaluators;
 
     public GdsSharedResourceEvaluator(SharedResourceInfo resource, Set<String> defaultAccessTypes, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         this.resource           = resource;
@@ -82,6 +86,25 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(serviceDefHelper.getServiceDef(), policyResource);
         this.allowedAccessTypes    = serviceDefHelper.expandImpliedAccessGrants(resource.getAccessTypes() != null ? resource.getAccessTypes() : defaultAccessTypes);
 
+        if (serviceDefHelper.isDataMaskSupported(policyResource.keySet()) && CollectionUtils.isNotEmpty(resource.getSubResourceMasks())) {
+            this.maskEvaluators = new ArrayList<>(resource.getSubResourceMasks().size());
+
+            RangerResourceDef maskResourceDef = serviceDefHelper.getResourceDef(resource.getSubResourceType(), RangerPolicy.POLICY_TYPE_DATAMASK);
+
+            for (RangerGdsMaskInfo maskInfo : resource.getSubResourceMasks()) {
+                RangerDefaultResourceMatcher resourceMatcher = new RangerDefaultResourceMatcher();
+
+                resourceMatcher.setResourceDef(maskResourceDef);
+                resourceMatcher.setPolicyResource(new RangerPolicyResource(maskInfo.getValues(), Boolean.FALSE, Boolean.FALSE));
+
+                resourceMatcher.init();
+
+                this.maskEvaluators.add(new GdsMaskEvaluator(resourceMatcher, maskInfo.getMaskInfo()));
+            }
+        } else {
+            this.maskEvaluators = Collections.emptyList();
+        }
+
         LOG.debug("GdsSharedResourceEvaluator: resource={}, conditionEvaluator={}, policyResource={}, leafResourceDef={}, allowedAccessTypes={}",
                   resource, conditionEvaluator, policyResource, leafResourceDef, allowedAccessTypes);
     }
@@ -90,6 +113,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         this.resource           = other.resource;
         this.conditionEvaluator = other.conditionEvaluator;
         this.allowedAccessTypes = other.allowedAccessTypes;
+        this.maskEvaluators     = policyType == RangerPolicy.POLICY_TYPE_DATAMASK ? other.maskEvaluators : Collections.emptyList();
 
         if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER && other.policyResource != other.resource.getResource()) {
             this.policyResource        = new HashMap<>(resource.getResource()); // ignore resource.subResource
@@ -194,7 +218,9 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     }
 
     public RangerPolicyItemDataMaskInfo getDataMask(String subResourceName) {
-        return resource.getSubResourceMasks() != null ? resource.getSubResourceMasks().get(subResourceName) : null;
+        GdsMaskEvaluator maskEvaluator = maskEvaluators.stream().filter(e -> e.isMatch(subResourceName)).findFirst().orElse(null);
+
+        return maskEvaluator != null ? maskEvaluator.maskInfo : null;
     }
 
     GdsSharedResourceEvaluator createDataMaskEvaluator(RangerServiceDefHelper serviceDefHelper) {
@@ -226,6 +252,24 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         matcher.init();
 
         return matcher;
+    }
+
+    private static class GdsMaskEvaluator {
+        private final RangerDefaultResourceMatcher resourceMatcher;
+        private final RangerPolicyItemDataMaskInfo maskInfo;
+
+        public GdsMaskEvaluator(RangerDefaultResourceMatcher resourceMatcher, RangerPolicyItemDataMaskInfo maskInfo) {
+            this.resourceMatcher = resourceMatcher;
+            this.maskInfo        = maskInfo;
+        }
+
+        public boolean isMatch(String value) {
+            return resourceMatcher.isMatch(value, RangerAccessRequest.ResourceElementMatchingScope.SELF, null);
+        }
+
+        public RangerPolicyItemDataMaskInfo getMaskInfo() {
+            return maskInfo;
+        }
     }
 
     public static class GdsSharedResourceEvalOrderComparator implements Comparator<GdsSharedResourceEvaluator> {
