@@ -52,7 +52,12 @@
 	<security:http pattern="/service/xusers/download/*" security="none"/>
 	<security:http pattern="/service/actuator/health" security="none" />
 	<security:http pattern="/service/metrics/**" security="none" />
-	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
+	<security:http
+			disable-url-rewriting="true"
+			use-expressions="true"
+			create-session="always"
+			entry-point-ref="authenticationProcessingFilterEntryPoint"
+			security-context-explicit-save="false">
 		<csrf disabled="true"/>
 		<security:headers>
 			<security:frame-options/>
