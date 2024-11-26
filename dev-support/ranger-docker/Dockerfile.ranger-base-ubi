@@ -19,7 +19,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:${UBI_VERSION}
 
 USER root
 ARG RANGER_BASE_UBI_JAVA_VERSION
-ENV OS_NAME RHEL
+ENV OS_NAME=RHEL
 
 RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
     install -y java-${RANGER_BASE_UBI_JAVA_VERSION}-openjdk-devel \
@@ -49,13 +49,14 @@ RUN microdnf install -y sudo
 RUN microdnf install -y initscripts
 RUN microdnf install -y openssh-clients
 RUN microdnf install -y openssh-server
+RUN microdnf install -y wget
 RUN pip3 install apache-ranger
 
 # Set environment variables
-ENV RANGER_HOME    /opt/ranger
-ENV RANGER_DIST    /home/ranger/dist
-ENV RANGER_SCRIPTS /home/ranger/scripts
-ENV PATH           /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV RANGER_HOME=/opt/ranger
+ENV RANGER_DIST=/home/ranger/dist
+ENV RANGER_SCRIPTS=/home/ranger/scripts
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN sudo sed -i 's/^HOME_MODE.*/HOME_MODE 0755/' /etc/login.defs
 
