@@ -23,6 +23,7 @@
 package org.apache.ranger.security.web.filter;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.filter.GenericFilterBean;
 
 public class RangerSecurityContextFormationFilter extends GenericFilterBean {
@@ -65,6 +67,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 	@Autowired
 	GUIDUtil guidUtil;
+
+	@Autowired private TransactionTemplate transactionTemplate;
 		
 	String testIP = null;
 
@@ -121,16 +125,22 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 				RangerContextHolder.setSecurityContext(context);
 				int authType = getAuthType(httpRequest);
-				UserSessionBase userSession = sessionMgr.processSuccessLogin(
-						authType, userAgent, httpRequest);
 
-				if (userSession != null) {
-					if (userSession.getClientTimeOffsetInMinute() == 0) {
-						userSession.setClientTimeOffsetInMinute(clientTimeOffset);
+				// ToDo: re-check this fix to transaction problem
+				AtomicReference<UserSessionBase> userSession = new AtomicReference<>();
+				transactionTemplate.execute(status -> {
+					userSession.set(sessionMgr.processSuccessLogin(
+							authType, userAgent, httpRequest));
+                    return null;
+                });
+
+				if (userSession.get() != null) {
+					if (userSession.get().getClientTimeOffsetInMinute() == 0) {
+						userSession.get().setClientTimeOffsetInMinute(clientTimeOffset);
 					}
 				}
 
-				context.setUserSession(userSession);
+				context.setUserSession(userSession.get());
 			}
 
 			setupAdminOpContext(request);

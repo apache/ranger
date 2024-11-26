@@ -103,6 +103,10 @@
 		<property name="entityManagerFactory" ref="defaultEntityManagerFactory" />
 	</bean>
 
+	<bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+		<property name="transactionManager" ref="transactionManager"/>
+	</bean>
+
 	<!-- Datasource and Connection Pool Configuration https://github.com/brettwooldridge/HikariCP -->
 	<bean id="defaultDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
 		<property name="driverClassName" value="${ranger.jpa.jdbc.driver}" />

@@ -342,11 +342,8 @@ public class SessionMgr {
 
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	protected XXAuthSession storeAuthSession(XXAuthSession gjAuthSession) {
-		// daoManager.getEntityManager().getTransaction().begin();
-		XXAuthSession dbMAuthSession = daoManager.getXXAuthSession().create(
-				gjAuthSession);
-		// daoManager.getEntityManager().getTransaction().commit();
-		return dbMAuthSession;
+        return daoManager.getXXAuthSession().create(
+                gjAuthSession);
 	}
 
 	// non-WEB processing
