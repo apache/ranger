@@ -930,10 +930,11 @@ public class PublicAPIsv2 {
 	/*
     	This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
  	 */
-	@PUT
-	@Path("/api/roles/{id}/addUsersAndGroups")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
+//	ToDo: fixes jersey validations
+//	@PUT
+//	@Path("/api/roles/{id}/addUsersAndGroups")
+//	@Consumes({ "application/json" })
+//	@Produces({ "application/json" })
 	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
 		return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
 	}
@@ -941,10 +942,11 @@ public class PublicAPIsv2 {
 	/*
         This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
      */
-	@PUT
-	@Path("/api/roles/{id}/removeUsersAndGroups")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
+//	ToDo: fixes jersey validations
+//	@PUT
+//	@Path("/api/roles/{id}/removeUsersAndGroups")
+//	@Consumes({ "application/json" })
+//	@Produces({ "application/json" })
 	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeUsersAndGroups(roleId, users, groups);
 	}
@@ -952,10 +954,11 @@ public class PublicAPIsv2 {
 	/*
         This API is used to remove GRANT privilege from listed users and groups.
      */
-	@PUT
-	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
+//	ToDo: fixes jersey validations
+//	@PUT
+//	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
+//	@Consumes({ "application/json" })
+//	@Produces({ "application/json" })
 	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
 	}

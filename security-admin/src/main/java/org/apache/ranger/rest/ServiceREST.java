@@ -582,9 +582,10 @@ public class ServiceREST {
 		return ret;
 	}
 
-	@GET
-	@Path("/policies/{serviceDefName}/for-resource")
-	@Produces({ "application/json" })
+//	ToDo: fixes jersey validations
+//	@GET
+//	@Path("/policies/{serviceDefName}/for-resource")
+//	@Produces({ "application/json" })
 	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
 												  @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												  @Context HttpServletRequest request) {
@@ -2103,9 +2104,10 @@ public class ServiceREST {
         return ret;
     }
 
-	@GET
-	@Path("/policies/downloadExcel")
-	@Produces("application/ms-excel")
+	//	ToDo: fixes jersey validations
+	//	@GET
+//	@Path("/policies/downloadExcel")
+//	@Produces("application/ms-excel")
 	public void getPoliciesInExcel(@Context HttpServletRequest request,
 			@Context HttpServletResponse response) {
 
@@ -2150,9 +2152,11 @@ public class ServiceREST {
 		}
 	}
 
-	@GET
-	@Path("/policies/csv")
-	@Produces("text/csv")
+
+	//	ToDo: fixes jersey validations
+	//	@GET
+//	@Path("/policies/csv")
+//	@Produces("text/csv")
 	public void getPoliciesInCsv(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
 
 		if (LOG.isDebugEnabled()) {
@@ -2197,9 +2201,10 @@ public class ServiceREST {
 		}
 	}
 
-	@GET
-	@Path("/policies/exportJson")
-	@Produces("text/json")
+	//	ToDo: fixes jersey validations
+//	@GET
+//	@Path("/policies/exportJson")
+//	@Produces("text/json")
 	public void getPoliciesInJson(@Context HttpServletRequest request,
 			@Context HttpServletResponse response,
 			@QueryParam("checkPoliciesExists") Boolean checkPoliciesExists) {
