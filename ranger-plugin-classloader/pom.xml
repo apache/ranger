@@ -50,5 +50,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <url>http://maven.apache.org</url>
 </project>
