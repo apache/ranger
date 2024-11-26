@@ -26,11 +26,11 @@
 					<beans:map>
 						<beans:entry key="SPRINGSECURITY">
 							<beans:array>
-								<beans:bean class="javax.security.auth.login.AppConfigurationEntry">
+								<beans:bean class="jakarta.security.auth.login.AppConfigurationEntry">
 									<beans:constructor-arg
 										value="org.apache.ranger.authentication.unix.jaas.RemoteUnixLoginModule" />
 									<beans:constructor-arg>
-										<util:constant static-field="javax.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
+										<util:constant static-field="jakarta.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
 									</beans:constructor-arg>
 									<beans:constructor-arg ref="rangerConfiguration" />
 								</beans:bean>
