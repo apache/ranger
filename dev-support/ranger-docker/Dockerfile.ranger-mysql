@@ -26,4 +26,4 @@ COPY config/my.cnf /home/mysql/.my.cnf
 RUN sed -i "s/skip-name-resolve/# skip-name-resolve/" /etc/mysql/mariadb.cnf
 RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/ /home/mysql
 
-ENV MYSQL_ROOT_PASSWORD rangerR0cks!
+ENV MYSQL_ROOT_PASSWORD=rangerR0cks!
