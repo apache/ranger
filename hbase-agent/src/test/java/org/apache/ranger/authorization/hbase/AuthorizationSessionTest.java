@@ -71,7 +71,7 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testIsBuildable() {
-		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
+		RangerHBasePlugin plugin = new RangerHBasePlugin( "hbase");
 		AuthorizationSession session = new AuthorizationSession(plugin);
 		try {
 			session.verifyBuildable();
@@ -136,7 +136,7 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testAuthorize() {
-		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
+		RangerHBasePlugin plugin = new RangerHBasePlugin( "hbase");
 		
 		User user = mock(User.class);
 		when(user.getShortName()).thenReturn("user1");
