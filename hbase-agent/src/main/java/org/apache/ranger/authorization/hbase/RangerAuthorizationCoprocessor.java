@@ -462,7 +462,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("evaluateAccess: family level access for [" + family + "] is evaluated to " + isColumnFamilyAuthorized + ". Checking if [" + family + "] descendants have access.");
 				}
-				//buildRequest again since resourceMatchingScope changed
+				// buildRequest again since resourceMatchingScope changed
+				// reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
 						.ignoreDescendantDeny(false)
 						.buildRequest()
@@ -525,6 +526,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 							.authorize();
 
 					boolean isColumnFamilyAuthorized = session.isAuthorized();
+
+					//check if column family fully authorized i.e. no deny for columns
 					session.column(null)
 							.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
 							.ignoreDescendantDeny(false)
