@@ -41,9 +41,36 @@ downloadIfNotPresent() {
   fi
 }
 
+createShaded() {
+  local jar_name=$1
+
+  echo "migrating ${jar}"
+  java -jar ./downloads/jakartaee-migration-1.0.8-shaded.jar ./downloads/${jar_name}-${HADOOP_VERSION}.jar ./dist/${jar_name}-${HADOOP_VERSION}-${SHADE_SUFFIX}.jar
+}
+
+installInLocalRepo() {
+  local jar_name=$1
+
+  mvn install:install-file -Dfile=./dist/${jar_name}-${HADOOP_VERSION}-${SHADE_SUFFIX}.jar -DgroupId=org.apache.hadoop -DartifactId=${jar_name} -Dversion=${HADOOP_VERSION} -Dpackaging=jar
+}
+
+shadeHadoopDependencies () {
+  downloadIfNotPresent jakartaee-migration-1.0.8-shaded.jar https://archive.apache.org/dist/tomcat/jakartaee-migration/v1.0.8/binaries/
+  downloadIfNotPresent hadoop-common-${HADOOP_VERSION}.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/${HADOOP_VERSION}
+  downloadIfNotPresent hadoop-auth-${HADOOP_VERSION}.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-auth/${HADOOP_VERSION}
+
+  createShaded hadoop-common
+  createShaded hadoop-auth
+
+  installInLocalRepo hadoop-common
+  installInLocalRepo hadoop-auth
+}
+
 downloadIfNotPresent postgresql-42.7.2.jar "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.2"
 downloadIfNotPresent mysql-connector-java-8.0.28.jar        "https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28"
 downloadIfNotPresent log4jdbc-1.2.jar                       https://repo1.maven.org/maven2/com/googlecode/log4jdbc/log4jdbc/1.2
+
+shadeHadoopDependencies
 
 if [[ $# -eq 0 ]]
 then
