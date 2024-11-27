@@ -87,7 +87,7 @@ public class RangerValidityScheduleEvaluator {
 
         this.startTime = startTime;
         this.endTime   = endTime;
-        this.timeZone  = timeZone;
+        this.timeZone  = StringUtils.isNotBlank(timeZone) ? timeZone : "GMT";
 
         if (CollectionUtils.isNotEmpty(recurrences)) {
             for (RangerValidityRecurrence recurrence : recurrences) {
