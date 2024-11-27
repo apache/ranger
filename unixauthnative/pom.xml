@@ -32,8 +32,8 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>native-maven-plugin</artifactId>
-                <extensions>true</extensions>
                 <version>1.0-alpha-8</version>
+                <extensions>true</extensions>
                 <configuration>
                     <compilerStartOptions>
                         <compilerStartOption>${commonCompilerOptions}</compilerStartOption>

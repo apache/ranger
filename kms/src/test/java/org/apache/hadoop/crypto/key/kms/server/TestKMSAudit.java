@@ -22,6 +22,8 @@ import java.io.FilterOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -30,7 +32,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.reflection.Whitebox;
 
 public class TestKMSAudit {
 
@@ -174,8 +175,8 @@ public class TestKMSAudit {
   @Test
   public void testInitAuditLoggers() throws Exception {
     // Default should be the simple logger
-    List<KMSAuditLogger> loggers = (List<KMSAuditLogger>) Whitebox
-        .getInternalState(kmsAudit, "auditLoggers");
+
+    List<KMSAuditLogger> loggers = (List<KMSAuditLogger>) FieldUtils.getField(KMSAudit.class, "auditLoggers", true).get(kmsAudit);
     Assertions.assertEquals(1, loggers.size());
     Assertions.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
 
@@ -185,8 +186,7 @@ public class TestKMSAudit {
         SimpleKMSAuditLogger.class.getName() + ", "
             + SimpleKMSAuditLogger.class.getName());
     final KMSAudit audit = new KMSAudit(conf);
-    loggers =
-        (List<KMSAuditLogger>) Whitebox.getInternalState(audit, "auditLoggers");
+    loggers = (List<KMSAuditLogger>) FieldUtils.getField(KMSAudit.class, "auditLoggers", true).get(audit);
     Assertions.assertEquals(1, loggers.size());
     Assertions.assertEquals(SimpleKMSAuditLogger.class, loggers.get(0).getClass());
 
