@@ -22,17 +22,22 @@ package org.apache.ranger.audit.utils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.hdfs.DFSOutputStream;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * This is Abstract class to have common properties of Ranger Audit HDFS Destination Writer.
@@ -46,6 +51,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public static final String    PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
     public static final String    PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
     public static final String    PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String    PROP_FILESYSTEM_GZIP_COMPRESSION_ENABLED = "file.gzip.compression.enabled";
     public Configuration		  conf						       = null;
     public FileSystem		      fileSystem				       = null;
     public Map<String, String>    auditConfigs				       = null;
@@ -65,8 +71,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public int                    fileRolloverSec			       = 24 * 60 * 60; // In seconds
     public boolean                rollOverByDuration               = false;
     public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
-    private boolean               isHFlushCapableStream            = false;
-    protected boolean               reUseLastLogFile               = false;
+    private boolean isHSyncCapableStream = false;
+    protected boolean reUseLastLogFile = false;
+    private boolean isGzipCompressionEnabled = false;
+    private GZIPOutputStream gos = null;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -122,6 +130,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
     public  Configuration createConfiguration() {
         Configuration conf = new Configuration();
+        // to close gracefully after flushing
+        conf.setBoolean("fs.hdfs.impl.disable.cache", true);
         for (Map.Entry<String, String> entry : auditConfigs.entrySet()) {
             String key   = entry.getKey();
             String value = entry.getValue();
@@ -169,9 +179,13 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         logFileNameFormat = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_FILE_NAME_FORMAT);
         fileRolloverSec   = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_FILESYSTEM_FILE_ROLLOVER, fileRolloverSec);
+        isGzipCompressionEnabled   = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_FILESYSTEM_GZIP_COMPRESSION_ENABLED, false);
 
         if (StringUtils.isEmpty(fileExtension)) {
             setFileExtension(PROP_FILESYSTEM_FILE_EXTENSION);
+        }
+        if (isGzipCompressionEnabled) {
+            setFileExtension(fileExtension + ".gz");
         }
 
         if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
@@ -279,8 +293,25 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
                 createFileSystemFolders();
                 ostream = fileSystem.create(auditPath);
             }
-            logWriter             = new PrintWriter(ostream);
-            isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
+            if (isGzipCompressionEnabled) {
+                gos = new GZIPOutputStream(ostream, true);
+                AbstractRangerAuditWriter thisClass = this;
+                logWriter = new PrintWriter(gos) {
+                    @Override
+                    public void close() {
+                        try {
+                            gos.finish();
+                            thisClass.flush();
+                        } catch (IOException e) {
+                            logger.error("Failed to finish writing compressed data to the output stream", e);
+                        }
+                        super.close();
+                    }
+                };
+            } else {
+                logWriter = new PrintWriter(ostream);
+            }
+            isHSyncCapableStream = ostream.hasCapability(StreamCapabilities.HSYNC);
         }
 
         if (logger.isDebugEnabled()) {
@@ -334,20 +365,28 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         if (ostream != null) {
             try {
                 synchronized (this) {
-                    if (ostream != null)
+                    if (ostream != null) {
                         // 1) PrinterWriter does not have bufferring of its own so
                         // we need to flush its underlying stream
                         // 2) HDFS flush() does not really flush all the way to disk.
-                        if (isHFlushCapableStream) {
+                        if (isHSyncCapableStream) {
                             //Checking HFLUSH capability of the stream because of HADOOP-13327.
                             //For S3 filesysttem, hflush throws UnsupportedOperationException and hence we call flush.
-                            ostream.hflush();
+                            OutputStream stm = ostream.getWrappedStream();
+                            if (stm instanceof DFSOutputStream) {
+                                // Do this to update file size. Refer to org.apache.hadoop.hdfs.TestHFlush#hSyncUpdateLength_00() example
+                                ((DFSOutputStream) stm).hsync(EnumSet
+                                        .of(HdfsDataOutputStream.SyncFlag.UPDATE_LENGTH));
+                            } else {
+                                ostream.hsync();
+                            }
                         } else {
                             ostream.flush();
                         }
                         if (logger.isDebugEnabled()) {
                             logger.debug("Flush " + fileSystemScheme + " audit logs completed.....");
                         }
+                    }
                 }
             } catch (IOException e) {
                 logger.error("Error on flushing log writer: " + e.getMessage() +
