@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -65,6 +66,7 @@ import java.util.regex.Pattern;
 import org.apache.ranger.kms.metrics.KMSMetricWrapper;
 import org.apache.ranger.kms.metrics.KMSMetrics;
 import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.hadoop.util.KMSUtil.checkNotEmpty;
@@ -94,6 +96,10 @@ public class KMS {
   private final KMSAudit                   kmsAudit;
 
   private KMSMetricsCollector kmsMetricsCollector;
+
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+  }
 
   public KMS() throws Exception {
     provider = KMSWebApp.getKeyProvider();
