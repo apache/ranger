@@ -18,28 +18,34 @@
 
 package org.apache.ranger.common;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import jakarta.ws.rs.ext.ContextResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.Provider;
 
 
 @Provider
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@Component
-public class RangerJsonProvider extends JacksonJaxbJsonProvider {
+public class RangerJsonProvider implements ContextResolver<ObjectMapper> {
     private static final Logger LOG = LoggerFactory.getLogger(RangerJsonProvider.class);
 
-    public RangerJsonProvider() {
-        super(JsonUtilsV2.getMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
+    final ObjectMapper defaultMapper;
 
+    public RangerJsonProvider() {
+        defaultMapper = createDefaultMapper();
         LOG.info("RangerJsonProvider() instantiated");
+    }
+
+    @Override
+    public ObjectMapper getContext(Class<?> aClass) {
+        return defaultMapper;
+    }
+
+    private static ObjectMapper createDefaultMapper(){
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+        return mapper;
     }
 }

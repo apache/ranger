@@ -67,6 +67,7 @@
       <param-value>
         org.apache.ranger.service.filter.RangerRESTAPIFilter
         org.glassfish.jersey.media.multipart.MultiPartFeature
+        org.glassfish.jersey.jackson.JacksonFeature
       </param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
