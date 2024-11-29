@@ -18,6 +18,21 @@
 
 echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
 
+cat <<EOF > /etc/ssh/ssh_config
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+EOF
+
+cat <<EOF > ${HADOOP_HOME}/etc/hadoop/core-site.xml
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://ranger-hadoop:9000</value>
+  </property>
+</configuration>
+EOF
+
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
 su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive

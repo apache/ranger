@@ -66,7 +66,7 @@ shadeHadoopDependencies () {
   installInLocalRepo hadoop-auth
 }
 
-downloadIfNotPresent postgresql-42.7.2.jar "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.2"
+downloadIfNotPresent postgresql-42.2.16.jre7.jar            "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7"
 downloadIfNotPresent mysql-connector-java-8.0.28.jar        "https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28"
 downloadIfNotPresent log4jdbc-1.2.jar                       https://repo1.maven.org/maven2/com/googlecode/log4jdbc/log4jdbc/1.2
 

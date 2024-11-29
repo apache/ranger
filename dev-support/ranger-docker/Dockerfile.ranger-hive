@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM apache/hive:4.0.0
+FROM ranger-base:latest
 
 ARG HIVE_VERSION
 ARG HIVE_HADOOP_VERSION
@@ -24,39 +24,31 @@ ARG RANGER_DB_TYPE
 
 COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz /home/ranger/dist/
-COPY ./downloads/postgresql-42.7.2.jar                       /home/ranger/dist
-COPY ./downloads/jackson-jaxrs-1.9.13.jar                    /home/ranger/dist
+COPY ./downloads/apache-hive-${HIVE_VERSION}-bin.tar.gz      /home/ranger/dist/
+COPY ./downloads/hadoop-${HIVE_HADOOP_VERSION}.tar.gz        /home/ranger/dist/
+COPY ./downloads/mysql-connector-java-8.0.28.jar             /home/ranger/dist
 
 COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
 
-USER root
-
-ENV RANGER_DIST    /home/ranger/dist
-ENV RANGER_SCRIPTS /home/ranger/scripts
-ENV RANGER_HOME    /opt/ranger
-
-RUN mkdir -p /home/ranger/dist && \
-    mkdir -p /home/ranger/scripts && \
-    mkdir -p /opt/ranger
-
-USER root
-
-RUN mv /home/ranger/dist/postgresql-42.7.2.jar /opt/hive/lib/ && \
-    mv /home/ranger/dist/jackson-jaxrs-1.9.13.jar /opt/hive/lib/ && \
+RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --directory=/opt/ && \
+    ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
+    rm -f /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
+    mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /opt/hive/lib/ && \
+    tar xvfz /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz --directory=/opt/ && \
+    ln -s /opt/hadoop-${HIVE_HADOOP_VERSION} /opt/hadoop && \
+    rm -f /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz && \
     tar xvfz /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin /opt/ranger/ranger-hive-plugin && \
     rm -f /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz && \
-    ls /opt/ranger/ranger-hive-plugin/ && \
     cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
 
 ENV HIVE_HOME   /opt/hive
 ENV HADOOP_HOME /opt/hadoop
 ENV PATH        /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hive/bin:/opt/hadoop/bin
-ENV IS_RESUME true
 
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hive.sh" ]

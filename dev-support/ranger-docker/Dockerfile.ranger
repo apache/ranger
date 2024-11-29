@@ -44,8 +44,8 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && mkdir -p /usr/share/java/
 
 FROM ranger AS ranger_postgres
-COPY ./downloads/postgresql-42.7.2.jar         /home/ranger/dist/
-RUN mv /home/ranger/dist/postgresql-42.7.2.jar /usr/share/java/postgresql.jar
+COPY ./downloads/postgresql-42.2.16.jre7.jar      /home/ranger/dist/
+RUN mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
 
 FROM ranger AS ranger_mysql
 COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
