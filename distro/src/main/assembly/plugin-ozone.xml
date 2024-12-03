@@ -128,6 +128,12 @@
                     <include>org.apache.orc:orc-core:jar:${orc.version}</include>
                     <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                    <include>org.graalvm.js:js:jar:${graalvm.version}</include>
+                    <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
+                    <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
+                    <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
+                    <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
+                    <include>com.ibm.icu:icu4j</include>
                 </includes>
             </binaries>
         </moduleSet>
