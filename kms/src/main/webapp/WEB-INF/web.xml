@@ -16,7 +16,13 @@
   limitations under the License.
 -->
 
-<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee">
+<web-app
+        xmlns="https://jakarta.ee/xml/ns/jakartaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+             https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+        version="5.0"
+>
 
   <display-name>ranger-kms</display-name>
   <absolute-ordering />
@@ -27,9 +33,9 @@
 
   <servlet>
     <servlet-name>webservices-driver</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
     <init-param>
-      <param-name>com.sun.jersey.config.property.packages</param-name>
+      <param-name>jersey.config.server.provider.packages</param-name>
       <param-value>org.apache.hadoop.crypto.key.kms.server</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>

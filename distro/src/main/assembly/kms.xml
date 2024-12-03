@@ -61,6 +61,7 @@
                     <include>org.apache.directory.api:api-asn1-api</include>
                     <include>org.apache.directory.api:api-i18n</include>
                     <include>org.apache.directory.api:api-util</include>
+                    <include>org.apache.commons:commons-lang3</include>
                     <include>commons-beanutils:commons-beanutils</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
@@ -71,8 +72,19 @@
                     <include>org.apache.curator:curator-recipes</include>
                     <include>org.apache.hadoop:hadoop-annotations</include>
                     <include>org.apache.httpcomponents:httpcore</include>
-                    <include>javax.xml.bind:jaxb-api</include>
-                    <include>com.sun.xml.bind:jaxb-impl</include>
+                    <include>jakarta.annotation:jakarta.annotation-api:jar:${jakarta.annotation-api}</include>
+                    <include>jakarta.inject:jakarta.inject-api:jar:${jakarta-inject.version}</include>
+                    <include>jakarta.persistence:jakarta.persistence-api:jar:${jakarta.persistence.version}</include>
+                    <include>jakarta.ws.rs:jakarta.ws.rs-api:jar:${jakarta.ws.version}</include>
+                    <include>jakarta.xml.bind:jakarta.xml.bind-api:jar:${jakarta.xml.version}</include>
+                    <include>org.glassfish.jersey.core:jersey-client</include>
+                    <include>org.glassfish.jersey.core:jersey-common</include>
+                    <include>org.glassfish.jersey.core:jersey-hk2</include>
+                    <include>org.glassfish.jersey.core:jersey-server</include>
+                    <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+                    <include>org.glassfish.jaxb:jaxb-runtime</include>
                     <include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
                     <include>jline:jline</include>
                     <include>com.jcraft:jsch</include>
@@ -110,8 +122,8 @@
                     <include>com.nimbusds:oauth2-oidc-sdk</include>
                     <include>net.minidev:json-smart</include>
                     <include>net.minidev:asm:jar:${net.minidev.asm.version}</include>
-                    <include>javax.mail:javax.mail-api</include>
-                    <include>com.sun.mail:javax.mail</include>
+                    <include>jakarta.mail:jakarta.mail-api</include>
+                    <include>com.sun.mail:jakarta.mail</include>
                     <include>com.nimbusds:nimbus-jose-jwt</include>
                     <include>com.microsoft.azure:azure-keyvault-webkey</include>
                     <include>org.bouncycastle:bcprov-jdk15on</include>
