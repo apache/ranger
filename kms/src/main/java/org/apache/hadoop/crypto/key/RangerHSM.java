@@ -27,7 +27,7 @@ import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -128,7 +128,7 @@ public class RangerHSM implements RangerKMSMKI {
                 if (result == true) {
                     logger.debug("Ranger Master Key is present in Keystore");
                     SecretKey key = (SecretKey) myStore.getKey(alias, password.toCharArray());
-                    return Base64.encode(key.getEncoded());
+                    return Base64.getEncoder().encodeToString(key.getEncoded());
                 }
             } catch (Exception e) {
                 logger.error("getMasterKey : Exception searching for Ranger Master Key - {} ", e.getMessage());

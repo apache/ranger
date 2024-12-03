@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -150,7 +150,7 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
                                         SecretKey key = (SecretKey) myStore.getKey(alias,
                                                         password.toCharArray());
                                         if (key != null) {
-                                                return Base64.encode(key.getEncoded());
+                                                return Base64.getEncoder().encodeToString(key.getEncoded());
                                         }
 
                                 }

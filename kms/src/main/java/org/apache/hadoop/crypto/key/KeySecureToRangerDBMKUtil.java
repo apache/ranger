@@ -22,7 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 
 public class KeySecureToRangerDBMKUtil {
         private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
@@ -72,7 +72,7 @@ public class KeySecureToRangerDBMKUtil {
                                         conf);
                         String mKey = rangerSafenetKeySecure.getMasterKey(password);
 
-                        byte[] key = Base64.decode(mKey);
+                        byte[] key = Base64.getDecoder().decode(mKey);
 
                         // Put Master Key in Ranger DB
                         RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);

@@ -21,7 +21,7 @@ import java.util.Arrays;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 
 public class HSM2DBMKUtil {
 
@@ -81,7 +81,7 @@ public class HSM2DBMKUtil {
 			// Get Master Key from HSM
 			RangerHSM rangerHSM = new RangerHSM(conf);
 			String mKey = rangerHSM.getMasterKey(password);
-			byte[] key = Base64.decode(mKey);
+			byte[] key = Base64.getDecoder().decode(mKey);
 			
 			// Put Master Key in Ranger DB			
 			RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
