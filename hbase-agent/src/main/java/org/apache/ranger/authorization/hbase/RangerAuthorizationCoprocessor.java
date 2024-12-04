@@ -105,8 +105,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	private static volatile RangerHBasePlugin hbasePlugin = null;
 
 	public void setColumnAuthOptimizationEnabled(boolean enable) throws Exception {
-		if (hbasePlugin!=null) {
-			hbasePlugin.setColumnAuthOptimizationEnabled(enable);
+		RangerHBasePlugin plugin = hbasePlugin;
+		if (plugin!=null) {
+			plugin.setColumnAuthOptimizationEnabled(enable);
 		}
 		else {
 			throw new Exception("Error while enabling column auth optimization");
