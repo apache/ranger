@@ -515,42 +515,49 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
 				session.ignoreDescendantDeny(true);
 			} else {
-				boolean isColumnAuthShortCircuitingEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
+				boolean isColumnAuthOptimizationEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("evaluateAccess: columns collection not empty." +
 							" Skipping Family level check, will do finer level access check for columns.");
 				}
-				if (isColumnAuthShortCircuitingEnabled) {
+				if (isColumnAuthOptimizationEnabled) {
 					session.column(null)
 							.buildRequest()
 							.authorize();
-
-					boolean isColumnFamilyAuthorized = session.isAuthorized();
-
-					//check if column family fully authorized i.e. no deny for columns
-					session.column(null)
-							.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
-							.ignoreDescendantDeny(false)
-							.buildRequest()
-							.authorize();
-
-					boolean isColumnFamilyAndDescendantsAuthorized = session.isAuthorized() && isColumnFamilyAuthorized;
-					AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
-					// reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
-					session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF)
-							.ignoreDescendantDeny(true);
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, isColumnFamilyAndDescendantsAuthorized={}",isColumnFamilyAndDescendantsAuthorized);
+						LOG.debug(
+								"evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAuthorized={}",
+								isColumnAuthOptimizationEnabled, session.isAuthorized());
 					}
-					if (isColumnFamilyAndDescendantsAuthorized) {
-						familiesFullyAuthorized.add(family);
-						if (auditEvent != null) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("evaluateAccess: isColumnAuthShortCircuitingEnabled=true, adding to familiesFullyAuthorized set");
-							}
-							familyLevelAccessEvents.add(auditEvent);
+					if(session.isAuthorized()) {
+
+						//check if column family fully authorized i.e. no deny for columns
+						session.column(null)
+								.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
+								.ignoreDescendantDeny(false)
+								.buildRequest()
+								.authorize();
+
+						boolean isColumnFamilyAndDescendantsAuthorized = session.isAuthorized();
+						AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
+						// reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
+						session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF)
+								.ignoreDescendantDeny(true);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(
+									"evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAndDescendantsAuthorized={}",
+									isColumnAuthOptimizationEnabled, isColumnFamilyAndDescendantsAuthorized);
 						}
-						continue;
+						if (isColumnFamilyAndDescendantsAuthorized) {
+							familiesFullyAuthorized.add(family);
+							if (auditEvent != null) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled ={}, adding family {} to familiesFullyAuthorized", isColumnAuthOptimizationEnabled, family);
+								}
+								familyLevelAccessEvents.add(auditEvent);
+							}
+							continue;
+						}
 					}
 				}
 				Set<String> accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
