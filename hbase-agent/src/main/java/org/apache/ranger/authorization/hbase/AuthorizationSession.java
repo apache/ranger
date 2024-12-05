@@ -30,11 +30,7 @@ import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.hadoop.thirdparty.com.google.common.base.MoreObjects;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.policyengine.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +43,7 @@ public class AuthorizationSession {
 	final HbaseUserUtils _userUtils = _factory.getUserUtils();
 	final HbaseAuthUtils _authUtils = _factory.getAuthUtils();
 	// immutable state
-	final RangerBasePlugin _authorizer;
+	final RangerHBasePlugin _authorizer;
 	// Mutable state: Use supplied state information
 	String _operation;
 	String _otherInformation;
@@ -69,8 +65,8 @@ public class AuthorizationSession {
 	// internal state per-authorization
 	RangerAccessRequest _request;
 	RangerAccessResult _result;
-	
-	public AuthorizationSession(RangerBasePlugin authorizer) {
+
+	public AuthorizationSession(RangerHBasePlugin authorizer) {
 		_authorizer = authorizer;
 	}
 
@@ -83,12 +79,12 @@ public class AuthorizationSession {
 		_otherInformation = information;
 		return this;
 	}
-	
+
 	AuthorizationSession remoteAddress(String ipAddress) {
 		_remoteAddress = ipAddress;
 		return this;
 	}
-	
+
 	AuthorizationSession access(String anAccess) {
 		_access = anAccess;
 		return this;
@@ -127,7 +123,7 @@ public class AuthorizationSession {
 	}
 
 	void verifyBuildable() {
-		
+
 		String template = "Internal error: Incomplete/inconsisten state: [%s]. Can't build auth request!";
 		if (_factory == null) {
 			String message = String.format(template, "factory is null");
@@ -174,11 +170,7 @@ public class AuthorizationSession {
 				StringUtils.equals(_operation, "getUserPermissionForNamespace");
 	}
 
-	AuthorizationSession buildRequest() {
-
-		verifyBuildable();
-		// session can be reused so reset its state
-		zapAuthorizationState();
+	private RangerAccessResource createHBaseResource() {
 		// TODO get this via a factory instead
 		RangerAccessResourceImpl resource = new RangerHBaseResource();
 		// policy engine should deal sensibly with null/empty values, if any
@@ -189,7 +181,11 @@ public class AuthorizationSession {
 		}
 		resource.setValue(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily);
 		resource.setValue(RangerHBaseResource.KEY_COLUMN, _column);
-		
+		return resource;
+	}
+
+	private RangerAccessRequest createRangerRequest() {
+		RangerAccessResource resource = createHBaseResource();
 		String user = _userUtils.getUserAsString(_user);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups, null);
 		request.setAction(_operation);
@@ -198,18 +194,25 @@ public class AuthorizationSession {
 		request.setResourceMatchingScope(_resourceMatchingScope);
 		request.setAccessTime(new Date());
 		request.setIgnoreDescendantDeny(_ignoreDescendantDeny);
-		_request = request;
+		return request;
+	}
+
+	AuthorizationSession buildRequest() {
+		verifyBuildable();
+		// session can be reused so reset its state
+		zapAuthorizationState();
+		_request = createRangerRequest();
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Built request: " + request.toString());
+			LOG.debug("Built request: " + _request.toString());
 		}
 		return this;
 	}
-	
+
 	AuthorizationSession authorize() {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> AuthorizationSession.authorize: " + getRequestMessage());
 		}
-		
+
 		if (_request == null) {
 			String message = String.format("Invalid state transition: buildRequest() must be called before authorize().  This request would ultimately get denied.!");
 			throw new IllegalStateException(message);
@@ -223,7 +226,7 @@ public class AuthorizationSession {
 			}
 			_result = _authorizer.isAccessAllowed(_request, _auditHandler);
 		}
-		
+
 		if (LOG.isDebugEnabled()) {
 			boolean allowed = isAuthorized();
 			String reason = getDenialReason();
@@ -231,19 +234,19 @@ public class AuthorizationSession {
 		}
 		return this;
 	}
-	
+
 	void logCapturedEvents() {
 		if (_auditHandler != null) {
 			List<AuthzAuditEvent> events = _auditHandler.getCapturedEvents();
 			_auditHandler.logAuthzAudits(events);
 		}
 	}
-	
+
 	void publishResults() throws AccessDeniedException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> AuthorizationSession.publishResults()");
 		}
-		
+
 		boolean authorized = isAuthorized();
 		if (_auditHandler != null && isAudited()) {
 			List<AuthzAuditEvent> events = null;
@@ -284,7 +287,7 @@ public class AuthorizationSession {
 			LOG.debug("<== AuthorizationSession.publishResults()");
 		}
 	}
-	
+
 	boolean isAudited() {
 
 		boolean audited = false;
@@ -313,7 +316,7 @@ public class AuthorizationSession {
 		}
 		return allowed;
 	}
-	
+
 	String getDenialReason() {
 		String reason = "";
 		if (_result == null) {
@@ -327,20 +330,21 @@ public class AuthorizationSession {
 		}
 		return reason;
 	}
-	
+
 	String requestToString() {
 		return MoreObjects.toStringHelper(_request.getClass())
-			.add("operation", _operation)
-			.add("otherInformation", _otherInformation)
-			.add("access", _access)
-			.add("user", _user == null ? null : _user.getName())
-			.add("groups", _groups)
-			.add("auditHandler", _auditHandler == null ? null : _auditHandler.getClass().getSimpleName())
-			.add(RangerHBaseResource.KEY_TABLE, _table)
-			.add(RangerHBaseResource.KEY_COLUMN, _column)
-			.add(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily)
-			.add("resource-matching-scope", _resourceMatchingScope)
-			.toString();
+				.add("operation", _operation)
+				.add("otherInformation", _otherInformation)
+				.add("access", _access)
+				.add("user", _user == null ? null : _user.getName())
+				.add("groups", _groups)
+				.add("auditHandler", _auditHandler == null ? null : _auditHandler.getClass().getSimpleName())
+				.add(RangerHBaseResource.KEY_TABLE, _table)
+				.add(RangerHBaseResource.KEY_COLUMN, _column)
+				.add(RangerHBaseResource.KEY_COLUMN_FAMILY, _columnFamily)
+				.add("resource-matching-scope", _resourceMatchingScope)
+				.add("ignoreDescendantDeny", _ignoreDescendantDeny)
+				.toString();
 	}
 
 	String getPrintableValue(String value) {
@@ -350,7 +354,7 @@ public class AuthorizationSession {
 			return "";
 		}
 	}
-	
+
 	String getRequestMessage() {
 		String format = "Access[%s] by user[%s] belonging to groups[%s] to table[%s] for column-family[%s], column[%s] triggered by operation[%s], otherInformation[%s]";
 		String user = _userUtils.getUserAsString();
@@ -358,7 +362,7 @@ public class AuthorizationSession {
 				getPrintableValue(_columnFamily), getPrintableValue(_column), getPrintableValue(_operation), getPrintableValue(_otherInformation));
 		return message;
 	}
-	
+
 	String getLogMessage(boolean allowed, String reason) {
 		String format = " %s: status[%s], reason[%s]";
 		String message = String.format(format, getRequestMessage(), allowed ? "allowed" : "denied", reason);
@@ -379,8 +383,13 @@ public class AuthorizationSession {
 		_resourceMatchingScope = scope;
 		return this;
 	}
+
 	AuthorizationSession ignoreDescendantDeny(boolean ignoreDescendantDeny) {
 		_ignoreDescendantDeny = ignoreDescendantDeny;
 		return this;
+	}
+
+	public boolean getPropertyIsColumnAuthOptimizationEnabled() {
+		return _authorizer.getPropertyIsColumnAuthOptimizationEnabled();
 	}
 }

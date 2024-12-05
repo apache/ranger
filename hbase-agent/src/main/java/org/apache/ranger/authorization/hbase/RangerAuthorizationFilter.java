@@ -40,16 +40,18 @@ public class RangerAuthorizationFilter extends FilterBase {
 	final Set<String> _familiesAccessDenied;
 	final Set<String> _familiesAccessIndeterminate;
 	final Map<String, Set<String>> _columnsAccessAllowed;
+	final Set<String> _familiesFullyAuthorized;
 	final AuthorizationSession _session;
 	final HbaseAuditHandler _auditHandler = HbaseFactory.getInstance().getAuditHandler();
 
 	public RangerAuthorizationFilter(AuthorizationSession session, Set<String> familiesAccessAllowed, Set<String> familiesAccessDenied, Set<String> familiesAccessIndeterminate,
-									 Map<String, Set<String>> columnsAccessAllowed) {
+									 Map<String, Set<String>> columnsAccessAllowed, Set<String> familiesFullyAuthorized) {
 		// the class assumes that all of these can be empty but none of these can be null
 		_familiesAccessAllowed = familiesAccessAllowed;
 		_familiesAccessDenied = familiesAccessDenied;
 		_familiesAccessIndeterminate = familiesAccessIndeterminate;
 		_columnsAccessAllowed = columnsAccessAllowed;
+		_familiesFullyAuthorized = familiesFullyAuthorized;
 		// this session should have everything set on it except family and column which would be altered based on need
 		_session = session;
 		// we don't want to audit denial, so we need to make sure the hander is what we need it to be.
@@ -88,6 +90,9 @@ public class RangerAuthorizationFilter extends FilterBase {
 			LOG.warn("filterKeyValue: Unexpected - null/empty family! Access denied!");
 		} else if (_familiesAccessDenied.contains(family)) {
 			LOG.debug("filterKeyValue: family found in access denied families cache.  Access denied.");
+		} else if (_session.getPropertyIsColumnAuthOptimizationEnabled() && _familiesFullyAuthorized.contains(family)){
+			LOG.debug("filterKeyValue: ColumnAuthOptimizationEnabled and family found in fully authorized families cache.  Column authorization is not required");
+			result = ReturnCode.INCLUDE;
 		} else if (_columnsAccessAllowed.containsKey(family)) {
 			LOG.debug("filterKeyValue: family found in column level access results cache.");
 			if (_columnsAccessAllowed.get(family).contains(column)) {
