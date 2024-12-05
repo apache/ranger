@@ -19,13 +19,6 @@
 
 package org.apache.ranger.audit.provider.solr;
 
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Properties;
-
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -38,268 +31,272 @@ import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Properties;
+
 public class SolrAuditProvider extends AuditDestination {
-	private static final Logger LOG = LoggerFactory.getLogger(SolrAuditProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SolrAuditProvider.class);
 
-	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.solr.async.max.queue.size";
-	public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.solr.async.max.flush.interval.ms";
-	public static final String AUDIT_RETRY_WAIT_PROP = "xasecure.audit.solr.retry.ms";
+    public static final String AUDIT_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.solr.async.max.queue.size";
+    public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.solr.async.max.flush.interval.ms";
+    public static final String AUDIT_RETRY_WAIT_PROP         = "xasecure.audit.solr.retry.ms";
 
-	static final Object lock = new Object();
-	volatile SolrClient solrClient = null;
-	Date lastConnectTime = null;
-	long lastFailTime = 0;
+    static final Object lock = new Object();
 
-	int retryWaitTime = 30000;
+    volatile SolrClient solrClient;
 
-	public SolrAuditProvider() {
-	}
+    Date lastConnectTime;
+    long lastFailTime;
+    int  retryWaitTime = 30000;
 
-	@Override
-	public void init(Properties props) {
-		LOG.info("init() called");
-		super.init(props);
+    public SolrAuditProvider() {
+    }
 
-		retryWaitTime = MiscUtil.getIntProperty(props,
-				AUDIT_RETRY_WAIT_PROP, retryWaitTime);
-	}
+    @Override
+    public void init(Properties props) {
+        LOG.info("init() called");
 
-	void connect() {
-		SolrClient  me  = solrClient;
-		if (me == null) {
-			synchronized (lock) {
-				me = solrClient;
-				if (me == null) {
-					final String solrURL = MiscUtil.getStringProperty(props,
-							"xasecure.audit.solr.solr_url");
+        super.init(props);
 
-					if (lastConnectTime != null) {
-						// Let's wait for enough time before retrying
-						long diff = System.currentTimeMillis()
-								- lastConnectTime.getTime();
-						if (diff < retryWaitTime) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Ignore connecting to solr url="
-										+ solrURL + ", lastConnect=" + diff
-										+ "ms");
-							}
-							return;
-						}
-					}
-					lastConnectTime = new Date();
+        retryWaitTime = MiscUtil.getIntProperty(props, AUDIT_RETRY_WAIT_PROP, retryWaitTime);
+    }
 
-					if (solrURL == null || solrURL.isEmpty()) {
-						LOG.error("Solr URL for Audit is empty");
-						return;
-					}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger.audit.model.AuditEventBase)
+     */
+    @Override
+    public boolean log(AuditEventBase event) {
+        if (!(event instanceof AuthzAuditEvent)) {
+            LOG.error("{} audit event class type is not supported", event.getClass().getName());
 
-					try {
-						// TODO: Need to support SolrCloud also
-						solrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<SolrClient>() {
-							@Override
-							public SolrClient run()  throws Exception {
-								HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
-								builder.withBaseSolrUrl(solrURL);
-								builder.allowCompression(true);
-								builder.withConnectionTimeout(1000);
-								HttpSolrClient httpSolrClient = builder.build();
-								return httpSolrClient;
-							};
-						});
+            return false;
+        }
 
-						me = solrClient;
-					} catch (Throwable t) {
-						LOG.error("Can't connect to Solr server. URL="
-								+ solrURL, t);
-					}
-				}
-			}
-		}
-	}
+        AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
+        // TODO: This should be done at a higher level
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger.
-	 * audit.model.AuditEventBase)
-	 */
-	@Override
-	public boolean log(AuditEventBase event) {
-		if (!(event instanceof AuthzAuditEvent)) {
-			LOG.error(event.getClass().getName()
-					+ " audit event class type is not supported");
-			return false;
-		}
-		AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
-		// TODO: This should be done at a higher level
+        if (authzEvent.getAgentHostname() == null) {
+            authzEvent.setAgentHostname(MiscUtil.getHostname());
+        }
 
-		if (authzEvent.getAgentHostname() == null) {
-			authzEvent.setAgentHostname(MiscUtil.getHostname());
-		}
+        if (authzEvent.getLogType() == null) {
+            authzEvent.setLogType("RangerAudit");
+        }
 
-		if (authzEvent.getLogType() == null) {
-			authzEvent.setLogType("RangerAudit");
-		}
+        if (authzEvent.getEventId() == null) {
+            authzEvent.setEventId(MiscUtil.generateUniqueId());
+        }
 
-		if (authzEvent.getEventId() == null) {
-			authzEvent.setEventId(MiscUtil.generateUniqueId());
-		}
+        try {
+            if (solrClient == null) {
+                connect();
 
-		try {
-			if (solrClient == null) {
-				connect();
-				if (solrClient == null) {
-					// Solr is still not initialized. So need to throw error
-					return false;
-				}
-			}
+                if (solrClient == null) {
+                    // Solr is still not initialized. So need to throw error
+                    return false;
+                }
+            }
 
-			if (lastFailTime > 0) {
-				long diff = System.currentTimeMillis() - lastFailTime;
-				if (diff < retryWaitTime) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Ignore sending audit. lastConnect=" + diff
-								+ " ms");
-					}
-					return false;
-				}
-			}
-			// Convert AuditEventBase to Solr document
-			final SolrInputDocument document = toSolrDoc(authzEvent);
-			final Collection<SolrInputDocument> docs = Collections.singletonList(document);
-			final UpdateResponse response = SolrAppUtil.addDocsToSolr(solrClient, docs);
+            if (lastFailTime > 0) {
+                long diff = System.currentTimeMillis() - lastFailTime;
 
-			if (response.getStatus() != 0) {
-				lastFailTime = System.currentTimeMillis();
+                if (diff < retryWaitTime) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Ignore sending audit. lastConnect={} ms", diff);
+                    }
 
-				// System.out.println("Response=" + response.toString()
-				// + ", status= " + response.getStatus() + ", event="
-				// + event);
-				// throw new Exception("Aborting. event=" + event +
-				// ", response="
-				// + response.toString());
-			} else {
-				lastFailTime = 0;
-			}
+                    return false;
+                }
+            }
 
-		} catch (Throwable t) {
-			LOG.error("Error sending message to Solr", t);
-			return false;
-		}
-		return true;
-	}
+            // Convert AuditEventBase to Solr document
+            final SolrInputDocument             document = toSolrDoc(authzEvent);
+            final Collection<SolrInputDocument> docs     = Collections.singletonList(document);
+            final UpdateResponse                response = SolrAppUtil.addDocsToSolr(solrClient, docs);
 
-	@Override
-	public boolean log(Collection<AuditEventBase> events) {
-		for (AuditEventBase event : events) {
-			log(event);
-		}
-		return true;
-	}
+            if (response.getStatus() != 0) {
+                lastFailTime = System.currentTimeMillis();
+            } else {
+                lastFailTime = 0;
+            }
+        } catch (Throwable t) {
+            LOG.error("Error sending message to Solr", t);
 
-	@Override
-	public boolean logJSON(String event) {
-		AuditEventBase eventObj = MiscUtil.fromJson(event,
-				AuthzAuditEvent.class);
-		return log(eventObj);
-	}
+            return false;
+        }
 
-	@Override
-	public boolean logJSON(Collection<String> events) {
-		for (String event : events) {
-			logJSON(event);
-		}
-		return false;
-	}
+        return true;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#start()
-	 */
-	@Override
-	public void start() {
-		connect();
-	}
+    @Override
+    public boolean logJSON(String event) {
+        AuditEventBase eventObj = MiscUtil.fromJson(event, AuthzAuditEvent.class);
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#stop()
-	 */
-	@Override
-	public void stop() {
-		LOG.info("SolrAuditProvider.stop() called..");
-		try {
-			if (solrClient != null) {
-				solrClient.close();
-			}
-		} catch (IOException ioe) {
-			LOG.error("Error while stopping slor!", ioe);
-		} finally {
-			solrClient = null;
-		}
-	}
+        return log(eventObj);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete()
-	 */
-	@Override
-	public void waitToComplete() {
+    @Override
+    public boolean logJSON(Collection<String> events) {
+        for (String event : events) {
+            logJSON(event);
+        }
 
-	}
+        return false;
+    }
 
-	
-	@Override
-	public void waitToComplete(long timeout) {
-		
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#flush()
-	 */
-	@Override
-	public void flush() {
-		// TODO Auto-generated method stub
+    @Override
+    public boolean log(Collection<AuditEventBase> events) {
+        for (AuditEventBase event : events) {
+            log(event);
+        }
 
-	}
+        return true;
+    }
 
-	SolrInputDocument toSolrDoc(AuthzAuditEvent auditEvent) {
-		SolrInputDocument doc = new SolrInputDocument();
-		doc.addField("id", auditEvent.getEventId());
-		doc.addField("access", auditEvent.getAccessType());
-		doc.addField("enforcer", auditEvent.getAclEnforcer());
-		doc.addField("agent", auditEvent.getAgentId());
-		doc.addField("repo", auditEvent.getRepositoryName());
-		doc.addField("sess", auditEvent.getSessionId());
-		doc.addField("reqUser", auditEvent.getUser());
-		doc.addField("reqData", auditEvent.getRequestData());
-		doc.addField("resource", auditEvent.getResourcePath());
-		doc.addField("cliIP", auditEvent.getClientIP());
-		doc.addField("logType", auditEvent.getLogType());
-		doc.addField("result", auditEvent.getAccessResult());
-		doc.addField("policy", auditEvent.getPolicyId());
-		doc.addField("repoType", auditEvent.getRepositoryType());
-		doc.addField("resType", auditEvent.getResourceType());
-		doc.addField("reason", auditEvent.getResultReason());
-		doc.addField("action", auditEvent.getAction());
-		doc.addField("evtTime", auditEvent.getEventTime());
-		doc.addField("tags", auditEvent.getTags());
-		doc.addField("datasets", auditEvent.getDatasets());
-		doc.addField("projects", auditEvent.getProjects());
-		doc.addField("cluster", auditEvent.getClusterName());
-		doc.addField("zone", auditEvent.getZoneName());
-		doc.addField("agentHost", auditEvent.getAgentHostname());
-		return doc;
-	}
-	
-	public boolean isAsync() {
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#flush()
+     */
+    @Override
+    public void flush() {
+        // TODO Auto-generated method stub
+    }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#start()
+     */
+    @Override
+    public void start() {
+        connect();
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#stop()
+     */
+    @Override
+    public void stop() {
+        LOG.info("SolrAuditProvider.stop() called..");
+
+        try {
+            if (solrClient != null) {
+                solrClient.close();
+            }
+        } catch (IOException ioe) {
+            LOG.error("Error while stopping slor!", ioe);
+        } finally {
+            solrClient = null;
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete()
+     */
+    @Override
+    public void waitToComplete() {
+    }
+
+    @Override
+    public void waitToComplete(long timeout) {
+    }
+
+    public boolean isAsync() {
+        return true;
+    }
+
+    void connect() {
+        SolrClient me = solrClient;
+
+        if (me == null) {
+            synchronized (lock) {
+                me = solrClient;
+
+                if (me == null) {
+                    final String solrURL = MiscUtil.getStringProperty(props, "xasecure.audit.solr.solr_url");
+
+                    if (lastConnectTime != null) {
+                        // Let's wait for enough time before retrying
+                        long diff = System.currentTimeMillis() - lastConnectTime.getTime();
+
+                        if (diff < retryWaitTime) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Ignore connecting to solr url={}, lastConnect={}ms", solrURL, diff);
+                            }
+
+                            return;
+                        }
+                    }
+
+                    lastConnectTime = new Date();
+
+                    if (solrURL == null || solrURL.isEmpty()) {
+                        LOG.error("Solr URL for Audit is empty");
+
+                        return;
+                    }
+
+                    try {
+                        // TODO: Need to support SolrCloud also
+                        me = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<SolrClient>) () -> {
+                            HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+
+                            builder.withBaseSolrUrl(solrURL);
+                            builder.allowCompression(true);
+                            builder.withConnectionTimeout(1000);
+
+                            return builder.build();
+                        });
+
+                        solrClient = me;
+                    } catch (Throwable t) {
+                        LOG.error("Can't connect to Solr server. URL={}", solrURL, t);
+                    }
+                }
+            }
+        }
+    }
+
+    SolrInputDocument toSolrDoc(AuthzAuditEvent auditEvent) {
+        SolrInputDocument doc = new SolrInputDocument();
+
+        doc.addField("id", auditEvent.getEventId());
+        doc.addField("access", auditEvent.getAccessType());
+        doc.addField("enforcer", auditEvent.getAclEnforcer());
+        doc.addField("agent", auditEvent.getAgentId());
+        doc.addField("repo", auditEvent.getRepositoryName());
+        doc.addField("sess", auditEvent.getSessionId());
+        doc.addField("reqUser", auditEvent.getUser());
+        doc.addField("reqData", auditEvent.getRequestData());
+        doc.addField("resource", auditEvent.getResourcePath());
+        doc.addField("cliIP", auditEvent.getClientIP());
+        doc.addField("logType", auditEvent.getLogType());
+        doc.addField("result", auditEvent.getAccessResult());
+        doc.addField("policy", auditEvent.getPolicyId());
+        doc.addField("repoType", auditEvent.getRepositoryType());
+        doc.addField("resType", auditEvent.getResourceType());
+        doc.addField("reason", auditEvent.getResultReason());
+        doc.addField("action", auditEvent.getAction());
+        doc.addField("evtTime", auditEvent.getEventTime());
+        doc.addField("tags", auditEvent.getTags());
+        doc.addField("datasets", auditEvent.getDatasets());
+        doc.addField("projects", auditEvent.getProjects());
+        doc.addField("cluster", auditEvent.getClusterName());
+        doc.addField("zone", auditEvent.getZoneName());
+        doc.addField("agentHost", auditEvent.getAgentHostname());
+
+        return doc;
+    }
 }

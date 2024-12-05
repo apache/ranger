@@ -33,72 +33,37 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- *  This class writes the Ranger audits to HDFS as ORC files
- *  Refer README.TXT for enabling ORCWriter.
+ * This class writes the Ranger audits to HDFS as ORC files
+ * Refer README.TXT for enabling ORCWriter.
  */
 public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
     private static final Logger logger = LoggerFactory.getLogger(RangerORCAuditWriter.class);
 
     protected static final String ORC_FILE_EXTENSION = ".orc";
-    protected volatile ORCFileUtil orcFileUtil       = null;
-    protected Writer   orcLogWriter                  = null;
-    protected String  fileType                       = "orc";
-    protected String  compression                    = null;
-    protected int     orcBufferSize                  = 0;
-    protected int     defaultbufferSize              = 100000;
-    protected long    orcStripeSize                  = 0;
-    protected long    defaultStripeSize              = 100000L;
+
+    protected volatile ORCFileUtil orcFileUtil;
+
+    protected Writer orcLogWriter;
+    protected String fileType           = "orc";
+    protected String compression;
+    protected int    orcBufferSize;
+    protected int    defaultbufferSize  = 100000;
+    protected long   orcStripeSize;
+    protected long   defaultStripeSize  = 100000L;
 
     @Override
-    public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
+    public void init(Properties props, String propPrefix, String auditProviderName, Map<String, String> auditConfigs) {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerORCAuditWriter.init()");
         }
-        init(props,propPrefix,auditProviderName);
+
+        init(props, propPrefix, auditProviderName);
+
         super.init(props, propPrefix, auditProviderName, auditConfigs);
+
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerORCAuditWriter.init()");
         }
-    }
-
-    synchronized public boolean logAuditAsORC(final Collection<AuthzAuditEvent> events) throws  Exception {
-        boolean ret = false;
-        Writer  out = null;
-        try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("UGI=" + MiscUtil.getUGILoginUser()
-                                     + ". Will write to HDFS file=" + currentFileName);
-            }
-
-            out = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<Writer>() {
-                @Override
-                public Writer run()  throws Exception {
-                    Writer out = getORCFileWrite();
-                    orcFileUtil.log(out,events);
-                    return out;
-                }
-            });
-        } catch (Exception e) {
-            orcLogWriter = null;
-            logger.error("Error while writing into ORC FileWriter", e);
-            throw e;
-        } finally {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Flushing HDFS audit in ORC Format. Event Size:" + events.size());
-            }
-            if (out != null) {
-                try {
-                    //flush and close the ORC batch file
-                    orcFileUtil.close(out);
-                    ret = true;
-                } catch (Exception e) {
-                    logger.error("Error while closing the ORC FileWriter", e);
-                    throw e;
-                }
-                orcLogWriter = null;
-            }
-        }
-        return ret;
     }
 
     @Override
@@ -107,9 +72,60 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
         //So nothing to flush.
     }
 
+    public synchronized boolean logAuditAsORC(final Collection<AuthzAuditEvent> events) throws Exception {
+        boolean ret = false;
+        Writer  out = null;
+
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("UGI={}. Will write to HDFS file={}", MiscUtil.getUGILoginUser(), currentFileName);
+            }
+
+            out = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Writer>) () -> {
+                Writer out1 = getORCFileWrite();
+
+                orcFileUtil.log(out1, events);
+
+                return out1;
+            });
+        } catch (Exception e) {
+            orcLogWriter = null;
+
+            logger.error("Error while writing into ORC FileWriter", e);
+
+            throw e;
+        } finally {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Flushing HDFS audit in ORC Format. Event Size:{}", events.size());
+            }
+
+            if (out != null) {
+                try {
+                    //flush and close the ORC batch file
+                    orcFileUtil.close(out);
+
+                    ret = true;
+                } catch (Exception e) {
+                    logger.error("Error while closing the ORC FileWriter", e);
+
+                    throw e;
+                }
+
+                orcLogWriter = null;
+            }
+        }
+
+        return ret;
+    }
+
     @Override
-    public boolean log(Collection<String> events) throws  Exception {
+    public boolean log(Collection<String> events) throws Exception {
         return logAsORC(events);
+    }
+
+    @Override
+    public boolean logFile(File file) throws Exception {
+        return false;
     }
 
     @Override
@@ -123,51 +139,30 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
             try {
                 orcFileUtil.close(orcLogWriter);
             } catch (Throwable t) {
-                logger.error("Error on closing log ORC Writer. Exception will be ignored. name="
-                                     + auditProviderName + ", fileName=" + currentFileName);
+                logger.error("Error on closing log ORC Writer. Exception will be ignored. name={}, fileName={}", auditProviderName, currentFileName);
             }
+
             orcLogWriter = null;
         }
     }
 
-    @Override
-    public boolean logFile(File file) throws Exception {
-        return false;
-    }
-
-    // Creates ORC Write file
-    protected synchronized Writer getORCFileWrite() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerORCAuditWriter.getORCFileWrite()");
-        }
-        if (orcLogWriter == null) {
-            // Create the file to write
-            createFileSystemFolders();
-            logger.info("Creating new log file. hdfPath=" + fullPath);
-            orcLogWriter    = orcFileUtil.createWriter(conf, fileSystem, fullPath);
-            currentFileName = fullPath;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== RangerORCAuditWriter.getORCFileWrite()");
-        }
-        return orcLogWriter;
-    }
-
-    public boolean logAsORC(Collection<String> events) throws  Exception {
-        boolean ret = false;
+    public boolean logAsORC(Collection<String> events) throws Exception {
         Collection<AuthzAuditEvent> authzAuditEvents = getAuthzAuditEvents(events);
-        ret = logAuditAsORC(authzAuditEvents);
-        return ret;
+
+        return logAuditAsORC(authzAuditEvents);
     }
 
-    public Collection<AuthzAuditEvent> getAuthzAuditEvents(Collection<String> events) throws  Exception {
+    public Collection<AuthzAuditEvent> getAuthzAuditEvents(Collection<String> events) {
         Collection<AuthzAuditEvent> ret = new ArrayList<>();
+
         for (String event : events) {
             try {
                 AuthzAuditEvent authzAuditEvent = MiscUtil.fromJson(event, AuthzAuditEvent.class);
+
                 ret.add(authzAuditEvent);
             } catch (Exception e) {
-                logger.error("Error converting to From JSON to AuthzAuditEvent=" + event);
+                logger.error("Error converting to From JSON to AuthzAuditEvent={}", event);
+
                 throw e;
             }
         }
@@ -175,15 +170,41 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
     }
 
     public void init(Properties props, String propPrefix, String auditProviderName) {
-        compression    = MiscUtil.getStringProperty(props, propPrefix + "." + fileType +".compression");
-        orcBufferSize  = MiscUtil.getIntProperty(props, propPrefix + "." + fileType +".buffersize",defaultbufferSize);
-        orcStripeSize  = MiscUtil.getLongProperty(props, propPrefix + "." + fileType +".stripesize",defaultStripeSize);
+        compression   = MiscUtil.getStringProperty(props, propPrefix + "." + fileType + ".compression");
+        orcBufferSize = MiscUtil.getIntProperty(props, propPrefix + "." + fileType + ".buffersize", defaultbufferSize);
+        orcStripeSize = MiscUtil.getLongProperty(props, propPrefix + "." + fileType + ".stripesize", defaultStripeSize);
+
         setFileExtension(ORC_FILE_EXTENSION);
+
         try {
             orcFileUtil = ORCFileUtil.getInstance();
+
             orcFileUtil.init(orcBufferSize, orcStripeSize, compression);
-        } catch ( Exception e) {
+        } catch (Exception e) {
             logger.error("Error while doing ORCWriter.init() ", e);
         }
+    }
+
+    // Creates ORC Write file
+    protected synchronized Writer getORCFileWrite() throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> RangerORCAuditWriter.getORCFileWrite()");
+        }
+
+        if (orcLogWriter == null) {
+            // Create the file to write
+            createFileSystemFolders();
+
+            logger.info("Creating new log file. hdfPath={}", fullPath);
+
+            orcLogWriter    = orcFileUtil.createWriter(conf, fileSystem, fullPath);
+            currentFileName = fullPath;
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerORCAuditWriter.getORCFileWrite()");
+        }
+
+        return orcLogWriter;
     }
 }

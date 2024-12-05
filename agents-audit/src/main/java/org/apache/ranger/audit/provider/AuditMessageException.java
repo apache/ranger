@@ -25,43 +25,41 @@ package org.apache.ranger.audit.provider;
  * a transient error
  */
 public class AuditMessageException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    public AuditMessageException() {
+    }
 
-	public AuditMessageException() {
-	}
+    /**
+     * @param message
+     */
+    public AuditMessageException(String message) {
+        super(message);
+    }
 
-	/**
-	 * @param message
-	 */
-	public AuditMessageException(String message) {
-		super(message);
-	}
+    /**
+     * @param cause
+     */
+    public AuditMessageException(Throwable cause) {
+        super(cause);
+    }
 
-	/**
-	 * @param cause
-	 */
-	public AuditMessageException(Throwable cause) {
-		super(cause);
-	}
+    /**
+     * @param message
+     * @param cause
+     */
+    public AuditMessageException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public AuditMessageException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	/**
-	 * @param message
-	 * @param cause
-	 * @param enableSuppression
-	 * @param writableStackTrace
-	 */
-	public AuditMessageException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
+    /**
+     * @param message
+     * @param cause
+     * @param enableSuppression
+     * @param writableStackTrace
+     */
+    public AuditMessageException(String message, Throwable cause,
+            boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }
