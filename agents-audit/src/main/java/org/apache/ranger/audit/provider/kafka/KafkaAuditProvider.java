@@ -16,11 +16,6 @@
  */
 package org.apache.ranger.audit.provider.kafka;
 
-import java.security.PrivilegedExceptionAction;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -31,162 +26,166 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.PrivilegedExceptionAction;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class KafkaAuditProvider extends AuditDestination {
-	private static final Logger LOG = LoggerFactory.getLogger(KafkaAuditProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaAuditProvider.class);
 
-	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.kafka.async.max.queue.size";
-	public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.kafka.async.max.flush.interval.ms";
-	public static final String AUDIT_KAFKA_BROKER_LIST = "xasecure.audit.kafka.broker_list";
-	public static final String AUDIT_KAFKA_TOPIC_NAME = "xasecure.audit.kafka.topic_name";
-	boolean initDone = false;
+    public static final String AUDIT_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.kafka.async.max.queue.size";
+    public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.kafka.async.max.flush.interval.ms";
+    public static final String AUDIT_KAFKA_BROKER_LIST       = "xasecure.audit.kafka.broker_list";
+    public static final String AUDIT_KAFKA_TOPIC_NAME        = "xasecure.audit.kafka.topic_name";
 
-	Producer<String, String> producer = null;
-	String topic = null;
+    boolean                  initDone;
+    Producer<String, String> producer;
+    String                   topic;
 
-	@Override
-	public void init(Properties props) {
-		LOG.info("init() called");
-		super.init(props);
+    @Override
+    public void init(Properties props) {
+        LOG.info("init() called");
 
-		topic = MiscUtil.getStringProperty(props,
-				AUDIT_KAFKA_TOPIC_NAME);
-		if (topic == null || topic.isEmpty()) {
-			topic = "ranger_audits";
-		}
+        super.init(props);
 
-		try {
-			if (!initDone) {
-				String brokerList = MiscUtil.getStringProperty(props,
-						AUDIT_KAFKA_BROKER_LIST);
-				if (brokerList == null || brokerList.isEmpty()) {
-					brokerList = "localhost:9092";
-				}
+        topic = MiscUtil.getStringProperty(props, AUDIT_KAFKA_TOPIC_NAME);
 
-				final Map<String, Object> kakfaProps = new HashMap<String,Object>();
-				kakfaProps.put("metadata.broker.list", brokerList);
-				kakfaProps.put("serializer.class",
-						"kafka.serializer.StringEncoder");
-				// kakfaProps.put("partitioner.class",
-				// "example.producer.SimplePartitioner");
-				kakfaProps.put("request.required.acks", "1");
+        if (topic == null || topic.isEmpty()) {
+            topic = "ranger_audits";
+        }
 
-				LOG.info("Connecting to Kafka producer using properties:"
-						+ kakfaProps.toString());
+        try {
+            if (!initDone) {
+                String brokerList = MiscUtil.getStringProperty(props, AUDIT_KAFKA_BROKER_LIST);
 
-				producer = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Producer<String, String>>) () -> new KafkaProducer<>(kakfaProps));
+                if (brokerList == null || brokerList.isEmpty()) {
+                    brokerList = "localhost:9092";
+                }
 
-				initDone = true;
-			}
-		} catch (Throwable t) {
-			LOG.error("Error initializing kafka:", t);
-		}
-	}
+                final Map<String, Object> kakfaProps = new HashMap<>();
 
-	@Override
-	public boolean log(AuditEventBase event) {
-		if (event instanceof AuthzAuditEvent) {
-			AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
+                kakfaProps.put("metadata.broker.list", brokerList);
+                kakfaProps.put("serializer.class", "kafka.serializer.StringEncoder");
+                // kakfaProps.put("partitioner.class", "example.producer.SimplePartitioner");
+                kakfaProps.put("request.required.acks", "1");
 
-			if (authzEvent.getAgentHostname() == null) {
-				authzEvent.setAgentHostname(MiscUtil.getHostname());
-			}
+                LOG.info("Connecting to Kafka producer using properties:{}", kakfaProps);
 
-			if (authzEvent.getLogType() == null) {
-				authzEvent.setLogType("RangerAudit");
-			}
+                producer = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Producer<String, String>>) () -> new KafkaProducer<>(kakfaProps));
+                initDone = true;
+            }
+        } catch (Throwable t) {
+            LOG.error("Error initializing kafka:", t);
+        }
+    }
 
-			if (authzEvent.getEventId() == null) {
-				authzEvent.setEventId(MiscUtil.generateUniqueId());
-			}
-		}
+    @Override
+    public boolean log(AuditEventBase event) {
+        if (event instanceof AuthzAuditEvent) {
+            AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
 
-		String message = MiscUtil.stringify(event);
-		try {
+            if (authzEvent.getAgentHostname() == null) {
+                authzEvent.setAgentHostname(MiscUtil.getHostname());
+            }
 
-			if (producer != null) {
-				// TODO: Add partition key
-				final ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(
-						topic, message);
+            if (authzEvent.getLogType() == null) {
+                authzEvent.setLogType("RangerAudit");
+            }
 
-				MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
-					producer.send(keyedMessage);
-					return null;
-				});
+            if (authzEvent.getEventId() == null) {
+                authzEvent.setEventId(MiscUtil.generateUniqueId());
+            }
+        }
 
-			} else {
-				LOG.info("AUDIT LOG (Kafka Down):" + message);
-			}
-		} catch (Throwable t) {
-			LOG.error("Error sending message to Kafka topic. topic=" + topic
-					+ ", message=" + message, t);
-			return false;
-		}
-		return true;
-	}
+        String message = MiscUtil.stringify(event);
 
-	@Override
-	public boolean log(Collection<AuditEventBase> events) {
-		for (AuditEventBase event : events) {
-			log(event);
-		}
-		return true;
-	}
+        try {
+            if (producer != null) {
+                // TODO: Add partition key
+                final ProducerRecord<String, String> keyedMessage = new ProducerRecord<>(topic, message);
 
-	@Override
-	public boolean logJSON(String event) {
-		AuditEventBase eventObj = MiscUtil.fromJson(event,
-				AuthzAuditEvent.class);
-		return log(eventObj);
-	}
+                MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
+                    producer.send(keyedMessage);
 
-	@Override
-	public boolean logJSON(Collection<String> events) {
-		for (String event : events) {
-			logJSON(event);
-		}
-		return false;
-	}
+                    return null;
+                });
+            } else {
+                LOG.info("AUDIT LOG (Kafka Down):{}", message);
+            }
+        } catch (Throwable t) {
+            LOG.error("Error sending message to Kafka topic. topic={}, message={}", topic, message, t);
 
-	@Override
-	public void start() {
-		LOG.info("start() called");
-		// TODO Auto-generated method stub
+            return false;
+        }
 
-	}
+        return true;
+    }
 
-	@Override
-	public void stop() {
-		LOG.info("stop() called");
-		if (producer != null) {
-			try {
-				MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
-					producer.close();
-					return null;
-				});
-			} catch (Throwable t) {
-				LOG.error("Error closing Kafka producer");
-			}
-		}
-	}
+    @Override
+    public boolean logJSON(String event) {
+        AuditEventBase eventObj = MiscUtil.fromJson(event, AuthzAuditEvent.class);
 
-	@Override
-	public void waitToComplete() {
-		LOG.info("waitToComplete() called");
-	}
-	
-	@Override
-	public void waitToComplete(long timeout) {
-	}
+        return log(eventObj);
+    }
 
-	@Override
-	public void flush() {
-		LOG.info("flush() called");
+    @Override
+    public boolean logJSON(Collection<String> events) {
+        for (String event : events) {
+            logJSON(event);
+        }
 
-	}
+        return false;
+    }
 
-	public boolean isAsync() {
-		return true;
-	}
+    @Override
+    public boolean log(Collection<AuditEventBase> events) {
+        for (AuditEventBase event : events) {
+            log(event);
+        }
 
+        return true;
+    }
+
+    @Override
+    public void flush() {
+        LOG.info("flush() called");
+    }
+
+    @Override
+    public void start() {
+        LOG.info("start() called");
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void stop() {
+        LOG.info("stop() called");
+
+        if (producer != null) {
+            try {
+                MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
+                    producer.close();
+
+                    return null;
+                });
+            } catch (Throwable t) {
+                LOG.error("Error closing Kafka producer");
+            }
+        }
+    }
+
+    @Override
+    public void waitToComplete() {
+        LOG.info("waitToComplete() called");
+    }
+
+    @Override
+    public void waitToComplete(long timeout) {
+    }
+
+    public boolean isAsync() {
+        return true;
+    }
 }
