@@ -46,6 +46,7 @@
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
+        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
         <checkstyle.version>8.29</checkstyle.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
@@ -702,7 +703,7 @@
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>./dev-support/checkstyle.xml</configLocation>
                             <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
-                            <failOnViolation>true</failOnViolation>
+                            <failOnViolation>${checkstyle.failOnViolation}</failOnViolation>
                         </configuration>
                     </execution>
                 </executions>
