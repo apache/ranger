@@ -42,7 +42,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: build (8)
-        run: mvn -T 8 clean install --no-transfer-progress -B -V
+        run: mvn clean install --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -60,7 +60,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: build (11)
-        run: mvn -T 8 clean install -pl '!knox-agent' --no-transfer-progress -B -V
+        run: mvn clean install -pl '!knox-agent' --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
