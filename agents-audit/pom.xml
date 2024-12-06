@@ -421,5 +421,15 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-java</artifactId>
+            <version>${opensearch-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-rest-client</artifactId>
+            <version>${opensearch-rest-client.version}</version>
+        </dependency>
     </dependencies>
 </project>

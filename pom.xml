@@ -173,6 +173,8 @@
         <netty-all.version>4.1.100.Final</netty-all.version>
         <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
+        <opensearch-java.version>2.6.0</opensearch-java.version>
+        <opensearch-rest-client.version>2.9.0</opensearch-rest-client.version>
         <orc.core.version>1.6.7</orc.core.version>
         <orc.version>1.5.8</orc.version>
         <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
