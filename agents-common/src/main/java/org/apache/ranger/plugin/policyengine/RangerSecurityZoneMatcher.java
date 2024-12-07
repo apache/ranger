@@ -33,7 +33,14 @@ import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class RangerSecurityZoneMatcher {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityZoneMatcher.class);
@@ -63,6 +70,11 @@ public class RangerSecurityZoneMatcher {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(resourceZoneTrie, zonesWithTagService);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -73,12 +85,7 @@ public class RangerSecurityZoneMatcher {
         RangerSecurityZoneMatcher other = (RangerSecurityZoneMatcher) obj;
 
         return Objects.equals(resourceZoneTrie, other.resourceZoneTrie) &&
-               Objects.equals(zonesWithTagService, other.zonesWithTagService);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(resourceZoneTrie, zonesWithTagService);
+                Objects.equals(zonesWithTagService, other.zonesWithTagService);
     }
 
     private Set<String> getZonesForResourceAndChildren(Map<String, ?> resource, RangerAccessResource accessResource) {

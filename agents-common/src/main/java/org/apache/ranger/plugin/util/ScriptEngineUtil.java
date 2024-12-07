@@ -19,34 +19,31 @@
 
 package org.apache.ranger.plugin.util;
 
-
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 
-
 public class ScriptEngineUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ScriptEngineUtil.class);
 
-    private static volatile ScriptEngineCreator SCRIPT_ENGINE_CREATOR             = null;
-    private static volatile boolean             SCRIPT_ENGINE_CREATOR_INITIALIZED = false;
+    private static volatile ScriptEngineCreator scriptEngineCreator;
+    private static volatile boolean             scriptEngineCreatorInitialized;
+
+    private ScriptEngineUtil() {
+        // to block instantiation
+    }
 
     // for backward compatibility with any plugin that might use this API
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + "): engineName ignored");
-        }
+        LOG.debug("ScriptEngineUtil.createScriptEngine(engineName={}, serviceType={}): engineName ignored", engineName, serviceType);
 
         return createScriptEngine(serviceType);
     }
 
     public static ScriptEngine createScriptEngine(String serviceType) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ScriptEngineUtil.createScriptEngine(serviceType=" + serviceType + ")");
-        }
+        LOG.debug("==> ScriptEngineUtil.createScriptEngine(serviceType={})", serviceType);
 
         ScriptEngine        ret     = null;
         ScriptEngineCreator creator = getScriptEngineCreator(serviceType);
@@ -77,28 +74,28 @@ public class ScriptEngineUtil {
     }
 
     private static ScriptEngineCreator getScriptEngineCreator(String serviceType) {
-        boolean isInitialized = SCRIPT_ENGINE_CREATOR_INITIALIZED;
+        boolean isInitialized = scriptEngineCreatorInitialized;
 
         if (!isInitialized) {
             synchronized (ScriptEngineUtil.class) {
-                isInitialized = SCRIPT_ENGINE_CREATOR_INITIALIZED;
+                isInitialized = scriptEngineCreatorInitialized;
 
                 if (!isInitialized) {
                     initScriptEngineCreator(serviceType);
                 }
 
-                SCRIPT_ENGINE_CREATOR_INITIALIZED = true;
+                scriptEngineCreatorInitialized = true;
             }
         }
 
-        return SCRIPT_ENGINE_CREATOR;
+        return scriptEngineCreator;
     }
 
     private static void initScriptEngineCreator(String serviceType) {
-        String[] engineCreators = new String[] { "org.apache.ranger.plugin.util.NashornScriptEngineCreator",
-                                                 "org.apache.ranger.plugin.util.GraalScriptEngineCreator",
-                                                 "org.apache.ranger.plugin.util.JavaScriptEngineCreator"
-                                               };
+        String[] engineCreators = new String[] {"org.apache.ranger.plugin.util.NashornScriptEngineCreator",
+                "org.apache.ranger.plugin.util.GraalScriptEngineCreator",
+                "org.apache.ranger.plugin.util.JavaScriptEngineCreator"
+        };
 
         for (String creatorClsName : engineCreators) {
             ScriptEngineCreator creator = null;
@@ -132,7 +129,7 @@ public class ScriptEngineUtil {
             }
 
             if (engine != null) {
-                SCRIPT_ENGINE_CREATOR = creator;
+                scriptEngineCreator = creator;
 
                 break;
             }

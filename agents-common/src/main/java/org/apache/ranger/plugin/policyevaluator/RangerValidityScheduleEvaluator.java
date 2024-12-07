@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,17 +45,12 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class RangerValidityScheduleEvaluator {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerValidityScheduleEvaluator.class);
+    private static final Logger LOG      = LoggerFactory.getLogger(RangerValidityScheduleEvaluator.class);
     private static final Logger PERF_LOG = LoggerFactory.getLogger("test.perf.RangerValidityScheduleEvaluator");
 
-    private final static TimeZone defaultTZ = TimeZone.getDefault();
+    private static final TimeZone defaultTZ = TimeZone.getDefault();
 
-    private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
-        }
-    };
+    private static final ThreadLocal<DateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION));
 
     private final Date                            startTime;
     private final Date                            endTime;
@@ -73,7 +69,7 @@ public class RangerValidityScheduleEvaluator {
             try {
                 startTime = DATE_FORMATTER.get().parse(startTimeStr);
             } catch (ParseException exception) {
-                LOG.error("Error parsing startTime:[" + startTimeStr + "]", exception);
+                LOG.error("Error parsing startTime:[{}]", startTimeStr, exception);
             }
         }
 
@@ -81,7 +77,7 @@ public class RangerValidityScheduleEvaluator {
             try {
                 endTime = DATE_FORMATTER.get().parse(endTimeStr);
             } catch (ParseException exception) {
-                LOG.error("Error parsing endTime:[" + endTimeStr + "]", exception);
+                LOG.error("Error parsing endTime:[{}]", endTimeStr, exception);
             }
         }
 
@@ -96,10 +92,36 @@ public class RangerValidityScheduleEvaluator {
         }
     }
 
-    public boolean isApplicable(long accessTime) {
+    public static long getAdjustedTime(long localTime, TimeZone timeZone) {
+        long ret = localTime;
+
         if (LOG.isDebugEnabled()) {
-            LOG.debug("===> isApplicable(accessTime=" + accessTime + ")");
+            LOG.debug("Input:[{}, target-timezone{}], default-timezone:[{}]", new Date(localTime), timeZone, defaultTZ);
         }
+
+        if (!defaultTZ.equals(timeZone)) {
+            int targetOffset  = timeZone.getOffset(localTime);
+            int defaultOffset = defaultTZ.getOffset(localTime);
+            int diff          = defaultOffset - targetOffset;
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Offset of target-timezone from UTC :[{}]", targetOffset);
+                LOG.debug("Offset of default-timezone from UTC :[{}]", defaultOffset);
+                LOG.debug("Difference between default-timezone and target-timezone :[{}]", diff);
+            }
+
+            ret += diff;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Output:[{}]", new Date(ret));
+        }
+
+        return ret;
+    }
+
+    public boolean isApplicable(long accessTime) {
+        LOG.debug("===> isApplicable(accessTime={})", accessTime);
 
         boolean          ret  = false;
         RangerPerfTracer perf = null;
@@ -142,36 +164,7 @@ public class RangerValidityScheduleEvaluator {
 
         RangerPerfTracer.log(perf);
 
-	    if (LOG.isDebugEnabled()) {
-		    LOG.debug("<=== isApplicable(accessTime=" + accessTime + ") :" + ret);
-	    }
-        return ret;
-    }
-
-    public static long getAdjustedTime(long localTime, TimeZone timeZone) {
-        long ret = localTime;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Input:[" + new Date(localTime) + ", target-timezone" + timeZone + "], default-timezone:[" + defaultTZ + "]");
-        }
-
-        if (!defaultTZ.equals(timeZone)) {
-            int targetOffset  = timeZone.getOffset(localTime);
-            int defaultOffset = defaultTZ.getOffset(localTime);
-            int diff          = defaultOffset - targetOffset;
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Offset of target-timezone from UTC :[" + targetOffset + "]");
-                LOG.debug("Offset of default-timezone from UTC :[" + defaultOffset + "]");
-                LOG.debug("Difference between default-timezone and target-timezone :[" + diff + "]");
-            }
-
-            ret += diff;
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Output:[" + new Date(ret) + "]");
-        }
+        LOG.debug("<=== isApplicable(accessTime={}) :{}", accessTime, ret);
 
         return ret;
     }
@@ -184,8 +177,7 @@ public class RangerValidityScheduleEvaluator {
         private final List<ScheduledTimeMatcher> months      = new ArrayList<>();
         private final List<ScheduledTimeMatcher> years       = new ArrayList<>();
         private final RangerValidityRecurrence   recurrence;
-        private       int                        intervalInMinutes = 0;
-
+        private       int                        intervalInMinutes;
 
         public RangerRecurrenceEvaluator(RangerValidityRecurrence recurrence) {
             this.recurrence = recurrence;
@@ -205,8 +197,7 @@ public class RangerValidityScheduleEvaluator {
         }
 
         public boolean isApplicable(Calendar now) {
-            boolean ret = false;
-
+            boolean          ret  = false;
             RangerPerfTracer perf = null;
 
             if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
@@ -214,16 +205,15 @@ public class RangerValidityScheduleEvaluator {
             }
 
             if (recurrence != null && intervalInMinutes > 0) { // recurring schedule
-
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Access-Time:[" + now.getTime() + "]");
+                    LOG.debug("Access-Time:[{}]", now.getTime());
                 }
 
                 Calendar startOfInterval = getClosestPastEpoch(now);
 
                 if (startOfInterval != null) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Start-of-Interval:[" + startOfInterval.getTime() + "]");
+                        LOG.debug("Start-of-Interval:[{}]", startOfInterval.getTime());
                     }
 
                     Calendar endOfInterval = (Calendar) startOfInterval.clone();
@@ -235,12 +225,11 @@ public class RangerValidityScheduleEvaluator {
                     now.getTime();
 
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("End-of-Interval:[" + endOfInterval.getTime() + "]");
+                        LOG.debug("End-of-Interval:[{}]", endOfInterval.getTime());
                     }
 
                     ret = startOfInterval.compareTo(now) <= 0 && endOfInterval.compareTo(now) >= 0;
                 }
-
             } else {
                 ret = true;
             }
@@ -266,7 +255,7 @@ public class RangerValidityScheduleEvaluator {
 
                             break;
                         } else {
-                            list.add(new ScheduledTimeExactMatcher(Integer.valueOf(range[0]) - (isMonth ? 1 : 0)));
+                            list.add(new ScheduledTimeExactMatcher(Integer.parseInt(range[0]) - (isMonth ? 1 : 0)));
                         }
                     } else {
                         if (StringUtils.equals(range[0], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD) || StringUtils.equals(range[1], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
@@ -275,14 +264,13 @@ public class RangerValidityScheduleEvaluator {
 
                             break;
                         } else {
-                            list.add(new ScheduledTimeRangeMatcher(Integer.valueOf(range[0]) - (isMonth ? 1 : 0), Integer.valueOf(range[1]) - (isMonth ? 1 : 0)));
+                            list.add(new ScheduledTimeRangeMatcher(Integer.parseInt(range[0]) - (isMonth ? 1 : 0), Integer.parseInt(range[1]) - (isMonth ? 1 : 0)));
                         }
                     }
                 }
 
                 Collections.reverse(list);
             }
-
         }
 
     /*
@@ -297,44 +285,6 @@ public class RangerValidityScheduleEvaluator {
                       dayOfWeek - is picked
                     - For dayOfMonth calculation, consider that months have different number of days
     */
-
-        private static class ValueWithBorrow {
-            int value;
-            boolean borrow;
-
-            ValueWithBorrow() {
-            }
-
-            ValueWithBorrow(int value) {
-                this(value, false);
-            }
-
-            ValueWithBorrow(int value, boolean borrow) {
-                this.value = value;
-                this.borrow = borrow;
-            }
-
-            void setValue(int value) {
-                this.value = value;
-            }
-
-            void setBorrow(boolean borrow) {
-                this.borrow = borrow;
-            }
-
-            int getValue() {
-                return value;
-            }
-
-            boolean getBorrow() {
-                return borrow;
-            }
-
-            @Override
-            public String toString() {
-                return "value=" + value + ", borrow=" + borrow;
-            }
-        }
 
         private Calendar getClosestPastEpoch(Calendar current) {
             Calendar ret = null;
@@ -357,9 +307,8 @@ public class RangerValidityScheduleEvaluator {
                 ret = getEarlierCalendar(dayOfMonthCalendar, dayOfWeekCalendar);
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("ClosestPastEpoch:[" + (ret != null ? ret.getTime() : null) + "]");
+                    LOG.debug("ClosestPastEpoch:[{}]", ret != null ? ret.getTime() : null);
                 }
-
             } catch (Exception e) {
                 LOG.error("Could not find ClosestPastEpoch, Exception=", e);
             }
@@ -371,7 +320,9 @@ public class RangerValidityScheduleEvaluator {
             if (StringUtils.isNotBlank(recurrence.getSchedule().getDayOfMonth())) {
                 int initialDayOfMonth = current.get(Calendar.DAY_OF_MONTH);
 
-                int currentDayOfMonth = initialDayOfMonth, currentMonth = current.get(Calendar.MONTH), currentYear = current.get(Calendar.YEAR);
+                int currentDayOfMonth          = initialDayOfMonth;
+                int currentMonth               = current.get(Calendar.MONTH);
+                int currentYear                = current.get(Calendar.YEAR);
                 int maximumDaysInPreviousMonth = getMaximumValForPreviousMonth(current);
 
                 if (closestHour.borrow) {
@@ -382,23 +333,24 @@ public class RangerValidityScheduleEvaluator {
                     int previousDayOfMonth = dayOfMonthCalc.get(Calendar.DAY_OF_MONTH);
                     if (initialDayOfMonth < previousDayOfMonth) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Need to borrow from previous month, initialDayOfMonth:[" + initialDayOfMonth + "], previousDayOfMonth:[" + previousDayOfMonth + "], dayOfMonthCalc:[" + dayOfMonthCalc.getTime() + "]");
+                            LOG.debug("Need to borrow from previous month, initialDayOfMonth:[{}], previousDayOfMonth:[{}], dayOfMonthCalc:[{}]", initialDayOfMonth, previousDayOfMonth, dayOfMonthCalc.getTime());
                         }
-                        currentDayOfMonth = previousDayOfMonth;
-                        currentMonth = dayOfMonthCalc.get(Calendar.MONTH);
-                        currentYear = dayOfMonthCalc.get(Calendar.YEAR);
+
+                        currentDayOfMonth          = previousDayOfMonth;
+                        currentMonth               = dayOfMonthCalc.get(Calendar.MONTH);
+                        currentYear                = dayOfMonthCalc.get(Calendar.YEAR);
                         maximumDaysInPreviousMonth = getMaximumValForPreviousMonth(dayOfMonthCalc);
                     } else if (initialDayOfMonth == previousDayOfMonth) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("No need to borrow from previous month, initialDayOfMonth:[" + initialDayOfMonth + "], previousDayOfMonth:[" + previousDayOfMonth + "]");
+                            LOG.debug("No need to borrow from previous month, initialDayOfMonth:[{}], previousDayOfMonth:[{}]", initialDayOfMonth, previousDayOfMonth);
                         }
                     } else {
-                        LOG.error("Should not get here, initialDayOfMonth:[" + initialDayOfMonth + "], previousDayOfMonth:[" + previousDayOfMonth + "]");
+                        LOG.error("Should not get here, initialDayOfMonth:[{}], previousDayOfMonth:[{}]", initialDayOfMonth, previousDayOfMonth);
                         throw new Exception("Should not get here, initialDayOfMonth:[" + initialDayOfMonth + "], previousDayOfMonth:[" + previousDayOfMonth + "]");
                     }
                 }
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("currentDayOfMonth:[" + currentDayOfMonth + "], maximumDaysInPreviourMonth:[" + maximumDaysInPreviousMonth + "]");
+                    LOG.debug("currentDayOfMonth:[{}], maximumDaysInPreviourMonth:[{}]", currentDayOfMonth, maximumDaysInPreviousMonth);
                 }
                 ValueWithBorrow input = new ValueWithBorrow();
                 input.setValue(currentDayOfMonth);
@@ -416,14 +368,15 @@ public class RangerValidityScheduleEvaluator {
                         c.set(Calendar.DAY_OF_MONTH, currentDayOfMonth);
                         c.add(Calendar.MONTH, -i);
                         c.getTime();
-                        currentMonth = c.get(Calendar.MONTH);
-                        currentYear = c.get(Calendar.YEAR);
-                        currentDayOfMonth = c.get(Calendar.DAY_OF_MONTH);
+                        currentMonth               = c.get(Calendar.MONTH);
+                        currentYear                = c.get(Calendar.YEAR);
+                        currentDayOfMonth          = c.get(Calendar.DAY_OF_MONTH);
                         maximumDaysInPreviousMonth = getMaximumValForPreviousMonth(c);
                         input.setValue(currentDayOfMonth);
                         input.setBorrow(false);
                     }
-                } while (closestDayOfMonth == null);
+                }
+                while (closestDayOfMonth == null);
 
                 // Build calendar for dayOfMonth
                 ret = new GregorianCalendar();
@@ -443,7 +396,7 @@ public class RangerValidityScheduleEvaluator {
                 ret.getTime(); // For recomputation
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Best guess using DAY_OF_MONTH:[" + ret.getTime() + "]");
+                    LOG.debug("Best guess using DAY_OF_MONTH:[{}]", ret.getTime());
                 }
             }
             return ret;
@@ -457,11 +410,10 @@ public class RangerValidityScheduleEvaluator {
                 input.setValue(current.get(Calendar.DAY_OF_WEEK));
                 input.setBorrow(closestHour.borrow);
 
-
                 ValueWithBorrow closestDayOfWeek = getPastFieldValueWithBorrow(RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfWeek, daysOfWeek, input);
 
                 int daysToGoback = closestHour.borrow ? 1 : 0;
-                int range = RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfWeek.maximum - RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfWeek.minimum + 1;
+                int range        = RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfWeek.maximum - RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.dayOfWeek.minimum + 1;
 
                 if (closestDayOfWeek.borrow) {
                     if (input.value - closestDayOfWeek.value != daysToGoback) {
@@ -472,24 +424,23 @@ public class RangerValidityScheduleEvaluator {
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Need to go back [" + daysToGoback + "] days to match dayOfWeek");
+                    LOG.debug("Need to go back [{}] days to match dayOfWeek", daysToGoback);
                 }
 
                 ret = (GregorianCalendar) current.clone();
                 ret.set(Calendar.MINUTE, closestMinute.value);
                 ret.set(Calendar.HOUR_OF_DAY, closestHour.value);
-                ret.add(Calendar.DAY_OF_MONTH, (0 - daysToGoback));
-	            ret.set(Calendar.SECOND, 0);
-	            ret.set(Calendar.MILLISECOND, 0);
+                ret.add(Calendar.DAY_OF_MONTH, (-daysToGoback));
+                ret.set(Calendar.SECOND, 0);
+                ret.set(Calendar.MILLISECOND, 0);
 
                 ret.getTime();
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Best guess using DAY_OF_WEEK:[" + ret.getTime() + "]");
+                    LOG.debug("Best guess using DAY_OF_WEEK:[{}]", ret.getTime());
                 }
             }
             return ret;
-
         }
 
         private int getMaximumValForPreviousMonth(Calendar current) {
@@ -501,15 +452,16 @@ public class RangerValidityScheduleEvaluator {
         }
 
         private Calendar getEarlierCalendar(Calendar dayOfMonthCalendar, Calendar dayOfWeekCalendar) throws Exception {
-
             Calendar withDayOfMonth = fillOutCalendar(dayOfMonthCalendar);
+
             if (LOG.isDebugEnabled()) {
-                LOG.debug("dayOfMonthCalendar:[" + (withDayOfMonth != null ? withDayOfMonth.getTime() : null) + "]");
+                LOG.debug("dayOfMonthCalendar:[{}]", withDayOfMonth != null ? withDayOfMonth.getTime() : null);
             }
 
             Calendar withDayOfWeek = fillOutCalendar(dayOfWeekCalendar);
+
             if (LOG.isDebugEnabled()) {
-                LOG.debug("dayOfWeekCalendar:[" + (withDayOfWeek != null ? withDayOfWeek.getTime() : null) + "]");
+                LOG.debug("dayOfWeekCalendar:[{}]", withDayOfWeek != null ? withDayOfWeek.getTime() : null);
             }
 
             if (withDayOfMonth != null && withDayOfWeek != null) {
@@ -525,7 +477,7 @@ public class RangerValidityScheduleEvaluator {
             Calendar ret = null;
 
             if (calendar != null) {
-                ValueWithBorrow input = new ValueWithBorrow(calendar.get(Calendar.MONTH));
+                ValueWithBorrow input        = new ValueWithBorrow(calendar.get(Calendar.MONTH));
                 ValueWithBorrow closestMonth = getPastFieldValueWithBorrow(RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month, months, input);
 
                 input.setValue(calendar.get(Calendar.YEAR));
@@ -539,10 +491,10 @@ public class RangerValidityScheduleEvaluator {
                 ret.set(Calendar.SECOND, 0);
 
                 ret.getTime(); // for recomputation
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Filled-out-Calendar:[" + ret.getTime() + "]");
-                }
+
+                LOG.debug("Filled-out-Calendar:[{}]", ret.getTime());
             }
+
             return ret;
         }
 
@@ -551,25 +503,22 @@ public class RangerValidityScheduleEvaluator {
         }
 
         private ValueWithBorrow getPastFieldValueWithBorrow(RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec fieldSpec, List<ScheduledTimeMatcher> searchList, ValueWithBorrow input, int maximum) throws Exception {
-
             ValueWithBorrow ret;
-            boolean borrow = false;
-
-            int value = input.value - (input.borrow ? 1 : 0);
+            boolean         borrow = false;
+            int             value  = input.value - (input.borrow ? 1 : 0);
 
             if (CollectionUtils.isNotEmpty(searchList)) {
                 int range = fieldSpec.maximum - fieldSpec.minimum + 1;
 
                 for (int i = 0; i < range; i++, value--) {
                     if (value < fieldSpec.minimum) {
-                        value = maximum;
+                        value  = maximum;
                         borrow = true;
                     }
                     for (ScheduledTimeMatcher time : searchList) {
                         if (time.isMatch(value)) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Found match in field:[" + fieldSpec + "], value:[" + value + "], borrow:[" + borrow + "], maximum:[" + maximum + "]");
-                            }
+                            LOG.debug("Found match in field:[{}], value:[{}], borrow:[{}], maximum:[{}]", fieldSpec, value, borrow, maximum);
+
                             return new ValueWithBorrow(value, borrow);
                         }
                     }
@@ -583,6 +532,44 @@ public class RangerValidityScheduleEvaluator {
                 ret = new ValueWithBorrow(value, false);
             }
             return ret;
+        }
+
+        private static class ValueWithBorrow {
+            int     value;
+            boolean borrow;
+
+            ValueWithBorrow() {
+            }
+
+            ValueWithBorrow(int value) {
+                this(value, false);
+            }
+
+            ValueWithBorrow(int value, boolean borrow) {
+                this.value  = value;
+                this.borrow = borrow;
+            }
+
+            @Override
+            public String toString() {
+                return "value=" + value + ", borrow=" + borrow;
+            }
+
+            int getValue() {
+                return value;
+            }
+
+            void setValue(int value) {
+                this.value = value;
+            }
+
+            boolean getBorrow() {
+                return borrow;
+            }
+
+            void setBorrow(boolean borrow) {
+                this.borrow = borrow;
+            }
         }
     }
 }

@@ -28,6 +28,7 @@
     <name>Common library for Plugins</name>
     <description>Plugins Common</description>
     <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>

@@ -29,6 +29,7 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -36,8 +37,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 public class GraalScriptEngineCreator implements ScriptEngineCreator {
     private static final Logger LOG = LoggerFactory.getLogger(GraalScriptEngineCreator.class);
@@ -59,7 +61,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         graalVmConfigsDefault.put("polyglot.js.allowHostAccess", Boolean.TRUE); //default is true for backward(Nashorn) compatibility
         graalVmConfigsDefault.put("polyglot.js.nashorn-compat", Boolean.TRUE);  //default is true for backward(Nashorn) compatibility
 
-        for (String file: findFiles(fileNameFilter)) {
+        for (String file : findFiles(fileNameFilter)) {
             configuration.addResource(new Path(file));
         }
 
@@ -125,7 +127,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
 
         // add default values if not already set
         for (Map.Entry<String, Boolean> entry : graalVmConfigsDefault.entrySet()) {
-            String key   = entry.getKey();
+            String  key   = entry.getKey();
             Boolean value = entry.getValue();
 
             ret.putIfAbsent(key, value);
@@ -139,9 +141,9 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
     }
 
     private Set<String> findFiles(FilenameFilter filenameFilter) {
-        String classPath = System.getProperty(CONFIG_JAVA_CLASS_PATH);
+        String       classPath  = System.getProperty(CONFIG_JAVA_CLASS_PATH);
         List<String> configDirs = new ArrayList<>(5);
-        Set<String> ret = new HashSet<>();
+        Set<String>  ret        = new HashSet<>();
 
         for (String path : classPath.split(":")) {
             if (!path.endsWith("jar")) {  //ignore jars
@@ -155,7 +157,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         for (String configDir : configDirs) {
             File confDir = new File(configDir);
             if (confDir.isDirectory()) {
-                for (File file : Objects.requireNonNull(confDir.listFiles(filenameFilter))) {
+                for (File file : requireNonNull(confDir.listFiles(filenameFilter))) {
                     ret.add(file.getAbsolutePath());
                 }
             }

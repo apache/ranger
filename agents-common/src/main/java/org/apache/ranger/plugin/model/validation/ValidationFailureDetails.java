@@ -26,78 +26,88 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 public class ValidationFailureDetails {
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationFailureDetails.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(ValidationFailureDetails.class);
+    final String  fieldName;
+    final String  subFieldName;
+    final boolean missing;
+    final boolean semanticError;
+    final boolean internalError;
+    final String  reason;
+    final int     errorCode;
 
-	final String _fieldName;
-	final String _subFieldName;
-	final boolean _missing;
-	final boolean _semanticError;
-	final boolean _internalError;
-	final String _reason;
-	final int _errorCode;
+    public ValidationFailureDetails(ValidationErrorCode errorCode, String fieldName, Object... errorCodeArgs) {
+        this(errorCode.getErrorCode(), fieldName, null, false, false, false, errorCode.getMessage(errorCodeArgs));
+    }
 
-	public ValidationFailureDetails(ValidationErrorCode errorCode, String fieldName, Object... errorCodeArgs) {
-		this(errorCode.getErrorCode(), fieldName, null, false, false, false, errorCode.getMessage(errorCodeArgs));
-	}
+    public ValidationFailureDetails(int errorCode, String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
+        this.errorCode     = errorCode;
+        this.missing       = missing;
+        this.semanticError = semanticError;
+        this.internalError = internalError;
+        this.fieldName     = fieldName;
+        this.subFieldName  = subFieldName;
+        this.reason        = reason;
+    }
 
-	public ValidationFailureDetails(int errorCode, String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
-		_errorCode = errorCode;
-		_missing = missing;
-		_semanticError = semanticError;
-		_internalError = internalError;
-		_fieldName = fieldName;
-		_subFieldName = subFieldName;
-		_reason = reason;
-	}
+    public String getFieldName() {
+        return fieldName;
+    }
 
-	public String getFieldName() {
-		return _fieldName;
-	}
+    public boolean isMissingRequiredValue() {
+        return missing;
+    }
 
-	public boolean isMissingRequiredValue() {
-		return _missing;
-	}
+    public boolean isSemanticallyIncorrect() {
+        return semanticError;
+    }
 
-	public boolean isSemanticallyIncorrect() {
-		return _semanticError;
-	}
-	
-	String getType() {
-		if (_missing) return "missing";
-		if (_semanticError) return "semantically incorrect";
-		if (_internalError) return "internal error";
-		return "";
-	}
+    public String getSubFieldName() {
+        return subFieldName;
+    }
 
-	public String getSubFieldName() {
-		return _subFieldName;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(fieldName, subFieldName, missing, semanticError, internalError, reason, errorCode);
+    }
 
-	@Override
-	public String toString() {
-		LOG.debug("ValidationFailureDetails.toString()");
-		return String.format(" %s: error code[%d], reason[%s], field[%s], subfield[%s], type[%s]", "Validation failure",
-				_errorCode, _reason, _fieldName, _subFieldName, getType());
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ValidationFailureDetails)) {
+            return false;
+        }
+        ValidationFailureDetails that = (ValidationFailureDetails) obj;
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(_fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason, _errorCode);
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof ValidationFailureDetails)) {
-			return false;
-		}
-		ValidationFailureDetails that = (ValidationFailureDetails)obj;
-		return Objects.equals(_fieldName, that._fieldName) &&
-				Objects.equals(_subFieldName, that._subFieldName) &&
-				Objects.equals(_reason, that._reason) &&
-				_internalError == that._internalError &&
-				_missing == that._missing &&
-				_semanticError == that._semanticError &&
-				_errorCode == that._errorCode;
-	}
+        return Objects.equals(fieldName, that.fieldName) &&
+                Objects.equals(subFieldName, that.subFieldName) &&
+                Objects.equals(reason, that.reason) &&
+                internalError == that.internalError &&
+                missing == that.missing &&
+                semanticError == that.semanticError &&
+                errorCode == that.errorCode;
+    }
+
+    @Override
+    public String toString() {
+        LOG.debug("ValidationFailureDetails.toString()");
+
+        return String.format(" %s: error code[%d], reason[%s], field[%s], subfield[%s], type[%s]", "Validation failure",
+                errorCode, reason, fieldName, subFieldName, getType());
+    }
+
+    String getType() {
+        if (missing) {
+            return "missing";
+        }
+
+        if (semanticError) {
+            return "semantically incorrect";
+        }
+
+        if (internalError) {
+            return "internal error";
+        }
+
+        return "";
+    }
 }

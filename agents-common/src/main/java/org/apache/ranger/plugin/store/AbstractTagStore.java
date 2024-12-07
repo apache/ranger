@@ -20,24 +20,20 @@
 package org.apache.ranger.plugin.store;
 
 public abstract class AbstractTagStore implements TagStore {
+    protected ServiceStore svcStore;
 
-	protected ServiceStore svcStore;
+    @Override
+    public void init() throws Exception {
+        // Empty
+    }
 
-	@Override
-	public void init() throws Exception {
-		// Empty
-	}
+    @Override
+    public final ServiceStore getServiceStore() {
+        return svcStore;
+    }
 
-	@Override
-	final public void setServiceStore(ServiceStore svcStore) {
-		this.svcStore = svcStore;
-	}
-
-	@Override
-	final public ServiceStore getServiceStore() {
-		return svcStore;
-	}
-
+    @Override
+    public final void setServiceStore(ServiceStore svcStore) {
+        this.svcStore = svcStore;
+    }
 }
-
-

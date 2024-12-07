@@ -41,13 +41,12 @@ public class RangerTimeRangeChecker {
     private final long fromTime;
     private final long toTime;
 
-
     public RangerTimeRangeChecker(String fromTime, String toTime, String timeZone) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerTimeRangeChecker({}, {})", fromTime, toTime);
         }
 
-        TimeZone tz = StringUtils.isNotBlank(timeZone) ? TimeZone.getTimeZone(timeZone) : null;;
+        TimeZone tz = StringUtils.isNotBlank(timeZone) ? TimeZone.getTimeZone(timeZone) : null;
 
         this.fromTime = parseDateTime(fromTime, tz);
         this.toTime   = parseDateTime(toTime, tz);
