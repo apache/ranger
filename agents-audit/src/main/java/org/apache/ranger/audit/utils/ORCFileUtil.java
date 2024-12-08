@@ -126,9 +126,7 @@ public class ORCFileUtil {
     }
 
     public void init(int orcBufferSize, long orcStripeSize, String compression) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCFileUtil.init()");
-        }
+        logger.debug("==> ORCFileUtil.init()");
 
         this.orcBufferSize   = orcBufferSize;
         this.orcStripeSize   = orcStripeSize;
@@ -136,15 +134,11 @@ public class ORCFileUtil {
 
         initORCAuditSchema();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCFileUtil.init() : orcBufferSize: {} stripeSize: {} compression: {}", orcBufferSize, orcStripeSize, compression);
-        }
+        logger.debug("<== ORCFileUtil.init() : orcBufferSize: {} stripeSize: {} compression: {}", orcBufferSize, orcStripeSize, compression);
     }
 
     public Writer createWriter(Configuration conf, FileSystem fs, String path) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCFileUtil.createWriter()");
-        }
+        logger.debug("==> ORCFileUtil.createWriter()");
 
         WriterOptions writeOptions = OrcFile.writerOptions(conf)
                 .fileSystem(fs)
@@ -155,31 +149,23 @@ public class ORCFileUtil {
 
         Writer ret = OrcFile.createWriter(new Path(path), writeOptions);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCFileUtil.createWriter()");
-        }
+        logger.debug("<== ORCFileUtil.createWriter()");
 
         return ret;
     }
 
     public void close(Writer writer) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCFileUtil.close()");
-        }
+        logger.debug("==> ORCFileUtil.close()");
 
         writer.close();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCFileUtil.close()");
-        }
+        logger.debug("<== ORCFileUtil.close()");
     }
 
     public void log(Writer writer, Collection<AuthzAuditEvent> events) throws Exception {
         int eventBatchSize = events.size();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCFileUtil.log() : EventSize: {} ORC bufferSize:{}", eventBatchSize, orcBufferSize);
-        }
+        logger.debug("==> ORCFileUtil.log() : EventSize: {} ORC bufferSize:{}", eventBatchSize, orcBufferSize);
 
         try {
             for (AuthzAuditEvent event : events) {
@@ -216,9 +202,7 @@ public class ORCFileUtil {
             throw e;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCFileUtil.log(): EventSize = {}", eventBatchSize);
-        }
+        logger.debug("<== ORCFileUtil.log(): EventSize = {}", eventBatchSize);
     }
 
     protected byte[] getBytesValues(String val) {
@@ -238,9 +222,7 @@ public class ORCFileUtil {
     }
 
     protected void initORCAuditSchema() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCWriter.initORCAuditSchema()");
-        }
+        logger.debug("==> ORCWriter.initORCAuditSchema()");
 
         auditSchema = getAuditSchema();
 
@@ -251,9 +233,7 @@ public class ORCFileUtil {
 
         buildVectorRowBatch(schemaFieldTypeMap);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCWriter.initORCAuditSchema()");
-        }
+        logger.debug("<== ORCWriter.initORCAuditSchema()");
     }
 
     protected Map<String, String> getSchemaFieldTypeMap() {
@@ -387,9 +367,7 @@ public class ORCFileUtil {
     }
 
     protected String getAuditSchema() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> ORCWriter.getAuditSchema()");
-        }
+        logger.debug("==> ORCWriter.getAuditSchema()");
 
         String                 fieldStr        = "struct<";
         StringBuilder          sb              = new StringBuilder(fieldStr);
@@ -418,9 +396,7 @@ public class ORCFileUtil {
 
         String ret = fieldStr + ">";
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== ORCWriter.getAuditSchema()  AuditSchema: {}", ret);
-        }
+        logger.debug("<== ORCWriter.getAuditSchema()  AuditSchema: {}", ret);
 
         return ret;
     }

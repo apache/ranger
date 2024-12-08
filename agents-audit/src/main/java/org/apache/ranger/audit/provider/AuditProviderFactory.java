@@ -446,9 +446,7 @@ public class AuditProviderFactory {
         AuditHandler ret;
         String       queueType = MiscUtil.getStringProperty(props, propPrefix + "." + "queuetype", DEFAULT_QUEUE_TYPE);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AuditProviderFactory.getAuditProvider() propPerfix={}, queueType={}", propPrefix, queueType);
-        }
+        LOG.debug("==> AuditProviderFactory.getAuditProvider() propPerfix={}, queueType={}", propPrefix, queueType);
 
         if (FILE_QUEUE_TYPE.equalsIgnoreCase(queueType)) {
             AuditFileQueue auditFileQueue      = new AuditFileQueue(consumer);
@@ -461,9 +459,7 @@ public class AuditProviderFactory {
             ret = new AuditBatchQueue(consumer);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AuditProviderFactory.getAuditProvider()");
-        }
+        LOG.debug("<== AuditProviderFactory.getAuditProvider()");
 
         return ret;
     }

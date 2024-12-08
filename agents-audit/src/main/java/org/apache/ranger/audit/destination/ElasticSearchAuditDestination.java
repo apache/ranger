@@ -213,7 +213,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                         logFailedEvent(Arrays.asList(itemRequest), itemResponse.getFailureMessage());
                     } else {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug(String.format("Indexed %s", itemRequest.getEventKey()));
+                            LOG.debug("Indexed {}", itemRequest.getEventKey());
                         }
 
                         addSuccessCount(1);
@@ -322,9 +322,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             RestClientBuilder restClientBuilder = getRestClientBuilder(hosts, protocol, user, password, port);
 
             try (RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Initialized client");
-                }
+                LOG.debug("Initialized client");
 
                 boolean exists = false;
 
@@ -335,9 +333,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 }
 
                 if (exists) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Index exists");
-                    }
+                    LOG.debug("Index exists");
                 } else {
                     LOG.info("Index does not exist");
                 }

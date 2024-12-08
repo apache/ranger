@@ -60,9 +60,7 @@ public class AuditWriterFactory {
     }
 
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String, String> auditConfigs) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AuditWriterFactory.init()");
-        }
+        logger.debug("==> AuditWriterFactory.init()");
 
         this.props             = props;
         this.propPrefix        = propPrefix;
@@ -77,31 +75,23 @@ public class AuditWriterFactory {
         if (auditWriter != null) {
             auditWriter.init(props, propPrefix, auditProviderName, auditConfigs);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("<== AuditWriterFactory.init() :{}", auditWriter.getClass().getName());
-            }
+            logger.debug("<== AuditWriterFactory.init() :{}", auditWriter.getClass().getName());
         }
     }
 
     public RangerAuditWriter createWriter(String writerClass) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AuditWriterFactory.createWriter()");
-        }
+        logger.debug("==> AuditWriterFactory.createWriter()");
 
         Class<RangerAuditWriter> cls = (Class<RangerAuditWriter>) Class.forName(writerClass);
         RangerAuditWriter        ret = cls.newInstance();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AuditWriterFactory.createWriter()");
-        }
+        logger.debug("<== AuditWriterFactory.createWriter()");
 
         return ret;
     }
 
     public String getDefaultWriter(String auditFileType) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AuditWriterFactory.getDefaultWriter()");
-        }
+        logger.debug("==> AuditWriterFactory.getDefaultWriter()");
 
         final String ret;
 
@@ -117,9 +107,7 @@ public class AuditWriterFactory {
                 break;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AuditWriterFactory.getDefaultWriter() :{}", ret);
-        }
+        logger.debug("<== AuditWriterFactory.getDefaultWriter() :{}", ret);
 
         return ret;
     }

@@ -83,9 +83,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
     @Override
     public void flush() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> HDFSAuditDestination.flush() called. name={}", getName());
-        }
+        logger.debug("==> HDFSAuditDestination.flush() called. name={}", getName());
 
         try {
             MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
@@ -96,9 +94,7 @@ public class HDFSAuditDestination extends AuditDestination {
             logger.error("HDFSAuditDestination.flush() failed", excp);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== HDFSAuditDestination.flush() called. name={}", getName());
-        }
+        logger.debug("<== HDFSAuditDestination.flush() called. name={}", getName());
     }
 
     @Override
@@ -135,9 +131,7 @@ public class HDFSAuditDestination extends AuditDestination {
 
             return false;
         } finally {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Flushing HDFS audit. Event Size:{}", events.size());
-            }
+            logger.debug("Flushing HDFS audit. Event Size:{}", events.size());
 
             if (auditWriter != null) {
                 flush();

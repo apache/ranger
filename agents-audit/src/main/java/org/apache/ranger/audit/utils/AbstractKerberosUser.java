@@ -67,9 +67,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
         try {
             // If it's the first time ever calling login then we need to initialize a new context
             if (loginContext == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Initializing new login context...");
-                }
+                LOG.debug("Initializing new login context...");
 
                 if (this.subject == null) {
                     // only create a new subject if a current one does not exist

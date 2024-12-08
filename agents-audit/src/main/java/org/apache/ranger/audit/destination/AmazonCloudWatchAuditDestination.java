@@ -162,9 +162,7 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
             }
 
             // LogStream may exist before first push attempt, re-obtain the sequence token
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Invalid sequence token. Plugin possibly restarted. Updating the sequence token and retrying");
-            }
+            LOG.debug("Invalid sequence token. Plugin possibly restarted. Updating the sequence token and retrying");
 
             sequenceToken = ex.getExpectedSequenceToken();
 

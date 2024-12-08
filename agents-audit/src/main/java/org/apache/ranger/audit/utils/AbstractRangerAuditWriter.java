@@ -92,9 +92,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
     @Override
     public void flush() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.flush() {}", fileSystemScheme);
-        }
+        logger.debug("==> AbstractRangerAuditWriter.flush() {}", fileSystemScheme);
 
         if (ostream != null) {
             try {
@@ -112,24 +110,18 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
                         }
                     }
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Flush {} audit logs completed.....", fileSystemScheme);
-                    }
+                    logger.debug("Flush {} audit logs completed.....", fileSystemScheme);
                 }
             } catch (IOException e) {
                 logger.error("Error on flushing log writer: {}\nException will be ignored. name={}, fileName={}", e.getMessage(), auditProviderName, currentFileName);
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.flush()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.flush()");
     }
 
     public void createFileSystemFolders() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.createFileSystemFolders()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.createFileSystemFolders()");
 
         // Create a new file
         Date   currentTime = new Date();
@@ -172,9 +164,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         currentFileName = fullPath;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.createFileSystemFolders()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.createFileSystemFolders()");
     }
 
     public Configuration createConfiguration() {
@@ -208,9 +198,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     }
 
     public void init(Properties props, String propPrefix) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.init()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.init()");
 
         String logFolderProp = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_DIR);
 
@@ -262,20 +250,14 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             nextRollOverTime   = rollOverByDuration();
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.init()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.init()");
     }
 
     public void closeFileIfNeeded() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.closeFileIfNeeded()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.closeFileIfNeeded()");
 
         if (logWriter == null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Log writer is null, aborting rollover condition check!");
-            }
+            logger.debug("Log writer is null, aborting rollover condition check!");
 
             return;
         }
@@ -309,9 +291,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
     }
 
     public Date rollOverByDuration() {
@@ -321,9 +301,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     }
 
     public PrintWriter createWriter() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.createWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.createWriter()");
 
         if (logWriter == null) {
             boolean appendMode = false;
@@ -353,9 +331,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.createWriter()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.createWriter()");
 
         return logWriter;
     }
@@ -364,9 +340,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
      * Closes the writer after writing audits
      **/
     public void closeWriter() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
 
         if (ostream != null) {
             try {
@@ -380,28 +354,20 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logWriter.close();
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
     }
 
     public void resetWriter() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.resetWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.resetWriter()");
 
         logWriter = null;
         ostream   = null;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
     }
 
     public boolean logFileToHDFS(File file) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.logFileToHDFS()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.logFileToHDFS()");
 
         boolean ret = false;
 
@@ -416,9 +382,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             ret = FileUtil.copy(file, fileSystem, destPath, false, conf);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.logFileToHDFS()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.logFileToHDFS()");
 
         return ret;
     }

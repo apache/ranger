@@ -671,9 +671,7 @@ public class MiscUtil {
         String               principal  = null;
         UserGroupInformation ugi        = null;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("===> MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: {}", jaasConfigAppName);
-        }
+        logger.debug("===> MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: {}", jaasConfigAppName);
 
         try {
             AppConfigurationEntry[] entries = Configuration.getConfiguration().getAppConfigurationEntry(jaasConfigAppName);
@@ -715,9 +713,8 @@ public class MiscUtil {
 
             throw e;
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("<=== MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: {} UGI: {} principal: {} keytab: {}", jaasConfigAppName, ugi, principal, keytabFile);
-        }
+
+        logger.debug("<=== MiscUtil.setUGIFromJAASConfig() jaasConfigAppName: {} UGI: {} principal: {} keytab: {}", jaasConfigAppName, ugi, principal, keytabFile);
     }
 
     public static void authWithKerberos(String keytab, String principal, String nameRules) {
@@ -803,9 +800,7 @@ public class MiscUtil {
     }
 
     public static void loginWithKeyTab(String keytab, String principal, String nameRules) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> MiscUtil.loginWithKeyTab() keytab={} principal={} nameRules={}}", keytab, principal, nameRules);
-        }
+        logger.debug("==> MiscUtil.loginWithKeyTab() keytab={} principal={} nameRules={}}", keytab, principal, nameRules);
 
         if (keytab == null || principal == null) {
             logger.error("Failed to login as keytab or principal is null!");
@@ -840,9 +835,7 @@ public class MiscUtil {
             logger.error("Failed to login with given keytab={} principal={} nameRules={}", keytab, principal, nameRules, e);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== MiscUtil.loginWithKeyTab()");
-        }
+        logger.debug("<== MiscUtil.loginWithKeyTab()");
     }
 
     public static UserGroupInformation getLoginUser() throws IOException {
@@ -958,9 +951,7 @@ public class MiscUtil {
     }
 
     private static void initLocalHost() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> MiscUtil.initLocalHost()");
-        }
+        logger.debug("==> MiscUtil.initLocalHost()");
 
         try {
             localHostname = InetAddress.getLocalHost().getHostName();
@@ -968,9 +959,7 @@ public class MiscUtil {
             logger.warn("getHostname()", excp);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== MiscUtil.initLocalHost()");
-        }
+        logger.debug("<== MiscUtil.initLocalHost()");
     }
 
     static class LogHistory {

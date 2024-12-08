@@ -62,13 +62,9 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
 
     @Override
     protected LoginContext createLoginContext(Subject subject) throws LoginException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> KerberosJAASConfigUser.createLoginContext()");
-        }
+        LOG.debug("==> KerberosJAASConfigUser.createLoginContext()");
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== KerberosJAASConfigUser.createLoginContext(), Subject: {}", subject);
-        }
+        LOG.debug("<== KerberosJAASConfigUser.createLoginContext(), Subject: {}", subject);
 
         return new LoginContext(configName, subject, null, config);
     }

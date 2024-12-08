@@ -53,17 +53,13 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String, String> auditConfigs) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerORCAuditWriter.init()");
-        }
+        logger.debug("==> RangerORCAuditWriter.init()");
 
         init(props, propPrefix, auditProviderName);
 
         super.init(props, propPrefix, auditProviderName, auditConfigs);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== RangerORCAuditWriter.init()");
-        }
+        logger.debug("<== RangerORCAuditWriter.init()");
     }
 
     @Override
@@ -95,9 +91,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
 
             throw e;
         } finally {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Flushing HDFS audit in ORC Format. Event Size:{}", events.size());
-            }
+            logger.debug("Flushing HDFS audit in ORC Format. Event Size:{}", events.size());
 
             if (out != null) {
                 try {
@@ -187,9 +181,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
 
     // Creates ORC Write file
     protected synchronized Writer getORCFileWrite() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerORCAuditWriter.getORCFileWrite()");
-        }
+        logger.debug("==> RangerORCAuditWriter.getORCFileWrite()");
 
         if (orcLogWriter == null) {
             // Create the file to write
@@ -201,9 +193,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
             currentFileName = fullPath;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== RangerORCAuditWriter.getORCFileWrite()");
-        }
+        logger.debug("<== RangerORCAuditWriter.getORCFileWrite()");
 
         return orcLogWriter;
     }

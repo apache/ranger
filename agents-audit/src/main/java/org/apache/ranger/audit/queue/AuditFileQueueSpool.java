@@ -922,9 +922,7 @@ public class AuditFileQueueSpool implements Runnable {
     }
 
     private void logFile(File file) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AuditFileQueueSpool.logFile()");
-        }
+        logger.debug("==> AuditFileQueueSpool.logFile()");
 
         int currLine  = 0;
         int startLine = currentConsumerIndexRecord.getLinePosition();
@@ -939,17 +937,13 @@ public class AuditFileQueueSpool implements Runnable {
             throw new Exception("Destination down");
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AuditFileQueueSpool.logFile()");
-        }
+        logger.debug("<== AuditFileQueueSpool.logFile()");
     }
 
     private boolean sendFile(File file, AuditIndexRecord indexRecord, int currLine) {
         boolean ret = true;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AuditFileQueueSpool.sendFile()");
-        }
+        logger.debug("==> AuditFileQueueSpool.sendFile()");
 
         try {
             ret = consumerProvider.logFile(file);
@@ -976,9 +970,7 @@ public class AuditFileQueueSpool implements Runnable {
             logger.error("Error sending log file to consumer. provider={}, consumer={}, logFile={}", FILE_QUEUE_PROVIDER_NAME, consumerProvider.getName(), file.getName(), t);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AuditFileQueueSpool.sendFile() {}", ret);
-        }
+        logger.debug("<== AuditFileQueueSpool.sendFile() {}", ret);
 
         return ret;
     }

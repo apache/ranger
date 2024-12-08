@@ -656,9 +656,7 @@ public class AuditFileSpool implements Runnable {
 
             boolean filedRenamed = logFile.renameTo(archiveFile);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("logFile renamed to archiveFile {} {}", archiveFile, filedRenamed);
-            }
+            logger.debug("logFile renamed to archiveFile {} {}", archiveFile, filedRenamed);
         } catch (Exception t) {
             logger.error("Error moving log file to archive folder. logFile={}, archiveFile={}", logFile, archiveFile, t);
         }

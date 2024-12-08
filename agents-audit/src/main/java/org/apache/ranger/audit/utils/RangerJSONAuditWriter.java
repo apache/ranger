@@ -58,9 +58,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     private long periodicRollOverCheckTimeinSec;
 
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String, String> auditConfigs) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerJSONAuditWriter.init()");
-        }
+        logger.debug("==> RangerJSONAuditWriter.init()");
 
         init();
 
@@ -72,9 +70,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             periodicRollOverCheckTimeinSec = MiscUtil.getLongProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_PERIODIC_ROLLOVER_CHECK_TIME, 60L);
 
             try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("rolloverPeriod: {} nextRollOverTime: {} periodicRollOverTimeinSec: {}", rolloverPeriod, nextRollOverTime, periodicRollOverCheckTimeinSec);
-                }
+                logger.debug("rolloverPeriod: {} nextRollOverTime: {} periodicRollOverTimeinSec: {}", rolloverPeriod, nextRollOverTime, periodicRollOverCheckTimeinSec);
 
                 startAuditFilePeriodicRollOverTask();
             } catch (Exception e) {
@@ -82,21 +78,15 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== RangerJSONAuditWriter.init()");
-        }
+        logger.debug("<== RangerJSONAuditWriter.init()");
     }
 
     public void flush() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> JSONWriter.flush() called. name={}", auditProviderName);
-        }
+        logger.debug("==> JSONWriter.flush() called. name={}", auditProviderName);
 
         super.flush();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== JSONWriter.flush()");
-        }
+        logger.debug("<== JSONWriter.flush()");
     }
 
     public void init() {
@@ -107,9 +97,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
         PrintWriter out = null;
 
         try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("UGI = {}, will write to HDFS file = {}", MiscUtil.getUGILoginUser(), currentFileName);
-            }
+            logger.debug("UGI = {}, will write to HDFS file = {}", MiscUtil.getUGILoginUser(), currentFileName);
 
             out = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<PrintWriter>) () -> {
                 PrintWriter out1 = getLogFileStream();
@@ -143,9 +131,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
 
             return false;
         } finally {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Flushing HDFS audit. Event Size:{}", events.size());
-            }
+            logger.debug("Flushing HDFS audit. Event Size:{}", events.size());
 
             if (out != null) {
                 out.flush();
@@ -173,9 +159,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
 
     @Override
     public synchronized void stop() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> JSONWriter.stop()");
-        }
+        logger.debug("==> JSONWriter.stop()");
 
         if (logWriter != null) {
             try {
@@ -189,15 +173,11 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             ostream   = null;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== JSONWriter.stop()");
-        }
+        logger.debug("<== JSONWriter.stop()");
     }
 
     public synchronized boolean logAsFile(final File file) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("UGI={}. Will write to HDFS file={}", MiscUtil.getUGILoginUser(), currentFileName);
-        }
+        logger.debug("UGI={}. Will write to HDFS file={}", MiscUtil.getUGILoginUser(), currentFileName);
 
         boolean ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Boolean>) () -> logFileToHDFS(file));
 
@@ -220,9 +200,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     private void startAuditFilePeriodicRollOverTask() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(new AuditFilePeriodicRollOverTaskThreadFactory());
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("HDFSAuditDestination.startAuditFilePeriodicRollOverTask() strated.." + "Audit File rollover happens every {}", rolloverPeriod);
-        }
+        logger.debug("HDFSAuditDestination.startAuditFilePeriodicRollOverTask() strated.." + "Audit File rollover happens every {}", rolloverPeriod);
 
         executorService.scheduleAtFixedRate(new AuditFilePeriodicRollOverTask(), 0, periodicRollOverCheckTimeinSec, TimeUnit.SECONDS);
     }
@@ -242,9 +220,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     private class AuditFilePeriodicRollOverTask implements Runnable {
         @Override
         public void run() {
-            if (logger.isDebugEnabled()) {
-                logger.debug("==> AuditFilePeriodicRollOverTask.run()");
-            }
+            logger.debug("==> AuditFilePeriodicRollOverTask.run()");
 
             try {
                 closeFileIfNeeded();
@@ -252,9 +228,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 logger.error("AuditFilePeriodicRollOverTask Failed. Aborting..", excp);
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("<== AuditFilePeriodicRollOverTask.run()");
-            }
+            logger.debug("<== AuditFilePeriodicRollOverTask.run()");
         }
     }
 }

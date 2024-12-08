@@ -108,9 +108,7 @@ public class SolrAuditProvider extends AuditDestination {
                 long diff = System.currentTimeMillis() - lastFailTime;
 
                 if (diff < retryWaitTime) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Ignore sending audit. lastConnect={} ms", diff);
-                    }
+                    LOG.debug("Ignore sending audit. lastConnect={} ms", diff);
 
                     return false;
                 }
@@ -232,9 +230,7 @@ public class SolrAuditProvider extends AuditDestination {
                         long diff = System.currentTimeMillis() - lastConnectTime.getTime();
 
                         if (diff < retryWaitTime) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Ignore connecting to solr url={}, lastConnect={}ms", solrURL, diff);
-                            }
+                            LOG.debug("Ignore connecting to solr url={}, lastConnect={}ms", solrURL, diff);
 
                             return;
                         }
