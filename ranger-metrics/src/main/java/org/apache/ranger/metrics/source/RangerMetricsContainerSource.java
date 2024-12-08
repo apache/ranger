@@ -20,64 +20,48 @@
 package org.apache.ranger.metrics.source;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.ranger.metrics.RangerMetricsInfo;
 import org.apache.ranger.server.tomcat.EmbeddedServer;
 import org.apache.ranger.server.tomcat.EmbeddedServerMetricsCollector;
-import org.apache.hadoop.metrics2.MetricsCollector;
 
 import java.util.Objects;
 
 public class RangerMetricsContainerSource extends RangerMetricsSource {
-
+    private final String context;
     private EmbeddedServerMetricsCollector embeddedServerMetricsCollector;
-
     private long maxConnections;
-
     private int acceptCount;
-
     private long activeConnectionsCount;
-
     private int maxContainersThreadCount;
-
     private int minSpareThreadsCount;
-
     private int activeContainerThreadsCount;
-
     private int totalContainerThreadsCount;
-
     private long connectionTimeout;
-
     private long keepAliveTimeout;
 
-    private final String context;
-
     public RangerMetricsContainerSource(String context) {
-        this.context = context;
+        this.context                        = context;
         this.embeddedServerMetricsCollector = EmbeddedServer.getServerMetricsCollector();
     }
 
     @Override
     protected void refresh() {
-
-        if(Objects.nonNull(this.embeddedServerMetricsCollector))
-        {
-            this.maxConnections = embeddedServerMetricsCollector.getMaxAllowedConnection();
-            this.acceptCount = embeddedServerMetricsCollector.getConnectionAcceptCount();
-            this.activeConnectionsCount = embeddedServerMetricsCollector.getActiveConnectionCount();
-            this.maxContainersThreadCount = embeddedServerMetricsCollector.getMaxContainerThreadsCount();
-            this.minSpareThreadsCount = embeddedServerMetricsCollector.getMinSpareContainerThreadsCount();
+        if (Objects.nonNull(this.embeddedServerMetricsCollector)) {
+            this.maxConnections              = embeddedServerMetricsCollector.getMaxAllowedConnection();
+            this.acceptCount                 = embeddedServerMetricsCollector.getConnectionAcceptCount();
+            this.activeConnectionsCount      = embeddedServerMetricsCollector.getActiveConnectionCount();
+            this.maxContainersThreadCount    = embeddedServerMetricsCollector.getMaxContainerThreadsCount();
+            this.minSpareThreadsCount        = embeddedServerMetricsCollector.getMinSpareContainerThreadsCount();
             this.activeContainerThreadsCount = embeddedServerMetricsCollector.getActiveContainerThreadsCount();
-            this.connectionTimeout = embeddedServerMetricsCollector.getConnectionTimeout();
-            this.keepAliveTimeout = embeddedServerMetricsCollector.getKeepAliveTimeout();
-            this.totalContainerThreadsCount = embeddedServerMetricsCollector.getTotalContainerThreadsCount();
+            this.connectionTimeout           = embeddedServerMetricsCollector.getConnectionTimeout();
+            this.keepAliveTimeout            = embeddedServerMetricsCollector.getKeepAliveTimeout();
+            this.totalContainerThreadsCount  = embeddedServerMetricsCollector.getTotalContainerThreadsCount();
         }
-
-
     }
 
     @Override
     protected void update(MetricsCollector collector, boolean all) {
-
         collector.addRecord("RangerWebContainer")
                 .setContext(this.context)
                 .addCounter(new RangerMetricsInfo("MaxConnectionsCount", "Ranger max configured container connections"), this.maxConnections)
@@ -92,8 +76,7 @@ public class RangerMetricsContainerSource extends RangerMetricsSource {
     }
 
     @VisibleForTesting
-    void setEmbeddedServerMetricsCollector( EmbeddedServerMetricsCollector embeddedServerMetricsCollector ){
+    void setEmbeddedServerMetricsCollector(EmbeddedServerMetricsCollector embeddedServerMetricsCollector) {
         this.embeddedServerMetricsCollector = embeddedServerMetricsCollector;
     }
-
 }
