@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public interface RangerAuditWriter {
-    void init(Properties prop, String propPrefix, String auditProviderName, Map<String,String> auditConfigs);
+    void init(Properties prop, String propPrefix, String auditProviderName, Map<String, String> auditConfigs);
 
     boolean log(Collection<String> events) throws Exception;
 

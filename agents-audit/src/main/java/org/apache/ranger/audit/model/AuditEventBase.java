@@ -22,12 +22,14 @@ package org.apache.ranger.audit.model;
 import java.util.Date;
 
 public abstract class AuditEventBase {
+    protected AuditEventBase() {
+    }
 
-	protected AuditEventBase() {
-	}
+    public abstract String getEventKey();
 
-	public abstract String getEventKey();
-	public abstract Date getEventTime ();
-	public abstract void setEventCount(long eventCount);
-	public abstract void setEventDurationMS(long eventDurationMS);
+    public abstract Date getEventTime();
+
+    public abstract void setEventCount(long eventCount);
+
+    public abstract void setEventDurationMS(long eventDurationMS);
 }

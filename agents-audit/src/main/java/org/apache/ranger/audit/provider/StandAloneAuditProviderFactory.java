@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,25 +22,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StandAloneAuditProviderFactory extends AuditProviderFactory {
-	private static final Logger LOG = LoggerFactory.getLogger(StandAloneAuditProviderFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StandAloneAuditProviderFactory.class);
 
-	private volatile static StandAloneAuditProviderFactory sFactory = null;
+    private static volatile StandAloneAuditProviderFactory sFactory;
 
-	public static StandAloneAuditProviderFactory getInstance() {
-		StandAloneAuditProviderFactory ret = sFactory;
-		if(ret == null) {
-			synchronized(StandAloneAuditProviderFactory.class) {
-				ret = sFactory;
-				if(ret == null) {
-					ret = sFactory = new StandAloneAuditProviderFactory();
-				}
-			}
-		}
-		return ret;
-	}
+    private StandAloneAuditProviderFactory() {
+        super();
 
-	private StandAloneAuditProviderFactory() {
-		super();
-		LOG.info("StandAloneAuditProviderFactory: created..");
-	}
+        LOG.info("StandAloneAuditProviderFactory: created..");
+    }
+
+    public static StandAloneAuditProviderFactory getInstance() {
+        StandAloneAuditProviderFactory ret = sFactory;
+
+        if (ret == null) {
+            synchronized (StandAloneAuditProviderFactory.class) {
+                ret = sFactory;
+
+                if (ret == null) {
+                    ret      = new StandAloneAuditProviderFactory();
+                    sFactory = ret;
+                }
+            }
+        }
+
+        return ret;
+    }
 }

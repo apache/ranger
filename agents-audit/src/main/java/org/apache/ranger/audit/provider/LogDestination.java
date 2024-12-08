@@ -21,26 +21,26 @@ package org.apache.ranger.audit.provider;
 import org.apache.ranger.audit.model.AuditEventBase;
 
 public interface LogDestination<T> {
-	void start();
+    void start();
 
-	void stop();
+    void stop();
 
-	boolean isAvailable();
+    boolean isAvailable();
 
-	boolean send(AuditEventBase log) throws AuditMessageException;
+    boolean send(AuditEventBase log) throws AuditMessageException;
 
-	boolean send(AuditEventBase[] logs) throws AuditMessageException;
+    boolean send(AuditEventBase[] logs) throws AuditMessageException;
 
-	boolean sendStringified(String log) throws AuditMessageException;
+    boolean sendStringified(String log) throws AuditMessageException;
 
-	boolean sendStringified(String[] logs) throws AuditMessageException;
+    boolean sendStringified(String[] logs) throws AuditMessageException;
 
-	boolean flush();
+    boolean flush();
 
-	/**
-	 * Name for the destination
-	 *
-	 * @return
-	 */
-	String getName();
+    /**
+     * Name for the destination
+     *
+     * @return
+     */
+    String getName();
 }

@@ -20,5 +20,5 @@
 package org.apache.ranger.audit.model;
 
 public enum SPOOL_FILE_STATUS {
-	pending, write_inprogress, read_inprogress, done
+    pending, write_inprogress, read_inprogress, done
 }

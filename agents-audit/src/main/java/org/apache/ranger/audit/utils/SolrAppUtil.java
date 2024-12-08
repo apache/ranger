@@ -28,12 +28,11 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 
 public class SolrAppUtil {
+    private SolrAppUtil() {
+        // to block instantiation
+    }
+
     public static UpdateResponse addDocsToSolr(final SolrClient solrClient, final Collection<SolrInputDocument> docs) throws Exception {
-        return MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<UpdateResponse>() {
-            @Override
-            public UpdateResponse run() throws Exception {
-                return solrClient.add(docs);
-            }
-        });
+        return MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<UpdateResponse>) () -> solrClient.add(docs));
     }
 }
