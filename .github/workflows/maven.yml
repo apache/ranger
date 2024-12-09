@@ -104,7 +104,7 @@ jobs:
           cp version dev-support/ranger-docker/dist
       
       - name: Cache downloaded archives
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: dev-support/ranger-docker/downloads
           key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
