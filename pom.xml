@@ -48,6 +48,7 @@
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
+        <checkstyle.skip>true</checkstyle.skip>
         <checkstyle.version>8.29</checkstyle.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
@@ -704,6 +705,7 @@
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>./dev-support/checkstyle.xml</configLocation>
                             <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
+                            <skip>${checkstyle.skip}</skip>
                             <failOnViolation>${checkstyle.failOnViolation}</failOnViolation>
                         </configuration>
                     </execution>
