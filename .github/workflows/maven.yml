@@ -29,6 +29,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3
+
 jobs:
   build-8:
     runs-on: ubuntu-latest
