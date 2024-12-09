@@ -25,6 +25,9 @@
     </parent>
 
     <artifactId>ranger-intg</artifactId>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>
@@ -147,7 +150,6 @@
                     </filesets>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>
