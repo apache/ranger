@@ -29,24 +29,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class OzoneClient extends BaseClient {
-
     private static final Logger LOG     = LoggerFactory.getLogger(OzoneClient.class);
-    private static final String ERR_MSG = "You can still save the repository and start creating policies, but you " +
-            "would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
+    private static final String ERR_MSG = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
+    private final OzoneConfiguration                         conf;
+    private       org.apache.hadoop.ozone.client.OzoneClient ozoneClient;
 
-    private final OzoneConfiguration conf;
-    private org.apache.hadoop.ozone.client.OzoneClient ozoneClient = null;
-
-    public OzoneClient(String serviceName, Map<String,String> connectionProperties) throws Exception{
-        super(serviceName,connectionProperties, "ozone-client");
+    public OzoneClient(String serviceName, Map<String, String> connectionProperties) throws Exception {
+        super(serviceName, connectionProperties, "ozone-client");
         conf = new OzoneConfiguration();
         Set<String> rangerInternalPropertyKeys = getConfigHolder().getRangerInternalPropertyKeys();
-        for (Map.Entry<String, String> entry: connectionProperties.entrySet())  {
+        for (Map.Entry<String, String> entry : connectionProperties.entrySet()) {
             String key   = entry.getKey();
             String value = entry.getValue();
             if (!rangerInternalPropertyKeys.contains(key) && value != null) {
@@ -60,13 +63,40 @@ public class OzoneClient extends BaseClient {
         });
     }
 
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> connectionProperties) throws Exception {
+        Map<String, Object> responseData       = new HashMap<>();
+        OzoneClient         connectionObj      = null;
+        boolean             connectivityStatus = false;
+        List<String>        testResult;
+
+        try {
+            connectionObj = new OzoneClient(serviceName, connectionProperties);
+            testResult    = connectionObj.getVolumeList("");
+            if (testResult != null && testResult.size() != 0) {
+                connectivityStatus = true;
+            }
+            if (connectivityStatus) {
+                String successMsg = "ConnectionTest Successful";
+                generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
+            } else {
+                String failureMsg = "Unable to retrieve any volumes using given parameters.";
+                generateResponseDataMap(false, failureMsg, failureMsg + ERR_MSG, null, null, responseData);
+            }
+        } finally {
+            if (connectionObj != null) {
+                connectionObj.close();
+            }
+        }
+
+        return responseData;
+    }
+
     public void close() {
         try {
             ozoneClient.close();
         } catch (IOException e) {
             LOG.error("Unable to close Ozone Client connection", e);
         }
-
     }
 
     public List<String> getVolumeList(String volumePrefix) {
@@ -87,7 +117,7 @@ public class OzoneClient extends BaseClient {
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : " , e);
+                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
             }
         }
         if (LOG.isDebugEnabled()) {
@@ -102,7 +132,7 @@ public class OzoneClient extends BaseClient {
         }
         List<String> ret = new ArrayList<>();
         try {
-            if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()){
+            if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
                 for (String ozoneVol : finalVolumeList) {
                     Iterator<? extends OzoneBucket> ozoneBucketList = ozoneClient.getObjectStore().getVolume(ozoneVol).listBuckets(bucketPrefix);
                     if (ozoneBucketList != null) {
@@ -115,7 +145,7 @@ public class OzoneClient extends BaseClient {
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : " , e);
+                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
             }
         }
         if (LOG.isDebugEnabled()) {
@@ -151,43 +181,12 @@ public class OzoneClient extends BaseClient {
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : " , e);
+                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
             }
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== OzoneClient.getVolumeList(): " + ret);
         }
         return ret;
-    }
-
-    public static Map<String, Object> connectionTest(String serviceName,
-                                                     Map<String, String> connectionProperties) throws Exception {
-        Map<String, Object> responseData = new HashMap<>();
-        OzoneClient connectionObj = null;
-        boolean connectivityStatus = false;
-        List<String> testResult;
-
-        try {
-            connectionObj = new OzoneClient(serviceName, connectionProperties);
-            testResult    = connectionObj.getVolumeList("");
-            if (testResult != null && testResult.size() != 0) {
-                connectivityStatus = true;
-            }
-            if (connectivityStatus) {
-                String successMsg = "ConnectionTest Successful";
-                generateResponseDataMap(true, successMsg, successMsg,
-                        null, null, responseData);
-            } else {
-                String failureMsg = "Unable to retrieve any volumes using given parameters.";
-                generateResponseDataMap(false, failureMsg, failureMsg + ERR_MSG,
-                        null, null, responseData);
-            }
-        } finally {
-            if (connectionObj != null) {
-                connectionObj.close();
-            }
-        }
-
-        return responseData;
     }
 }
