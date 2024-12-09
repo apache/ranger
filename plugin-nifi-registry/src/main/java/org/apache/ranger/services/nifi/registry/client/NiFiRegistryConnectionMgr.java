@@ -65,9 +65,8 @@ public class NiFiRegistryConnectionMgr {
         validateNotBlank(authTypeStr, "Authentication Type is required for " + serviceName);
 
         final NiFiRegistryAuthType authType = NiFiRegistryAuthType.valueOf(authTypeStr);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("NiFiRegistryAuthType is " + authType.name());
-        }
+
+        LOG.debug("NiFiRegistryAuthType is {}", authType.name());
 
         SSLContext sslContext = null;
 

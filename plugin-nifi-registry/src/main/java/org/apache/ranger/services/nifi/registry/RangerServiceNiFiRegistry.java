@@ -39,24 +39,20 @@ public class RangerServiceNiFiRegistry extends RangerBaseService {
         HashMap<String, Object> ret;
         String                  serviceName = getServiceName();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceNiFiRegistry.validateConfig Service: (" + serviceName + " )");
-        }
+        LOG.debug("==> RangerServiceNiFiRegistry.validateConfig Service: ({})", serviceName);
 
         if (configs != null) {
             try {
                 ret = NiFiRegistryConnectionMgr.connectionTest(serviceName, configs);
             } catch (Exception e) {
-                LOG.error("<== RangerServiceNiFiRegistry.validateConfig Error:", e);
+                LOG.error("<== RangerServiceNiFiRegistry.validateConfig Error: ", e);
                 throw e;
             }
         } else {
             throw new IllegalStateException("No Configuration found");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceNiFiRegistry.validateConfig Response : (" + ret + " )");
-        }
+        LOG.debug("<== RangerServiceNiFiRegistry.validateConfig Response : ({})", ret);
 
         return ret;
     }

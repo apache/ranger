@@ -51,9 +51,9 @@ import java.util.List;
  * Client to communicate with NiFi Registry and retrieve available resources.
  */
 public class NiFiRegistryClient {
+    private static final Logger LOG = LoggerFactory.getLogger(NiFiRegistryClient.class);
     static final String SUCCESS_MSG = "ConnectionTest Successful";
     static final String FAILURE_MSG = "Unable to retrieve any resources using given parameters. ";
-    private static final Logger LOG = LoggerFactory.getLogger(NiFiRegistryClient.class);
     private final String           url;
     private final SSLContext       sslContext;
     private final HostnameVerifier hostnameVerifier;
@@ -74,9 +74,7 @@ public class NiFiRegistryClient {
             final WebResource    resource = getWebResource();
             final ClientResponse response = getResponse(resource, "application/json");
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Got response from NiFi with status code " + response.getStatus());
-            }
+            LOG.debug("Got response from NiFi with status code {}", response.getStatus());
 
             if (Response.Status.OK.getStatusCode() == response.getStatus()) {
                 connectivityStatus = true;
@@ -85,7 +83,7 @@ public class NiFiRegistryClient {
                 errMsg             = "Status Code = " + response.getStatus();
             }
         } catch (Exception e) {
-            LOG.error("Connection to NiFi failed due to " + e.getMessage(), e);
+            LOG.error("Connection to NiFi failed due to {}", e.getMessage(), e);
             connectivityStatus = false;
             errMsg             = e.getMessage();
         }
@@ -93,11 +91,12 @@ public class NiFiRegistryClient {
         if (connectivityStatus) {
             BaseClient.generateResponseDataMap(connectivityStatus, SUCCESS_MSG, SUCCESS_MSG, null, null, responseData);
         } else {
-            BaseClient.generateResponseDataMap(connectivityStatus, FAILURE_MSG, FAILURE_MSG + errMsg, null, null, responseData);
+            String errorMsg = FAILURE_MSG + errMsg;
+            BaseClient.generateResponseDataMap(connectivityStatus, FAILURE_MSG, errorMsg, null, null, responseData);
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Response Data - " + responseData);
+            LOG.debug("Response Data - {}", responseData);
         }
 
         return responseData;
@@ -179,7 +178,7 @@ public class NiFiRegistryClient {
                     }
                 }
             } catch (final SSLPeerUnverifiedException | CertificateParsingException ex) {
-                LOG.warn("Hostname Verification encountered exception verifying hostname due to: " + ex, ex);
+                LOG.warn("Hostname Verification encountered exception verifying hostname due to: {}", ex, ex);
             }
 
             return false;
@@ -195,7 +194,6 @@ public class NiFiRegistryClient {
             for (final List<?> generalName : altNames) {
                 /**
                  * generalName has the name type as the first element a String or byte array for the second element. We return any general names that are String types.
-                 *
                  * We don't inspect the numeric name type because some certificates incorrectly put IPs and DNS names under the wrong name types.
                  */
                 if (generalName.size() > 1) {
