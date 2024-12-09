@@ -107,7 +107,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         RangerPerfTracer perf = null;
 
         if (RangerPerfTracer.isPerfTraceEnabled(PERF_OZONEAUTH_REQUEST_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_OZONEAUTH_REQUEST_LOG, "RangerOzoneAuthorizer.authorize(resource=" + resource + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_OZONEAUTH_REQUEST_LOG, String.format("RangerOzoneAuthorizer.authorize(resource = %s)", resource));
         }
 
         Date   eventTime  = new Date();
@@ -115,7 +115,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         if (accessType == null) {
             String message = String.format("Unsupported access type. operation = %s", operation);
             MiscUtil.logErrorMessageByInterval(LOG, message);
-            LOG.error(message + ", resource = " + resource);
+            LOG.error("{}, resource = {}", message, resource);
             return returnValue;
         }
         String action      = accessType;
@@ -150,7 +150,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
                 rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
             }
         } else {
-            LOG.error("Unsupported resource = " + resource);
+            LOG.error("Unsupported resource = {}", resource);
             String message = String.format("Unsupported resource type = %s for resource = %s, request = %s", ozoneObj.getResourceType(), resource, rangerRequest);
             MiscUtil.logErrorMessageByInterval(LOG, message);
             return returnValue;

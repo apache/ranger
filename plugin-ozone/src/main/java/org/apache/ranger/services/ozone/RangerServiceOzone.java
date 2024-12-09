@@ -64,20 +64,20 @@ public class RangerServiceOzone extends RangerBaseService {
         Map<String, Object> ret         = new HashMap<String, Object>();
         String              serviceName = getServiceName();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.validateConfig Service: (" + serviceName + " )");
+            LOG.debug("<== RangerServiceOzone.validateConfig Service: ({})", serviceName);
         }
 
         if (configs != null) {
             try {
                 ret = OzoneResourceMgr.connectionTest(serviceName, configs);
             } catch (HadoopException e) {
-                LOG.error("<== RangerServiceOzone.validateConfig Error: " + e.getMessage(), e);
+                LOG.error("<== RangerServiceOzone.validateConfig Error: {}", e.getMessage(), e);
                 throw e;
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.validateConfig Response : (" + ret + " )");
+            LOG.debug("<== RangerServiceOzone.validateConfig Response : ({})", ret);
         }
 
         return ret;
@@ -90,18 +90,18 @@ public class RangerServiceOzone extends RangerBaseService {
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceOzone.lookupResource Context: (" + context + ")");
+            LOG.debug("==> RangerServiceOzone.lookupResource Context: ({})", context);
         }
         if (context != null) {
             try {
                 ret = OzoneResourceMgr.getOzoneResources(serviceName, serviceType, configs, context);
             } catch (Exception e) {
-                LOG.error("<==RangerServiceOzone.lookupResource Error : " + e);
+                LOG.error("<==RangerServiceOzone.lookupResource Error : ", e);
                 throw e;
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.lookupResource Response: (" + ret + ")");
+            LOG.debug("<== RangerServiceOzone.lookupResource Response: ({})", ret);
         }
         return ret;
     }
@@ -141,7 +141,7 @@ public class RangerServiceOzone extends RangerBaseService {
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : " + ret);
+            LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : {}", ret);
         }
         return ret;
     }
