@@ -40,5 +40,7 @@ public class RangerServiceException extends Exception {
         this.status = status;
     }
 
-    public ClientResponse.Status getStatus() { return status; }
+    public ClientResponse.Status getStatus() {
+        return status;
+    }
 }
