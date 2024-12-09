@@ -19,6 +19,8 @@ package org.apache.ranger.plugin.util;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.Cipher;
@@ -228,5 +230,121 @@ public class PasswordUtils {
 			}
 		}
 		return decryptedPwd;
+	}
+
+	/* Password Generator */
+	public static final class PasswordGenerator {
+		private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";
+		private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		private static final String DIGITS = "0123456789";
+		private static final String SYMBOLS = "!@#$%&*()_+-=[]|,./?><";
+		private final boolean useLower;
+		private final boolean useUpper;
+		private final boolean useDigits;
+		private final boolean useSymbols;
+
+		private PasswordGenerator(PasswordGeneratorBuilder builder) {
+			this.useLower = builder.useLower;
+			this.useUpper = builder.useUpper;
+			this.useDigits = builder.useDigits;
+			this.useSymbols = builder.useSymbols;
+		}
+
+		public static class PasswordGeneratorBuilder {
+			private boolean useLower;
+			private boolean useUpper;
+			private boolean useDigits;
+			private boolean useSymbols;
+
+			public PasswordGeneratorBuilder() {
+				this.useLower = false;
+				this.useUpper = false;
+				this.useDigits = false;
+				this.useSymbols = false;
+			}
+
+			/**
+			 * @param useLower true in case you would like to include lowercase
+			 *                 characters (abc...xyz). Default false.
+			 * @return the builder for chaining.
+			 */
+			public PasswordGeneratorBuilder useLower(boolean useLower) {
+				this.useLower = useLower;
+				return this;
+			}
+
+			/**
+			 * @param useUpper true in case you would like to include uppercase
+			 *                 characters (ABC...XYZ). Default false.
+			 * @return the builder for chaining.
+			 */
+			public PasswordGeneratorBuilder useUpper(boolean useUpper) {
+				this.useUpper = useUpper;
+				return this;
+			}
+
+			/**
+			 * @param useDigits true in case you would like to include digit
+			 *                  characters (123...). Default false.
+			 * @return the builder for chaining.
+			 */
+			public PasswordGeneratorBuilder useDigits(boolean useDigits) {
+				this.useDigits = useDigits;
+				return this;
+			}
+
+			/**
+			 * @param useSymbols true in case you would like to include
+			 *                   punctuation characters (!@#...). Default false.
+			 * @return the builder for chaining.
+			 */
+			public PasswordGeneratorBuilder useSymbols(boolean useSymbols) {
+				this.useSymbols = useSymbols;
+				return this;
+			}
+
+			/**
+			 * Get an object to use.
+			 *
+			 * @return the {@link PasswordGenerator}
+			 * object.
+			 */
+			public PasswordGenerator build() {
+				return new PasswordGenerator(this);
+			}
+		}
+
+		/**
+		 * @param length the length of the password you would like to generate.
+		 * @return a password that uses the categories you define when constructing
+		 * the object with a probability.
+		 */
+		public String generate(int length) {
+			StringBuilder password = new StringBuilder(length);
+			SecureRandom secureRandom = new SecureRandom();
+
+			List<String> charCategories = new ArrayList<>(4);
+			if (useLower) {
+				charCategories.add(LOWER);
+			}
+			if (useUpper) {
+				charCategories.add(UPPER);
+			}
+			if (useDigits) {
+				charCategories.add(DIGITS);
+			}
+			if (useSymbols) {
+				charCategories.add(SYMBOLS);
+			}
+
+			// Build the password.
+			for (int i = 0; i < length; i++) {
+				int    idxCatagory  = (i < charCategories.size()) ? i : secureRandom.nextInt(charCategories.size());
+				String charCategory = charCategories.get(idxCatagory);
+				int position = secureRandom.nextInt(charCategory.length());
+				password.append(charCategory.charAt(position));
+			}
+			return new String(password);
+		}
 	}
 }

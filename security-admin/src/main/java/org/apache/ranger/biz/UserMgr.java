@@ -1068,9 +1068,10 @@ public class UserMgr {
 	}
 
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile) {
-		if (userProfile.getPassword() == null
-				|| userProfile.getPassword().trim().isEmpty()) {
-			userProfile.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+		if (userProfile.getUserSource() != RangerCommonEnums.USER_FEDERATED) {
+			if (StringUtils.isBlank(userProfile.getPassword())) {
+				userProfile.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+			}
 		}
 		// access control
 		checkAdminAccess();
