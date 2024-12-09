@@ -19,6 +19,7 @@
 
 package org.apache.ranger.examples.sampleapp;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -52,7 +53,7 @@ public class SampleApp {
 	public void run() {
 		LOG.debug("==> SampleApp.run()");
 
-		do {
+		while(true) {
 			String input = getInput();
 
 			if(input == null) {
@@ -69,9 +70,7 @@ public class SampleApp {
 			String      userName   = getStringArg(args, 2);
 			Set<String> userGroups = new HashSet<String>();
 
-			for(int i = 3; i < args.length; i++) {
-				userGroups.add(args[i]);
-			}
+			userGroups.addAll(Arrays.asList(args).subList(3, args.length));
 
 			if(fileName == null || accessType == null || userName == null) {
 				LOG.info("Insufficient arguments. Usage: <accessType> <fileName> <userName> [userGroup1 userGroup2 userGroup3 ..]");
@@ -90,7 +89,7 @@ public class SampleApp {
 			} else {
 				LOG.info("Not authorized!");
 			}
-		} while(true);
+		}
 
 		LOG.debug("<== SampleApp.run()");
 	}
