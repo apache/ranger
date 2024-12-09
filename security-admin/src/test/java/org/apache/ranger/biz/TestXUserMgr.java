@@ -275,6 +275,23 @@ public class TestXUserMgr {
 		return vxUser;
 	}
 
+	private VXUser vxUserFederated() {
+		Collection<String> userRoleList = new ArrayList<String>();
+		userRoleList.add("ROLE_USER");
+		Collection<String> groupNameList = new ArrayList<String>();
+		groupNameList.add(groupName);
+		VXUser vxUser = new VXUser();
+		vxUser.setId(userId);
+		vxUser.setDescription("group test working");
+		vxUser.setName(userLoginID);
+		vxUser.setUserRoleList(userRoleList);
+		vxUser.setGroupNameList(groupNameList);
+		vxUser.setPassword(null);
+		vxUser.setEmailAddress("test@test.com");
+		vxUser.setUserSource(RangerCommonEnums.USER_FEDERATED);
+		return vxUser;
+	}
+
 	private XXUser xxUser(VXUser vxUser) {
 		XXUser xXUser = new XXUser();
 		xXUser.setId(userId);
@@ -4650,5 +4667,68 @@ public class TestXUserMgr {
 		createdXUser = xUserMgr.createExternalUser(vXUser.getName());
 		Assert.assertNotNull(createdXUser);
 		Assert.assertEquals(createdXUser.getName(), vXUser.getName());
+	}
+
+	@Test
+	public void test01CreateXUser_federated() {
+		destroySession();
+		setup();
+		VXUser vxUser = vxUserFederated();
+		vxUser.setFirstName("user12");
+		vxUser.setLastName("test12");
+		Collection<Long> groupIdList = new ArrayList<Long>();
+		groupIdList.add(userId);
+		vxUser.setGroupIdList(groupIdList);
+		VXGroup vxGroup = vxGroup();
+		vxGroup.setName("user12Grp");
+		VXGroupUser vXGroupUser = new VXGroupUser();
+		vXGroupUser.setParentGroupId(userId);
+		vXGroupUser.setUserId(userId);
+		vXGroupUser.setName(vxGroup.getName());
+		Mockito.when(xGroupService.readResource(userId)).thenReturn(vxGroup);
+		Mockito.when(xGroupUserService.createResource((VXGroupUser) Mockito.any())).thenReturn(vXGroupUser);
+		ArrayList<String> userRoleListVXPortaUser = getRoleList();
+		VXPortalUser vXPortalUser = new VXPortalUser();
+		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
+		Mockito.when(xUserService.createResource(vxUser)).thenReturn(vxUser);
+		XXModuleDefDao value = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(value);
+		Mockito.when(userMgr.createDefaultAccountUser((VXPortalUser) Mockito.any())).thenReturn(vXPortalUser);
+		Mockito.when(stringUtil.validateEmail("test@test.com")).thenReturn(true);
+		VXUser dbUser = xUserMgr.createXUser(vxUser);
+		Assert.assertNotNull(dbUser);
+		userId = dbUser.getId();
+		Assert.assertEquals(userId, dbUser.getId());
+		Assert.assertEquals(dbUser.getDescription(), vxUser.getDescription());
+		Assert.assertEquals(dbUser.getName(), vxUser.getName());
+		Assert.assertEquals(dbUser.getUserRoleList(), vxUser.getUserRoleList());
+		Assert.assertEquals(dbUser.getGroupNameList(),
+				vxUser.getGroupNameList());
+		Assert.assertNotNull(dbUser.getPassword());
+		Assert.assertEquals(dbUser.getUserSource(), RangerCommonEnums.USER_FEDERATED);
+		Mockito.verify(xUserService).createResource(vxUser);
+		Mockito.when(xUserService.readResourceWithOutLogin(userId)).thenReturn(vxUser);
+
+		VXUser loggedInUser = vxUser();
+		List<String> loggedInUserRole = new ArrayList<String>();
+		loggedInUserRole.add(RangerConstants.ROLE_ADMIN);
+		loggedInUser.setId(8L);
+		loggedInUser.setName("testuser");
+		loggedInUser.setUserRoleList(loggedInUserRole);
+		Mockito.when(xUserService.getXUserByUserName("admin")).thenReturn(loggedInUser);
+		Mockito.when(restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Logged-In user is not allowed to access requested user data", true)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		VXUser dbvxUser = xUserMgr.getXUser(userId);
+		Mockito.verify(userMgr).createDefaultAccountUser((VXPortalUser) Mockito.any());
+		Assert.assertNotNull(dbvxUser);
+		Assert.assertEquals(userId, dbvxUser.getId());
+		Assert.assertEquals(dbvxUser.getDescription(), vxUser.getDescription());
+		Assert.assertEquals(dbvxUser.getName(), vxUser.getName());
+		Assert.assertEquals(dbvxUser.getUserRoleList(),vxUser.getUserRoleList());
+		Assert.assertEquals(dbvxUser.getGroupIdList(),vxUser.getGroupIdList());
+		Assert.assertEquals(dbvxUser.getGroupNameList(),vxUser.getGroupNameList());
+		Assert.assertNotNull(dbvxUser.getPassword());
+		Assert.assertEquals(dbvxUser.getUserSource(), RangerCommonEnums.USER_FEDERATED);
+		Mockito.verify(xUserService).readResourceWithOutLogin(userId);
 	}
 }
