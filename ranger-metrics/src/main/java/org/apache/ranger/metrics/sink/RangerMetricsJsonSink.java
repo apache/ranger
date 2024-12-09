@@ -65,12 +65,10 @@ public class RangerMetricsJsonSink implements MetricsSink {
                     }
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("=== RangerMetricsJsonSink:putMetrics(): skipping... " + metricsRecord.context());
-                }
+                LOG.debug("<=== RangerMetricsJsonSink:putMetrics({}): skipping... ", metricsRecord.context());
             }
         } catch (Exception e) {
-            LOG.error("Exception occured while converting metrics into json.", e);
+            LOG.error("Exception occured while converting metrics into json", e);
         }
     }
 

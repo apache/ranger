@@ -87,7 +87,7 @@ public class RangerMetricsSystemWrapper {
             metricsSystem.register(sinkWrapper.getName(), sinkWrapper.getDescription(), sinkWrapper.getSink());
         }
 
-        LOG.info("===>> Ranger Metric system initialized successfully.");
+        LOG.info("Ranger Metric system initialized successfully!");
     }
 
     public String getRangerMetricsInPrometheusFormat() throws IOException {
