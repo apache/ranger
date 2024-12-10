@@ -36,8 +36,8 @@ public class OzoneConnectionMgr {
     protected ConcurrentMap<String, Boolean>     repoConnectStatusMap;
 
     public OzoneConnectionMgr() {
-        ozoneConnectionCache = new ConcurrentHashMap<String, OzoneClient>();
-        repoConnectStatusMap = new ConcurrentHashMap<String, Boolean>();
+        ozoneConnectionCache = new ConcurrentHashMap<>();
+        repoConnectStatusMap = new ConcurrentHashMap<>();
     }
 
     public OzoneClient getOzoneConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {

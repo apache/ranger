@@ -116,32 +116,14 @@ public class OzoneResourceMgr {
 
                 if (ozoneClient != null) {
                     if (volumePrefix != null && !volumePrefix.isEmpty()) {
-                        // get the DBList for given Input
                         finalVolPrefix = volumePrefix;
-                        callableObj    = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() {
-                                return ozoneClient.getVolumeList(finalVolPrefix);
-                            }
-                        };
+                        callableObj    = () -> ozoneClient.getVolumeList(finalVolPrefix);
                     } else if (bucketPrefix != null && !bucketPrefix.isEmpty()) {
-                        // get  ColumnList for given Input
                         finalBucketPrefix = bucketPrefix;
-                        callableObj       = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() {
-                                return ozoneClient.getBucketList(finalBucketPrefix, finalvolumeList);
-                            }
-                        };
+                        callableObj       = () -> ozoneClient.getBucketList(finalBucketPrefix, finalvolumeList);
                     } else if (keyPrefix != null && !keyPrefix.isEmpty()) {
-                        // get  ColumnList for given Input
                         finalKeyPrefix = keyPrefix;
-                        callableObj = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() {
-                                return ozoneClient.getKeyList(finalKeyPrefix, finalvolumeList, finalbucketList);
-                            }
-                        };
+                        callableObj = () -> ozoneClient.getKeyList(finalKeyPrefix, finalvolumeList, finalbucketList);
                     }
                     if (callableObj != null) {
                         synchronized (ozoneClient) {

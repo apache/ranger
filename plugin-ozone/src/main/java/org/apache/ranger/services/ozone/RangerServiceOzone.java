@@ -61,7 +61,7 @@ public class RangerServiceOzone extends RangerBaseService {
 
     @Override
     public Map<String, Object> validateConfig() throws Exception {
-        Map<String, Object> ret         = new HashMap<String, Object>();
+        Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceOzone.validateConfig Service: ({})", serviceName);
@@ -85,7 +85,7 @@ public class RangerServiceOzone extends RangerBaseService {
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String>        ret         = new ArrayList<String>();
+        List<String>        ret         = new ArrayList<>();
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
@@ -124,7 +124,7 @@ public class RangerServiceOzone extends RangerBaseService {
 
                 if (StringUtils.isNotBlank(lookUpUser)) {
                     RangerPolicyItem                          policyItemForLookupUser = new RangerPolicyItem();
-                    List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+                    List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));

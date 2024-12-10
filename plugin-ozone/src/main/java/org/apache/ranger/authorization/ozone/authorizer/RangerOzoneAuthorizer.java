@@ -79,7 +79,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         boolean returnValue = false;
         if (ozoneObject == null) {
             LOG.error("Ozone object is null!!");
-            return returnValue;
+            return false;
         }
         OzoneObj             ozoneObj  = (OzoneObj) ozoneObject;
         UserGroupInformation ugi       = context.getClientUgi();
@@ -92,7 +92,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         if (rangerPlugin == null) {
             MiscUtil.logErrorMessageByInterval(LOG, "Authorizer is still not initialized");
-            return returnValue;
+            return false;
         }
 
         //TODO: If source type is S3 and resource is volume, then allow it by default
@@ -116,9 +116,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             String message = String.format("Unsupported access type. operation = %s", operation);
             MiscUtil.logErrorMessageByInterval(LOG, message);
             LOG.error("{}, resource = {}", message, resource);
-            return returnValue;
+            return false;
         }
-        String action      = accessType;
         String clusterName = rangerPlugin.getClusterName();
 
         RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
@@ -133,7 +132,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         rangerRequest.setResource(rangerResource);
         rangerRequest.setAccessType(accessType);
-        rangerRequest.setAction(action);
+        rangerRequest.setAction(accessType);
         rangerRequest.setRequestData(resource);
         rangerRequest.setClusterName(clusterName);
 
@@ -153,7 +152,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             LOG.error("Unsupported resource = {}", resource);
             String message = String.format("Unsupported resource type = %s for resource = %s, request = %s", ozoneObj.getResourceType(), resource, rangerRequest);
             MiscUtil.logErrorMessageByInterval(LOG, message);
-            return returnValue;
+            return false;
         }
 
         try {
