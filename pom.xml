@@ -779,28 +779,6 @@
     </issueManagement>
     <repositories>
         <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>apache.snapshots.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/snapshots</url>
-        </repository>
-        <repository>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>apache.public.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/public</url>
-        </repository>
-        <repository>
             <id>jetbrains-pty4j</id>
             <name>jetbrains-intellij-dependencies</name>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
