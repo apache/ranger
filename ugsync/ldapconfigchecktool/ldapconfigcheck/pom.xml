@@ -27,6 +27,9 @@
     <packaging>jar</packaging>
     <name>Ldap Config Check Tool</name>
     <description>Ldap configuration check tool</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>commons-cli</groupId>

@@ -19,35 +19,33 @@
 
 package org.apache.ranger.usergroupsync;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class TestRegEx {
-	protected String userNameBaseProperty = "ranger.usersync.mapping.username.regex";
+    protected String userNameBaseProperty  = "ranger.usersync.mapping.username.regex";
     protected String groupNameBaseProperty = "ranger.usersync.mapping.groupname.regex";
-    protected String mappingSeparator = "/";
-    protected RegEx userNameRegEx = null;
-    protected RegEx groupNameRegEx = null;
-    List<String> userRegexPatterns = null;
-    List<String> groupRegexPatterns = null;
+    protected String mappingSeparator      = "/";
+    protected RegEx  userNameRegEx;
+    protected RegEx  groupNameRegEx;
+    List<String> userRegexPatterns;
+    List<String> groupRegexPatterns;
 
-	@Before
-	public void setUp() throws Exception {
-		userNameRegEx = new RegEx();
-        //userNameRegEx.init(userNameBaseProperty);
-        userRegexPatterns = new ArrayList<String>();
-        groupNameRegEx = new RegEx();
-        //groupNameRegEx.init(groupNameBaseProperty);
+    @Before
+    public void setUp() throws Exception {
+        userNameRegEx      = new RegEx();
+        groupNameRegEx     = new RegEx();
+        userRegexPatterns  = new ArrayList<String>();
         groupRegexPatterns = new ArrayList<String>();
-	}
+    }
 
-	@Test
+    @Test
     public void testUserNameTransform() throws Throwable {
         userRegexPatterns.add("s/\\s/_/");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
@@ -123,5 +121,4 @@ public class TestRegEx {
         assertEquals("mew_ty", userNameRegEx.transform("mew"));
         assertEquals("onix_ty", userNameRegEx.transform("onix"));
     }
-
 }

@@ -19,11 +19,6 @@
 
 package org.apache.ranger.unixusersync.ha;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.RangerHAInitializer;
 import org.apache.ranger.ha.ActiveInstanceElectorService;
@@ -35,27 +30,43 @@ import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class UserSyncHAInitializerImpl extends RangerHAInitializer {
     private static final Logger LOG = LoggerFactory.getLogger(UserSyncHAInitializerImpl.class);
-    ActiveInstanceElectorService activeInstanceElectorService = null;
-    ActiveStateChangeHandler activeStateChangeHandler = null;
-    List<HARangerService> haRangerService = null;
-    ServiceManager serviceManager = null;
-    private static UserSyncHAInitializerImpl theInstance = null;
+    private static UserSyncHAInitializerImpl theInstance;
+    ActiveInstanceElectorService activeInstanceElectorService;
+    ActiveStateChangeHandler     activeStateChangeHandler;
+    List<HARangerService>        haRangerService;
+    ServiceManager               serviceManager;
 
     private UserSyncHAInitializerImpl(Configuration configuration) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> UserSyncHAInitializerImpl.UserSyncHAInitializerImpl()");
         }
         try {
-            LOG.info("Ranger UserSync server is HA enabled : "+configuration.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false) );
+            LOG.info("Ranger UserSync server is HA enabled : " + configuration.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false));
             init(configuration);
         } catch (Exception e) {
-            LOG.error("UserSyncHAInitializerImpl initialization failed", e.getMessage());
+            LOG.error("UserSyncHAInitializerImpl initialization failed {}", e.getMessage());
         }
         if (LOG.isDebugEnabled()) {
             LOG.info("<== UserSyncHAInitializerImpl.UserSyncHAInitializerImpl()");
         }
+    }
+
+    public static UserSyncHAInitializerImpl getInstance(Configuration configuration) {
+        if (theInstance == null) {
+            synchronized (UserSyncHAInitializerImpl.class) {
+                if (theInstance == null) {
+                    theInstance = new UserSyncHAInitializerImpl(configuration);
+                }
+            }
+        }
+        return theInstance;
     }
 
     public void init(Configuration configuration) throws Exception {
@@ -63,8 +74,7 @@ public class UserSyncHAInitializerImpl extends RangerHAInitializer {
         LOG.info("==> UserSyncHAInitializerImpl.init() initialization started ");
 
         Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<ActiveStateChangeHandler>();
-        activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders,
-                curatorFactory, activeInstanceState, serviceState, configuration);
+        activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders, curatorFactory, activeInstanceState, serviceState, configuration);
 
         haRangerService = new ArrayList<HARangerService>();
         haRangerService.add(activeInstanceElectorService);
@@ -88,16 +98,6 @@ public class UserSyncHAInitializerImpl extends RangerHAInitializer {
         }
     }
 
-    public static UserSyncHAInitializerImpl getInstance(Configuration configuration) {
-        if(theInstance == null){
-            synchronized(UserSyncHAInitializerImpl.class){
-                if(theInstance == null){
-                    theInstance =  new UserSyncHAInitializerImpl(configuration);
-                }
-            }
-        }
-        return theInstance;
-    }
     public boolean isActive() {
         try {
             // To let the curator thread a chance to run and set the active state if needed
