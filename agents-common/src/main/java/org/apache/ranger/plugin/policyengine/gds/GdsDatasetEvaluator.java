@@ -22,7 +22,12 @@ package org.apache.ranger.plugin.policyengine.gds;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
@@ -44,7 +49,6 @@ public class GdsDatasetEvaluator {
 
     public static final GdsDatasetEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsDatasetEvalOrderComparator();
 
-
     private final DatasetInfo                     dataset;
     private final RangerServiceDef                gdsServiceDef;
     private final String                          name;
@@ -52,13 +56,12 @@ public class GdsDatasetEvaluator {
     private final List<GdsDipEvaluator>           dipEvaluators = new ArrayList<>();
     private final List<RangerPolicyEvaluator>     policyEvaluators;
 
-
     public GdsDatasetEvaluator(DatasetInfo dataset, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsDatasetEvaluator()");
 
-        this.dataset            = dataset;
-        this.gdsServiceDef      = gdsServiceDef;
-        this.name               = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
+        this.dataset       = dataset;
+        this.gdsServiceDef = gdsServiceDef;
+        this.name          = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
 
         if (dataset.getValiditySchedule() != null) {
             scheduleEvaluator = new RangerValidityScheduleEvaluator(dataset.getValiditySchedule());

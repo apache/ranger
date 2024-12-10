@@ -17,53 +17,50 @@
  * under the License.
  */
 
- package org.apache.ranger.admin.client;
-
+package org.apache.ranger.admin.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.apache.ranger.plugin.util.RangerUserStore;
 
 import java.util.List;
 
-
 public interface RangerAdminClient {
+    void init(String serviceName, String appId, String configPropertyPrefix, Configuration config);
 
-	void init(String serviceName, String appId, String configPropertyPrefix, Configuration config);
+    ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
 
-	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+    RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMills) throws Exception;
 
-	RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMills) throws Exception;
+    RangerRole createRole(RangerRole request) throws Exception;
 
-	RangerRole createRole(RangerRole request) throws Exception;
+    void dropRole(String execUser, String roleName) throws Exception;
 
-	void dropRole(String execUser, String roleName) throws Exception;
+    List<String> getAllRoles(String execUser) throws Exception;
 
-	List<String> getAllRoles(String execUser) throws Exception;
+    List<String> getUserRoles(String execUser) throws Exception;
 
-	List<String> getUserRoles(String execUser) throws Exception;
+    RangerRole getRole(String execUser, String roleName) throws Exception;
 
-	RangerRole getRole(String execUser, String roleName) throws Exception;
+    void grantRole(GrantRevokeRoleRequest request) throws Exception;
 
-	void grantRole(GrantRevokeRoleRequest request) throws Exception;
+    void revokeRole(GrantRevokeRoleRequest request) throws Exception;
 
-	void revokeRole(GrantRevokeRoleRequest request) throws Exception;
+    void grantAccess(GrantRevokeRequest request) throws Exception;
 
-	void grantAccess(GrantRevokeRequest request) throws Exception;
+    void revokeAccess(GrantRevokeRequest request) throws Exception;
 
-	void revokeAccess(GrantRevokeRequest request) throws Exception;
+    ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
 
-	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+    List<String> getTagTypes(String tagTypePattern) throws Exception;
 
-	List<String> getTagTypes(String tagTypePattern) throws Exception;
+    RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception;
 
-	RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception;
-
-	ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+    ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
 }

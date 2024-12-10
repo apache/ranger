@@ -34,6 +34,10 @@ public class JavaScriptEdits {
     private static final String  DOUBLE_BRACKET_REGEX   = "\\[\\[([}{\\$\"a-zA-Z0-9_.\\[\\]]+)(\\,['\\\"](.+?)['\\\"])*\\]\\]"; // regex: /\[\[([a-zA-Z0-9_.\[\]]+)(\,['"](.+)['"])*\]\]/g;
     private static final Pattern DOUBLE_BRACKET_PATTERN = Pattern.compile(DOUBLE_BRACKET_REGEX);
 
+    private JavaScriptEdits() {
+        // to block instantiation
+    }
+
     public static boolean hasDoubleBrackets(String str) {
         return StringUtils.contains(str, DOUBLE_BRACKET_START) && StringUtils.contains(str, DOUBLE_BRACKET_END);
     }
@@ -60,18 +64,13 @@ public class JavaScriptEdits {
                 delimiter = ",";
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("replaceDoubleBrackets({}): tokenToReplace={} expr={} delimiterSpec={} delimiter={}", str, tokenToReplace, expr, delimiterSpec, delimiter);
-            }
+            LOG.debug("replaceDoubleBrackets({}): tokenToReplace={} expr={} delimiterSpec={} delimiter={}", str, tokenToReplace, expr, delimiterSpec, delimiter);
 
             ret = ret.replace(tokenToReplace, expr + ".split(\"" + delimiter + "\")");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== replaceDoubleBrackets({}): ret={}", str, ret);
-        }
+        LOG.debug("<== replaceDoubleBrackets({}): ret={}", str, ret);
 
         return ret;
     }
 }
-

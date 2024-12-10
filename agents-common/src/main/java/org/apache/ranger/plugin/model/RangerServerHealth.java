@@ -18,42 +18,33 @@
  */
 
 package org.apache.ranger.plugin.model;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonInclude(Include.NON_EMPTY)
 public class RangerServerHealth {
-    public enum RangerServerStatus {
-        UNKNOWN, INITIALIZING, INITIALIZATION_FAILURE, UP, DOWN
-    }
-
     private final RangerServerStatus  status;
     private final Map<String, Object> details;
 
     private RangerServerHealth(Builder builder) {
         this.status  = builder.status;
         this.details = Collections.unmodifiableMap(builder.details);
-    }
-
-    public RangerServerStatus getStatus() {
-        return this.status;
-    }
-
-    public Map<String, Object> getDetails() {
-        return this.details;
     }
 
     public static Builder unknown() {
@@ -72,6 +63,19 @@ public class RangerServerHealth {
         return new Builder(status);
     }
 
+    public RangerServerStatus getStatus() {
+        return this.status;
+    }
+
+    public Map<String, Object> getDetails() {
+        return this.details;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(status, details);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -86,31 +90,30 @@ public class RangerServerHealth {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(status, details);
-    }
-
-    @Override
     public String toString() {
         return getStatus() + " " + getDetails();
     }
 
+    public enum RangerServerStatus {
+        UNKNOWN, INITIALIZING, INITIALIZATION_FAILURE, UP, DOWN
+    }
+
     public static class Builder {
-        private RangerServerStatus status;
         private final Map<String, Object> details;
+        private       RangerServerStatus  status;
 
         public Builder() {
-            this.status = RangerServerStatus.UNKNOWN;
+            this.status  = RangerServerStatus.UNKNOWN;
             this.details = new LinkedHashMap<>();
         }
 
         public Builder(RangerServerStatus status) {
-            this.status = status;
+            this.status  = status;
             this.details = new LinkedHashMap<>();
         }
 
         public Builder(RangerServerStatus status, Map<String, ?> details) {
-            this.status = status;
+            this.status  = status;
             this.details = new LinkedHashMap<>(details);
         }
 

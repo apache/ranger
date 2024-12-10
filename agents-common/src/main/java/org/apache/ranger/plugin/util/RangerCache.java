@@ -25,33 +25,38 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-
 
 public class RangerCache<K, V> {
     private static final Logger LOG = LoggerFactory.getLogger(RangerCache.class);
 
-    public enum RefreshMode { ON_ACCESS, ON_SCHEDULE } // when to refresh the value: when a value is accessed? or on a scheduled interval?
-
-    private static final AtomicInteger CACHE_NUMBER                     = new AtomicInteger(1);
-    private static final String        CACHE_LOADER_THREAD_PREFIX       = "ranger-cache-";
-    private static final int           DEFAULT_LOADER_THREADS_COUNT     = 10;
-    private static final RefreshMode   DEFAULT_REFRESH_MODE             = RefreshMode.ON_ACCESS;
-    private static final int           DEFAULT_VALUE_VALIDITY_PERIOD_MS = 30 * 1000;
-    private static final int           DEFAULT_VALUE_INIT_TIMEOUT_MS    = -1; // infinite timeout
-    private static final int           DEFAULT_VALUE_REFRESH_TIMEOUT_MS = 10;
-
-    private final String              name;
-    private final Map<K, CachedValue> cache;
-    private       ValueLoader<K, V>   loader;                    // loader implementation that fetches the value for a given key from the source
-    private final int                 loaderThreadsCount;        // number of threads to use for loading values into cache
-    private final RefreshMode         refreshMode;               // when to refresh a cached value: when a value is accessed? or on a scheduled interval?
-    private final long                valueValidityPeriodMs;     // minimum interval before a cached value is refreshed
-    private final long                valueInitLoadTimeoutMs;    // max time a caller would wait if cache doesn't have the value
-    private final long                valueRefreshLoadTimeoutMs; // max time a caller would wait if cache already has the value, but needs refresh
-    private final ExecutorService     loaderThreadPool;
+    private static final AtomicInteger       CACHE_NUMBER                     = new AtomicInteger(1);
+    private static final String              CACHE_LOADER_THREAD_PREFIX       = "ranger-cache-";
+    private static final int                 DEFAULT_LOADER_THREADS_COUNT     = 10;
+    private static final RefreshMode         DEFAULT_REFRESH_MODE             = RefreshMode.ON_ACCESS;
+    private static final int                 DEFAULT_VALUE_VALIDITY_PERIOD_MS = 30 * 1000;
+    private static final int                 DEFAULT_VALUE_INIT_TIMEOUT_MS    = -1; // infinite timeout
+    private static final int                 DEFAULT_VALUE_REFRESH_TIMEOUT_MS = 10;
+    private final        String              name;
+    private final        Map<K, CachedValue> cache;
+    private final        int                 loaderThreadsCount;        // number of threads to use for loading values into cache
+    private final        RefreshMode         refreshMode;               // when to refresh a cached value: when a value is accessed? or on a scheduled interval?
+    private final        long                valueValidityPeriodMs;     // minimum interval before a cached value is refreshed
+    private final        long                valueInitLoadTimeoutMs;    // max time a caller would wait if cache doesn't have the value
+    private final        long                valueRefreshLoadTimeoutMs; // max time a caller would wait if cache already has the value, but needs refresh
+    private final        ExecutorService     loaderThreadPool;
+    private              ValueLoader<K, V>   loader;                    // loader implementation that fetches the value for a given key from the source
 
     protected RangerCache(String name, ValueLoader<K, V> loader) {
         this(name, loader, DEFAULT_LOADER_THREADS_COUNT, DEFAULT_REFRESH_MODE, DEFAULT_VALUE_VALIDITY_PERIOD_MS, DEFAULT_VALUE_INIT_TIMEOUT_MS, DEFAULT_VALUE_REFRESH_TIMEOUT_MS);
@@ -76,21 +81,37 @@ public class RangerCache<K, V> {
         LOG.info("Created RangerCache(name={}): loaderThreadsCount={}, refreshMode={}, valueValidityPeriodMs={}, valueInitLoadTimeoutMs={}, valueRefreshLoadTimeoutMs={}", name, loaderThreadsCount, refreshMode, valueValidityPeriodMs, valueInitLoadTimeoutMs, valueRefreshLoadTimeoutMs);
     }
 
-    protected void setLoader(ValueLoader<K, V> loader) { this.loader = loader; }
+    public String getName() {
+        return name;
+    }
 
-    public String getName() { return name; }
+    public ValueLoader<K, V> getLoader() {
+        return loader;
+    }
 
-    public ValueLoader<K, V> getLoader() { return loader; }
+    protected void setLoader(ValueLoader<K, V> loader) {
+        this.loader = loader;
+    }
 
-    public int getLoaderThreadsCount() { return loaderThreadsCount; }
+    public int getLoaderThreadsCount() {
+        return loaderThreadsCount;
+    }
 
-    public RefreshMode getRefreshMode() { return refreshMode; }
+    public RefreshMode getRefreshMode() {
+        return refreshMode;
+    }
 
-    public long getValueValidityPeriodMs() { return valueValidityPeriodMs; }
+    public long getValueValidityPeriodMs() {
+        return valueValidityPeriodMs;
+    }
 
-    public long getValueInitLoadTimeoutMs() { return valueInitLoadTimeoutMs; }
+    public long getValueInitLoadTimeoutMs() {
+        return valueInitLoadTimeoutMs;
+    }
 
-    public long getValueRefreshLoadTimeoutMs() { return valueRefreshLoadTimeoutMs; }
+    public long getValueRefreshLoadTimeoutMs() {
+        return valueRefreshLoadTimeoutMs;
+    }
 
     public V get(K key) {
         return get(key, null);
@@ -138,9 +159,7 @@ public class RangerCache<K, V> {
             if (timeoutMs <= timeTaken) {
                 ret = value.getCurrentValue();
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("key={}: cache-lookup={}ms took longer than timeout={}ms. Using current value {}", key, timeTaken, timeoutMs, ret);
-                }
+                LOG.debug("key={}: cache-lookup={}ms took longer than timeout={}ms. Using current value {}", key, timeTaken, timeoutMs, ret);
             } else {
                 ret = value.getValue(timeoutMs - timeTaken);
             }
@@ -151,6 +170,30 @@ public class RangerCache<K, V> {
         return ret;
     }
 
+    private ThreadFactory createThreadFactory() {
+        return new ThreadFactory() {
+            private final String        namePrefix = CACHE_LOADER_THREAD_PREFIX + CACHE_NUMBER.getAndIncrement() + "-" + name;
+            private final AtomicInteger number     = new AtomicInteger(1);
+
+            @Override
+            public Thread newThread(@NotNull Runnable r) {
+                Thread t = new Thread(r, namePrefix + number.getAndIncrement());
+
+                if (!t.isDaemon()) {
+                    t.setDaemon(true);
+                }
+
+                if (t.getPriority() != Thread.NORM_PRIORITY) {
+                    t.setPriority(Thread.NORM_PRIORITY);
+                }
+
+                return t;
+            }
+        };
+    }
+
+    public enum RefreshMode { ON_ACCESS, ON_SCHEDULE } // when to refresh the value: when a value is accessed? or on a scheduled interval?
+
     public static class RefreshableValue<V> {
         private final V    value;
         private       long nextRefreshTimeMs = -1;
@@ -159,35 +202,45 @@ public class RangerCache<K, V> {
             this.value = value;
         }
 
-        public V getValue() { return value; }
+        public V getValue() {
+            return value;
+        }
 
         public boolean needsRefresh() {
             return nextRefreshTimeMs == -1 || System.currentTimeMillis() > nextRefreshTimeMs;
         }
 
-        private void setNextRefreshTimeMs(long nextRefreshTimeMs) {this.nextRefreshTimeMs = nextRefreshTimeMs; }
+        private void setNextRefreshTimeMs(long nextRefreshTimeMs) {
+            this.nextRefreshTimeMs = nextRefreshTimeMs;
+        }
     }
 
-    public static abstract class ValueLoader<K, V> {
+    public abstract static class ValueLoader<K, V> {
         public abstract RefreshableValue<V> load(K key, RefreshableValue<V> currentValue, Object context) throws Exception;
     }
 
+    public static class KeyNotFoundException extends Exception {
+        public KeyNotFoundException(String msg) {
+            super(msg);
+        }
+    }
+
     private class CachedValue {
-        private final    ReentrantLock       lock = new ReentrantLock();
+        private final    ReentrantLock       lock      = new ReentrantLock();
         private final    K                   key;
-        private volatile boolean             isRemoved = false;
-        private volatile RefreshableValue<V> value     = null;
-        private volatile Future<?>           refresher = null;
+        private volatile boolean             isRemoved;
+        private volatile RefreshableValue<V> value;
+        private volatile Future<?>           refresher;
 
         private CachedValue(K key) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("CachedValue({})", key);
-            }
+            LOG.debug("CachedValue({})", key);
 
             this.key = key;
         }
 
-        public K getKey() { return key; }
+        public K getKey() {
+            return key;
+        }
 
         public V getValue(Object context) {
             refreshIfNeeded(context);
@@ -228,9 +281,7 @@ public class RangerCache<K, V> {
                         Future<?> future = this.refresher;
 
                         if (future == null) { // refresh from current thread
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("refreshIfNeeded(key={}): using caller thread", key);
-                            }
+                            LOG.debug("refreshIfNeeded(key={}): using caller thread", key);
 
                             refreshValue(context);
                         } else { // wait for the refresher to complete
@@ -257,15 +308,12 @@ public class RangerCache<K, V> {
                             Future<?> future = this.refresher;
 
                             if (future == null) {
-                                future = this.refresher = loaderThreadPool.submit(new RefreshWithContext(context));
+                                future         = loaderThreadPool.submit(new RefreshWithContext(context));
+                                this.refresher = future;
 
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("refresher scheduled for key {}", key);
-                                }
+                                LOG.debug("refresher scheduled for key {}", key);
                             } else {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("refresher already exists for key {}", key);
-                                }
+                                LOG.debug("refresher already exists for key {}", key);
                             }
 
                             long timeLeftMs = timeoutMs - (System.currentTimeMillis() - startTime);
@@ -276,16 +324,12 @@ public class RangerCache<K, V> {
 
                                     this.refresher = null;
                                 } catch (TimeoutException | InterruptedException | ExecutionException excp) {
-                                    if (LOG.isDebugEnabled()) {
-                                        LOG.debug("refreshIfNeeded(key={}, timeoutMs={}) failed", key, timeoutMs, excp);
-                                    }
+                                    LOG.debug("refreshIfNeeded(key={}, timeoutMs={}) failed", key, timeoutMs, excp);
                                 }
                             }
                         }
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("refreshIfNeeded(key={}, timeoutMs={}) couldn't obtain lock", key, timeoutMs);
-                        }
+                        LOG.debug("refreshIfNeeded(key={}, timeoutMs={}) couldn't obtain lock", key, timeoutMs);
                     }
                 }
             }
@@ -320,15 +364,13 @@ public class RangerCache<K, V> {
                 setValue(newValue);
 
                 if (refreshMode == RefreshMode.ON_SCHEDULE) {
-                     if (!isRemoved) {
-                         ScheduledExecutorService scheduledExecutor = ((ScheduledExecutorService) loaderThreadPool);
+                    if (!isRemoved) {
+                        ScheduledExecutorService scheduledExecutor = ((ScheduledExecutorService) loaderThreadPool);
 
-                         scheduledExecutor.schedule(new RefreshWithContext(context), valueValidityPeriodMs, TimeUnit.MILLISECONDS);
-                     } else {
-                         if (LOG.isDebugEnabled()) {
-                             LOG.debug("key {} was removed. Not scheduling next refresh ", key);
-                         }
-                     }
+                        scheduledExecutor.schedule(new RefreshWithContext(context), valueValidityPeriodMs, TimeUnit.MILLISECONDS);
+                    } else {
+                        LOG.debug("key {} was removed. Not scheduling next refresh ", key);
+                    }
                 }
             }
 
@@ -354,34 +396,6 @@ public class RangerCache<K, V> {
             public Boolean call() {
                 return refreshValue(context);
             }
-        }
-    }
-
-    private ThreadFactory createThreadFactory() {
-        return new ThreadFactory() {
-            private final String        namePrefix = CACHE_LOADER_THREAD_PREFIX + CACHE_NUMBER.getAndIncrement() + "-" + name;
-            private final AtomicInteger number     = new AtomicInteger(1);
-
-            @Override
-            public Thread newThread(@NotNull Runnable r) {
-                Thread t = new Thread(r, namePrefix + number.getAndIncrement());
-
-                if (!t.isDaemon()) {
-                    t.setDaemon(true);
-                }
-
-                if (t.getPriority() != Thread.NORM_PRIORITY) {
-                    t.setPriority(Thread.NORM_PRIORITY);
-                }
-
-                return t;
-            }
-        };
-    }
-
-    public static class KeyNotFoundException extends Exception {
-        public KeyNotFoundException(String msg) {
-            super(msg);
         }
     }
 }

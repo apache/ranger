@@ -32,9 +32,7 @@ public class GetFromDataFile {
     private static final Logger LOG = LoggerFactory.getLogger(GetFromDataFile.class);
 
     public Map<String, Map<String, String>> getFromDataFile(String dataFile, String attrName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getFromDataFile(dataFile={}, attrName={})", dataFile, attrName);
-        }
+        LOG.debug("==> getFromDataFile(dataFile={}, attrName={})", dataFile, attrName);
 
         Map<String, Map<String, String>> ret = new HashMap<>();
 
@@ -50,9 +48,7 @@ public class GetFromDataFile {
         if (prop == null) {
             LOG.warn("getFromDataFile({}, {}): failed to read file", dataFile, attrName);
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("read from datafile {}: {}", dataFile, prop);
-            }
+            LOG.debug("read from datafile {}: {}", dataFile, prop);
 
             // reformat UserAttrsProp into UserStore format:
             // format of UserAttrsProp: Map<String, String>
@@ -66,9 +62,7 @@ public class GetFromDataFile {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getFromDataFile(dataFile={}, attrName={}): ret={}", dataFile, attrName, ret);
-        }
+        LOG.debug("<== getFromDataFile(dataFile={}, attrName={}): ret={}", dataFile, attrName, ret);
 
         return ret;
     }

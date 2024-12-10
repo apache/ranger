@@ -23,44 +23,36 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RangerAccessedNotFromClusterTypeCondition extends RangerAbstractConditionEvaluator{
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedNotFromClusterTypeCondition.class);
+public class RangerAccessedNotFromClusterTypeCondition extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedNotFromClusterTypeCondition.class);
 
-	private boolean isAlwaysTrue = false;
+    private boolean isAlwaysTrue;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedNotFromClusterTypeCondition.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAccessedNotFromClusterTypeCondition.init({})", condition);
 
-		super.init();
+        super.init();
 
-		isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
+        isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedNotFromClusterTypeCondition.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerAccessedNotFromClusterTypeCondition.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedNotFromClusterTypeCondition.isMatched(" + condition + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerAccessedNotFromClusterTypeCondition.isMatched({})", condition);
 
-		final boolean ret;
+        final boolean ret;
 
-		if (isAlwaysTrue || request.getClusterType() == null) {
-			ret = true;
-		} else {
-			ret = !condition.getValues().contains(request.getClusterType());
-		}
+        if (isAlwaysTrue || request.getClusterType() == null) {
+            ret = true;
+        } else {
+            ret = !condition.getValues().contains(request.getClusterType());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedNotFromClusterTypeCondition.isMatched(" + condition + "): " + ret);
-		}
+        LOG.debug("<== RangerAccessedNotFromClusterTypeCondition.isMatched({}): {}", condition, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 }

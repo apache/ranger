@@ -19,50 +19,50 @@
 
 package org.apache.ranger.plugin.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
+import java.util.List;
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerServiceResourceWithTags extends RangerServiceResource implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private List<RangerTag>	associatedTags;
+    private List<RangerTag> associatedTags;
 
-	public List<RangerTag> getAssociatedTags() {
-		return associatedTags;
-	}
+    public List<RangerTag> getAssociatedTags() {
+        return associatedTags;
+    }
 
-	public void setAssociatedTags(List<RangerTag> associatedTags) {
-		this.associatedTags = associatedTags;
-	}
+    public void setAssociatedTags(List<RangerTag> associatedTags) {
+        this.associatedTags = associatedTags;
+    }
 
-	@Override
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerServiceResourceWithTags={ ");
+    @Override
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerServiceResourceWithTags={ ");
 
-		super.toString(sb);
+        super.toString(sb);
 
-		sb.append("associatedTags=[");
-		if (associatedTags != null) {
-			String prefix = "";
+        sb.append("associatedTags=[");
+        if (associatedTags != null) {
+            String prefix = "";
 
-			for (RangerTag associatedTag : associatedTags) {
-	            sb.append(prefix);
+            for (RangerTag associatedTag : associatedTags) {
+                sb.append(prefix);
 
-				associatedTag.toString(sb);
+                associatedTag.toString(sb);
 
-				prefix = ", ";
-	        }
-		}
-		sb.append("] ");
+                prefix = ", ";
+            }
+        }
+        sb.append("] ");
 
-		sb.append(" }");
+        sb.append(" }");
 
-		return sb;
-	}
+        return sb;
+    }
 }

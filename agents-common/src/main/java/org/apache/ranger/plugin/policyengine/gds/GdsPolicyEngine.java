@@ -54,7 +54,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-
 public class GdsPolicyEngine {
     private static final Logger LOG = LoggerFactory.getLogger(GdsPolicyEngine.class);
 
@@ -195,8 +194,6 @@ public class GdsPolicyEngine {
 
         return new SharedResourceIter(dshEvaluators);
     }
-
-
 
     private void evaluate(RangerAccessRequest request, int policyType, GdsAccessResult result) {
         LOG.debug("==> RangerGdsPolicyEngine.evaluate({}, {}, {})", request, policyType, result);
@@ -532,6 +529,76 @@ public class GdsPolicyEngine {
         }
     }
 
+    private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createRowFilterTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+        final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> ret;
+
+        if (!serviceDefHelper.isRowFilterSupported() || evaluators.isEmpty()) {
+            ret = Collections.emptyMap();
+        } else {
+            List<GdsSharedResourceEvaluator> rowFilterEvaluators = evaluators.stream().map(e -> e.createRowFilterEvaluator(serviceDefHelper, pluginContext)).filter(Objects::nonNull).collect(Collectors.toList());
+
+            if (rowFilterEvaluators.isEmpty()) {
+                ret = Collections.emptyMap();
+            } else {
+                ret = new HashMap<>();
+
+                for (RangerResourceDef resourceDef : serviceDefHelper.getServiceDef().getRowFilterDef().getResources()) {
+                    ret.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, rowFilterEvaluators, true, pluginContext));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    static class SharedResourceIter implements Iterator<GdsSharedResourceEvaluator> {
+        private final Iterator<GdsDataShareEvaluator>      dataShareIter;
+        private       Iterator<GdsSharedResourceEvaluator> sharedResourceIter = Collections.emptyIterator();
+        private       GdsSharedResourceEvaluator           nextResource;
+
+        SharedResourceIter(Set<GdsDataShareEvaluator> evaluators) {
+            if (evaluators == null) {
+                dataShareIter = Collections.emptyIterator();
+            } else {
+                dataShareIter = evaluators.iterator();
+            }
+
+            setNext();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextResource != null;
+        }
+
+        @Override
+        public GdsSharedResourceEvaluator next() {
+            GdsSharedResourceEvaluator ret = nextResource;
+
+            if (ret != null) {
+                setNext();
+            }
+
+            return ret;
+        }
+
+        private void setNext() {
+            if (!sharedResourceIter.hasNext()) {
+                while (dataShareIter.hasNext()) {
+                    GdsDataShareEvaluator dataShareEvaluator = dataShareIter.next();
+
+                    sharedResourceIter = dataShareEvaluator.getResourceEvaluators().iterator();
+
+                    if (sharedResourceIter.hasNext()) {
+                        break;
+                    }
+                }
+            }
+
+            nextResource = sharedResourceIter.hasNext() ? sharedResourceIter.next() : null;
+        }
+    }
+
     private class GdsZoneResources {
         private final String                                                      zoneName;
         private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> accessTries;
@@ -545,7 +612,9 @@ public class GdsPolicyEngine {
             this.rowFilterTries = createRowFilterTries(evaluators, serviceDefHelper, pluginContext);
         }
 
-        public String getZoneName() { return zoneName; }
+        public String getZoneName() {
+            return zoneName;
+        }
 
         public void collectDataShareResources(RangerAccessRequest request, int policyType, Map<GdsDataShareEvaluator, Set<GdsSharedResourceEvaluator>> dshResources) {
             final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> tries;
@@ -607,76 +676,6 @@ public class GdsPolicyEngine {
             }
 
             return ret;
-        }
-    }
-
-    private Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> createRowFilterTries(List<GdsSharedResourceEvaluator> evaluators, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
-        final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> ret;
-
-        if (!serviceDefHelper.isRowFilterSupported() || evaluators.isEmpty()) {
-            ret = Collections.emptyMap();
-        } else {
-            List<GdsSharedResourceEvaluator> rowFilterEvaluators = evaluators.stream().map(e -> e.createRowFilterEvaluator(serviceDefHelper, pluginContext)).filter(Objects::nonNull).collect(Collectors.toList());
-
-            if (rowFilterEvaluators.isEmpty()) {
-                ret = Collections.emptyMap();
-            } else {
-                ret = new HashMap<>();
-
-                for (RangerResourceDef resourceDef : serviceDefHelper.getServiceDef().getRowFilterDef().getResources()) {
-                    ret.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, rowFilterEvaluators, true, pluginContext));
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    static class SharedResourceIter implements Iterator<GdsSharedResourceEvaluator> {
-        private final Iterator<GdsDataShareEvaluator>      dataShareIter;
-        private       Iterator<GdsSharedResourceEvaluator> sharedResourceIter = Collections.emptyIterator();
-        private       GdsSharedResourceEvaluator           nextResource       = null;
-
-        SharedResourceIter(Set<GdsDataShareEvaluator> evaluators) {
-            if (evaluators == null) {
-                dataShareIter = Collections.emptyIterator();
-            } else {
-                dataShareIter = evaluators.iterator();
-            }
-
-            setNext();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return nextResource != null;
-        }
-
-        @Override
-        public GdsSharedResourceEvaluator next() {
-            GdsSharedResourceEvaluator ret = nextResource;
-
-            if (ret != null) {
-                setNext();
-            }
-
-            return ret;
-        }
-
-        private void setNext() {
-            if (!sharedResourceIter.hasNext()) {
-                while (dataShareIter.hasNext()) {
-                    GdsDataShareEvaluator dataShareEvaluator = dataShareIter.next();
-
-                    sharedResourceIter = dataShareEvaluator.getResourceEvaluators().iterator();
-
-                    if (sharedResourceIter.hasNext()) {
-                        break;
-                    }
-                }
-            }
-
-            nextResource = sharedResourceIter.hasNext() ? sharedResourceIter.next() : null;
         }
     }
 }

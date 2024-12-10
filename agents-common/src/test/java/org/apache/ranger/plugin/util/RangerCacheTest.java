@@ -21,26 +21,37 @@ import org.apache.ranger.plugin.util.RangerCache.RefreshMode;
 import org.apache.ranger.plugin.util.RangerCache.RefreshableValue;
 import org.junit.Test;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class RangerCacheTest {
     private static final int CACHE_THREAD_COUNT               = 25;
     private static final int VALUE_VALIDITY_DURATION_MS       = 3 * 1000;
     private static final int VALUE_REFRESH_TIMEOUT_MS         = 10;
     private static final int VALUE_INIT_TIMEOUT_MS            = -1; // no timeout for init
-    private static final int VALUE_LOAD_TIME_TYPICAL_MAX_MS   =  8;
+    private static final int VALUE_LOAD_TIME_TYPICAL_MAX_MS   = 8;
     private static final int VALUE_LOAD_TIME_FAIL_MAX_MS      = 100;
     private static final int VALUE_LOAD_TIME_LONG_MIN_MS      = VALUE_VALIDITY_DURATION_MS / 2;
     private static final int VALUE_LOAD_TIME_VERY_LONG_MIN_MS = VALUE_VALIDITY_DURATION_MS;
 
     private static final int USER_COUNT                = 100;
-    private static final int CACHE_CLIENT_THREAD_COUNT =  20;
+    private static final int CACHE_CLIENT_THREAD_COUNT = 20;
     private static final int CACHE_LOOKUP_COUNT        = 200;
-    private static final int CACHE_LOOKUP_INTERVAL_MS  =   5;
+    private static final int CACHE_LOOKUP_INTERVAL_MS  = 5;
 
     private static final boolean IS_DEBUG_ENABLED = false;
 
@@ -65,7 +76,6 @@ public class RangerCacheTest {
     private static final String USERNAME_PREFIX_VERY_LONG_REFRESH = "veryLongRefresh_";
 
     private final Random random = new Random();
-
 
     @Test
     public void testOnAccessRefreshCacheMultiThreadedGet() throws Throwable {
@@ -155,7 +165,7 @@ public class RangerCacheTest {
     }
 
     private String getUserName(int index) {
-        int percent = (index % USER_COUNT) * 100 / USER_COUNT;
+        int          percent = (index % USER_COUNT) * 100 / USER_COUNT;
         final String ret;
 
         if (percent < 88) {
@@ -186,7 +196,7 @@ public class RangerCacheTest {
     }
 
     private void testLoadWait(UserGroupCache.UserStats userStats, RefreshableValue<List<String>> currVal) throws Exception {
-        boolean fail = false;
+        boolean fail     = false;
         long    sleepTimeMs;
         String  userName = userStats.userName;
 
@@ -305,7 +315,11 @@ public class RangerCacheTest {
     }
 
     private void printStats(Map<String, UserGroupCache.UserStats> stats, String userNamePrefix) {
-        long userCount = 0, loadCount = 0, getCount = 0, totalLoadTime = 0, totalGetTime = 0;
+        long userCount     = 0;
+        long loadCount     = 0;
+        long getCount      = 0;
+        long totalLoadTime = 0;
+        long totalGetTime  = 0;
 
         for (Map.Entry<String, UserGroupCache.UserStats> entry : stats.entrySet()) {
             String userName = entry.getKey();
@@ -317,13 +331,48 @@ public class RangerCacheTest {
             UserGroupCache.UserStats userStats = entry.getValue();
 
             userCount++;
-            loadCount     += userStats.load.count.get();
-            getCount      += userStats.get.count.get();
+            loadCount += userStats.load.count.get();
+            getCount += userStats.get.count.get();
             totalLoadTime += userStats.load.totalTime.get();
-            totalGetTime  += userStats.get.totalTime.get();
+            totalGetTime += userStats.get.totalTime.get();
         }
 
-        log(String.format("  userPrefix=%-16s userCount=%-4s loadCount=%-5s getCount=%-7s avgLoadTime=%-9.3f avgGetTime=%-6.3f", userNamePrefix, userCount, loadCount, getCount, (totalLoadTime / (float)loadCount), (totalGetTime / (float)getCount)));
+        log(String.format("  userPrefix=%-16s userCount=%-4s loadCount=%-5s getCount=%-7s avgLoadTime=%-9.3f avgGetTime=%-6.3f", userNamePrefix, userCount, loadCount, getCount, (totalLoadTime / (float) loadCount), (totalGetTime / (float) getCount)));
+    }
+
+    private static class TimedCounter {
+        final AtomicLong count     = new AtomicLong();
+        final AtomicLong totalTime = new AtomicLong();
+        final AtomicLong minTime   = new AtomicLong(Long.MAX_VALUE);
+        final AtomicLong maxTime   = new AtomicLong();
+
+        public void record(long timeTaken) {
+            count.getAndIncrement();
+            totalTime.addAndGet(timeTaken);
+
+            long minTimeTaken = minTime.get();
+            long maxTimeTaken = maxTime.get();
+
+            if (timeTaken < minTimeTaken) {
+                minTime.compareAndSet(minTimeTaken, timeTaken);
+            }
+
+            if (timeTaken > maxTimeTaken) {
+                maxTime.compareAndSet(maxTimeTaken, timeTaken);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "count: " + count.get() + ", totalTime: " + totalTime.get() + ", minTime: " + minTime.get() + ", maxTime: " + maxTime.get() + ", avgTime: " + (getAvgTimeMs());
+        }
+
+        private String getAvgTimeMs() {
+            long totalTime = this.totalTime.get();
+            long count     = this.count.get();
+
+            return String.format("%.3f", (count != 0 ? (totalTime / (double) count) : -1));
+        }
     }
 
     // multiple instances of this class are used by the test to simulate simultaneous access to cache to obtain groups for users
@@ -437,7 +486,7 @@ public class RangerCacheTest {
             final TimedCounter get             = new TimedCounter();
             final TimedCounter load            = new TimedCounter();
             final AtomicLong   inProgressCount = new AtomicLong();
-            List<String>       lastValue;
+            List<String> lastValue;
 
             public UserStats(String userName) {
                 this.userName = userName;
@@ -447,41 +496,6 @@ public class RangerCacheTest {
             public String toString() {
                 return userName + ": lastValue(" + lastValue + "), load(" + load + "), get(" + get + ")";
             }
-        }
-    }
-
-    private static class TimedCounter {
-        final AtomicLong count     = new AtomicLong();
-        final AtomicLong totalTime = new AtomicLong();
-        final AtomicLong minTime   = new AtomicLong(Long.MAX_VALUE);
-        final AtomicLong maxTime   = new AtomicLong();
-
-        public void record(long timeTaken) {
-            count.getAndIncrement();
-            totalTime.addAndGet(timeTaken);
-
-            long minTimeTaken = minTime.get();
-            long maxTimeTaken = maxTime.get();
-
-            if (timeTaken < minTimeTaken) {
-                minTime.compareAndSet(minTimeTaken, timeTaken);
-            }
-
-            if (timeTaken > maxTimeTaken) {
-                maxTime.compareAndSet(maxTimeTaken, timeTaken);
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "count: " + count.get() + ", totalTime: " + totalTime.get() + ", minTime: " + minTime.get() + ", maxTime: " + maxTime.get() + ", avgTime: " + (getAvgTimeMs());
-        }
-
-        private String getAvgTimeMs() {
-            long totalTime = this.totalTime.get();
-            long count     = this.count.get();
-
-            return String.format("%.3f", (count != 0 ? (totalTime / (double)count) : -1));
         }
     }
 }

@@ -19,23 +19,23 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.apache.ranger.plugin.util.RangerUserStoreUtil;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.plugin.util.RangerUserStoreUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GroupInfo extends RangerBaseModelObject implements java.io.Serializable {
-
     private static final long serialVersionUID = 1L;
-    private String                  name;
-    private String                  description;
-    private Map<String, String>     otherAttributes;
+
+    private String              name;
+    private String              description;
+    private Map<String, String> otherAttributes;
 
     public GroupInfo() {
         this(null, null, null);
@@ -78,5 +78,4 @@ public class GroupInfo extends RangerBaseModelObject implements java.io.Serializ
                 + ", otherAttributes=" + RangerUserStoreUtil.getPrintableOptions(otherAttributes)
                 + "}";
     }
-
 }

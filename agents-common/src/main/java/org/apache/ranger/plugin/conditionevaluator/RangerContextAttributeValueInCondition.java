@@ -28,49 +28,41 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class RangerContextAttributeValueInCondition extends RangerAbstractConditionEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerContextAttributeValueInCondition.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerContextAttributeValueInCondition.class);
 
-	protected String attributeName;
+    protected String attributeName;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerContextAttributeValueInCondition.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerContextAttributeValueInCondition.init({})", condition);
 
-		super.init();
+        super.init();
 
-		Map<String, String> evalOptions = conditionDef. getEvaluatorOptions();
+        Map<String, String> evalOptions = conditionDef.getEvaluatorOptions();
 
-		if (MapUtils.isNotEmpty(evalOptions)) {
-			attributeName = evalOptions.get("attributeName");
-		}
+        if (MapUtils.isNotEmpty(evalOptions)) {
+            attributeName = evalOptions.get("attributeName");
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerContextAttributeValueInCondition.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerContextAttributeValueInCondition.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerContextAttributeValueInCondition.isMatched(" + condition + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerContextAttributeValueInCondition.isMatched({})", condition);
 
-		boolean ret = true;
+        boolean ret = true;
 
-		if(attributeName != null && condition != null && CollectionUtils.isNotEmpty(condition.getValues())) {
-			Object val = request.getContext().get(attributeName);
+        if (attributeName != null && condition != null && CollectionUtils.isNotEmpty(condition.getValues())) {
+            Object val = request.getContext().get(attributeName);
 
-			if(val != null) {
-				ret = condition.getValues().contains(val);
-			}
-		}
+            if (val != null) {
+                ret = condition.getValues().contains(val);
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerContextAttributeValueInCondition.isMatched(" + condition + "): " + ret);
-		}
+        LOG.debug("<== RangerContextAttributeValueInCondition.isMatched({}): {}", condition, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 }

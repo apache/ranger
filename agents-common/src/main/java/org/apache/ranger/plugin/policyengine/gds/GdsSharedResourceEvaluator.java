@@ -106,7 +106,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         }
 
         LOG.debug("GdsSharedResourceEvaluator: resource={}, conditionEvaluator={}, policyResource={}, leafResourceDef={}, allowedAccessTypes={}",
-                  resource, conditionEvaluator, policyResource, leafResourceDef, allowedAccessTypes);
+                resource, conditionEvaluator, policyResource, leafResourceDef, allowedAccessTypes);
     }
 
     private GdsSharedResourceEvaluator(GdsSharedResourceEvaluator other, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext, int policyType) {
@@ -152,17 +152,25 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     }
 
     @Override
-    public boolean isLeaf(String resourceName) { return StringUtils.equals(leafResourceDef.getName(), resourceName); }
+    public boolean isLeaf(String resourceName) {
+        return StringUtils.equals(leafResourceDef.getName(), resourceName);
+    }
 
-    public Long getDataShareId() { return resource.getDataShareId(); }
+    public Long getDataShareId() {
+        return resource.getDataShareId();
+    }
 
     public Collection<String> getResourceKeys() {
         return resource != null && resource.getResource() != null ? resource.getResource().keySet() : Collections.emptySet();
     }
 
-    public boolean isConditional() { return conditionEvaluator != null; }
+    public boolean isConditional() {
+        return conditionEvaluator != null;
+    }
 
-    public Set<String> getAllowedAccessTypes() { return allowedAccessTypes; }
+    public Set<String> getAllowedAccessTypes() {
+        return allowedAccessTypes;
+    }
 
     public boolean isAllowed(RangerAccessRequest request) {
         LOG.debug("==> GdsSharedResourceEvaluator.evaluate({})", request);
@@ -273,6 +281,14 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
     }
 
     public static class GdsSharedResourceEvalOrderComparator implements Comparator<GdsSharedResourceEvaluator> {
+        static int compareStrings(String str1, String str2) {
+            if (str1 == null) {
+                return str2 == null ? 0 : -1;
+            } else {
+                return str2 == null ? 1 : str1.compareTo(str2);
+            }
+        }
+
         @Override
         public int compare(GdsSharedResourceEvaluator me, GdsSharedResourceEvaluator other) {
             int ret = 0;
@@ -294,14 +310,6 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             }
 
             return ret;
-        }
-
-        static int compareStrings(String str1, String str2) {
-            if (str1 == null) {
-                return str2 == null ? 0 : -1;
-            } else {
-                return str2 == null ? 1 : str1.compareTo(str2);
-            }
         }
     }
 }

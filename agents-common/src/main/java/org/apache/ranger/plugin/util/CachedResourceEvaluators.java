@@ -41,13 +41,83 @@ import java.util.Map;
 import java.util.Set;
 
 public class CachedResourceEvaluators {
-    private final Map<String, Map<Map<String, RangerAccessRequest.ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache     = new HashMap<>();
-    private final RangerReadWriteLock                                                                                                       cacheLock = new RangerReadWriteLock(true);
-
-    private static final Logger LOG = LoggerFactory.getLogger(CachedResourceEvaluators.class);
-    private static final Logger PERF_EVALUATORS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("CachedResourceEvaluators.retrieval");
+    private static final Logger                                                                                                                    LOG                           = LoggerFactory.getLogger(CachedResourceEvaluators.class);
+    private static final Logger                                                                                                                    PERF_EVALUATORS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("CachedResourceEvaluators.retrieval");
+    private final        Map<String, Map<Map<String, RangerAccessRequest.ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache                         = new HashMap<>();
+    private final        RangerReadWriteLock                                                                                                       cacheLock                     = new RangerReadWriteLock(true);
 
     public CachedResourceEvaluators() {}
+
+    public static Collection<RangerServiceResourceMatcher> getEvaluators(RangerAccessRequest request, Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie, CachedResourceEvaluators cache) {
+        LOG.debug("==> CachedResourceEvaluators.getEvaluators(request={})", request);
+
+        Collection<RangerServiceResourceMatcher> ret      = null;
+        final RangerAccessResource               resource = request.getResource();
+        RangerServiceDefHelper                   helper   = new RangerServiceDefHelper(resource.getServiceDef());
+
+        RangerPerfTracer perf = null;
+
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_EVALUATORS_RETRIEVAL_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_EVALUATORS_RETRIEVAL_LOG, "CachedResourceEvaluators.getEvaluators(resource=" + resource.getAsString() + ")");
+        }
+
+        final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
+        final Predicate                                 predicate             = !(request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) && excludeDescendantMatches(resource) ? new SelfOrAncestorPredicate(helper.getResourceDef(resource.getLeafName())) : null;
+
+        if (predicate != null) {
+            ret = cache.getEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes());
+        }
+
+        if (ret == null) {
+            ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes(), predicate);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found [{}] service-resource-matchers for service-resource [{}]", ret.size(), resource.getAsString());
+            }
+
+            if (predicate != null) {
+                cache.cacheEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes(), ret);
+            }
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found [{}] service-resource-matchers for service-resource [{}] in the cache", ret.size(), resource.getAsString());
+            }
+        }
+
+        RangerPerfTracer.logAlways(perf);
+
+        if (ret == null) {
+            ret = new ArrayList<>();
+        }
+
+        LOG.debug("<== CachedResourceEvaluators.getEvaluators(request={}): evaluators={}", request, ret);
+
+        return ret;
+    }
+
+    public static boolean excludeDescendantMatches(RangerAccessResource resource) {
+        final boolean ret;
+
+        String leafName = resource.getLeafName();
+
+        if (StringUtils.isNotEmpty(leafName)) {
+            RangerServiceDefHelper                        helper      = new RangerServiceDefHelper(resource.getServiceDef());
+            Set<List<RangerServiceDef.RangerResourceDef>> hierarchies = helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, resource.getKeys());
+
+            // skip caching if the leaf of accessed resource is the deepest in the only applicable hierarchy
+            if (hierarchies.size() == 1) {
+                List<RangerServiceDef.RangerResourceDef> theHierarchy    = hierarchies.iterator().next();
+                RangerServiceDef.RangerResourceDef       leafOfHierarchy = theHierarchy.get(theHierarchy.size() - 1);
+
+                ret = !StringUtils.equals(leafOfHierarchy.getName(), leafName);
+            } else {
+                ret = true;
+            }
+        } else {
+            ret = false;
+        }
+        return ret;
+    }
 
     public Collection<RangerServiceResourceMatcher> getEvaluators(String resourceKey, Map<String, RangerAccessRequest.ResourceElementMatchingScope> scopes) {
         Collection<RangerServiceResourceMatcher> ret;
@@ -75,81 +145,6 @@ public class CachedResourceEvaluators {
         try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
             cache.clear();
         }
-    }
-
-    public static Collection<RangerServiceResourceMatcher> getEvaluators(RangerAccessRequest request, Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie, CachedResourceEvaluators cache) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> CachedResourceEvaluators.getEvaluators(request=" + request + ")");
-        }
-
-        Collection<RangerServiceResourceMatcher> ret      = null;
-        final RangerAccessResource               resource = request.getResource();
-        RangerServiceDefHelper                   helper   = new RangerServiceDefHelper(resource.getServiceDef());
-
-        RangerPerfTracer perf = null;
-
-        if (RangerPerfTracer.isPerfTraceEnabled(PERF_EVALUATORS_RETRIEVAL_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_EVALUATORS_RETRIEVAL_LOG, "CachedResourceEvaluators.getEvaluators(resource=" + resource.getAsString() + ")");
-        }
-
-        final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
-        final Predicate                                 predicate             = !(request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) && excludeDescendantMatches(resource) ? new SelfOrAncestorPredicate(helper.getResourceDef(resource.getLeafName())) : null;
-
-        if (predicate != null) {
-            ret = cache.getEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes());
-        }
-
-        if (ret == null) {
-            ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes(), predicate);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found [" + ret.size() + "] service-resource-matchers for service-resource [" + resource.getAsString() + "]");
-            }
-
-            if (predicate != null) {
-                cache.cacheEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes(), ret);
-            }
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found [" + ret.size() + "] service-resource-matchers for service-resource [" + resource.getAsString() + "] in the cache");
-            }
-        }
-
-        RangerPerfTracer.logAlways(perf);
-
-        if (ret == null) {
-            ret = new ArrayList<>();
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== CachedResourceEvaluators.getEvaluators(request=" + request + "): evaluators=" + ret);
-        }
-
-        return ret;
-    }
-
-    public static boolean excludeDescendantMatches(RangerAccessResource resource) {
-        final boolean ret;
-
-        String               leafName = resource.getLeafName();
-
-        if (StringUtils.isNotEmpty(leafName)) {
-            RangerServiceDefHelper                        helper      = new RangerServiceDefHelper(resource.getServiceDef());
-            Set<List<RangerServiceDef.RangerResourceDef>> hierarchies = helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, resource.getKeys());
-
-            // skip caching if the leaf of accessed resource is the deepest in the only applicable hierarchy
-            if (hierarchies.size() == 1) {
-                List<RangerServiceDef.RangerResourceDef> theHierarchy    = hierarchies.iterator().next();
-                RangerServiceDef.RangerResourceDef       leafOfHierarchy = theHierarchy.get(theHierarchy.size() - 1);
-
-                ret = !StringUtils.equals(leafOfHierarchy.getName(), leafName);
-            } else {
-                ret = true;
-            }
-        } else {
-            ret = false;
-        }
-        return ret;
     }
 
     private static class SelfOrAncestorPredicate implements Predicate {

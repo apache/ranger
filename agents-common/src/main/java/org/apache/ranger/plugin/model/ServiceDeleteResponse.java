@@ -20,50 +20,54 @@
 package org.apache.ranger.plugin.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceDeleteResponse implements java.io.Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private String  serviceName;
-	private Long    serviceId;
-	private Boolean isDeleted;
-	private String  errorMsg;
+    private String  serviceName;
+    private Long    serviceId;
+    private Boolean isDeleted;
+    private String  errorMsg;
 
-	public ServiceDeleteResponse(Long serviceId) {
-		this.serviceId = serviceId;
-	}
+    public ServiceDeleteResponse(Long serviceId) {
+        this.serviceId = serviceId;
+    }
 
-	public String getServiceName() {
-		return serviceName;
-	}
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-	public Long getServiceId() {
-		return serviceId;
-	}
-	public void setServiceId(Long serviceId) {
-		this.serviceId = serviceId;
-	}
-	public Boolean getIsDeleted() {
-		return isDeleted;
-	}
-	public void setIsDeleted(Boolean isDeleted) {
-		this.isDeleted = isDeleted;
-	}
-	public String getErrorMsg() {
-		return errorMsg;
-	}
-	public void setErrorMsg(String errorMsg) {
-		this.errorMsg = errorMsg;
-	}
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public Long getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
 }

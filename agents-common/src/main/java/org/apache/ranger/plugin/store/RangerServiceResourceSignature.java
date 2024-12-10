@@ -24,84 +24,86 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class RangerServiceResourceSignature {
-	private final String _string;
-	private final String _hash;
+    private final String strValue;
+    private final String hashValue;
 
-	public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
-		_string = ServiceResourceSerializer.toString(serviceResource);
-		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
-			_hash = DigestUtils.sha512Hex(_string);
-		} else {
-			_hash = DigestUtils.sha256Hex(_string);
-		}
-	}
+    public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
+        strValue = ServiceResourceSerializer.toString(serviceResource);
+        if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+            hashValue = DigestUtils.sha512Hex(strValue);
+        } else {
+            hashValue = DigestUtils.sha256Hex(strValue);
+        }
+    }
 
-	String asString() {
-		return _string;
-	}
+    public String getSignature() {
+        return hashValue;
+    }
 
-	public String getSignature() {
-		return _hash;
-	}
+    String asString() {
+        return strValue;
+    }
 
-	static class ServiceResourceSerializer {
+    static class ServiceResourceSerializer {
+        static final int _SignatureVersion = 1;
 
-		static final int _SignatureVersion = 1;
+        public static String toString(final RangerServiceResource serviceResource) {
+            // invalid/empty serviceResource gets a deterministic signature as if it had an
+            // empty resource string
+            Map<String, RangerPolicy.RangerPolicyResource> resource  = serviceResource.getResourceElements();
+            Map<String, ResourceSerializer>                resources = new TreeMap<>();
+            for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : resource.entrySet()) {
+                String             resourceName = entry.getKey();
+                ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
+                resources.put(resourceName, resourceView);
+            }
+            String resourcesAsString = resources.toString();
+            return String.format("{version=%d,resource=%s}", _SignatureVersion, resourcesAsString);
+        }
 
-		static public String toString(final RangerServiceResource serviceResource) {
-			// invalid/empty serviceResource gets a deterministic signature as if it had an
-			// empty resource string
-			Map<String, RangerPolicy.RangerPolicyResource> resource = serviceResource.getResourceElements();
-			Map<String, ResourceSerializer> resources = new TreeMap<>();
-			for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : resource.entrySet()) {
-				String resourceName = entry.getKey();
-				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
-				resources.put(resourceName, resourceView);
-			}
-			String resourcesAsString = resources.toString();
-			return String.format("{version=%d,resource=%s}", _SignatureVersion, resourcesAsString);
-		}
+        static class ResourceSerializer {
+            final RangerPolicy.RangerPolicyResource policyResource;
 
-		static class ResourceSerializer {
-			final RangerPolicy.RangerPolicyResource _policyResource;
+            ResourceSerializer(RangerPolicy.RangerPolicyResource policyResource) {
+                this.policyResource = policyResource;
+            }
 
-			ResourceSerializer(RangerPolicy.RangerPolicyResource policyResource) {
-				_policyResource = policyResource;
-			}
+            @Override
+            public String toString() {
+                StringBuilder builder = new StringBuilder();
+                builder.append("{");
+                if (policyResource != null) {
+                    builder.append("values=");
+                    if (policyResource.getValues() != null) {
+                        List<String> values = new ArrayList<>(policyResource.getValues());
+                        Collections.sort(values);
+                        builder.append(values);
+                    }
 
-			@Override
-			public String toString() {
-				StringBuilder builder = new StringBuilder();
-				builder.append("{");
-				if (_policyResource != null) {
-					builder.append("values=");
-					if (_policyResource.getValues() != null) {
-						List<String> values = new ArrayList<>(_policyResource.getValues());
-						Collections.sort(values);
-						builder.append(values);
-					}
+                    builder.append(",excludes=");
+                    if (policyResource.getIsExcludes() == null) { // null is same as false
+                        builder.append(Boolean.FALSE);
+                    } else {
+                        builder.append(policyResource.getIsExcludes());
+                    }
 
-					builder.append(",excludes=");
-					if (_policyResource.getIsExcludes() == null) { // null is same as false
-						builder.append(Boolean.FALSE);
-					} else {
-						builder.append(_policyResource.getIsExcludes());
-					}
-
-					builder.append(",recursive=");
-					if (_policyResource.getIsRecursive() == null) { // null is the same as false
-						builder.append(Boolean.FALSE);
-					} else {
-						builder.append(_policyResource.getIsRecursive());
-					}
-				}
-				builder.append("}");
-				return builder.toString();
-			}
-		}
-	}
+                    builder.append(",recursive=");
+                    if (policyResource.getIsRecursive() == null) { // null is the same as false
+                        builder.append(Boolean.FALSE);
+                    } else {
+                        builder.append(policyResource.getIsRecursive());
+                    }
+                }
+                builder.append("}");
+                return builder.toString();
+            }
+        }
+    }
 }
-

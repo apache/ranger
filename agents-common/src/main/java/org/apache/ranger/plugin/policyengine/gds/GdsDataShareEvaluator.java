@@ -73,11 +73,17 @@ public class GdsDataShareEvaluator {
         return zoneName;
     }
 
-    public Set<String> getDefaultAccessTypes() { return dsh.getDefaultAccessTypes(); }
+    public Set<String> getDefaultAccessTypes() {
+        return dsh.getDefaultAccessTypes();
+    }
 
-    public Set<GdsSharedResourceEvaluator> getResourceEvaluators() { return evaluators; }
+    public Set<GdsSharedResourceEvaluator> getResourceEvaluators() {
+        return evaluators;
+    }
 
-    public List<GdsDshidEvaluator> getDshidEvaluators() { return dshidEvaluators; }
+    public List<GdsDshidEvaluator> getDshidEvaluators() {
+        return dshidEvaluators;
+    }
 
     public List<GdsSharedResourceEvaluator> getResourceEvaluators(RangerAccessRequest request) {
         final List<GdsSharedResourceEvaluator> ret;

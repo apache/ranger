@@ -19,9 +19,8 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,107 +29,99 @@ import java.util.Map;
 
 import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.NONE;
 
-
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
 
-	@Override
-	public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + ")");
-		}
+    @Override
+    public ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        LOG.debug("==> RangerDefaultResourceMatcher.getMatchType({}, {})", resource, evalContext);
 
-		ResourceElementMatchType matchType = getMatchType(resource, matchingScope, evalContext);
-		boolean                  ret       = ResourceMatcher.isMatch(matchType, matchingScope);
+        ResourceElementMatchType ret                = NONE;
+        boolean                  allValuesRequested = isAllValuesRequested(resource);
+        boolean                  isPrefixMatch      = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
 
-		if (ret == false) {
-			if(LOG.isDebugEnabled()) {
-				StringBuilder sb = new StringBuilder();
-				sb.append("[");
-				for (String policyValue: policyValues) {
-					sb.append(policyValue);
-					sb.append(" ");
-				}
-				sb.append("]");
+        if (isMatchAny || (allValuesRequested && !isPrefixMatch)) {
+            ret = isMatchAny ? ResourceElementMatchType.SELF : NONE;
+        } else {
+            if (resource instanceof String) {
+                String strValue = (String) resource;
 
-				LOG.debug("RangerDefaultResourceMatcher.isMatch returns FALSE, (resource=" + resource + ", policyValues=" + sb.toString() + ")");
-			}
-		}
+                for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+                    ResourceElementMatchType matchType = resourceMatcher.getMatchType(strValue, matchingScope, evalContext);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + "): " + ret);
-		}
+                    if (matchType != NONE) {
+                        ret = matchType;
+                    }
 
-		return ret;
-	}
+                    if (ret == ResourceElementMatchType.SELF) {
+                        break;
+                    }
+                }
+            } else if (resource instanceof Collection) {
+                @SuppressWarnings("unchecked")
+                Collection<String> resourceValues = (Collection<String>) resource;
 
-	@Override
-	public ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.getMatchType(" + resource + ", " + evalContext + ")");
-		}
+                for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+                    for (String resourceValue : resourceValues) {
+                        ResourceElementMatchType matchType = resourceMatcher.getMatchType(resourceValue, matchingScope, evalContext);
 
-		ResourceElementMatchType ret                = NONE;
-		boolean                  allValuesRequested = isAllValuesRequested(resource);
-		boolean                  isPrefixMatch      = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
+                        if (matchType != NONE) {
+                            ret = matchType;
+                        }
 
-		if (isMatchAny || (allValuesRequested && !isPrefixMatch)) {
-			ret = isMatchAny ? ResourceElementMatchType.SELF : NONE;
-		} else {
-			if (resource instanceof String) {
-				String strValue = (String) resource;
+                        if (ret == ResourceElementMatchType.SELF) {
+                            break;
+                        }
+                    }
 
-				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					ResourceElementMatchType matchType = resourceMatcher.getMatchType(strValue, matchingScope, evalContext);
+                    if (ret == ResourceElementMatchType.SELF) {
+                        break;
+                    }
+                }
+            }
+        }
 
-					if (matchType != NONE) {
-						ret = matchType;
-					}
+        ret = applyExcludes(allValuesRequested, ret);
 
-					if (ret == ResourceElementMatchType.SELF) {
-						break;
-					}
-				}
-			} else if (resource instanceof Collection) {
-				@SuppressWarnings("unchecked")
-				Collection<String> resourceValues = (Collection<String>) resource;
+        LOG.debug("<== RangerDefaultResourceMatcher.getMatchType({}, {}): {}", resource, evalContext, ret);
 
-				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					for (String resourceValue : resourceValues) {
-						ResourceElementMatchType matchType = resourceMatcher.getMatchType(resourceValue, matchingScope, evalContext);
+        return ret;
+    }
 
-						if (matchType != NONE) {
-							ret = matchType;
-						}
+    @Override
+    public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        LOG.debug("==> RangerDefaultResourceMatcher.isMatch({}, {})", resource, evalContext);
 
-						if (ret == ResourceElementMatchType.SELF) {
-							break;
-						}
-					}
+        ResourceElementMatchType matchType = getMatchType(resource, matchingScope, evalContext);
+        boolean                  ret       = ResourceMatcher.isMatch(matchType, matchingScope);
 
-					if (ret == ResourceElementMatchType.SELF) {
-						break;
-					}
-				}
-			}
-		}
+        if (!ret) {
+            if (LOG.isDebugEnabled()) {
+                StringBuilder sb = new StringBuilder();
 
-		ret = applyExcludes(allValuesRequested, ret);
+                sb.append("[");
+                for (String policyValue : policyValues) {
+                    sb.append(policyValue);
+                    sb.append(" ");
+                }
+                sb.append("]");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.getMatchType(" + resource + ", " + evalContext + "): " + ret);
-		}
+                LOG.debug("RangerDefaultResourceMatcher.isMatch returns FALSE, (resource={}, policyValues={})", resource, sb);
+            }
+        }
 
-		return ret;
-	}
+        LOG.debug("<== RangerDefaultResourceMatcher.isMatch({}, {}): {}", resource, evalContext, ret);
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerDefaultResourceMatcher={");
+        return ret;
+    }
 
-		super.toString(sb);
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerDefaultResourceMatcher={");
 
-		sb.append("}");
+        super.toString(sb);
 
-		return sb;
-	}
+        sb.append("}");
+
+        return sb;
+    }
 }

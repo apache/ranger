@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.util;
 
 public final class DownloadTrigger {
-    private boolean isNotified = false;
+    private boolean isNotified;
 
     public synchronized void waitForCompletion() throws InterruptedException {
         while (!isNotified) {

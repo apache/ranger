@@ -20,50 +20,50 @@
 package org.apache.ranger.plugin.model.validation;
 
 public class ValidationFailureDetailsBuilder {
-	protected String _fieldName;
-	protected boolean _missing;
-	protected boolean _semanticError;
-	protected String _reason;
-	protected String _subFieldName;
-	protected boolean _internalError;
-	protected int _errorCode;
+    protected String  fieldName;
+    protected boolean missing;
+    protected boolean semanticError;
+    protected String  reason;
+    protected String  subFieldName;
+    protected boolean internalError;
+    protected int     errorCode;
 
-	ValidationFailureDetailsBuilder becauseOf(String aReason) {
-		_reason = aReason;
-		return this;
-	}
-	
-	ValidationFailureDetailsBuilder isMissing() {
-		_missing = true;
-		return this;
-	}
-	
-	ValidationFailureDetailsBuilder isSemanticallyIncorrect() {
-		_semanticError = true;
-		return this;
-	}
-	
-	ValidationFailureDetailsBuilder field(String fieldName) {
-		_fieldName = fieldName;
-		return this;
-	}
-	
-	ValidationFailureDetails build() {
-		return new ValidationFailureDetails(_errorCode, _fieldName, _subFieldName, _missing, _semanticError, _internalError, _reason);
-	}
+    ValidationFailureDetailsBuilder becauseOf(String aReason) {
+        reason = aReason;
+        return this;
+    }
 
-	ValidationFailureDetailsBuilder subField(String missingParameter) {
-		_subFieldName = missingParameter;
-		return this;
-	}
+    ValidationFailureDetailsBuilder isMissing() {
+        missing = true;
+        return this;
+    }
 
-	ValidationFailureDetailsBuilder isAnInternalError() {
-		_internalError = true;
-		return this;
-	}
+    ValidationFailureDetailsBuilder isSemanticallyIncorrect() {
+        semanticError = true;
+        return this;
+    }
 
-	ValidationFailureDetailsBuilder errorCode(int errorCode) {
-		_errorCode = errorCode;
-		return this;
-	}
+    ValidationFailureDetailsBuilder field(String fieldName) {
+        this.fieldName = fieldName;
+        return this;
+    }
+
+    ValidationFailureDetails build() {
+        return new ValidationFailureDetails(errorCode, fieldName, subFieldName, missing, semanticError, internalError, reason);
+    }
+
+    ValidationFailureDetailsBuilder subField(String missingParameter) {
+        subFieldName = missingParameter;
+        return this;
+    }
+
+    ValidationFailureDetailsBuilder isAnInternalError() {
+        internalError = true;
+        return this;
+    }
+
+    ValidationFailureDetailsBuilder errorCode(int errorCode) {
+        this.errorCode = errorCode;
+        return this;
+    }
 }

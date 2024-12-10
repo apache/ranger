@@ -19,21 +19,19 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
 public class RangerTagResource extends RangerAccessResourceImpl {
-	private static final String KEY_TAG = "tag";
+    private static final String KEY_TAG = "tag";
 
+    public RangerTagResource(String tagType, RangerServiceDef tagServiceDef) {
+        super.setValue(KEY_TAG, tagType);
+        super.setServiceDef(tagServiceDef);
+    }
 
-	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef) {
-		super.setValue(KEY_TAG, tagType);
-		super.setServiceDef(tagServiceDef);
-	}
-
-	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef, String ownerUser) {
-		super.setValue(KEY_TAG, tagType);
-		super.setServiceDef(tagServiceDef);
-		super.setOwnerUser(ownerUser);
-	}
+    public RangerTagResource(String tagType, RangerServiceDef tagServiceDef, String ownerUser) {
+        super.setValue(KEY_TAG, tagType);
+        super.setServiceDef(tagServiceDef);
+        super.setOwnerUser(ownerUser);
+    }
 }

@@ -25,198 +25,212 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class RangerGeolocationData implements Comparable<RangerGeolocationData>, RangeChecker<Long> {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerGeolocationData.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerGeolocationData.class);
 
-	private static final Character IPSegmentsSeparator = '.';
+    private static final Character IPSegmentsSeparator = '.';
 
-	private final long fromIPAddress;
-	private final long toIPAddress;
-	private final String[] locationData;
-	private int hash;
+    private final long     fromIPAddress;
+    private final long     toIPAddress;
+    private final String[] locationData;
+    private       int      hash;
 
-	public static RangerGeolocationData create(String fields[], int index, boolean useDotFormat) {
+    private RangerGeolocationData(final long fromIPAddress, final long toIPAddress, final String[] locationData) {
+        this.fromIPAddress = fromIPAddress;
+        this.toIPAddress   = toIPAddress;
+        this.locationData  = locationData;
+    }
 
-		RangerGeolocationData data = null;
+    public static RangerGeolocationData create(String[] fields, int index, boolean useDotFormat) {
+        RangerGeolocationData data = null;
 
-		if (fields.length > 2) {
-			String startAddress = fields[0];
-			String endAddress = fields[1];
+        if (fields.length > 2) {
+            String startAddress = fields[0];
+            String endAddress   = fields[1];
 
-			if (RangerGeolocationData.validateAsIP(startAddress, useDotFormat) && RangerGeolocationData.validateAsIP(endAddress, useDotFormat)) {
+            if (RangerGeolocationData.validateAsIP(startAddress, useDotFormat) && RangerGeolocationData.validateAsIP(endAddress, useDotFormat)) {
+                if (!useDotFormat) {
+                    startAddress = RangerGeolocationData.unsignedIntToIPAddress(Long.parseLong(startAddress));
+                    endAddress   = RangerGeolocationData.unsignedIntToIPAddress(Long.parseLong(endAddress));
+                }
 
-				long startIP, endIP;
-				if (!useDotFormat) {
-					startAddress = RangerGeolocationData.unsignedIntToIPAddress(Long.valueOf(startAddress));
-					endAddress = RangerGeolocationData.unsignedIntToIPAddress(Long.valueOf(endAddress));
-				}
-				startIP = RangerGeolocationData.ipAddressToLong(startAddress);
-				endIP = RangerGeolocationData.ipAddressToLong(endAddress);
+                long startIP = RangerGeolocationData.ipAddressToLong(startAddress);
+                long endIP   = RangerGeolocationData.ipAddressToLong(endAddress);
 
-				if ((endIP - startIP) >= 0) {
+                if ((endIP - startIP) >= 0) {
+                    String[] locationData = new String[fields.length - 2];
 
-					String[] locationData = new String[fields.length-2];
-					for (int i = 2; i < fields.length; i++) {
-						locationData[i-2] = fields[i];
-					}
-					data = new RangerGeolocationData(startIP, endIP, locationData);
-				}
-			}
+                    for (int i = 2; i < fields.length; i++) {
+                        locationData[i - 2] = fields[i];
+                    }
 
-		} else {
-			LOG.error("GeolocationMetadata.createMetadata() - Not enough fields specified, need {start, end, location} at " + index);
-		}
-		return data;
-	}
+                    data = new RangerGeolocationData(startIP, endIP, locationData);
+                }
+            }
+        } else {
+            LOG.error("GeolocationMetadata.createMetadata() - Not enough fields specified, need {start, end, location} at {}", index);
+        }
 
-	private RangerGeolocationData(final long fromIPAddress, final long toIPAddress, final String[] locationData) {
-		this.fromIPAddress = fromIPAddress;
-		this.toIPAddress = toIPAddress;
-		this.locationData = locationData;
-	}
+        return data;
+    }
 
-	public String[] getLocationData() {
-		return locationData;
-	}
+    public static long ipAddressToLong(final String ipAddress) {
+        long ret = 0L;
 
-	@Override
-	public int compareTo(final RangerGeolocationData other) {
-		int ret = (other == null) ? 1 : 0;
-		if (ret == 0) {
-			ret = Long.compare(fromIPAddress, other.fromIPAddress);
-			if (ret == 0) {
-				ret = Long.compare(toIPAddress, other.toIPAddress);
-				if (ret == 0) {
-					ret = Integer.compare(locationData.length, other.locationData.length);
-					for (int i = 0; ret == 0 && i < locationData.length; i++) {
-						ret = stringCompareTo(locationData[i], other.locationData[i]);
-					}
-				}
-			}
-		}
-		return ret;
-	}
+        try {
+            byte[] bytes = InetAddress.getByName(ipAddress).getAddress();
 
-	@Override
-	public boolean equals(Object other) {
-		boolean ret = false;
-		if (other != null && (other instanceof RangerGeolocationData)) {
-			ret = this == other || compareTo((RangerGeolocationData) other) == 0;
-		}
-		return ret;
-	}
+            if (bytes != null && bytes.length <= 4) {
+                for (int i = 0; i < bytes.length; i++) {
+                    int val = bytes[i] < 0 ? (256 + bytes[i]) : bytes[i];
 
-	@Override
-	public int hashCode() {
-		if (hash == 0) {
-			hash = Objects.hash(fromIPAddress, toIPAddress, locationData);
-		}
-		return hash;
-	}
+                    ret += (val << (8 * (3 - i)));
+                }
+            }
+        } catch (UnknownHostException exception) {
+            LOG.error("RangerGeolocationData.ipAddressToLong() - Invalid IP address {}", ipAddress);
+        }
 
-	@Override
-	public int compareToRange(final Long ip) {
-		int ret = Long.compare(fromIPAddress, ip.longValue());
+        return ret;
+    }
 
-		if (ret < 0) {
-			ret = Long.compare(toIPAddress, ip.longValue());
-			if (ret > 0) {
-				ret = 0;
-			}
-		}
+    public static String unsignedIntToIPAddress(final long val) {
+        if (val <= 0) {
+            return "";
+        }
 
-		return ret;
-	}
+        long     remaining = val;
+        String[] segments  = new String[4];
 
-	public static long ipAddressToLong(final String ipAddress) {
+        for (int i = 3; i >= 0; i--) {
+            long segment = remaining % 0x100;
 
-		long ret = 0L;
+            remaining   = remaining / 0x100;
+            segments[i] = String.valueOf(segment);
+        }
 
-		try {
-			byte[] bytes = InetAddress.getByName(ipAddress).getAddress();
+        return StringUtils.join(segments, IPSegmentsSeparator);
+    }
 
-			if (bytes != null && bytes.length <= 4) {
-				for (int i = 0; i < bytes.length; i++) {
-					int val = bytes[i] < 0 ? (256 + bytes[i]) : bytes[i];
-					ret += (val << (8 * (3 - i)));
-				}
-			}
-		}
-		catch (UnknownHostException exception) {
-			LOG.error("RangerGeolocationData.ipAddressToLong() - Invalid IP address " + ipAddress);
-		}
+    public static boolean validateAsIP(String ipAddress, boolean ipInDotNotation) {
+        if (!ipInDotNotation) {
+            return StringUtils.isNumeric(ipAddress);
+        }
 
-		return ret;
-	}
+        boolean ret = false;
 
-	public static String unsignedIntToIPAddress(final long val) {
-		if (val <= 0) {
-			return "";
-		}
-		long remaining = val;
-		String segments[] = new String[4];
-		for (int i = 3; i >= 0; i--) {
-			long segment = remaining % 0x100;
-			remaining = remaining / 0x100;
-			segments[i] = String.valueOf(segment);
-		}
-		return StringUtils.join(segments, IPSegmentsSeparator);
-	}
+        try {
+            // Only to validate to see if ipAddress is in correct format
+            InetAddress.getByName(ipAddress).getAddress();
 
-	public static boolean validateAsIP(String ipAddress, boolean ipInDotNotation) {
-		if (!ipInDotNotation) {
-			return StringUtils.isNumeric(ipAddress);
-		}
+            ret = true;
+        } catch (UnknownHostException exception) {
+            LOG.error("RangerGeolocationData.validateAsIP() - Invalid address {}", ipAddress);
+        }
 
-		boolean ret = false;
+        return ret;
+    }
 
-		try {
-			// Only to validate to see if ipAddress is in correct format
-			InetAddress.getByName(ipAddress).getAddress();
-			ret = true;
-		}
-		catch(UnknownHostException exception) {
-			LOG.error("RangerGeolocationData.validateAsIP() - Invalid address " + ipAddress);
-		}
+    public String[] getLocationData() {
+        return locationData;
+    }
 
-		return ret;
-	}
+    @Override
+    public int compareTo(final RangerGeolocationData other) {
+        int ret = (other == null) ? 1 : 0;
 
-	private static int stringCompareTo(String str1, String str2) {
-		if(str1 == str2) {
-			return 0;
-		} else if(str1 == null) {
-			return -1;
-		} else if(str2 == null) {
-			return 1;
-		} else {
-			return str1.compareTo(str2);
-		}
-	}
+        if (ret == 0) {
+            ret = Long.compare(fromIPAddress, other.fromIPAddress);
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
+            if (ret == 0) {
+                ret = Long.compare(toIPAddress, other.toIPAddress);
 
-		toString(sb);
+                if (ret == 0) {
+                    ret = Integer.compare(locationData.length, other.locationData.length);
 
-		return sb.toString();
-	}
+                    for (int i = 0; ret == 0 && i < locationData.length; i++) {
+                        ret = stringCompareTo(locationData[i], other.locationData[i]);
+                    }
+                }
+            }
+        }
+        return ret;
+    }
 
-	private StringBuilder toString(StringBuilder sb) {
-		sb.append("{")
-				.append("from=")
-				.append(RangerGeolocationData.unsignedIntToIPAddress(fromIPAddress))
-				.append(", to=")
-				.append(RangerGeolocationData.unsignedIntToIPAddress(toIPAddress))
-				.append(", location={");
-			for (String data : locationData) {
-				sb.append(data).append(", ");
-			}
-				sb.append("}");
-		sb.append("}");
-		return sb;
-	}
+    @Override
+    public int hashCode() {
+        if (hash == 0) {
+            hash = Objects.hash(fromIPAddress, toIPAddress, Arrays.hashCode(locationData));
+        }
+
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        boolean ret = false;
+
+        if ((other instanceof RangerGeolocationData)) {
+            ret = this == other || compareTo((RangerGeolocationData) other) == 0;
+        }
+
+        return ret;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        toString(sb);
+
+        return sb.toString();
+    }
+
+    @Override
+    public int compareToRange(final Long ip) {
+        int ret = Long.compare(fromIPAddress, ip);
+
+        if (ret < 0) {
+            ret = Long.compare(toIPAddress, ip);
+
+            if (ret > 0) {
+                ret = 0;
+            }
+        }
+
+        return ret;
+    }
+
+    private static int stringCompareTo(String str1, String str2) {
+        if (str1 == str2) {
+            return 0;
+        } else if (str1 == null) {
+            return -1;
+        } else if (str2 == null) {
+            return 1;
+        } else {
+            return str1.compareTo(str2);
+        }
+    }
+
+    private StringBuilder toString(StringBuilder sb) {
+        sb.append("{")
+                .append("from=")
+                .append(RangerGeolocationData.unsignedIntToIPAddress(fromIPAddress))
+                .append(", to=")
+                .append(RangerGeolocationData.unsignedIntToIPAddress(toIPAddress))
+                .append(", location={");
+
+        for (String data : locationData) {
+            sb.append(data).append(", ");
+        }
+
+        sb.append("}");
+        sb.append("}");
+
+        return sb;
+    }
 }

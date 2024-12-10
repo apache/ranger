@@ -36,18 +36,21 @@ import java.util.Set;
 public class RangerResourceEvaluatorsRetriever {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceEvaluatorsRetriever.class);
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource) {
+    private RangerResourceEvaluatorsRetriever() {
+        // to block instantiation
+    }
+
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource) {
         return getEvaluators(resourceTrie, resource, null);
     }
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
         return getEvaluators(resourceTrie, resource, scopes, null);
     }
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes, Predicate predicate) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators(" + resource + ")");
-        }
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes, Predicate predicate) {
+        LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators({})", resource);
+
         Set<T> ret = null;
 
         if (scopes == null) {
@@ -80,7 +83,7 @@ public class RangerResourceEvaluatorsRetriever {
 
                 if (minEvalCount == 0) {
                     resourceWithMinEvals = null;
-                    ret = Collections.emptySet();
+                    ret                  = Collections.emptySet();
                 }
             } else if (resourceKeys.size() == 1) { // skip getEvaluatorsCountForResource() when there is only one resource
                 String                resourceKey = resourceKeys.iterator().next();
@@ -122,9 +125,7 @@ public class RangerResourceEvaluatorsRetriever {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerResourceEvaluatorsRetriever.getEvaluators(" + resource + ") : evaluator:[" + ret + "]");
-        }
+        LOG.debug("<== RangerResourceEvaluatorsRetriever.getEvaluators({}) : evaluator:[{}]", resource, ret);
 
         return ret;
     }

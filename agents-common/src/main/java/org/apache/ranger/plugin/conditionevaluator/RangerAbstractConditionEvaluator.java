@@ -23,29 +23,30 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 
 public abstract class RangerAbstractConditionEvaluator implements RangerConditionEvaluator {
-	protected RangerServiceDef serviceDef;
-	protected RangerPolicyConditionDef  conditionDef;
-	protected RangerPolicyItemCondition condition;
+    protected RangerServiceDef          serviceDef;
+    protected RangerPolicyConditionDef  conditionDef;
+    protected RangerPolicyItemCondition condition;
 
-	@Override
-	public void setServiceDef(RangerServiceDef serviceDef) {
-		this.serviceDef = serviceDef;
-	}
+    @Override
+    public void setConditionDef(RangerPolicyConditionDef conditionDef) {
+        this.conditionDef = conditionDef;
+    }
 
-	@Override
-	public void setConditionDef(RangerPolicyConditionDef conditionDef) {
-		this.conditionDef = conditionDef;
-	}
+    public RangerPolicyItemCondition getPolicyItemCondition() {
+        return condition;
+    }
 
-	@Override
-	public void setPolicyItemCondition(RangerPolicyItemCondition condition) {
-		this.condition = condition;
-	}
+    @Override
+    public void setPolicyItemCondition(RangerPolicyItemCondition condition) {
+        this.condition = condition;
+    }
 
-	@Override
-	public void init() {
-	}
+    @Override
+    public void setServiceDef(RangerServiceDef serviceDef) {
+        this.serviceDef = serviceDef;
+    }
 
-	public RangerPolicyItemCondition getPolicyItemCondition() { return condition; }
-
+    @Override
+    public void init() {
+    }
 }

@@ -31,60 +31,58 @@ import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
 public class RangerAdminGdsInfoRetriever extends RangerGdsInfoRetriever {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminGdsInfoRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminGdsInfoRetriever.class);
 
-	private static final String  OPTION_DEDUP_TAGS         = "deDupTags";
-	private static final Boolean OPTION_DEDUP_TAGS_DEFAULT = true;
+    private static final String  OPTION_DEDUP_TAGS         = "deDupTags";
+    private static final Boolean OPTION_DEDUP_TAGS_DEFAULT = true;
 
+    private RangerAdminClient adminClient;
+    private boolean           deDupTags;
 
-	private RangerAdminClient adminClient;
-	private boolean           deDupTags;
+    @Override
+    public void init(Map<String, String> options) {
+        try {
+            if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
+                RangerPluginConfig pluginConfig = super.pluginConfig;
 
-	@Override
-	public void init(Map<String, String> options) {
-		try {
-			if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
-				RangerPluginConfig pluginConfig = super.pluginConfig;
+                if (pluginConfig == null) {
+                    pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
+                }
 
-				if (pluginConfig == null) {
-					pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
-				}
+                String              deDupTagsVal  = options != null ? options.get(OPTION_DEDUP_TAGS) : null;
+                RangerPluginContext pluginContext = getPluginContext();
+                RangerAdminClient   rangerAdmin   = pluginContext.getAdminClient();
 
-				String              deDupTagsVal  = options != null ? options.get(OPTION_DEDUP_TAGS) : null;
-				RangerPluginContext pluginContext = getPluginContext();
-				RangerAdminClient   rangerAdmin   = pluginContext.getAdminClient();
+                this.deDupTags   = StringUtils.isNotBlank(deDupTagsVal) ? Boolean.parseBoolean(deDupTagsVal) : OPTION_DEDUP_TAGS_DEFAULT;
+                this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
+            } else {
+                LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve GdsInfo.");
+            }
+        } catch (Exception excp) {
+            LOG.error("FATAL: Failed to initialize GDS retriever. Will not be able to enforce GDS policies", excp);
+        }
+    }
 
-				this.deDupTags   = StringUtils.isNotBlank(deDupTagsVal) ? Boolean.parseBoolean(deDupTagsVal) : OPTION_DEDUP_TAGS_DEFAULT;
-				this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
-			} else {
-				LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve GdsInfo.");
-			}
-		} catch (Exception excp) {
-			LOG.error("FATAL: Failed to initialize GDS retriever. Will not be able to enforce GDS policies", excp);
-		}
-	}
+    @Override
+    public ServiceGdsInfo retrieveGdsInfo(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
+        ServiceGdsInfo ret = null;
 
-	@Override
-	public ServiceGdsInfo retrieveGdsInfo(long lastKnownVersion, long lastActivationTimeInMillis) throws InterruptedException {
-		ServiceGdsInfo ret = null;
+        if (adminClient != null) {
+            try {
+                ret = adminClient.getGdsInfoIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
+            } catch (ClosedByInterruptException excp) {
+                LOG.error("gdsInfo retriever thread was interrupted while blocked on I/O", excp);
 
-		if (adminClient != null) {
-			try {
-				ret = adminClient.getGdsInfoIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
-			} catch (ClosedByInterruptException excp) {
-				LOG.error("gdsInfo retriever thread was interrupted while blocked on I/O", excp);
+                throw new InterruptedException();
+            } catch (Exception e) {
+                LOG.error("gdsInfo retriever encountered exception. Returning null gdsInfo", e);
+            }
+        }
 
-				throw new InterruptedException();
-			} catch (Exception e) {
-				LOG.error("gdsInfo retriever encountered exception. Returning null gdsInfo", e);
-			}
-		}
+        if (ret != null && deDupTags) {
+            ret.dedupStrings();
+        }
 
-		if (ret != null && deDupTags) {
-			ret.dedupStrings();
-		}
-
-		return ret;
-	}
+        return ret;
+    }
 }
-

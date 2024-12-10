@@ -42,14 +42,13 @@ import java.util.List;
 import java.util.Set;
 
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
-
+    private static final Logger LOG                              = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
     private static final Logger PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
-    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
 
     protected final PolicyEngine policyEngine;
-    private final boolean useRangerGroups;
-    private final boolean useOnlyRangerGroups;
-    private final boolean convertEmailToUser;
+    private   final boolean      useRangerGroups;
+    private   final boolean      useOnlyRangerGroups;
+    private   final boolean      convertEmailToUser;
 
     public RangerDefaultRequestProcessor(PolicyEngine policyEngine) {
         this.policyEngine = policyEngine;
@@ -70,15 +69,11 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
     @Override
     public void preProcess(RangerAccessRequest request) {
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> preProcess(" + request + ")");
-        }
+        LOG.debug("==> preProcess({})", request);
 
         if (RangerAccessRequestUtil.getIsRequestPreprocessed(request.getContext())) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== preProcess(" + request + ")");
-            }
+            LOG.debug("<== preProcess({})", request);
+
             return;
         }
 
@@ -138,9 +133,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== preProcess(" + request + ")");
-        }
+        LOG.debug("<== preProcess({})", request);
     }
 
     @Override
@@ -148,10 +141,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         List<RangerContextEnricher> enrichers = policyEngine.getAllContextEnrichers();
 
         if (!CollectionUtils.isEmpty(enrichers)) {
-            for(RangerContextEnricher enricher : enrichers) {
+            for (RangerContextEnricher enricher : enrichers) {
                 RangerPerfTracer perf = null;
 
-                if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_REQUEST_LOG)) {
+                if (RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_REQUEST_LOG)) {
                     perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_REQUEST_LOG, "RangerContextEnricher.enrich(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ", enricherName=" + enricher.getName() + ")");
                 }
 
@@ -160,9 +153,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 RangerPerfTracer.log(perf);
             }
         } else {
-            if (LOG.isDebugEnabled()){
-                LOG.debug("No context-enrichers!!!");
-            }
+            LOG.debug("No context-enrichers!!!");
         }
     }
 
@@ -172,6 +163,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         if (resource.getServiceDef() == null) {
             if (resource instanceof RangerMutableResource) {
                 RangerMutableResource mutable = (RangerMutableResource) resource;
+
                 mutable.setServiceDef(policyEngine.getServiceDef());
             }
         }

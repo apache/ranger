@@ -22,35 +22,33 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class MacroProcessorTest {
+    @Test
+    public void testMacros() {
+        Map<String, String> macros = new HashMap<>();
 
-	@Test
-	public void testMacros() {
-		Map<String, String> macros = new HashMap<>();
+        macros.put("USER", "getUser()");
+        macros.put("USER_NAME", "getUserName()");
+        macros.put("GROUPS", "getGroups()");
+        macros.put("GET_GROUP_ATTR", "getGroupAttr");
 
-		macros.put("USER", "getUser()");
-		macros.put("USER_NAME", "getUserName()");
-		macros.put("GROUPS", "getGroups()");
-		macros.put("GET_GROUP_ATTR", "getGroupAttr");
+        MacroProcessor processor = new MacroProcessor(macros);
 
-		MacroProcessor processor = new MacroProcessor(macros);
+        Map<String, String> testInputOutput = new HashMap<>(macros);
 
-		Map<String, String> testInputOutput = new HashMap<>();
+        testInputOutput.put("USER != null", "getUser() != null");
+        testInputOutput.put("USER_NAME=='testUser'", "getUserName()=='testUser'");
+        testInputOutput.put("USER != null && USER_NAME=='testUser'", "getUser() != null && getUserName()=='testUser'");
+        testInputOutput.put("GROUPS.length() > 1", "getGroups().length() > 1");
+        testInputOutput.put("GET_GROUP_ATTR('group1', 'attr1')", "getGroupAttr('group1', 'attr1')");
 
-		testInputOutput.putAll(macros);
-		testInputOutput.put("USER != null", "getUser() != null");
-		testInputOutput.put("USER_NAME=='testUser'", "getUserName()=='testUser'");
-		testInputOutput.put("USER != null && USER_NAME=='testUser'", "getUser() != null && getUserName()=='testUser'");
-		testInputOutput.put("GROUPS.length() > 1", "getGroups().length() > 1");
-		testInputOutput.put("GET_GROUP_ATTR('group1', 'attr1')", "getGroupAttr('group1', 'attr1')");
+        for (Map.Entry<String, String> inputOutput : testInputOutput.entrySet()) {
+            String input  = inputOutput.getKey();
+            String output = inputOutput.getValue();
 
-		for (Map.Entry<String, String> inputOutput : testInputOutput.entrySet()) {
-			String input  = inputOutput.getKey();
-			String output = inputOutput.getValue();
-
-			assertEquals(output, processor.expandMacros(input));;
-		}
-	}
+            assertEquals(output, processor.expandMacros(input));
+        }
+    }
 }

@@ -33,8 +33,12 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -47,7 +51,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
     private RangerGdsInfoRetriever gdsInfoRetriever;
     private RangerGdsInfoRefresher gdsInfoRefresher;
     private RangerServiceDefHelper serviceDefHelper;
-    private GdsPolicyEngine        gdsPolicyEngine = null;
+    private GdsPolicyEngine        gdsPolicyEngine;
 
     @Override
     public void init() {
@@ -78,7 +82,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
             String cacheFilename = String.format("%s_%s_gds.json", appId, serviceName);
 
             cacheFilename = cacheFilename.replace(File.separatorChar, '_');
-            cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
+            cacheFilename = cacheFilename.replace(File.pathSeparatorChar, '_');
 
             cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
 
@@ -106,6 +110,21 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         LOG.info("RangerGdsEnricher.init(): retrieverClassName={}, pollingIntervalMs={}, cacheFile={}", retrieverClassName, pollingIntervalMs, cacheFile);
 
         LOG.debug("<== RangerGdsEnricher.init()");
+    }
+
+    @Override
+    public void enrich(RangerAccessRequest request, Object dataStore) {
+        LOG.debug("==> RangerGdsEnricher.enrich({}, {})", request, dataStore);
+
+        GdsPolicyEngine policyEngine = (dataStore instanceof GdsPolicyEngine) ? (GdsPolicyEngine) dataStore : this.gdsPolicyEngine;
+
+        LOG.debug("RangerGdsEnricher.enrich(): using policyEngine={}", policyEngine);
+
+        GdsAccessResult result = policyEngine != null ? policyEngine.evaluate(request) : null;
+
+        RangerAccessRequestUtil.setGdsResultInContext(request, result);
+
+        LOG.debug("<== RangerGdsEnricher.enrich({}, {})", request, dataStore);
     }
 
     @Override
@@ -138,30 +157,19 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         LOG.debug("<== RangerGdsEnricher.enrich({})", request);
     }
 
-    @Override
-    public void enrich(RangerAccessRequest request, Object dataStore) {
-        LOG.debug("==> RangerGdsEnricher.enrich({}, {})", request, dataStore);
-
-        GdsPolicyEngine policyEngine = (dataStore instanceof GdsPolicyEngine) ? (GdsPolicyEngine) dataStore : this.gdsPolicyEngine;
-
-        LOG.debug("RangerGdsEnricher.enrich(): using policyEngine={}", policyEngine);
-
-        GdsAccessResult result = policyEngine != null ? policyEngine.evaluate(request) : null;
-
-        RangerAccessRequestUtil.setGdsResultInContext(request, result);
-
-        LOG.debug("<== RangerGdsEnricher.enrich({}, {})", request, dataStore);
-    }
-
     public void setGdsInfo(ServiceGdsInfo gdsInfo) {
         this.gdsPolicyEngine = new GdsPolicyEngine(gdsInfo, serviceDefHelper, getPluginContext());
 
         setGdsInfoInPlugin();
     }
 
-    public RangerServiceDefHelper getServiceDefHelper() { return serviceDefHelper; }
+    public RangerServiceDefHelper getServiceDefHelper() {
+        return serviceDefHelper;
+    }
 
-    public GdsPolicyEngine getGdsPolicyEngine() { return gdsPolicyEngine; }
+    public GdsPolicyEngine getGdsPolicyEngine() {
+        return gdsPolicyEngine;
+    }
 
     private void setGdsInfoInPlugin() {
         LOG.debug("==> setGdsInfoInPlugin()");
@@ -185,7 +193,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
         private       long                           lastActivationTimeInMillis;
         private       Timer                          downloadTimer;
         private       BlockingQueue<DownloadTrigger> downloadQueue;
-        private       boolean                        gdsInfoSetInPlugin = false;
+        private       boolean                        gdsInfoSetInPlugin;
 
         public RangerGdsInfoRefresher(RangerGdsInfoRetriever retriever, long pollingIntervalMs, String cacheFile, long lastKnownVersion) {
             super("RangerGdsInfoRefresher");
@@ -194,6 +202,35 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
             this.pollingIntervalMs = pollingIntervalMs;
             this.cacheFile         = cacheFile;
             this.lastKnownVersion  = lastKnownVersion;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                BlockingQueue<DownloadTrigger> downloadQueue = this.downloadQueue;
+                DownloadTrigger                trigger       = null;
+
+                try {
+                    if (downloadQueue == null) {
+                        LOG.error("RangerGdsInfoRefresher(serviceName={}).run(): downloadQueue is null", serviceName);
+
+                        break;
+                    }
+
+                    trigger = downloadQueue.take();
+
+                    populateGdsInfo();
+                } catch (InterruptedException excp) {
+                    LOG.info("RangerGdsInfoRefresher(serviceName={}).run() interrupted! Exiting thread", serviceName, excp);
+                    break;
+                } catch (Exception excp) {
+                    LOG.error("RangerGdsInfoRefresher(serviceName={}).run() failed to download gdsInfo. Will retry again", serviceName, excp);
+                } finally {
+                    if (trigger != null) {
+                        trigger.signalCompletion();
+                    }
+                }
+            }
         }
 
         final void startRefresher() {
@@ -205,99 +242,12 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
 
                 downloadTimer.schedule(new DownloaderTask(downloadQueue), pollingIntervalMs, pollingIntervalMs);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Scheduled timer to download gdsInfo every " + pollingIntervalMs + " milliseconds");
-                }
+                LOG.debug("Scheduled timer to download gdsInfo every {} milliseconds", pollingIntervalMs);
             } catch (IllegalStateException exception) {
                 LOG.error("Error scheduling gdsInfo download", exception);
-                LOG.error("*** GdsInfo will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
+                LOG.error("*** GdsInfo will NOT be downloaded every {} milliseconds ***", pollingIntervalMs);
 
                 stopRefresher();
-            }
-        }
-
-        private void stopRefresher() {
-            Timer downloadTimer = this.downloadTimer;
-
-            this.downloadTimer = null;
-            this.downloadQueue = null;
-
-            if (downloadTimer != null) {
-                downloadTimer.cancel();
-            }
-
-            if (super.isAlive()) {
-                super.interrupt();
-
-                boolean setInterrupted = false;
-                boolean isJoined       = false;
-
-                while (!isJoined) {
-                    try {
-                        super.join();
-
-                        isJoined = true;
-
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("RangerGdsInfoRefresher({}) is stopped", getName());
-                        }
-                    } catch (InterruptedException excp) {
-                        LOG.warn("RangerGdsInfoRefresher({}).stopRefresher(): Error while waiting for thread to exit", getName(), excp);
-                        LOG.warn("Retrying Thread.join(). Current thread will be marked as 'interrupted' after Thread.join() returns");
-
-                        setInterrupted = true;
-                    }
-                }
-
-                if (setInterrupted) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                BlockingQueue<DownloadTrigger> downloadQueue = this.downloadQueue;
-                DownloadTrigger                trigger       = null;
-
-                try {
-                    if (downloadQueue == null) {
-                        LOG.error("RangerGdsInfoRefresher(serviceName=" + serviceName + ").run(): downloadQueue is null");
-
-                        break;
-                    }
-
-                    trigger = downloadQueue.take();
-
-                    populateGdsInfo();
-                } catch(InterruptedException excp) {
-                    LOG.info("RangerGdsInfoRefresher(serviceName=" + serviceName + ").run() interrupted! Exiting thread", excp);
-                    break;
-                } catch (Exception excp) {
-                    LOG.error("RangerGdsInfoRefresher(serviceName=" + serviceName + ").run() failed to download gdsInfo. Will retry again", excp);
-                } finally {
-                    if (trigger != null) {
-                        trigger.signalCompletion();
-                    }
-                }
-            }
-        }
-
-        private void populateGdsInfo() throws Exception {
-            ServiceGdsInfo gdsInfo = retriever.retrieveGdsInfo(lastKnownVersion != null ? lastKnownVersion : -1, lastActivationTimeInMillis);
-
-            if (gdsInfo == null && !gdsInfoSetInPlugin) {
-                gdsInfo = loadFromCache();
-            }
-
-            if (gdsInfo != null) {
-                setGdsInfo(gdsInfo);
-                saveToCache(gdsInfo);
-
-                gdsInfoSetInPlugin         = true;
-                lastKnownVersion           = gdsInfo.getGdsVersion();
-                lastActivationTimeInMillis = System.currentTimeMillis();
             }
         }
 
@@ -316,7 +266,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
             File           cacheFile = org.apache.commons.lang.StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
 
             if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
-                try (Reader reader = new FileReader(cacheFile)){
+                try (Reader reader = new FileReader(cacheFile)) {
                     ret = JsonUtilsV2.readValue(reader, ServiceGdsInfo.class);
                 } catch (Exception excp) {
                     LOG.error("failed to load gdsInfo from cache file {}", cacheFile.getAbsolutePath(), excp);
@@ -348,6 +298,60 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
             }
 
             LOG.debug("<== RangerGdsInfoRefresher(serviceName={}).saveToCache()", getServiceName());
+        }
+
+        private void stopRefresher() {
+            Timer downloadTimer = this.downloadTimer;
+
+            this.downloadTimer = null;
+            this.downloadQueue = null;
+
+            if (downloadTimer != null) {
+                downloadTimer.cancel();
+            }
+
+            if (super.isAlive()) {
+                super.interrupt();
+
+                boolean setInterrupted = false;
+                boolean isJoined       = false;
+
+                while (!isJoined) {
+                    try {
+                        super.join();
+
+                        isJoined = true;
+
+                        LOG.debug("RangerGdsInfoRefresher({}) is stopped", getName());
+                    } catch (InterruptedException excp) {
+                        LOG.warn("RangerGdsInfoRefresher({}).stopRefresher(): Error while waiting for thread to exit", getName(), excp);
+                        LOG.warn("Retrying Thread.join(). Current thread will be marked as 'interrupted' after Thread.join() returns");
+
+                        setInterrupted = true;
+                    }
+                }
+
+                if (setInterrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        private void populateGdsInfo() throws Exception {
+            ServiceGdsInfo gdsInfo = retriever.retrieveGdsInfo(lastKnownVersion != null ? lastKnownVersion : -1, lastActivationTimeInMillis);
+
+            if (gdsInfo == null && !gdsInfoSetInPlugin) {
+                gdsInfo = loadFromCache();
+            }
+
+            if (gdsInfo != null) {
+                setGdsInfo(gdsInfo);
+                saveToCache(gdsInfo);
+
+                gdsInfoSetInPlugin         = true;
+                lastKnownVersion           = gdsInfo.getGdsVersion();
+                lastActivationTimeInMillis = System.currentTimeMillis();
+            }
         }
     }
 }

@@ -26,48 +26,56 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 
 public class RangerPerfTracerFactory {
+    static volatile ThreadMXBean threadMgmtBean;
 
-	static volatile ThreadMXBean threadMgmtBean = null;
-	private static boolean isThreadCPUTimeSupported = false;
-	private static boolean isThreadCPUTimeEnabled = false;
+    private static  boolean isThreadCPUTimeSupported;
+    private static  boolean isThreadCPUTimeEnabled;
 
-	static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
+    private RangerPerfTracerFactory() {
+        // to block instantiation
+    }
 
-		RangerPerfTracer ret = null;
+    static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
+        if (logger.isDebugEnabled()) {
+            if (threadMgmtBean == null) {
+                synchronized (RangerPerfTracerFactory.class) {
+                    if (threadMgmtBean == null) {
+                        threadMgmtBean           = ManagementFactory.getThreadMXBean();
+                        isThreadCPUTimeSupported = threadMgmtBean.isThreadCpuTimeSupported();
 
-		if (logger.isDebugEnabled()) {
-			if (threadMgmtBean == null) {
-				synchronized (RangerPerfTracerFactory.class) {
-					if (threadMgmtBean == null) {
-						threadMgmtBean = ManagementFactory.getThreadMXBean();
-						isThreadCPUTimeSupported = threadMgmtBean.isThreadCpuTimeSupported();
-						logger.info("ThreadCPUTimeSupported (by JVM)  = " + isThreadCPUTimeSupported);
+                        logger.info("ThreadCPUTimeSupported (by JVM)  = {}", isThreadCPUTimeSupported);
 
-						isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
-						logger.info("ThreadCPUTimeEnabled  = " + isThreadCPUTimeEnabled);
+                        isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
 
-						if (isThreadCPUTimeSupported) {
-							if (!isThreadCPUTimeEnabled) {
-								threadMgmtBean.setThreadCpuTimeEnabled(true);
-								isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
-							}
-							logger.info("ThreadCPUTimeEnabled  = " + isThreadCPUTimeEnabled);
-						}
-					}
-				}
-			}
-		}
+                        logger.info("ThreadCPUTimeEnabled  = {}", isThreadCPUTimeEnabled);
 
-		ThreadInfo threadInfo = null;
-		if (isThreadCPUTimeSupported && isThreadCPUTimeEnabled) {
-			threadInfo = threadMgmtBean.getThreadInfo(Thread.currentThread().getId());
-		}
+                        if (isThreadCPUTimeSupported) {
+                            if (!isThreadCPUTimeEnabled) {
+                                threadMgmtBean.setThreadCpuTimeEnabled(true);
+                                isThreadCPUTimeEnabled = threadMgmtBean.isThreadCpuTimeEnabled();
+                            }
 
-		if (PerfDataRecorder.collectStatistics()) {
-			ret = new RangerPerfCollectorTracer(logger, tag, data, threadInfo);
-		} else {
-			ret = new RangerPerfTracer(logger, tag, data, threadInfo);
-		}
-		return ret;
-	}
+                            logger.info("ThreadCPUTimeEnabled  = {}", isThreadCPUTimeEnabled);
+                        }
+                    }
+                }
+            }
+        }
+
+        ThreadInfo threadInfo = null;
+
+        if (isThreadCPUTimeSupported && isThreadCPUTimeEnabled) {
+            threadInfo = threadMgmtBean.getThreadInfo(Thread.currentThread().getId());
+        }
+
+        final RangerPerfTracer ret;
+
+        if (PerfDataRecorder.collectStatistics()) {
+            ret = new RangerPerfCollectorTracer(logger, tag, data, threadInfo);
+        } else {
+            ret = new RangerPerfTracer(logger, tag, data, threadInfo);
+        }
+
+        return ret;
+    }
 }

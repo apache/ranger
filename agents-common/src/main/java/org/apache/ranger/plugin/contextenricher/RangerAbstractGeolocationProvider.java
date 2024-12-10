@@ -30,119 +30,98 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public abstract class RangerAbstractGeolocationProvider extends RangerAbstractContextEnricher {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractGeolocationProvider.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractGeolocationProvider.class);
+    public static final String ENRICHER_OPTION_GEOLOCATION_META_PREFIX = "geolocation.meta.prefix";
+    public static final String KEY_CONTEXT_GEOLOCATION_PREFIX          = "LOCATION_";
 
-	public static final String ENRICHER_OPTION_GEOLOCATION_META_PREFIX = "geolocation.meta.prefix";
+    private GeolocationStore store;
+    private String           geoMetaPrefix;
 
-	public static final String KEY_CONTEXT_GEOLOCATION_PREFIX = "LOCATION_";
-	private GeolocationStore store;
-	private String geoMetaPrefix;
+    public abstract String getGeoSourceLoader();
 
-	abstract public String getGeoSourceLoader();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAbstractGeolocationProvider.init()");
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractGeolocationProvider.init()");
-		}
+        super.init();
 
-		super.init();
+        geoMetaPrefix = getOption(ENRICHER_OPTION_GEOLOCATION_META_PREFIX);
 
-		geoMetaPrefix = getOption(ENRICHER_OPTION_GEOLOCATION_META_PREFIX);
-		if (geoMetaPrefix == null) {
-			geoMetaPrefix = "";
-		}
+        if (geoMetaPrefix == null) {
+            geoMetaPrefix = "";
+        }
 
-		String geoSourceLoader = getGeoSourceLoader();
+        GeolocationStore    geoStore = null;
+        Map<String, String> context  = enricherDef.getEnricherOptions();
 
-		GeolocationStore geoStore = null;
-		Map<String, String> context = enricherDef.getEnricherOptions();
+        if (context != null) {
+            String geoSourceLoader = getGeoSourceLoader();
 
-		if (context != null) {
-			try {
-				// Get the class definition and ensure it is of the correct type
-				@SuppressWarnings("unchecked")
-				Class<GeolocationStore> geoSourceLoaderClass = (Class<GeolocationStore>) Class.forName(geoSourceLoader);
-				// instantiate the loader class and initialize it with options
-				geoStore = geoSourceLoaderClass.newInstance();
-			}
-			catch (ClassNotFoundException exception) {
-				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " not found, exception=" + exception);
-			}
-			catch (ClassCastException exception) {
-				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " is not a type of GeolocationStore, exception=" + exception);
-			}
-			catch (IllegalAccessException exception) {
-				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " could not be instantiated, exception=" + exception);
-			}
-			catch (InstantiationException exception) {
-				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " could not be instantiated, exception=" + exception);
-			}
+            try {
+                // Get the class definition and ensure it is of the correct type
+                @SuppressWarnings("unchecked")
+                Class<GeolocationStore> geoSourceLoaderClass = (Class<GeolocationStore>) Class.forName(geoSourceLoader);
+                // instantiate the loader class and initialize it with options
+                geoStore = geoSourceLoaderClass.newInstance();
+            } catch (ClassNotFoundException exception) {
+                LOG.error("RangerAbstractGeolocationProvider.init() - Class {} not found, exception={}", geoSourceLoader, exception.toString());
+            } catch (ClassCastException exception) {
+                LOG.error("RangerAbstractGeolocationProvider.init() - Class {} is not a type of GeolocationStore, exception={}", geoSourceLoader, exception.toString());
+            } catch (IllegalAccessException | InstantiationException exception) {
+                LOG.error("RangerAbstractGeolocationProvider.init() - Class {} could not be instantiated, exception={}", geoSourceLoader, exception.toString());
+            }
 
-			if (geoStore != null) {
-				try {
-					geoStore.init(context);
-					store = geoStore;
-				} catch (Exception exception) {
-					LOG.error("RangerAbstractGeolocationProvider.init() - geoLocation Store cannot be initialized, exception=" + exception);
-				}
-			}
-		}
+            if (geoStore != null) {
+                try {
+                    geoStore.init(context);
 
-		if (store == null) {
-			LOG.error("RangerAbstractGeolocationProvider.init() - is not initialized correctly.");
-		}
+                    store = geoStore;
+                } catch (Exception exception) {
+                    LOG.error("RangerAbstractGeolocationProvider.init() - geoLocation Store cannot be initialized, exception={}", exception.toString());
+                }
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractGeolocationProvider.init()");
-		}
-	}
+        if (store == null) {
+            LOG.error("RangerAbstractGeolocationProvider.init() - is not initialized correctly.");
+        }
 
-	@Override
-	public void enrich(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractGeolocationProvider.enrich(" + request + ")");
-		}
+        LOG.debug("<== RangerAbstractGeolocationProvider.init()");
+    }
 
-		RangerGeolocationData geolocation = null;
+    @Override
+    public void enrich(RangerAccessRequest request) {
+        LOG.debug("==> RangerAbstractGeolocationProvider.enrich({})", request);
 
-		String clientIPAddress = request.getClientIPAddress();
+        RangerGeolocationData geolocation;
+        String                clientIPAddress = request.getClientIPAddress();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress=" + clientIPAddress);
-		}
+        LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress={}", clientIPAddress);
 
-		if (StringUtils.isNotBlank(clientIPAddress) && store != null) {
-			geolocation = store.getGeoLocation(clientIPAddress);
+        if (StringUtils.isNotBlank(clientIPAddress) && store != null) {
+            geolocation = store.getGeoLocation(clientIPAddress);
 
-			if (geolocation != null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerAbstractGeolocationProvider.enrich() - Country=" + geolocation);
-				}
-				Map<String, Object> context = request.getContext();
+            if (geolocation != null) {
+                LOG.debug("RangerAbstractGeolocationProvider.enrich() - Country={}", geolocation);
 
-				String[] geoAttrValues = geolocation.getLocationData();
+                Map<String, Object>       context        = request.getContext();
+                String[]                  geoAttrValues  = geolocation.getLocationData();
+                RangerGeolocationDatabase database       = store.getGeoDatabase();
+                String[]                  attributeNames = database.getMetadata().getLocationDataItemNames();
 
-				RangerGeolocationDatabase database = store.getGeoDatabase();
-				String[] attributeNames = database.getMetadata().getLocationDataItemNames();
+                for (int i = 0; i < geoAttrValues.length && i < attributeNames.length; i++) {
+                    String contextName = KEY_CONTEXT_GEOLOCATION_PREFIX + geoMetaPrefix + attributeNames[i];
 
-				for (int i = 0; i < geoAttrValues.length && i < attributeNames.length; i++) {
-					String contextName = KEY_CONTEXT_GEOLOCATION_PREFIX + geoMetaPrefix + attributeNames[i];
-					context.put(contextName, geoAttrValues[i]);
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress '" + clientIPAddress + "' not found.");
-				}
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress is null or blank, cannot get geolocation");
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractGeolocationProvider.enrich(" + request + ")");
-		}
-	}
+                    context.put(contextName, geoAttrValues[i]);
+                }
+            } else {
+                LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress '{}' not found.", clientIPAddress);
+            }
+        } else {
+            LOG.debug("RangerAbstractGeolocationProvider.enrich() - clientIPAddress is null or blank, cannot get geolocation");
+        }
+
+        LOG.debug("<== RangerAbstractGeolocationProvider.enrich({})", request);
+    }
 }

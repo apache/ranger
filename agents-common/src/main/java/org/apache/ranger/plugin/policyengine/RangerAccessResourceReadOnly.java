@@ -23,50 +23,75 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class RangerAccessResourceReadOnly implements RangerAccessResource {
+    private final RangerAccessResource source;
+    private final Set<String>          keys;
+    private final Map<String, Object>  map;
 
-	private final RangerAccessResource source;
-	private final Set<String> keys;
-	private final Map<String, Object> map;
+    public RangerAccessResourceReadOnly(final RangerAccessResource source) {
+        this.source = source;
 
-	public RangerAccessResourceReadOnly(final RangerAccessResource source) {
-		this.source = source;
+        // Cached here for reducing access overhead
+        Set<String> sourceKeys = source.getKeys();
 
-		// Cached here for reducing access overhead
-		Set<String> sourceKeys = source.getKeys();
+        if (CollectionUtils.isEmpty(sourceKeys)) {
+            sourceKeys = new HashSet<>();
+        }
 
-		if (CollectionUtils.isEmpty(sourceKeys)) {
-			sourceKeys = new HashSet<>();
-		}
-		this.keys = Collections.unmodifiableSet(sourceKeys);
+        this.keys = Collections.unmodifiableSet(sourceKeys);
 
-		Map<String, Object> sourceMap = source.getAsMap();
+        Map<String, Object> sourceMap = source.getAsMap();
 
-		if (MapUtils.isEmpty(sourceMap)) {
-			sourceMap = new HashMap<>();
-		}
-		this.map = Collections.unmodifiableMap(sourceMap);
-	}
+        if (MapUtils.isEmpty(sourceMap)) {
+            sourceMap = new HashMap<>();
+        }
 
-	public String getOwnerUser() { return source.getOwnerUser(); }
+        this.map = Collections.unmodifiableMap(sourceMap);
+    }
 
-	public boolean exists(String name) { return source.exists(name); }
+    public String getOwnerUser() {
+        return source.getOwnerUser();
+    }
 
-	public Object getValue(String name) { return source.getValue(name); }
+    public boolean exists(String name) {
+        return source.exists(name);
+    }
 
-	public RangerServiceDef getServiceDef() { return source.getServiceDef(); }
+    public Object getValue(String name) {
+        return source.getValue(name);
+    }
 
-	public Set<String> getKeys() { return keys; }
+    public RangerServiceDef getServiceDef()  {
+        return source.getServiceDef();
+    }
 
-	public String getLeafName() { return source.getLeafName(); }
+    public Set<String> getKeys() {
+        return keys;
+    }
 
-	public String getAsString() { return source.getAsString(); }
+    public String getLeafName() {
+        return source.getLeafName();
+    }
 
-	public String getCacheKey() { return source.getCacheKey(); }
+    public String getAsString() {
+        return source.getAsString();
+    }
 
-	public Map<String, Object> getAsMap() { return map; }
+    public String getCacheKey() {
+        return source.getCacheKey();
+    }
 
-	public RangerAccessResource getReadOnlyCopy() { return this; }
+    public Map<String, Object> getAsMap() {
+        return map;
+    }
+
+    public RangerAccessResource getReadOnlyCopy() {
+        return this;
+    }
 }

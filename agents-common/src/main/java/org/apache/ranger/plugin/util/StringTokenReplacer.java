@@ -22,15 +22,15 @@ package org.apache.ranger.plugin.util;
 import java.util.Map;
 
 public class StringTokenReplacer {
-    private final char startChar;
-    private final char endChar;
-    private final char escapeChar;
+    private final char   startChar;
+    private final char   endChar;
+    private final char   escapeChar;
     private final String tokenPrefix;
 
     public StringTokenReplacer(char startChar, char endChar, char escapeChar, String tokenPrefix) {
-        this.startChar  = startChar;
-        this.endChar    = endChar;
-        this.escapeChar = escapeChar;
+        this.startChar   = startChar;
+        this.endChar     = endChar;
+        this.escapeChar  = escapeChar;
         this.tokenPrefix = tokenPrefix;
     }
 
@@ -39,19 +39,19 @@ public class StringTokenReplacer {
     }
 
     public String replaceTokens(String value, Map<String, Object> tokens) {
-        if(tokens == null || tokens.size() < 1 || !hasToken(value, startChar, endChar, escapeChar)) {
+        if (tokens == null || tokens.isEmpty() || !hasToken(value, startChar, endChar, escapeChar)) {
             return value;
         }
 
         StringBuilder ret   = new StringBuilder();
         StringBuilder token = null;
 
-        for(int i = 0; i < value.length(); i++) {
+        for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
 
-            if(c == escapeChar) {
+            if (c == escapeChar) {
                 i++;
-                if(i < value.length()) {
+                if (i < value.length()) {
                     c = value.charAt(i);
                     if (token != null) {
                         // if next char is not the escape char or endChar, retain the escapeChar
@@ -76,19 +76,19 @@ public class StringTokenReplacer {
                 continue;
             }
 
-            if(token == null) { // not in token
-                if(c == startChar) {
+            if (token == null) { // not in token
+                if (c == startChar) {
                     token = new StringBuilder();
                 } else {
                     ret.append(c);
                 }
             } else { // in token
-                if(c == endChar) {
+                if (c == endChar) {
                     String rawToken = token.toString();
-                    if (tokenPrefix.length() == 0 || rawToken.startsWith(tokenPrefix)) {
+                    if (tokenPrefix.isEmpty() || rawToken.startsWith(tokenPrefix)) {
                         Object replaced = RangerAccessRequestUtil.getTokenFromContext(tokens, rawToken.substring(tokenPrefix.length()));
                         if (replaced != null) {
-                            ret.append(replaced.toString());
+                            ret.append(replaced);
                         } else {
                             ret.append(startChar).append(token).append(endChar);
                         }
@@ -102,10 +102,10 @@ public class StringTokenReplacer {
             }
         }
 
-        if(token != null) { // if no endChar is found
+        if (token != null) { // if no endChar is found
             ret.append(startChar).append(token);
         }
 
         return ret.toString();
-    }  
+    }
 }

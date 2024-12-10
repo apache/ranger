@@ -25,10 +25,10 @@ import org.slf4j.LoggerFactory;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 
-public final class  DownloaderTask extends TimerTask {
+public final class DownloaderTask extends TimerTask {
     private static final Logger LOG = LoggerFactory.getLogger(DownloaderTask.class);
 
-    private final DownloadTrigger timerTrigger = new DownloadTrigger();
+    private final DownloadTrigger                timerTrigger = new DownloadTrigger();
     private final BlockingQueue<DownloadTrigger> queue;
 
     public DownloaderTask(BlockingQueue<DownloadTrigger> queue) {

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.ranger.authorization.utils.TestStringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -28,7 +29,14 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -105,7 +113,6 @@ public class RangerRequestExprResolverTest {
         }
     }
 
-
     RangerAccessRequest createRequest(List<String> resourceTags) {
         RangerAccessResource resource = mock(RangerAccessResource.class);
 
@@ -137,7 +144,7 @@ public class RangerRequestExprResolverTest {
             RangerTagForEval      currentTag        = null;
 
             for (String resourceTag : resourceTags) {
-                RangerTag tag        = new RangerTag(UUID.randomUUID().toString(), resourceTag, Collections.singletonMap("attr1", resourceTag + "_value"), null, null, null);
+                RangerTag        tag        = new RangerTag(UUID.randomUUID().toString(), resourceTag, Collections.singletonMap("attr1", resourceTag + "_value"), null, null, null);
                 RangerTagForEval tagForEval = new RangerTagForEval(tag, RangerPolicyResourceMatcher.MatchType.SELF);
 
                 rangerTagForEvals.add(tagForEval);
@@ -149,7 +156,7 @@ public class RangerRequestExprResolverTest {
 
             RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), rangerTagForEvals);
             RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), currentTag);
-        }  else {
+        } else {
             RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), null);
         }
 
@@ -160,13 +167,12 @@ public class RangerRequestExprResolverTest {
         Map<String, Map<String, String>> userAttrMapping  = Collections.singletonMap("test-user", Collections.singletonMap("state", "CA"));
         Map<String, Map<String, String>> groupAttrMapping = new HashMap<>();
 
-        groupAttrMapping.put("test-group1", new HashMap<String, String>() {{ put("dept", "ENGG"); put("site", "10"); }});
-        groupAttrMapping.put("test-group2", new HashMap<String, String>() {{ put("dept", "PROD"); put("site", "20"); }});
+        groupAttrMapping.put("test-group1", TestStringUtil.mapFromStrings("dept", "ENGG", "site", "10"));
+        groupAttrMapping.put("test-group2", TestStringUtil.mapFromStrings("dept", "PROD", "site", "20"));
 
         when(userStore.getUserAttrMapping()).thenReturn(userAttrMapping);
         when(userStore.getGroupAttrMapping()).thenReturn(groupAttrMapping);
 
         return request;
     }
-
 }

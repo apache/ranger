@@ -19,10 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
@@ -30,67 +26,71 @@ import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 public interface RangerPolicyEngine {
-	String GROUP_PUBLIC      = "public";
-	String ANY_ACCESS        = "_any";
-	String ADMIN_ACCESS      = "_admin";
-	String SUPER_USER_ACCESS = "_super_user";
+    String GROUP_PUBLIC      = "public";
+    String ANY_ACCESS        = "_any";
+    String ADMIN_ACCESS      = "_admin";
+    String SUPER_USER_ACCESS = "_super_user";
 
-	String AUDIT_ALL      = "audit-all";
-	String AUDIT_NONE     = "audit-none";
-	String AUDIT_DEFAULT  = "audit-default";
+    String AUDIT_ALL     = "audit-all";
+    String AUDIT_NONE    = "audit-none";
+    String AUDIT_DEFAULT = "audit-default";
 
-	String PLUGIN_AUDIT_EXCLUDE_USERS  = "ranger.plugin.audit.exclude.users";
-	String PLUGIN_AUDIT_EXCLUDE_GROUPS = "ranger.plugin.audit.exclude.groups";
-	String PLUGIN_AUDIT_EXCLUDE_ROLES  = "ranger.plugin.audit.exclude.roles";
-	String PLUGIN_SUPER_USERS          = "ranger.plugin.super.users";
-	String PLUGIN_SUPER_GROUPS         = "ranger.plugin.super.groups";
-	String PLUGIN_AUDIT_FILTER         = "ranger.plugin.audit.filters";
-	String PLUGIN_SERVICE_ADMINS	   = "ranger.plugin.service.admins";
+    String PLUGIN_AUDIT_EXCLUDE_USERS  = "ranger.plugin.audit.exclude.users";
+    String PLUGIN_AUDIT_EXCLUDE_GROUPS = "ranger.plugin.audit.exclude.groups";
+    String PLUGIN_AUDIT_EXCLUDE_ROLES  = "ranger.plugin.audit.exclude.roles";
+    String PLUGIN_SUPER_USERS          = "ranger.plugin.super.users";
+    String PLUGIN_SUPER_GROUPS         = "ranger.plugin.super.groups";
+    String PLUGIN_AUDIT_FILTER         = "ranger.plugin.audit.filters";
+    String PLUGIN_SERVICE_ADMINS       = "ranger.plugin.service.admins";
 
-	String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
-	String RESOURCE_OWNER = "{OWNER}";
+    String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
+    String RESOURCE_OWNER = "{OWNER}";
 
-	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
+    void setUseForwardedIPAddress(boolean useForwardedIPAddress);
 
-	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
+    void setTrustedProxyAddresses(String[] trustedProxyAddresses);
 
-	RangerServiceDef getServiceDef();
+    RangerServiceDef getServiceDef();
 
-	RangerServiceDefHelper getServiceDefHelper();
+    RangerServiceDefHelper getServiceDefHelper();
 
-	long getPolicyVersion();
+    long getPolicyVersion();
 
-	long getRoleVersion();
+    long getRoleVersion();
 
-	void setRoles(RangerRoles roles);
+    void setRoles(RangerRoles roles);
 
-	RangerAccessResult evaluatePolicies(RangerAccessRequest request, int policyType, RangerAccessResultProcessor resultProcessor);
+    RangerAccessResult evaluatePolicies(RangerAccessRequest request, int policyType, RangerAccessResultProcessor resultProcessor);
 
-	Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor);
+    Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor);
 
-	void evaluateAuditPolicies(RangerAccessResult result);
+    void evaluateAuditPolicies(RangerAccessResult result);
 
-	RangerResourceACLs getResourceACLs(RangerAccessRequest request);
+    RangerResourceACLs getResourceACLs(RangerAccessRequest request);
 
-	RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer requestedPolicyType);
+    RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer requestedPolicyType);
 
-	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
+    Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 
-	RangerRoles getRangerRoles();
+    RangerRoles getRangerRoles();
 
-	RangerPluginContext getPluginContext();
+    RangerPluginContext getPluginContext();
 
-	String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
+    String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 
-	// Helpers
+    // Helpers
 
-	List<RangerPolicy> getResourcePolicies(String zoneName);
+    List<RangerPolicy> getResourcePolicies(String zoneName);
 
-	List<RangerPolicy> getResourcePolicies();
+    List<RangerPolicy> getResourcePolicies();
 
-	List<RangerPolicy> getTagPolicies();
+    List<RangerPolicy> getTagPolicies();
 
-	// This API is used only used by test code
-	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
+    // This API is used only used by test code
+    RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);
 }

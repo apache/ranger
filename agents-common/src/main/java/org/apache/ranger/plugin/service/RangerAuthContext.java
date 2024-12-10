@@ -43,7 +43,7 @@ public class RangerAuthContext {
 
     public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerSecurityZoneMatcher zoneMatcher, RangerRoles roles, RangerUserStore userStore) {
         this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
-        this.zoneMatcher             = zoneMatcher;;
+        this.zoneMatcher             = zoneMatcher;
 
         setRoles(roles);
         setUserStore(userStore);
@@ -110,7 +110,9 @@ public class RangerAuthContext {
         return allRoles;
     }
 
-    public long getRoleVersion() { return this.rolesUtil.getRoleVersion(); }
+    public long getRoleVersion() {
+        return this.rolesUtil.getRoleVersion();
+    }
 
     public RangerRolesUtil getRangerRolesUtil() {
         return this.rolesUtil;

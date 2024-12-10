@@ -27,12 +27,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerAccessRequestWrapper implements RangerAccessRequest {
-
     private final RangerAccessRequest request;
     private final String              accessType;
     private final boolean             isAccessTypeAny;
     private final boolean             isAccessTypeDelegatedAdmin;
-
 
     public RangerAccessRequestWrapper(RangerAccessRequest request, String accessType) {
         this.request                    = request;
@@ -42,70 +40,112 @@ public class RangerAccessRequestWrapper implements RangerAccessRequest {
     }
 
     @Override
-    public RangerAccessResource getResource() { return request.getResource(); }
+    public RangerAccessResource getResource() {
+        return request.getResource();
+    }
 
     @Override
-    public String getAccessType() { return accessType; }
+    public String getAccessType() {
+        return accessType;
+    }
 
     @Override
-    public boolean ignoreDescendantDeny() { return request.ignoreDescendantDeny(); }
+    public boolean isAccessTypeAny() {
+        return isAccessTypeAny;
+    }
 
     @Override
-    public boolean isAccessTypeAny() { return isAccessTypeAny; }
+    public boolean ignoreDescendantDeny() {
+        return request.ignoreDescendantDeny();
+    }
 
     @Override
-    public boolean isAccessTypeDelegatedAdmin() { return isAccessTypeDelegatedAdmin; }
+    public boolean isAccessTypeDelegatedAdmin() {
+        return isAccessTypeDelegatedAdmin;
+    }
 
     @Override
-    public String getUser() { return request.getUser(); }
+    public String getUser() {
+        return request.getUser();
+    }
 
     @Override
-    public Set<String> getUserGroups() { return request.getUserGroups(); }
+    public Set<String> getUserGroups() {
+        return request.getUserGroups();
+    }
 
     @Override
-    public Set<String> getUserRoles() {return request.getUserRoles(); }
+    public Set<String> getUserRoles() {
+        return request.getUserRoles();
+    }
 
     @Override
-    public Date getAccessTime() { return request.getAccessTime(); }
+    public Date getAccessTime() {
+        return request.getAccessTime();
+    }
 
     @Override
-    public String getClientIPAddress() { return request.getClientIPAddress(); }
+    public String getClientIPAddress() {
+        return request.getClientIPAddress();
+    }
 
     @Override
-    public String getRemoteIPAddress() { return request.getRemoteIPAddress(); }
+    public String getRemoteIPAddress() {
+        return request.getRemoteIPAddress();
+    }
 
     @Override
-    public List<String> getForwardedAddresses() { return request.getForwardedAddresses(); }
+    public List<String> getForwardedAddresses() {
+        return request.getForwardedAddresses();
+    }
 
     @Override
-    public String getClientType() { return request.getClientType(); }
+    public String getClientType() {
+        return request.getClientType();
+    }
 
     @Override
-    public String getAction() { return request.getAction(); }
+    public String getAction() {
+        return request.getAction();
+    }
 
     @Override
-    public String getRequestData() { return request.getRequestData(); }
+    public String getRequestData() {
+        return request.getRequestData();
+    }
 
     @Override
-    public String getSessionId() { return request.getSessionId(); }
+    public String getSessionId() {
+        return request.getSessionId();
+    }
 
     @Override
-    public String getClusterName() { return request.getClusterName(); }
+    public String getClusterName() {
+        return request.getClusterName();
+    }
 
     @Override
-    public String getClusterType() { return request.getClusterType(); }
+    public String getClusterType() {
+        return request.getClusterType();
+    }
 
     @Override
-    public Map<String, Object> getContext() { return request.getContext(); }
+    public Map<String, Object> getContext() {
+        return request.getContext();
+    }
 
     @Override
-    public RangerAccessRequest getReadOnlyCopy() { return request.getReadOnlyCopy(); }
+    public RangerAccessRequest getReadOnlyCopy() {
+        return request.getReadOnlyCopy();
+    }
 
     @Override
-    public ResourceMatchingScope getResourceMatchingScope() { return request.getResourceMatchingScope(); }
+    public ResourceMatchingScope getResourceMatchingScope() {
+        return request.getResourceMatchingScope();
+    }
 
     @Override
-    public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return request.getResourceElementMatchingScopes(); }
-
+    public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+        return request.getResourceElementMatchingScopes();
+    }
 }
-

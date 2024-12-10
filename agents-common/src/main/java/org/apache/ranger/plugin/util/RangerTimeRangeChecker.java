@@ -41,26 +41,19 @@ public class RangerTimeRangeChecker {
     private final long fromTime;
     private final long toTime;
 
-
     public RangerTimeRangeChecker(String fromTime, String toTime, String timeZone) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerTimeRangeChecker({}, {})", fromTime, toTime);
-        }
+        LOG.debug("==> RangerTimeRangeChecker({}, {})", fromTime, toTime);
 
-        TimeZone tz = StringUtils.isNotBlank(timeZone) ? TimeZone.getTimeZone(timeZone) : null;;
+        TimeZone tz = StringUtils.isNotBlank(timeZone) ? TimeZone.getTimeZone(timeZone) : null;
 
         this.fromTime = parseDateTime(fromTime, tz);
         this.toTime   = parseDateTime(toTime, tz);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerTimeRangeChecker({}, {}): fromTime={}, toTime={}", fromTime, toTime, this.fromTime, this.toTime);
-        }
+        LOG.debug("<== RangerTimeRangeChecker({}, {}): fromTime={}, toTime={}", fromTime, toTime, this.fromTime, this.toTime);
     }
 
     public boolean isInRange(long time) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> isInRange({})", time);
-        }
+        LOG.debug("==> isInRange({})", time);
 
         final boolean ret;
 
@@ -72,9 +65,7 @@ public class RangerTimeRangeChecker {
             ret = time >= fromTime && time < toTime;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== isInRange({}): fromTime={}, toTime={} ret={}", time, fromTime, toTime, ret);
-        }
+        LOG.debug("<== isInRange({}): fromTime={}, toTime={} ret={}", time, fromTime, toTime, ret);
 
         return ret;
     }

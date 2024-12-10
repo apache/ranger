@@ -37,25 +37,24 @@ public class RangerAuditConfig extends RangerConfiguration {
         initSuccess = addAuditResources(serviceName);
     }
 
-    public boolean isInitSuccess() { return initSuccess; }
+    public boolean isInitSuccess() {
+        return initSuccess;
+    }
 
     private boolean addAuditResources(String serviceName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addAuditResources()");
-        }
+        LOG.debug("==> addAuditResources()");
 
         String defaultCfg = "ranger-" + serviceName + "-audit.xml";
 
         boolean ret = true;
 
         if (!addResourceIfReadable(defaultCfg)) {
-            LOG.error("Could not add " + defaultCfg + " to RangerAuditConfig.");
+            LOG.error("Could not add {} to RangerAuditConfig.", defaultCfg);
+
             ret = false;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== addAuditResources(), result=" + ret);
-        }
+        LOG.debug("<== addAuditResources(), result={}", ret);
 
         return ret;
     }

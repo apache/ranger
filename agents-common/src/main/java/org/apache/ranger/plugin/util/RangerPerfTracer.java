@@ -26,97 +26,100 @@ import org.slf4j.LoggerFactory;
 import java.lang.management.ThreadInfo;
 
 public class RangerPerfTracer {
-	protected final Logger logger;
-	protected final String tag;
-	protected final String data;
-	protected final ThreadInfo threadInfo;
-	protected final long   startTime;
-	protected final long   userStartTime;
+    private static final String tagEndMarker = "(";
 
-	private final static String tagEndMarker = "(";
+    protected final Logger     logger;
+    protected final String     tag;
+    protected final String     data;
+    protected final ThreadInfo threadInfo;
+    protected final long       startTime;
+    protected final long       userStartTime;
 
-	public static Logger getPerfLogger(String name) {
-		return LoggerFactory.getLogger("org.apache.ranger.perf." + name);
-	}
+    public RangerPerfTracer(Logger logger, String tag, String data, ThreadInfo threadInfo) {
+        this.logger     = logger;
+        this.tag        = tag;
+        this.data       = data;
+        this.threadInfo = threadInfo;
 
-	public static Logger getPerfLogger(Class<?> cls) {
-		return RangerPerfTracer.getPerfLogger(cls.getName());
-	}
+        startTime     = threadInfo == null ? System.nanoTime() : RangerPerfTracerFactory.threadMgmtBean.getThreadCpuTime(threadInfo.getThreadId());
+        userStartTime = System.nanoTime();
+    }
 
-	public static boolean isPerfTraceEnabled(Logger logger) {
-		return logger.isDebugEnabled();
-	}
+    public static Logger getPerfLogger(String name) {
+        return LoggerFactory.getLogger("org.apache.ranger.perf." + name);
+    }
 
-	public static RangerPerfTracer getPerfTracer(Logger logger, String tag) {
-		if (logger.isDebugEnabled()) {
-			String data    = "";
-			String realTag = "";
+    public static Logger getPerfLogger(Class<?> cls) {
+        return RangerPerfTracer.getPerfLogger(cls.getName());
+    }
 
-			if (tag != null) {
-				int indexOfTagEndMarker = StringUtils.indexOf(tag, tagEndMarker);
+    public static boolean isPerfTraceEnabled(Logger logger) {
+        return logger.isDebugEnabled();
+    }
 
-				if (indexOfTagEndMarker != -1) {
-					realTag = StringUtils.substring(tag, 0, indexOfTagEndMarker);
+    public static RangerPerfTracer getPerfTracer(Logger logger, String tag) {
+        if (logger.isDebugEnabled()) {
+            String data    = "";
+            String realTag = "";
 
-					if (!PerfDataRecorder.collectStatistics()) {
-						data = StringUtils.substring(tag, indexOfTagEndMarker);
-					}
-				} else {
-					realTag = tag;
-				}
-			}
+            if (tag != null) {
+                int indexOfTagEndMarker = StringUtils.indexOf(tag, tagEndMarker);
 
-			return RangerPerfTracerFactory.getPerfTracer(logger, realTag, data);
-		} else {
-			return null;
-		}
-	}
+                if (indexOfTagEndMarker != -1) {
+                    realTag = StringUtils.substring(tag, 0, indexOfTagEndMarker);
 
-	public static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
-		return RangerPerfTracerFactory.getPerfTracer(logger, tag, data);
-	}
+                    if (!PerfDataRecorder.collectStatistics()) {
+                        data = StringUtils.substring(tag, indexOfTagEndMarker);
+                    }
+                } else {
+                    realTag = tag;
+                }
+            }
 
-	public static void log(RangerPerfTracer tracer) {
-		if(tracer != null) {
-			tracer.log();
-		}
-	}
+            return RangerPerfTracerFactory.getPerfTracer(logger, realTag, data);
+        } else {
+            return null;
+        }
+    }
 
-	public static void logAlways(RangerPerfTracer tracer) {
-		if(tracer != null) {
-			tracer.logAlways();
-		}
-	}
-	public RangerPerfTracer(Logger logger, String tag, String data, ThreadInfo threadInfo) {
-		this.logger = logger;
-		this.tag    = tag;
-		this.data	= data;
-		this.threadInfo = threadInfo;
+    public static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
+        return RangerPerfTracerFactory.getPerfTracer(logger, tag, data);
+    }
 
-		startTime = threadInfo == null ? System.nanoTime() : RangerPerfTracerFactory.threadMgmtBean.getThreadCpuTime(threadInfo.getThreadId());
-		userStartTime = System.nanoTime();
-	}
+    public static void log(RangerPerfTracer tracer) {
+        if (tracer != null) {
+            tracer.log();
+        }
+    }
 
-	public final long getElapsedUserTime() {
-		return System.nanoTime() - userStartTime;
-	}
-	public final long getElapsedCpuTime() {
-		if (threadInfo == null) {
-			return getElapsedUserTime();
-		} else {
-			return RangerPerfTracerFactory.threadMgmtBean.getThreadCpuTime(threadInfo.getThreadId()) - startTime;
-		}
-	}
+    public static void logAlways(RangerPerfTracer tracer) {
+        if (tracer != null) {
+            tracer.logAlways();
+        }
+    }
 
-	public void log() {
-		long elapsedTime = Math.max(getElapsedUserTime(), getElapsedCpuTime());
-		long reportingThreshold = threadInfo == null ? 0L : (1000000/1000 - 1); // just about a microsecond
+    public final long getElapsedUserTime() {
+        return System.nanoTime() - userStartTime;
+    }
 
-		if (elapsedTime > reportingThreshold) {
-			logger.debug("[PERF]:" + (threadInfo != null ? threadInfo.getThreadName() : "") + ":" + tag + data + ":" + getElapsedCpuTime() + ":" + getElapsedUserTime());
-		}
-	}
-	public void logAlways() {
-		logger.debug("[PERF]:" + (threadInfo != null ? threadInfo.getThreadName() : "") + ":" + tag + data + ":" + getElapsedCpuTime() + ":" + getElapsedUserTime());
-	}
+    public final long getElapsedCpuTime() {
+        if (threadInfo == null) {
+            return getElapsedUserTime();
+        } else {
+            return RangerPerfTracerFactory.threadMgmtBean.getThreadCpuTime(threadInfo.getThreadId()) - startTime;
+        }
+    }
+
+    public void log() {
+        long elapsedTime        = Math.max(getElapsedUserTime(), getElapsedCpuTime());
+        long reportingThreshold = threadInfo == null ? 0L : (1000000 / 1000 - 1); // just about a microsecond
+
+        if (elapsedTime > reportingThreshold) {
+            logger.debug("[PERF]:{}:{}{}:{}:{}", threadInfo != null ? threadInfo.getThreadName() : "", tag, data, getElapsedCpuTime(), getElapsedUserTime());
+        }
+    }
+
+    public void logAlways() {
+        logger.debug("[PERF]:{}:{}{}:{}:{}", threadInfo != null ? threadInfo.getThreadName() : "", tag, data, getElapsedCpuTime(), getElapsedUserTime());
+    }
 }

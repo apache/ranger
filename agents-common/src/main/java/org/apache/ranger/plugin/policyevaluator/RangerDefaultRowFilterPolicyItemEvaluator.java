@@ -28,53 +28,52 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 
-
 public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerRowFilterPolicyItemEvaluator {
-	final private RangerRowFilterPolicyItem rowFilterPolicyItem;
-	final private String                    rowFilterExpr;
-	final private RangerRequestExprResolver exprResolver;
+    private final RangerRowFilterPolicyItem rowFilterPolicyItem;
+    private final String                    rowFilterExpr;
+    private final RangerRequestExprResolver exprResolver;
 
-	public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER, policyItemIndex, options);
+    public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
+        super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER, policyItemIndex, options);
 
-		rowFilterPolicyItem = policyItem;
+        rowFilterPolicyItem = policyItem;
 
-		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
+        RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
-		if (rowFilterInfo != null && rowFilterInfo.getFilterExpr() != null) {
-			String rowFilterExpr = rowFilterInfo.getFilterExpr();
+        if (rowFilterInfo != null && rowFilterInfo.getFilterExpr() != null) {
+            String rowFilterExpr = rowFilterInfo.getFilterExpr();
 
-			if (JavaScriptEdits.hasDoubleBrackets(rowFilterExpr)) {
-				rowFilterExpr = JavaScriptEdits.replaceDoubleBrackets(rowFilterExpr);
-			}
+            if (JavaScriptEdits.hasDoubleBrackets(rowFilterExpr)) {
+                rowFilterExpr = JavaScriptEdits.replaceDoubleBrackets(rowFilterExpr);
+            }
 
-			this.rowFilterExpr = rowFilterExpr;
-		} else {
-			rowFilterExpr = null;
-		}
+            this.rowFilterExpr = rowFilterExpr;
+        } else {
+            rowFilterExpr = null;
+        }
 
-		if (rowFilterExpr != null && RangerRequestExprResolver.hasExpressions(rowFilterExpr)) {
-			exprResolver = new RangerRequestExprResolver(rowFilterExpr, getServiceType());
-		} else {
-			exprResolver = null;
-		}
-	}
+        if (rowFilterExpr != null && RangerRequestExprResolver.hasExpressions(rowFilterExpr)) {
+            exprResolver = new RangerRequestExprResolver(rowFilterExpr, getServiceType());
+        } else {
+            exprResolver = null;
+        }
+    }
 
-	@Override
-	public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
-		return rowFilterPolicyItem == null ? null : rowFilterPolicyItem.getRowFilterInfo();
-	}
+    @Override
+    public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
+        return rowFilterPolicyItem == null ? null : rowFilterPolicyItem.getRowFilterInfo();
+    }
 
-	@Override
-	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
-		if (exprResolver != null) {
-			result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
-		} else if (rowFilterExpr != null) {
-			result.setFilterExpr(rowFilterExpr);
-		}
+    @Override
+    public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
+        if (exprResolver != null) {
+            result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
+        } else if (rowFilterExpr != null) {
+            result.setFilterExpr(rowFilterExpr);
+        }
 
-		if (result.getFilterExpr() != null) {
-			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
-		}
-	}
+        if (result.getFilterExpr() != null) {
+            policyEvaluator.updateAccessResult(result, matchType, true, getComments());
+        }
+    }
 }

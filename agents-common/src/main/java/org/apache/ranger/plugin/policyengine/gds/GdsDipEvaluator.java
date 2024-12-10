@@ -55,7 +55,9 @@ public class GdsDipEvaluator {
         return dip.getProjectId();
     }
 
-    public GdsProjectEvaluator getProjectEvaluator() { return projectEvaluator; }
+    public GdsProjectEvaluator getProjectEvaluator() {
+        return projectEvaluator;
+    }
 
     public boolean isActive() {
         boolean ret = dip.getStatus() == RangerGds.GdsShareStatus.ACTIVE;

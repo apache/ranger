@@ -32,44 +32,36 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceGds extends RangerBaseService {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceGds.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceGds.class);
 
-	public RangerServiceGds() {
-		super();
-	}
+    public RangerServiceGds() {
+        super();
+    }
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceGds.validateConfig(" + serviceName + " )");
-		}
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        LOG.debug("==> RangerServiceGds.validateConfig({} )", serviceName);
 
-		Map<String, Object> ret = new HashMap<>();
+        Map<String, Object> ret = new HashMap<>();
 
-		ret.put("connectivityStatus", true);
+        ret.put("connectivityStatus", true);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceGds.validateConfig(" + serviceName + " ): " + ret);
-		}
+        LOG.debug("<== RangerServiceGds.validateConfig({} ): {}", serviceName, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceGds.lookupResource(" + context + ")");
-		}
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        LOG.debug("==> RangerServiceGds.lookupResource({})", context);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceGds.lookupResource()");
-		}
+        LOG.debug("<== RangerServiceGds.lookupResource()");
 
-		return Collections.emptyList();
-	}
+        return Collections.emptyList();
+    }
 }

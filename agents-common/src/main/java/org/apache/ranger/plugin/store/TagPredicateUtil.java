@@ -23,361 +23,322 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
-import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.List;
 
 public class TagPredicateUtil extends AbstractPredicateUtil {
+    public TagPredicateUtil() {
+        super();
+    }
 
-	public TagPredicateUtil() { super(); }
+    @Override
+    public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+        super.addPredicates(filter, predicates);
 
-	@Override
-	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
-		super.addPredicates(filter, predicates);
+        addPredicateForTagDefId(filter.getParam(SearchFilter.TAG_DEF_ID), predicates);
+        addPredicateForTagDefGuid(filter.getParam(SearchFilter.TAG_DEF_GUID), predicates);
 
-		addPredicateForTagDefId(filter.getParam(SearchFilter.TAG_DEF_ID), predicates);
-		addPredicateForTagDefGuid(filter.getParam(SearchFilter.TAG_DEF_GUID), predicates);
+        addPredicateForTagId(filter.getParam(SearchFilter.TAG_ID), predicates);
+        addPredicateForTagGuid(filter.getParam(SearchFilter.TAG_GUID), predicates);
+        addPredicateForTagType(filter.getParam(SearchFilter.TAG_TYPE), predicates);
 
-		addPredicateForTagId(filter.getParam(SearchFilter.TAG_ID), predicates);
-		addPredicateForTagGuid(filter.getParam(SearchFilter.TAG_GUID), predicates);
-		addPredicateForTagType(filter.getParam(SearchFilter.TAG_TYPE), predicates);
+        addPredicateForResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
+        addPredicateForResourceGuid(filter.getParam(SearchFilter.TAG_RESOURCE_GUID), predicates);
+        addPredicateForServiceResourceServiceName(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME), predicates);
+        addPredicateForResourceSignature(filter.getParam(SearchFilter.TAG_RESOURCE_SIGNATURE), predicates);
 
-		addPredicateForResourceId(filter.getParam(SearchFilter.TAG_RESOURCE_ID), predicates);
-		addPredicateForResourceGuid(filter.getParam(SearchFilter.TAG_RESOURCE_GUID), predicates);
-		addPredicateForServiceResourceServiceName(filter.getParam(SearchFilter.TAG_RESOURCE_SERVICE_NAME), predicates);
-		addPredicateForResourceSignature(filter.getParam(SearchFilter.TAG_RESOURCE_SIGNATURE), predicates);
+        addPredicateForTagResourceMapId(filter.getParam(SearchFilter.TAG_MAP_ID), predicates);
+    }
 
-		addPredicateForTagResourceMapId(filter.getParam(SearchFilter.TAG_MAP_ID), predicates);
-	}
+    private Predicate addPredicateForTagDefId(final String id, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
 
-	private Predicate addPredicateForTagDefId(final String id, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(id)) {
-			return null;
-		}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            if (object == null) {
+                return ret1;
+            }
 
-				boolean ret = false;
+            if (object instanceof RangerTagDef) {
+                RangerTagDef tagDef = (RangerTagDef) object;
 
-				if (object == null) {
-					return ret;
-				}
+                ret1 = StringUtils.equals(id, tagDef.getId().toString());
+            }
 
-				if (object instanceof RangerTagDef) {
-					RangerTagDef tagDef = (RangerTagDef) object;
+            return ret1;
+        };
 
-					ret = StringUtils.equals(id, tagDef.getId().toString());
-				}
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-				return ret;
-			}
-		};
+        return ret;
+    }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+    private Predicate addPredicateForTagDefGuid(final String guid, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(guid)) {
+            return null;
+        }
 
-		return ret;
-	}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-	private Predicate addPredicateForTagDefGuid(final String guid, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(guid)) {
-			return null;
-		}
+            if (object == null) {
+                return ret1;
+            }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            if (object instanceof RangerTagDef) {
+                RangerTagDef tagDef = (RangerTagDef) object;
 
-				boolean ret = false;
+                ret1 = StringUtils.equals(guid, tagDef.getGuid());
+            }
 
-				if (object == null) {
-					return ret;
-				}
+            return ret1;
+        };
 
-				if (object instanceof RangerTagDef) {
-					RangerTagDef tagDef = (RangerTagDef) object;
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-					ret = StringUtils.equals(guid, tagDef.getGuid());
-				}
+        return ret;
+    }
 
-				return ret;
-			}
-		};
+    private Predicate addPredicateForTagId(final String id, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-		return ret;
-	}
+            if (object == null) {
+                return ret1;
+            }
 
-	private Predicate addPredicateForTagId(final String id, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(id)) {
-			return null;
-		}
+            if (object instanceof RangerTag) {
+                RangerTag tag = (RangerTag) object;
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+                ret1 = StringUtils.equals(id, tag.getId().toString());
+            } else if (object instanceof RangerTagResourceMap) {
+                RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
+                ret1 = StringUtils.equals(id, tagResourceMap.getTagId().toString());
+            }
 
-				boolean ret = false;
+            return ret1;
+        };
 
-				if (object == null) {
-					return ret;
-				}
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-				if (object instanceof RangerTag) {
-					RangerTag tag = (RangerTag) object;
+        return ret;
+    }
 
-					ret = StringUtils.equals(id, tag.getId().toString());
-				} else if (object instanceof RangerTagResourceMap) {
-					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
-					ret = StringUtils.equals(id, tagResourceMap.getTagId().toString());
-				}
+    private Predicate addPredicateForTagGuid(final String guid, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(guid)) {
+            return null;
+        }
 
-				return ret;
-			}
-		};
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+            if (object == null) {
+                return ret1;
+            }
 
-		return ret;
-	}
+            if (object instanceof RangerTag) {
+                RangerTag tag = (RangerTag) object;
 
-	private Predicate addPredicateForTagGuid(final String guid, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(guid)) {
-			return null;
-		}
+                ret1 = StringUtils.equals(guid, tag.getGuid());
+            }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            return ret1;
+        };
 
-				boolean ret = false;
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-				if (object == null) {
-					return ret;
-				}
+        return ret;
+    }
 
-				if (object instanceof RangerTag) {
-					RangerTag tag = (RangerTag) object;
+    private Predicate addPredicateForTagType(final String type, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(type)) {
+            return null;
+        }
 
-					ret = StringUtils.equals(guid, tag.getGuid());
-				}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-				return ret;
-			}
-		};
+            if (object == null) {
+                return ret1;
+            }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+            if (object instanceof RangerTagDef) {
+                RangerTagDef tagDef = (RangerTagDef) object;
 
-		return ret;
-	}
+                ret1 = StringUtils.equals(type, tagDef.getName());
+            } else if (object instanceof RangerTag) {
+                RangerTag tag = (RangerTag) object;
 
-	private Predicate addPredicateForTagType(final String type, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(type)) {
-			return null;
-		}
+                ret1 = StringUtils.equals(type, tag.getType());
+            }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            return ret1;
+        };
 
-				boolean ret = false;
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-				if (object == null) {
-					return ret;
-				}
+        return ret;
+    }
 
-				if (object instanceof RangerTagDef) {
-					RangerTagDef tagDef = (RangerTagDef) object;
+    private Predicate addPredicateForResourceId(final String id, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
 
-					ret = StringUtils.equals(type, tagDef.getName());
-				} else if (object instanceof RangerTag) {
-					RangerTag tag = (RangerTag) object;
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-					ret = StringUtils.equals(type, tag.getType());
-				}
+            if (object == null) {
+                return ret1;
+            }
 
-				return ret;
-			}
-		};
+            if (object instanceof RangerServiceResource) {
+                RangerServiceResource resource = (RangerServiceResource) object;
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+                ret1 = StringUtils.equals(id, resource.getId().toString());
+            } else if (object instanceof RangerTagResourceMap) {
+                RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
 
-		return ret;
-	}
+                ret1 = StringUtils.equals(id, tagResourceMap.getId().toString());
+            }
 
-	private Predicate addPredicateForResourceId(final String id, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(id)) {
-			return null;
-		}
+            return ret1;
+        };
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-				boolean ret = false;
+        return ret;
+    }
 
-				if (object == null) {
-					return ret;
-				}
+    private Predicate addPredicateForResourceGuid(final String id, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
 
-				if (object instanceof RangerServiceResource) {
-					RangerServiceResource resource = (RangerServiceResource) object;
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-					ret = StringUtils.equals(id, resource.getId().toString());
-				} else if(object instanceof RangerTagResourceMap) {
-					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap)object;
+            if (object == null) {
+                return ret1;
+            }
 
-					ret = StringUtils.equals(id, tagResourceMap.getId().toString());
-				}
+            if (object instanceof RangerServiceResource) {
+                RangerServiceResource resource = (RangerServiceResource) object;
 
-				return ret;
-			}
-		};
+                ret1 = StringUtils.equals(id, resource.getGuid());
+            }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+            return ret1;
+        };
 
-		return ret;
-	}
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-	private Predicate addPredicateForResourceGuid(final String id, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(id)) {
-			return null;
-		}
+        return ret;
+    }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+    private Predicate addPredicateForServiceResourceServiceName(final String serviceName, List<Predicate> predicates) {
+        if (serviceName == null || StringUtils.isEmpty(serviceName)) {
+            return null;
+        }
 
-				boolean ret = false;
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-				if (object == null) {
-					return ret;
-				}
+            if (object == null) {
+                return ret1;
+            }
 
-				if (object instanceof RangerServiceResource) {
-					RangerServiceResource resource = (RangerServiceResource) object;
+            if (object instanceof RangerServiceResource) {
+                RangerServiceResource resource = (RangerServiceResource) object;
+                ret1 = StringUtils.equals(resource.getServiceName(), serviceName);
+            }
 
-					ret = StringUtils.equals(id, resource.getGuid());
-				}
+            return ret1;
+        };
 
-				return ret;
-			}
-		};
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    private Predicate addPredicateForResourceSignature(final String signature, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(signature)) {
+            return null;
+        }
 
-	private Predicate addPredicateForServiceResourceServiceName(final String serviceName, List<Predicate> predicates) {
-		if (serviceName == null || StringUtils.isEmpty(serviceName)) {
-			return null;
-		}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            if (object == null) {
+                return ret1;
+            }
 
-				boolean ret = false;
+            if (object instanceof RangerServiceResource) {
+                RangerServiceResource resource = (RangerServiceResource) object;
 
-				if (object == null) {
-					return ret;
-				}
+                ret1 = StringUtils.equals(signature, resource.getResourceSignature());
+            }
 
-				if (object instanceof RangerServiceResource) {
-					RangerServiceResource resource = (RangerServiceResource) object;
-					ret = StringUtils.equals(resource.getServiceName(), serviceName);
-				}
+            return ret1;
+        };
 
-				return ret;
-			}
-		};
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    private Predicate addPredicateForTagResourceMapId(final String id, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
 
-	private Predicate addPredicateForResourceSignature(final String signature, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(signature)) {
-			return null;
-		}
+        Predicate ret = object -> {
+            boolean ret1 = false;
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
+            if (object == null) {
+                return ret1;
+            }
 
-				boolean ret = false;
+            if (object instanceof RangerTagResourceMap) {
+                RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
+                ret1 = StringUtils.equals(id, tagResourceMap.getId().toString());
+            }
 
-				if (object == null) {
-					return ret;
-				}
+            return ret1;
+        };
 
-				if (object instanceof RangerServiceResource) {
-					RangerServiceResource resource = (RangerServiceResource) object;
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-					ret = StringUtils.equals(signature, resource.getResourceSignature());
-				}
-
-				return ret;
-			}
-		};
-
-		if (predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
-
-	private Predicate addPredicateForTagResourceMapId(final String id, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(id)) {
-			return null;
-		}
-
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-
-				boolean ret = false;
-
-				if (object == null) {
-					return ret;
-				}
-
-				if (object instanceof RangerTagResourceMap) {
-					RangerTagResourceMap tagResourceMap = (RangerTagResourceMap) object;
-					ret = StringUtils.equals(id, tagResourceMap.getId().toString());
-				}
-
-				return ret;
-			}
-		};
-
-		if (predicates != null) {
-			predicates.add(ret);
-		}
-
-		return ret;
-	}
+        return ret;
+    }
 }

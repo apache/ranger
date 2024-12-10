@@ -35,59 +35,65 @@ import java.util.Comparator;
 import java.util.Map;
 
 public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
-	public static final Comparator<RangerServiceResourceMatcher> ID_COMPARATOR = new IdComparator();
+    public static final Comparator<RangerServiceResourceMatcher> ID_COMPARATOR = new IdComparator();
 
-	private final RangerServiceResource       serviceResource;
-	private final RangerPolicyResourceMatcher policyResourceMatcher;
-	private final RangerResourceDef           leafResourceDef;
+    private final RangerServiceResource       serviceResource;
+    private final RangerPolicyResourceMatcher policyResourceMatcher;
+    private final RangerResourceDef           leafResourceDef;
 
-	public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
-		this.serviceResource       = serviceResource;
-		this.policyResourceMatcher = policyResourceMatcher;
-		this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(policyResourceMatcher.getServiceDef(), getPolicyResource(), true);
-	}
+    public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
+        this.serviceResource       = serviceResource;
+        this.policyResourceMatcher = policyResourceMatcher;
+        this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(policyResourceMatcher.getServiceDef(), getPolicyResource(), true);
+    }
 
-	public RangerServiceResource getServiceResource() { return serviceResource; }
+    public RangerServiceResource getServiceResource() {
+        return serviceResource;
+    }
 
-	@Override
-	public long getId() {
-		return serviceResource != null ? serviceResource.getId() :-1;
-	}
+    @Override
+    public long getId() {
+        return serviceResource != null ? serviceResource.getId() : -1;
+    }
 
-	@Override
-	public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
+    @Override
+    public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
+        return policyResourceMatcher;
+    }
 
-	@Override
-	public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
-		return serviceResource != null ? serviceResource.getResourceElements() : null;
-	}
+    @Override
+    public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
+        return serviceResource != null ? serviceResource.getResourceElements() : null;
+    }
 
-	@Override
-	public RangerResourceMatcher getResourceMatcher(String resourceName) {
-		return policyResourceMatcher != null ? policyResourceMatcher.getResourceMatcher(resourceName) : null;
-	}
+    @Override
+    public RangerResourceMatcher getResourceMatcher(String resourceName) {
+        return policyResourceMatcher != null ? policyResourceMatcher.getResourceMatcher(resourceName) : null;
+    }
 
-	@Override
-	public boolean isAncestorOf(RangerResourceDef resourceDef) {
-		return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
-	}
+    @Override
+    public boolean isAncestorOf(RangerResourceDef resourceDef) {
+        return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
+    }
 
-	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
-		return policyResourceMatcher != null ? policyResourceMatcher.getMatchType(requestedResource, scopes, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
-	}
+    @Override
+    public boolean isLeaf(String resourceName) {
+        return StringUtils.equals(resourceName, leafResourceDef.getName());
+    }
 
-	static class IdComparator implements Comparator<RangerServiceResourceMatcher>, Serializable {
-		@Override
-		public int compare(RangerServiceResourceMatcher me, RangerServiceResourceMatcher other) {
-			return Long.compare(me.getId(), other.getId());
-		}
-	}
+    public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
+        return policyResourceMatcher != null ? policyResourceMatcher.getMatchType(requestedResource, scopes, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
+    }
 
-	@Override
-	public String toString() {
-		return String.valueOf(getId());
-	}
+    @Override
+    public String toString() {
+        return String.valueOf(getId());
+    }
 
-	@Override
-	public boolean isLeaf(String resourceName) { return StringUtils.equals(resourceName, leafResourceDef.getName()); }
+    static class IdComparator implements Comparator<RangerServiceResourceMatcher>, Serializable {
+        @Override
+        public int compare(RangerServiceResourceMatcher me, RangerServiceResourceMatcher other) {
+            return Long.compare(me.getId(), other.getId());
+        }
+    }
 }

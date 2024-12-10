@@ -24,45 +24,36 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class RangerAccessedFromClusterCondition extends RangerAbstractConditionEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedFromClusterCondition.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedFromClusterCondition.class);
 
-	private boolean isAlwaysTrue = false;
+    private boolean isAlwaysTrue;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedFromClusterCondition.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAccessedFromClusterCondition.init({})", condition);
 
-		super.init();
+        super.init();
 
-		isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
+        isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedFromClusterCondition.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerAccessedFromClusterCondition.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedFromClusterCondition.isMatched(" + condition + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerAccessedFromClusterCondition.isMatched({})", condition);
 
-		final boolean ret;
+        final boolean ret;
 
-		if (isAlwaysTrue || request.getClusterName() == null) {
-			ret = isAlwaysTrue;
-		} else {
-			ret = condition.getValues().contains(request.getClusterName());
-		}
+        if (isAlwaysTrue || request.getClusterName() == null) {
+            ret = isAlwaysTrue;
+        } else {
+            ret = condition.getValues().contains(request.getClusterName());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedFromClusterCondition.isMatched(" + condition + "): " + ret);
-		}
+        LOG.debug("<== RangerAccessedFromClusterCondition.isMatched({}): {}", condition, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 }

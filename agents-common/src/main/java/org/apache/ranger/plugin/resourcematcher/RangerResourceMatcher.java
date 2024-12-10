@@ -21,26 +21,25 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 
 import java.util.Map;
 
 public interface RangerResourceMatcher {
-	void setResourceDef(RangerResourceDef resourceDef);
+    void setResourceDef(RangerResourceDef resourceDef);
 
-	void setPolicyResource(RangerPolicyResource policyResource);
+    void setPolicyResource(RangerPolicyResource policyResource);
 
-	void init();
+    void init();
 
-	boolean isMatchAny();
+    boolean isMatchAny();
 
-	ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
+    ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
 
-	boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
+    boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext);
 
-	boolean isCompleteMatch(String resource, Map<String, Object> evalContext);
+    boolean isCompleteMatch(String resource, Map<String, Object> evalContext);
 
-	boolean getNeedsDynamicEval();
-
+    boolean getNeedsDynamicEval();
 }

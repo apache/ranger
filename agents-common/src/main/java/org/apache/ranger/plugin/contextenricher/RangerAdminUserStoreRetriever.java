@@ -37,7 +37,6 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
 
     @Override
     public void init(Map<String, String> options) {
-
         if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
             RangerPluginConfig pluginConfig = super.pluginConfig;
 
@@ -46,9 +45,8 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
             }
 
             RangerPluginContext pluginContext = getPluginContext();
-            RangerAdminClient	rangerAdmin  = pluginContext.getAdminClient();
-            this.adminClient                 = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
-
+            RangerAdminClient   rangerAdmin   = pluginContext.getAdminClient();
+            this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
         } else {
             LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving userstore. Will NOT be able to retrieve userstore.");
         }
@@ -56,7 +54,6 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
 
     @Override
     public RangerUserStore retrieveUserStoreInfo(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         RangerUserStore rangerUserStore = null;
 
         if (adminClient != null) {
@@ -72,6 +69,4 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
         }
         return rangerUserStore;
     }
-
 }
-

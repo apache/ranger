@@ -25,11 +25,9 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-
 public class JavaScriptEngineCreator implements ScriptEngineCreator {
-    private static final Logger LOG = LoggerFactory.getLogger(JavaScriptEngineCreator.class);
-
-    static final String ENGINE_NAME = "JavaScript";
+    static final         String ENGINE_NAME = "JavaScript";
+    private static final Logger LOG         = LoggerFactory.getLogger(JavaScriptEngineCreator.class);
 
     public ScriptEngine getScriptEngine(ClassLoader clsLoader) {
         ScriptEngine ret = null;

@@ -18,8 +18,11 @@
  */
 package org.apache.ranger.plugin.policyengine.gds;
 
-
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class GdsAccessResult {
     private boolean      isAllowed;
@@ -34,7 +37,6 @@ public class GdsAccessResult {
     private Set<String>  projects;
     private Set<String>  allowedByDatasets;
     private Set<String>  allowedByProjects;
-
 
     public GdsAccessResult() {
     }
@@ -166,22 +168,22 @@ public class GdsAccessResult {
             GdsAccessResult other = (GdsAccessResult) obj;
 
             return Objects.equals(isAllowed, other.isAllowed) &&
-                   Objects.equals(isAudited, other.isAudited) &&
-                   Objects.equals(policyId, other.policyId) &&
-                   Objects.equals(policyVersion, other.policyVersion) &&
-                   Objects.equals(maskType, other.maskType) &&
-                   Objects.equals(maskedValue, other.maskedValue) &&
-                   Objects.equals(maskCondition, other.maskCondition) &&
-                   Objects.equals(rowFilters, other.rowFilters) &&
-                   Objects.equals(datasets, other.datasets) &&
-                   Objects.equals(projects, other.projects) &&
-                   Objects.equals(allowedByDatasets, other.allowedByDatasets) &&
-                   Objects.equals(allowedByProjects, other.allowedByProjects);
+                    Objects.equals(isAudited, other.isAudited) &&
+                    Objects.equals(policyId, other.policyId) &&
+                    Objects.equals(policyVersion, other.policyVersion) &&
+                    Objects.equals(maskType, other.maskType) &&
+                    Objects.equals(maskedValue, other.maskedValue) &&
+                    Objects.equals(maskCondition, other.maskCondition) &&
+                    Objects.equals(rowFilters, other.rowFilters) &&
+                    Objects.equals(datasets, other.datasets) &&
+                    Objects.equals(projects, other.projects) &&
+                    Objects.equals(allowedByDatasets, other.allowedByDatasets) &&
+                    Objects.equals(allowedByProjects, other.allowedByProjects);
         }
     }
 
     @Override
-    public String toString( ) {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         toString(sb);

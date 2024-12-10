@@ -37,21 +37,39 @@ public abstract class RangerGdsInfoRetriever {
 
     public abstract ServiceGdsInfo retrieveGdsInfo(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
 
-    public String getServiceName() { return serviceName; }
+    public String getServiceName() {
+        return serviceName;
+    }
 
-    public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
-    public RangerServiceDef getServiceDef() { return serviceDef; }
+    public RangerServiceDef getServiceDef() {
+        return serviceDef;
+    }
 
-    public void setServiceDef(RangerServiceDef serviceDef) { this.serviceDef = serviceDef; }
+    public void setServiceDef(RangerServiceDef serviceDef) {
+        this.serviceDef = serviceDef;
+    }
 
-    public String getAppId() { return appId; }
+    public String getAppId() {
+        return appId;
+    }
 
-    public void setAppId(String appId) { this.appId = appId; }
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
-    public void setPluginConfig(RangerPluginConfig pluginConfig) { this.pluginConfig = pluginConfig; }
+    public void setPluginConfig(RangerPluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
+    }
 
-    public RangerPluginContext getPluginContext() { return pluginContext; }
+    public RangerPluginContext getPluginContext() {
+        return pluginContext;
+    }
 
-    public void setPluginContext(RangerPluginContext pluginContext) { this.pluginContext = pluginContext; }
+    public void setPluginContext(RangerPluginContext pluginContext) {
+        this.pluginContext = pluginContext;
+    }
 }

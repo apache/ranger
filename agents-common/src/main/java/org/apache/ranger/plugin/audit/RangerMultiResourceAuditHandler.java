@@ -19,55 +19,56 @@
 
 package org.apache.ranger.plugin.audit;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerMultiResourceAuditHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerMultiResourceAuditHandler.class);
 
-	Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
+    Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
 
-	public RangerMultiResourceAuditHandler() {
-	}
+    public RangerMultiResourceAuditHandler() {
+    }
 
+    @Override
+    public void logAuthzAudit(AuthzAuditEvent auditEvent) {
+        auditEvents.add(auditEvent);
+    }
 
-	@Override
-	public void logAuthzAudit(AuthzAuditEvent auditEvent) {
-		auditEvents.add(auditEvent);
-	}
+    @Override
+    public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
+        this.auditEvents.addAll(auditEvents);
+    }
 
-	@Override
-	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
-		this.auditEvents.addAll(auditEvents);
-	}
+    public void flushAudit() {
+        try {
+            boolean deniedExists = false;
 
-	public void flushAudit() {
-		try {
-			boolean deniedExists = false;
-			// First iterate to see if there are any denied
-			for (AuthzAuditEvent auditEvent : auditEvents) {
-				if (auditEvent.getAccessResult() == 0) {
-					deniedExists = true;
-					break;
-				}
-			}
+            // First iterate to see if there are any denied
+            for (AuthzAuditEvent auditEvent : auditEvents) {
+                if (auditEvent.getAccessResult() == 0) {
+                    deniedExists = true;
 
-			for (AuthzAuditEvent auditEvent : auditEvents) {
-				if (deniedExists && auditEvent.getAccessResult() != 0) {
-					continue;
-				}
+                    break;
+                }
+            }
 
-				super.logAuthzAudit(auditEvent);
-			}
-		} catch (Throwable t) {
-			LOG.error("Error occured while writing audit log... ", t);
-		} finally {
-			// reset auditEvents once audits are logged
-			auditEvents = new ArrayList<>();
-		}
-	}
+            for (AuthzAuditEvent auditEvent : auditEvents) {
+                if (deniedExists && auditEvent.getAccessResult() != 0) {
+                    continue;
+                }
+
+                super.logAuthzAudit(auditEvent);
+            }
+        } catch (Throwable t) {
+            LOG.error("Error occured while writing audit log... ", t);
+        } finally {
+            // reset auditEvents once audits are logged
+            auditEvents = new ArrayList<>();
+        }
+    }
 }

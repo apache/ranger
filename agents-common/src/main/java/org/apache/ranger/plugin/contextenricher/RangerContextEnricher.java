@@ -19,30 +19,28 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 public interface RangerContextEnricher {
-	void setEnricherDef(RangerContextEnricherDef enricherDef);
+    void setEnricherDef(RangerContextEnricherDef enricherDef);
 
-	void setServiceName(String serviceName);
+    void setServiceName(String serviceName);
 
-	void setServiceDef(RangerServiceDef serviceDef);
+    void setServiceDef(RangerServiceDef serviceDef);
 
-	void setAppId(String appId);
+    void setAppId(String appId);
 
-	void init();
+    void init();
 
-	void enrich(RangerAccessRequest request);
+    void enrich(RangerAccessRequest request);
 
-	void enrich(RangerAccessRequest request, Object dataStore);
+    void enrich(RangerAccessRequest request, Object dataStore);
 
-	boolean preCleanup();
+    boolean preCleanup();
 
-	void cleanup();
+    void cleanup();
 
-	String getName();
-
+    String getName();
 }

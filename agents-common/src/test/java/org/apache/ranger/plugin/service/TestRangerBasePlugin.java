@@ -19,13 +19,31 @@
 
 package org.apache.ranger.plugin.service;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.apache.ranger.plugin.util.ServiceGdsInfo;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -33,9 +51,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TestRangerBasePlugin {
     static Gson                      gsonBuilder;
@@ -44,10 +69,10 @@ public class TestRangerBasePlugin {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
-                                       .setPrettyPrinting()
-                                       .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-                                       .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
-                                       .create();
+                .setPrettyPrinting()
+                .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
+                .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
+                .create();
 
         peOptions = new RangerPolicyEngineOptions();
 
@@ -55,9 +80,7 @@ public class TestRangerBasePlugin {
         peOptions.disableTagRetriever       = true;
         peOptions.disableUserStoreRetriever = true;
         peOptions.disableGdsInfoRetriever   = true;
-
     }
-
 
     @Test
     public void testBasePluginHive() throws Exception {
@@ -178,7 +201,7 @@ public class TestRangerBasePlugin {
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
         @Override
         public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-                                               JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
             ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
@@ -186,10 +209,10 @@ public class TestRangerBasePlugin {
                 ret.setAccessTime(new Date());
             }
             Map<String, Object> reqContext  = ret.getContext();
-            Object accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
+            Object              accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
             if (accessTypes != null) {
                 Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
-                Set<String> requestedAccesses = new TreeSet<>(accessTypesCollection);
+                Set<String>        requestedAccesses     = new TreeSet<>(accessTypesCollection);
                 ret.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES, requestedAccesses);
             }
 
@@ -199,8 +222,8 @@ public class TestRangerBasePlugin {
 
                 List<Object> listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
                 for (Object accessTypeGroup : listOfAccessTypeGroups) {
-                    List<String> accesses = (List<String>) accessTypeGroup;
-                    Set<String> setOfAccesses = new TreeSet<>(accesses);
+                    List<String> accesses      = (List<String>) accessTypeGroup;
+                    Set<String>  setOfAccesses = new TreeSet<>(accesses);
                     setOfAccessTypeGroups.add(setOfAccesses);
                 }
 
@@ -214,7 +237,7 @@ public class TestRangerBasePlugin {
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
         public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

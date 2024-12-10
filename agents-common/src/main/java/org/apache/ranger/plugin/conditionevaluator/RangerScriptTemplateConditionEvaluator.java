@@ -27,61 +27,53 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerScriptTemplateConditionEvaluator extends RangerScriptConditionEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerScriptTemplateConditionEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerScriptTemplateConditionEvaluator.class);
 
-	protected String  script;
-	private   boolean reverseResult;
+    protected String  script;
+    private   boolean reverseResult;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptTemplateConditionEvaluator.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerScriptTemplateConditionEvaluator.init({})", condition);
 
-		super.init();
+        super.init();
 
-		if(CollectionUtils.isNotEmpty(condition.getValues())) {
-			String expectedScriptReturn = condition.getValues().get(0);
+        if (CollectionUtils.isNotEmpty(condition.getValues())) {
+            String expectedScriptReturn = condition.getValues().get(0);
 
-			if(StringUtils.isNotBlank(expectedScriptReturn)) {
-				if(StringUtils.equalsIgnoreCase(expectedScriptReturn, "false") || StringUtils.equalsIgnoreCase(expectedScriptReturn, "no")) {
-					reverseResult = true;
-				}
+            if (StringUtils.isNotBlank(expectedScriptReturn)) {
+                if (StringUtils.equalsIgnoreCase(expectedScriptReturn, "false") || StringUtils.equalsIgnoreCase(expectedScriptReturn, "no")) {
+                    reverseResult = true;
+                }
 
-				script = MapUtils.getString(conditionDef.getEvaluatorOptions(), "scriptTemplate");
+                script = MapUtils.getString(conditionDef.getEvaluatorOptions(), "scriptTemplate");
 
-				if(script != null) {
-					script = script.trim();
-				}
-			}
-		}
+                if (script != null) {
+                    script = script.trim();
+                }
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.init(" + condition + "): script=" + script + "; reverseResult=" + reverseResult);
-		}
-	}
+        LOG.debug("<== RangerScriptTemplateConditionEvaluator.init({}): script={}; reverseResult={}", condition, script, reverseResult);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptTemplateConditionEvaluator.isMatched()");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerScriptTemplateConditionEvaluator.isMatched()");
 
-		boolean ret = super.isMatched(request);
+        boolean ret = super.isMatched(request);
 
-		if(reverseResult) {
-			ret = !ret;
-		}
+        if (reverseResult) {
+            ret = !ret;
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptTemplateConditionEvaluator.isMatched(): ret=" + ret);
-		}
+        LOG.debug("<== RangerScriptTemplateConditionEvaluator.isMatched(): ret={}", ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	protected String getScript() {
-		return script;
-	}
+    @Override
+    protected String getScript() {
+        return script;
+    }
 }

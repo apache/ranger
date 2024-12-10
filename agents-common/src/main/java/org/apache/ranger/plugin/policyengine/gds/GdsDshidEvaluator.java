@@ -33,7 +33,7 @@ public class GdsDshidEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDshidEvaluator.class);
 
     private final DataShareInDatasetInfo          dshid;
-    private final GdsDatasetEvaluator             datasetEvaluator;;
+    private final GdsDatasetEvaluator             datasetEvaluator;
     private final RangerValidityScheduleEvaluator scheduleEvaluator;
 
     public GdsDshidEvaluator(DataShareInDatasetInfo dshid, GdsDatasetEvaluator datasetEvaluator) {

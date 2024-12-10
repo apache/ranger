@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -39,24 +38,24 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class RangerServiceTagsDeltaUtil {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTagsDeltaUtil.class);
-
+    private static final Logger LOG                 = LoggerFactory.getLogger(RangerServiceTagsDeltaUtil.class);
     private static final Logger PERF_TAGS_DELTA_LOG = RangerPerfTracer.getPerfLogger("tags.delta");
+
+    private RangerServiceTagsDeltaUtil() {
+        // to block instantiation
+    }
 
     /*
     It should be possible to call applyDelta() multiple times with serviceTags and delta resulting from previous call to applyDelta()
     The end result should be same if called once or multiple times.
      */
-    static public ServiceTags applyDelta(ServiceTags serviceTags, ServiceTags delta, boolean supportsTagsDedup) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceTagsDeltaUtil.applyDelta(): serviceTags:[" + serviceTags + "], delta:[" + delta + "], supportsTagsDedup:[" + supportsTagsDedup + "]");
-        }
+    public static ServiceTags applyDelta(ServiceTags serviceTags, ServiceTags delta, boolean supportsTagsDedup) {
+        LOG.debug("==> RangerServiceTagsDeltaUtil.applyDelta(): serviceTags:[{}], delta:[{}], supportsTagsDedup:[{}]", serviceTags, delta, supportsTagsDedup);
 
         ServiceTags      ret  = serviceTags;
         RangerPerfTracer perf = null;
 
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TAGS_DELTA_LOG)) {
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_TAGS_DELTA_LOG)) {
             perf = RangerPerfTracer.getPerfTracer(PERF_TAGS_DELTA_LOG, "RangerServiceTagsDeltaUtil.applyDelta()");
         }
 
@@ -67,15 +66,18 @@ public class RangerServiceTagsDeltaUtil {
             ret.setTagVersion(delta.getTagVersion());
             ret.setIsTagsDeduped(delta.getIsTagsDeduped());
 
-            int tagDefsAdded = 0, tagDefsUpdated = 0, tagDefsRemoved = 0;
-            int tagsAdded    = 0, tagsUpdated    = 0, tagsRemoved    = 0;
+            int tagDefsAdded   = 0;
+            int tagDefsUpdated = 0;
+            int tagDefsRemoved = 0;
+            int tagsAdded      = 0;
+            int tagsUpdated    = 0;
+            int tagsRemoved    = 0;
 
             Map<Long, RangerTagDef> tagDefs = ret.getTagDefinitions();
 
-            for (Iterator<Map.Entry<Long, RangerTagDef>> deltaTagDefIter = delta.getTagDefinitions().entrySet().iterator(); deltaTagDefIter.hasNext(); ) {
-                Map.Entry<Long, RangerTagDef> entry         = deltaTagDefIter.next();
-                Long                          deltaTagDefId = entry.getKey();
-                RangerTagDef                  deltaTagDef   = entry.getValue();
+            for (Map.Entry<Long, RangerTagDef> entry : delta.getTagDefinitions().entrySet()) {
+                Long         deltaTagDefId = entry.getKey();
+                RangerTagDef deltaTagDef   = entry.getValue();
 
                 if (StringUtils.isEmpty(deltaTagDef.getName())) { // tagdef has been removed
                     RangerTagDef removedTagDef = tagDefs.remove(deltaTagDefId);
@@ -97,14 +99,13 @@ public class RangerServiceTagsDeltaUtil {
             Map<Long, RangerTag> tags           = ret.getTags();
             Map<Long, Long>      replacedTagIds = new HashMap<>();
 
-            for (Iterator<Map.Entry<Long, RangerTag>> deltaTagIter = delta.getTags().entrySet().iterator(); deltaTagIter.hasNext(); ) {
-                Map.Entry<Long, RangerTag> entry      = deltaTagIter.next();
-                Long                       deltaTagId = entry.getKey();
-                RangerTag                  deltaTag   = entry.getValue();
+            for (Map.Entry<Long, RangerTag> entry : delta.getTags().entrySet()) {
+                Long      deltaTagId = entry.getKey();
+                RangerTag deltaTag   = entry.getValue();
 
                 if (StringUtils.isEmpty(deltaTag.getType())) { // tag has been removed
                     if (supportsTagsDedup) {
-                        boolean found   = false;
+                        boolean found = false;
 
                         for (Iterator<Map.Entry<RangerTag, MutablePair<Long, Long>>> iterator = ret.cachedTags.entrySet().iterator(); iterator.hasNext(); ) {
                             MutablePair<Long, Long> value = iterator.next().getValue();
@@ -187,9 +188,9 @@ public class RangerServiceTagsDeltaUtil {
 
             if (!resourcesToRemove.isEmpty()) {
                 for (ListIterator<RangerServiceResource> iter = serviceResources.listIterator(); iter.hasNext(); ) {
-                    RangerServiceResource resource          = iter.next();
-                    RangerServiceResource deletedResource   = resourcesToRemove.get(resource.getId());
-                    RangerServiceResource addedResource     = resourcesToAdd.get(resource.getId());
+                    RangerServiceResource resource        = iter.next();
+                    RangerServiceResource deletedResource = resourcesToRemove.get(resource.getId());
+                    RangerServiceResource addedResource   = resourcesToAdd.get(resource.getId());
 
                     if (addedResource == null && deletedResource == resource) {
                         iter.remove();
@@ -204,7 +205,7 @@ public class RangerServiceTagsDeltaUtil {
                     ListIterator<Long> listIter = resourceEntry.getValue().listIterator();
 
                     while (listIter.hasNext()) {
-                        Long tagId = listIter.next();
+                        Long tagId         = listIter.next();
                         Long replacerTagId = replacedTagIds.get(tagId);
 
                         if (replacerTagId != null) {
@@ -217,13 +218,14 @@ public class RangerServiceTagsDeltaUtil {
             resourceToTagIds.putAll(delta.getResourceToTagIds());
 
             if (MapUtils.isEmpty(resourceToTagIds)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("There are no resource->tag mappings!!");
-                }
+                LOG.debug("There are no resource->tag mappings!!");
+
                 if (MapUtils.isNotEmpty(ret.getTags())) {
                     LOG.warn("There are no resource->tag mappings, but there are tags in the ServiceTags!! Cleaning up");
+
                     ret.getTags().clear();
                 }
+
                 if (supportsTagsDedup) {
                     ret.cachedTags.clear();
                 }
@@ -237,6 +239,7 @@ public class RangerServiceTagsDeltaUtil {
                 resourceToRemove.setResourceSignature(null);
                 deltaServiceResources.add(resourceToRemove);
             }
+
             if (!resourcesToAdd.isEmpty()) {
                 deltaServiceResources.addAll(resourcesToAdd.values());
             }
@@ -244,24 +247,17 @@ public class RangerServiceTagsDeltaUtil {
             delta.setServiceResources(deltaServiceResources);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("RangerServiceTagsDeltaUtil.applyDelta(): delta(tagDefs={}, tags={}, resources={}), " +
-                          "resources(total={}, added={}, removed={}), " +
-                          "tags(total={}, added={}, updated={}, removed={}), " +
-                          "tagDefs(total={}, added={}, updated={}, removed={})",
+                LOG.debug("RangerServiceTagsDeltaUtil.applyDelta(): delta(tagDefs={}, tags={}, resources={}), resources(total={}, added={}, removed={}), tags(total={}, added={}, updated={}, removed={}), tagDefs(total={}, added={}, updated={}, removed={})",
                         delta.getTagDefinitions().size(), delta.getTags().size(), delta.getServiceResources().size(),
                         serviceResources.size(), resourcesToAdd.size(), resourcesToRemove.size(),
                         tags.size(), tagsAdded, tagsUpdated, tagsRemoved,
                         tagDefs.size(), tagDefsAdded, tagDefsUpdated, tagDefsRemoved);
             }
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Cannot apply deltas to service-tags as one of preconditions is violated. Returning received serviceTags without applying delta!!");
-            }
+            LOG.debug("Cannot apply deltas to service-tags as one of preconditions is violated. Returning received serviceTags without applying delta!!");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceTagsDeltaUtil.applyDelta(): serviceTags:[" + ret + "], delta:[" + delta + "], supportsTagsDedup:[" + supportsTagsDedup + "]");
-        }
+        LOG.debug("<== RangerServiceTagsDeltaUtil.applyDelta(): serviceTags:[{}], delta:[{}], supportsTagsDedup:[{}]", ret, delta, supportsTagsDedup);
 
         RangerPerfTracer.log(perf);
 
@@ -307,7 +303,7 @@ public class RangerServiceTagsDeltaUtil {
         tag.setGuid(null);
         tag.setVersion(null);
 
-        if (tag.getOwner() != null && tag.getOwner().shortValue() == RangerTag.OWNER_SERVICERESOURCE) {
+        if (tag.getOwner() != null && tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
             tag.setOwner(null);
         }
 
@@ -336,5 +332,4 @@ public class RangerServiceTagsDeltaUtil {
             serviceResource.setAdditionalInfo(null);
         }
     }
-
 }

@@ -24,11 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerChainedPluginConfig extends RangerPluginConfig {
-
     private static final Logger LOG = LoggerFactory.getLogger(RangerChainedPluginConfig.class);
 
-    private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
-    private final String[] chainedPluginPropertyPrefixes = new String[] { ".chained.services"};
+    private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file", "xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
+    private final String[] chainedPluginPropertyPrefixes = new String[] {".chained.services"};
 
     public RangerChainedPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
         super(serviceType, serviceName, appId, sourcePluginConfig);
@@ -48,35 +47,37 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
         set(getPropertyPrefix() + ".service.name", serviceName);
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " : { " + printProperties() + " }";
+    }
+
     private void copyProperties(RangerPluginConfig sourcePluginConfig, String propertyPrefix) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> copyProperties: propertyPrefix:[" + propertyPrefix + "]");
-        }
+        LOG.debug("==> copyProperties: propertyPrefix:[{}]", propertyPrefix);
+
         for (String propName : sourcePluginConfig.getProperties().stringPropertyNames()) {
             String value = sourcePluginConfig.get(propName);
 
             if (value != null && propName.startsWith(propertyPrefix)) {
                 String suffix = propName.substring(propertyPrefix.length());
+
                 if (!isExcludedSuffix(suffix)) {
                     set(getPropertyPrefix() + suffix, value);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("set property:[" + getPropertyPrefix() + suffix + "] to value:[" + value + "]");
-                    }
+
+                    LOG.debug("set property:[{}{}] to value:[{}]", getPropertyPrefix(), suffix, value);
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Not copying property :[" + propName + "] value from sourcePluginConfig");
-                    }
+                    LOG.debug("Not copying property :[{}] value from sourcePluginConfig", propName);
                 }
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== copyProperties: propertyPrefix:[" + propertyPrefix + "]");
-        }
+
+        LOG.debug("<== copyProperties: propertyPrefix:[{}]", propertyPrefix);
     }
 
     private void copyLegacySSLProperties(RangerPluginConfig sourcePluginConfig) {
         for (String legacyPropertyName : legacySSLProperties) {
             String value = sourcePluginConfig.get(legacyPropertyName);
+
             if (value != null) {
                 set(legacyPropertyName, value);
             }
@@ -89,6 +90,7 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
 
             if (value != null && propName.startsWith(propertyPrefix)) {
                 String suffix = propName.substring(propertyPrefix.length());
+
                 for (String chainedPropertyPrefix : chainedPluginPropertyPrefixes) {
                     if (StringUtils.startsWith(suffix, chainedPropertyPrefix)) {
                         set(getPropertyPrefix() + suffix, value);
@@ -104,26 +106,26 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
                 return true;
             }
         }
+
         return false;
     }
 
     private String printProperties() {
-        StringBuilder sb = new StringBuilder();
-        boolean seenOneProp = false;
+        StringBuilder sb          = new StringBuilder();
+        boolean       seenOneProp = false;
+
         for (String propName : this.getProperties().stringPropertyNames()) {
             String value = this.get(propName);
+
             if (!seenOneProp) {
                 seenOneProp = true;
             } else {
                 sb.append(",\n");
             }
+
             sb.append("{ propertyName:[").append(propName).append("], propertyValue:[").append(value).append("] }");
         }
-        return sb.toString();
-    }
 
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + " : { " + printProperties() + " }";
+        return sb.toString();
     }
 }

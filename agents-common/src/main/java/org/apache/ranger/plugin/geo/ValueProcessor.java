@@ -20,5 +20,5 @@
 package org.apache.ranger.plugin.geo;
 
 public interface ValueProcessor<T> {
-	T process(T value);
+    T process(T value);
 }

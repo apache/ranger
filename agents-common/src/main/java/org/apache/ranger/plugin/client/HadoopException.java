@@ -17,64 +17,60 @@
  * under the License.
  */
 
- package org.apache.ranger.plugin.client;
+package org.apache.ranger.plugin.client;
+
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-
 public class HadoopException extends RuntimeException {
-	private static final long serialVersionUID = 8872734935128535649L;
-	
-	public HashMap<String, Object> responseData;
+    private static final long serialVersionUID = 8872734935128535649L;
 
-	public HadoopException() {
-		super();
-	}
+    public final HashMap<String, Object> responseData = new HashMap<>();
 
-	public HadoopException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public HadoopException() {
+        super();
+    }
 
-	public HadoopException(String message) {
-		super(message);
-	}
+    public HadoopException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public HadoopException(Throwable cause) {
-		super(cause);
-	}
+    public HadoopException(String message) {
+        super(message);
+    }
 
-	public void generateResponseDataMap(boolean connectivityStatus,
-			String message, String description, Long objectId, String fieldName) {
-		responseData = new HashMap<>();
-		responseData.put("connectivityStatus", connectivityStatus);
-		responseData.put("message", message);
-		responseData.put("description", description);
-		responseData.put("objectId", objectId);
-		responseData.put("fieldName", fieldName);
-	}
+    public HadoopException(Throwable cause) {
+        super(cause);
+    }
 
-	public String getMessage(Throwable excp) {
-		List<String> errList = new ArrayList<>();
-		while (excp != null) {
-			if (!errList.contains(excp.getMessage() + ". \n") && !errList.contains(excp.toString() + ". \n")) {
-				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
-					errList.add(excp.getMessage() + ". \n");
-				}
-			}
-			excp = excp.getCause();
-		}
-		return StringUtils.join(errList, "");
-	}
+    public void generateResponseDataMap(boolean connectivityStatus, String message, String description, Long objectId, String fieldName) {
+        responseData.put("connectivityStatus", connectivityStatus);
+        responseData.put("message", message);
+        responseData.put("description", description);
+        responseData.put("objectId", objectId);
+        responseData.put("fieldName", fieldName);
+    }
 
-	public HashMap<String,Object> getResponseData() {
-		return responseData;
-	}
+    public String getMessage(Throwable excp) {
+        List<String> errList = new ArrayList<>();
 
-	public void setReponseData(HashMap<String,Object> responseData) {
-		this.responseData = responseData;
-	}
+        while (excp != null) {
+            if (!errList.contains(excp.getMessage() + ". \n") && !errList.contains(excp + ". \n")) {
+                if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
+                    errList.add(excp.getMessage() + ". \n");
+                }
+            }
 
+            excp = excp.getCause();
+        }
+
+        return StringUtils.join(errList, "");
+    }
+
+    public HashMap<String, Object> getResponseData() {
+        return responseData;
+    }
 }

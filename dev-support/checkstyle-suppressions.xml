@@ -15,15 +15,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE suppressions PUBLIC
-  "-//Checkstyle//DTD SuppressionFilter Configuration 1.0//EN"
-  "https://checkstyle.org/dtds/suppressions_1_0.dtd">
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.0//EN" "https://checkstyle.org/dtds/suppressions_1_0.dtd">
 
 <suppressions>
   <suppress files="[\\/]generated-sources[\\/]" checks="[a-zA-Z0-9]*"/>
   <suppress files="[\\/]surefire-reports[\\/]" checks="[a-zA-Z0-9]*"/>
-  <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
   <suppress files="AuditFileCacheProviderSpool.java" checks="TypeName"/>
   <suppress files="AuthzAuditEvent.java" checks="StaticVariableName"/>
+  <suppress files="RangerRolesUtil.java" checks="TypeName"/>
+  <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
 
 </suppressions>

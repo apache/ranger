@@ -40,7 +40,6 @@ public class RangerSecurityZoneHelper {
     private final String                                       currentUser;
     private final Map<String, RangerSecurityZoneServiceHelper> services;
 
-
     public RangerSecurityZoneHelper(RangerSecurityZone zone, String currentUser) {
         this.zone        = zone;
         this.currentUser = currentUser;
@@ -51,7 +50,9 @@ public class RangerSecurityZoneHelper {
         }
     }
 
-    public RangerSecurityZone getZone() { return zone; }
+    public RangerSecurityZone getZone() {
+        return zone;
+    }
 
     public RangerSecurityZoneServiceHelper getZoneService(String serviceName) {
         return services.get(serviceName);
@@ -142,11 +143,11 @@ public class RangerSecurityZoneHelper {
         }
 
         if (changeData.getTagServicesToAdd() != null) {
-			for (String tagServiceToAdd : changeData.getTagServicesToAdd()) {
-				if (!addIfAbsent(tagServiceToAdd, zone.getTagServices())) {
-					throw new Exception(tagServiceToAdd + ": tag service already exists in zone");
-				}
-			}
+            for (String tagServiceToAdd : changeData.getTagServicesToAdd()) {
+                if (!addIfAbsent(tagServiceToAdd, zone.getTagServices())) {
+                    throw new Exception(tagServiceToAdd + ": tag service already exists in zone");
+                }
+            }
         }
 
         if (changeData.getTagServicesToRemove() != null) {
@@ -183,12 +184,12 @@ public class RangerSecurityZoneHelper {
             if (principal.getType() == RangerPrincipal.PrincipalType.USER) {
                 isAdded = addIfAbsent(principal.getName(), users);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.GROUP) {
-				isAdded = addIfAbsent(principal.getName(), groups);
+                isAdded = addIfAbsent(principal.getName(), groups);
             } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
-				isAdded = addIfAbsent(principal.getName(), roles);
+                isAdded = addIfAbsent(principal.getName(), roles);
             }
 
-            if(!isAdded) {
+            if (!isAdded) {
                 throw new Exception(principal + ": principal already an admin or auditor in zone");
             }
         }
@@ -206,7 +207,7 @@ public class RangerSecurityZoneHelper {
                 isRemoved = roles.remove(principal.getName());
             }
 
-            if(!isRemoved) {
+            if (!isRemoved) {
                 throw new Exception(principal + ": principal not an admin or auditor in zone");
             }
         }
@@ -280,7 +281,9 @@ public class RangerSecurityZoneHelper {
             }
         }
 
-        public RangerSecurityZoneService getZoneService() { return zoneService; }
+        public RangerSecurityZoneService getZoneService() {
+            return zoneService;
+        }
 
         public int getResourceCount() {
             return resources != null ? resources.size() : 0;
@@ -351,7 +354,7 @@ public class RangerSecurityZoneHelper {
             }
 
             return resource;
-       }
+        }
 
         public RangerSecurityZoneResource removeResource(long id) {
             int idx = getResourceIdx(id);
@@ -436,7 +439,7 @@ public class RangerSecurityZoneHelper {
         private void setUpdated(RangerSecurityZoneResourceBase baseInfo, int idx) {
             RangerSecurityZoneResourceBase resourceBase = (resourcesBaseInfo != null && resourcesBaseInfo.size() > idx) ? resourcesBaseInfo.get(idx) : null;
 
-            if(resourceBase != null) {
+            if (resourceBase != null) {
                 baseInfo.setId(resourceBase.getId());
                 baseInfo.setCreatedBy(resourceBase.getCreatedBy());
                 baseInfo.setCreateTime(resourceBase.getCreateTime());
