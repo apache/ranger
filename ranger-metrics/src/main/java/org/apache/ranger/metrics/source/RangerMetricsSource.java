@@ -23,7 +23,6 @@ import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.hadoop.metrics2.MetricsSource;
 
 public abstract class RangerMetricsSource implements MetricsSource {
-
     @Override
     public void getMetrics(MetricsCollector collector, boolean all) {
         refresh();
@@ -33,12 +32,13 @@ public abstract class RangerMetricsSource implements MetricsSource {
     /**
      * Responsibility of this method is to refresh metrics hold by this class.
      */
-    abstract protected void refresh();
+    protected abstract void refresh();
 
     /**
      * Responsibility of this method is to update metrics system with latest values of ranger metrics.
+     *
      * @param collector
      * @param all
      */
-    abstract protected void update(MetricsCollector collector, boolean all);
+    protected abstract void update(MetricsCollector collector, boolean all);
 }
