@@ -197,6 +197,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             case WRITE_ACL:
                 rangerAccessType = ACCESS_TYPE_WRITE_ACL;
                 break;
+            default:
+                LOG.error("Unknown operation!");
+                break;
         }
         return rangerAccessType;
     }
