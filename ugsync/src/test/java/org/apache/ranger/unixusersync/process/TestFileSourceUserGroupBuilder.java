@@ -18,15 +18,14 @@
  */
 package org.apache.ranger.unixusersync.process;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
 import org.junit.Test;
 
-public class TestFileSourceUserGroupBuilder {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+public class TestFileSourceUserGroupBuilder {
     private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
     @Test

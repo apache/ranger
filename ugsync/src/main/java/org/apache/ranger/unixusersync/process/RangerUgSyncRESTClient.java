@@ -19,63 +19,57 @@
 
 package org.apache.ranger.unixusersync.process;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
-
 public class RangerUgSyncRESTClient extends RangerRESTClient {
-	private String AUTH_KERBEROS = "kerberos";
+    private String authKerberos = "kerberos";
 
-	public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd,
-			String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType,
-			String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
+    public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd, String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType, String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
+        super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig());
+        if (!(authenticationType != null && authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
+            setBasicAuthInfo(polMgrUsername, polMgrPassword);
+        }
 
-		super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig());
-		if (!(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
-				&& SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
-			setBasicAuthInfo(polMgrUsername, polMgrPassword);
-		}
+        if (isSSL()) {
+            setKeyStoreType(ugKeyStoreType);
+            setTrustStoreType(ugTrustStoreType);
+            KeyManager[]   kmList     = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
+            TrustManager[] tmList     = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
+            SSLContext     sslContext = getSSLContext(kmList, tmList);
+            ClientConfig   config     = new DefaultClientConfig();
 
-		if (isSSL()) {
-			setKeyStoreType(ugKeyStoreType);
-			setTrustStoreType(ugTrustStoreType);
-			KeyManager[] kmList = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
-			TrustManager[] tmList = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
-			SSLContext sslContext = getSSLContext(kmList, tmList);
-			ClientConfig config = new DefaultClientConfig();
+            config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
+            HostnameVerifier hv = new HostnameVerifier() {
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return session.getPeerHost().equals(urlHostName);
+                }
+            };
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
 
-			config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
-			HostnameVerifier hv = new HostnameVerifier() {
-				public boolean verify(String urlHostName, SSLSession session) {
-					return session.getPeerHost().equals(urlHostName);
-				}
-			};
-			config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
+            setClient(Client.create(config));
+            if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
+                getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
+            }
+        }
 
-			setClient(Client.create(config));
-			if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
-				getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
-			}
-		}
+        UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
-		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-
-		super.setMaxRetryAttempts(config.getPolicyMgrMaxRetryAttempts());
-		super.setRetryIntervalMs(config.getPolicyMgrRetryIntervalMs());
-	}
+        super.setMaxRetryAttempts(config.getPolicyMgrMaxRetryAttempts());
+        super.setRetryIntervalMs(config.getPolicyMgrRetryIntervalMs());
+    }
 }

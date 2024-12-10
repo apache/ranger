@@ -19,42 +19,39 @@
 
 package org.apache.ranger.ldapconfigcheck;
 
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
+import org.springframework.security.ldap.authentication.BindAuthenticator;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
-import org.springframework.security.ldap.authentication.BindAuthenticator;
-import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
-
 
 public class AuthenticationCheck {
-    private String ldapUrl = null;
+    private String ldapUrl;
+    private String adDomain;
+    private String userDnPattern;
+    private String roleAttribute;
+    private String groupSearchBase;
+    private String groupSearchFilter;
+    private PrintStream logFile;
+    private PrintStream ambariProps;
+    private PrintStream installProps;
     private String authMethod = "NONE";
-    private String adDomain = null;
-    private String userDnPattern = null;
-    private String roleAttribute = null;
-    private String groupSearchBase = null;
-    private String groupSearchFilter = null;
 
-    private PrintStream logFile = null;
-    private PrintStream ambariProps = null;
-    private PrintStream installProps = null;
-
-    public AuthenticationCheck(String ldapUrl, UserSync userSyncObj, PrintStream logFile,
-                               PrintStream ambariProps, PrintStream installProps) {
-
-        this.logFile = logFile;
-        this.ambariProps = ambariProps;
+    public AuthenticationCheck(String ldapUrl, UserSync userSyncObj, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) {
+        this.logFile      = logFile;
+        this.ambariProps  = ambariProps;
         this.installProps = installProps;
 
         if (userSyncObj.getUserNameAttribute().equalsIgnoreCase("sAMAccountName")) {
@@ -62,17 +59,15 @@ public class AuthenticationCheck {
         } else {
             authMethod = "LDAP";
         }
-        this.ldapUrl = ldapUrl;
-        adDomain = userSyncObj.getSearchBase();
-        userDnPattern = userSyncObj.getUserNameAttribute() + "={0}," + userSyncObj.getUserSearchBase();
-        roleAttribute = userSyncObj.getGroupNameAttrName();
-        groupSearchBase = userSyncObj.getGroupSearchBase();
+        this.ldapUrl      = ldapUrl;
+        adDomain          = userSyncObj.getSearchBase();
+        userDnPattern     = userSyncObj.getUserNameAttribute() + "={0}," + userSyncObj.getUserSearchBase();
+        roleAttribute     = userSyncObj.getGroupNameAttrName();
+        groupSearchBase   = userSyncObj.getGroupSearchBase();
         groupSearchFilter = userSyncObj.getGroupMemberName() + "=" + userDnPattern;
-
     }
 
     public void discoverAuthProperties() {
-
         ambariProps.println("\n# Possible values for authentication properties:");
         installProps.println("\n# Possible values for authentication properties:");
         if (authMethod.equalsIgnoreCase("AD")) {
@@ -99,8 +94,7 @@ public class AuthenticationCheck {
         }
     }
 
-    public boolean isAuthenticated(String ldapUrl, String bindDn, String bindPassword, String userName,
-                                   String userPassword) {
+    public boolean isAuthenticated(String ldapUrl, String bindDn, String bindPassword, String userName, String userPassword) {
         boolean isAuthenticated = false;
         //Verify Authentication
         Authentication authentication;
@@ -116,8 +110,7 @@ public class AuthenticationCheck {
         return isAuthenticated;
     }
 
-    private Authentication getADBindAuthentication(String ldapUrl, String bindDn, String bindPassword,
-                                                   String userName, String userPassword) {
+    private Authentication getADBindAuthentication(String ldapUrl, String bindDn, String bindPassword, String userName, String userPassword) {
         Authentication result = null;
         try {
             LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(ldapUrl);
@@ -129,8 +122,8 @@ public class AuthenticationCheck {
             ldapContextSource.setPooled(true);
             ldapContextSource.afterPropertiesSet();
 
-            String searchFilter="(sAMAccountName={0})";
-            FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(adDomain, searchFilter,ldapContextSource);
+            String                    searchFilter = "(sAMAccountName={0})";
+            FilterBasedLdapUserSearch userSearch   = new FilterBasedLdapUserSearch(adDomain, searchFilter, ldapContextSource);
             userSearch.setSearchSubtree(true);
 
             BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
@@ -142,23 +135,20 @@ public class AuthenticationCheck {
             if (userName != null && userPassword != null && !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
                 final List<GrantedAuthority> grantedAuths = new ArrayList<>();
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
-                final UserDetails principal = new User(userName, userPassword, grantedAuths);
+                final UserDetails    principal           = new User(userName, userPassword, grantedAuths);
                 final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 
                 result = ldapAuthenticationProvider.authenticate(finalAuthentication);
             }
-
         } catch (BadCredentialsException bce) {
-            logFile.println("ERROR: LDAP Authentication Failed. Please verify values for ranger.admin.auth.sampleuser and " +
-                    "ranger.admin.auth.samplepassword\n");
+            logFile.println("ERROR: LDAP Authentication Failed. Please verify values for ranger.admin.auth.sampleuser and ranger.admin.auth.samplepassword\n");
         } catch (Exception e) {
             logFile.println("ERROR: LDAP Authentication Failed: " + e);
         }
         return result;
     }
 
-    private Authentication getLdapBindAuthentication(String ldapUrl, String bindDn, String bindPassword,
-                                                     String userName, String userPassword) {
+    private Authentication getLdapBindAuthentication(String ldapUrl, String bindDn, String bindPassword, String userName, String userPassword) {
         Authentication result = null;
         try {
             LdapContextSource ldapContextSource = new DefaultSpringSecurityContextSource(ldapUrl);
@@ -175,34 +165,31 @@ public class AuthenticationCheck {
             defaultLdapAuthoritiesPopulator.setGroupSearchFilter(groupSearchFilter);
             defaultLdapAuthoritiesPopulator.setIgnorePartialResultException(true);
 
-            String searchFilter="(uid={0})";
-            FilterBasedLdapUserSearch userSearch=new FilterBasedLdapUserSearch(adDomain, searchFilter,ldapContextSource);
+            String                    searchFilter = "(uid={0})";
+            FilterBasedLdapUserSearch userSearch   = new FilterBasedLdapUserSearch(adDomain, searchFilter, ldapContextSource);
             userSearch.setSearchSubtree(true);
 
             BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
             bindAuthenticator.setUserSearch(userSearch);
-            String[] userDnPatterns = new String[] { userDnPattern };
+            String[] userDnPatterns = new String[] {userDnPattern};
             bindAuthenticator.setUserDnPatterns(userDnPatterns);
             bindAuthenticator.afterPropertiesSet();
 
-            LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator,defaultLdapAuthoritiesPopulator);
+            LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator, defaultLdapAuthoritiesPopulator);
 
             if (userName != null && userPassword != null && !userName.trim().isEmpty() && !userPassword.trim().isEmpty()) {
                 final List<GrantedAuthority> grantedAuths = new ArrayList<>();
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
-                final UserDetails principal = new User(userName, userPassword, grantedAuths);
+                final UserDetails    principal           = new User(userName, userPassword, grantedAuths);
                 final Authentication finalAuthentication = new UsernamePasswordAuthenticationToken(principal, userPassword, grantedAuths);
 
                 result = ldapAuthenticationProvider.authenticate(finalAuthentication);
             }
         } catch (BadCredentialsException bce) {
-            logFile.println("ERROR: LDAP Authentication Failed. Please verify values for ranger.admin.auth.sampleuser and " +
-                    "ranger.admin.auth.samplepassword\n");
+            logFile.println("ERROR: LDAP Authentication Failed. Please verify values for ranger.admin.auth.sampleuser and ranger.admin.auth.samplepassword\n");
         } catch (Exception e) {
             logFile.println("ERROR: LDAP Authentication Failed: " + e);
         }
         return result;
     }
 }
-
-

@@ -27,6 +27,9 @@
     <packaging>uexe</packaging>
     <name>PAM Authenticator</name>
     <description>PAM authentication service</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+    </properties>
     <build>
         <plugins>
             <plugin>
