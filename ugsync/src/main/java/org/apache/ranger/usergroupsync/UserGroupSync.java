@@ -19,102 +19,97 @@
 
 package org.apache.ranger.usergroupsync;
 
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
 public class UserGroupSync implements Runnable {
+    private static final Logger LOG = LoggerFactory.getLogger(UserGroupSync.class);
+    private UserGroupSink   ugSink;
+    private UserGroupSource ugSource;
 
-	private static final Logger LOG = LoggerFactory.getLogger(UserGroupSync.class);
+    public static void main(String[] args) {
+        UserGroupSync userGroupSync = new UserGroupSync();
+        userGroupSync.run();
+    }
 
-	private UserGroupSink ugSink;
-	private UserGroupSource ugSource;
+    @Override
+    public void run() {
+        try {
+            long    sleepTimeBetweenCycleInMillis     = UserGroupSyncConfig.getInstance().getSleepTimeInMillisBetweenCycle();
+            long    initSleepTimeBetweenCycleInMillis = UserGroupSyncConfig.getInstance().getInitSleepTimeInMillisBetweenCycle();
+            boolean initPending                       = true;
 
-	public static void main(String[] args) {
-		UserGroupSync userGroupSync = new UserGroupSync();
-		userGroupSync.run();
-	}
+            while (initPending) {
+                try {
+                    if (UserGroupSyncConfig.isUgsyncServiceActive()) {
+                        ugSink = UserGroupSyncConfig.getInstance().getUserGroupSink();
+                        LOG.info("initializing sink: " + ugSink.getClass().getName());
+                        ugSink.init();
 
-	@Override
-	public void run() {
-		try {
-			long sleepTimeBetweenCycleInMillis = UserGroupSyncConfig.getInstance().getSleepTimeInMillisBetweenCycle();
-			long initSleepTimeBetweenCycleInMillis = UserGroupSyncConfig.getInstance().getInitSleepTimeInMillisBetweenCycle();
-			boolean initPending = true;
+                        ugSource = UserGroupSyncConfig.getInstance().getUserGroupSource();
+                        LOG.info("initializing source: " + ugSource.getClass().getName());
+                        ugSource.init();
 
-			while (initPending) {
-				try {
-					if (UserGroupSyncConfig.isUgsyncServiceActive()) {
-						ugSink = UserGroupSyncConfig.getInstance().getUserGroupSink();
-						LOG.info("initializing sink: " + ugSink.getClass().getName());
-						ugSink.init();
+                        LOG.info("Begin: initial load of user/group from source==>sink");
+                        syncUserGroup();
+                        LOG.info("End: initial load of user/group from source==>sink");
 
-						ugSource = UserGroupSyncConfig.getInstance().getUserGroupSource();
-						LOG.info("initializing source: " + ugSource.getClass().getName());
-						ugSource.init();
+                        initPending = false;
+                        LOG.info("Done initializing user/group source and sink");
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Sleeping for [" + initSleepTimeBetweenCycleInMillis + "] milliSeconds as this server is running in passive mode");
+                        }
+                        Thread.sleep(initSleepTimeBetweenCycleInMillis);
+                    }
+                } catch (Throwable t) {
+                    LOG.error("Failed to initialize UserGroup source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds. Error details: ", t);
+                    try {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+                        }
+                        Thread.sleep(sleepTimeBetweenCycleInMillis);
+                    } catch (Exception e) {
+                        LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize UserGroup source/sink", e);
+                    }
+                }
+            }
 
-						LOG.info("Begin: initial load of user/group from source==>sink");
-						syncUserGroup();
-						LOG.info("End: initial load of user/group from source==>sink");
+            while (true) {
+                try {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+                    }
+                    Thread.sleep(sleepTimeBetweenCycleInMillis);
+                } catch (InterruptedException e) {
+                    LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize UserGroup information", e);
+                }
 
-						initPending = false;
-						LOG.info("Done initializing user/group source and sink");
-					}else {
-						if (LOG.isDebugEnabled()){
-							LOG.debug("Sleeping for [" + initSleepTimeBetweenCycleInMillis + "] milliSeconds as this server is running in passive mode");
-						}
-						Thread.sleep(initSleepTimeBetweenCycleInMillis);
-					}
-				} catch (Throwable t) {
-					LOG.error("Failed to initialize UserGroup source/sink. Will retry after " + sleepTimeBetweenCycleInMillis + " milliseconds. Error details: ", t);
-					try {
-						if (LOG.isDebugEnabled()){
-							LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-						}
-						Thread.sleep(sleepTimeBetweenCycleInMillis);
-					} catch (Exception e) {
-						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to initialize UserGroup source/sink", e);
-					}
-				}
-			}
+                try {
+                    if (UserGroupSyncConfig.isUgsyncServiceActive()) {
+                        LOG.info("Begin: update user/group from source==>sink");
+                        syncUserGroup();
+                        LOG.info("End: update user/group from source==>sink");
+                    } else {
+                        LOG.info("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds as this server is running in passive mode");
+                    }
+                } catch (Throwable t) {
+                    LOG.error("Failed to synchronize UserGroup information. Error details: ", t);
+                }
+            }
+        } catch (Throwable t) {
+            LOG.error("UserGroupSync thread got an error", t);
+        } finally {
+            LOG.info("Shutting down the UserGroupSync thread");
+        }
+    }
 
-			while (true) {
-				try {
-					if (LOG.isDebugEnabled()){
-						LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-					}
-					Thread.sleep(sleepTimeBetweenCycleInMillis);
-				} catch (InterruptedException e) {
-					LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis + "] milliseconds before attempting to synchronize UserGroup information", e);
-				}
+    private void syncUserGroup() throws Throwable {
+        UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
-				try {
-					if (UserGroupSyncConfig.isUgsyncServiceActive()) {
-						LOG.info("Begin: update user/group from source==>sink");
-						syncUserGroup();
-						LOG.info("End: update user/group from source==>sink");
-					} else {
-						LOG.info("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds as this server is running in passive mode");
-					}
-				} catch (Throwable t) {
-					LOG.error("Failed to synchronize UserGroup information. Error details: ", t);
-				}
-			}
-
-		} catch (Throwable t) {
-			LOG.error("UserGroupSync thread got an error", t);
-		} finally {
-			LOG.info("Shutting down the UserGroupSync thread");
-		}
-	}
-
-	private void syncUserGroup() throws Throwable {
-		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-
-		if (config.isUserSyncEnabled()) {
-			ugSource.updateSink(ugSink);
-		}
-
-	}
-
+        if (config.isUserSyncEnabled()) {
+            ugSource.updateSink(ugSink);
+        }
+    }
 }
