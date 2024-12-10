@@ -50,12 +50,12 @@ public class TestEvents {
             File propFile = new File(AUDIT_PROPERTIES_FILE);
 
             if (!propFile.exists()) {
-                LOG.info("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
+                LOG.info("Loading Audit properties file {}", AUDIT_PROPERTIES_FILE);
                 try (FileInputStream fileInputStream = new FileInputStream(propFile)) {
                     auditProperties.load(fileInputStream);
                 }
             } else {
-                LOG.info("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
+                LOG.info("Audit properties file missing: {}", AUDIT_PROPERTIES_FILE);
 
                 auditProperties.setProperty("xasecure.audit.is.enabled", "true");
                 auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");

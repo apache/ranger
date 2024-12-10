@@ -263,7 +263,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 }
             }
         } catch (Throwable t) {
-            logger.error("Error initializing File Spooler. queue=" + FILE_CACHE_PROVIDER_NAME, t);
+            logger.error("Error initializing File Spooler. queue={}", FILE_CACHE_PROVIDER_NAME, t);
 
             return false;
         }
@@ -349,7 +349,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
 
     public void flush() {
         if (!initDone) {
-            logger.error("Cannot flush Audit File Spooler. Initilization not done. queueName=" + FILE_CACHE_PROVIDER_NAME);
+            logger.error("Cannot flush Audit File Spooler. Initilization not done. queueName={}", FILE_CACHE_PROVIDER_NAME);
 
             return;
         }

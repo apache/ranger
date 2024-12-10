@@ -249,7 +249,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
                 String loginModuleName = properties.getProperty(keyParam);
 
                 if (loginModuleName == null) {
-                    LOG.error("Unable to add JAAS configuration for " + "client [{}] as it is missing param [{}]." + " Skipping JAAS config for [{}]", jaasClient, keyParam, jaasClient);
+                    LOG.error("Unable to add JAAS configuration for client [{}] as it is missing param [{}]. Skipping JAAS config for [{}]", jaasClient, keyParam, jaasClient);
 
                     continue;
                 } else {

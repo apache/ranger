@@ -200,7 +200,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     private void startAuditFilePeriodicRollOverTask() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(new AuditFilePeriodicRollOverTaskThreadFactory());
 
-        logger.debug("HDFSAuditDestination.startAuditFilePeriodicRollOverTask() strated.." + "Audit File rollover happens every {}", rolloverPeriod);
+        logger.debug("HDFSAuditDestination.startAuditFilePeriodicRollOverTask() strated..Audit File rollover happens every {}", rolloverPeriod);
 
         executorService.scheduleAtFixedRate(new AuditFilePeriodicRollOverTask(), 0, periodicRollOverCheckTimeinSec, TimeUnit.SECONDS);
     }
