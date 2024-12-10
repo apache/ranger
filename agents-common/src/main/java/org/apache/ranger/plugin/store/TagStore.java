@@ -19,7 +19,10 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.ranger.plugin.model.*;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 
@@ -32,30 +35,29 @@ import java.util.List;
 public interface TagStore {
     void init() throws Exception;
 
-    void setServiceStore(ServiceStore svcStore);
-
     ServiceStore getServiceStore();
+
+    void setServiceStore(ServiceStore svcStore);
 
     RangerTagDef createTagDef(RangerTagDef tagDef) throws Exception;
 
-    RangerTagDef updateTagDef(RangerTagDef TagDef) throws Exception;
+    RangerTagDef updateTagDef(RangerTagDef tagDef) throws Exception;
 
     void deleteTagDefByName(String name) throws Exception;
 
-	void deleteTagDef(Long id) throws Exception;
+    void deleteTagDef(Long id) throws Exception;
 
     RangerTagDef getTagDef(Long id) throws Exception;
 
     RangerTagDef getTagDefByGuid(String guid) throws Exception;
 
-	RangerTagDef getTagDefByName(String name) throws Exception;
+    RangerTagDef getTagDefByName(String name) throws Exception;
 
     List<RangerTagDef> getTagDefs(SearchFilter filter) throws Exception;
 
     PList<RangerTagDef> getPaginatedTagDefs(SearchFilter filter) throws Exception;
 
     List<String> getTagTypes() throws Exception;
-
 
     RangerTag createTag(RangerTag tag) throws Exception;
 
@@ -78,7 +80,6 @@ public interface TagStore {
     List<RangerTag> getTags(SearchFilter filter) throws Exception;
 
     PList<RangerTag> getPaginatedTags(SearchFilter filter) throws Exception;
-
 
     RangerServiceResource createServiceResource(RangerServiceResource resource) throws Exception;
 
@@ -104,7 +105,6 @@ public interface TagStore {
 
     PList<RangerServiceResource> getPaginatedServiceResources(SearchFilter filter) throws Exception;
 
-
     RangerTagResourceMap createTagResourceMap(RangerTagResourceMap tagResourceMap) throws Exception;
 
     void deleteTagResourceMap(Long id) throws Exception;
@@ -129,16 +129,15 @@ public interface TagStore {
 
     PList<RangerTagResourceMap> getPaginatedTagResourceMaps(SearchFilter filter) throws Exception;
 
-
     ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception;
-    ServiceTags getServiceTags(String serviceName, Long lastKnownVersion) throws Exception;
-    ServiceTags getServiceTagsDelta(String serviceName, Long lastKnownVersion) throws Exception;
 
+    ServiceTags getServiceTags(String serviceName, Long lastKnownVersion) throws Exception;
+
+    ServiceTags getServiceTagsDelta(String serviceName, Long lastKnownVersion) throws Exception;
 
     Long getTagVersion(String serviceName);
 
     void deleteAllTagObjectsForService(String serviceName) throws Exception;
 
     boolean isInPlaceTagUpdateSupported();
-
 }

@@ -20,9 +20,8 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 
-
 public interface RangerRowFilterPolicyItemEvaluator extends RangerPolicyItemEvaluator {
-	void init();
+    void init();
 
-	RangerPolicyItemRowFilterInfo getRowFilterInfo();
+    RangerPolicyItemRowFilterInfo getRowFilterInfo();
 }

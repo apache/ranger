@@ -19,25 +19,25 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.ranger.plugin.model.RangerRole;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.plugin.model.RangerRole;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
-@JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerRoles implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String           serviceName;
-    private Long             roleVersion;
-    private Date             roleUpdateTime;
-    private Set<RangerRole>  rangerRoles;
+    private String          serviceName;
+    private Long            roleVersion;
+    private Date            roleUpdateTime;
+    private Set<RangerRole> rangerRoles;
 
     public String getServiceName() {
         return serviceName;
@@ -63,11 +63,11 @@ public class RangerRoles implements Serializable {
         this.roleUpdateTime = roleUpdateTime;
     }
 
-    public Set<RangerRole> getRangerRoles(){
+    public Set<RangerRole> getRangerRoles() {
         return this.rangerRoles;
     }
 
-    public void setRangerRoles(Set<RangerRole> rangerRoles){
+    public void setRangerRoles(Set<RangerRole> rangerRoles) {
         this.rangerRoles = rangerRoles;
     }
 }

@@ -19,33 +19,46 @@
 
 package org.apache.ranger.plugin.model;
 
-import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Assert;
-import org.junit.Test;
+
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.DOWN;
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.UP;
 
 public class TestRangerHealth {
     @Test
     public void testRangerStatusUP() {
         Map<String, Object> componentsMap = new HashMap<>();
-        Map<String, Object> dbMap = new LinkedHashMap<>();
+        Map<String, Object> dbMap         = new LinkedHashMap<>();
+
         dbMap.put("status", UP);
+
         Map<String, Object> dbDetailsMap = new LinkedHashMap<>();
-        dbDetailsMap.put("database","Oracle 21.3c");
-        dbDetailsMap.put("validationQuery","SELECT banner from v$version where rownum<2");
-        dbMap.put("details",dbDetailsMap);
-        componentsMap.put("db",dbMap);
+
+        dbDetailsMap.put("database", "Oracle 21.3c");
+        dbDetailsMap.put("validationQuery", "SELECT banner from v$version where rownum<2");
+
+        dbMap.put("details", dbDetailsMap);
+        componentsMap.put("db", dbMap);
+
         Map<String, Object> auditProviderMap = new LinkedHashMap<>();
+
         auditProviderMap.put("status", UP);
+
         Map<String, Object> auditProviderDetailsMap = new LinkedHashMap<>();
-        auditProviderDetailsMap.put("provider","Elastic Search");
-        auditProviderDetailsMap.put("providerHealthCheckEndpoint","http://localhost:9200/_cluster/health?pretty");
-        auditProviderDetailsMap.put("details", auditProviderDetailsMap);
-        componentsMap.put("auditProvider",auditProviderMap);
+        auditProviderDetailsMap.put("provider", "Elastic Search");
+        auditProviderDetailsMap.put("providerHealthCheckEndpoint", "http://localhost:9200/_cluster/health?pretty");
+
+        auditProviderMap.put("details", auditProviderDetailsMap);
+
+        componentsMap.put("auditProvider", auditProviderMap);
+
         RangerServerHealth rangerHealth = RangerServerHealth.up().withDetail("components", componentsMap).build();
+
         Assert.assertEquals("RangerHealth.up()", UP, rangerHealth.getStatus());
         Assert.assertEquals("RangerHealth.getDetails()", 1, rangerHealth.getDetails().size());
         Assert.assertEquals("RangerHealth.getDetails('component')", 2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size());
@@ -54,21 +67,31 @@ public class TestRangerHealth {
     @Test
     public void testRangerStatusDOWN() {
         Map<String, Object> componentsMap = new HashMap<>();
-        Map<String, Object> dbMap = new LinkedHashMap<>();
+        Map<String, Object> dbMap         = new LinkedHashMap<>();
+
         dbMap.put("status", DOWN);
+
         Map<String, Object> dbDetailsMap = new LinkedHashMap<>();
-        dbDetailsMap.put("database","Oracle 21.3c");
-        dbDetailsMap.put("validationQuery","SELECT banner from v$version where rownum<2");
-        dbMap.put("details",dbDetailsMap);
-        componentsMap.put("db",dbMap);
+
+        dbDetailsMap.put("database", "Oracle 21.3c");
+        dbDetailsMap.put("validationQuery", "SELECT banner from v$version where rownum<2");
+
+        dbMap.put("details", dbDetailsMap);
+        componentsMap.put("db", dbMap);
+
         Map<String, Object> auditProviderMap = new LinkedHashMap<>();
         auditProviderMap.put("status", DOWN);
+
         Map<String, Object> auditProviderDetailsMap = new LinkedHashMap<>();
-        auditProviderDetailsMap.put("provider","Elastic Search");
-        auditProviderDetailsMap.put("providerHealthCheckEndpoint","http://localhost:9200/_cluster/health?pretty");
-        auditProviderDetailsMap.put("details", auditProviderDetailsMap);
-        componentsMap.put("auditProvider",auditProviderMap);
+
+        auditProviderDetailsMap.put("provider", "Elastic Search");
+        auditProviderDetailsMap.put("providerHealthCheckEndpoint", "http://localhost:9200/_cluster/health?pretty");
+
+        auditProviderMap.put("details", auditProviderDetailsMap);
+        componentsMap.put("auditProvider", auditProviderMap);
+
         RangerServerHealth rangerHealth = RangerServerHealth.down().withDetail("components", componentsMap).build();
+
         Assert.assertEquals("RangerHealth.down()", DOWN, rangerHealth.getStatus());
         Assert.assertEquals("RangerHealth.getDetails()", 1, rangerHealth.getDetails().size());
         Assert.assertEquals("RangerHealth.getDetails('component')", 2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size());

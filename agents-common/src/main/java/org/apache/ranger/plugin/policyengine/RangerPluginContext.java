@@ -35,151 +35,145 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RangerPluginContext {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginContext.class);
 
-	private final    RangerPluginConfig                                                         config;
-	private          RangerAuthContext                                                          authContext;
-	private          RangerAuthContextListener                                                  authContextListener;
-	private          RangerAdminClient                                                          adminClient;
-	private	final 	 Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
-	private final    ReentrantReadWriteLock                                                     lock = new ReentrantReadWriteLock(true); // fair lock
+    private final RangerPluginConfig                                                         config;
+    private final Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
+    private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true); // fair lock
+    private       RangerAuthContext                                                          authContext;
+    private       RangerAuthContextListener                                                  authContextListener;
+    private       RangerAdminClient                                                          adminClient;
 
+    public RangerPluginContext(RangerPluginConfig config) {
+        this.config = config;
+    }
 
-	public RangerPluginContext(RangerPluginConfig config) {
-		this.config = config;
-	}
+    public RangerPluginConfig getConfig() {
+        return config;
+    }
 
-	public RangerPluginConfig getConfig() { return  config; }
+    public String getClusterName() {
+        return config.getClusterName();
+    }
 
-	public String getClusterName() {
-		return config.getClusterName();
-	}
+    public String getClusterType() {
+        return config.getClusterType();
+    }
 
-	public String getClusterType() {
-		return config.getClusterType();
-	}
+    public RangerAuthContext getAuthContext() {
+        return authContext;
+    }
 
-	public RangerAuthContext getAuthContext() { return authContext; }
+    public void setAuthContext(RangerAuthContext authContext) {
+        this.authContext = authContext;
+    }
 
-	public RangerResourceMatcher getResourceMatcher(String resourceDefName, RangerPolicy.RangerPolicyResource resource) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> getResourceMatcher(resourceDefName={}, resource={})", resourceDefName, resource);
-		}
-		RangerResourceMatcher ret = null;
+    public RangerResourceMatcher getResourceMatcher(String resourceDefName, RangerPolicy.RangerPolicyResource resource) {
+        LOG.debug("==> getResourceMatcher(resourceDefName={}, resource={})", resourceDefName, resource);
 
-		try {
-			lock.readLock().lock();
+        RangerResourceMatcher ret = null;
 
-			Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher> matchersForResource = resourceMatchers.get(resourceDefName);
+        try {
+            lock.readLock().lock();
 
-			if (matchersForResource != null) {
-				ret = matchersForResource.get(resource);
-			}
-		} finally {
-			lock.readLock().unlock();
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== getResourceMatcher(resourceDefName={}, resource={}) : ret={}", resourceDefName, resource, ret);
-		}
+            Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher> matchersForResource = resourceMatchers.get(resourceDefName);
 
-		return ret;
-	}
+            if (matchersForResource != null) {
+                ret = matchersForResource.get(resource);
+            }
+        } finally {
+            lock.readLock().unlock();
+        }
 
-	public void setResourceMatcher(String resourceDefName, RangerPolicy.RangerPolicyResource resource, RangerResourceMatcher matcher) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> setResourceMatcher(resourceDefName={}, resource={}, matcher={})", resourceDefName, resource, matcher);
-		}
-		if (config != null && config.getPolicyEngineOptions().enableResourceMatcherReuse) {
-			try {
-				lock.writeLock().lock();
+        LOG.debug("<== getResourceMatcher(resourceDefName={}, resource={}) : ret={}", resourceDefName, resource, ret);
 
-				Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher> matchersForResource = resourceMatchers.computeIfAbsent(resourceDefName, k -> new HashMap<>());
-				matchersForResource.put(resource, matcher);
-			} finally {
-				lock.writeLock().unlock();
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== setResourceMatcher(resourceDefName={}, resource={}, matcher={})", resourceDefName, resource, matcher);
-		}
-	}
+        return ret;
+    }
 
-	void cleanResourceMatchers() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> cleanResourceMatchers()");
-		}
-		try {
-			lock.writeLock().lock();
+    public void setResourceMatcher(String resourceDefName, RangerPolicy.RangerPolicyResource resource, RangerResourceMatcher matcher) {
+        LOG.debug("==> setResourceMatcher(resourceDefName={}, resource={}, matcher={})", resourceDefName, resource, matcher);
 
-			resourceMatchers.clear();
-		} finally {
-			lock.writeLock().unlock();
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== cleanResourceMatchers()");
-		}
-	}
+        if (config != null && config.getPolicyEngineOptions().enableResourceMatcherReuse) {
+            try {
+                lock.writeLock().lock();
 
-	public void setAuthContext(RangerAuthContext authContext) { this.authContext = authContext; }
+                Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher> matchersForResource = resourceMatchers.computeIfAbsent(resourceDefName, k -> new HashMap<>());
+                matchersForResource.put(resource, matcher);
+            } finally {
+                lock.writeLock().unlock();
+            }
+        }
 
-	public void setAuthContextListener(RangerAuthContextListener authContextListener) { this.authContextListener = authContextListener; }
+        LOG.debug("<== setResourceMatcher(resourceDefName={}, resource={}, matcher={})", resourceDefName, resource, matcher);
+    }
 
-	public void notifyAuthContextChanged() {
-		RangerAuthContextListener authContextListener = this.authContextListener;
+    public void setAuthContextListener(RangerAuthContextListener authContextListener) {
+        this.authContextListener = authContextListener;
+    }
 
-		if (authContextListener != null) {
-			authContextListener.contextChanged();
-		}
-	}
+    public void notifyAuthContextChanged() {
+        RangerAuthContextListener authContextListener = this.authContextListener;
 
-	public RangerAdminClient getAdminClient() {
-		return adminClient;
-	}
+        if (authContextListener != null) {
+            authContextListener.contextChanged();
+        }
+    }
 
-	public void setAdminClient(RangerAdminClient adminClient) {
-		this.adminClient = adminClient;
-	}
+    public RangerAdminClient getAdminClient() {
+        return adminClient;
+    }
 
-	public RangerAdminClient createAdminClient(RangerPluginConfig pluginConfig) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + ")");
-		}
+    public void setAdminClient(RangerAdminClient adminClient) {
+        this.adminClient = adminClient;
+    }
 
-		RangerAdminClient ret              = null;
-		String            propertyName     = pluginConfig.getPropertyPrefix() + ".policy.source.impl";
-		String            policySourceImpl = pluginConfig.get(propertyName);
+    public RangerAdminClient createAdminClient(RangerPluginConfig pluginConfig) {
+        LOG.debug("==> RangerBasePlugin.createAdminClient({}, {}, {})", pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix());
 
-		if(StringUtils.isEmpty(policySourceImpl)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("Value for property[%s] was null or empty. Unexpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("Value for property[%s] was [%s].", propertyName, policySourceImpl));
-			}
+        RangerAdminClient ret              = null;
+        String            propertyName     = pluginConfig.getPropertyPrefix() + ".policy.source.impl";
+        String            policySourceImpl = pluginConfig.get(propertyName);
 
-			try {
-				@SuppressWarnings("unchecked")
-				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
+        if (StringUtils.isEmpty(policySourceImpl)) {
+            LOG.debug("Value for property[{}] was null or empty. Unexpected! Will use policy source of type[{}]", propertyName, RangerAdminRESTClient.class.getName());
+        } else {
+            LOG.debug("Value for property[{}] was [{}].", propertyName, policySourceImpl);
 
-				ret = adminClass.newInstance();
-			} catch (Exception excp) {
-				LOG.error("failed to instantiate policy source of type '" + policySourceImpl + "'. Will use policy source of type '" + RangerAdminRESTClient.class.getName() + "'", excp);
-			}
-		}
+            try {
+                @SuppressWarnings("unchecked")
+                Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>) Class.forName(policySourceImpl);
 
-		if(ret == null) {
-			ret = new RangerAdminRESTClient();
-		}
+                ret = adminClass.newInstance();
+            } catch (Exception excp) {
+                LOG.error("failed to instantiate policy source of type '{}'. Will use policy source of type '{}'", policySourceImpl, RangerAdminRESTClient.class.getName(), excp);
+            }
+        }
 
-		ret.init(pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), pluginConfig);
+        if (ret == null) {
+            ret = new RangerAdminRESTClient();
+        }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
-		}
+        ret.init(pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), pluginConfig);
 
-		setAdminClient(ret);
+        LOG.debug("<== RangerBasePlugin.createAdminClient({}, {}, {}): policySourceImpl={}, client={}",
+                pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), policySourceImpl, ret);
 
-		return ret;
-	}
+        setAdminClient(ret);
+
+        return ret;
+    }
+
+    void cleanResourceMatchers() {
+        LOG.debug("==> cleanResourceMatchers()");
+
+        try {
+            lock.writeLock().lock();
+
+            resourceMatchers.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
+
+        LOG.debug("<== cleanResourceMatchers()");
+    }
 }
