@@ -19,21 +19,19 @@
 
 package org.apache.ranger.tagsync.model;
 
-
 import java.util.Properties;
 
 public interface TagSource {
 
-	boolean initialize(Properties properties);
+    boolean initialize(Properties properties);
 
-	void setTagSink(TagSink sink);
+    void setTagSink(TagSink sink);
 
-	void setName(String name);
+    String getName();
 
-	String getName();
+    void setName(String name);
 
-	boolean start();
+    boolean start();
 
-	void stop();
-
+    void stop();
 }

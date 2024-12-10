@@ -19,56 +19,52 @@
 
 package org.apache.ranger.tagsync.process;
 
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
 import java.util.Properties;
-
 
 public class TestTagSynchronizer {
 
-	private static TagSynchronizer tagSynchronizer;
+    private static TagSynchronizer tagSynchronizer;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		System.out.println("setUpBeforeClass() called");
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        System.out.println("setUpBeforeClass() called");
 
-		TagSyncConfig config = TagSyncConfig.getInstance();
+        TagSyncConfig config = TagSyncConfig.getInstance();
 
-		TagSyncConfig.dumpConfiguration(config, new BufferedWriter(new OutputStreamWriter(System.out)));
-		System.out.println();
+        TagSyncConfig.dumpConfiguration(config, new BufferedWriter(new OutputStreamWriter(System.out)));
+        System.out.println();
 
-		Properties props = config.getProperties();
+        Properties props = config.getProperties();
 
-		tagSynchronizer = new TagSynchronizer(props);
+        tagSynchronizer = new TagSynchronizer(props);
+    }
 
-	}
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        System.out.println("tearDownAfterClass() called");
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-		System.out.println("tearDownAfterClass() called");
+    @Test
+    public void testTagSynchronizer() {
 
-	}
+        System.out.println("testTagSynchronizer() called");
 
-	@Test
-	public void testTagSynchronizer() {
+        boolean initDone = tagSynchronizer.initialize();
 
-		System.out.println("testTagSynchronizer() called");
+        System.out.println("TagSynchronizer initialization result=" + initDone);
 
-		boolean initDone = tagSynchronizer.initialize();
+        if (initDone) {
+            tagSynchronizer.shutdown("From testTagSynchronizer: time=up");
+        }
 
-		System.out.println("TagSynchronizer initialization result=" + initDone);
+        System.out.println("Exiting test");
 
-		if (initDone) {
-			tagSynchronizer.shutdown("From testTagSynchronizer: time=up");
-		}
-
-		System.out.println("Exiting test");
-
-		assert(initDone);
-
-	}
+        assert (initDone);
+    }
 }
