@@ -31,58 +31,57 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class OzoneResourceMgr {
-
     private static final Logger LOG = LoggerFactory.getLogger(OzoneResourceMgr.class);
+    private static final String VOLUME = "volume";
+    private static final String BUCKET = "bucket";
+    private static final String KEY    = "key";
 
-    private static final String VOLUME     = "volume";
-    private static final String BUCKET     = "bucket";
-    private static final String KEY        = "key";
-
+    private OzoneResourceMgr() {
+        throw new UnsupportedOperationException("OzoneResourceMgr cannot be instantiated!");
+    }
 
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-        Map<String, Object> ret = null;
+        Map<String, Object> ret;
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> OzoneResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> OzoneResourceMgr.connectionTest ServiceName: {} Configs: {}", serviceName, configs);
         }
 
         try {
             ret = OzoneClient.connectionTest(serviceName, configs);
         } catch (HadoopException e) {
-            LOG.error("<== OzoneResourceMgr.connectionTest Error: " + e);
+            LOG.error("<== OzoneResourceMgr.connectionTest Error: ", e);
             throw e;
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.connectionTest Result : "+ ret  );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== OzoneResourceMgr.connectionTest Result : {}", ret);
         }
 
         return ret;
     }
 
-    public static List<String> getOzoneResources(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context) throws Exception  {
-
-        String userInput                       = context.getUserInput();
-        String resource	                       = context.getResourceName();
+    public static List<String> getOzoneResources(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context) throws Exception {
+        String                    userInput    = context.getUserInput();
+        String                    resource     = context.getResourceName();
         Map<String, List<String>> resourceMap  = context.getResources();
-        List<String> resultList 	           = null;
-        List<String> volumeList                = null;
-        List<String> bucketList	               = null;
-        List<String> keyList	               = null;
-        String volumePrefix                    = null;
-        String bucketPrefix	                   = null;
-        String keyPrefix	                   = null;
+        List<String>              resultList   = null;
+        List<String>              volumeList   = null;
+        List<String>              bucketList   = null;
+        List<String>              keyList      = null;
+        String                    volumePrefix = null;
+        String                    bucketPrefix = null;
+        String                    keyPrefix    = null;
 
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.getOzoneResources()  UserInput: \""+ userInput  + "\" resource : " + resource + " resourceMap: "  + resourceMap);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== OzoneResourceMgr.getOzoneResources()  UserInput: {} resource: {} resourceMap: {}", userInput, resource, resourceMap);
         }
 
-        if ( userInput != null && resource != null) {
-            if ( resourceMap != null  && !resourceMap.isEmpty() ) {
+        if (userInput != null && resource != null) {
+            if (resourceMap != null && !resourceMap.isEmpty()) {
                 volumeList = resourceMap.get(VOLUME);
                 bucketList = resourceMap.get(BUCKET);
-                keyList = resourceMap.get(KEY);
+                keyList    = resourceMap.get(KEY);
             }
             switch (resource.trim().toLowerCase()) {
                 case VOLUME:
@@ -92,7 +91,7 @@ public class OzoneResourceMgr {
                     bucketPrefix = userInput;
                     break;
                 case KEY:
-                    keyPrefix    = userInput;
+                    keyPrefix = userInput;
                     break;
                 default:
                     break;
@@ -101,63 +100,52 @@ public class OzoneResourceMgr {
 
         if (serviceName != null && userInput != null) {
             try {
-
-                if(LOG.isDebugEnabled()) {
-                    LOG.debug("==> OzoneResourceMgr.getOzoneResources() UserInput: "+ userInput  + " configs: " + configs + " volumeList: "  + volumeList + " bucketList: "
-                            + bucketList + " keyList: " + keyList );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("==> OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {}  keyList: {}", userInput, configs, volumeList, bucketList, keyList);
                 }
 
                 final OzoneClient ozoneClient = new OzoneConnectionMgr().getOzoneConnection(serviceName, serviceType, configs);
 
                 Callable<List<String>> callableObj = null;
-                final String finalVolPrefix;
-                final String finalBucketPrefix;
-                final String finalKeyPrefix;
+                final String           finalVolPrefix;
+                final String           finalBucketPrefix;
+                final String           finalKeyPrefix;
 
                 final List<String> finalvolumeList = volumeList;
                 final List<String> finalbucketList = bucketList;
 
-                if ( ozoneClient != null) {
-                    if ( volumePrefix != null
-                            && !volumePrefix.isEmpty()){
+                if (ozoneClient != null) {
+                    if (volumePrefix != null && !volumePrefix.isEmpty()) {
                         // get the DBList for given Input
                         finalVolPrefix = volumePrefix;
-                        callableObj = new Callable<List<String>>() {
+                        callableObj    = new Callable<List<String>>() {
                             @Override
                             public List<String> call() {
                                 return ozoneClient.getVolumeList(finalVolPrefix);
                             }
                         };
-                    } else if ( bucketPrefix != null
-                            && !bucketPrefix.isEmpty()) {
+                    } else if (bucketPrefix != null && !bucketPrefix.isEmpty()) {
                         // get  ColumnList for given Input
                         finalBucketPrefix = bucketPrefix;
-                        callableObj = new Callable<List<String>>() {
-
+                        callableObj       = new Callable<List<String>>() {
                             @Override
                             public List<String> call() {
-                                return ozoneClient.getBucketList(finalBucketPrefix,
-                                        finalvolumeList);
+                                return ozoneClient.getBucketList(finalBucketPrefix, finalvolumeList);
                             }
                         };
-                    } else if ( keyPrefix != null
-                            && !keyPrefix.isEmpty()) {
+                    } else if (keyPrefix != null && !keyPrefix.isEmpty()) {
                         // get  ColumnList for given Input
-                       finalKeyPrefix = keyPrefix;
-
+                        finalKeyPrefix = keyPrefix;
                         callableObj = new Callable<List<String>>() {
                             @Override
                             public List<String> call() {
-                                return ozoneClient.getKeyList(finalKeyPrefix,
-                                        finalvolumeList,
-                                        finalbucketList);
+                                return ozoneClient.getKeyList(finalKeyPrefix, finalvolumeList, finalbucketList);
                             }
                         };
                     }
                     if (callableObj != null) {
                         synchronized (ozoneClient) {
-                            resultList = TimedEventUtil.timedTask(callableObj, 5,
-                                    TimeUnit.SECONDS);
+                            resultList = TimedEventUtil.timedTask(callableObj, 5, TimeUnit.SECONDS);
                         }
                     } else {
                         LOG.error("Could not initiate at timedTask");
@@ -169,13 +157,9 @@ public class OzoneResourceMgr {
             }
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.getOzoneResources() UserInput: "+ userInput  + " configs: " + configs + " volumeList: "  + volumeList + " bucketList: "
-                    + bucketList + " keyList: " + keyList + "Result :" + resultList );
-
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {} keyList: {} Result: {}", userInput, configs, volumeList, bucketList, keyList, resultList);
         }
         return resultList;
-
     }
-
 }
