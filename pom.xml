@@ -1149,6 +1149,7 @@
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
                 <module>plugin-kylin</module>
+                <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
