@@ -22,14 +22,14 @@ package org.apache.ranger.metrics.wrapper;
 import org.apache.hadoop.metrics2.MetricsSink;
 
 public class RangerMetricsSinkWrapper {
-    private final String name;
-    private final String description;
+    private final String      name;
+    private final String      description;
     private final MetricsSink sink;
 
     public RangerMetricsSinkWrapper(String name, String description, MetricsSink sink) {
-        this.name = name;
+        this.name        = name;
         this.description = description;
-        this.sink=sink;
+        this.sink        = sink;
     }
 
     public String getName() {
