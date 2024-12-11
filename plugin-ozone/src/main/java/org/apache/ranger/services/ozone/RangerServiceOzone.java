@@ -89,7 +89,7 @@ public class RangerServiceOzone extends RangerBaseService {
         Map<String, String> configs     = getConfigs();
 
         LOG.debug("==> RangerServiceOzone.lookupResource Context: ({})", context);
-        
+
         if (context != null) {
             try {
                 ret = OzoneResourceMgr.getOzoneResources(serviceName, serviceType, configs, context);
