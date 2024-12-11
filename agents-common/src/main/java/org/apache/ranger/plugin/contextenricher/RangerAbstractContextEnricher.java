@@ -246,25 +246,15 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
     }
 
     public char getCharOption(String name, char defaultValue) {
-        char   ret = defaultValue;
         String val = getOption(name);
 
-        if (!StringUtils.isEmpty(val)) {
-            ret = val.charAt(0);
-        }
-
-        return ret;
+        return !StringUtils.isEmpty(val) ? val.charAt(0) : defaultValue;
     }
 
     public long getLongOption(String name, long defaultValue) {
-        long   ret = defaultValue;
         String val = getOption(name);
 
-        if (val != null) {
-            ret = Long.parseLong(val);
-        }
-
-        return ret;
+        return val != null ? Long.parseLong(val) : defaultValue;
     }
 
     public Properties readProperties(String fileName) {

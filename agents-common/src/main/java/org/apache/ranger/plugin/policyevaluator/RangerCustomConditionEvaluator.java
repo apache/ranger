@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.List;
 
 //
-// this class should have been named RangerConditionEvaluatorFactory
+// this class serves as a factory to instantiate RangerConditionEvaluator implementations
 //
 public class RangerCustomConditionEvaluator {
     private static final Logger LOG                           = LoggerFactory.getLogger(RangerCustomConditionEvaluator.class);

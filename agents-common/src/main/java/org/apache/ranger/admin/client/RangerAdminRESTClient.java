@@ -502,7 +502,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
     @Override
     public RangerRole getRole(final String execUser, final String roleName) throws Exception {
-        LOG.debug("==> RangerAdminRESTClient.getPrincipalsForRole({})", roleName);
+        LOG.debug("==> RangerAdminRESTClient.getRole({}, {})", execUser, roleName);
 
         final UserGroupInformation user         = MiscUtil.getUGILoginUser();
         final boolean              isSecureMode = isKerberosEnabled(user);
@@ -538,7 +538,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
             if (response.getStatus() != HttpServletResponse.SC_OK) {
                 RESTResponse resp = RESTResponse.fromClientResponse(response);
 
-                LOG.error("getPrincipalsForRole() failed: HTTP status={}, message={}, isSecure={}{}", response.getStatus(), resp.getMessage(), isSecureMode, (isSecureMode ? (", user=" + user) : ""));
+                LOG.error("getRole() failed: HTTP status={}, message={}, isSecure={}{}", response.getStatus(), resp.getMessage(), isSecureMode, (isSecureMode ? (", user=" + user) : ""));
 
                 if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
                     throw new AccessControlException();
@@ -552,7 +552,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
             throw new Exception("unknown error during getPrincipalsForRole. roleName=" + roleName);
         }
 
-        LOG.debug("<== RangerAdminRESTClient.getPrincipalsForRole({})", roleName);
+        LOG.debug("<== RangerAdminRESTClient.getRole({}, {})", execUser, roleName);
 
         return ret;
     }

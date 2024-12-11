@@ -22,6 +22,7 @@ import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,11 +111,7 @@ public class SecureClientLogin {
         if (aSubject != null) {
             Set<User> list = aSubject.getPrincipals(User.class);
 
-            if (list != null) {
-                return new HashSet<>(list);
-            } else {
-                return null;
-            }
+            return list != null ? new HashSet<>(list) : null;
         } else {
             return null;
         }
@@ -174,7 +171,7 @@ public class SecureClientLogin {
     private static String replacePattern(String[] components, String hostname) throws IOException {
         String fqdn = hostname;
 
-        if (fqdn == null || fqdn.isEmpty() || "0.0.0.0".equals(fqdn)) {
+        if (StringUtil.isEmpty(fqdn) || "0.0.0.0".equals(fqdn)) {
             fqdn = java.net.InetAddress.getLocalHost().getCanonicalHostName();
         }
 

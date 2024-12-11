@@ -33,14 +33,14 @@ public class PasswordUtilsTest {
         // encryption of password that contains no configuration info is using legacy
         // cryptography algorithm for backward compatibility.
         String encryptedPassword = PasswordUtils.encryptPassword("secretPasswordNoOneWillEverKnow");
+
         assertNotNull(encryptedPassword);
         assertEquals("ljoJ3gf4T018Xr+BujPAqBDW8Onp1PqprsLKmxus8pGGBETtAVU6OQ==", encryptedPassword);
     }
 
     @Test
     public void testDecrypt() throws IOException {
-        String decryptedPassword = PasswordUtils
-                .decryptPassword("ljoJ3gf4T018Xr+BujPAqBDW8Onp1PqprsLKmxus8pGGBETtAVU6OQ==");
+        String decryptedPassword = PasswordUtils.decryptPassword("ljoJ3gf4T018Xr+BujPAqBDW8Onp1PqprsLKmxus8pGGBETtAVU6OQ==");
 
         assertNotNull(decryptedPassword);
         assertEquals("secretPasswordNoOneWillEverKnow", decryptedPassword);
@@ -49,34 +49,36 @@ public class PasswordUtilsTest {
     @Test
     public void testEncryptWithExplicitDefaultWeakAlgorithm() throws IOException {
         String freeTextPasswordMetaData = join("PBEWithMD5AndDES", "ENCRYPT_KEY", "SALTSALT", "4");
-        String encryptedPassword = PasswordUtils
-                .encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
+        String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
+
         assertNotNull(encryptedPassword);
 
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals("secretPasswordNoOneWillEverKnow", decryptedPassword);
     }
 
     @Test
     public void testEncryptWithSHA1AndDESede() throws IOException {
         String freeTextPasswordMetaData = join("PBEWithSHA1AndDESede", "ENCRYPT_KEY", "SALTSALT", "4");
-        String encryptedPassword = PasswordUtils
-                .encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
+        String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
+
         assertNotNull(encryptedPassword);
 
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals("secretPasswordNoOneWillEverKnow", decryptedPassword);
     }
 
     @Test
     public void testEncryptWithSHA512AndAES128() throws IOException, NoSuchAlgorithmException {
-        String freeTextPasswordMetaData = join("PBEWITHHMACSHA512ANDAES_128", "ENCRYPT_KEY", "SALTSALT", "4",
-                PasswordUtils.generateIvIfNeeded("PBEWITHHMACSHA512ANDAES_128"));
-        String encryptedPassword = PasswordUtils
-                .encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
+        String freeTextPasswordMetaData = join("PBEWITHHMACSHA512ANDAES_128", "ENCRYPT_KEY", "SALTSALT", "4", PasswordUtils.generateIvIfNeeded("PBEWITHHMACSHA512ANDAES_128"));
+        String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals("secretPasswordNoOneWillEverKnow", decryptedPassword);
     }
 
@@ -87,7 +89,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -98,7 +102,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -109,7 +115,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -120,7 +128,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -131,7 +141,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -142,7 +154,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -153,7 +167,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -164,7 +180,9 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
@@ -175,13 +193,16 @@ public class PasswordUtilsTest {
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
         assertNotNull(encryptedPassword);
+
         String decryptedPassword = PasswordUtils.decryptPassword(join(freeTextPasswordMetaData, encryptedPassword));
+
         assertEquals(freeTextPassword, decryptedPassword);
     }
 
     @Test
     public void testDecryptEmptyResultInNull() throws Throwable {
         String string0 = PasswordUtils.decryptPassword("");
+
         assertNull(string0);
     }
 

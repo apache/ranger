@@ -187,7 +187,7 @@ public enum ValidationErrorCode {
         MessageFormat mf     = new MessageFormat(template);
         String        result = mf.format(items);
 
-        LOG.debug("<== ValidationErrorCode.getMessage({}): {}}", items, result);
+        LOG.debug("<== ValidationErrorCode.getMessage({}): {}", items, result);
 
         return result;
     }

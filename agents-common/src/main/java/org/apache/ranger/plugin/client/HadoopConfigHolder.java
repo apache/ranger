@@ -56,12 +56,13 @@ public class HadoopConfigHolder {
     public static final String ENABLE_HIVE_METASTORE_LOOKUP          = "enable.hive.metastore.lookup";
     public static final String HIVE_SITE_FILE_PATH                   = "hive.site.file.path";
 
-    private static       boolean                                  initialized;
     private static final Map<String, HashMap<String, Properties>> dataSource2ResourceListMap    = new HashMap<>();
     private static final Map<String, HadoopConfigHolder>          dataSource2HadoopConfigHolder = new HashMap<>();
-    private static       Properties                               globalLoginProp               = new Properties();
-    private static       Properties                               resourcemapProperties;
     private static final Set<String>                              rangerInternalPropertyKeys = new HashSet<>();
+
+    private static boolean    initialized;
+    private static Properties resourcemapProperties;
+    private static Properties globalLoginProp = new Properties();
 
     private final String              datasourceName;
     private       String              defaultConfigFile;
@@ -157,7 +158,7 @@ public class HadoopConfigHolder {
         return datasourceName;
     }
 
-    public boolean hasResourceExists(String aResourceName) {    // dilli
+    public boolean hasResourceExists(String aResourceName) {
         HashMap<String, Properties> resourceName2PropertiesMap = dataSource2ResourceListMap.get(datasourceName);
 
         return (resourceName2PropertiesMap != null && resourceName2PropertiesMap.containsKey(aResourceName));
@@ -415,11 +416,7 @@ public class HadoopConfigHolder {
     }
 
     private static void addConfiguration(String dataSource, String resourceName, String propertyName, String value) {
-        if (dataSource == null || dataSource.isEmpty()) {
-            return;
-        }
-
-        if (propertyName == null || propertyName.isEmpty()) {
+        if (StringUtils.isEmpty(dataSource) || StringUtils.isEmpty(propertyName)) {
             return;
         }
 

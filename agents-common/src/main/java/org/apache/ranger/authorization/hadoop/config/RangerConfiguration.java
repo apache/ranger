@@ -90,6 +90,7 @@ public class RangerConfiguration extends Configuration {
                 }
             }
         }
+
         return lurl;
     }
 }
