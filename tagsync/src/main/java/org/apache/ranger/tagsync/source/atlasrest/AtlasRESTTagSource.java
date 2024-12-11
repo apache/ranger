@@ -129,7 +129,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     public boolean initialize(Properties properties) {
         LOG.debug("==> AtlasRESTTagSource.initialize()");
 
-
         boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
         sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceAtlasDownloadIntervalInMillis(properties);
@@ -181,7 +180,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public void run() {
-
         LOG.debug("==> AtlasRESTTagSource.run()");
 
         while (true) {
@@ -287,7 +285,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
                 if (commitUpdates && searchResult != null) {
                     LOG.debug(AtlasType.toJson(searchResult));
-
 
                     List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 

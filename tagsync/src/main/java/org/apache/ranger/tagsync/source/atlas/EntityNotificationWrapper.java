@@ -124,7 +124,7 @@ public class EntityNotificationWrapper {
                         opType = NotificationOpType.CLASSIFICATION_DELETE;
                         break;
                     default:
-                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        LOG.error("Received OperationType [{}], converting to UNKNOWN", operationType);
                         opType = NotificationOpType.UNKNOWN;
                         break;
                 }
@@ -190,7 +190,7 @@ public class EntityNotificationWrapper {
                         opType = NotificationOpType.CLASSIFICATION_DELETE;
                         break;
                     default:
-                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        LOG.error("Received OperationType [{}], converting to UNKNOWN", operationType);
                         opType = NotificationOpType.UNKNOWN;
                         break;
                 }
@@ -198,7 +198,7 @@ public class EntityNotificationWrapper {
             break;
 
             default: {
-                LOG.error("Unknown notification type - [" + notificationType + "]");
+                LOG.error("Unknown notification type - [{}]", notificationType);
 
                 rangerAtlasEntity      = null;
                 entityTypeName         = null;

@@ -171,10 +171,10 @@ public class TagSyncConfig extends Configuration {
                     try {
                         ret = fileURL.getFile();
                     } catch (Exception exception) {
-                        LOG.error(path + " is not a file", exception);
+                        LOG.error("{} is not a file", path, exception);
                     }
                 } else {
-                    LOG.warn("URL not found for " + path + " or no privilege for reading file " + path);
+                    LOG.warn("URL not found for {} or no privilege for reading file {}", path, path);
                 }
             }
         }
@@ -514,9 +514,9 @@ public class TagSyncConfig extends Configuration {
         if (StringUtils.isNotBlank(fileName)) {
             String fName = getResourceFileName(fileName);
             if (StringUtils.isBlank(fName)) {
-                LOG.warn("Cannot find configuration file " + fileName + " in the classpath");
+                LOG.warn("Cannot find configuration file {} in the classpath", fileName);
             } else {
-                LOG.info("Loading configuration from " + fName);
+                LOG.info("Loading configuration from {}", fName);
                 addResource(fileName);
             }
         } else {

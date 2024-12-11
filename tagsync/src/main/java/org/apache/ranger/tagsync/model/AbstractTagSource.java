@@ -63,12 +63,12 @@ public abstract class AbstractTagSource implements TagSource {
                     LOG.error("This TagSync server is not in active state. Cannot commit transaction!");
                     throw new RuntimeException("This TagSync server is not in active state. Cannot commit transaction!");
                 }
-                LOG.debug("Uploading serviceTags={}" , JsonUtils.objectToJson(toUpload));
+                LOG.debug("Uploading serviceTags={}", JsonUtils.objectToJson(toUpload));
                 ServiceTags uploaded = tagSink.upload(toUpload);
-                LOG.debug("Uploaded serviceTags={}" , JsonUtils.objectToJson(uploaded));
+                LOG.debug("Uploaded serviceTags={}", JsonUtils.objectToJson(uploaded));
             }
         } catch (Exception exception) {
-            LOG.error("Failed to upload serviceTags: " + JsonUtils.objectToJson(toUpload));
+            LOG.error("Failed to upload serviceTags: {}", JsonUtils.objectToJson(toUpload));
             LOG.error("Exception : ", exception);
             throw exception;
         }

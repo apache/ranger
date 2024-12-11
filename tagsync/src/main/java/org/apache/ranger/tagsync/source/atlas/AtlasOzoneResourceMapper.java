@@ -92,7 +92,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 
         LOG.debug("ENTITY_ATTRIBUTE_QUALIFIED_NAME = {}", qualifiedName);
 
-
         String   entityType  = entity.getTypeName();
         String   entityGuid  = entity.getGuid();
         String[] resources   = parseQualifiedName(qualifiedName, entityType);
@@ -102,7 +101,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
         String   clusterName = resources[IDX_CLUSTER_NAME];
 
         LOG.debug("Ozone resources for entityType {} are {}", entityType, Arrays.toString(resources));
-
 
         if (StringUtils.isEmpty(clusterName)) {
             throwExceptionWithMessage("cluster-name not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
@@ -169,7 +167,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 
         LOG.debug("Prefix for qualifiedName={} is {}", qualifiedName, prefix);
 
-
         if (this.legacyParsingEnabled) {
             return parseQualifiedNameO3FS(qualifiedName, entityType);
         } else if (prefix.equals("ofs")) {
@@ -181,7 +178,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 
     private String[] parseQualifiedNameOFS(String qualifiedName, String entityType) {
         LOG.debug("==> parseQualifiedNameOFS(qualifiedName={}, entityType={})", qualifiedName, entityType);
-
 
         String[] ret = new String[RESOURCE_COUNT];
 
@@ -219,16 +215,13 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
             }
         }
 
-
         LOG.debug("<== parseQualifiedNameOFS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
 
         return ret;
     }
 
     private String[] parseQualifiedNameO3FS(String qualifiedName, String entityType) {
-
         LOG.debug("==> parseQualifiedNameO3FS(qualifiedName={}, entityType={})", qualifiedName, entityType);
-
 
         String[] ret = new String[RESOURCE_COUNT];
 

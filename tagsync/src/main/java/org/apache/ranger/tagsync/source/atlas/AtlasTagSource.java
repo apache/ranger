@@ -58,7 +58,6 @@ public class AtlasTagSource extends AbstractTagSource {
 
     @Override
     public boolean initialize(Properties properties) {
-
         LOG.debug("==> AtlasTagSource.initialize()");
 
         Properties atlasProperties = new Properties();
@@ -73,12 +72,12 @@ public class AtlasTagSource extends AbstractTagSource {
                     atlasProperties.load(inputStream);
                 } catch (Exception exception) {
                     ret = false;
-                    LOG.error("Cannot load Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
+                    LOG.error("Cannot load Atlas application properties file, file-name: {}", TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
                 } finally {
                     try {
                         inputStream.close();
                     } catch (IOException ioException) {
-                        LOG.error("Cannot close Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, ioException);
+                        LOG.error("Cannot close Atlas application properties file, file-name: {}", TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, ioException);
                     }
                 }
             } else {
@@ -90,15 +89,15 @@ public class AtlasTagSource extends AbstractTagSource {
         if (ret) {
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
                 ret = false;
-                LOG.error("Value of property '" + TAGSYNC_ATLAS_KAFKA_ENDPOINTS + "' is not specified!");
+                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
             }
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT))) {
                 ret = false;
-                LOG.error("Value of property '" + TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT + "' is not specified!");
+                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT);
             }
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
                 ret = false;
-                LOG.error("Value of property '" + TAGSYNC_ATLAS_CONSUMER_GROUP + "' is not specified!");
+                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_CONSUMER_GROUP);
             }
         }
 
@@ -188,7 +187,7 @@ public class AtlasTagSource extends AbstractTagSource {
                                     try {
                                         notificationWrapper = new EntityNotificationWrapper(notification);
                                     } catch (Throwable e) {
-                                        LOG.error("notification:[" + notification + "] has some issues..perhaps null entity??", e);
+                                        LOG.error("notification:[{}] has some issues..perhaps null entity??", notification, e);
                                     }
                                     if (notificationWrapper != null) {
                                         LOG.debug("Message-offset={}, Notification={}", message.getOffset(), getPrintableEntityNotification(notificationWrapper));
@@ -243,7 +242,7 @@ public class AtlasTagSource extends AbstractTagSource {
 
                 if (MapUtils.isNotEmpty(serviceTagsMap)) {
                     if (serviceTagsMap.size() != 1) {
-                        LOG.warn("Unexpected!! Notifications for more than one service received by AtlasTagSource.. Service-Names:[" + serviceTagsMap.keySet() + "]");
+                        LOG.warn("Unexpected!! Notifications for more than one service received by AtlasTagSource.. Service-Names:[{}]", serviceTagsMap.keySet());
                     }
                     for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
                         if (isHandlingDeleteOps) {
@@ -267,7 +266,6 @@ public class AtlasTagSource extends AbstractTagSource {
                 messages.clear();
 
                 LOG.debug("Completed processing batch of messages of size:[{}] received from NotificationConsumer", messages.size());
-
             }
 
             LOG.debug("<== buildAndUploadServiceTags()");
@@ -286,7 +284,7 @@ public class AtlasTagSource extends AbstractTagSource {
                     consumer.commit(partition, messageOffset);
                     offsetOfLastMessageCommittedToKafka = messageOffset;
                 } catch (Exception commitException) {
-                    LOG.warn("Ranger tagsync already processed message at offset " + messageOffset + ". Ignoring failure in committing message:[" + messageToCommit + "]", commitException);
+                    LOG.warn("Ranger tagsync already processed message at offset {}. Ignoring failure in committing message:[{}]", messageOffset, messageToCommit, commitException);
                 }
             }
 

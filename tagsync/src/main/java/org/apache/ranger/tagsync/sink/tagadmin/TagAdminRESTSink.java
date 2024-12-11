@@ -108,7 +108,6 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     @Override
     public ServiceTags upload(ServiceTags toUpload) throws Exception {
-
         LOG.debug("==> upload() ");
 
         UploadWorkItem uploadWorkItem = new UploadWorkItem(toUpload);
@@ -231,7 +230,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         if (response == null || response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
             RESTResponse resp = RESTResponse.fromClientResponse(response);
 
-            LOG.error("Upload of service-tags failed with message " + resp.getMessage());
+            LOG.error("Upload of service-tags failed with message {}", resp.getMessage());
 
             if (response == null || resp.getHttpStatusCode() != HttpServletResponse.SC_BAD_REQUEST) {
                 // NOT an application error
@@ -293,7 +292,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             try {
                 response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, null, serviceTags);
             } catch (Exception e) {
-                LOG.error("Failed to get response, Error is : " + e.getMessage());
+                LOG.error("Failed to get response, Error is : {}", e.getMessage());
             }
             if (response != null) {
                 if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
@@ -333,7 +332,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         try {
             response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, serviceTags, sessionId);
         } catch (Exception e) {
-            LOG.error("Failed to get response, Error is : " + e.getMessage());
+            LOG.error("Failed to get response, Error is : {}", e.getMessage());
         }
         if (response != null) {
             if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {

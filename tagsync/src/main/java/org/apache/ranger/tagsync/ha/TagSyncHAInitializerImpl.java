@@ -42,11 +42,10 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
     ServiceManager               serviceManager;
 
     private TagSyncHAInitializerImpl(Configuration configuration) {
-
         LOG.debug("==> TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
 
         try {
-            LOG.info("Ranger TagSync server is HA enabled : " + configuration.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false));
+            LOG.info("Ranger TagSync server is HA enabled : {}", configuration.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false));
             init(configuration);
         } catch (Exception e) {
             LOG.error("TagSyncHAInitializerImpl initialization failed", e);
@@ -87,8 +86,7 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
 
     @Override
     public void stop() {
-
-        LOG.debug("==> TagSyncHAInitializerImpl.stop() ");
+        LOG.debug("==> TagSyncHAInitializerImpl.stop()");
 
         if (serviceManager != null) {
             serviceManager.stop();
@@ -97,7 +95,7 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
             curatorFactory.close();
         }
 
-        LOG.debug("<== TagSyncHAInitializerImpl.stop() ");
+        LOG.debug("<== TagSyncHAInitializerImpl.stop()");
     }
 
     public boolean isActive() {

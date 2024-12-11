@@ -63,7 +63,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
         if (args.length > 0) {
             String tagSourceFileName = args[0];
-            LOG.info("TagSourceFileName is set to " + args[0]);
+            LOG.info("TagSourceFileName is set to {}", args[0]);
             props.setProperty(TagSyncConfig.TAGSYNC_FILESOURCE_FILENAME_PROP, tagSourceFileName);
         }
 
@@ -135,9 +135,9 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
                     serviceTagsFileStream = new FileInputStream(f);
                     serviceTagsFileURL    = f.toURI().toURL();
                 } catch (FileNotFoundException exception) {
-                    LOG.error("Error processing input file:" + serviceTagsFileName + " or no privilege for reading file " + serviceTagsFileName, exception);
+                    LOG.error("Error processing input file:{} or no privilege for reading file {}", serviceTagsFileName, serviceTagsFileName, exception);
                 } catch (MalformedURLException malformedException) {
-                    LOG.error("Error processing input file:" + serviceTagsFileName + " cannot be converted to URL " + serviceTagsFileName, malformedException);
+                    LOG.error("Error processing input file:{} cannot be converted to URL {}", serviceTagsFileName, serviceTagsFileName, malformedException);
                 }
             } else {
                 URL fileURL = getClass().getResource(serviceTagsFileName);
@@ -161,10 +161,10 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
                         serviceTagsFileStream = fileURL.openStream();
                         serviceTagsFileURL    = fileURL;
                     } catch (Exception exception) {
-                        LOG.error(serviceTagsFileName + " is not a file", exception);
+                        LOG.error("{} is not a file", serviceTagsFileName, exception);
                     }
                 } else {
-                    LOG.warn("Error processing input file: URL not found for " + serviceTagsFileName + " or no privilege for reading file " + serviceTagsFileName);
+                    LOG.warn("Error processing input file: URL not found for {} or no privilege for reading file {}", serviceTagsFileName, serviceTagsFileName);
                 }
             }
 
@@ -202,7 +202,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
     public void run() {
         LOG.debug("==> FileTagSource.run()");
 
-
         while (true) {
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
@@ -213,7 +212,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             } catch (Exception e) {
                 LOG.error("Caught exception..", e);
             } finally {
-                LOG.debug("Sleeping for [" + fileModTimeCheckIntervalInMs + "] milliSeconds");
+                LOG.debug("Sleeping for [{}] milliSeconds", fileModTimeCheckIntervalInMs);
 
                 try {
                     Thread.sleep(fileModTimeCheckIntervalInMs);
@@ -237,7 +236,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             lastModifiedTimeInMillis = getModificationTime();
 
             LOG.debug("End: update tags from source==>sink");
-
         } else {
             LOG.debug("FileTagSource: no change found for synchronization.");
         }
@@ -245,7 +243,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     private boolean isChanged() {
         LOG.debug("==> FileTagSource.isChanged()");
-
 
         boolean ret              = false;
         long    modificationTime = getModificationTime();
@@ -264,7 +261,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
     private ServiceTags readFromFile() {
         LOG.debug("==> FileTagSource.readFromFile(): sourceFileName={}", serviceTagsFileName);
 
-
         ServiceTags ret = null;
 
         if (serviceTagsFileURL != null) {
@@ -272,10 +268,10 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
                     Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
             } catch (IOException e) {
-                LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName, e);
+                LOG.warn("Error processing input file: or no privilege for reading file {}", serviceTagsFileName, e);
             }
         } else {
-            LOG.error("Error reading file: " + serviceTagsFileName);
+            LOG.error("Error reading file: {}", serviceTagsFileName);
         }
 
         LOG.debug("<== FileTagSource.readFromFile(): sourceFileName={}", serviceTagsFileName);
@@ -285,7 +281,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     private long getModificationTime() {
         LOG.debug("==> FileTagSource.getLastModificationTime(): sourceFileName={}", serviceTagsFileName);
-
 
         long ret        = 0L;
         File sourceFile = new File(serviceTagsFileName);

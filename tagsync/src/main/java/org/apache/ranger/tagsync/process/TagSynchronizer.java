@@ -97,8 +97,8 @@ public class TagSynchronizer {
         LOG.info("Ranger-TagSync Configuration: {\n");
         if (MapUtils.isNotEmpty(properties)) {
             for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                LOG.info("\tProperty-Name:" + entry.getKey());
-                LOG.info("\tProperty-Value:" + entry.getValue());
+                LOG.info("\tProperty-Name:{}", entry.getKey());
+                LOG.info("\tProperty-Value:{}", entry.getValue());
                 LOG.info("\n");
             }
         }
@@ -122,7 +122,7 @@ public class TagSynchronizer {
             ret = tagSinkClass.newInstance();
 
             if (!ret.initialize(properties)) {
-                LOG.error("Failed to initialize TAG sink " + tagSinkClassName);
+                LOG.error("Failed to initialize TAG sink {}", tagSinkClassName);
                 ret = null;
             }
         } catch (Throwable t) {
@@ -136,9 +136,7 @@ public class TagSynchronizer {
     }
 
     public static boolean initializeKerberosIdentity(Properties props) {
-
         LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
-
 
         boolean ret = false;
 
@@ -168,7 +166,7 @@ public class TagSynchronizer {
                         LOG.error("KerberosIdentity is null!");
                     }
                 } catch (IOException exception) {
-                    LOG.error("Failed to get UGI from principal:[" + principal + "], and keytab:[" + keytab + "]", exception);
+                    LOG.error("Failed to get UGI from principal:[{}], and keytab:[{}]", principal, keytab, exception);
                 }
             } else {
                 LOG.error("Invalid Kerberos principal and/or keytab specified. Failed to initialize Kerberos identity");
@@ -191,7 +189,6 @@ public class TagSynchronizer {
     }
 
     public boolean initialize() {
-
         LOG.debug("==> TagSynchronizer.initialize()");
 
         printConfigurationProperties(properties);
@@ -217,7 +214,6 @@ public class TagSynchronizer {
     }
 
     public void run() throws Exception {
-
         LOG.debug("==> TagSynchronizer.run()");
 
         isShutdownInProgress = false;
@@ -268,7 +264,7 @@ public class TagSynchronizer {
     }
 
     public void shutdown(String reason) {
-        LOG.info("Received shutdown(), reason=" + reason);
+        LOG.info("Received shutdown(), reason={}", reason);
 
         synchronized (shutdownNotifier) {
             isShutdownInProgress = true;
@@ -304,8 +300,7 @@ public class TagSynchronizer {
                     || value.equalsIgnoreCase("enabled")
                     || value.equalsIgnoreCase("true")) {
                 tagSourceNameList.add(tagSourceName);
-                LOG.info("Tag source " + propName + " is set to "
-                        + value);
+                LOG.info("Tag source {} is set to {}", propName, value);
             }
         }
 
@@ -319,7 +314,7 @@ public class TagSynchronizer {
             if (tagSource != null) {
                 try {
                     if (!tagSource.initialize(properties)) {
-                        LOG.error("Failed to initialize TAG source " + tagSourceName);
+                        LOG.error("Failed to initialize TAG source {}", tagSourceName);
                         failedTagSources.add(tagSource);
                     } else {
                         tagSource.setTagSink(tagSink);
@@ -327,7 +322,7 @@ public class TagSynchronizer {
                         initializedTagSourceNameList.add(tagSourceName);
                     }
                 } catch (Exception exception) {
-                    LOG.error("tag-source:" + tagSourceName + " initialization failed with ", exception);
+                    LOG.error("tag-source:{} initialization failed with ", tagSourceName, exception);
                     failedTagSources.add(tagSource);
                 }
             }
@@ -355,13 +350,13 @@ public class TagSynchronizer {
                     if (tagSource.start()) {
                         tagSources.add(tagSource);
                     } else {
-                        LOG.error("Failed to start tagSource: " + tagSource);
+                        LOG.error("Failed to start tagSource: {}", tagSource);
                     }
                 } else {
-                    LOG.error("Failed to initialize TAG source " + tagSource);
+                    LOG.error("Failed to initialize TAG source {}", tagSource);
                 }
             } catch (Exception exception) {
-                LOG.error("tag-source:" + tagSource + " initialization failed with ", exception);
+                LOG.error("tag-source:{} initialization failed with ", tagSource, exception);
             }
         }
 
@@ -381,8 +376,7 @@ public class TagSynchronizer {
             } else if (tagSourceName.equals("atlasrest")) {
                 className = "org.apache.ranger.tagsync.source.atlasrest.AtlasRESTTagSource";
             } else {
-                LOG.error("tagSource name doesn't have any class associated with it. tagSourceName="
-                        + tagSourceName + ", propertyPrefix=" + propPrefix);
+                LOG.error("tagSource name doesn't have any class associated with it. tagSourceName={}, propertyPrefix={}", tagSourceName, propPrefix);
             }
         }
         if (StringUtils.isNotBlank(className)) {
@@ -395,9 +389,7 @@ public class TagSynchronizer {
 
                 tagSource.setName(tagSourceName);
             } catch (Exception e) {
-                LOG.error("Can't instantiate tagSource class for tagSourceName="
-                        + tagSourceName + ", className=" + className
-                        + ", propertyPrefix=" + propPrefix, e);
+                LOG.error("Can't instantiate tagSource class for tagSourceName={}, className={}, propertyPrefix={}", tagSourceName, className, propPrefix, e);
             }
         }
         return tagSource;

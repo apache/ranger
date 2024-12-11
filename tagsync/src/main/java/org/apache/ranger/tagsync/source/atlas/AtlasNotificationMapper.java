@@ -67,7 +67,7 @@ public final class AtlasNotificationMapper {
 
             if (loggingNeeded) {
                 if (!entityNotification.getIsEntityTypeHandled()) {
-                    LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[" + entityNotification.getEntityTypeName() + "]");
+                    LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[{}]", entityNotification.getEntityTypeName());
                 }
 
                 LOG.debug("Dropped process entity notification for Atlas-Entity [{}]", entityNotification.getRangerAtlasEntity());
@@ -116,7 +116,7 @@ public final class AtlasNotificationMapper {
                     break;
                 }
                 default:
-                    LOG.error(opType + ": unknown notification received - not handled");
+                    LOG.error("{}: unknown notification received - not handled", opType);
                     break;
             }
             if (ret) {

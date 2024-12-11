@@ -61,7 +61,7 @@ public final class AtlasResourceMapperUtil {
             try {
                 resource = mapper.buildResource(atlasEntity);
             } catch (Exception exception) {
-                LOG.error("Could not get serviceResource for atlas entity:" + atlasEntity.getGuid() + ": ", exception);
+                LOG.error("Could not get serviceResource for atlas entity:{}: ", atlasEntity.getGuid(), exception);
             }
         }
 
@@ -75,9 +75,8 @@ public final class AtlasResourceMapperUtil {
 
         String customMapperNames = TagSyncConfig.getCustomAtlasResourceMappers(properties);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + customMapperNames + ")");
-        }
+        LOG.debug("==> initializeAtlasResourceMappers.initializeAtlasResourceMappers({})", customMapperNames);
+
         boolean ret = true;
 
         List<String> mapperNames = new ArrayList<String>();
@@ -106,14 +105,13 @@ public final class AtlasResourceMapperUtil {
                     add(entityTypeName, resourceMapper);
                 }
             } catch (Exception exception) {
-                LOG.error("Failed to create AtlasResourceMapper:" + mapperName + ": ", exception);
+                LOG.error("Failed to create AtlasResourceMapper:{}: ", mapperName, exception);
                 ret = false;
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers(" + mapperNames + "): " + ret);
-        }
+        LOG.debug("<== initializeAtlasResourceMappers.initializeAtlasResourceMappers({}): {}", mapperNames, ret);
+
         return ret;
     }
 

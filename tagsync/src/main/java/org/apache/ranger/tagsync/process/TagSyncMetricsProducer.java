@@ -42,17 +42,14 @@ public class TagSyncMetricsProducer implements Runnable {
             TagSyncConfig config                        = TagSyncConfig.getInstance();
             long          sleepTimeBetweenCycleInMillis = config.getTagSyncMetricsFrequency();
             String        logFileNameWithPath           = config.getTagSyncMetricsFileName();
-            LOG.info("Tagsync metrics frequency :  " + sleepTimeBetweenCycleInMillis + " and metrics file : " + logFileNameWithPath);
+            LOG.info("Tagsync metrics frequency :  {} and metrics file : {}", sleepTimeBetweenCycleInMillis, logFileNameWithPath);
             if (null != logFileNameWithPath) {
                 while (!shutdownFlag) {
                     try {
-
                         LOG.debug("Sleeping Tagsync metrics for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
-
                         Thread.sleep(sleepTimeBetweenCycleInMillis);
                     } catch (InterruptedException e) {
-                        LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis
-                                + "] milliseconds before attempting to tagsync metrics information", e);
+                        LOG.error("Failed to wait for [{}] milliseconds before attempting to tagsync metrics information", sleepTimeBetweenCycleInMillis, e);
                     }
                     try {
                         writeJVMMetrics(logFileNameWithPath, config);
