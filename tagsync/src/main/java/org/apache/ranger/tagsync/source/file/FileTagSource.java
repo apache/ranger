@@ -100,9 +100,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public boolean initialize(Properties props) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> FileTagSource.initialize()");
-        }
+        LOG.debug("==> FileTagSource.initialize()");
 
         Properties properties;
 
@@ -125,10 +123,8 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
         if (ret) {
             fileModTimeCheckIntervalInMs = TagSyncConfig.getTagSourceFileModTimeCheckIntervalInMillis(properties);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Provided serviceTagsFileName=" + serviceTagsFileName);
-                LOG.debug("'ranger.tagsync.filesource.modtime.check.interval':" + fileModTimeCheckIntervalInMs + "ms");
-            }
+            LOG.debug("Provided serviceTagsFileName={}", serviceTagsFileName);
+            LOG.debug("'ranger.tagsync.filesource.modtime.check.interval':{}ms", fileModTimeCheckIntervalInMs);
 
             InputStream serviceTagsFileStream = null;
 
@@ -181,9 +177,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== FileTagSource.initialize(): sourceFileName=" + serviceTagsFileName + ", result=" + ret);
-        }
+        LOG.debug("<== FileTagSource.initialize(): sourceFileName={}, result={}", serviceTagsFileName, ret);
 
         return ret;
     }
@@ -206,16 +200,14 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public void run() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> FileTagSource.run()");
-        }
+        LOG.debug("==> FileTagSource.run()");
+
 
         while (true) {
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> FileTagSource is running as server is active");
-                    }
+                    LOG.debug("==> FileTagSource is running as server is active");
+
                     synchUp();
                 }
             } catch (Exception e) {
@@ -236,9 +228,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     public void synchUp() throws Exception {
         if (isChanged()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Begin: update tags from source==>sink");
-            }
+            LOG.debug("Begin: update tags from source==>sink");
 
             ServiceTags serviceTags = readFromFile();
 
@@ -246,44 +236,34 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
             lastModifiedTimeInMillis = getModificationTime();
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("End: update tags from source==>sink");
-            }
+            LOG.debug("End: update tags from source==>sink");
+
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("FileTagSource: no change found for synchronization.");
-            }
+            LOG.debug("FileTagSource: no change found for synchronization.");
         }
     }
 
     private boolean isChanged() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> FileTagSource.isChanged()");
-        }
+        LOG.debug("==> FileTagSource.isChanged()");
+
 
         boolean ret              = false;
         long    modificationTime = getModificationTime();
 
         if (modificationTime > lastModifiedTimeInMillis) {
-            if (LOG.isDebugEnabled()) {
-                Date modifiedDate     = new Date(modificationTime);
-                Date lastModifiedDate = new Date(lastModifiedTimeInMillis);
-                LOG.debug("File modified at " + modifiedDate + "last-modified at " + lastModifiedDate);
-            }
+            LOG.debug("File modified at {}last-modified at {}", new Date(modificationTime), new Date(lastModifiedTimeInMillis));
 
             ret = true;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== FileTagSource.isChanged(): result=" + ret);
-        }
+        LOG.debug("<== FileTagSource.isChanged(): result={}", ret);
+
         return ret;
     }
 
     private ServiceTags readFromFile() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> FileTagSource.readFromFile(): sourceFileName=" + serviceTagsFileName);
-        }
+        LOG.debug("==> FileTagSource.readFromFile(): sourceFileName={}", serviceTagsFileName);
+
 
         ServiceTags ret = null;
 
@@ -298,17 +278,14 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             LOG.error("Error reading file: " + serviceTagsFileName);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== FileTagSource.readFromFile(): sourceFileName=" + serviceTagsFileName);
-        }
+        LOG.debug("<== FileTagSource.readFromFile(): sourceFileName={}", serviceTagsFileName);
 
         return ret;
     }
 
     private long getModificationTime() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> FileTagSource.getLastModificationTime(): sourceFileName=" + serviceTagsFileName);
-        }
+        LOG.debug("==> FileTagSource.getLastModificationTime(): sourceFileName={}", serviceTagsFileName);
+
 
         long ret        = 0L;
         File sourceFile = new File(serviceTagsFileName);
@@ -317,9 +294,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             ret = sourceFile.lastModified();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== FileTagSource.lastModificationTime(): serviceTagsFileName=" + serviceTagsFileName + " result=" + new Date(ret));
-        }
+        LOG.debug("<== FileTagSource.lastModificationTime(): serviceTagsFileName={} result={}", serviceTagsFileName, new Date(ret));
 
         return ret;
     }

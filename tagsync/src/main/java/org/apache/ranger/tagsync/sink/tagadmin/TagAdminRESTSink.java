@@ -67,9 +67,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     @Override
     public boolean initialize(Properties properties) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagAdminRESTSink.initialize()");
-        }
+        LOG.debug("==> TagAdminRESTSink.initialize()");
 
         boolean ret = false;
 
@@ -83,13 +81,11 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         rangerAdminCookieName              = TagSyncConfig.getRangerAdminCookieName(properties);
         sessionId                          = null;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("restUrl=" + restUrl);
-            LOG.debug("sslConfigFile=" + sslConfigFile);
-            LOG.debug("userName=" + userName);
-            LOG.debug("rangerAdminConnectionCheckInterval=" + rangerAdminConnectionCheckInterval);
-            LOG.debug("isKerberized=" + isKerberized);
-        }
+        LOG.debug("restUrl={}", restUrl);
+        LOG.debug("sslConfigFile={}", sslConfigFile);
+        LOG.debug("userName={}", userName);
+        LOG.debug("rangerAdminConnectionCheckInterval={}", rangerAdminConnectionCheckInterval);
+        LOG.debug("isKerberized={}", isKerberized);
 
         if (StringUtils.isNotBlank(restUrl)) {
             tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance());
@@ -105,18 +101,15 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagAdminRESTSink.initialize(), result=" + ret);
-        }
+        LOG.debug("<== TagAdminRESTSink.initialize(), result={}", ret);
 
         return ret;
     }
 
     @Override
     public ServiceTags upload(ServiceTags toUpload) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> upload() ");
-        }
+
+        LOG.debug("==> upload() ");
 
         UploadWorkItem uploadWorkItem = new UploadWorkItem(toUpload);
 
@@ -125,9 +118,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         // Wait until message is successfully delivered
         ServiceTags ret = uploadWorkItem.waitForUpload();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== upload()");
-        }
+        LOG.debug("<== upload()");
 
         return ret;
     }
@@ -150,9 +141,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     @Override
     public void run() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagAdminRESTSink.run()");
-        }
+        LOG.debug("==> TagAdminRESTSink.run()");
 
         while (true) {
             if (TagSyncConfig.isTagSyncServiceActive()) {
@@ -207,9 +196,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                     }
                 }
                 if (userGroupInformation != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Using Principal = " + userGroupInformation.getUserName());
-                    }
+                    LOG.debug("Using Principal = {}", userGroupInformation.getUserName());
                     return userGroupInformation.doAs((PrivilegedExceptionAction<ServiceTags>) () -> {
                         try {
                             return uploadServiceTags(serviceTags);
@@ -232,9 +219,8 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     }
 
     private ServiceTags uploadServiceTags(ServiceTags serviceTags) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> doUpload()");
-        }
+        LOG.debug("==> doUpload()");
+
         ClientResponse response = null;
         if (isRangerCookieEnabled) {
             response = uploadServiceTagsUsingCookie(serviceTags);
@@ -253,33 +239,26 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== doUpload()");
-        }
+        LOG.debug("<== doUpload()");
 
         return serviceTags;
     }
 
     private ClientResponse uploadServiceTagsUsingCookie(ServiceTags serviceTags) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> uploadServiceTagCache()");
-        }
+        LOG.debug("==> uploadServiceTagCache()");
         ClientResponse clientResponse = null;
         if (sessionId != null && isValidRangerCookie) {
             clientResponse = tryWithCookie(serviceTags);
         } else {
             clientResponse = tryWithCred(serviceTags);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== uploadServiceTagCache()");
-        }
+        LOG.debug("<== uploadServiceTagCache()");
         return clientResponse;
     }
 
     private ClientResponse tryWithCred(ServiceTags serviceTags) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> tryWithCred");
-        }
+        LOG.debug("==> tryWithCred");
+
         ClientResponse clientResponsebyCred = uploadTagsWithCred(serviceTags);
         if (clientResponsebyCred != null && clientResponsebyCred.getStatus() != HttpServletResponse.SC_NO_CONTENT
                 && clientResponsebyCred.getStatus() != HttpServletResponse.SC_BAD_REQUEST
@@ -288,9 +267,8 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             clientResponsebyCred = null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== tryWithCred");
-        }
+        LOG.debug("<== tryWithCred");
+
         return clientResponsebyCred;
     }
 
@@ -349,9 +327,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     }
 
     private ClientResponse uploadTagsWithCookie(ServiceTags serviceTags) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> uploadTagsWithCookie");
-        }
+        LOG.debug("==> uploadTagsWithCookie");
 
         ClientResponse response = null;
         try {
@@ -382,9 +358,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== uploadTagsWithCookie");
-        }
+        LOG.debug("<== uploadTagsWithCookie");
         return response;
     }
 

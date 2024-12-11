@@ -20,7 +20,6 @@
 package org.apache.ranger.tagsync.ha;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.ranger.RangerHAInitializer;
 import org.apache.ranger.ha.ActiveInstanceElectorService;
 import org.apache.ranger.ha.ActiveStateChangeHandler;
@@ -28,6 +27,7 @@ import org.apache.ranger.ha.ServiceState;
 import org.apache.ranger.ha.service.HARangerService;
 import org.apache.ranger.ha.service.ServiceManager;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,25 +35,24 @@ import java.util.List;
 import java.util.Set;
 
 public class TagSyncHAInitializerImpl extends RangerHAInitializer {
-    private static final    Logger                   LOG = Logger.getLogger(TagSyncHAInitializerImpl.class);
+    private static final    org.slf4j.Logger         LOG = LoggerFactory.getLogger(TagSyncHAInitializerImpl.class);
     private static volatile TagSyncHAInitializerImpl theInstance;
     ActiveInstanceElectorService activeInstanceElectorService;
     List<HARangerService>        haRangerService;
     ServiceManager               serviceManager;
 
     private TagSyncHAInitializerImpl(Configuration configuration) {
-        if (LOG.isDebugEnabled()) {
-            LOG.info("==> TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
-        }
+
+        LOG.debug("==> TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
+
         try {
             LOG.info("Ranger TagSync server is HA enabled : " + configuration.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false));
             init(configuration);
         } catch (Exception e) {
             LOG.error("TagSyncHAInitializerImpl initialization failed", e);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.info("<== TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
-        }
+
+        LOG.debug("<== TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
     }
 
     public static TagSyncHAInitializerImpl getInstance(Configuration configuration) {
@@ -88,18 +87,17 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
 
     @Override
     public void stop() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSyncHAInitializerImpl.stop() ");
-        }
+
+        LOG.debug("==> TagSyncHAInitializerImpl.stop() ");
+
         if (serviceManager != null) {
             serviceManager.stop();
         }
         if (curatorFactory != null) {
             curatorFactory.close();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSyncHAInitializerImpl.stop() ");
-        }
+
+        LOG.debug("<== TagSyncHAInitializerImpl.stop() ");
     }
 
     public boolean isActive() {

@@ -69,9 +69,8 @@ public final class AtlasNotificationMapper {
                 if (!entityNotification.getIsEntityTypeHandled()) {
                     LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[" + entityNotification.getEntityTypeName() + "]");
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Dropped process entity notification for Atlas-Entity [" + entityNotification.getRangerAtlasEntity() + "]");
-                }
+
+                LOG.debug("Dropped process entity notification for Atlas-Entity [{}]", entityNotification.getRangerAtlasEntity());
             }
         }
     }
@@ -98,17 +97,13 @@ public final class AtlasNotificationMapper {
                 case ENTITY_CREATE:
                     ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
-                        }
+                        LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
                     }
                     break;
                 case ENTITY_UPDATE:
                     ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
-                        }
+                        LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
                     }
                     break;
                 case ENTITY_DELETE:
@@ -128,9 +123,7 @@ public final class AtlasNotificationMapper {
                 ret = entityNotification.getIsEntityTypeHandled();
             }
             if (!ret) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Notification : [" + entityNotification + "] will NOT be processed.");
-                }
+                LOG.debug("Notification : [{}] will NOT be processed.", entityNotification);
             }
         }
 
@@ -145,9 +138,7 @@ public final class AtlasNotificationMapper {
             if (entity != null) {
                 buildServiceTags(element, ret);
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Ignoring entity because its State is not ACTIVE: " + element);
-                }
+                LOG.debug("Ignoring entity because its State is not ACTIVE: {}", element);
             }
         }
 
@@ -226,9 +217,7 @@ public final class AtlasNotificationMapper {
                     tagIds.add(tag.getId());
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it");
-                }
+                LOG.debug("Entity {} does not have any tags associated with it", entityWithTags);
             }
 
             ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);

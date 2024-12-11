@@ -51,9 +51,7 @@ public final class AtlasResourceMapperUtil {
     }
 
     public static RangerServiceResource getRangerServiceResource(RangerAtlasEntity atlasEntity) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getRangerServiceResource(" + atlasEntity.getGuid() + ")");
-        }
+        LOG.debug("==> getRangerServiceResource({})", atlasEntity.getGuid());
 
         RangerServiceResource resource = null;
 
@@ -67,9 +65,7 @@ public final class AtlasResourceMapperUtil {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getRangerServiceResource(" + atlasEntity.getGuid() + "): resource=" + resource);
-        }
+        LOG.debug("<== getRangerServiceResource({}): resource={}", atlasEntity.getGuid(), resource);
 
         return resource;
     }

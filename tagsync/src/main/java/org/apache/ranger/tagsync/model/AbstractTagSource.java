@@ -57,23 +57,15 @@ public abstract class AbstractTagSource implements TagSource {
     protected void updateSink(final ServiceTags toUpload) throws Exception {
         try {
             if (toUpload == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("No ServiceTags to upload");
-                }
+                LOG.debug("No ServiceTags to upload");
             } else {
                 if (!TagSyncConfig.isTagSyncServiceActive()) {
                     LOG.error("This TagSync server is not in active state. Cannot commit transaction!");
                     throw new RuntimeException("This TagSync server is not in active state. Cannot commit transaction!");
                 }
-                if (LOG.isDebugEnabled()) {
-                    String toUploadJSON = JsonUtils.objectToJson(toUpload);
-                    LOG.debug("Uploading serviceTags=" + toUploadJSON);
-                }
+                LOG.debug("Uploading serviceTags={}" , JsonUtils.objectToJson(toUpload));
                 ServiceTags uploaded = tagSink.upload(toUpload);
-                if (LOG.isDebugEnabled()) {
-                    String uploadedJSON = JsonUtils.objectToJson(uploaded);
-                    LOG.debug("Uploaded serviceTags=" + uploadedJSON);
-                }
+                LOG.debug("Uploaded serviceTags={}" , JsonUtils.objectToJson(uploaded));
             }
         } catch (Exception exception) {
             LOG.error("Failed to upload serviceTags: " + JsonUtils.objectToJson(toUpload));

@@ -90,9 +90,8 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
             throw new Exception("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("ENTITY_ATTRIBUTE_QUALIFIED_NAME = " + qualifiedName);
-        }
+        LOG.debug("ENTITY_ATTRIBUTE_QUALIFIED_NAME = {}", qualifiedName);
+
 
         String   entityType  = entity.getTypeName();
         String   entityGuid  = entity.getGuid();
@@ -102,9 +101,8 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
         String   keyName     = resources[IDX_KEY];
         String   clusterName = resources[IDX_CLUSTER_NAME];
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Ozone resources for entityType " + entityType + " are " + Arrays.toString(resources));
-        }
+        LOG.debug("Ozone resources for entityType {} are {}", entityType, Arrays.toString(resources));
+
 
         if (StringUtils.isEmpty(clusterName)) {
             throwExceptionWithMessage("cluster-name not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
@@ -169,9 +167,8 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
         int    idxProtocolSep = qualifiedName.indexOf(SEP_PROTOCOL);
         String prefix         = idxProtocolSep != -1 ? qualifiedName.substring(0, idxProtocolSep) : "";
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Prefix for qualifiedName={} is {}", qualifiedName, prefix);
-        }
+        LOG.debug("Prefix for qualifiedName={} is {}", qualifiedName, prefix);
+
 
         if (this.legacyParsingEnabled) {
             return parseQualifiedNameO3FS(qualifiedName, entityType);
@@ -183,9 +180,8 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
     }
 
     private String[] parseQualifiedNameOFS(String qualifiedName, String entityType) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> parseQualifiedNameOFS(qualifiedName={}, entityType={})", qualifiedName, entityType);
-        }
+        LOG.debug("==> parseQualifiedNameOFS(qualifiedName={}, entityType={})", qualifiedName, entityType);
+
 
         String[] ret = new String[RESOURCE_COUNT];
 
@@ -223,17 +219,16 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== parseQualifiedNameOFS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
-        }
+
+        LOG.debug("<== parseQualifiedNameOFS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
 
         return ret;
     }
 
     private String[] parseQualifiedNameO3FS(String qualifiedName, String entityType) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> parseQualifiedNameO3FS(qualifiedName={}, entityType={})", qualifiedName, entityType);
-        }
+
+        LOG.debug("==> parseQualifiedNameO3FS(qualifiedName={}, entityType={})", qualifiedName, entityType);
+
 
         String[] ret = new String[RESOURCE_COUNT];
 
@@ -276,9 +271,7 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== parseQualifiedNameO3FS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
-        }
+        LOG.debug("<== parseQualifiedNameO3FS(qualifiedName={}, entityType={}): volume={}, bucket={}, key={}, clusterName={}", qualifiedName, entityType, ret[IDX_VOLUME], ret[IDX_BUCKET], ret[IDX_KEY], ret[IDX_CLUSTER_NAME]);
 
         return ret;
     }

@@ -58,9 +58,8 @@ public class AtlasTagSource extends AbstractTagSource {
 
     @Override
     public boolean initialize(Properties properties) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AtlasTagSource.initialize()");
-        }
+
+        LOG.debug("==> AtlasTagSource.initialize()");
 
         Properties atlasProperties = new Properties();
 
@@ -112,17 +111,15 @@ public class AtlasTagSource extends AbstractTagSource {
 
         maxBatchSize = TagSyncConfig.getSinkMaxBatchSize(properties);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AtlasTagSource.initialize(), result=" + ret);
-        }
+        LOG.debug("<== AtlasTagSource.initialize(), result={}", ret);
+
         return ret;
     }
 
     @Override
     public boolean start() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AtlasTagSource.start()");
-        }
+        LOG.debug("==> AtlasTagSource.start()");
+
         if (consumerTask == null) {
             LOG.error("No consumerTask!!!");
         } else {
@@ -130,9 +127,7 @@ public class AtlasTagSource extends AbstractTagSource {
             myThread.setDaemon(true);
             myThread.start();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AtlasTagSource.start()");
-        }
+        LOG.debug("<== AtlasTagSource.start()");
         return myThread != null;
     }
 
@@ -170,22 +165,17 @@ public class AtlasTagSource extends AbstractTagSource {
 
         @Override
         public void run() {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> ConsumerRunnable.run()");
-            }
+            LOG.debug("==> ConsumerRunnable.run()");
 
             while (true) {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> ConsumerRunnable.run() is running as server is active");
-                    }
+                    LOG.debug("==> ConsumerRunnable.run() is running as server is active");
                     try {
                         List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
                         if (newMessages.size() == 0) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("AtlasTagSource.ConsumerRunnable.run: no message from NotificationConsumer within " + MAX_WAIT_TIME_IN_MILLIS + " milliseconds");
-                            }
+                            LOG.debug("AtlasTagSource.ConsumerRunnable.run: no message from NotificationConsumer within {} milliseconds", MAX_WAIT_TIME_IN_MILLIS);
+
                             if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags)) {
                                 buildAndUploadServiceTags();
                             }
@@ -201,9 +191,7 @@ public class AtlasTagSource extends AbstractTagSource {
                                         LOG.error("notification:[" + notification + "] has some issues..perhaps null entity??", e);
                                     }
                                     if (notificationWrapper != null) {
-                                        if (LOG.isDebugEnabled()) {
-                                            LOG.debug("Message-offset=" + message.getOffset() + ", Notification=" + getPrintableEntityNotification(notificationWrapper));
-                                        }
+                                        LOG.debug("Message-offset={}, Notification={}", message.getOffset(), getPrintableEntityNotification(notificationWrapper));
 
                                         if (AtlasNotificationMapper.isNotificationHandled(notificationWrapper)) {
                                             if ((notificationWrapper.getIsEntityDeleteOp() && !isHandlingDeleteOps) || (!notificationWrapper.getIsEntityDeleteOp() && isHandlingDeleteOps)) {
@@ -248,9 +236,7 @@ public class AtlasTagSource extends AbstractTagSource {
         }
 
         private void buildAndUploadServiceTags() throws Exception {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> buildAndUploadServiceTags()");
-            }
+            LOG.debug("==> buildAndUploadServiceTags()");
 
             if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags) && CollectionUtils.isNotEmpty(messages)) {
                 Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(atlasEntitiesWithTags);
@@ -268,10 +254,8 @@ public class AtlasTagSource extends AbstractTagSource {
                             entry.getValue().setOp(ServiceTags.OP_ADD_OR_UPDATE);
                         }
 
-                        if (LOG.isDebugEnabled()) {
-                            String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
-                            LOG.debug("serviceTags=" + serviceTagsString);
-                        }
+                        LOG.debug("serviceTags= {}", JsonUtils.objectToJson(entry.getValue()));
+
                         updateSink(entry.getValue());
                     }
                 }
@@ -282,20 +266,15 @@ public class AtlasTagSource extends AbstractTagSource {
                 atlasEntitiesWithTags.clear();
                 messages.clear();
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Completed processing batch of messages of size:[" + messages.size() + "] received from NotificationConsumer");
-                }
+                LOG.debug("Completed processing batch of messages of size:[{}] received from NotificationConsumer", messages.size());
+
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== buildAndUploadServiceTags()");
-            }
+            LOG.debug("<== buildAndUploadServiceTags()");
         }
 
         private void commitToKafka(AtlasKafkaMessage<EntityNotification> messageToCommit) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> commitToKafka(" + messageToCommit + ")");
-            }
+            LOG.debug("==> commitToKafka({})", messageToCommit);
 
             long messageOffset = messageToCommit.getOffset();
             int  partitionId   = messageToCommit.getPartition();
@@ -303,9 +282,7 @@ public class AtlasTagSource extends AbstractTagSource {
             if (offsetOfLastMessageCommittedToKafka < messageOffset) {
                 TopicPartition partition = new TopicPartition(messageToCommit.getTopic(), partitionId);
                 try {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Committing message with offset:[" + messageOffset + "] to Kafka");
-                    }
+                    LOG.debug("Committing message with offset:[{}] to Kafka", messageOffset);
                     consumer.commit(partition, messageOffset);
                     offsetOfLastMessageCommittedToKafka = messageOffset;
                 } catch (Exception commitException) {
@@ -313,9 +290,7 @@ public class AtlasTagSource extends AbstractTagSource {
                 }
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== commitToKafka(" + messageToCommit + ")");
-            }
+            LOG.debug("<== commitToKafka({})", messageToCommit);
         }
     }
 }

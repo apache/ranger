@@ -108,17 +108,14 @@ public class TagSynchronizer {
     }
 
     public static TagSink initializeTagSink(Properties properties) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.initializeTagSink()");
-        }
+        LOG.debug("==> TagSynchronizer.initializeTagSink()");
         TagSink ret = null;
 
         try {
             String tagSinkClassName = TagSyncConfig.getTagSinkClassName(properties);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("tagSinkClassName=" + tagSinkClassName);
-            }
+            LOG.debug("tagSinkClassName={}", tagSinkClassName);
+
             @SuppressWarnings("unchecked")
             Class<TagSink> tagSinkClass = (Class<TagSink>) Class.forName(tagSinkClassName);
 
@@ -133,16 +130,15 @@ public class TagSynchronizer {
             ret = null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.initializeTagSink(), result:" + (ret == null ? "false" : "true"));
-        }
+        LOG.debug("<== TagSynchronizer.initializeTagSink(), result: {}", (ret == null ? "false" : "true"));
+
         return ret;
     }
 
     public static boolean initializeKerberosIdentity(Properties props) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
-        }
+
+        LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
+
 
         boolean ret = false;
 
@@ -151,32 +147,22 @@ public class TagSynchronizer {
         String keytab             = TagSyncConfig.getKerberosKeytab(props);
         String nameRules          = TagSyncConfig.getNameRules(props);
 
-        if (LOG.isDebugEnabled()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("authenticationType=" + authenticationType);
-                LOG.debug("principal=" + principal);
-                LOG.debug("keytab" + keytab);
-                LOG.debug("nameRules=" + nameRules);
-            }
-        }
+        LOG.debug("authenticationType= {}, principal= {}, keytab= {}, nameRules={}", authenticationType, principal, keytab, nameRules);
+
         final boolean isKerberized = !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS);
 
         if (isKerberized) {
             LOG.info("Configured for Kerberos Authentication");
 
             if (SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Trying to get kerberos identity");
-                }
+                LOG.debug("Trying to get kerberos identity");
 
                 try {
                     UserGroupInformation.loginUserFromKeytab(principal, keytab);
                     UserGroupInformation kerberosIdentity = UserGroupInformation.getLoginUser();
                     if (kerberosIdentity != null) {
                         props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Got UGI, user:[" + kerberosIdentity.getUserName() + "]");
-                        }
+                        LOG.debug("Got UGI, user:[{}]", kerberosIdentity.getUserName());
                         ret = true;
                     } else {
                         LOG.error("KerberosIdentity is null!");
@@ -199,17 +185,14 @@ public class TagSynchronizer {
             props.remove(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.initializeKerberosIdentity() : " + ret);
-        }
+        LOG.debug("<== TagSynchronizer.initializeKerberosIdentity() : {}", ret);
 
         return ret;
     }
 
     public boolean initialize() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.initialize()");
-        }
+
+        LOG.debug("==> TagSynchronizer.initialize()");
 
         printConfigurationProperties(properties);
 
@@ -228,26 +211,21 @@ public class TagSynchronizer {
             LOG.error("Error initializing kerberos identity");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.initialize() : " + ret);
-        }
+        LOG.debug("<== TagSynchronizer.initialize() : {}", ret);
 
         return ret;
     }
 
     public void run() throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.run()");
-        }
+
+        LOG.debug("==> TagSynchronizer.run()");
 
         isShutdownInProgress = false;
 
         try {
             boolean threadsStarted = tagSink.start();
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> starting TagSyncMetricsProducer with default metrics location : " + System.getProperty("logdir"));
-            }
+            LOG.debug("==> starting TagSyncMetricsProducer with default metrics location : {}", System.getProperty("logdir"));
             //Start the tag sync metrics
             boolean isTagSyncMetricsEnabled = TagSyncConfig.isTagSyncMetricsEnabled(properties);
             if (isTagSyncMetricsEnabled) {
@@ -286,9 +264,7 @@ public class TagSynchronizer {
             tagSink.stop();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.run()");
-        }
+        LOG.debug("<== TagSynchronizer.run()");
     }
 
     public void shutdown(String reason) {
@@ -309,9 +285,7 @@ public class TagSynchronizer {
     }
 
     private void initializeTagSources() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.initializeTagSources()");
-        }
+        LOG.debug("==> TagSynchronizer.initializeTagSources()");
 
         List<String> tagSourceNameList = new ArrayList<String>();
 
@@ -364,16 +338,11 @@ public class TagSynchronizer {
             LOG.warn("Please recheck configuration properties and tagsync environment to ensure that this is correct.");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.initializeTagSources(initializedTagSources=" + initializedTagSourceNameList
-                    + ", failedTagSources=" + failedTagSources + ")");
-        }
+        LOG.debug("<== TagSynchronizer.initializeTagSources(initializedTagSources={}, failedTagSources={})", initializedTagSourceNameList, failedTagSources);
     }
 
     private void reInitializeFailedTagSources() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TagSynchronizer.reInitializeFailedTagSources()");
-        }
+        LOG.debug("==> TagSynchronizer.reInitializeFailedTagSources()");
 
         for (int index = 0; index < failedTagSources.size(); index++) {
             TagSource tagSource = failedTagSources.get(index);
@@ -396,9 +365,7 @@ public class TagSynchronizer {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TagSynchronizer.reInitializeFailedTagSources()");
-        }
+        LOG.debug("<== TagSynchronizer.reInitializeFailedTagSources()");
     }
 
     private static TagSource getTagSourceFromConfig(Properties props,
@@ -424,9 +391,8 @@ public class TagSynchronizer {
                 Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(className);
 
                 tagSource = tagSourceClass.newInstance();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Created instance of " + className);
-                }
+                LOG.debug("Created instance of {}", className);
+
                 tagSource.setName(tagSourceName);
             } catch (Exception e) {
                 LOG.error("Can't instantiate tagSource class for tagSourceName="

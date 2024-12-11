@@ -127,9 +127,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public boolean initialize(Properties properties) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AtlasRESTTagSource.initialize()");
-        }
+        LOG.debug("==> AtlasRESTTagSource.initialize()");
+
 
         boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
@@ -141,12 +140,11 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         String sslConfigFile = TagSyncConfig.getAtlasRESTSslConfigFile(properties);
         this.userNamePassword = new String[] {TagSyncConfig.getAtlasRESTUserName(properties), TagSyncConfig.getAtlasRESTPassword(properties)};
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("restUrl=" + restEndpoint);
-            LOG.debug("sslConfigFile=" + sslConfigFile);
-            LOG.debug("userName=" + userNamePassword[0]);
-            LOG.debug("kerberized=" + isKerberized);
-        }
+        LOG.debug("restUrl={}", restEndpoint);
+        LOG.debug("sslConfigFile={}", sslConfigFile);
+        LOG.debug("userName={}", userNamePassword[0]);
+        LOG.debug("kerberized={}", isKerberized);
+
         if (StringUtils.isNotEmpty(restEndpoint)) {
             this.restUrls = restEndpoint.split(",");
 
@@ -160,9 +158,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             ret = false;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AtlasRESTTagSource.initialize(), result=" + ret);
-        }
+        LOG.debug("<== AtlasRESTTagSource.initialize(), result={}", ret);
 
         return ret;
     }
@@ -185,22 +181,19 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public void run() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AtlasRESTTagSource.run()");
-        }
+
+        LOG.debug("==> AtlasRESTTagSource.run()");
+
         while (true) {
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
-                    }
+                    LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
+
                     synchUp();
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> This server is running passive mode");
-                    }
+                    LOG.debug("==> This server is running passive mode");
                 }
-                LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+                LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
 
                 Thread.sleep(sleepTimeBetweenCycleInMillis);
             } catch (InterruptedException exception) {
@@ -229,7 +222,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                     if (LOG.isDebugEnabled()) {
                         try {
                             String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
-                            LOG.debug("serviceTags=" + serviceTagsString);
+                            LOG.debug("serviceTags={}", serviceTagsString);
                         } catch (Exception e) {
                             LOG.error("An error occurred while conveting serviceTags to string", e);
                         }
@@ -241,9 +234,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     }
 
     private List<RangerAtlasEntityWithTags> getAtlasActiveEntities() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getAtlasActiveEntities()");
-        }
+        LOG.debug("==> getAtlasActiveEntities()");
+
         List<RangerAtlasEntityWithTags> ret = new ArrayList<>();
 
         AtlasClientV2 atlasClient = null;
@@ -294,9 +286,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 }
 
                 if (commitUpdates && searchResult != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(AtlasType.toJson(searchResult));
-                    }
+                    LOG.debug(AtlasType.toJson(searchResult));
+
 
                     List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 
@@ -306,17 +297,13 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
                         for (AtlasEntityHeader header : entityHeaders) {
                             if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Skipping entity because it is not ACTIVE, header:[" + header + "]");
-                                }
+                                LOG.debug("Skipping entity because it is not ACTIVE, header:[{}]", header);
                                 continue;
                             }
 
                             String typeName = header.getTypeName();
                             if (!AtlasResourceMapperUtil.isEntityTypeHandled(typeName)) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Not fetching Atlas entities of type:[" + typeName + "]");
-                                }
+                                LOG.debug("Not fetching Atlas entities of type:[{}]", typeName);
                                 continue;
                             }
 
@@ -342,9 +329,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             while (isMoreData);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getAtlasActiveEntities()");
-        }
+        LOG.debug("<== getAtlasActiveEntities()");
 
         return ret;
     }

@@ -46,10 +46,9 @@ public class TagSyncMetricsProducer implements Runnable {
             if (null != logFileNameWithPath) {
                 while (!shutdownFlag) {
                     try {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Sleeping Tagsync metrics for [" + sleepTimeBetweenCycleInMillis
-                                    + "] milliSeconds");
-                        }
+
+                        LOG.debug("Sleeping Tagsync metrics for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
+
                         Thread.sleep(sleepTimeBetweenCycleInMillis);
                     } catch (InterruptedException e) {
                         LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis
