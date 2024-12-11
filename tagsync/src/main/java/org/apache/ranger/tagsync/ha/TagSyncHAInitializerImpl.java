@@ -73,14 +73,16 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
 
     public void init(Configuration configuration) throws Exception {
         super.init(configuration);
+
         LOG.info("==> TagSyncHAInitializerImpl.init() initialization started");
+
         Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<>();
-        activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders,
-                curatorFactory, activeInstanceState, serviceState, configuration);
+        activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders, curatorFactory, activeInstanceState, serviceState, configuration);
 
         haRangerService = new ArrayList<>();
         haRangerService.add(activeInstanceElectorService);
         serviceManager = new ServiceManager(haRangerService);
+
         LOG.info("<== TagSyncHAInitializerImpl.init() initialization completed");
     }
 

@@ -42,7 +42,9 @@ public class TagSyncMetricsProducer implements Runnable {
             TagSyncConfig config                        = TagSyncConfig.getInstance();
             long          sleepTimeBetweenCycleInMillis = config.getTagSyncMetricsFrequency();
             String        logFileNameWithPath           = config.getTagSyncMetricsFileName();
+
             LOG.info("Tagsync metrics frequency :  {} and metrics file : {}", sleepTimeBetweenCycleInMillis, logFileNameWithPath);
+
             if (null != logFileNameWithPath) {
                 while (!shutdownFlag) {
                     try {
