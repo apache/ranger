@@ -46,9 +46,11 @@ public class OzoneConnectionMgr {
         if (serviceType != null) {
             // get it from the cache
             ozoneClient = ozoneConnectionCache.get(serviceName);
+
             if (ozoneClient == null) {
                 if (configs != null) {
                     final Callable<OzoneClient> connectOzone = () -> new OzoneClient(serviceName, configs);
+
                     try {
                         ozoneClient = TimedEventUtil.timedTask(connectOzone, 5, TimeUnit.SECONDS);
                     } catch (Exception e) {
@@ -56,6 +58,7 @@ public class OzoneConnectionMgr {
                     }
 
                     OzoneClient oldClient;
+
                     if (ozoneClient != null) {
                         oldClient = ozoneConnectionCache.putIfAbsent(serviceName, ozoneClient);
                     } else {
@@ -67,11 +70,14 @@ public class OzoneConnectionMgr {
                         if (ozoneClient != null) {
                             ozoneClient.close();
                         }
+                        
                         ozoneClient = oldClient;
                     }
+
                     repoConnectStatusMap.put(serviceName, true);
                 } else {
                     String message = String.format("Connection Config not defined for asset: %s", serviceName);
+
                     LOG.error(message, new IllegalStateException(message));
                 }
             } else {
@@ -84,13 +90,16 @@ public class OzoneConnectionMgr {
                      * presumably the connection is bad which is why we are closing it, so damage should not be much.
                      */
                     ozoneClient.close();
+
                     ozoneClient = getOzoneConnection(serviceName, serviceType, configs);
                 }
             }
         } else {
             String message = String.format("Asset not found with name: %s", serviceName);
+
             LOG.error(message, new IllegalStateException(message));
         }
+
         return ozoneClient;
     }
 }
