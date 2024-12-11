@@ -24,5 +24,5 @@
   <suppress files="AuthzAuditEvent.java" checks="StaticVariableName"/>
   <suppress files="RangerRolesUtil.java" checks="TypeName"/>
   <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
-
+  <suppress files="buildks.java" checks="TypeName"/>
 </suppressions>

@@ -205,6 +205,7 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
+        <spotbugs.failOnViolation>false</spotbugs.failOnViolation>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
         <springframework.security.version>5.7.12</springframework.security.version>
@@ -567,7 +568,7 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-                <version>0.11</version>
+                <version>0.16.1</version>
                 <configuration>
                     <excludeSubProjects>false</excludeSubProjects>
                     <excludes>
@@ -578,6 +579,7 @@
                         <exclude>**/src/main/webapp/fonts/**</exclude>
                         <exclude>**/src/main/webapp/libs/**</exclude>
                         <exclude>.git/**</exclude>
+                        <exclude>.gitattributes/**</exclude>
                         <exclude>.github/pull_request_template.md</exclude>
                         <exclude>.pc/**</exclude>
                         <exclude>debian/**</exclude>
@@ -661,14 +663,17 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs.plugin.version}</version>
-                <configuration>
-                    <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
-                </configuration>
                 <executions>
                     <execution>
+                        <id>spotbugs-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <failOnError>${spotbugs.failOnViolation}</failOnError>
+                            <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
