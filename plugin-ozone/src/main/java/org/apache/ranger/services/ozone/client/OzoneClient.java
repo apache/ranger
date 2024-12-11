@@ -57,7 +57,7 @@ public class OzoneClient extends BaseClient {
         for (Map.Entry<String, String> entry : connectionProperties.entrySet()) {
             String key   = entry.getKey();
             String value = entry.getValue();
-        
+
             if (!rangerInternalPropertyKeys.contains(key) && value != null) {
                 conf.set(key, value);
             }
@@ -140,7 +140,7 @@ public class OzoneClient extends BaseClient {
         LOG.debug("==> OzoneClient getBucketList bucketPrefix : {}", bucketPrefix);
 
         List<String> ret = new ArrayList<>();
-        
+
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
                 for (String ozoneVol : finalVolumeList) {
@@ -167,19 +167,19 @@ public class OzoneClient extends BaseClient {
         LOG.debug("==> OzoneClient getKeyList keyPrefix : {}", keyPrefix);
 
         List<String> ret = new ArrayList<>();
-        
+
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
                 for (String ozoneVol : finalVolumeList) {
                     Iterator<? extends OzoneBucket> ozoneBucketIterator = ozoneClient.getObjectStore().getVolume(ozoneVol).listBuckets(null);
-         
+
                     if (ozoneBucketIterator != null) {
                         while (ozoneBucketIterator.hasNext()) {
                             OzoneBucket currentBucket = ozoneBucketIterator.next();
 
                             if (finalBucketList.contains(currentBucket.getName())) {
                                 Iterator<? extends OzoneKey> ozoneKeyIterator = currentBucket.listKeys(keyPrefix);
-                            
+
                                 if (ozoneKeyIterator != null) {
                                     while (ozoneKeyIterator.hasNext()) {
                                         ret.add(ozoneKeyIterator.next().getName());
@@ -196,7 +196,7 @@ public class OzoneClient extends BaseClient {
         }
 
         LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
-        
+
         return ret;
     }
 }
