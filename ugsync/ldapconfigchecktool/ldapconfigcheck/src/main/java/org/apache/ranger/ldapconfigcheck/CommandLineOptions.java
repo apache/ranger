@@ -29,20 +29,21 @@ import org.apache.commons.cli.ParseException;
 import java.io.Console;
 
 public class CommandLineOptions {
-    private String[] args;
+    private final Options options = new Options();
+    private final String[] args;
+
     private String   input;
     private String   output;
     private String   discoverProperties;
     private String   retrieveValues;
-    private String   ldapUrl            = "";
-    private String   bindDn             = "";
-    private String   bindPassword       = "";
-    private String   userSearchBase     = "";
-    private String   userSearchFilter   = "";
-    private String   authUser           = "";
-    private String   authPass           = "";
-    private Options  options            = new Options();
-    private boolean  isAuthEnabled      = true;
+    private String   ldapUrl           = "";
+    private String   bindDn            = "";
+    private String   bindPassword      = "";
+    private String   userSearchBase    = "";
+    private String   userSearchFilter  = "";
+    private String   authUser          = "";
+    private String  authPass           = "";
+    private boolean isAuthEnabled      = true;
 
     public CommandLineOptions(String[] args) {
         this.args = args;
@@ -60,6 +61,7 @@ public class CommandLineOptions {
         CommandLineParser parser = new BasicParser();
         try {
             CommandLine cmd = parser.parse(options, args);
+
             if (cmd.hasOption("p")) {
                 bindPassword = cmd.getOptionValue("p");
                 if (bindPassword.trim().isEmpty()) {
@@ -83,6 +85,7 @@ public class CommandLineOptions {
 
             if (cmd.hasOption("d")) {
                 discoverProperties = cmd.getOptionValue("d");
+
                 if (discoverProperties == null || (!discoverProperties.equalsIgnoreCase("all") &&
                         !discoverProperties.equalsIgnoreCase("users") && !discoverProperties.equalsIgnoreCase("groups"))) {
                     System.out.println("Unsupported value for option d");
@@ -189,8 +192,8 @@ public class CommandLineOptions {
                 System.out.println("Please enter valid ldap url.");
                 repeat = true;
             }
-        }
-        while (repeat == true);
+        } while (repeat);
+
         do {
             repeat = false;
             System.out.print("Bind DN [cn=admin,ou=users,dc=example,dc=com]: ");
@@ -199,19 +202,19 @@ public class CommandLineOptions {
                 System.out.println("Please enter valid bindDn.");
                 repeat = true;
             }
-        }
-        while (repeat == true);
+        } while (repeat);
+
         do {
             repeat = false;
             System.out.print("Bind Password: ");
             char[] password = console.readPassword();
             bindPassword = String.valueOf(password);
-            if (bindPassword == null || bindPassword.isEmpty()) {
+            if (bindPassword.isEmpty()) {
                 System.out.println("Bind Password can't be empty.");
                 repeat = true;
             }
-        }
-        while (repeat == true);
+        } while (repeat);
+
         System.out.print("User Search Base [ou=users,dc=example,dc=com]: ");
         userSearchBase = console.readLine();
         System.out.print("User Search Filter [cn=user1]: ");
@@ -226,19 +229,18 @@ public class CommandLineOptions {
                     System.out.println("Sample Authentication user must not be empty!");
                     repeat = true;
                 }
-            }
-            while (repeat == true);
+            } while (repeat);
+
             do {
                 repeat = false;
                 System.out.print("Sample Authentication Password: ");
                 char[] password = console.readPassword();
                 authPass = String.valueOf(password);
-                if (authPass == null || authPass.isEmpty()) {
+                if (authPass.isEmpty()) {
                     System.out.println("Sample Authentication password must not be empty!");
                     repeat = true;
                 }
-            }
-            while (repeat == true);
+            } while (repeat);
         }
     }
 }

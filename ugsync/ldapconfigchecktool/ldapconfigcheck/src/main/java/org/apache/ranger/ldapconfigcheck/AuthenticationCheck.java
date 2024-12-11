@@ -38,16 +38,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AuthenticationCheck {
-    private String ldapUrl;
-    private String adDomain;
-    private String userDnPattern;
-    private String roleAttribute;
-    private String groupSearchBase;
-    private String groupSearchFilter;
-    private PrintStream logFile;
-    private PrintStream ambariProps;
-    private PrintStream installProps;
-    private String authMethod = "NONE";
+    private final String ldapUrl;
+    private final String adDomain;
+    private final String userDnPattern;
+    private final String roleAttribute;
+    private final String groupSearchBase;
+    private final String groupSearchFilter;
+    private final PrintStream logFile;
+    private final PrintStream ambariProps;
+    private final PrintStream installProps;
+    private final String authMethod;
 
     public AuthenticationCheck(String ldapUrl, UserSync userSyncObj, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) {
         this.logFile      = logFile;
@@ -59,6 +59,7 @@ public class AuthenticationCheck {
         } else {
             authMethod = "LDAP";
         }
+
         this.ldapUrl      = ldapUrl;
         adDomain          = userSyncObj.getSearchBase();
         userDnPattern     = userSyncObj.getUserNameAttribute() + "={0}," + userSyncObj.getUserSearchBase();
@@ -70,6 +71,7 @@ public class AuthenticationCheck {
     public void discoverAuthProperties() {
         ambariProps.println("\n# Possible values for authentication properties:");
         installProps.println("\n# Possible values for authentication properties:");
+
         if (authMethod.equalsIgnoreCase("AD")) {
             installProps.println("xa_ldap_ad_url=" + ldapUrl);
             installProps.println("xa_ldap_ad_domain=" + adDomain);
@@ -98,11 +100,13 @@ public class AuthenticationCheck {
         boolean isAuthenticated = false;
         //Verify Authentication
         Authentication authentication;
+
         if (authMethod.equalsIgnoreCase("AD")) {
             authentication = getADBindAuthentication(ldapUrl, bindDn, bindPassword, userName, userPassword);
         } else {
             authentication = getLdapBindAuthentication(ldapUrl, bindDn, bindPassword, userName, userPassword);
         }
+
         if (authentication != null) {
             isAuthenticated = authentication.isAuthenticated();
         }

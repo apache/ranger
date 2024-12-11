@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 public class UserSyncMetricsProducer implements Runnable {
-    private static final Logger  LOG = LoggerFactory.getLogger(UserSyncMetricsProducer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserSyncMetricsProducer.class);
     private boolean shutdownFlag;
 
     public static void main(String[] args) {
@@ -46,7 +46,9 @@ public class UserSyncMetricsProducer implements Runnable {
             UserGroupSyncConfig config                        = UserGroupSyncConfig.getInstance();
             long                sleepTimeBetweenCycleInMillis = config.getUserSyncMetricsFrequency();
             String              logFileNameWithPath           = config.getUserSyncMetricsFileName();
+
             LOG.info("User Sync metrics frequency :  {} and metrics file : {}", sleepTimeBetweenCycleInMillis, logFileNameWithPath);
+
             if (logFileNameWithPath != null) {
                 while (!shutdownFlag) {
                     try {
@@ -73,19 +75,21 @@ public class UserSyncMetricsProducer implements Runnable {
 
     private void writeJVMMetrics(String logFileNameWithPath) throws Throwable {
         try {
-            File                userMetricFile = null;
+            File                userMetricFile = new File(logFileNameWithPath);
             UserGroupSyncConfig userConfig     = UserGroupSyncConfig.getInstance();
             Configuration       config         = userConfig.getUserGroupConfig();
-            userMetricFile = new File(logFileNameWithPath);
+
             if (!userMetricFile.exists()) {
                 userMetricFile.createNewFile();
             }
+
             RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
+
             if (config.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
-                if (userConfig.isUgsyncServiceActive()) {
-                    rangerMetricsUtil.setIsRoleActive(1);
+                if (UserGroupSyncConfig.isUgsyncServiceActive()) {
+                    RangerMetricsUtil.setIsRoleActive(1);
                 } else {
-                    rangerMetricsUtil.setIsRoleActive(0);
+                    RangerMetricsUtil.setIsRoleActive(0);
                 }
             }
             rangerMetricsUtil.writeMetricsToFile(userMetricFile);

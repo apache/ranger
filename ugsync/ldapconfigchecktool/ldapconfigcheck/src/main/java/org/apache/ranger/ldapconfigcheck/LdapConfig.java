@@ -37,6 +37,7 @@ public class LdapConfig {
     public static final  String CONFIG_FILE                                    = "input.properties";
     public static final  String UGSYNC_NONE_CASE_CONVERSION_VALUE              = "none";
     public static final  String UGSYNC_LOWER_CASE_CONVERSION_VALUE             = "lower";
+
     private static final String LGSYNC_LDAP_URL                                = "ranger.usersync.ldap.url";
     private static final String LGSYNC_LDAP_BIND_DN                            = "ranger.usersync.ldap.binddn";
     private static final String LGSYNC_LDAP_BIND_PASSWORD                      = "ranger.usersync.ldap.ldapbindpassword";
@@ -53,18 +54,18 @@ public class LdapConfig {
     private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM         = "ranger.usersync.ldap.groupname.caseconversion";
     private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE  = UGSYNC_NONE_CASE_CONVERSION_VALUE;
     private static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_NONE_CASE_CONVERSION_VALUE;
-    private static final String  LGSYNC_PAGED_RESULTS_ENABLED         = "ranger.usersync.pagedresultsenabled";
-    private static final String  LGSYNC_PAGED_RESULTS_SIZE            = "ranger.usersync.pagedresultssize";
-    private static final String  LGSYNC_GROUP_SEARCH_ENABLED          = "ranger.usersync.group.searchenabled";
-    private static final String  LGSYNC_GROUP_SEARCH_BASE             = "ranger.usersync.group.searchbase";
-    private static final String  LGSYNC_GROUP_SEARCH_SCOPE            = "ranger.usersync.group.searchscope";
-    private static final String  LGSYNC_GROUP_OBJECT_CLASS            = "ranger.usersync.group.objectclass";
-    private static final String  LGSYNC_GROUP_SEARCH_FILTER           = "ranger.usersync.group.searchfilter";
-    private static final String  LGSYNC_GROUP_NAME_ATTRIBUTE          = "ranger.usersync.group.nameattribute";
-    private static final String  LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME   = "ranger.usersync.group.memberattributename";
-    private static final int     DEFAULT_LGSYNC_PAGED_RESULTS_SIZE    = 500;
-    private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED = true;
-    private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED  = false;
+    private static final String  LGSYNC_PAGED_RESULTS_ENABLED                  = "ranger.usersync.pagedresultsenabled";
+    private static final String  LGSYNC_PAGED_RESULTS_SIZE                     = "ranger.usersync.pagedresultssize";
+    private static final String  LGSYNC_GROUP_SEARCH_ENABLED                   = "ranger.usersync.group.searchenabled";
+    private static final String  LGSYNC_GROUP_SEARCH_BASE                      = "ranger.usersync.group.searchbase";
+    private static final String  LGSYNC_GROUP_SEARCH_SCOPE                     = "ranger.usersync.group.searchscope";
+    private static final String  LGSYNC_GROUP_OBJECT_CLASS                     = "ranger.usersync.group.objectclass";
+    private static final String  LGSYNC_GROUP_SEARCH_FILTER                    = "ranger.usersync.group.searchfilter";
+    private static final String  LGSYNC_GROUP_NAME_ATTRIBUTE                   = "ranger.usersync.group.nameattribute";
+    private static final String  LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME            = "ranger.usersync.group.memberattributename";
+    private static final int     DEFAULT_LGSYNC_PAGED_RESULTS_SIZE             = 500;
+    private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED          = true;
+    private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED           = false;
 
     //Authentication related properties
     private static final String     AUTHENTICATION_METHOD = "ranger.authentication.method";
@@ -75,13 +76,14 @@ public class LdapConfig {
     private static final String     GROUP_SEARCH_FILTER   = "ranger.ldap.group.searchfilter";
     private static final String     AUTH_USERNAME         = "ranger.admin.auth.sampleuser";
     private static final String     AUTH_PASSWORD         = "ranger.admin.auth.samplepassword";
-    private              Properties prop                  = new Properties();
+
+    private final Properties prop = new Properties();
 
     public LdapConfig(String configFile, String bindPasswd) {
         init(configFile, bindPasswd);
     }
 
-    public String getLdapUrl() throws Throwable {
+    public String getLdapUrl() {
         String val = prop.getProperty(LGSYNC_LDAP_URL);
         if (val == null || val.trim().isEmpty()) {
             throw new NullArgumentException(LGSYNC_LDAP_URL);
@@ -89,7 +91,7 @@ public class LdapConfig {
         return val;
     }
 
-    public String getLdapBindDn() throws Throwable {
+    public String getLdapBindDn() {
         String val = prop.getProperty(LGSYNC_LDAP_BIND_DN);
         if (val == null || val.trim().isEmpty()) {
             throw new NullArgumentException(LGSYNC_LDAP_BIND_DN);
@@ -99,9 +101,6 @@ public class LdapConfig {
 
     public String getLdapBindPassword() {
         //update credential from keystore
-        if (prop == null) {
-            return null;
-        }
         return prop.getProperty(LGSYNC_LDAP_BIND_PASSWORD);
     }
 
@@ -173,7 +172,7 @@ public class LdapConfig {
         if (val == null || val.trim().isEmpty()) {
             pagedResultsEnabled = DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED;
         } else {
-            pagedResultsEnabled = Boolean.valueOf(val);
+            pagedResultsEnabled = Boolean.parseBoolean(val);
         }
         return pagedResultsEnabled;
     }
@@ -198,7 +197,7 @@ public class LdapConfig {
         if (val == null || val.trim().isEmpty()) {
             groupSearchEnabled = DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED;
         } else {
-            groupSearchEnabled = Boolean.valueOf(val);
+            groupSearchEnabled = Boolean.parseBoolean(val);
         }
         return groupSearchEnabled;
     }
@@ -311,7 +310,7 @@ public class LdapConfig {
                     try {
                         in.close();
                     } catch (IOException ioe) {
-                        System.out.println(ioe);
+                        System.out.println(ioe.getMessage());
                     }
                 }
             }
@@ -321,7 +320,7 @@ public class LdapConfig {
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
-        InputStream ret = null;
+        InputStream ret;
         File f = new File(path);
 
         if (f.exists()) {

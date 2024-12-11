@@ -28,7 +28,6 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -63,9 +62,9 @@ public class LdapConfigCheckMain {
         LdapContext ldapContext  = null;
 
         try {
-            logFile      = new PrintStream(new File(outputDir + LOG_FILE));
-            ambariProps  = new PrintStream(new File(outputDir + AMBARI_PROPERTIES));
-            installProps = new PrintStream(new File(outputDir + INSTALL_PROPERTIES));
+            logFile      = new PrintStream(outputDir + LOG_FILE);
+            ambariProps  = new PrintStream(outputDir + AMBARI_PROPERTIES);
+            installProps = new PrintStream(outputDir + INSTALL_PROPERTIES);
 
             UserSync userSyncObj = new UserSync(config, logFile, ambariProps, installProps);
 
@@ -148,7 +147,7 @@ public class LdapConfigCheckMain {
         userSyncObj.findGroupProperties(ldapContext);
     }
 
-    private static void authenticate(UserSync userSyncObj, LdapConfig config, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) throws Throwable {
+    private static void authenticate(UserSync userSyncObj, LdapConfig config, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) {
         AuthenticationCheck auth = new AuthenticationCheck(config.getLdapUrl(), userSyncObj, logFile, ambariProps, installProps);
 
         auth.discoverAuthProperties();

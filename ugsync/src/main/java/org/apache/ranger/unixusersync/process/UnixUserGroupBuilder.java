@@ -42,12 +42,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
     private static final Logger LOG = LoggerFactory.getLogger(UnixUserGroupBuilder.class);
+
     private static final String OS  = System.getProperty("os.name");
     /**
      * Shell commands to get users and groups
@@ -70,22 +70,22 @@ public class UnixUserGroupBuilder implements UserGroupSource {
     static final String BACKEND_PASSWD = "passwd";
     Set<String> allGroups = new HashSet<>();
     private boolean useNss;
-    private boolean enumerateGroupMembers;
+    private final boolean enumerateGroupMembers;
     private boolean isUpdateSinkSucc      = true;
-    private UserGroupSyncConfig              config         = UserGroupSyncConfig.getInstance();
+    private final UserGroupSyncConfig              config         = UserGroupSyncConfig.getInstance();
     private Map<String, String>              groupId2groupNameMap;
     private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
     private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
     private Map<String, Set<String>>         sourceGroupUsers;
     private Table<String, String, String>    groupUserTable; // groupname, username, group id
-    private String  unixPasswordFile;
-    private String unixGroupFile;
+    private final String  unixPasswordFile;
+    private final String unixGroupFile;
     private String currentSyncSource;
     private int deleteCycles;
-    private int minimumUserId;
-    private int minimumGroupId;
+    private final int minimumUserId;
+    private final int minimumGroupId;
     private long lastUpdateTime;
-    private long timeout;
+    private final long timeout;
     private long passwordFileModifiedAt;
     private long groupFileModifiedAt;
     private UgsyncAuditInfo    ugsyncAuditInfo;
@@ -184,9 +184,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
         unixSyncSourceInfo.setSyncTime(formatter.format(syncTime));
         if (isChanged() || isStartupFlag) {
             buildUserGroupInfo();
-            LOG.debug("Users = " + sourceUsers.keySet());
-            LOG.debug("Groups = " + sourceGroups.keySet());
-            LOG.debug("GroupUsers = " + sourceGroupUsers.keySet());
+            LOG.debug("Users = {}", sourceUsers.keySet());
+            LOG.debug("Groups = {}", sourceGroups.keySet());
+            LOG.debug("GroupUsers = {}", sourceGroupUsers.keySet());
 
             try {
                 sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
@@ -237,9 +237,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
             buildUnixUserList(LINUX_GET_ALL_USERS_CMD);
         }
 
-        Iterator<String> groupUserTableIterator = groupUserTable.rowKeySet().iterator();
-        while (groupUserTableIterator.hasNext()) {
-            String              groupName     = groupUserTableIterator.next();
+        for (String groupName : groupUserTable.rowKeySet()) {
             Map<String, String> groupUsersMap = groupUserTable.row(groupName);
             Set<String>         userSet       = new HashSet<>();
 
@@ -260,10 +258,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
     private void print() {
         for (String user : sourceUsers.keySet()) {
-            LOG.debug("USER:" + user);
+            LOG.debug("USER: {}", user);
             Set<String> groups = groupUserTable.column(user).keySet();
             for (String group : groups) {
-                LOG.debug("\tGROUP: " + group);
+                LOG.debug("\tGROUP: {}", group);
             }
         }
     }
@@ -294,7 +292,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 int len = tokens.length;
 
                 if (len < 4) {
-                    LOG.warn("Unable to parse: " + line);
+                    LOG.warn("Unable to parse: {}", line);
                     continue;
                 }
 
@@ -307,7 +305,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                     userId   = tokens[2];
                     groupId  = tokens[3];
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
-                    LOG.warn("Ignoring line - [" + line + "]: Unable to parse line for getting user information", aiobe);
+                    LOG.warn("Ignoring line - [{}]: Unable to parse line for getting user information", line, aiobe);
                     continue;
                 }
 
@@ -315,7 +313,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 try {
                     numUserId = Integer.parseInt(userId);
                 } catch (NumberFormatException nfe) {
-                    LOG.warn("Unix UserId: [" + userId + "]: can not be parsed as valid int. considering as  -1.", nfe);
+                    LOG.warn("Unix UserId: [{}]: can not be parsed as valid int. considering as  -1.", userId, nfe);
                     numUserId = -1;
                 }
 
@@ -374,11 +372,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("id -G returned " + line);
+                    LOG.debug("id -G returned {}", line);
                 }
 
                 if (line == null || line.trim().isEmpty()) {
-                    LOG.warn("User " + userName + " could not be resolved");
+                    LOG.warn("User {} could not be resolved", userName);
                     continue;
                 }
 
@@ -444,7 +442,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 groupUserTable.put(groupName, user, groupId);
             }
         } else {
-            sourceGroupUsers.put(groupName, new HashSet<String>());
+            sourceGroupUsers.put(groupName, new HashSet<>());
         }
     }
 
@@ -484,8 +482,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
         if (enumerateGroupMembers) {
             LOG.debug("Start enumerating group members");
-            String              line = null;
-            Map<String, String> copy = new HashMap<String, String>(groupId2groupNameMap);
+            String              line;
+            Map<String, String> copy = new HashMap<>(groupId2groupNameMap);
 
             for (Map.Entry<String, String> group : copy.entrySet()) {
                 LOG.debug("Enumerating group: {} GID({})", group.getValue(), group.getKey());
