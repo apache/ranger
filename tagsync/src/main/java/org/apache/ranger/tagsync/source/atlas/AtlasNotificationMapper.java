@@ -43,7 +43,7 @@ public final class AtlasNotificationMapper {
 
     private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
     private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
-    private static       Map<String, Long> unhandledEventTypes = new HashMap<>();
+    private static final Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     public static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
         boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications();
@@ -229,7 +229,7 @@ public final class AtlasNotificationMapper {
                 }
             }
         } else {
-            LOG.error("Failed to build serviceResource for entity:" + entity.getGuid());
+            LOG.error("Failed to build serviceResource for entity:{}", entity.getGuid());
         }
 
         return ret;

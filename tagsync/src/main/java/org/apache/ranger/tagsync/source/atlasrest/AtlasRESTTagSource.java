@@ -68,16 +68,13 @@ import java.util.TimeZone;
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTTagSource.class);
 
-    private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(AtlasBaseTypeDef.SERIALIZED_DATE_FORMAT_STR);
+    private static final ThreadLocal<DateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(AtlasBaseTypeDef.SERIALIZED_DATE_FORMAT_STR);
 
-            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-            return dateFormat;
-        }
-    };
+        return dateFormat;
+    });
 
     private long     sleepTimeBetweenCycleInMillis;
     private String[] restUrls;
@@ -403,7 +400,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 }
             }
         } catch (Exception exception) {
-            LOG.error("Error in resolving tags for type:[" + typeName + "]", exception);
+            LOG.error("Error in resolving tags for type:[{}]", typeName, exception);
         }
         return ret;
     }

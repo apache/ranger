@@ -20,7 +20,6 @@
 package org.apache.ranger.tagsync.source.atlas;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
@@ -58,7 +57,7 @@ public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
             throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
         }
 
-        Map<String, RangerPolicyResource> elements    = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+        Map<String, RangerPolicyResource> elements    = new HashMap<>();
         Boolean                           isExcludes  = Boolean.FALSE;
         Boolean                           isRecursive = Boolean.TRUE;
 

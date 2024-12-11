@@ -111,9 +111,7 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
             throwExceptionWithMessage("unrecognized entity-type: " + entityType);
         }
 
-        RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-        return ret;
+        return new RangerServiceResource(entityGuid, serviceName, elements);
     }
 
     /* qualifiedName can be of format, depending upon the entity-type:

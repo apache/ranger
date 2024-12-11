@@ -226,7 +226,7 @@ public class TagSyncConfig extends Configuration {
         long   ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL;
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -249,12 +249,12 @@ public class TagSyncConfig extends Configuration {
 
     public static boolean isTagSyncEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
-        return val == null || Boolean.valueOf(val.trim());
+        return val == null || Boolean.parseBoolean(val.trim());
     }
 
     public static String getTagAdminPassword(Properties prop) {
         //update credential from keystore
-        String password = null;
+        String password;
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_PASSWORD_PROP)) {
             password = prop.getProperty(TAGSYNC_TAGADMIN_PASSWORD_PROP);
             if (password != null && !password.isEmpty()) {
@@ -379,7 +379,7 @@ public class TagSyncConfig extends Configuration {
         String val = prop.getProperty(TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP);
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -392,7 +392,7 @@ public class TagSyncConfig extends Configuration {
         String val = prop.getProperty(TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP);
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -411,8 +411,8 @@ public class TagSyncConfig extends Configuration {
 
         if (StringUtils.isNotEmpty(maxBatchSizeStr)) {
             try {
-                ret = Integer.valueOf(maxBatchSizeStr);
-            } catch (Exception e) {
+                ret = Integer.parseInt(maxBatchSizeStr);
+            } catch (Exception ignored) {
             }
         }
         return ret;
@@ -429,7 +429,7 @@ public class TagSyncConfig extends Configuration {
 
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Integer.valueOf(val);
+                ret = Integer.parseInt(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -449,7 +449,7 @@ public class TagSyncConfig extends Configuration {
         sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ")
                 .append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");
 
-        return sb.toString() + super.toString();
+        return sb + super.toString();
     }
 
     public String getTagSyncMetricsFileName() {
@@ -483,7 +483,7 @@ public class TagSyncConfig extends Configuration {
         String val = getProperties().getProperty(TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }

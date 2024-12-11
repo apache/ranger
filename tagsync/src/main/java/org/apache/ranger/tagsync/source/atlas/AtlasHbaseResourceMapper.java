@@ -66,7 +66,7 @@ public class AtlasHbaseResourceMapper extends AtlasResourceMapper {
         String entityGuid  = entity.getGuid();
         String serviceName = getRangerServiceName(clusterName);
 
-        Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();
+        Map<String, RangerPolicyResource> elements = new HashMap<>();
 
         if (StringUtils.equals(entityType, ENTITY_TYPE_HBASE_NAMESPACE)) {
             if (StringUtils.isNotEmpty(resourceStr)) {

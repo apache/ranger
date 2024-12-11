@@ -47,8 +47,8 @@ public class TagSynchronizer {
     private final    Object                   shutdownNotifier         = new Object();
     private       TagSink         tagSink;
     private final List<TagSource> tagSources       = new ArrayList<>();
-    private       List<TagSource> failedTagSources = new ArrayList<TagSource>();
-    private Properties      properties;
+    private final List<TagSource> failedTagSources = new ArrayList<>();
+    private       Properties      properties;
     private volatile boolean                  isShutdownInProgress;
     private          TagSyncHAInitializerImpl tagSyncHAinitializerImpl;
 
@@ -109,7 +109,7 @@ public class TagSynchronizer {
 
     public static TagSink initializeTagSink(Properties properties) {
         LOG.debug("==> TagSynchronizer.initializeTagSink()");
-        TagSink ret = null;
+        TagSink ret;
 
         try {
             String tagSinkClassName = TagSyncConfig.getTagSinkClassName(properties);
@@ -283,7 +283,7 @@ public class TagSynchronizer {
     private void initializeTagSources() {
         LOG.debug("==> TagSynchronizer.initializeTagSources()");
 
-        List<String> tagSourceNameList = new ArrayList<String>();
+        List<String> tagSourceNameList = new ArrayList<>();
 
         for (Object propNameObj : properties.keySet()) {
             String propName = propNameObj.toString();
@@ -304,7 +304,7 @@ public class TagSynchronizer {
             }
         }
 
-        List<String> initializedTagSourceNameList = new ArrayList<String>();
+        List<String> initializedTagSourceNameList = new ArrayList<>();
 
         for (String tagSourceName : tagSourceNameList) {
             String tagSourcePropPrefix = TAGSYNC_SOURCE_BASE + tagSourceName;
@@ -409,7 +409,7 @@ public class TagSynchronizer {
     }
 
     private static List<String> toArray(String destListStr, String delim) {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         if (destListStr != null && !destListStr.isEmpty()) {
             StringTokenizer tokenizer = new StringTokenizer(destListStr,
                     delim.trim());

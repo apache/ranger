@@ -21,7 +21,6 @@ package org.apache.ranger.tagsync.source.atlas;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
@@ -101,12 +100,10 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 
         Path pathObj = new Path(path);
 
-        Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+        Map<String, RangerPolicyResource> elements = new HashMap<>();
         elements.put(RANGER_TYPE_HDFS_PATH, new RangerPolicyResource(pathObj.toUri().getPath(), isExcludes, isRecursive));
 
-        RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-        return ret;
+        return new RangerServiceResource(entityGuid, serviceName, elements);
     }
 
     private String getCustomRangerServiceNameForClusterAndNameService(String clusterName, String nameServiceId) {

@@ -29,7 +29,7 @@ public class RangerAtlasEntity {
     public RangerAtlasEntity(String typeName, String guid, Map<String, Object> attributes) {
         this.typeName   = typeName;
         this.guid       = guid;
-        this.attributes = attributes == null ? new HashMap<String, Object>() : attributes;
+        this.attributes = attributes == null ? new HashMap<>() : attributes;
     }
 
     public String getTypeName() {

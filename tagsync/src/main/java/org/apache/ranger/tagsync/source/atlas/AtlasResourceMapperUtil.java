@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.Properties;
 
 public final class AtlasResourceMapperUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapperUtil.class);
-    private static Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<String, AtlasResourceMapper>();
+    private static final Logger                           LOG                  = LoggerFactory.getLogger(AtlasResourceMapperUtil.class);
+    private static final Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<>();
 
     private AtlasResourceMapperUtil() {}
 
@@ -79,7 +79,7 @@ public final class AtlasResourceMapperUtil {
 
         boolean ret = true;
 
-        List<String> mapperNames = new ArrayList<String>();
+        List<String> mapperNames = new ArrayList<>();
         mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper");
         mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper");
         mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper");

@@ -69,7 +69,7 @@ public class TagSyncMetricsProducer implements Runnable {
 
     private void writeJVMMetrics(String logFileNameWithPath, TagSyncConfig config) throws Throwable {
         try {
-            File userMetricFile = null;
+            File userMetricFile;
             userMetricFile = new File(logFileNameWithPath);
             if (!userMetricFile.exists()) {
                 userMetricFile.createNewFile();

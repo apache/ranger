@@ -67,7 +67,7 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
         String   tblName     = resources.length > 1 ? resources[1] : null;
         String   colName     = resources.length > 2 ? resources[2] : null;
 
-        Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();
+        Map<String, RangerPolicyResource> elements = new HashMap<>();
 
         if (StringUtils.equals(entityType, ENTITY_TYPE_HIVE_DB)) {
             if (StringUtils.isNotEmpty(dbName)) {
@@ -92,8 +92,6 @@ public class AtlasHiveResourceMapper extends AtlasResourceMapper {
             throwExceptionWithMessage("invalid qualifiedName for entity-type '" + entityType + "': " + qualifiedName);
         }
 
-        RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-        return ret;
+        return new RangerServiceResource(entityGuid, serviceName, elements);
     }
 }

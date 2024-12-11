@@ -142,7 +142,7 @@ public class AtlasTagSource extends AbstractTagSource {
 
         sb.append("{ Notification-Type: ").append(notification.getOpType()).append(", ");
         RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(notification);
-        sb.append(entityWithTags.toString());
+        sb.append(entityWithTags);
 
         sb.append("}");
         return sb.toString();
@@ -172,7 +172,7 @@ public class AtlasTagSource extends AbstractTagSource {
                     try {
                         List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
-                        if (newMessages.size() == 0) {
+                        if (newMessages.isEmpty()) {
                             LOG.debug("AtlasTagSource.ConsumerRunnable.run: no message from NotificationConsumer within {} milliseconds", MAX_WAIT_TIME_IN_MILLIS);
 
                             if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags)) {

@@ -95,7 +95,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             // Build and cache REST client. This will catch any errors in building REST client up-front
             tagRESTClient.getClient();
 
-            uploadWorkItems = new LinkedBlockingQueue<UploadWorkItem>();
+            uploadWorkItems = new LinkedBlockingQueue<>();
             ret             = true;
         } else {
             LOG.error("No value specified for property 'ranger.tagsync.tagadmin.rest.url'!");
@@ -220,7 +220,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     private ServiceTags uploadServiceTags(ServiceTags serviceTags) throws Exception {
         LOG.debug("==> doUpload()");
 
-        ClientResponse response = null;
+        ClientResponse response;
         if (isRangerCookieEnabled) {
             response = uploadServiceTagsUsingCookie(serviceTags);
         } else {
@@ -245,7 +245,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     private ClientResponse uploadServiceTagsUsingCookie(ServiceTags serviceTags) {
         LOG.debug("==> uploadServiceTagCache()");
-        ClientResponse clientResponse = null;
+        ClientResponse clientResponse;
         if (sessionId != null && isValidRangerCookie) {
             clientResponse = tryWithCookie(serviceTags);
         } else {
@@ -362,12 +362,12 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     }
 
     static class UploadWorkItem {
-        private ServiceTags                serviceTags;
-        private BlockingQueue<ServiceTags> uploadedServiceTags;
+        private       ServiceTags                serviceTags;
+        private final BlockingQueue<ServiceTags> uploadedServiceTags;
 
         UploadWorkItem(ServiceTags serviceTags) {
             setServiceTags(serviceTags);
-            uploadedServiceTags = new ArrayBlockingQueue<ServiceTags>(1);
+            uploadedServiceTags = new ArrayBlockingQueue<>(1);
         }
 
         ServiceTags getServiceTags() {
