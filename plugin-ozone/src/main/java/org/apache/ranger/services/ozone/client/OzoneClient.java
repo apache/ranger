@@ -40,22 +40,29 @@ import java.util.Map;
 import java.util.Set;
 
 public class OzoneClient extends BaseClient {
-    private static final Logger LOG     = LoggerFactory.getLogger(OzoneClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OzoneClient.class);
+
     private static final String ERR_MSG = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
+
     private final OzoneConfiguration                         conf;
     private       org.apache.hadoop.ozone.client.OzoneClient ozoneClient;
 
     public OzoneClient(String serviceName, Map<String, String> connectionProperties) throws Exception {
         super(serviceName, connectionProperties, "ozone-client");
+
         conf = new OzoneConfiguration();
+
         Set<String> rangerInternalPropertyKeys = getConfigHolder().getRangerInternalPropertyKeys();
+
         for (Map.Entry<String, String> entry : connectionProperties.entrySet()) {
             String key   = entry.getKey();
             String value = entry.getValue();
+        
             if (!rangerInternalPropertyKeys.contains(key) && value != null) {
                 conf.set(key, value);
             }
         }
+
         Subject.doAs(getLoginSubject(), (PrivilegedExceptionAction<Void>) () -> {
             String[] serviceIds = conf.getTrimmedStrings("ozone.om.service.ids", "ozone1");
             ozoneClient = OzoneClientFactory.getRpcClient(serviceIds[0], conf);
@@ -72,15 +79,19 @@ public class OzoneClient extends BaseClient {
         try {
             connectionObj = new OzoneClient(serviceName, connectionProperties);
             testResult    = connectionObj.getVolumeList("");
+
             if (testResult != null && testResult.size() != 0) {
                 connectivityStatus = true;
             }
+
             if (connectivityStatus) {
                 String successMsg = "ConnectionTest Successful";
+
                 generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
             } else {
                 String failureMsg = "Unable to retrieve any volumes using given parameters.";
                 String errorMsg   = failureMsg + ERR_MSG;
+
                 generateResponseDataMap(false, failureMsg, errorMsg, null, null, responseData);
             }
         } finally {
@@ -104,9 +115,11 @@ public class OzoneClient extends BaseClient {
         LOG.debug("==> OzoneClient getVolume volumePrefix : {}", volumePrefix);
 
         List<String> ret = new ArrayList<>();
+
         try {
             if (ozoneClient != null) {
                 Iterator<? extends OzoneVolume> ozoneVolList = ozoneClient.getObjectStore().listVolumes(volumePrefix);
+
                 if (ozoneVolList != null) {
                     while (ozoneVolList.hasNext()) {
                         ret.add(ozoneVolList.next().getName());
@@ -117,17 +130,22 @@ public class OzoneClient extends BaseClient {
             LOG.error("Unable to get Volume List");
             LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
+
         LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
+
         return ret;
     }
 
     public List<String> getBucketList(String bucketPrefix, List<String> finalVolumeList) {
         LOG.debug("==> OzoneClient getBucketList bucketPrefix : {}", bucketPrefix);
+
         List<String> ret = new ArrayList<>();
+        
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
                 for (String ozoneVol : finalVolumeList) {
                     Iterator<? extends OzoneBucket> ozoneBucketList = ozoneClient.getObjectStore().getVolume(ozoneVol).listBuckets(bucketPrefix);
+
                     if (ozoneBucketList != null) {
                         while (ozoneBucketList.hasNext()) {
                             ret.add(ozoneBucketList.next().getName());
@@ -139,22 +157,29 @@ public class OzoneClient extends BaseClient {
             LOG.error("Unable to get Volume List");
             LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
+
         LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
+
         return ret;
     }
 
     public List<String> getKeyList(String keyPrefix, List<String> finalVolumeList, List<String> finalBucketList) {
         LOG.debug("==> OzoneClient getKeyList keyPrefix : {}", keyPrefix);
+
         List<String> ret = new ArrayList<>();
+        
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
                 for (String ozoneVol : finalVolumeList) {
                     Iterator<? extends OzoneBucket> ozoneBucketIterator = ozoneClient.getObjectStore().getVolume(ozoneVol).listBuckets(null);
+         
                     if (ozoneBucketIterator != null) {
                         while (ozoneBucketIterator.hasNext()) {
                             OzoneBucket currentBucket = ozoneBucketIterator.next();
+
                             if (finalBucketList.contains(currentBucket.getName())) {
                                 Iterator<? extends OzoneKey> ozoneKeyIterator = currentBucket.listKeys(keyPrefix);
+                            
                                 if (ozoneKeyIterator != null) {
                                     while (ozoneKeyIterator.hasNext()) {
                                         ret.add(ozoneKeyIterator.next().getName());
@@ -169,7 +194,9 @@ public class OzoneClient extends BaseClient {
             LOG.error("Unable to get Volume List");
             LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
+
         LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
+        
         return ret;
     }
 }
