@@ -25,5 +25,5 @@
   <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
   <suppress files="AuditFileCacheProviderSpool.java" checks="TypeName"/>
   <suppress files="AuthzAuditEvent.java" checks="StaticVariableName"/>
-
+  <suppress files="buildks.java" checks="TypeName"/>
 </suppressions>
