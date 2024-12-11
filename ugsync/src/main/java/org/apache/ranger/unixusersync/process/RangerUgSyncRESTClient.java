@@ -33,15 +33,13 @@ import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 
 public class RangerUgSyncRESTClient extends RangerRESTClient {
-    private String authKerberos = "kerberos";
-
     public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd, String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType, String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
         super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig());
-        if (!(authenticationType != null && authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
+        String authKerberos = "kerberos";
+        if (!(authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
             setBasicAuthInfo(polMgrUsername, polMgrPassword);
         }
 
@@ -54,11 +52,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
             ClientConfig   config     = new DefaultClientConfig();
 
             config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
-            HostnameVerifier hv = new HostnameVerifier() {
-                public boolean verify(String urlHostName, SSLSession session) {
-                    return session.getPeerHost().equals(urlHostName);
-                }
-            };
+            HostnameVerifier hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
 
             setClient(Client.create(config));

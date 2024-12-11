@@ -28,6 +28,7 @@
     <description>User Group Synchronizer Util</description>
     <properties>
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
     </properties>
     <dependencies>
         <dependency>
@@ -77,5 +78,4 @@
             </dependencies>
         </profile>
     </profiles>
-
 </project>

@@ -37,7 +37,9 @@ import java.util.Set;
 
 public class UserSyncHAInitializerImpl extends RangerHAInitializer {
     private static final Logger LOG = LoggerFactory.getLogger(UserSyncHAInitializerImpl.class);
+
     private static UserSyncHAInitializerImpl theInstance;
+
     ActiveInstanceElectorService activeInstanceElectorService;
     ActiveStateChangeHandler     activeStateChangeHandler;
     List<HARangerService>        haRangerService;
@@ -48,7 +50,7 @@ public class UserSyncHAInitializerImpl extends RangerHAInitializer {
             LOG.debug("==> UserSyncHAInitializerImpl.UserSyncHAInitializerImpl()");
         }
         try {
-            LOG.info("Ranger UserSync server is HA enabled : " + configuration.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false));
+            LOG.info("Ranger UserSync server is HA enabled : {}", configuration.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false));
             init(configuration);
         } catch (Exception e) {
             LOG.error("UserSyncHAInitializerImpl initialization failed {}", e.getMessage());
@@ -73,10 +75,10 @@ public class UserSyncHAInitializerImpl extends RangerHAInitializer {
         super.init(configuration);
         LOG.info("==> UserSyncHAInitializerImpl.init() initialization started ");
 
-        Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<ActiveStateChangeHandler>();
+        Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<>();
         activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders, curatorFactory, activeInstanceState, serviceState, configuration);
 
-        haRangerService = new ArrayList<HARangerService>();
+        haRangerService = new ArrayList<>();
         haRangerService.add(activeInstanceElectorService);
         serviceManager = new ServiceManager(haRangerService);
         LOG.info("<== UserSyncHAInitializerImpl.init() initialization completed.");

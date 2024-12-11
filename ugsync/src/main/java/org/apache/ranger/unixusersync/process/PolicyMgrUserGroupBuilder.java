@@ -60,6 +60,7 @@ import java.util.regex.Pattern;
 
 public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implements UserGroupSink {
     private static final Logger  LOG = LoggerFactory.getLogger(PolicyMgrUserGroupBuilder.class);
+
     /* ***** POST APIs **** */
     private static final String PM_ADD_USERS_URI             = "/service/xusers/ugsync/users";
     private static final String PM_ADD_GROUPS_URI            = "/service/xusers/ugsync/groups/";

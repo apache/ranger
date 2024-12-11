@@ -50,12 +50,13 @@ import java.util.Set;
 
 public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implements UserGroupSource {
     private static final Logger LOG = LoggerFactory.getLogger(FileSourceUserGroupBuilder.class);
+
     private String userGroupFilename;
     private String currentSyncSource;
     private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
     private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
     private Map<String, Set<String>>         sourceGroupUsers;
-    private Map<String, List<String>>        user2GroupListMap  = new HashMap<String, List<String>>();
+    private Map<String, List<String>>        user2GroupListMap  = new HashMap<>();
     private UgsyncAuditInfo ugsyncAuditInfo;
     private FileSyncSourceInfo fileSyncSourceInfo;
     private int deleteCycles;
@@ -169,9 +170,9 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
                 }
             }
 
-            LOG.debug("Users = " + sourceUsers.keySet());
-            LOG.debug("Groups = " + sourceGroups.keySet());
-            LOG.debug("GroupUsers = " + sourceGroupUsers.keySet());
+            LOG.debug("Users = {}", sourceUsers.keySet());
+            LOG.debug("Groups = {}", sourceGroups.keySet());
+            LOG.debug("GroupUsers = {}", sourceGroupUsers.keySet());
 
             try {
                 sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
@@ -183,7 +184,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
         try {
             sink.postUserGroupAuditInfo(ugsyncAuditInfo);
         } catch (Throwable t) {
-            LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
+            LOG.error("sink.postUserGroupAuditInfo failed with exception: {}", t.getMessage());
         }
         isStartupFlag = false;
     }
@@ -206,7 +207,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
         File f = new File(userGroupFilename);
 
         if (f.exists() && f.canRead()) {
-            Map<String, List<String>> tmpUser2GroupListMap = null;
+            Map<String, List<String>> tmpUser2GroupListMap;
 
             if (isJsonFile(userGroupFilename)) {
                 tmpUser2GroupListMap = readJSONfile(f);
@@ -235,7 +236,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
     }
 
     public Map<String, List<String>> readTextFile(File textFile) throws Exception {
-        Map<String, List<String>> ret = new HashMap<String, List<String>>();
+        Map<String, List<String>> ret = new HashMap<>();
 
         String delimiter = config.getUserSyncFileSourceDelimiter();
 
@@ -246,7 +247,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
 
             if (csvRecordList != null) {
                 for (CSVRecord csvRecord : csvRecordList) {
-                    List<String> groups = new ArrayList<String>();
+                    List<String> groups = new ArrayList<>();
                     String       user   = csvRecord.get(0);
 
                     user = user.replaceAll("^\"|\"$", "");

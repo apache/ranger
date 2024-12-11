@@ -36,25 +36,25 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UserSync {
-    private static String[] userNameAttrValues = {
+    private static final String[] userNameAttrValues = {
             "sAMAccountName", "uid", "cn"
     };
 
     /* Not needed as this is read from the second occurrence of objectClass attribute from user entry */
-    private static String[] userObjClassValues = {
+    private static final String[] userObjClassValues = {
             "person", "posixAccount"
     };
-    private static String[] userGroupMemAttrValues = {
+    private static final String[] userGroupMemAttrValues = {
             "memberOf", "ismemberOf"
     };
 
-    private static String[] groupObjectClassValues = {
+    private static final String[] groupObjectClassValues = {
             "group", "groupOfNames", "posixGroup"
     };
-    private static String[] groupNameAttrValues    = {
+    private static final String[] groupNameAttrValues    = {
             "distinguishedName", "cn"
     };
-    private static String[] groupMemAttrValues     = {
+    private static final String[] groupMemAttrValues     = {
             "member", "memberUid"
     };
 
@@ -69,11 +69,11 @@ public class UserSync {
     private String      userSearchBase;
     private String      userSearchFilter;
     private String      searchBase;
-    private String      groupName;
-    private PrintStream logFile;
-    private PrintStream ambariProps;
-    private PrintStream installProps;
-    private LdapConfig config;
+    private       String      groupName;
+    private final PrintStream logFile;
+    private final PrintStream ambariProps;
+    private final PrintStream installProps;
+    private final LdapConfig  config;
 
     public UserSync(LdapConfig config, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) {
         this.config       = config;
@@ -131,7 +131,7 @@ public class UserSync {
         int       noOfUsers    = 0;
         Attribute userNameAttr = null;
         //String groupName = null;
-        Attribute                       groupMemberAttr      = null;
+        Attribute                       groupMemberAttr;
         NamingEnumeration<SearchResult> userSearchResultEnum = null;
         SearchControls                  userSearchControls   = new SearchControls();
         userSearchControls.setSearchScope(config.getUserSearchScope());
@@ -143,9 +143,8 @@ public class UserSync {
             userSearchAttributes.add(userGroupMemberName);
         }
 
-        if (userSearchAttributes.size() > 0) {
-            userSearchControls.setReturningAttributes(userSearchAttributes.toArray(
-                    new String[userSearchAttributes.size()]));
+        if (!userSearchAttributes.isEmpty()) {
+            userSearchControls.setReturningAttributes(userSearchAttributes.toArray(new String[userSearchAttributes.size()]));
         } else {
             userSearchControls.setReturningAttributes(new java.lang.String[] {"*", "+"});
         }
@@ -182,17 +181,17 @@ public class UserSync {
                     }
 
                     if (userNameAttribute == null || userNameAttribute.isEmpty()) {
-                        for (int i = 0; i < userNameAttrValues.length; i++) {
-                            userNameAttr = attributes.get(userNameAttrValues[i]);
+                        for (String userNameAttrValue : userNameAttrValues) {
+                            userNameAttr = attributes.get(userNameAttrValue);
                             if (userNameAttr != null) {
-                                userNameAttribute = userNameAttrValues[i];
+                                userNameAttribute = userNameAttrValue;
                                 break;
                             }
                         }
                         if (userNameAttr == null) {
                             logFile.print("WARN: Failed to find any of ( ");
-                            for (int i = 0; i < userNameAttrValues.length; i++) {
-                                logFile.print(userNameAttrValues[i] + " ");
+                            for (String userNameAttrValue : userNameAttrValues) {
+                                logFile.print(userNameAttrValue + " ");
                             }
                             logFile.println(") for entry " + userEntry.getNameInNamespace());
                             continue;
@@ -316,8 +315,7 @@ public class UserSync {
         }
 
         try {
-            groupSearchResultEnum = ldapContext.search(groupSearchBase, extendedGroupSearchFilter,
-                    groupSearchControls);
+            groupSearchResultEnum = ldapContext.search(groupSearchBase, extendedGroupSearchFilter, groupSearchControls);
 
             logFile.println("\nINFO: First 20 Groups and associated Users are:");
 
@@ -326,7 +324,9 @@ public class UserSync {
                 if (groupEntry == null) {
                     continue;
                 }
+
                 Attributes groupAttributes = groupEntry.getAttributes();
+
                 if (groupAttributes == null) {
                     logFile.println("WARN: Attributes missing for entry " + groupEntry.getNameInNamespace());
                     continue;
@@ -442,12 +442,13 @@ public class UserSync {
             }
 
             try {
-                userSearchResultEnum = ldapContext.search(userSBase,
-                        userSFilter, userSearchControls);
+                userSearchResultEnum = ldapContext.search(userSBase, userSFilter, userSearchControls);
                 while (userSearchResultEnum.hasMore()) {
+
                     if (noOfUsers >= 5) {
                         break;
                     }
+
                     final SearchResult userEntry = userSearchResultEnum.next();
 
                     if (userEntry == null) {
@@ -462,17 +463,18 @@ public class UserSync {
                     }
 
                     if (userNameAttribute == null || userNameAttribute.isEmpty()) {
-                        for (int i = 0; i < userNameAttrValues.length; i++) {
-                            userNameAttr = attributes.get(userNameAttrValues[i]);
+                        for (String nameAttrValue : userNameAttrValues) {
+                            userNameAttr = attributes.get(nameAttrValue);
                             if (userNameAttr != null) {
-                                userNameAttribute = userNameAttrValues[i];
+                                userNameAttribute = nameAttrValue;
                                 break;
                             }
                         }
+
                         if (userNameAttr == null) {
                             logFile.print("WARN: Failed to find any of ( ");
-                            for (int i = 0; i < userNameAttrValues.length; i++) {
-                                logFile.print(userNameAttrValues[i] + " ");
+                            for (String userNameAttrValue : userNameAttrValues) {
+                                logFile.print(userNameAttrValue + " ");
                             }
                             logFile.println(") for entry " + userEntry.getNameInNamespace());
                             continue;
@@ -499,15 +501,14 @@ public class UserSync {
                         userObjClass = userObjClassEnum.next().toString();
                         if (userObjClassName == null || userObjClassName.isEmpty()) {
                             if (userObjClass != null) {
-                                for (int i = 0; i < userObjClassValues.length; i++) {
-                                    if (userObjClass.equalsIgnoreCase(userObjClassValues[i])) {
+                                for (String userObjClassValue : userObjClassValues) {
+                                    if (userObjClass.equalsIgnoreCase(userObjClassValue)) {
                                         userObjClassName = userObjClass;
                                         break;
                                     }
                                 }
                             } else {
                                 logFile.println("WARN: Failed to find objectClass attribute for " + userName);
-                                //continue;
                             }
                         }
                     }
@@ -516,10 +517,10 @@ public class UserSync {
                         userObjClassName = userObjClass;
                     }
 
-                    for (int i = 0; i < userGroupMemAttrValues.length; i++) {
-                        groupMemberAttr = attributes.get(userGroupMemAttrValues[i]);
+                    for (String userGroupMemAttrValue : userGroupMemAttrValues) {
+                        groupMemberAttr = attributes.get(userGroupMemAttrValue);
                         if (groupMemberAttr != null) {
-                            userGroupMemberName = userGroupMemAttrValues[i];
+                            userGroupMemberName = userGroupMemAttrValue;
                             groupName           = groupMemberAttr.get(0).toString();
                             break;
                         }
@@ -528,7 +529,7 @@ public class UserSync {
                     noOfUsers++;
                 }
             } catch (NamingException ne) {
-                String msg = "Exception occured while discovering basic user properties:\n" +
+                String msg = "Exception occurred while discovering basic user properties:\n" +
                         "ranger.usersync.ldap.user.nameattribute\n" +
                         "ranger.usersync.ldap.user.objectclass\n" +
                         "ranger.usersync.ldap.user.groupnameattribute\n";
@@ -557,7 +558,7 @@ public class UserSync {
                     userSearchResultEnum.close();
                 }
             } catch (NamingException ne) {
-                throw new Exception("Exception occured while closing user search result: " + ne);
+                logFile.println("ERROR: Exception occurred while closing user search result: " + ne.getMessage());
             }
         }
     }
@@ -625,10 +626,10 @@ public class UserSync {
                 }
                 Integer ouOccrs = ouOccurences.get(dnValue);
                 if (ouOccrs == null) {
-                    ouOccrs = Integer.valueOf(0);
+                    ouOccrs = 0;
                 }
-                int val = ouOccrs.intValue();
-                ouOccrs = Integer.valueOf(++val);
+                int val = ouOccrs;
+                ouOccrs = ++val;
                 ouOccurences.put(dnValue, ouOccrs);
                 noOfUsers++;
             }
@@ -637,7 +638,7 @@ public class UserSync {
                 Set<String> keys      = ouOccurences.keySet();
                 int         maxOUOccr = 0;
                 for (String key : keys) {
-                    int ouOccurVal = ouOccurences.get(key).intValue();
+                    int ouOccurVal = ouOccurences.get(key);
                     logFile.println("INFO: No. of users from " + key + " = " + ouOccurVal);
                     if (ouOccurVal > maxOUOccr) {
                         maxOUOccr      = ouOccurVal;
@@ -718,8 +719,8 @@ public class UserSync {
                     NamingEnumeration<?> groupObjClassEnum = groupObjClassAttr.getAll();
                     while (groupObjClassEnum.hasMore()) {
                         String groupObjClassStr = groupObjClassEnum.next().toString();
-                        for (int i = 0; i < groupObjectClassValues.length; i++) {
-                            if (groupObjClassStr.equalsIgnoreCase(groupObjectClassValues[i])) {
+                        for (String groupObjectClassValue : groupObjectClassValues) {
+                            if (groupObjClassStr.equalsIgnoreCase(groupObjectClassValue)) {
                                 groupObjClassName = groupObjClassStr;
                                 break;
                             }
@@ -731,19 +732,19 @@ public class UserSync {
                 }
 
                 if (groupNameAttrName == null || groupNameAttrName.isEmpty()) {
-                    for (int i = 0; i < groupNameAttrValues.length; i++) {
-                        groupNameAttr = groupAttributes.get(groupNameAttrValues[i]);
+                    for (String groupNameAttrValue : groupNameAttrValues) {
+                        groupNameAttr = groupAttributes.get(groupNameAttrValue);
                         if (groupNameAttr != null) {
-                            groupNameAttrName = groupNameAttrValues[i];
+                            groupNameAttrName = groupNameAttrValue;
                             break;
                         }
                     }
                 }
 
-                for (int i = 0; i < groupMemAttrValues.length; i++) {
-                    groupMemberAttr = groupAttributes.get(groupMemAttrValues[i]);
+                for (String groupMemAttrValue : groupMemAttrValues) {
+                    groupMemberAttr = groupAttributes.get(groupMemAttrValue);
                     if (groupMemberAttr != null) {
-                        groupMemberName = groupMemAttrValues[i];
+                        groupMemberName = groupMemAttrValue;
                         break;
                     }
                 }
@@ -821,10 +822,10 @@ public class UserSync {
 
                 Integer ouOccrs = ouOccurences.get(dnValue);
                 if (ouOccrs == null) {
-                    ouOccrs = Integer.valueOf(0);
+                    ouOccrs = 0;
                 }
-                int val = ouOccrs.intValue();
-                ouOccrs = Integer.valueOf(++val);
+                int val = ouOccrs;
+                ouOccrs = ++val;
                 ouOccurences.put(dnValue, ouOccrs);
 
                 noOfGroups++;
@@ -834,7 +835,7 @@ public class UserSync {
                 Set<String> keys      = ouOccurences.keySet();
                 int         maxOUOccr = 0;
                 for (String key : keys) {
-                    int ouOccurVal = ouOccurences.get(key).intValue();
+                    int ouOccurVal = ouOccurences.get(key);
                     logFile.println("INFO: No. of groups from " + key + " = " + ouOccurVal);
                     if (ouOccurVal > maxOUOccr) {
                         maxOUOccr       = ouOccurVal;

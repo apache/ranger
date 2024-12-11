@@ -44,64 +44,69 @@ import java.util.StringTokenizer;
 
 public class UserGroupSyncConfig {
     private static final Logger LOG = LoggerFactory.getLogger(UserGroupSyncConfig.class);
-    public static final  String CONFIG_FILE                      = "ranger-ugsync-site.xml";
-    public static final String DEFAULT_CONFIG_FILE               = "ranger-ugsync-default.xml";
-    private static final String CORE_SITE_CONFIG_FILE            = "core-site.xml";
-    public static final String UGSYNC_ENABLED_PROP               = "ranger.usersync.enabled";
-    public static final String UGSYNC_PM_URL_PROP                = "ranger.usersync.policymanager.baseURL";
-    public static final String UGSYNC_UNIX_PASSWORD_FILE         = "ranger.usersync.unix.password.file";
-    public static final String DEFAULT_UGSYNC_UNIX_PASSWORD_FILE = "/etc/passwd";
-    public static final String UGSYNC_UNIX_GROUP_FILE            = "ranger.usersync.unix.group.file";
-    public static final String DEFAULT_UGSYNC_UNIX_GROUP_FILE    = "/etc/group";
-    public static final String UGSYNC_MIN_USERID_PROP            = "ranger.usersync.unix.minUserId";
-    public static final String UGSYNC_MIN_GROUPID_PROP           = "ranger.usersync.unix.minGroupId";
-    public static final String DEFAULT_UGSYNC_MIN_GROUPID        = "0";
-    public static final String UGSYNC_MAX_RECORDS_PER_API_CALL_PROP = "ranger.usersync.policymanager.maxrecordsperapicall";
-    public static final String UGSYNC_MOCK_RUN_PROP = "ranger.usersync.policymanager.mockrun";
-    public static final String UGSYNC_TEST_RUN_PROP = "ranger.usersync.policymanager.testrun";
-    public static final String UGSYNC_SOURCE_FILE_PROC = "ranger.usersync.filesource.file";
-    public static final String UGSYNC_SOURCE_FILE_DELIMITER   = "ranger.usersync.filesource.text.delimiter";
-    public static final String UGSYNC_SOURCE_FILE_DELIMITERER = "ranger.usersync.filesource.text.delimiterer";
-    public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE  = "none";
-    public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
-    public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper";
-    public static final String SYNC_MAPPING_USERNAME = "ranger.usersync.mapping.username.regex";
-    public static final String SYNC_MAPPING_GROUPNAME = "ranger.usersync.mapping.groupname.regex";
-    public static final  String UGSYNC_METRICS_ENABLED_PROP                     = "ranger.usersync.metrics.enabled";
-    public static final  String  UGSYNC_NAME_VALIDATION_ENABLED            = "ranger.usersync.name.validation.enabled";
-    public static final  String  UGSYNC_SERVER_HA_ENABLED_PARAM            = "ranger-ugsync.server.ha.enabled";
-    public static final  String  UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED      = "ranger.usersync.syncsource.validation.enabled";
 
-    private static final String SSL_KEYSTORE_FILE_TYPE_PARAM = "ranger.keystore.file.type";
-    private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM = "ranger.truststore.file.type";
-    private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
-    private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.keystore.password";
-    private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
-    private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
-    private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.truststore.password";
-    private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
-    private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM = "ranger.usersync.sleeptimeinmillisbetweensynccycle";
-    private static final String UGSYNC_SLEEP_LDAP_FORCE_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM_ENABLED = "ranger.usersync.ldap.force.sleeptimeinmillisbetweensynccycle.enabled";
-    private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE = 60000L;
-    private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE = 60000L;
-    private static final long UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE = 3600000L;
-    private static final String UGSYNC_SOURCE_CLASS_PARAM = "ranger.usersync.source.impl.class";
-    private static final String UGSYNC_SINK_CLASS_PARAM = "ranger.usersync.sink.impl.class";
-    private static final String UGSYNC_SOURCE_CLASS = "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder";
-    private static final String UGSYNC_SINK_CLASS = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
-    private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
-    private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
-    private static final String  LGSYNC_LDAP_DELTASYNC_ENABLED         = "ranger.usersync.ldap.deltasync";
-    private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED = false;
-    private static final String  LGSYNC_LDAP_STARTTLS_ENABLED         = "ranger.usersync.ldap.starttls";
-    private static final boolean DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED = false;
-    private static final String LGSYNC_LDAP_BIND_DN = "ranger.usersync.ldap.binddn";
-    private static final String LGSYNC_LDAP_BIND_KEYSTORE = "ranger.usersync.credstore.filename";
-    private static final String LGSYNC_LDAP_BIND_ALIAS = "ranger.usersync.ldap.bindalias";
-    private static final String LGSYNC_LDAP_BIND_PASSWORD = "ranger.usersync.ldap.ldapbindpassword";
-    private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM = "ranger.usersync.ldap.authentication.mechanism";
-    private static final String DEFAULT_AUTHENTICATION_MECHANISM     = "simple";
-    private static final String LGSYNC_SEARCH_BASE = "ranger.usersync.ldap.searchBase";
+    private static final String CORE_SITE_CONFIG_FILE            = "core-site.xml";
+    public static final String CONFIG_FILE                       = "ranger-ugsync-site.xml";
+    public static final String DEFAULT_CONFIG_FILE               = "ranger-ugsync-default.xml";
+
+    private static final String UGSYNC_SOURCE_CLASS_PARAM                                                            = "ranger.usersync.source.impl.class";
+    private static final String UGSYNC_SINK_CLASS_PARAM                                                              = "ranger.usersync.sink.impl.class";
+    private static final String UGSYNC_SOURCE_CLASS                                                                  = "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder";
+    private static final String UGSYNC_SINK_CLASS                                                                    = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
+    private static final String LGSYNC_SOURCE_CLASS                                                                  = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
+
+    public static final String UGSYNC_ENABLED_PROP                                                                   = "ranger.usersync.enabled";
+    public static final String UGSYNC_PM_URL_PROP                                                                    = "ranger.usersync.policymanager.baseURL";
+    public static final String UGSYNC_UNIX_PASSWORD_FILE                                                             = "ranger.usersync.unix.password.file";
+    public static final String DEFAULT_UGSYNC_UNIX_PASSWORD_FILE                                                     = "/etc/passwd";
+    public static final String UGSYNC_UNIX_GROUP_FILE                                                                = "ranger.usersync.unix.group.file";
+    public static final String DEFAULT_UGSYNC_UNIX_GROUP_FILE                                                        = "/etc/group";
+    public static final String UGSYNC_MIN_USERID_PROP                                                                = "ranger.usersync.unix.minUserId";
+    public static final String UGSYNC_MIN_GROUPID_PROP                                                               = "ranger.usersync.unix.minGroupId";
+    public static final String DEFAULT_UGSYNC_MIN_GROUPID                                                            = "0";
+    public static final String UGSYNC_MAX_RECORDS_PER_API_CALL_PROP                                                  = "ranger.usersync.policymanager.maxrecordsperapicall";
+    public static final String UGSYNC_MOCK_RUN_PROP                                                                  = "ranger.usersync.policymanager.mockrun";
+    public static final String UGSYNC_TEST_RUN_PROP                                                                  = "ranger.usersync.policymanager.testrun";
+    public static final String UGSYNC_SOURCE_FILE_PROC                                                               = "ranger.usersync.filesource.file";
+    public static final String UGSYNC_SOURCE_FILE_DELIMITER                                                          = "ranger.usersync.filesource.text.delimiter";
+    public static final String UGSYNC_SOURCE_FILE_DELIMITERER                                                        = "ranger.usersync.filesource.text.delimiterer";
+    public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE                                                     = "none";
+    public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE                                                    = "lower";
+    public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE                                                    = "upper";
+    public static final String SYNC_MAPPING_USERNAME                                                                 = "ranger.usersync.mapping.username.regex";
+    public static final String SYNC_MAPPING_GROUPNAME                                                                = "ranger.usersync.mapping.groupname.regex";
+    public static final String UGSYNC_METRICS_ENABLED_PROP                                                           = "ranger.usersync.metrics.enabled";
+    public static final String UGSYNC_NAME_VALIDATION_ENABLED                                                        = "ranger.usersync.name.validation.enabled";
+    public static final String UGSYNC_SERVER_HA_ENABLED_PARAM                                                        = "ranger-ugsync.server.ha.enabled";
+    public static final String UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED                                                 = "ranger.usersync.syncsource.validation.enabled";
+
+    private static final String SSL_KEYSTORE_FILE_TYPE_PARAM                                                         = "ranger.keystore.file.type";
+    private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM                                                       = "ranger.truststore.file.type";
+    private static final String SSL_KEYSTORE_PATH_PARAM                                                              = "ranger.usersync.keystore.file";
+    private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM                                                     = "ranger.usersync.keystore.password";
+    private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS                                                     = "usersync.ssl.key.password";
+    private static final String SSL_TRUSTSTORE_PATH_PARAM                                                            = "ranger.usersync.truststore.file";
+    private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM                                                   = "ranger.usersync.truststore.password";
+    private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS                                                   = "usersync.ssl.truststore.password";
+
+    private static final String UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM                                      = "ranger.usersync.sleeptimeinmillisbetweensynccycle";
+    private static final String UGSYNC_SLEEP_LDAP_FORCE_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM_ENABLED                   = "ranger.usersync.ldap.force.sleeptimeinmillisbetweensynccycle.enabled";
+    private static final long   UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE                                  = 60000L;
+    private static final long   UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE                         = 60000L;
+    private static final long   UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE                         = 3600000L;
+
+    private static final String LGSYNC_LDAP_URL                                                                      = "ranger.usersync.ldap.url";
+    private static final String  LGSYNC_LDAP_DELTASYNC_ENABLED                                                       = "ranger.usersync.ldap.deltasync";
+    private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED                                               = false;
+    private static final String  LGSYNC_LDAP_STARTTLS_ENABLED                                                        = "ranger.usersync.ldap.starttls";
+    private static final boolean DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED                                                = false;
+    private static final String LGSYNC_LDAP_BIND_DN                                                                  = "ranger.usersync.ldap.binddn";
+    private static final String LGSYNC_LDAP_BIND_KEYSTORE                                                            = "ranger.usersync.credstore.filename";
+    private static final String LGSYNC_LDAP_BIND_ALIAS                                                               = "ranger.usersync.ldap.bindalias";
+    private static final String LGSYNC_LDAP_BIND_PASSWORD                                                            = "ranger.usersync.ldap.ldapbindpassword";
+    private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM                                                 = "ranger.usersync.ldap.authentication.mechanism";
+    private static final String DEFAULT_AUTHENTICATION_MECHANISM                                                     = "simple";
+    private static final String LGSYNC_SEARCH_BASE                                                                   = "ranger.usersync.ldap.searchBase";
     private static final String LGSYNC_USER_SEARCH_BASE = "ranger.usersync.ldap.user.searchbase";
     private static final String LGSYNC_USER_SEARCH_SCOPE = "ranger.usersync.ldap.user.searchscope";
     private static final String LGSYNC_USER_OBJECT_CLASS  = "ranger.usersync.ldap.user.objectclass";
@@ -198,7 +203,7 @@ public class UserGroupSyncConfig {
     private static final long    UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5000L;
     private static final boolean DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED                   = true;
     private static volatile UserGroupSyncConfig me;
-    private Properties prop = new Properties();
+    private final Properties prop = new Properties();
     private Configuration userGroupConfig;
 
     private UserGroupSyncConfig() {
@@ -343,7 +348,7 @@ public class UserGroupSyncConfig {
         if (prop.containsKey(LGSYNC_LDAP_BIND_KEYSTORE)) {
             String path  = prop.getProperty(LGSYNC_LDAP_BIND_KEYSTORE);
             String alias = SSL_KEYSTORE_PATH_PASSWORD_ALIAS;
-            if (path != null && alias != null) {
+            if (path != null) {
                 if (!path.trim().isEmpty() && !alias.trim().isEmpty()) {
                     if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
                         String crendentialProviderPrefixBcfks = "bcfks" + "://file";
@@ -396,7 +401,7 @@ public class UserGroupSyncConfig {
     }
 
     public long getInitSleepTimeInMillisBetweenCycle() throws Throwable {
-        long          initSleepValue = 0;
+        long          initSleepValue;
         Configuration config         = getUserGroupConfig();
         if (config.getBoolean(UGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
             initSleepValue = UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA;
@@ -444,9 +449,7 @@ public class UserGroupSyncConfig {
 
         Class<UserGroupSource> ugSourceClass = (Class<UserGroupSource>) Class.forName(className);
 
-        UserGroupSource ret = ugSourceClass.newInstance();
-
-        return ret;
+        return ugSourceClass.newInstance();
     }
 
     public UserGroupSink getUserGroupSink() throws Throwable {
@@ -458,9 +461,7 @@ public class UserGroupSyncConfig {
 
         Class<UserGroupSink> ugSinkClass = (Class<UserGroupSink>) Class.forName(val);
 
-        UserGroupSink ret = ugSinkClass.newInstance();
-
-        return ret;
+        return ugSinkClass.newInstance();
     }
 
     public String getLdapUrl() throws Throwable {
@@ -522,7 +523,7 @@ public class UserGroupSyncConfig {
     }
 
     /* Used only for unit testing */
-    public void setUserSearchBase(String userSearchBase) throws Throwable {
+    public void setUserSearchBase(String userSearchBase) {
         prop.setProperty(LGSYNC_USER_SEARCH_BASE, userSearchBase);
     }
 
@@ -591,7 +592,7 @@ public class UserGroupSyncConfig {
 
     public Set<String> getGroupNameSet() {
         String      groupNames    = getGroupNames();
-        Set<String> groupNamegSet = new HashSet<String>();
+        Set<String> groupNamegSet = new HashSet<>();
         if (StringUtils.isNotEmpty(groupNames)) {
             StringTokenizer st = new StringTokenizer(groupNames, ";");
             while (st.hasMoreTokens()) {
@@ -604,7 +605,7 @@ public class UserGroupSyncConfig {
     public Set<String> getUserGroupNameAttributeSet() {
         String          uga                       = getUserGroupNameAttribute();
         StringTokenizer st                        = new StringTokenizer(uga, ",");
-        Set<String>     userGroupNameAttributeSet = new HashSet<String>();
+        Set<String>     userGroupNameAttributeSet = new HashSet<>();
         while (st.hasMoreTokens()) {
             userGroupNameAttributeSet.add(st.nextToken().trim());
         }
@@ -617,7 +618,7 @@ public class UserGroupSyncConfig {
             otherAttributes = DEFAULT_OTHER_USER_ATTRIBUTES;
         }
         StringTokenizer st                  = new StringTokenizer(otherAttributes, ",");
-        Set<String>     otherUserAttributes = new HashSet<String>();
+        Set<String>     otherUserAttributes = new HashSet<>();
         while (st.hasMoreTokens()) {
             otherUserAttributes.add(st.nextToken().trim());
         }
@@ -668,7 +669,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             pagedResultsEnabled = DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED;
         } else {
-            pagedResultsEnabled = Boolean.valueOf(val);
+            pagedResultsEnabled = Boolean.parseBoolean(val);
         }
         return pagedResultsEnabled;
     }
@@ -679,7 +680,7 @@ public class UserGroupSyncConfig {
     }
 
     public int getPagedResultsSize() {
-        int    pagedResultsSize = DEFAULT_LGSYNC_PAGED_RESULTS_SIZE;
+        int    pagedResultsSize;
         String val              = prop.getProperty(LGSYNC_PAGED_RESULTS_SIZE);
         if (val == null || val.trim().isEmpty()) {
             pagedResultsSize = DEFAULT_LGSYNC_PAGED_RESULTS_SIZE;
@@ -698,7 +699,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             groupSearchEnabled = DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED;
         } else {
-            groupSearchEnabled = Boolean.valueOf(val);
+            groupSearchEnabled = Boolean.parseBoolean(val);
         }
         return groupSearchEnabled;
     }
@@ -714,7 +715,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             groupSearchFirstEnabled = DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED;
         } else {
-            groupSearchFirstEnabled = Boolean.valueOf(val);
+            groupSearchFirstEnabled = Boolean.parseBoolean(val);
         }
         if (!isGroupSearchEnabled()) {
             groupSearchFirstEnabled = false;
@@ -733,7 +734,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             userSearchEnabled = DEFAULT_LGSYNC_USER_SEARCH_ENABLED;
         } else {
-            userSearchEnabled = Boolean.valueOf(val);
+            userSearchEnabled = Boolean.parseBoolean(val);
         }
         if (!isGroupSearchFirstEnabled()) {
             userSearchEnabled = true;
@@ -758,7 +759,7 @@ public class UserGroupSyncConfig {
     }
 
     /* Used only for unit testing */
-    public void setGroupSearchBase(String groupSearchBase) throws Throwable {
+    public void setGroupSearchBase(String groupSearchBase) {
         prop.setProperty(LGSYNC_GROUP_SEARCH_BASE, groupSearchBase);
     }
 
@@ -843,7 +844,7 @@ public class UserGroupSyncConfig {
             otherAttributes = DEFAULT_OTHER_GROUP_ATTRIBUTES;
         }
         StringTokenizer st                   = new StringTokenizer(otherAttributes, ",");
-        Set<String>     otherGroupAttributes = new HashSet<String>();
+        Set<String>     otherGroupAttributes = new HashSet<>();
         while (st.hasMoreTokens()) {
             otherGroupAttributes.add(st.nextToken().trim());
         }
@@ -882,7 +883,7 @@ public class UserGroupSyncConfig {
 
     public String getPolicyMgrPassword() {
         //update credential from keystore
-        String password = null;
+        String password;
         if (prop != null && prop.containsKey(SYNC_POLICY_MGR_KEYSTORE)) {
             password = prop.getProperty(SYNC_POLICY_MGR_PASSWORD);
             if (password != null && !password.isEmpty()) {
@@ -958,8 +959,8 @@ public class UserGroupSyncConfig {
         return referral;
     }
 
-    public List<String> getAllRegexPatterns(String baseProperty) throws Throwable {
-        List<String> regexPatterns = new ArrayList<String>();
+    public List<String> getAllRegexPatterns(String baseProperty) {
+        List<String> regexPatterns = new ArrayList<>();
         if (prop != null) {
             String baseRegex = prop.getProperty(baseProperty);
             if (baseRegex == null) {
@@ -1037,7 +1038,7 @@ public class UserGroupSyncConfig {
 
     public boolean isUserSyncRangerCookieEnabled() {
         String val = prop.getProperty(USERSYNC_RANGER_COOKIE_ENABLED_PROP);
-        return val == null || Boolean.valueOf(val.trim());
+        return val == null || Boolean.parseBoolean(val.trim());
     }
 
     public String getRangerAdminCookieName() {
@@ -1066,7 +1067,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             starttlsEnabled = DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED;
         } else {
-            starttlsEnabled = Boolean.valueOf(val);
+            starttlsEnabled = Boolean.parseBoolean(val);
         }
         return starttlsEnabled;
     }
@@ -1077,7 +1078,7 @@ public class UserGroupSyncConfig {
         if (val == null || val.trim().isEmpty()) {
             deltaSyncEnabled = DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED;
         } else {
-            deltaSyncEnabled = Boolean.valueOf(val);
+            deltaSyncEnabled = Boolean.parseBoolean(val);
         }
         return deltaSyncEnabled;
     }
@@ -1142,7 +1143,7 @@ public class UserGroupSyncConfig {
         String val = prop.getProperty(UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -1161,7 +1162,7 @@ public class UserGroupSyncConfig {
         if (StringUtils.isEmpty(val)) {
             isUserSyncDeletesEnabled = DEFAULT_UGSYNC_DELETES_ENABLED;
         } else {
-            isUserSyncDeletesEnabled = Boolean.valueOf(val);
+            isUserSyncDeletesEnabled = Boolean.parseBoolean(val);
         }
         return isUserSyncDeletesEnabled;
     }
@@ -1172,12 +1173,12 @@ public class UserGroupSyncConfig {
      * If the delete frequency interval value is less than sync interval and greater than 8hrs,
      * then deleted objects are computed at every sync cycle.
      */
-    public long getUserSyncDeletesFrequency() throws Throwable {
+    public long getUserSyncDeletesFrequency() {
         long ret = 1;
 
         String val = prop.getProperty(UGSYNC_DELETES_FREQUENCY);
         if (StringUtils.isNotBlank(val)) {
-            ret = Long.valueOf(val);
+            ret = Long.parseLong(val);
             if (!isTestRunEnabled() && ret < DEFAULT_UGSYNC_DELETES_FREQUENCY) {
                 LOG.info("Frequency of computing deletes cannot be set below " + DEFAULT_UGSYNC_DELETES_FREQUENCY);
                 ret = DEFAULT_UGSYNC_DELETES_FREQUENCY;
@@ -1205,7 +1206,7 @@ public class UserGroupSyncConfig {
         if (StringUtils.isEmpty(val)) {
             isUserSyncNameValidationEnabled = DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED;
         } else {
-            isUserSyncNameValidationEnabled = Boolean.valueOf(val);
+            isUserSyncNameValidationEnabled = Boolean.parseBoolean(val);
         }
         return isUserSyncNameValidationEnabled;
     }
@@ -1220,7 +1221,7 @@ public class UserGroupSyncConfig {
                 LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator /");
             }
         }
-        LOG.info(String.format("Using %s as the RegEx Separator", ret));
+        LOG.info("Using {} as the RegEx Separator", ret);
         return ret;
     }
 
@@ -1242,9 +1243,9 @@ public class UserGroupSyncConfig {
 
     private String getUserGroupSourceClassName() {
         String val       = prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM);
-        String className = UGSYNC_SOURCE_CLASS;
+        String className;
 
-        String syncSource = null;
+        String syncSource;
 
         if (val == null || val.trim().isEmpty()) {
             syncSource = getSyncSource();
@@ -1273,8 +1274,8 @@ public class UserGroupSyncConfig {
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Integer.parseInt(val);
-            } catch (NumberFormatException excp) {
-                LOG.warn("Invalid value for property: " + key + "=" + val + ". Will use default value: " + defaultValue, excp);
+            } catch (NumberFormatException exp) {
+                LOG.warn("Invalid value for property: {} = {} , will use default value: {}", key, val, defaultValue, exp);
             }
         }
 

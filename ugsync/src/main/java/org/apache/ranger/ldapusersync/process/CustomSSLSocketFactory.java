@@ -38,32 +38,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
 public class CustomSSLSocketFactory extends SSLSocketFactory {
     private static final Logger              LOG    = LoggerFactory.getLogger(CustomSSLSocketFactory.class);
+
     private              SSLSocketFactory    sockFactory;
-    private              UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
     public CustomSSLSocketFactory() {
-        SSLContext sslContext        = null;
-        String     keyStoreFile      = config.getSSLKeyStorePath();
-        String     keyStoreFilepwd   = config.getSSLKeyStorePathPassword();
-        String     trustStoreFile    = config.getSSLTrustStorePath();
-        String     trustStoreFilepwd = config.getSSLTrustStorePathPassword();
-        String     keyStoreType      = config.getSSLKeyStoreType();
-        String     trustStoreType    = config.getSSLTrustStoreType();
+        SSLContext          sslContext;
+        UserGroupSyncConfig config            = UserGroupSyncConfig.getInstance();
+        String              keyStoreFile      = config.getSSLKeyStorePath();
+        String              keyStoreFilepwd   = config.getSSLKeyStorePathPassword();
+        String              trustStoreFile    = config.getSSLTrustStorePath();
+        String              trustStoreFilepwd = config.getSSLTrustStorePathPassword();
+        String              keyStoreType      = config.getSSLKeyStoreType();
+        String              trustStoreType    = config.getSSLTrustStoreType();
         try {
             KeyManager[]   kmList = null;
             TrustManager[] tmList = null;
 
             if (keyStoreFile != null && keyStoreFilepwd != null) {
                 KeyStore    keyStore = KeyStore.getInstance(keyStoreType);
-                InputStream in       = null;
-                try {
-                    in = getFileInputStream(keyStoreFile);
+                try (InputStream in = getFileInputStream(keyStoreFile)) {
                     if (in == null) {
                         LOG.error("Unable to obtain keystore from file [{}]", keyStoreFile);
                         return;
@@ -72,30 +70,20 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
                     KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                     keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
                     kmList = keyManagerFactory.getKeyManagers();
-                } finally {
-                    if (in != null) {
-                        in.close();
-                    }
                 }
             }
 
             if (trustStoreFile != null && trustStoreFilepwd != null) {
                 KeyStore    trustStore = KeyStore.getInstance(trustStoreType);
-                InputStream in         = null;
-                try {
-                    in = getFileInputStream(trustStoreFile);
+                try (InputStream in = getFileInputStream(trustStoreFile)) {
                     if (in == null) {
-                        LOG.error("Unable to obtain keystore from file [{}]", trustStoreFile);
+                        LOG.error("Unable to obtain truststore from file [{}]", trustStoreFile);
                         return;
                     }
                     trustStore.load(in, trustStoreFilepwd.toCharArray());
                     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                     trustManagerFactory.init(trustStore);
                     tmList = trustManagerFactory.getTrustManagers();
-                } finally {
-                    if (in != null) {
-                        in.close();
-                    }
                 }
             }
 
@@ -128,12 +116,12 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port) throws IOException {
         return sockFactory.createSocket(host, port);
     }
 
     @Override
-    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
         return sockFactory.createSocket(host, port, localHost, localPort);
     }
 
@@ -148,7 +136,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
-        InputStream ret = null;
+        InputStream ret;
 
         File f = new File(path);
 
