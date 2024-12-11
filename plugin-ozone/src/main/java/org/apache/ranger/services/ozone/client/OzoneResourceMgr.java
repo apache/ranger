@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class OzoneResourceMgr {
     private static final Logger LOG = LoggerFactory.getLogger(OzoneResourceMgr.class);
+
     private static final String VOLUME = "volume";
     private static final String BUCKET = "bucket";
     private static final String KEY    = "key";
@@ -77,6 +78,7 @@ public class OzoneResourceMgr {
                 bucketList = resourceMap.get(BUCKET);
                 keyList    = resourceMap.get(KEY);
             }
+
             switch (resource.trim().toLowerCase()) {
                 case VOLUME:
                     volumePrefix = userInput;
@@ -115,7 +117,7 @@ public class OzoneResourceMgr {
                         callableObj       = () -> ozoneClient.getBucketList(finalBucketPrefix, finalvolumeList);
                     } else if (keyPrefix != null && !keyPrefix.isEmpty()) {
                         finalKeyPrefix = keyPrefix;
-                        callableObj = () -> ozoneClient.getKeyList(finalKeyPrefix, finalvolumeList, finalbucketList);
+                        callableObj    = () -> ozoneClient.getKeyList(finalKeyPrefix, finalvolumeList, finalbucketList);
                     }
                     if (callableObj != null) {
                         synchronized (ozoneClient) {
@@ -132,6 +134,7 @@ public class OzoneResourceMgr {
         }
 
         LOG.debug("<== OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {} keyList: {} Result: {}", userInput, configs, volumeList, bucketList, keyList, resultList);
+
         return resultList;
     }
 }
