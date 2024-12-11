@@ -86,9 +86,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         ACLType              operation = context.getAclRights();
         String               resource  = ozoneObj.getPath();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = {}, resource = {}, store type = {}, ugi = {}, ip = {}, resourceType = {}", operation, resource, OzoneObj.StoreType.values(), ugi, context.getIp(), ozoneObj.getResourceType());
-        }
+        LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = {}, resource = {}, store type = {}, ugi = {}, ip = {}, resourceType = {}", operation, resource, OzoneObj.StoreType.values(), ugi, context.getIp(), ozoneObj.getResourceType());
 
         if (rangerPlugin == null) {
             MiscUtil.logErrorMessageByInterval(LOG, "Authorizer is still not initialized");
@@ -97,9 +95,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         //TODO: If source type is S3 and resource is volume, then allow it by default
         if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3 && ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("If store type is s3 and resource is volume, then we allow it by default!  Returning true");
-            }
+            LOG.debug("If store type is s3 and resource is volume, then we allow it by default!  Returning true");
             LOG.warn("Allowing access by default since source type is S3 and resource type is Volume!!");
             return true;
         }
@@ -167,9 +163,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         }
         RangerPerfTracer.log(perf);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("rangerRequest = {}, return = {}", rangerRequest, returnValue);
-        }
+        LOG.debug("rangerRequest = {}, return = {}", rangerRequest, returnValue);
         return returnValue;
     }
 

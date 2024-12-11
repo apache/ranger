@@ -101,9 +101,7 @@ public class OzoneClient extends BaseClient {
     }
 
     public List<String> getVolumeList(String volumePrefix) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> OzoneClient getVolume volumePrefix : {}", volumePrefix);
-        }
+        LOG.debug("==> OzoneClient getVolume volumePrefix : {}", volumePrefix);
 
         List<String> ret = new ArrayList<>();
         try {
@@ -117,20 +115,14 @@ public class OzoneClient extends BaseClient {
             }
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
-            }
+            LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
-        }
+        LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
         return ret;
     }
 
     public List<String> getBucketList(String bucketPrefix, List<String> finalVolumeList) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> OzoneClient getBucketList bucketPrefix : {}", bucketPrefix);
-        }
+        LOG.debug("==> OzoneClient getBucketList bucketPrefix : {}", bucketPrefix);
         List<String> ret = new ArrayList<>();
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
@@ -145,20 +137,14 @@ public class OzoneClient extends BaseClient {
             }
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
-            }
+            LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
-        }
+        LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
         return ret;
     }
 
     public List<String> getKeyList(String keyPrefix, List<String> finalVolumeList, List<String> finalBucketList) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> OzoneClient getKeyList keyPrefix : {}", keyPrefix);
-        }
+        LOG.debug("==> OzoneClient getKeyList keyPrefix : {}", keyPrefix);
         List<String> ret = new ArrayList<>();
         try {
             if (ozoneClient != null && finalVolumeList != null && !finalVolumeList.isEmpty()) {
@@ -181,13 +167,9 @@ public class OzoneClient extends BaseClient {
             }
         } catch (IOException e) {
             LOG.error("Unable to get Volume List");
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
-            }
+            LOG.debug("<== OzoneClient.getVolumeList() Error : ", e);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
-        }
+        LOG.debug("<== OzoneClient.getVolumeList(): {}", ret);
         return ret;
     }
 }

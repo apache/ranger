@@ -43,9 +43,7 @@ public class OzoneResourceMgr {
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
         Map<String, Object> ret;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> OzoneResourceMgr.connectionTest ServiceName: {} Configs: {}", serviceName, configs);
-        }
+        LOG.debug("==> OzoneResourceMgr.connectionTest ServiceName: {} Configs: {}", serviceName, configs);
 
         try {
             ret = OzoneClient.connectionTest(serviceName, configs);
@@ -54,9 +52,7 @@ public class OzoneResourceMgr {
             throw e;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.connectionTest Result : {}", ret);
-        }
+        LOG.debug("<== OzoneResourceMgr.connectionTest Result : {}", ret);
 
         return ret;
     }
@@ -73,9 +69,7 @@ public class OzoneResourceMgr {
         String                    bucketPrefix = null;
         String                    keyPrefix    = null;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.getOzoneResources()  UserInput: {} resource: {} resourceMap: {}", userInput, resource, resourceMap);
-        }
+        LOG.debug("<== OzoneResourceMgr.getOzoneResources()  UserInput: {} resource: {} resourceMap: {}", userInput, resource, resourceMap);
 
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
@@ -100,9 +94,7 @@ public class OzoneResourceMgr {
 
         if (serviceName != null && userInput != null) {
             try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("==> OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {}  keyList: {}", userInput, configs, volumeList, bucketList, keyList);
-                }
+                LOG.debug("==> OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {}  keyList: {}", userInput, configs, volumeList, bucketList, keyList);
 
                 final OzoneClient ozoneClient = new OzoneConnectionMgr().getOzoneConnection(serviceName, serviceType, configs);
 
@@ -139,9 +131,7 @@ public class OzoneResourceMgr {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {} keyList: {} Result: {}", userInput, configs, volumeList, bucketList, keyList, resultList);
-        }
+        LOG.debug("<== OzoneResourceMgr.getOzoneResources() UserInput: {} configs: {} volumeList: {} bucketList: {} keyList: {} Result: {}", userInput, configs, volumeList, bucketList, keyList, resultList);
         return resultList;
     }
 }

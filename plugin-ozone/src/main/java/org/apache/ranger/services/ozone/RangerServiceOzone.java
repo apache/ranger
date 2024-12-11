@@ -63,9 +63,7 @@ public class RangerServiceOzone extends RangerBaseService {
     public Map<String, Object> validateConfig() throws Exception {
         Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.validateConfig Service: ({})", serviceName);
-        }
+        LOG.debug("<== RangerServiceOzone.validateConfig Service: ({})", serviceName);
 
         if (configs != null) {
             try {
@@ -76,9 +74,7 @@ public class RangerServiceOzone extends RangerBaseService {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.validateConfig Response : ({})", ret);
-        }
+        LOG.debug("<== RangerServiceOzone.validateConfig Response : ({})", ret);
 
         return ret;
     }
@@ -89,9 +85,7 @@ public class RangerServiceOzone extends RangerBaseService {
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceOzone.lookupResource Context: ({})", context);
-        }
+        LOG.debug("==> RangerServiceOzone.lookupResource Context: ({})", context);
         if (context != null) {
             try {
                 ret = OzoneResourceMgr.getOzoneResources(serviceName, serviceType, configs, context);
@@ -100,17 +94,13 @@ public class RangerServiceOzone extends RangerBaseService {
                 throw e;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.lookupResource Response: ({})", ret);
-        }
+        LOG.debug("<== RangerServiceOzone.lookupResource Response: ({})", ret);
         return ret;
     }
 
     @Override
     public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceOzone.getDefaultRangerPolicies() ");
-        }
+        LOG.debug("==> RangerServiceOzone.getDefaultRangerPolicies() ");
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
@@ -140,9 +130,7 @@ public class RangerServiceOzone extends RangerBaseService {
                 }
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : {}", ret);
-        }
+        LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : {}", ret);
         return ret;
     }
 }
