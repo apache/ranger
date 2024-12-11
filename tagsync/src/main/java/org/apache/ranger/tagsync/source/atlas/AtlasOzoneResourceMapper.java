@@ -55,7 +55,7 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
     private static final int    RESOURCE_COUNT    = 4;
     private String  ofsKeyDelimiter           = "/";
     private String  ofsBucketDelimiter        = "\\.";
-    private boolean legacyParsingEnabled      = false;
+    private boolean legacyParsingEnabled;
     // keeping it true for ofs since it is new support from tagsync
     private boolean isRecursiveEnabledOFSKey  = true;
     // Setting to true by default. Causes behavior change for customer with existing deployments. Configurable if required otherwise

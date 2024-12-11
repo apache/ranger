@@ -38,14 +38,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AtlasNotificationMapper {
-    private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
+public final class AtlasNotificationMapper {
+    private AtlasNotificationMapper() {}
 
+    private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
     private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
     private static       Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     public static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
-
         boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications();
 
         if (!skipLogging) {
@@ -137,8 +137,7 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) {
-
+    private static Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) {
         Map<String, ServiceTags> ret = new HashMap<>();
 
         for (RangerAtlasEntityWithTags element : entitiesWithTags) {
@@ -202,13 +201,12 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) {
+    private static ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) {
         ServiceTags           ret             = null;
         RangerAtlasEntity     entity          = entityWithTags.getEntity();
         RangerServiceResource serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
 
         if (serviceResource != null) {
-
             List<RangerTag>    tags        = getTags(entityWithTags);
             List<RangerTagDef> tagDefs     = getTagDefs(entityWithTags);
             String             serviceName = serviceResource.getServiceName();
@@ -248,7 +246,7 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
+    private static ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
         ServiceTags ret = serviceTagsMap == null ? null : serviceTagsMap.get(serviceName);
 
         if (ret == null) {
@@ -265,7 +263,7 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
+    private static List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
         List<RangerTag> ret = new ArrayList<>();
 
         if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
@@ -286,15 +284,13 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
+    private static List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
         List<RangerTagDef> ret = new ArrayList<>();
 
         if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
-
             Map<String, String> tagNames = new HashMap<>();
 
             for (EntityNotificationWrapper.RangerAtlasClassification tag : entityWithTags.getTags()) {
-
                 if (!tagNames.containsKey(tag.getName())) {
                     tagNames.put(tag.getName(), tag.getName());
 

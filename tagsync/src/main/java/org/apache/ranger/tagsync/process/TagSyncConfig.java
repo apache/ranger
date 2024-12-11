@@ -93,9 +93,9 @@ public class TagSyncConfig extends Configuration {
     private static final int    DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
     private static final String TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
     private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
-    private static       TagSyncConfig instance    = null;
-    private static String LOCAL_HOSTNAME = "unknown";
-    private Properties props;
+    private static       TagSyncConfig instance;
+    private static String              localHostname;
+    private Properties                 props;
 
     private TagSyncConfig() {
         super(false);
@@ -114,8 +114,7 @@ public class TagSyncConfig extends Configuration {
     }
 
     public static InputStream getFileInputStream(String path) throws FileNotFoundException {
-
-        InputStream ret = null;
+        InputStream ret;
 
         File f = new File(path);
 
@@ -144,17 +143,14 @@ public class TagSyncConfig extends Configuration {
     }
 
     public static String getResourceFileName(String path) {
-
         String ret = null;
 
         if (StringUtils.isNotBlank(path)) {
-
             File f = new File(path);
 
             if (f.exists() && f.isFile() && f.canRead()) {
                 ret = path;
             } else {
-
                 URL fileURL = TagSyncConfig.class.getResource(path);
                 if (fileURL == null) {
                     if (!path.startsWith("/")) {
@@ -186,20 +182,20 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    synchronized static public boolean isTagSyncServiceActive() {
+    public static synchronized boolean isTagSyncServiceActive() {
         return TagSyncHAInitializerImpl.getInstance(TagSyncConfig.getInstance()).isActive();
     }
 
-    static public String getTagsyncKeyStoreType(Properties prop) {
+    public static String getTagsyncKeyStoreType(Properties prop) {
         return prop.getProperty(TAGSYNC_KEYSTORE_TYPE_PROP);
     }
 
-    static public boolean isTagSyncRangerCookieEnabled(Properties prop) {
+    public static boolean isTagSyncRangerCookieEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_RANGER_COOKIE_ENABLED_PROP);
-        return val == null || Boolean.valueOf(val.trim());
+        return val == null || Boolean.parseBoolean(val.trim());
     }
 
-    static public String getRangerAdminCookieName(Properties prop) {
+    public static String getRangerAdminCookieName(Properties prop) {
         String ret = RangerCommonConstants.DEFAULT_COOKIE_NAME;
         String val = prop.getProperty(TAGSYNC_TAGADMIN_COOKIE_NAME_PROP);
         if (StringUtils.isNotBlank(val)) {
@@ -208,16 +204,16 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    static public String getTagSyncLogdir(Properties prop) {
+    public static String getTagSyncLogdir(Properties prop) {
         return prop.getProperty(TAGSYNC_LOGDIR_PROP);
     }
 
-    static public long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
+    public static long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
         String val = prop.getProperty(TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP);
         long   ret = DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL;
         if (StringUtils.isNotBlank(val)) {
             try {
-                ret = Long.valueOf(val);
+                ret = Long.parseLong(val);
             } catch (NumberFormatException exception) {
                 // Ignore
             }
@@ -225,7 +221,7 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    static public long getTagSourceAtlasDownloadIntervalInMillis(Properties prop) {
+    public static long getTagSourceAtlasDownloadIntervalInMillis(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP);
         long   ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL;
         if (StringUtils.isNotBlank(val)) {
@@ -238,7 +234,7 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    static public String getTagSinkClassName(Properties prop) {
+    public static String getTagSinkClassName(Properties prop) {
         String val = prop.getProperty(TAGSYNC_SINK_CLASS_PROP);
         if (StringUtils.equalsIgnoreCase(val, "ranger")) {
             return "org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink";
@@ -247,16 +243,16 @@ public class TagSyncConfig extends Configuration {
         }
     }
 
-    static public String getTagAdminRESTUrl(Properties prop) {
+    public static String getTagAdminRESTUrl(Properties prop) {
         return prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
     }
 
-    static public boolean isTagSyncEnabled(Properties prop) {
+    public static boolean isTagSyncEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
         return val == null || Boolean.valueOf(val.trim());
     }
 
-    static public String getTagAdminPassword(Properties prop) {
+    public static String getTagAdminPassword(Properties prop) {
         //update credential from keystore
         String password = null;
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_PASSWORD_PROP)) {
@@ -283,7 +279,7 @@ public class TagSyncConfig extends Configuration {
         return null;
     }
 
-    static public String getTagAdminUserName(Properties prop) {
+    public static String getTagAdminUserName(Properties prop) {
         String userName = null;
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_USERNAME_PROP)) {
             userName = prop.getProperty(TAGSYNC_TAGADMIN_USERNAME_PROP);
@@ -294,19 +290,19 @@ public class TagSyncConfig extends Configuration {
         return userName;
     }
 
-    static public String getTagAdminRESTSslConfigFile(Properties prop) {
+    public static String getTagAdminRESTSslConfigFile(Properties prop) {
         return prop.getProperty(TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP);
     }
 
-    static public String getTagSourceFileName(Properties prop) {
+    public static String getTagSourceFileName(Properties prop) {
         return prop.getProperty(TAGSYNC_FILESOURCE_FILENAME_PROP);
     }
 
-    static public String getAtlasRESTEndpoint(Properties prop) {
+    public static String getAtlasRESTEndpoint(Properties prop) {
         return prop.getProperty(TAGSYNC_ATLASSOURCE_ENDPOINT_PROP);
     }
 
-    static public String getAtlasRESTPassword(Properties prop) {
+    public static String getAtlasRESTPassword(Properties prop) {
         //update credential from keystore
         String password = null;
         if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_PASSWORD_PROP)) {
@@ -336,7 +332,7 @@ public class TagSyncConfig extends Configuration {
         return null;
     }
 
-    static public String getAtlasRESTUserName(Properties prop) {
+    public static String getAtlasRESTUserName(Properties prop) {
         String userName = null;
         if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_USERNAME_PROP)) {
             userName = prop.getProperty(TAGSYNC_ATLASREST_USERNAME_PROP);
@@ -347,38 +343,38 @@ public class TagSyncConfig extends Configuration {
         return userName;
     }
 
-    static public String getAtlasRESTSslConfigFile(Properties prop) {
+    public static String getAtlasRESTSslConfigFile(Properties prop) {
         return prop.getProperty(TAGSYNC_ATLAS_REST_SSL_CONFIG_FILE_PROP);
     }
 
-    static public String getCustomAtlasResourceMappers(Properties prop) {
+    public static String getCustomAtlasResourceMappers(Properties prop) {
         return prop.getProperty(TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP);
     }
 
-    static public String getAuthenticationType(Properties prop) {
+    public static String getAuthenticationType(Properties prop) {
         return prop.getProperty(AUTH_TYPE, "simple");
     }
 
-    static public String getNameRules(Properties prop) {
+    public static String getNameRules(Properties prop) {
         return prop.getProperty(NAME_RULES, "DEFAULT");
     }
 
-    static public String getKerberosPrincipal(Properties prop) {
-//		return prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL);
+    public static String getKerberosPrincipal(Properties prop) {
+// return prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL);
         String principal = null;
         try {
-            principal = SecureClientLogin.getPrincipal(prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL, ""), LOCAL_HOSTNAME);
+            principal = SecureClientLogin.getPrincipal(prop.getProperty(TAGSYNC_KERBEROS_PRICIPAL, ""), localHostname);
         } catch (IOException ignored) {
             // do nothing
         }
         return principal;
     }
 
-    static public String getKerberosKeytab(Properties prop) {
+    public static String getKerberosKeytab(Properties prop) {
         return prop.getProperty(TAGSYNC_KERBEROS_KEYTAB, "");
     }
 
-    static public long getTagAdminConnectionCheckInterval(Properties prop) {
+    public static long getTagAdminConnectionCheckInterval(Properties prop) {
         long   ret = DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL;
         String val = prop.getProperty(TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP);
         if (StringUtils.isNotBlank(val)) {
@@ -391,7 +387,7 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    static public long getTagSourceRetryInitializationInterval(Properties prop) {
+    public static long getTagSourceRetryInitializationInterval(Properties prop) {
         long   ret = DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL;
         String val = prop.getProperty(TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP);
         if (StringUtils.isNotBlank(val)) {
@@ -404,7 +400,7 @@ public class TagSyncConfig extends Configuration {
         return ret;
     }
 
-    static public String getTagsyncKerberosIdentity(Properties prop) {
+    public static String getTagsyncKerberosIdentity(Properties prop) {
         return prop.getProperty(TAGSYNC_KERBEROS_IDENTITY);
     }
 
@@ -427,7 +423,7 @@ public class TagSyncConfig extends Configuration {
         return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
     }
 
-    static public int getAtlasRestSourceEntitiesBatchSize(Properties prop) {
+    public static int getAtlasRestSourceEntitiesBatchSize(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE);
         int    ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
 
@@ -496,7 +492,6 @@ public class TagSyncConfig extends Configuration {
     }
 
     private void init() {
-
         readConfigFile(CORE_SITE_FILE);
         readConfigFile(DEFAULT_CONFIG_FILE);
         readConfigFile(CONFIG_FILE);
@@ -516,7 +511,6 @@ public class TagSyncConfig extends Configuration {
     }
 
     private void readConfigFile(String fileName) {
-
         if (StringUtils.isNotBlank(fileName)) {
             String fName = getResourceFileName(fileName);
             if (StringUtils.isBlank(fName)) {
@@ -532,9 +526,9 @@ public class TagSyncConfig extends Configuration {
 
     static {
         try {
-            LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+            localHostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();
         } catch (UnknownHostException e) {
-            LOCAL_HOSTNAME = "unknown";
+            localHostname = "unknown";
         }
     }
 }

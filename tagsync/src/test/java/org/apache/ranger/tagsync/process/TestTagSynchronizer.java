@@ -20,6 +20,7 @@
 package org.apache.ranger.tagsync.process;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -28,7 +29,6 @@ import java.io.OutputStreamWriter;
 import java.util.Properties;
 
 public class TestTagSynchronizer {
-
     private static TagSynchronizer tagSynchronizer;
 
     @BeforeClass
@@ -52,7 +52,6 @@ public class TestTagSynchronizer {
 
     @Test
     public void testTagSynchronizer() {
-
         System.out.println("testTagSynchronizer() called");
 
         boolean initDone = tagSynchronizer.initialize();
@@ -65,6 +64,6 @@ public class TestTagSynchronizer {
 
         System.out.println("Exiting test");
 
-        assert (initDone);
+        Assert.assertTrue(initDone);
     }
 }

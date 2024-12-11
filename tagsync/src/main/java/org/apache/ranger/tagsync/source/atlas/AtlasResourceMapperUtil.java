@@ -32,23 +32,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class AtlasResourceMapperUtil {
+public final class AtlasResourceMapperUtil {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapperUtil.class);
-
     private static Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<String, AtlasResourceMapper>();
 
+    private AtlasResourceMapperUtil() {}
+
     public static boolean isEntityTypeHandled(String entityTypeName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> isEntityTypeHandled(entityTypeName=" + entityTypeName + ")");
-        }
+        LOG.debug("==> isEntityTypeHandled(entityTypeName={})", entityTypeName);
 
         AtlasResourceMapper mapper = atlasResourceMappers.get(entityTypeName);
 
         boolean ret = mapper != null;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== isEntityTypeHandled(entityTypeName=" + entityTypeName + ") : " + ret);
-        }
+        LOG.debug("<== isEntityTypeHandled(entityTypeName={}) : {}", entityTypeName, ret);
 
         return ret;
     }
@@ -77,8 +74,8 @@ public class AtlasResourceMapperUtil {
         return resource;
     }
 
-    static public boolean initializeAtlasResourceMappers(Properties properties) {
-        final String MAPPER_NAME_DELIMITER = ",";
+    public static boolean initializeAtlasResourceMappers(Properties properties) {
+        final String mapperNameDelimiter = ",";
 
         String customMapperNames = TagSyncConfig.getCustomAtlasResourceMappers(properties);
 
@@ -97,7 +94,7 @@ public class AtlasResourceMapperUtil {
         mapperNames.add(AtlasAdlsResourceMapper.class.getName());
 
         if (StringUtils.isNotBlank(customMapperNames)) {
-            for (String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMITER)) {
+            for (String customMapperName : customMapperNames.split(mapperNameDelimiter)) {
                 mapperNames.add(customMapperName.trim());
             }
         }

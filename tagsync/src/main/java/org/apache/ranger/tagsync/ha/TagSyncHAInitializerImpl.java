@@ -35,12 +35,11 @@ import java.util.List;
 import java.util.Set;
 
 public class TagSyncHAInitializerImpl extends RangerHAInitializer {
-    private static final Logger LOG = Logger.getLogger(TagSyncHAInitializerImpl.class);
-    private static TagSyncHAInitializerImpl theInstance = null;
-    ActiveInstanceElectorService activeInstanceElectorService = null;
-    ActiveStateChangeHandler     activeStateChangeHandler     = null;
-    List<HARangerService>        haRangerService              = null;
-    ServiceManager               serviceManager               = null;
+    private static final    Logger                   LOG = Logger.getLogger(TagSyncHAInitializerImpl.class);
+    private static volatile TagSyncHAInitializerImpl theInstance;
+    ActiveInstanceElectorService activeInstanceElectorService;
+    List<HARangerService>        haRangerService;
+    ServiceManager               serviceManager;
 
     private TagSyncHAInitializerImpl(Configuration configuration) {
         if (LOG.isDebugEnabled()) {
@@ -58,24 +57,30 @@ public class TagSyncHAInitializerImpl extends RangerHAInitializer {
     }
 
     public static TagSyncHAInitializerImpl getInstance(Configuration configuration) {
-        if (theInstance == null) {
+        TagSyncHAInitializerImpl me = theInstance;
+
+        if (me == null) {
             synchronized (TagSyncHAInitializerImpl.class) {
-                if (theInstance == null) {
-                    theInstance = new TagSyncHAInitializerImpl(configuration);
+                me = theInstance;
+
+                if (me == null) {
+                    me          = new TagSyncHAInitializerImpl(configuration);
+                    theInstance = me;
                 }
             }
         }
-        return theInstance;
+
+        return me;
     }
 
     public void init(Configuration configuration) throws Exception {
         super.init(configuration);
         LOG.info("==> TagSyncHAInitializerImpl.init() initialization started");
-        Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<ActiveStateChangeHandler>();
+        Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<>();
         activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders,
                 curatorFactory, activeInstanceState, serviceState, configuration);
 
-        haRangerService = new ArrayList<HARangerService>();
+        haRangerService = new ArrayList<>();
         haRangerService.add(activeInstanceElectorService);
         serviceManager = new ServiceManager(haRangerService);
         LOG.info("<== TagSyncHAInitializerImpl.init() initialization completed");

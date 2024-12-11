@@ -75,7 +75,7 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
         String entityGuid  = entity.getGuid();
         String serviceName = getRangerServiceName(clusterName);
 
-        Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicyResource>();
+        Map<String, RangerPolicyResource> elements = new HashMap<>();
 
         if (StringUtils.equals(entityType, ENTITY_TYPE_ADLS_GEN2_ACCOUNT)) {
             elements.put(RANGER_TYPE_ADLS_GEN2_ACCOUNT, new RangerPolicyResource(accountName));

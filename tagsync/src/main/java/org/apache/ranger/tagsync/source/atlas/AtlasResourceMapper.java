@@ -71,7 +71,7 @@ public abstract class AtlasResourceMapper {
         this.defaultClusterName = properties != null ? properties.getProperty(TAGSYNC_DEFAULT_CLUSTER_NAME) : null;
     }
 
-    abstract public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception;
+    public abstract RangerServiceResource buildResource(RangerAtlasEntity entity) throws Exception;
 
     protected String getCustomRangerServiceName(String atlasInstanceName) {
         if (properties != null) {

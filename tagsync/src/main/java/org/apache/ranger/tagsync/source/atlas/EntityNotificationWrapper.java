@@ -53,6 +53,7 @@ public class EntityNotificationWrapper {
     private final boolean                         isEmptyClassifications;
     private final List<RangerAtlasClassification> classifications;
     private final NotificationOpType              opType;
+
     EntityNotificationWrapper(@Nonnull EntityNotification notification) {
         EntityNotification.EntityNotificationType notificationType = notification.getType();
 
@@ -266,9 +267,11 @@ public class EntityNotificationWrapper {
         return opType;
     }
 
-    public boolean getIsEntityActive() {return isEntityActive;}
+    public boolean getIsEntityActive() {
+        return isEntityActive;
+    }
 
-    public enum NotificationOpType {UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE}
+    public enum NotificationOpType { UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE }
 
     public static class RangerAtlasClassification {
         private final String                       name;

@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 public class TagSyncMetricsProducer implements Runnable {
+    private static final Logger LOG = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
 
-    private static final Logger  LOG          = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
-    private              boolean shutdownFlag = false;
+    private boolean shutdownFlag;
 
     public static void main(String[] args) {
         TagSyncMetricsProducer tagSyncMetrics = new TagSyncMetricsProducer();
@@ -80,10 +80,10 @@ public class TagSyncMetricsProducer implements Runnable {
             }
             RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
             if (config.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
-                if (config.isTagSyncServiceActive()) {
-                    rangerMetricsUtil.setIsRoleActive(1);
+                if (TagSyncConfig.isTagSyncServiceActive()) {
+                    RangerMetricsUtil.setIsRoleActive(1);
                 } else {
-                    rangerMetricsUtil.setIsRoleActive(0);
+                    RangerMetricsUtil.setIsRoleActive(0);
                 }
             }
             rangerMetricsUtil.writeMetricsToFile(userMetricFile);

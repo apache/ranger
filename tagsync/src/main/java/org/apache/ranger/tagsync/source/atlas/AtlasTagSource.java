@@ -54,7 +54,7 @@ public class AtlasTagSource extends AbstractTagSource {
     private int maxBatchSize;
 
     private ConsumerRunnable consumerTask;
-    private Thread           myThread = null;
+    private Thread           myThread;
 
     @Override
     public boolean initialize(Properties properties) {
@@ -67,7 +67,6 @@ public class AtlasTagSource extends AbstractTagSource {
         boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
         if (ret) {
-
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(TAGSYNC_ATLAS_PROPERTIES_FILE_NAME);
 
             if (inputStream != null) {
@@ -156,15 +155,14 @@ public class AtlasTagSource extends AbstractTagSource {
     }
 
     private class ConsumerRunnable implements Runnable {
-
         private final NotificationConsumer<EntityNotification> consumer;
 
         private final List<RangerAtlasEntityWithTags>             atlasEntitiesWithTags = new ArrayList<>();
         private final List<AtlasKafkaMessage<EntityNotification>> messages              = new ArrayList<>();
-        private       AtlasKafkaMessage<EntityNotification>       lastUnhandledMessage  = null;
+        private       AtlasKafkaMessage<EntityNotification>       lastUnhandledMessage;
 
         private long    offsetOfLastMessageCommittedToKafka = -1L;
-        private boolean isHandlingDeleteOps                 = false;
+        private boolean isHandlingDeleteOps;
 
         private ConsumerRunnable(NotificationConsumer<EntityNotification> consumer) {
             this.consumer = consumer;
@@ -208,7 +206,6 @@ public class AtlasTagSource extends AbstractTagSource {
                                         }
 
                                         if (AtlasNotificationMapper.isNotificationHandled(notificationWrapper)) {
-
                                             if ((notificationWrapper.getIsEntityDeleteOp() && !isHandlingDeleteOps) || (!notificationWrapper.getIsEntityDeleteOp() && isHandlingDeleteOps)) {
                                                 if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags)) {
                                                     buildAndUploadServiceTags();
@@ -256,7 +253,6 @@ public class AtlasTagSource extends AbstractTagSource {
             }
 
             if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags) && CollectionUtils.isNotEmpty(messages)) {
-
                 Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(atlasEntitiesWithTags);
 
                 if (MapUtils.isNotEmpty(serviceTagsMap)) {
@@ -323,4 +319,3 @@ public class AtlasTagSource extends AbstractTagSource {
         }
     }
 }
-

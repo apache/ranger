@@ -52,18 +52,18 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
     List<NewCookie> cookieList = new ArrayList<>();
     private long rangerAdminConnectionCheckInterval;
-    private Cookie sessionId = null;
-    private boolean isValidRangerCookie = false;
+    private Cookie sessionId;
+    private boolean isValidRangerCookie;
     private boolean isRangerCookieEnabled;
     private String  rangerAdminCookieName;
 
-    private RangerRESTClient tagRESTClient = null;
+    private RangerRESTClient tagRESTClient;
 
     private boolean isKerberized;
 
     private BlockingQueue<UploadWorkItem> uploadWorkItems;
 
-    private Thread myThread = null;
+    private Thread myThread;
 
     @Override
     public boolean initialize(Properties properties) {
@@ -114,7 +114,6 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     @Override
     public ServiceTags upload(ServiceTags toUpload) throws Exception {
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> upload() ");
         }
@@ -135,7 +134,6 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     @Override
     public boolean start() {
-
         myThread = new Thread(this);
         myThread.setDaemon(true);
         myThread.start();
@@ -245,7 +243,6 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         }
 
         if (response == null || response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
-
             RESTResponse resp = RESTResponse.fromClientResponse(response);
 
             LOG.error("Upload of service-tags failed with message " + resp.getMessage());

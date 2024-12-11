@@ -88,8 +88,6 @@ public class AtlasNestedStructureResourceMapper extends AtlasResourceMapper {
             throwExceptionWithMessage("invalid qualifiedName for entity-type '" + entityType + "': " + qualifiedName);
         }
 
-        RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-        return ret;
+        return new RangerServiceResource(entityGuid, serviceName, elements);
     }
 }

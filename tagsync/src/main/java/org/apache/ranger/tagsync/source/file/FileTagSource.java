@@ -39,7 +39,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Properties;
 
@@ -52,7 +52,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
     private long fileModTimeCheckIntervalInMs;
 
-    private Thread myThread = null;
+    private Thread myThread;
 
     public static void main(String[] args) {
         FileTagSource fileTagSource = new FileTagSource();
@@ -75,7 +75,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             TagSink tagSink = TagSynchronizer.initializeTagSink(props);
 
             if (tagSink != null) {
-
                 if (fileTagSource.initialize(props)) {
                     try {
                         tagSink.start();
@@ -124,7 +123,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
         }
 
         if (ret) {
-
             fileModTimeCheckIntervalInMs = TagSyncConfig.getTagSourceFileModTimeCheckIntervalInMillis(properties);
 
             if (LOG.isDebugEnabled()) {
@@ -146,7 +144,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
                     LOG.error("Error processing input file:" + serviceTagsFileName + " cannot be converted to URL " + serviceTagsFileName, malformedException);
                 }
             } else {
-
                 URL fileURL = getClass().getResource(serviceTagsFileName);
                 if (fileURL == null) {
                     if (!serviceTagsFileName.startsWith("/")) {
@@ -164,7 +161,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
                 }
 
                 if (fileURL != null) {
-
                     try {
                         serviceTagsFileStream = fileURL.openStream();
                         serviceTagsFileURL    = fileURL;
@@ -293,7 +289,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
         if (serviceTagsFileURL != null) {
             try (InputStream inputStream = serviceTagsFileURL.openStream();
-                    Reader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"))) {
+                    Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
             } catch (IOException e) {
                 LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName, e);

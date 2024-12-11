@@ -59,11 +59,10 @@ public class AtlasHdfsResourceMapper extends AtlasResourceMapper {
 
         return ret;
     }
-
-	/*
-		If c11_hdfs_ns1 is the service-name for HDFS in 'cl1' cluster, that services nameService 'ns1' in a Federated setup
-		# ranger.tagsync.atlas.hdfs.instance.cl1.nameservice.ns1.ranger.service=cl1_hdfs_ns1
-	*/
+    /*
+    If c11_hdfs_ns1 is the service-name for HDFS in 'cl1' cluster, that services nameService 'ns1' in a Federated setup
+    # ranger.tagsync.atlas.hdfs.instance.cl1.nameservice.ns1.ranger.service=cl1_hdfs_ns1
+    */
 
     @Override
     public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {

@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerAtlasEntity {
-
     private final String              typeName;
     private final String              guid;
     private final Map<String, Object> attributes;
@@ -41,7 +40,9 @@ public class RangerAtlasEntity {
         return guid;
     }
 
-    public Map<String, Object> getAttributes() {return attributes;}
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
 
     @Override
     public String toString() {

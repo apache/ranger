@@ -80,15 +80,14 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     };
 
     private long     sleepTimeBetweenCycleInMillis;
-    private String[] restUrls          = null;
-    private boolean  isKerberized      = false;
-    private String[] userNamePassword  = null;
+    private String[] restUrls;
+    private boolean  isKerberized;
+    private String[] userNamePassword;
     private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
 
-    private Thread myThread = null;
+    private Thread myThread;
 
     public static void main(String[] args) {
-
         AtlasRESTTagSource atlasRESTTagSource = new AtlasRESTTagSource();
 
         TagSyncConfig config = TagSyncConfig.getInstance();
@@ -100,11 +99,9 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         boolean ret = TagSynchronizer.initializeKerberosIdentity(props);
 
         if (ret) {
-
             TagSink tagSink = TagSynchronizer.initializeTagSink(props);
 
             if (tagSink != null) {
-
                 if (atlasRESTTagSource.initialize(props)) {
                     try {
                         tagSink.start();
@@ -172,7 +169,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
     @Override
     public boolean start() {
-
         myThread = new Thread(this);
         myThread.setDaemon(true);
         myThread.start();
@@ -258,7 +254,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         }
 
         if (atlasClient != null) {
-
             SearchParameters searchParams = new SearchParameters();
 
             searchParams.setExcludeDeletedEntities(true);
@@ -306,7 +301,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                     List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 
                     if (CollectionUtils.isNotEmpty(entityHeaders)) {
-
                         nextStartIndex += entityHeaders.size();
                         isMoreData = true;
 
@@ -367,17 +361,14 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             AtlasClassificationType classificationType = typeRegistry.getClassificationTypeByName(typeName);
 
             if (classificationType != null) {
-
                 Map<String, String> allAttributes = new HashMap<>();
 
                 if (MapUtils.isNotEmpty(attributes) && MapUtils.isNotEmpty(classificationType.getAllAttributes())) {
                     for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
-
                         String name  = attribute.getKey();
                         Object value = attribute.getValue();
 
                         if (value != null) {
-
                             String                         stringValue    = value.toString();
                             AtlasStructType.AtlasAttribute atlasAttribute = classificationType.getAttribute(name);
 
@@ -405,16 +396,13 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 // Find base classification types
                 Set<String> superTypeNames = classificationType.getAllSuperTypes();
                 for (String superTypeName : superTypeNames) {
-
                     AtlasClassificationType superType = typeRegistry.getClassificationTypeByName(superTypeName);
 
                     if (superType != null) {
-
                         Map<String, String> attributeMap = new HashMap<>();
 
                         if (MapUtils.isNotEmpty(attributes) && MapUtils.isNotEmpty(superType.getAllAttributes())) {
                             for (String name : superType.getAllAttributes().keySet()) {
-
                                 String stringValue = allAttributes.get(name);
 
                                 if (stringValue != null) {
@@ -454,4 +442,3 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         return ret;
     }
 }
-

@@ -22,7 +22,6 @@ package org.apache.ranger.tagsync.model;
 import java.util.Properties;
 
 public interface TagSource {
-
     boolean initialize(Properties properties);
 
     void setTagSink(TagSink sink);

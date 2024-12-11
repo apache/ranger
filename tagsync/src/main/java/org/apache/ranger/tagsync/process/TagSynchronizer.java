@@ -38,7 +38,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 public class TagSynchronizer {
-
     private static final Logger LOG = LoggerFactory.getLogger(TagSynchronizer.class);
 
     private static final String AUTH_TYPE_KERBEROS = "kerberos";
@@ -46,12 +45,12 @@ public class TagSynchronizer {
     private static final String TAGSYNC_SOURCE_BASE = "ranger.tagsync.source.";
     private static final String PROP_CLASS_NAME     = "class";
     private final    Object                   shutdownNotifier         = new Object();
-    private TagSink         tagSink          = null;
-    private List<TagSource> tagSources       = new ArrayList<TagSource>();
-    private List<TagSource> failedTagSources = new ArrayList<TagSource>();
-    private Properties      properties       = null;
-    private volatile boolean                  isShutdownInProgress     = false;
-    private          TagSyncHAInitializerImpl tagSyncHAinitializerImpl = null;
+    private       TagSink         tagSink;
+    private final List<TagSource> tagSources       = new ArrayList<>();
+    private       List<TagSource> failedTagSources = new ArrayList<TagSource>();
+    private Properties      properties;
+    private volatile boolean                  isShutdownInProgress;
+    private          TagSyncHAInitializerImpl tagSyncHAinitializerImpl;
 
     TagSynchronizer() {
         this(null);
@@ -92,7 +91,7 @@ public class TagSynchronizer {
         }
     }
 
-    static public void printConfigurationProperties(Properties properties) {
+    public static void printConfigurationProperties(Properties properties) {
         LOG.info("--------------------------------");
         LOG.info("");
         LOG.info("Ranger-TagSync Configuration: {\n");
@@ -108,7 +107,7 @@ public class TagSynchronizer {
         LOG.info("--------------------------------");
     }
 
-    static public TagSink initializeTagSink(Properties properties) {
+    public static TagSink initializeTagSink(Properties properties) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagSynchronizer.initializeTagSink()");
         }
@@ -208,7 +207,6 @@ public class TagSynchronizer {
     }
 
     public boolean initialize() {
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagSynchronizer.initialize()");
         }
@@ -403,7 +401,7 @@ public class TagSynchronizer {
         }
     }
 
-    static private TagSource getTagSourceFromConfig(Properties props,
+    private static TagSource getTagSourceFromConfig(Properties props,
             String propPrefix, String tagSourceName) {
         TagSource tagSource = null;
         String className = getStringProperty(props, propPrefix + "."
