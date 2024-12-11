@@ -72,19 +72,27 @@
                     <include>org.apache.curator:curator-recipes</include>
                     <include>org.apache.hadoop:hadoop-annotations</include>
                     <include>org.apache.httpcomponents:httpcore</include>
+                    <include>jakarta.activation:jakarta.activation-api:jar:${jakarta.activation.version}</include>
                     <include>jakarta.annotation:jakarta.annotation-api:jar:${jakarta.annotation-api}</include>
                     <include>jakarta.inject:jakarta.inject-api:jar:${jakarta-inject.version}</include>
                     <include>jakarta.persistence:jakarta.persistence-api:jar:${jakarta.persistence.version}</include>
+                    <include>jakarta.validation:jakarta.validation-api</include>
                     <include>jakarta.ws.rs:jakarta.ws.rs-api:jar:${jakarta.ws.version}</include>
                     <include>jakarta.xml.bind:jakarta.xml.bind-api:jar:${jakarta.xml.version}</include>
-                    <include>org.glassfish.jersey.core:jersey-client</include>
-                    <include>org.glassfish.jersey.core:jersey-common</include>
-                    <include>org.glassfish.jersey.core:jersey-hk2</include>
-                    <include>org.glassfish.jersey.core:jersey-server</include>
+                    <include>org.glassfish.jaxb:jaxb-core:jar:${jaxb.api.version}</include>
+                    <include>org.glassfish.jaxb:jaxb-runtime:jar:${jaxb.api.version}</include>
+                    <include>org.glassfish.jersey.containers:jersey-container-servlet-core:jar:${jersey-core.version}</include>
+                    <include>org.glassfish.jersey.containers:jersey-container-servlet:jar:${jersey-core.version}</include>
+                    <include>org.glassfish.jersey.core:jersey-client:jar:${jersey-core.version}</include>
+                    <include>org.glassfish.jersey.core:jersey-common:jar:${jersey-core.version}</include>
+                    <include>org.glassfish.jersey.core:jersey-server:jar:${jersey-core.version}</include>
                     <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
-                    <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
-                    <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
-                    <include>org.glassfish.jaxb:jaxb-runtime</include>
+                    <include>org.glassfish.jersey.inject:jersey-hk2:jar:${jersey-core.version}</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-binding:jar:${jersey-media.version}</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-jackson:jar:${jersey-media.version}</include>
+                    <include>org.glassfish.hk2:hk2-api:jar:${hk2.version}</include>
+                    <include>org.glassfish.hk2:hk2-locator:jar:${hk2.version}</include>
+                    <include>org.glassfish.hk2:hk2-utils:jar:${hk2.version}</include>
                     <include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
                     <include>jline:jline</include>
                     <include>com.jcraft:jsch</include>
@@ -98,8 +106,13 @@
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.sun.istack:istack-commons-runtime</include>
                     <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-util:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-crypto:jar:${kerby.version}</include>

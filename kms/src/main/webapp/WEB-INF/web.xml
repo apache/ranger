@@ -38,6 +38,16 @@
       <param-name>jersey.config.server.provider.packages</param-name>
       <param-value>org.apache.hadoop.crypto.key.kms.server</param-value>
     </init-param>
+    <init-param>
+      <param-name>jersey.config.server.provider.classnames</param-name>
+      <param-value>
+        org.glassfish.jersey.jackson.JacksonFeature
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>jersey.config.server.injector</param-name>
+      <param-value>org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory</param-value>
+    </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
 
