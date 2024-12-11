@@ -40,15 +40,16 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceOzone extends RangerBaseService {
-    private static final Logger LOG                   = LoggerFactory.getLogger(RangerServiceOzone.class);
-    public static final  String ACCESS_TYPE_READ      = "read";
-    public static final  String ACCESS_TYPE_WRITE     = "write";
-    public static final  String ACCESS_TYPE_CREATE    = "create";
-    public static final  String ACCESS_TYPE_LIST      = "list";
-    public static final  String ACCESS_TYPE_DELETE    = "delete";
-    public static final  String ACCESS_TYPE_READ_ACL  = "read_acl";
-    public static final  String ACCESS_TYPE_WRITE_ACL = "write_acl";
-    public static final  String ACCESS_TYPE_ALL       = "all";
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceOzone.class);
+
+    public static final String ACCESS_TYPE_READ      = "read";
+    public static final String ACCESS_TYPE_WRITE     = "write";
+    public static final String ACCESS_TYPE_CREATE    = "create";
+    public static final String ACCESS_TYPE_LIST      = "list";
+    public static final String ACCESS_TYPE_DELETE    = "delete";
+    public static final String ACCESS_TYPE_READ_ACL  = "read_acl";
+    public static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
+    public static final String ACCESS_TYPE_ALL       = "all";
 
     public RangerServiceOzone() {
         super();
@@ -63,6 +64,7 @@ public class RangerServiceOzone extends RangerBaseService {
     public Map<String, Object> validateConfig() throws Exception {
         Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
+
         LOG.debug("<== RangerServiceOzone.validateConfig Service: ({})", serviceName);
 
         if (configs != null) {
@@ -85,7 +87,9 @@ public class RangerServiceOzone extends RangerBaseService {
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
+
         LOG.debug("==> RangerServiceOzone.lookupResource Context: ({})", context);
+        
         if (context != null) {
             try {
                 ret = OzoneResourceMgr.getOzoneResources(serviceName, serviceType, configs, context);
@@ -94,7 +98,9 @@ public class RangerServiceOzone extends RangerBaseService {
                 throw e;
             }
         }
+
         LOG.debug("<== RangerServiceOzone.lookupResource Response: ({})", ret);
+
         return ret;
     }
 
@@ -107,14 +113,17 @@ public class RangerServiceOzone extends RangerBaseService {
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().startsWith("all")) {
                 RangerPolicyItem policyItemOwner = new RangerPolicyItem();
+
                 policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
                 policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
                 policyItemOwner.setDelegateAdmin(true);
+
                 defaultPolicy.addPolicyItem(policyItemOwner);
 
                 if (StringUtils.isNotBlank(lookUpUser)) {
-                    RangerPolicyItem                          policyItemForLookupUser = new RangerPolicyItem();
-                    List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
+                    RangerPolicyItem             policyItemForLookupUser = new RangerPolicyItem();
+                    List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
+
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
@@ -123,14 +132,18 @@ public class RangerServiceOzone extends RangerBaseService {
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ_ACL));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE_ACL));
                     accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_ALL));
+
                     policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
                     policyItemForLookupUser.setAccesses(accessListForLookupUser);
                     policyItemForLookupUser.setDelegateAdmin(false);
+
                     defaultPolicy.addPolicyItem(policyItemForLookupUser);
                 }
             }
         }
+
         LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : {}", ret);
+
         return ret;
     }
 }
