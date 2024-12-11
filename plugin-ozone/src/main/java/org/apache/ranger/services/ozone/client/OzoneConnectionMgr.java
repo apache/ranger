@@ -70,7 +70,7 @@ public class OzoneConnectionMgr {
                         if (ozoneClient != null) {
                             ozoneClient.close();
                         }
-                        
+
                         ozoneClient = oldClient;
                     }
 
