@@ -23,25 +23,25 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class StormConnectionMgr {
+    private static final Logger LOG = LoggerFactory.getLogger(StormConnectionMgr.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(StormConnectionMgr.class);
+    private StormConnectionMgr(){
+    }
 
-	public static StormClient getStormClient(final String stormUIURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
+    public static StormClient getStormClient(final String stormUIURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
         StormClient stormClient = null;
         if (stormUIURL == null || stormUIURL.isEmpty()) {
-        	LOG.error("Can not create StormClient: stormUIURL is empty");
-        } else if(StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)){
-        	if (userName == null || userName.isEmpty()) {
-        		LOG.error("Can not create StormClient: stormAdminUser is empty");
-        	} else if (password == null || password.isEmpty()) {
-        		LOG.error("Can not create StormClient: stormAdminPassword is empty");
-        	}
-        }else {
-            stormClient =  new StormClient(stormUIURL, userName, password, lookupPrincipal, lookupKeytab, nameRules);
+            LOG.error("Can not create StormClient: stormUIURL is empty");
+        } else if (StringUtils.isEmpty(lookupPrincipal) || StringUtils.isEmpty(lookupKeytab)) {
+            if (userName == null || userName.isEmpty()) {
+                LOG.error("Can not create StormClient: stormAdminUser is empty");
+            } else if (password == null || password.isEmpty()) {
+                LOG.error("Can not create StormClient: stormAdminPassword is empty");
+            }
+        } else {
+            stormClient = new StormClient(stormUIURL, userName, password, lookupPrincipal, lookupKeytab, nameRules);
         }
         return stormClient;
     }
-
 }

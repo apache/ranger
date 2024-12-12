@@ -17,33 +17,32 @@
 
 package org.apache.ranger.authorization.storm;
 
-import java.security.Principal;
-import java.security.PrivilegedExceptionAction;
-
-import javax.security.auth.Subject;
-
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.RebalanceOptions;
 import org.apache.storm.topology.TopologyBuilder;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.security.auth.Subject;
+
+import java.security.Principal;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * A simple test that wires a WordSpout + WordCounterBolt into a topology and runs it. The "RangerStormAuthorizer" takes care of authorization.
  * The policies state that "bob" can do anything with the "word-count" topology. In addition, "bob" can create/kill the "temp*" topologies, but do
  * nothing else.
- *
+ * <p>
  * In addition we have some TAG based policies created in Atlas and synced into Ranger:
- *
+ * <p>
  * a) The tag "StormTopologyTag" is associated with "create/kill" permissions to the "bob" user for the "stormdev" topology.
  */
 
 // TODO to fix Strom Test working with Hadoop 3.0.0
 @Ignore
 public class StormRangerAuthorizerTest {
-
     private static LocalCluster cluster;
 
     @org.junit.BeforeClass
@@ -60,24 +59,19 @@ public class StormRangerAuthorizerTest {
         // bob can create a new topology
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
-                cluster.submitTopology("word-count", conf, builder.createTopology());
-                return null;
-            }
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            cluster.submitTopology("word-count", conf, builder.createTopology());
+            return null;
         });
-
     }
 
     @org.junit.AfterClass
     public static void cleanup() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
-                cluster.killTopology("word-count");
-                return null;
-            }
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            cluster.killTopology("word-count");
+            return null;
         });
 
         cluster.shutdown();
@@ -96,17 +90,15 @@ public class StormRangerAuthorizerTest {
 
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
-                try {
-                    cluster.submitTopology("word-count2", conf, builder.createTopology());
-                    Assert.fail("Authorization failure expected");
-                } catch (Exception ex) {
-                    // expected
-                }
-
-                return null;
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            try {
+                cluster.submitTopology("word-count2", conf, builder.createTopology());
+                Assert.fail("Authorization failure expected");
+            } catch (Exception ex) {
+                // expected
             }
+
+            return null;
         });
     }
 
@@ -114,37 +106,34 @@ public class StormRangerAuthorizerTest {
     public void testTopologyActivation() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            // Deactivate "word-count"
+            cluster.deactivate("word-count");
 
-                // Deactivate "word-count"
-                cluster.deactivate("word-count");
+            // Create a new topology called "temp1"
+            final Config conf = new Config();
+            conf.setDebug(true);
 
-                // Create a new topology called "temp1"
-                final Config conf = new Config();
-                conf.setDebug(true);
+            final TopologyBuilder builder = new TopologyBuilder();
+            builder.setSpout("words", new WordSpout());
+            builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
+            cluster.submitTopology("temp1", conf, builder.createTopology());
 
-                final TopologyBuilder builder = new TopologyBuilder();
-                builder.setSpout("words", new WordSpout());
-                builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
-                cluster.submitTopology("temp1", conf, builder.createTopology());
-
-                // Try to deactivate "temp1"
-                try {
-                    cluster.deactivate("temp1");
-                    Assert.fail("Authorization failure expected");
-                } catch (Exception ex) {
-                    // expected
-                }
-
-                // Re-activate "word-count"
-                cluster.activate("word-count");
-
-                // Kill temp1
-                cluster.killTopology("temp1");
-
-                return null;
+            // Try to deactivate "temp1"
+            try {
+                cluster.deactivate("temp1");
+                Assert.fail("Authorization failure expected");
+            } catch (Exception ex) {
+                // expected
             }
+
+            // Re-activate "word-count"
+            cluster.activate("word-count");
+
+            // Kill temp1
+            cluster.killTopology("temp1");
+
+            return null;
         });
     }
 
@@ -152,32 +141,30 @@ public class StormRangerAuthorizerTest {
     public void testTopologyRebalancing() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
-                RebalanceOptions options = new RebalanceOptions();
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            RebalanceOptions options = new RebalanceOptions();
 
-                // Create a new topology called "temp2"
-                final Config conf = new Config();
-                conf.setDebug(true);
+            // Create a new topology called "temp2"
+            final Config conf = new Config();
+            conf.setDebug(true);
 
-                final TopologyBuilder builder = new TopologyBuilder();
-                builder.setSpout("words", new WordSpout());
-                builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
-                cluster.submitTopology("temp2", conf, builder.createTopology());
+            final TopologyBuilder builder = new TopologyBuilder();
+            builder.setSpout("words", new WordSpout());
+            builder.setBolt("counter", new WordCounterBolt()).shuffleGrouping("words");
+            cluster.submitTopology("temp2", conf, builder.createTopology());
 
-                // Try to rebalance "temp2"
-                try {
-                    cluster.rebalance("temp2", options);
-                    Assert.fail("Authorization failure expected");
-                } catch (Exception ex) {
-                    // expected
-                }
-
-                // Kill temp2
-                cluster.killTopology("temp2");
-
-                return null;
+            // Try to rebalance "temp2"
+            try {
+                cluster.rebalance("temp2", options);
+                Assert.fail("Authorization failure expected");
+            } catch (Exception ex) {
+                // expected
             }
+
+            // Kill temp2
+            cluster.killTopology("temp2");
+
+            return null;
         });
     }
 
@@ -193,29 +180,24 @@ public class StormRangerAuthorizerTest {
         final Subject subject = new Subject();
 
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
-            public Void run() throws Exception {
-                // bob can create the "stormdev" topology
-                cluster.submitTopology("stormdev", conf, builder.createTopology());
+        Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
+            // bob can create the "stormdev" topology
+            cluster.submitTopology("stormdev", conf, builder.createTopology());
 
-                cluster.killTopology("stormdev");
+            cluster.killTopology("stormdev");
 
-                // but not the "stormdev2" topology
-                try {
-                    cluster.submitTopology("stormdev2", conf, builder.createTopology());
-                    Assert.fail("Authorization failure expected");
-                } catch (Exception ex) {
-                    // expected
-                }
-
-                return null;
+            // but not the "stormdev2" topology
+            try {
+                cluster.submitTopology("stormdev2", conf, builder.createTopology());
+                Assert.fail("Authorization failure expected");
+            } catch (Exception ignored) {
             }
-        });
 
+            return null;
+        });
     }
 
     private static class SimplePrincipal implements Principal {
-
         private final String name;
 
         public SimplePrincipal(String name) {
@@ -226,6 +208,5 @@ public class StormRangerAuthorizerTest {
         public String getName() {
             return name;
         }
-
     }
 }
