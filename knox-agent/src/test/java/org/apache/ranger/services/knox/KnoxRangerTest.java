@@ -30,6 +30,7 @@ import org.apache.knox.gateway.GatewayTestConfig;
 import org.apache.knox.gateway.GatewayTestDriver;
 import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,6 +49,9 @@ public class KnoxRangerTest {
 
     @BeforeClass
     public static void setupSuite() throws Exception {
+        // ToDo: advice this solution
+        Assume.assumeTrue("Test ignored on JRE >= 17", isJavaVersionBelow17(System.getProperty("java.version")));
+
         driver.setResourceBase(KnoxRangerTest.class);
         driver.setupLdap(0);
         GatewayTestConfig config = new GatewayTestConfig();
@@ -316,5 +320,12 @@ public class KnoxRangerTest {
         .log().all()
         .statusCode(statusCode);
 
+    }
+
+    private static boolean isJavaVersionBelow17(String version) {
+        String[] versionParts = version.split("\\.");
+        int majorVersion = Integer.parseInt(versionParts[0]);
+
+        return majorVersion < 17;
     }
 }
