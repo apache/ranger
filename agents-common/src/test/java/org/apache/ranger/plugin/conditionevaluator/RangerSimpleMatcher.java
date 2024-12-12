@@ -31,101 +31,86 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RangerSimpleMatcher extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSimpleMatcher.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSimpleMatcher.class);
+    public static final String CONTEXT_NAME = "CONTEXT_NAME";
 
-	public static final String CONTEXT_NAME = "CONTEXT_NAME";
+    private       boolean      allowAny;
+    private       String       contextName;
+    private final List<String> values = new ArrayList<>();
 
-	private boolean _allowAny;
-	private String _contextName;
-	private List<String> _values = new ArrayList<>();
-	
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerSimpleMatcher.init({})", condition);
 
-		super.init();
+        super.init();
 
-		if (condition == null) {
-			LOG.debug("init: null policy condition! Will match always!");
-			_allowAny = true;
-		} else if (conditionDef == null) {
-			LOG.debug("init: null policy condition definition! Will match always!");
-			_allowAny = true;
-		} else if (CollectionUtils.isEmpty(condition.getValues())) {
-			LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
-			_allowAny = true;
-		} else if (MapUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
-			LOG.debug("init: Evaluator options were empty.  Can't determine what value to use from context.  Will match always.");
-			_allowAny = true;
-		} else if (StringUtils.isEmpty(conditionDef.getEvaluatorOptions().get(CONTEXT_NAME))) {
-			LOG.debug("init: CONTEXT_NAME is not specified in evaluator options.  Can't determine what value to use from context.  Will match always.");
-			_allowAny = true;
-		} else {
-			_contextName = conditionDef.getEvaluatorOptions().get(CONTEXT_NAME);
-			_values.addAll(condition.getValues());
-		}
+        if (condition == null) {
+            LOG.debug("init: null policy condition! Will match always!");
+            allowAny = true;
+        } else if (conditionDef == null) {
+            LOG.debug("init: null policy condition definition! Will match always!");
+            allowAny = true;
+        } else if (CollectionUtils.isEmpty(condition.getValues())) {
+            LOG.debug("init: empty conditions collection on policy condition!  Will match always!");
+            allowAny = true;
+        } else if (MapUtils.isEmpty(conditionDef.getEvaluatorOptions())) {
+            LOG.debug("init: Evaluator options were empty.  Can't determine what value to use from context.  Will match always.");
+            allowAny = true;
+        } else if (StringUtils.isEmpty(conditionDef.getEvaluatorOptions().get(CONTEXT_NAME))) {
+            LOG.debug("init: CONTEXT_NAME is not specified in evaluator options.  Can't determine what value to use from context.  Will match always.");
+            allowAny = true;
+        } else {
+            contextName = conditionDef.getEvaluatorOptions().get(CONTEXT_NAME);
+            values.addAll(condition.getValues());
+        }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.init(" + condition + "): countries[" + _values + "]");
-		}
-	}
+        LOG.debug("<== RangerSimpleMatcher.init({}): countries[{}]", condition, values);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.isMatched(" + request + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerSimpleMatcher.isMatched({})", request);
 
-		boolean matched = false;
+        boolean matched = false;
 
-		if (_allowAny) {
-			matched = true;
-		} else {
-			String requestValue = extractValue(request, _contextName);
-			if (StringUtils.isNotBlank(requestValue)) {
-				for (String policyValue : _values) {
-					if (FilenameUtils.wildcardMatch(requestValue, policyValue)) {
-						matched = true;
-						break;
-					}
-				}
-			}
-		}
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.isMatched(" + request+ "): " + matched);
-		}
+        if (allowAny) {
+            matched = true;
+        } else {
+            String requestValue = extractValue(request, contextName);
+            if (StringUtils.isNotBlank(requestValue)) {
+                for (String policyValue : values) {
+                    if (FilenameUtils.wildcardMatch(requestValue, policyValue)) {
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+        }
 
-		return matched;
-	}
+        LOG.debug("<== RangerSimpleMatcher.isMatched({}): {}", request, matched);
 
-	String extractValue(final RangerAccessRequest request, String key) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSimpleMatcher.extractValue(" + request+ ")");
-		}
+        return matched;
+    }
 
-		String value = null;
-		if (request == null) {
-			LOG.debug("isMatched: Unexpected: null request.  Returning null!");
-		} else if (request.getContext() == null) {
-			LOG.debug("isMatched: Context map of request is null.  Ok. Returning null!");
-		} else if (CollectionUtils.isEmpty(request.getContext().entrySet())) {
-			LOG.debug("isMatched: Missing context on request.  Ok. Condition isn't applicable.  Returning null!");
-		} else if (!request.getContext().containsKey(key)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("isMatched: Unexpected: Context did not have data for condition[" + key + "]. Returning null!");
-			}
-		} else {
-			value = (String)request.getContext().get(key);
-		}
+    String extractValue(final RangerAccessRequest request, String key) {
+        LOG.debug("==> RangerSimpleMatcher.extractValue({})", request);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSimpleMatcher.extractValue(" + request+ "): " + value);
-		}
-		return value;
-	}
+        String value = null;
+        if (request == null) {
+            LOG.debug("isMatched: Unexpected: null request.  Returning null!");
+        } else if (request.getContext() == null) {
+            LOG.debug("isMatched: Context map of request is null.  Ok. Returning null!");
+        } else if (CollectionUtils.isEmpty(request.getContext().entrySet())) {
+            LOG.debug("isMatched: Missing context on request.  Ok. Condition isn't applicable.  Returning null!");
+        } else if (!request.getContext().containsKey(key)) {
+            LOG.debug("isMatched: Unexpected: Context did not have data for condition[{}]. Returning null!", key);
+        } else {
+            value = (String) request.getContext().get(key);
+        }
+
+        LOG.debug("<== RangerSimpleMatcher.extractValue({}): {}", request, value);
+
+        return value;
+    }
 }

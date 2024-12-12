@@ -20,13 +20,14 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 public class ScheduledTimeRangeMatcher implements ScheduledTimeMatcher {
-    private int lowerBound;
-    private int upperBound;
+    private final int lowerBound;
+    private final int upperBound;
 
     public ScheduledTimeRangeMatcher(int lowerBound, int upperBound) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
     }
+
     @Override
     public boolean isMatch(int currentTime) {
         return currentTime >= lowerBound && currentTime <= upperBound;

@@ -28,89 +28,79 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 public class TestCacheMap {
-	private static final Logger LOG = LoggerFactory.getLogger(TestCacheMap.class);
-	private static CacheMap<String, String> testCacheMap;
-	private static int initialCapacity = 16;
+    private static final Logger LOG = LoggerFactory.getLogger(TestCacheMap.class);
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> TestCacheMap.setUpBeforeClass(), initialCapacity:" + initialCapacity);
-		}
+    private static       CacheMap<String, String> testCacheMap;
+    private static final int                      initialCapacity = 16;
 
-		testCacheMap = new CacheMap<String, String>(initialCapacity);
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        LOG.debug("==> TestCacheMap.setUpBeforeClass(), initialCapacity:{}", initialCapacity);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== TestCacheMap.setUpBeforeClass(), initialCapacity:" + initialCapacity);
-		}
-	}
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+        testCacheMap = new CacheMap<>(initialCapacity);
 
-	@Test
-	public void runTests() {
+        LOG.debug("<== TestCacheMap.setUpBeforeClass(), initialCapacity:{}", initialCapacity);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> TestCacheMap.runTests(), First batch of " + initialCapacity + " inserts starting from 0");
-		}
-		for (int i = 0; i < initialCapacity; i++) {
-			String key = String.valueOf(i);
-			String value = key;
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+    }
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("TestCacheMap.runTests(), Inserting into Cache, key:" + key + ", value:" + value);
-			}
-			testCacheMap.put(key, value);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("TestCacheMap.runTests(), Cache Size after insert(): " + testCacheMap.size());
-			}
-		}
+    @Test
+    public void runTests() {
+        LOG.debug("==> TestCacheMap.runTests(), First batch of {} inserts starting from 0", initialCapacity);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("TestCacheMap.runTests(), First batch of " + initialCapacity/2 + " retrieves counting down from " + (initialCapacity/2-1));
-		}
+        for (int i = 0; i < initialCapacity; i++) {
+            String key   = String.valueOf(i);
+            String value = key;
 
-		for (int i = initialCapacity/2 - 1; i >= 0; i--) {
-			String key = String.valueOf(i);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("TestCacheMap.runTests(), Searching Cache, key:" + key);
-			}
-			String value = testCacheMap.get(key);
-			if (value == null || !value.equals(key)) {
-				LOG.error("TestCacheMap.runTests(), Did not get correct value for key, key:" + key + ", value:" + value);
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("TestCacheMap.runTests(), Second batch of " + initialCapacity/2 + " inserts starting from " + initialCapacity);
-		}
-		for (int i = initialCapacity; i < initialCapacity+initialCapacity/2; i++) {
-			String key = String.valueOf(i);
-			String value = key;
+            LOG.debug("TestCacheMap.runTests(), Inserting into Cache, key:{}, value:{}", key, value);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("TestCacheMap.runTests(), Inserting into Cache, key:" + key + ", value:" + value);
-			}
-			testCacheMap.put(key, value);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("TestCacheMap.runTests(), Cache Size after insert(): " + testCacheMap.size());
-			}
-		}
+            testCacheMap.put(key, value);
 
-		Set<String> keySet = testCacheMap.keySet();
+            LOG.debug("TestCacheMap.runTests(), Cache Size after insert(): {}", testCacheMap.size());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("TestCacheMap.runTests(), KeySet Size:" + keySet.size());
-			LOG.debug("TestCacheMap.runTests(), printing keys..");
+        LOG.debug("TestCacheMap.runTests(), First batch of {} retrieves counting down from {}", initialCapacity / 2, (initialCapacity / 2 - 1));
 
-		    int i = 0;
+        for (int i = initialCapacity / 2 - 1; i >= 0; i--) {
+            String key = String.valueOf(i);
 
-		    for (String key : keySet) {
-				LOG.debug("TestCacheMap.runTests(), index:" + i++ + ", key:" + key);
-			}
+            LOG.debug("TestCacheMap.runTests(), Searching Cache, key:{}", key);
 
-			LOG.debug("<== TestCacheMap.runTests()");
-		}
+            String value = testCacheMap.get(key);
 
-	}
+            if (value == null || !value.equals(key)) {
+                LOG.error("TestCacheMap.runTests(), Did not get correct value for key, key:{}, value:{}", key, value);
+            }
+        }
+
+        LOG.debug("TestCacheMap.runTests(), Second batch of {} inserts starting from {}", initialCapacity / 2, initialCapacity);
+
+        for (int i = initialCapacity; i < initialCapacity + initialCapacity / 2; i++) {
+            String key   = String.valueOf(i);
+            String value = key;
+
+            LOG.debug("TestCacheMap.runTests(), Inserting into Cache, key:{}, value:{}", key, value);
+
+            testCacheMap.put(key, value);
+
+            LOG.debug("TestCacheMap.runTests(), Cache Size after insert(): {}", testCacheMap.size());
+        }
+
+        if (LOG.isDebugEnabled()) {
+            Set<String> keySet = testCacheMap.keySet();
+
+            LOG.debug("TestCacheMap.runTests(), KeySet Size:{}", keySet.size());
+            LOG.debug("TestCacheMap.runTests(), printing keys..");
+
+            int i = 0;
+
+            for (String key : keySet) {
+                LOG.debug("TestCacheMap.runTests(), index:{}, key:{}", i++, key);
+            }
+
+            LOG.debug("<== TestCacheMap.runTests()");
+        }
+    }
 }

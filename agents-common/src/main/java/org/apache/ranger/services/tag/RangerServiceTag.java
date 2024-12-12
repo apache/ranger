@@ -33,167 +33,153 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUBLIC;
 
 public class RangerServiceTag extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTag.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTag.class);
+    public static final  String TAG_RESOURCE_NAME                = "tag";
+    public static final  String RANGER_TAG_NAME_EXPIRES_ON       = "EXPIRES_ON";
+    public static final  String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
 
-	public static final String TAG_RESOURCE_NAME = "tag";
-	public static final String RANGER_TAG_NAME_EXPIRES_ON = "EXPIRES_ON";
-	public static final String RANGER_TAG_EXPIRY_CONDITION_NAME = "accessed-after-expiry";
+    private TagStore tagStore;
 
-	private TagStore tagStore;
+    public RangerServiceTag() {
+        super();
+    }
 
-	public RangerServiceTag() {
-		super();
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        LOG.debug("==> RangerServiceTag.validateConfig({} )", serviceName);
 
-	public void setTagStore(TagStore tagStore) {
-		this.tagStore = tagStore;
-	}
+        Map<String, Object> ret = new HashMap<>();
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTag.validateConfig(" + serviceName + " )");
-		}
+        ret.put("connectivityStatus", true);
 
-		Map<String, Object> ret = new HashMap<>();
+        LOG.debug("<== RangerServiceTag.validateConfig({} ): {}", serviceName, ret);
 
-		ret.put("connectivityStatus", true);
+        return ret;
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTag.validateConfig(" + serviceName + " ): " + ret);
-		}
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        LOG.debug("==> RangerServiceTag.lookupResource({})", context);
 
-		return ret;
-	}
+        List<String> ret = new ArrayList<>();
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTag.lookupResource(" + context + ")");
-		}
+        if (context != null && StringUtils.equals(context.getResourceName(), TAG_RESOURCE_NAME)) {
+            try {
+                List<String> tags = tagStore != null ? tagStore.getTagTypes() : null;
 
-		List<String> ret = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(tags)) {
+                    List<String> valuesToExclude = MapUtils.isNotEmpty(context.getResources()) ? context.getResources().get(TAG_RESOURCE_NAME) : null;
 
-		if (context != null && StringUtils.equals(context.getResourceName(), TAG_RESOURCE_NAME)) {
-			try {
-				List<String> tags = tagStore != null ? tagStore.getTagTypes() : null;
+                    if (CollectionUtils.isNotEmpty(valuesToExclude)) {
+                        tags.removeAll(valuesToExclude);
+                    }
 
-				if(CollectionUtils.isNotEmpty(tags)) {
-					List<String> valuesToExclude = MapUtils.isNotEmpty(context.getResources()) ? context.getResources().get(TAG_RESOURCE_NAME) : null;
+                    String valueToMatch = context.getUserInput();
 
-					if(CollectionUtils.isNotEmpty(valuesToExclude)) {
-						tags.removeAll(valuesToExclude);
-					}
+                    if (StringUtils.isNotEmpty(valueToMatch)) {
+                        if (!valueToMatch.endsWith("*")) {
+                            valueToMatch += "*";
+                        }
 
-					String valueToMatch = context.getUserInput();
+                        for (String tag : tags) {
+                            if (FilenameUtils.wildcardMatch(tag, valueToMatch)) {
+                                ret.add(tag);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception excp) {
+                LOG.error("RangerServiceTag.lookupResource()", excp);
+            }
+        }
 
-					if(StringUtils.isNotEmpty(valueToMatch)) {
-						if(! valueToMatch.endsWith("*")) {
-							valueToMatch += "*";
-						}
+        LOG.debug("<== RangerServiceTag.lookupResource(): tag count={}", ret.size());
 
-						for (String tag : tags) {
-							if(FilenameUtils.wildcardMatch(tag, valueToMatch)) {
-								ret.add(tag);
-							}
-						}
-					}
-				}
-			} catch (Exception excp) {
-				LOG.error("RangerServiceTag.lookupResource()", excp);
-			}
-		}
+        return ret;
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTag.lookupResource(): tag count=" + ret.size());
-		}
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceTag.getDefaultRangerPolicies() ");
 
-		return ret;
-	}
+        List<RangerPolicy> ret = new ArrayList<>();
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTag.getDefaultRangerPolicies() ");
-		}
+        boolean isConditionDefFound = false;
 
-		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+        List<RangerServiceDef.RangerPolicyConditionDef> policyConditionDefs = serviceDef.getPolicyConditions();
 
-		boolean isConditionDefFound = false;
+        if (CollectionUtils.isNotEmpty(policyConditionDefs)) {
+            for (RangerServiceDef.RangerPolicyConditionDef conditionDef : policyConditionDefs) {
+                if (conditionDef.getName().equals(RANGER_TAG_EXPIRY_CONDITION_NAME)) {
+                    isConditionDefFound = true;
+                    break;
+                }
+            }
+        }
 
-		List<RangerServiceDef.RangerPolicyConditionDef> policyConditionDefs = serviceDef.getPolicyConditions();
+        if (isConditionDefFound) {
+            ret = super.getDefaultRangerPolicies();
 
-		if (CollectionUtils.isNotEmpty(policyConditionDefs)) {
-			for (RangerServiceDef.RangerPolicyConditionDef conditionDef : policyConditionDefs) {
-				if (conditionDef.getName().equals(RANGER_TAG_EXPIRY_CONDITION_NAME)) {
-					isConditionDefFound = true;
-					break;
-				}
-			}
-		}
+            String tagResourceName;
 
-		if (isConditionDefFound) {
+            if (!serviceDef.getResources().isEmpty()) {
+                tagResourceName = serviceDef.getResources().get(0).getName();
 
-			ret = super.getDefaultRangerPolicies();
-			String tagResourceName = null;
-			if (!serviceDef.getResources().isEmpty()) {
-				tagResourceName = serviceDef.getResources().get(0).getName();
+                for (RangerPolicy defaultPolicy : ret) {
+                    RangerPolicy.RangerPolicyResource tagPolicyResource = defaultPolicy.getResources().get(tagResourceName);
 
-				for (RangerPolicy defaultPolicy : ret) {
+                    if (tagPolicyResource != null) {
+                        String value = RANGER_TAG_NAME_EXPIRES_ON;
 
-					RangerPolicy.RangerPolicyResource tagPolicyResource = defaultPolicy.getResources().get(tagResourceName);
+                        tagPolicyResource.setValue(value);
+                        defaultPolicy.setName(value);
+                        defaultPolicy.setDescription("Policy for data with " + value + " tag");
 
-					if (tagPolicyResource != null) {
+                        List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
 
-						String value = RANGER_TAG_NAME_EXPIRES_ON;
+                        for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicyItems) {
+                            List<String> groups = new ArrayList<>();
+                            groups.add(GROUP_PUBLIC);
+                            defaultPolicyItem.setGroups(groups);
 
-						tagPolicyResource.setValue(value);
-						defaultPolicy.setName(value);
-						defaultPolicy.setDescription("Policy for data with " + value + " tag");
+                            List<RangerPolicy.RangerPolicyItemCondition> policyItemConditions = new ArrayList<>();
+                            List<String>                                 values               = new ArrayList<>();
+                            values.add("yes");
+                            RangerPolicy.RangerPolicyItemCondition policyItemCondition = new RangerPolicy.RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
+                            policyItemConditions.add(policyItemCondition);
 
-						List<RangerPolicy.RangerPolicyItem> defaultPolicyItems = defaultPolicy.getPolicyItems();
+                            defaultPolicyItem.setConditions(policyItemConditions);
+                            defaultPolicyItem.setDelegateAdmin(Boolean.FALSE);
+                        }
 
-						for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicyItems) {
+                        defaultPolicy.setDenyPolicyItems(defaultPolicyItems);
+                        defaultPolicy.setPolicyItems(null);
+                    }
+                }
+            }
+        } else {
+            LOG.error("RangerServiceTag.getDefaultRangerPolicies() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef with name={}", RANGER_TAG_EXPIRY_CONDITION_NAME);
+        }
 
-							List<String> groups = new ArrayList<String>();
-							groups.add(GROUP_PUBLIC);
-							defaultPolicyItem.setGroups(groups);
+        LOG.debug("<== RangerServiceTag.getDefaultRangerPolicies() : {}", ret);
 
-							List<RangerPolicy.RangerPolicyItemCondition> policyItemConditions = new ArrayList<RangerPolicy.RangerPolicyItemCondition>();
-							List<String> values = new ArrayList<String>();
-							values.add("yes");
-							RangerPolicy.RangerPolicyItemCondition policyItemCondition = new RangerPolicy.RangerPolicyItemCondition(RANGER_TAG_EXPIRY_CONDITION_NAME, values);
-							policyItemConditions.add(policyItemCondition);
+        return ret;
+    }
 
-							defaultPolicyItem.setConditions(policyItemConditions);
-							defaultPolicyItem.setDelegateAdmin(Boolean.FALSE);
-						}
-
-						defaultPolicy.setDenyPolicyItems(defaultPolicyItems);
-						defaultPolicy.setPolicyItems(null);
-					}
-				}
-			}
-		} else {
-			LOG.error("RangerServiceTag.getDefaultRangerPolicies() - Cannot create default TAG policy: Cannot get tagPolicyConditionDef with name=" + RANGER_TAG_EXPIRY_CONDITION_NAME);
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTag.getDefaultRangerPolicies() : " + ret);
-		}
-		return ret;
-	}
+    public void setTagStore(TagStore tagStore) {
+        this.tagStore = tagStore;
+    }
 }

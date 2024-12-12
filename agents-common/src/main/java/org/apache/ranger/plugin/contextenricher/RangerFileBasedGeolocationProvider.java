@@ -20,11 +20,10 @@
 package org.apache.ranger.plugin.contextenricher;
 
 public class RangerFileBasedGeolocationProvider extends RangerAbstractGeolocationProvider {
+    public static final String GEOLOCATION_SOURCE_LOADER_FILELOADER = "org.apache.ranger.plugin.store.file.GeolocationFileStore";
 
-	public static final String GEOLOCATION_SOURCE_LOADER_FILELOADER = "org.apache.ranger.plugin.store.file.GeolocationFileStore";
-
-	@Override
-	public String getGeoSourceLoader() {
-		return GEOLOCATION_SOURCE_LOADER_FILELOADER;
-	}
+    @Override
+    public String getGeoSourceLoader() {
+        return GEOLOCATION_SOURCE_LOADER_FILELOADER;
+    }
 }

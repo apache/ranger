@@ -21,9 +21,9 @@ package org.apache.ranger.plugin.store.file;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.geo.GeolocationMetadata;
-import org.apache.ranger.plugin.store.GeolocationStore;
-import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import org.apache.ranger.plugin.geo.RangerGeolocationData;
+import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
+import org.apache.ranger.plugin.store.GeolocationStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,218 +39,192 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GeolocationFileStore implements GeolocationStore {
-	private static final Logger LOG = LoggerFactory.getLogger(GeolocationFileStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GeolocationFileStore.class);
 
-	public static final String GeoLineCommentIdentifier = "#";
-	public static final Character GeoFieldsSeparator = ',';
+    public static final String    GeoLineCommentIdentifier          = "#";
+    public static final Character GeoFieldsSeparator                = ',';
+    public static final String    PROP_GEOLOCATION_FILE_LOCATION    = "FilePath";
+    public static final String    PROP_GEOLOCATION_FILE_REINIT      = "ForceRead";
+    public static final String    PROP_GEOLOCATION_IP_IN_DOT_FORMAT = "IPInDotFormat";
 
-	public static final String PROP_GEOLOCATION_FILE_LOCATION = "FilePath";
-	public static final String PROP_GEOLOCATION_FILE_REINIT = "ForceRead";
-	public static final String PROP_GEOLOCATION_IP_IN_DOT_FORMAT = "IPInDotFormat";
+    private static final Map<String, RangerGeolocationDatabase> GEOLOCATION_DB_MAP = new HashMap<>();
 
-	private static Map<String, RangerGeolocationDatabase> geolocationDBMap = new HashMap<>();
+    private RangerGeolocationDatabase geolocationDatabase;
+    private boolean                   isMetalineProcessed;
+    private boolean                   useDotFormat;
 
-	private RangerGeolocationDatabase geolocationDatabase;
+    @Override
+    public void init(final Map<String, String> context) {
+        String filePathToGeolocationFile = context.get(PROP_GEOLOCATION_FILE_LOCATION);
 
-	private boolean isMetalineProcessed;
-	private boolean useDotFormat;
+        if (StringUtils.isBlank(filePathToGeolocationFile)) {
+            filePathToGeolocationFile = "/etc/ranger/data/geo.txt";
+        }
 
-	@Override
-	public void init(final Map<String, String> context) {
+        String  reinit       = context.get(PROP_GEOLOCATION_FILE_REINIT);
+        boolean reinitialize = reinit == null || Boolean.parseBoolean(reinit);
 
-		String filePathToGeolocationFile = context.get(PROP_GEOLOCATION_FILE_LOCATION);
+        String ipInDotFormat = context.get(PROP_GEOLOCATION_IP_IN_DOT_FORMAT);
+        useDotFormat = ipInDotFormat == null || Boolean.parseBoolean(ipInDotFormat);
 
-		if (StringUtils.isBlank(filePathToGeolocationFile)) {
-			filePathToGeolocationFile = "/etc/ranger/data/geo.txt";
-		}
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("GeolocationFileStore.init() - Geolocation file location={}", filePathToGeolocationFile);
+            LOG.debug("GeolocationFileStore.init() - Reinitialize flag ={}", reinitialize);
+            LOG.debug("GeolocationFileStore.init() - UseDotFormat flag ={}", useDotFormat);
+        }
 
-		String reinit = context.get(PROP_GEOLOCATION_FILE_REINIT);
-		boolean reinitialize = reinit == null || Boolean.parseBoolean(reinit);
+        RangerGeolocationDatabase database = GEOLOCATION_DB_MAP.get(filePathToGeolocationFile);
 
-		String ipInDotFormat = context.get(PROP_GEOLOCATION_IP_IN_DOT_FORMAT);
-		useDotFormat = ipInDotFormat == null || Boolean.parseBoolean(ipInDotFormat);
+        if (database == null || reinitialize) {
+            RangerGeolocationDatabase newDatabase = build(filePathToGeolocationFile);
+            if (newDatabase != null) {
+                GEOLOCATION_DB_MAP.put(filePathToGeolocationFile, newDatabase);
+                database = newDatabase;
+            } else {
+                LOG.error("GeolocationFileStore.init() - Could not build database. Using old database if present.");
+            }
+        }
+        geolocationDatabase = database;
 
+        if (geolocationDatabase == null) {
+            LOG.error("GeolocationFileStore.init() - Cannot build Geolocation database from file {}", filePathToGeolocationFile);
+        }
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("GeolocationFileStore.init() - Geolocation file location=" + filePathToGeolocationFile);
-			LOG.debug("GeolocationFileStore.init() - Reinitialize flag =" + reinitialize);
-			LOG.debug("GeolocationFileStore.init() - UseDotFormat flag =" + useDotFormat);
-		}
+    @Override
+    public final RangerGeolocationData getGeoLocation(final String ipAddress) {
+        RangerGeolocationData ret = null;
 
-		RangerGeolocationDatabase database = geolocationDBMap.get(filePathToGeolocationFile);
+        RangerGeolocationDatabase database = geolocationDatabase;        // init() may get called when getGeolocation is half-executed
 
-		if (database == null || reinitialize) {
-			RangerGeolocationDatabase newDatabase = build(filePathToGeolocationFile);
-			if (newDatabase != null) {
-				geolocationDBMap.put(filePathToGeolocationFile, newDatabase);
-				database = newDatabase;
-			} else {
-				LOG.error("GeolocationFileStore.init() - Could not build database. Using old database if present.");
-			}
-		}
-		geolocationDatabase = database;
+        if (database != null) {
+            long start = System.currentTimeMillis();
+            long end   = System.currentTimeMillis();
 
-		if (geolocationDatabase == null) {
-			LOG.error("GeolocationFileStore.init() - Cannot build Geolocation database from file " + filePathToGeolocationFile);
-		}
+            ret = database.find(ipAddress);
 
-	}
+            if (LOG.isDebugEnabled()) {
+                if (ret == null) {
+                    LOG.debug("GeolocationFileStore.getGeolocation() - {} not found. Search time = {} milliseconds", ipAddress, end - start);
+                } else {
+                    LOG.debug("GeolocationFileStore.getGeolocation() - {} found. Search time = {} milliseconds", ipAddress, end - start);
 
-	@Override
-	public RangerGeolocationDatabase getGeoDatabase() {
-		return geolocationDatabase;
-	}
+                    for (String attrName : database.getMetadata().getLocationDataItemNames()) {
+                        LOG.debug("GeolocationFileStore.getGeolocation() - IPAddress[{}]={}", attrName, database.getValue(ret, attrName));
+                    }
+                }
+            }
+        } else {
+            LOG.error("GeolocationFileStore.getGeolocation() - GeoLocationDatabase is not initialized correctly.");
+        }
 
-	@Override
-	public final RangerGeolocationData getGeoLocation(final String ipAddress) {
-		RangerGeolocationData ret = null;
+        return ret;
+    }
 
-		RangerGeolocationDatabase database = geolocationDatabase;		// init() may get called when getGeolocation is half-executed
+    @Override
+    public RangerGeolocationDatabase getGeoDatabase() {
+        return geolocationDatabase;
+    }
 
-		if (database != null) {
+    RangerGeolocationDatabase build(String dataFileName) {
+        RangerGeolocationDatabase database = null;
+        long                      start    = System.currentTimeMillis();
 
-			long start = 0L, end = 0L;
+        try (BufferedReader bufferedReader = new BufferedReader(getReader(dataFileName))) {
+            database = new RangerGeolocationDatabase();
 
-			start = System.currentTimeMillis();
-			ret = database.find(ipAddress);
-			end = System.currentTimeMillis();
+            int lineNumber = 0;
 
-			if (LOG.isDebugEnabled()) {
-				if (ret == null) {
-					LOG.debug("GeolocationFileStore.getGeolocation() - " + ipAddress + " not found. Search time = " + (end - start) + " milliseconds");
-				} else {
-					LOG.debug("GeolocationFileStore.getGeolocation() - " + ipAddress + " found. Search time = " + (end - start) + " milliseconds");
+            isMetalineProcessed = false;
 
-					for (String attrName : database.getMetadata().getLocationDataItemNames()) {
-						LOG.debug("GeolocationFileStore.getGeolocation() - IPAddress[" + attrName + "]=" + database.getValue(ret, attrName) + ", ");
-					}
+            for (String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine()) {
+                lineNumber++;
 
-				}
-			}
-		} else {
-			LOG.error("GeolocationFileStore.getGeolocation() - GeoLocationDatabase is not initialized correctly.");
-		}
+                if (!processLine(lineNumber, line, database)) {
+                    LOG.error("RangerGeolocationDatabaseBuilder.build() - Invalid geo-specification - {}:{}", lineNumber, line);
 
-		return ret;
-	}
+                    database = null;
 
-	private Reader getReader(String dataFileName) throws IOException {
-		Reader ret = null;
+                    break;
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            LOG.error("RangerGeolocationDatabaseBuilder.build() - Unable to open file '{}'", dataFileName);
+        } catch (IOException ex) {
+            LOG.error("RangerGeolocationDatabaseBuilder.build() - Error reading file '{}', {}", dataFileName, ex);
+        }
 
-		File f = new File(dataFileName);
+        long end = System.currentTimeMillis();
 
-		if(f.exists() && f.canRead()) {
-			LOG.info("GeolocationFileStore: reading location data from file '" + dataFileName + "'");
+        LOG.debug("RangerGeolocationDatabaseBuilder.build() - Time taken for reading file = {} milliseconds", end - start);
 
-			ret = new FileReader(dataFileName);
-		} else {
-			InputStream inStr = this.getClass().getResourceAsStream(dataFileName);
+        if (database != null) {
+            database.optimize();
+        }
 
-			if(inStr != null) {
-				LOG.info("GeolocationFileStore: reading location data from resource '" + dataFileName + "'");
+        return database;
+    }
 
-				ret = new InputStreamReader(inStr);
-			}
-		}
+    private Reader getReader(String dataFileName) throws IOException {
+        Reader ret = null;
 
-		if(ret == null) {
-			throw new FileNotFoundException(dataFileName);
-		}
+        File f = new File(dataFileName);
 
-		return ret;
-	}
+        if (f.exists() && f.canRead()) {
+            LOG.info("GeolocationFileStore: reading location data from file '{}'", dataFileName);
 
-	RangerGeolocationDatabase build(String dataFileName) {
+            ret = new FileReader(dataFileName);
+        } else {
+            InputStream inStr = this.getClass().getResourceAsStream(dataFileName);
 
-		RangerGeolocationDatabase database = null;
+            if (inStr != null) {
+                LOG.info("GeolocationFileStore: reading location data from resource '{}'", dataFileName);
 
-		BufferedReader bufferedReader = null;
-		long start = 0L, end = 0L;
+                ret = new InputStreamReader(inStr);
+            }
+        }
 
-		start = System.currentTimeMillis();
+        if (ret == null) {
+            throw new FileNotFoundException(dataFileName);
+        }
 
-		try {
-			bufferedReader = new BufferedReader(getReader(dataFileName));
+        return ret;
+    }
 
-			database  = new RangerGeolocationDatabase();
+    private boolean processLine(int lineNumber, String line, RangerGeolocationDatabase database) {
+        boolean ret = true;
 
-			String line;
-			int lineNumber = 0;
-			isMetalineProcessed = false;
+        line = line.trim();
 
-			while(( line = bufferedReader.readLine()) != null) {
-				lineNumber++;
-				if (!processLine(lineNumber, line, database)) {
-					LOG.error("RangerGeolocationDatabaseBuilder.build() - Invalid geo-specification - " + lineNumber + ":" + line);
-					database = null;
-					break;
-				}
-			}
+        if (!line.startsWith(GeoLineCommentIdentifier)) {
+            String[] fields = StringUtils.split(line, GeoFieldsSeparator);
 
-			bufferedReader.close();
-			bufferedReader = null;
-		}
-		catch(FileNotFoundException ex) {
-			LOG.error("RangerGeolocationDatabaseBuilder.build() - Unable to open file '" + dataFileName + "'");
-		}
-		catch(IOException ex) {
-			LOG.error("RangerGeolocationDatabaseBuilder.build() - Error reading file '" + dataFileName + "', " + ex);
-		}
-		finally {
-			if (bufferedReader != null) {
-				try {
-					bufferedReader.close();
-				}
-				catch (Exception exception) {
-					// Ignore
-				}
-			}
-		}
+            if (fields != null) {
+                if (!isMetalineProcessed) {
+                    GeolocationMetadata metadata = GeolocationMetadata.create(fields, lineNumber);
 
-		end = System.currentTimeMillis();
+                    if (metadata != null) {
+                        database.setMetadata(metadata);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerGeolocationDatabaseBuilder.build() - Time taken for reading file = " + (end - start) + " milliseconds");
-		}
+                        isMetalineProcessed = true;
+                    } else {
+                        LOG.error("GeolocationFileStore.processLine() - Invalid metadata specification {}:{}", lineNumber, line);
 
-		if (database != null) {
-			database.optimize();
-		}
+                        ret = false;
+                    }
+                } else {
+                    RangerGeolocationData data = RangerGeolocationData.create(fields, lineNumber, useDotFormat);
+                    if (data != null) {
+                        database.getData().insert(data);
+                    } else {
+                        LOG.error("GeolocationFileStore.processLine() - Invalid data specification {}:{}", lineNumber, line);
+                    }
+                }
+            } else {
+                LOG.error("GeolocationFileStore.processLine() - Invalid line, skipping..{}:{}", lineNumber, line);
+            }
+        }
 
-		return database;
-	}
-
-	private boolean processLine(int lineNumber, String line, RangerGeolocationDatabase database) {
-
-		boolean ret = true;
-
-		line = line.trim();
-
-		if (!line.startsWith(GeoLineCommentIdentifier)) {
-			String fields[] = StringUtils.split(line, GeoFieldsSeparator);
-			if (fields != null) {
-				if (!isMetalineProcessed) {
-					GeolocationMetadata metadata = GeolocationMetadata.create(fields, lineNumber);
-					if (metadata != null) {
-						database.setMetadata(metadata);
-						isMetalineProcessed = true;
-					} else {
-						LOG.error("GeolocationFileStore.processLine() - Invalid metadata specification " + lineNumber + ":" + line);
-						ret = false;
-					}
-				} else {
-					RangerGeolocationData data = RangerGeolocationData.create(fields, lineNumber, useDotFormat);
-					if (data != null) {
-						database.getData().insert(data);
-					} else {
-						LOG.error("GeolocationFileStore.processLine() - Invalid data specification " + lineNumber + ":" + line);
-					}
-				}
-			} else {
-				LOG.error("GeolocationFileStore.processLine() - Invalid line, skipping.." + lineNumber + ":" + line);
-			}
-		}
-		return ret;
-	}
-
+        return ret;
+    }
 }

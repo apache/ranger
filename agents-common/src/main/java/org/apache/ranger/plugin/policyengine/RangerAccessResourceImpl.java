@@ -19,250 +19,261 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-
 public class RangerAccessResourceImpl implements RangerMutableResource {
-	private String              ownerUser;
-	private Map<String, Object> elements;
-	private String              stringifiedValue;
-	private String              stringifiedCacheKeyValue;
-	private String              leafName;
-	private RangerServiceDef    serviceDef;
+    private String              ownerUser;
+    private Map<String, Object> elements;
+    private String              stringifiedValue;
+    private String              stringifiedCacheKeyValue;
+    private String              leafName;
+    private RangerServiceDef    serviceDef;
 
-	public RangerAccessResourceImpl() {
-		this(null, null);
-	}
+    public RangerAccessResourceImpl() {
+        this(null, null);
+    }
 
-	public RangerAccessResourceImpl(Map<String, Object> elements) {
-		this(elements, null);
-	}
+    public RangerAccessResourceImpl(Map<String, Object> elements) {
+        this(elements, null);
+    }
 
-	public RangerAccessResourceImpl(Map<String, Object> elements, String ownerUser) {
-		this.elements  = elements;
-		this.ownerUser = ownerUser;
-	}
+    public RangerAccessResourceImpl(Map<String, Object> elements, String ownerUser) {
+        this.elements  = elements;
+        this.ownerUser = ownerUser;
+    }
 
-	@Override
-	public String getOwnerUser() {
-		return ownerUser;
-	}
+    @Override
+    public String getOwnerUser() {
+        return ownerUser;
+    }
 
-	@Override
-	public boolean exists(String name) {
-		return elements != null && elements.containsKey(name);
-	}
+    @Override
+    public boolean exists(String name) {
+        return elements != null && elements.containsKey(name);
+    }
 
-	@Override
-	public Object getValue(String name) {
-		Object ret = null;
+    @Override
+    public Object getValue(String name) {
+        Object ret = null;
 
-		if(elements != null && elements.containsKey(name)) {
-			ret = elements.get(name);
-		}
+        if (elements != null && elements.containsKey(name)) {
+            ret = elements.get(name);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public Set<String> getKeys() {
-		Set<String> ret = null;
+    @Override
+    public RangerServiceDef getServiceDef() {
+        return this.serviceDef;
+    }
 
-		if(elements != null) {
-			ret = elements.keySet();
-		}
+    @Override
+    public Set<String> getKeys() {
+        Set<String> ret = null;
 
-		return ret;
-	}
+        if (elements != null) {
+            ret = elements.keySet();
+        }
 
-	@Override
-	public void setOwnerUser(String ownerUser) {
-		this.ownerUser = ownerUser;
-	}
+        return ret;
+    }
 
-	@Override
-	public void setValue(String name, Object value) {
-		if(value == null) {
-			if(elements != null) {
-				elements.remove(name);
+    @Override
+    public String getLeafName() {
+        String ret = leafName;
 
-				if(elements.isEmpty()) {
-					elements = null;
-				}
-			}
-		} else {
-			if(elements == null) {
-				elements = new HashMap<>();
-			}
-			elements.put(name, value);
-		}
+        if (ret == null) {
+            if (serviceDef != null && serviceDef.getResources() != null) {
+                List<RangerResourceDef> resourceDefs = serviceDef.getResources();
 
-		// reset, so that these will be computed again with updated elements
-		stringifiedValue = stringifiedCacheKeyValue = leafName = null;
-	}
+                for (int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
+                    RangerResourceDef resourceDef = resourceDefs.get(idx);
 
-	@Override
-	public void setServiceDef(final RangerServiceDef serviceDef) {
-		this.serviceDef = serviceDef;
-		this.stringifiedValue = this.stringifiedCacheKeyValue = this.leafName = null;
-	}
+                    if (resourceDef != null && exists(resourceDef.getName())) {
+                        ret      = resourceDef.getName();
+                        leafName = ret;
 
-	@Override
-	public RangerServiceDef getServiceDef() {
-		return this.serviceDef;
-	}
-
-	@Override
-	public String getLeafName() {
-		String ret = leafName;
-
-		if(ret == null) {
-			if(serviceDef != null && serviceDef.getResources() != null) {
-				List<RangerResourceDef> resourceDefs = serviceDef.getResources();
-
-				for(int idx = resourceDefs.size() - 1; idx >= 0; idx--) {
-					RangerResourceDef resourceDef = resourceDefs.get(idx);
-
-					if(resourceDef != null && exists(resourceDef.getName())) {
-					    ret = leafName = resourceDef.getName();
-					    break;
+                        break;
                     }
-				}
-			}
-		}
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public String getAsString() {
-		String ret = stringifiedValue;
+    @Override
+    public String getAsString() {
+        String ret = stringifiedValue;
 
-		if(ret == null) {
-			if(serviceDef != null && serviceDef.getResources() != null) {
-				StringBuilder sb = new StringBuilder();
+        if (ret == null) {
+            if (serviceDef != null && serviceDef.getResources() != null) {
+                StringBuilder sb = new StringBuilder();
 
-				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-					if(resourceDef == null || !exists(resourceDef.getName())) {
-						continue;
-					}
+                for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    if (resourceDef == null || !exists(resourceDef.getName())) {
+                        continue;
+                    }
 
-					if(sb.length() > 0) {
-						sb.append(RESOURCE_SEP);
-					}
+                    if (sb.length() > 0) {
+                        sb.append(RESOURCE_SEP);
+                    }
 
-					sb.append(getValue(resourceDef.getName()));
-				}
+                    sb.append(getValue(resourceDef.getName()));
+                }
 
-				if(sb.length() > 0) {
-					ret = stringifiedValue = sb.toString();
-				}
-			}
-		}
+                if (sb.length() > 0) {
+                    ret              = sb.toString();
+                    stringifiedValue = ret;
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public String getCacheKey() {
-		String ret = stringifiedCacheKeyValue;
+    @Override
+    public String getCacheKey() {
+        String ret = stringifiedCacheKeyValue;
 
-		if(ret == null) {
-			if(serviceDef != null && serviceDef.getResources() != null) {
-				StringBuilder sb = new StringBuilder();
+        if (ret == null) {
+            if (serviceDef != null && serviceDef.getResources() != null) {
+                StringBuilder sb = new StringBuilder();
 
-				for(RangerResourceDef resourceDef : serviceDef.getResources()) {
-					if(resourceDef == null || !exists(resourceDef.getName())) {
-						continue;
-					}
+                for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    if (resourceDef == null || !exists(resourceDef.getName())) {
+                        continue;
+                    }
 
-					if(sb.length() > 0) {
-						sb.append(RESOURCE_SEP);
-					}
+                    if (sb.length() > 0) {
+                        sb.append(RESOURCE_SEP);
+                    }
 
-					sb.append(resourceDef.getName()).append(RESOURCE_NAME_VAL_SEP).append(getValue(resourceDef.getName()));
-				}
+                    sb.append(resourceDef.getName()).append(RESOURCE_NAME_VAL_SEP).append(getValue(resourceDef.getName()));
+                }
 
-				if(sb.length() > 0) {
-					ret = stringifiedCacheKeyValue = sb.toString();
-				}
-			}
-		}
+                if (sb.length() > 0) {
+                    ret                      = sb.toString();
+                    stringifiedCacheKeyValue = ret;
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public Map<String, Object> getAsMap() {
-		return elements == null ? Collections.EMPTY_MAP : Collections.unmodifiableMap(elements);
-	}
+    @Override
+    public Map<String, Object> getAsMap() {
+        return elements == null ? Collections.emptyMap() : Collections.unmodifiableMap(elements);
+    }
 
-	@Override
-	public RangerAccessResource getReadOnlyCopy() {
-		return new RangerAccessResourceReadOnly(this);
-	}
+    @Override
+    public RangerAccessResource getReadOnlyCopy() {
+        return new RangerAccessResourceReadOnly(this);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if(obj == null || !(obj instanceof RangerAccessResourceImpl)) {
-			return false;
-		}
+    @Override
+    public void setServiceDef(final RangerServiceDef serviceDef) {
+        this.serviceDef               = serviceDef;
+        this.stringifiedValue         = null;
+        this.stringifiedCacheKeyValue = null;
+        this.leafName                 = null;
+    }
 
-		if(this == obj) {
-			return true;
-		}
+    @Override
+    public void setOwnerUser(String ownerUser) {
+        this.ownerUser = ownerUser;
+    }
 
-		RangerAccessResourceImpl other = (RangerAccessResourceImpl) obj;
+    @Override
+    public void setValue(String name, Object value) {
+        if (value == null) {
+            if (elements != null) {
+                elements.remove(name);
 
-		return ObjectUtils.equals(ownerUser, other.ownerUser) &&
-			   ObjectUtils.equals(elements, other.elements);
-	}
+                if (elements.isEmpty()) {
+                    elements = null;
+                }
+            }
+        } else {
+            if (elements == null) {
+                elements = new HashMap<>();
+            }
+            elements.put(name, value);
+        }
 
-	@Override
-	public int hashCode() {
-		int ret = 7;
+        // reset, so that these will be computed again with updated elements
+        stringifiedValue         = null;
+        stringifiedCacheKeyValue = null;
+        leafName                 = null;
+    }
 
-		ret = 31 * ret + ObjectUtils.hashCode(ownerUser);
-		ret = 31 * ret + ObjectUtils.hashCode(elements);
+    @Override
+    public int hashCode() {
+        int ret = 7;
 
-		return ret;
-	}
+        ret = 31 * ret + ObjectUtils.hashCode(ownerUser);
+        ret = 31 * ret + ObjectUtils.hashCode(elements);
 
-	@Override
-	public String toString( ) {
-		StringBuilder sb = new StringBuilder();
+        return ret;
+    }
 
-		toString(sb);
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RangerAccessResourceImpl)) {
+            return false;
+        }
 
-		return sb.toString();
-	}
+        if (this == obj) {
+            return true;
+        }
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerResourceImpl={");
+        RangerAccessResourceImpl other = (RangerAccessResourceImpl) obj;
 
-		sb.append("ownerUser={").append(ownerUser).append("} ");
+        return ObjectUtils.equals(ownerUser, other.ownerUser) && ObjectUtils.equals(elements, other.elements);
+    }
 
-		sb.append("elements={");
-		if(elements != null) {
-			for(Map.Entry<String, Object> e : elements.entrySet()) {
-				sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
-			}
-		}
-		sb.append("} ");
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-		sb.append("}");
+        toString(sb);
 
-		return sb;
-	}
+        return sb.toString();
+    }
 
-	protected String getStringifiedValue() { return stringifiedValue; }
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerResourceImpl={");
 
-	protected void setStringifiedValue(String val) { this.stringifiedValue = val; }
+        sb.append("ownerUser={").append(ownerUser).append("} ");
+
+        sb.append("elements={");
+        if (elements != null) {
+            for (Map.Entry<String, Object> e : elements.entrySet()) {
+                sb.append(e.getKey()).append("=").append(e.getValue()).append("; ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append("}");
+
+        return sb;
+    }
+
+    protected String getStringifiedValue() {
+        return stringifiedValue;
+    }
+
+    protected void setStringifiedValue(String val) {
+        this.stringifiedValue = val;
+    }
 }

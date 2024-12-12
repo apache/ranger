@@ -26,55 +26,57 @@ import java.util.Map;
 import java.util.Set;
 
 public interface RangerAccessRequest {
-	RangerAccessResource getResource();
+    RangerAccessResource getResource();
 
-	String getAccessType();
+    String getAccessType();
 
-	boolean isAccessTypeAny();
+    boolean isAccessTypeAny();
 
-	default boolean ignoreDescendantDeny() { return true; }
+    default boolean ignoreDescendantDeny() {
+        return true;
+    }
 
-	boolean isAccessTypeDelegatedAdmin();
+    boolean isAccessTypeDelegatedAdmin();
 
-	String getUser();
+    String getUser();
 
-	Set<String> getUserGroups();
+    Set<String> getUserGroups();
 
-	Set<String> getUserRoles();
+    Set<String> getUserRoles();
 
-	Date getAccessTime();
+    Date getAccessTime();
 
-	String getClientIPAddress();
+    String getClientIPAddress();
 
-	String getRemoteIPAddress();
+    String getRemoteIPAddress();
 
-	List<String> getForwardedAddresses();
+    List<String> getForwardedAddresses();
 
-	String getClientType();
+    String getClientType();
 
-	String getAction();
+    String getAction();
 
-	String getRequestData();
+    String getRequestData();
 
-	String getSessionId();
-	
-	String getClusterName();
+    String getSessionId();
 
-	String getClusterType();
+    String getClusterName();
 
-	Map<String, Object> getContext();
+    String getClusterType();
 
-	RangerAccessRequest getReadOnlyCopy();
+    Map<String, Object> getContext();
 
-	ResourceMatchingScope getResourceMatchingScope();
+    RangerAccessRequest getReadOnlyCopy();
 
-	default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
-		return Collections.emptyMap();
-	}
+    ResourceMatchingScope getResourceMatchingScope();
 
-	enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }
+    default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+        return Collections.emptyMap();
+    }
 
-	enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
+    enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }
 
-	enum ResourceElementMatchType { NONE, SELF, CHILD, PREFIX }
+    enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
+
+    enum ResourceElementMatchType { NONE, SELF, CHILD, PREFIX }
 }

@@ -27,6 +27,10 @@
     <packaging>jar</packaging>
     <name>Credential Builder</name>
     <description>Credential Builder for non-hadoop java codebase</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.woodstox</groupId>
