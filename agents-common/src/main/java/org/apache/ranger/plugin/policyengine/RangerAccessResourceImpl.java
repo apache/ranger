@@ -239,8 +239,7 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 
         RangerAccessResourceImpl other = (RangerAccessResourceImpl) obj;
 
-        return ObjectUtils.equals(ownerUser, other.ownerUser) &&
-                ObjectUtils.equals(elements, other.elements);
+        return ObjectUtils.equals(ownerUser, other.ownerUser) && ObjectUtils.equals(elements, other.elements);
     }
 
     @Override

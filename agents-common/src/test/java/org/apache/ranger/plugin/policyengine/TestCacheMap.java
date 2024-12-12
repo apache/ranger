@@ -88,9 +88,9 @@ public class TestCacheMap {
             LOG.debug("TestCacheMap.runTests(), Cache Size after insert(): {}", testCacheMap.size());
         }
 
-        Set<String> keySet = testCacheMap.keySet();
-
         if (LOG.isDebugEnabled()) {
+            Set<String> keySet = testCacheMap.keySet();
+
             LOG.debug("TestCacheMap.runTests(), KeySet Size:{}", keySet.size());
             LOG.debug("TestCacheMap.runTests(), printing keys..");
 

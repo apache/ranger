@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestWrapper;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -41,6 +42,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerTagAccessRequest;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
@@ -246,21 +248,21 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                 RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
 
                 if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
-                    final RangerPolicyResourceMatcher.MatchType matchType;
+                    final MatchType matchType;
 
                     if (request instanceof RangerTagAccessRequest) {
                         matchType = ((RangerTagAccessRequest) request).getMatchType();
                     } else {
-                        matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
+                        matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : MatchType.NONE;
                     }
 
-                    final RangerAccessRequest.ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : RangerAccessRequest.ResourceMatchingScope.SELF;
-                    final boolean                                   isMatched;
+                    final ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : ResourceMatchingScope.SELF;
+                    final boolean               isMatched;
 
-                    if (request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-                        isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
+                    if (request.isAccessTypeAny() || resourceMatchingScope == ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+                        isMatched = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS || matchType == MatchType.DESCENDANT;
                     } else {
-                        isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+                        isMatched = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
                     }
 
                     if (isMatched) {
@@ -392,13 +394,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
     }
 
     @Override
-    public void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason) {
+    public void updateAccessResult(RangerAccessResult result, MatchType matchType, boolean isAllowed, String reason) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyEvaluator.updateAccessResult({}, {}, {}, {}, {})", result, matchType, isAllowed, reason, getPolicyId());
         }
 
         if (!isAllowed) {
-            if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT || !result.getAccessRequest().ignoreDescendantDeny()) {
+            if (matchType != MatchType.DESCENDANT || !result.getAccessRequest().ignoreDescendantDeny()) {
                 result.setIsAllowed(false);
                 result.setPolicyPriority(getPolicyPriority());
                 result.setPolicyId(getPolicyId());
@@ -425,16 +427,16 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
         LOG.debug("==> RangerDefaultPolicyEvaluator.getResourceAccessInfo({}, {})", request, result);
 
         for (RangerPolicyResourceEvaluator resourceEvaluator : getResourceEvaluators()) {
-            RangerPolicyResourceMatcher           resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
-            RangerPolicyResourceMatcher.MatchType matchType;
+            RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
+            MatchType                   matchType;
 
             if (request instanceof RangerTagAccessRequest) {
                 matchType = ((RangerTagAccessRequest) request).getMatchType();
             } else {
-                matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
+                matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext()) : MatchType.NONE;
             }
 
-            final boolean isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+            final boolean isMatched = matchType != MatchType.NONE;
 
             if (isMatched) {
                 if (CollectionUtils.isNotEmpty(allowEvaluators)) {
@@ -456,7 +458,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     result.getAllowedUsers().addAll(users);
                     result.getAllowedGroups().addAll(groups);
                 }
-                if (matchType != RangerPolicyResourceMatcher.MatchType.DESCENDANT) {
+                if (matchType != MatchType.DESCENDANT) {
                     if (CollectionUtils.isNotEmpty(denyEvaluators)) {
                         Set<String> users  = new HashSet<>();
                         Set<String> groups = new HashSet<>();
@@ -547,7 +549,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
      * This is used only by test code
      */
 
-    protected void evaluatePolicyItems(RangerAccessRequest request, RangerPolicyResourceMatcher.MatchType matchType, RangerAccessResult result) {
+    protected void evaluatePolicyItems(RangerAccessRequest request, MatchType matchType, RangerAccessResult result) {
         LOG.debug("==> RangerDefaultPolicyEvaluator.evaluatePolicyItems({}, {}, {})", request, result, matchType);
 
         Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
@@ -739,24 +741,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
     }
 
     protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
-        if (policy == null || (!hasAllow() && !hasDeny()) || serviceDef == null) {
-            return;
-        }
-
-        /*
-        Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
-
-        if(impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
-            return;
-        }
-
-        preprocessPolicyItems(policy.getPolicyItems(), impliedAccessGrants);
-        preprocessPolicyItems(policy.getDenyPolicyItems(), impliedAccessGrants);
-        preprocessPolicyItems(policy.getAllowExceptions(), impliedAccessGrants);
-        preprocessPolicyItems(policy.getDenyExceptions(), impliedAccessGrants);
-        preprocessPolicyItems(policy.getDataMaskPolicyItems(), impliedAccessGrants);
-        preprocessPolicyItems(policy.getRowFilterPolicyItems(), impliedAccessGrants);
-         */
     }
 
     protected void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {

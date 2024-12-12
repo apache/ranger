@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerRole.RoleMember;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngineForDeltas.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -85,8 +86,7 @@ public class TestPolicyEngineForDeltas {
 
         // For setting up auditProvider
         Properties auditProperties = new Properties();
-
-        File propFile = new File(AUDIT_PROPERTIES_FILE);
+        File       propFile        = new File(AUDIT_PROPERTIES_FILE);
 
         if (propFile.exists()) {
             System.out.println("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
@@ -103,6 +103,7 @@ public class TestPolicyEngineForDeltas {
         }
 
         AuditProviderFactory factory = AuditProviderFactory.getInstance();
+
         factory.init(auditProperties, "hdfs"); // second parameter does not matter for v2
 
         AuditHandler provider = factory.getAuditProvider();
@@ -110,6 +111,7 @@ public class TestPolicyEngineForDeltas {
         System.out.println("provider=" + provider.toString());
 
         File file = File.createTempFile("ranger-admin-test-site", ".xml");
+
         file.deleteOnExit();
 
         FileOutputStream   outStream = new FileOutputStream(file);
@@ -191,6 +193,7 @@ public class TestPolicyEngineForDeltas {
         assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.testsInfo != null && testCase.testsInfo.tests != null);
 
         ServicePolicies servicePolicies = new ServicePolicies();
+
         servicePolicies.setPolicyVersion(100L);
         servicePolicies.setServiceName(testCase.serviceName);
         servicePolicies.setServiceDef(testCase.serviceDef);
@@ -204,6 +207,7 @@ public class TestPolicyEngineForDeltas {
 
         if (null != testCase.tagPolicyInfo) {
             ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
+
             tagPolicies.setServiceName(testCase.tagPolicyInfo.serviceName);
             tagPolicies.setServiceDef(testCase.tagPolicyInfo.serviceDef);
             tagPolicies.setPolicies(testCase.tagPolicyInfo.tagPolicies);
@@ -212,6 +216,7 @@ public class TestPolicyEngineForDeltas {
             if (StringUtils.isNotBlank(testCase.auditMode)) {
                 tagPolicies.setAuditMode(testCase.auditMode);
             }
+
             servicePolicies.setTagPolicies(tagPolicies);
         }
 
@@ -219,6 +224,7 @@ public class TestPolicyEngineForDeltas {
         boolean            useForwardedIPAddress     = config.getBoolean(config.getPropertyPrefix() + ".use.x-forwarded-for.ipaddress", false);
         String             trustedProxyAddressString = config.get(config.getPropertyPrefix() + ".trusted.proxy.ipaddresses");
         String[]           trustedProxyAddresses     = StringUtils.split(trustedProxyAddressString, ';');
+
         if (trustedProxyAddresses != null) {
             for (int i = 0; i < trustedProxyAddresses.length; i++) {
                 trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
@@ -226,21 +232,25 @@ public class TestPolicyEngineForDeltas {
         }
 
         RangerRoles roles = new RangerRoles();
+
         roles.setServiceName(testCase.serviceName);
         roles.setRoleVersion(-1L);
-        Set<RangerRole> rolesSet = new HashSet<>();
 
+        Set<RangerRole>          rolesSet         = new HashSet<>();
         Map<String, Set<String>> userRoleMapping  = testCase.userRoles;
         Map<String, Set<String>> groupRoleMapping = testCase.groupRoles;
         Map<String, Set<String>> roleRoleMapping  = testCase.roleRoles;
+
         if (userRoleMapping != null) {
             for (Map.Entry<String, Set<String>> userRole : userRoleMapping.entrySet()) {
-                String                      user            = userRole.getKey();
-                Set<String>                 userRoles       = userRole.getValue();
-                RangerRole.RoleMember       userRoleMember  = new RangerRole.RoleMember(user, true);
-                List<RangerRole.RoleMember> userRoleMembers = Arrays.asList(userRoleMember);
+                String           user            = userRole.getKey();
+                Set<String>      userRoles       = userRole.getValue();
+                RoleMember       userRoleMember  = new RoleMember(user, true);
+                List<RoleMember> userRoleMembers = Arrays.asList(userRoleMember);
+
                 for (String usrRole : userRoles) {
                     RangerRole rangerUserRole = new RangerRole(usrRole, usrRole, null, userRoleMembers, null);
+
                     rolesSet.add(rangerUserRole);
                 }
             }
@@ -248,12 +258,14 @@ public class TestPolicyEngineForDeltas {
 
         if (groupRoleMapping != null) {
             for (Map.Entry<String, Set<String>> groupRole : groupRoleMapping.entrySet()) {
-                String                      group            = groupRole.getKey();
-                Set<String>                 groupRoles       = groupRole.getValue();
-                RangerRole.RoleMember       groupRoleMember  = new RangerRole.RoleMember(group, true);
-                List<RangerRole.RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
+                String           group            = groupRole.getKey();
+                Set<String>      groupRoles       = groupRole.getValue();
+                RoleMember       groupRoleMember  = new RoleMember(group, true);
+                List<RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
+
                 for (String grpRole : groupRoles) {
                     RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, null, groupRoleMembers);
+
                     rolesSet.add(rangerGroupRole);
                 }
             }
@@ -261,20 +273,20 @@ public class TestPolicyEngineForDeltas {
 
         if (roleRoleMapping != null) {
             for (Map.Entry<String, Set<String>> roleRole : roleRoleMapping.entrySet()) {
-                String                      role            = roleRole.getKey();
-                Set<String>                 roleRoles       = roleRole.getValue();
-                RangerRole.RoleMember       roleRoleMember  = new RangerRole.RoleMember(role, true);
-                List<RangerRole.RoleMember> roleRoleMembers = Arrays.asList(roleRoleMember);
+                String           role            = roleRole.getKey();
+                Set<String>      roleRoles       = roleRole.getValue();
+                RoleMember       roleRoleMember  = new RoleMember(role, true);
+                List<RoleMember> roleRoleMembers = Arrays.asList(roleRoleMember);
+
                 for (String rleRole : roleRoles) {
                     RangerRole rangerRoleRole = new RangerRole(rleRole, rleRole, null, null, null, roleRoleMembers);
+
                     rolesSet.add(rangerRoleRole);
                 }
             }
         }
 
         roles.setRangerRoles(rolesSet);
-
-        RangerPolicyEngineOptions policyEngineOptions = config.getPolicyEngineOptions();
 
         setPluginConfig(config, ".super.users", testCase.superUsers);
         setPluginConfig(config, ".super.groups", testCase.superGroups);
@@ -291,17 +303,20 @@ public class TestPolicyEngineForDeltas {
         policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
         PolicyEngineTestCase.TestsInfo testsInfo = testCase.testsInfo;
+
         do {
             runTestCaseTests(policyEngine, testCase.serviceDef, testName, testsInfo.tests);
+
             if (testsInfo.updatedPolicies != null && CollectionUtils.isNotEmpty(testsInfo.updatedPolicies.policyDeltas)) {
                 servicePolicies.setPolicyDeltas(testsInfo.updatedPolicies.policyDeltas);
                 servicePolicies.setPolicies(null);
+
                 if (MapUtils.isNotEmpty(testsInfo.updatedPolicies.securityZones)) {
                     servicePolicies.setSecurityZones(testsInfo.updatedPolicies.securityZones);
                 }
-                policyEngine = (RangerPolicyEngineImpl) RangerPolicyEngineImpl.getPolicyEngine(policyEngine, servicePolicies);
 
-                testsInfo = null;
+                policyEngine = (RangerPolicyEngineImpl) RangerPolicyEngineImpl.getPolicyEngine(policyEngine, servicePolicies);
+                testsInfo    = null;
             } else {
                 testsInfo = null;
             }
@@ -315,12 +330,9 @@ public class TestPolicyEngineForDeltas {
         for (TestData test : tests) {
             request = test.request;
 
-            if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
-                    request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+            if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) || request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
                 // Create a new AccessRequest
-                RangerAccessRequestImpl newRequest =
-                        new RangerAccessRequestImpl(request.getResource(), request.getAccessType(),
-                                request.getUser(), request.getUserGroups(), null);
+                RangerAccessRequestImpl newRequest = new RangerAccessRequestImpl(request.getResource(), request.getAccessType(), request.getUser(), request.getUserGroups(), null);
 
                 newRequest.setClientType(request.getClientType());
                 newRequest.setAccessTime(request.getAccessTime());
@@ -332,40 +344,35 @@ public class TestPolicyEngineForDeltas {
 
                 Map<String, Object> context        = request.getContext();
                 String              tagsJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
+
                 context.remove(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
                 if (!StringUtils.isEmpty(tagsJsonString)) {
                     try {
-                        Type setType = new TypeToken<Set<RangerTagForEval>>() {
-                        }.getType();
-                        Set<RangerTagForEval> tags = gsonBuilder.fromJson(tagsJsonString, setType);
+                        Type                  setType = new TypeToken<Set<RangerTagForEval>>() {}.getType();
+                        Set<RangerTagForEval> tags    = gsonBuilder.fromJson(tagsJsonString, setType);
 
                         context.put(RangerAccessRequestUtil.KEY_CONTEXT_TAGS, tags);
                     } catch (Exception e) {
-                        System.err.println("TestPolicyEngineForDeltas.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" +
-                                tagsJsonString + ", exception=" + e);
+                        System.err.println("TestPolicyEngineForDeltas.runTests(): error parsing TAGS JSON string in file " + testName + ", tagsJsonString=" + tagsJsonString + ", exception=" + e);
                     }
                 } else if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
                     String resourcesJsonString = (String) context.get(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
+
                     context.remove(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES);
+
                     if (!StringUtils.isEmpty(resourcesJsonString)) {
                         try {
-                            /*
-                            Reader stringReader = new StringReader(resourcesJsonString);
-                            RangerRequestedResources resources = gsonBuilder.fromJson(stringReader, RangerRequestedResources.class);
-                            */
-
-                            Type myType = new TypeToken<RangerRequestedResources>() {
-                            }.getType();
+                            Type                     myType    = new TypeToken<RangerRequestedResources>() {}.getType();
                             RangerRequestedResources resources = gsonBuilder.fromJson(resourcesJsonString, myType);
 
                             context.put(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES, resources);
                         } catch (Exception e) {
-                            System.err.println("TestPolicyEngineForDeltas.runTests(): error parsing REQUESTED_RESOURCES string in file " + testName + ", resourcesJsonString=" +
-                                    resourcesJsonString + ", exception=" + e);
+                            System.err.println("TestPolicyEngineForDeltas.runTests(): error parsing REQUESTED_RESOURCES string in file " + testName + ", resourcesJsonString=" + resourcesJsonString + ", exception=" + e);
                         }
                     }
                 }
+
                 newRequest.setContext(context);
 
                 // accessResource.ServiceDef is set here, so that we can skip call to policyEngine.preProcess() which
@@ -375,6 +382,7 @@ public class TestPolicyEngineForDeltas {
 
                 // Safe cast
                 RangerAccessResourceImpl accessResource = (RangerAccessResourceImpl) request.getResource();
+
                 accessResource.setServiceDef(serviceDef);
 
                 request = newRequest;
@@ -384,9 +392,7 @@ public class TestPolicyEngineForDeltas {
 
             if (test.result != null) {
                 RangerAccessResult expected = test.result;
-                RangerAccessResult result;
-
-                result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+                RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
                 policyEngine.evaluateAuditPolicies(result);
 
@@ -398,9 +404,7 @@ public class TestPolicyEngineForDeltas {
 
             if (test.dataMaskResult != null) {
                 RangerAccessResult expected = test.dataMaskResult;
-                RangerAccessResult result;
-
-                result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+                RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
                 policyEngine.evaluateAuditPolicies(result);
 
@@ -413,9 +417,7 @@ public class TestPolicyEngineForDeltas {
 
             if (test.rowFilterResult != null) {
                 RangerAccessResult expected = test.rowFilterResult;
-                RangerAccessResult result;
-
-                result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+                RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
                 policyEngine.evaluateAuditPolicies(result);
 
@@ -492,11 +494,11 @@ public class TestPolicyEngineForDeltas {
 
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
         @Override
-        public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-                JsonDeserializationContext context) throws JsonParseException {
+        public RangerAccessRequest deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
             RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
             ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
             if (ret.getAccessTime() == null) {
                 ret.setAccessTime(new Date());
             }
@@ -507,8 +509,7 @@ public class TestPolicyEngineForDeltas {
 
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
-        public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                JsonDeserializationContext context) throws JsonParseException {
+        public RangerAccessResource deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

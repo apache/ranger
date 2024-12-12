@@ -26,6 +26,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
@@ -41,10 +42,11 @@ import java.util.Map;
 import java.util.Set;
 
 public class CachedResourceEvaluators {
-    private static final Logger                                                                                                                    LOG                           = LoggerFactory.getLogger(CachedResourceEvaluators.class);
-    private static final Logger                                                                                                                    PERF_EVALUATORS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("CachedResourceEvaluators.retrieval");
-    private final        Map<String, Map<Map<String, RangerAccessRequest.ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache                         = new HashMap<>();
-    private final        RangerReadWriteLock                                                                                                       cacheLock                     = new RangerReadWriteLock(true);
+    private static final Logger LOG                           = LoggerFactory.getLogger(CachedResourceEvaluators.class);
+    private static final Logger PERF_EVALUATORS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("CachedResourceEvaluators.retrieval");
+
+    private final Map<String, Map<Map<String, ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache     = new HashMap<>();
+    private final RangerReadWriteLock                                                                                   cacheLock = new RangerReadWriteLock(true);
 
     public CachedResourceEvaluators() {}
 
@@ -119,7 +121,7 @@ public class CachedResourceEvaluators {
         return ret;
     }
 
-    public Collection<RangerServiceResourceMatcher> getEvaluators(String resourceKey, Map<String, RangerAccessRequest.ResourceElementMatchingScope> scopes) {
+    public Collection<RangerServiceResourceMatcher> getEvaluators(String resourceKey, Map<String, ResourceElementMatchingScope> scopes) {
         Collection<RangerServiceResourceMatcher> ret;
 
         try (RangerReadWriteLock.RangerLock ignored = cacheLock.getReadLock()) {
@@ -129,7 +131,7 @@ public class CachedResourceEvaluators {
         return ret;
     }
 
-    public void cacheEvaluators(String resource, Map<String, RangerAccessRequest.ResourceElementMatchingScope> scopes, Collection<RangerServiceResourceMatcher> evaluators) {
+    public void cacheEvaluators(String resource, Map<String, ResourceElementMatchingScope> scopes, Collection<RangerServiceResourceMatcher> evaluators) {
         try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
             cache.computeIfAbsent(resource, k -> new HashMap<>()).put(scopes, evaluators);
         }
