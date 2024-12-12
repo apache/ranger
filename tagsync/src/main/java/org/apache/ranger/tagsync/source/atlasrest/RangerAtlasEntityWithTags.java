@@ -29,13 +29,12 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerAtlasEntityWithTags {
-	static private final String                                             DEFAULT_TAG_ATTRIBUTE_TYPE = "string";
-
     private final RangerAtlasEntity                                         entity;
     private final List<EntityNotificationWrapper.RangerAtlasClassification> tags;
     private final AtlasTypeRegistry                                         typeRegistry;
+    private static final String DEFAULT_TAG_ATTRIBUTE_TYPE = "string";
 
-    public RangerAtlasEntityWithTags(EntityNotificationWrapper notification ) {
+    public RangerAtlasEntityWithTags(EntityNotificationWrapper notification) {
         this.entity       = notification.getRangerAtlasEntity();
         this.tags         = notification.getClassifications();
         this.typeRegistry = null;

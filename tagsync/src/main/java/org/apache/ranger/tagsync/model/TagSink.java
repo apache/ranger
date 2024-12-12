@@ -23,10 +23,12 @@ import org.apache.ranger.plugin.util.ServiceTags;
 
 import java.util.Properties;
 
-
 public interface TagSink {
-	boolean initialize(Properties properties);
-	ServiceTags upload(ServiceTags toUpload) throws Exception;
-	boolean start();
-	void stop();
+    boolean initialize(Properties properties);
+
+    ServiceTags upload(ServiceTags toUpload) throws Exception;
+
+    boolean start();
+
+    void stop();
 }

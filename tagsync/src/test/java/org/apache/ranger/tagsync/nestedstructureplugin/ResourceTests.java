@@ -39,7 +39,6 @@ public class ResourceTests extends TestCase {
         String   schemaName  = resources.length > 0 ? resources[0] : null;
         String   fieldName   = resources.length > 1 ? resources[1] : null;
 
-
         assertEquals("schemaName does not match expected value", "json_object.foo.v1", schemaName);
         assertEquals("fieldName does not match expected value", "partner", fieldName);
         System.out.println(schemaName);
@@ -76,7 +75,7 @@ public class ResourceTests extends TestCase {
             assertNotNull("Resource element missing value for field", resource.getResourceElements().get("field"));
             assertEquals("Resource element field value does not match", Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues());
             assertEquals("serviceName does not match expected value", "null_nestedstructure", resource.getServiceName());
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");
         }
@@ -94,7 +93,7 @@ public class ResourceTests extends TestCase {
             assertNotNull("Resource element missing value for field", resource.getResourceElements().get("field"));
             assertEquals("Resource element field value does not match", Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues());
             assertEquals("serviceName does not match expected value", "dev_nestedstructure", resource.getServiceName());
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");
         }

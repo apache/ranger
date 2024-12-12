@@ -19,53 +19,53 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AtlasStormResourceMapper extends AtlasResourceMapper {
-	public static final String ENTITY_TYPE_STORM_TOPOLOGY = "storm_topology";
-	public static final String RANGER_TYPE_STORM_TOPOLOGY = "topology";
+    public static final String ENTITY_TYPE_STORM_TOPOLOGY = "storm_topology";
+    public static final String RANGER_TYPE_STORM_TOPOLOGY = "topology";
 
-	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_STORM_TOPOLOGY };
+    public static final String[] SUPPORTED_ENTITY_TYPES = {ENTITY_TYPE_STORM_TOPOLOGY};
 
-	public AtlasStormResourceMapper() {
-		super("storm", SUPPORTED_ENTITY_TYPES);
-	}
+    public AtlasStormResourceMapper() {
+        super("storm", SUPPORTED_ENTITY_TYPES);
+    }
 
-	@Override
+    @Override
     public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
-		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+        String qualifiedName = (String) entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
 
-		String topology = getResourceNameFromQualifiedName(qualifiedName);
+        String topology = getResourceNameFromQualifiedName(qualifiedName);
 
-		if(StringUtils.isEmpty(topology)) {
-			throwExceptionWithMessage("topology not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "'");
-		}
+        if (StringUtils.isEmpty(topology)) {
+            throwExceptionWithMessage("topology not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "'");
+        }
 
-		String clusterName = getClusterNameFromQualifiedName(qualifiedName);
+        String clusterName = getClusterNameFromQualifiedName(qualifiedName);
 
-		if(StringUtils.isEmpty(clusterName)) {
-			clusterName = defaultClusterName;
-		}
+        if (StringUtils.isEmpty(clusterName)) {
+            clusterName = defaultClusterName;
+        }
 
-		if(StringUtils.isEmpty(clusterName)) {
-			throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "' not found in entity");
-		}
+        if (StringUtils.isEmpty(clusterName)) {
+            throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
+        }
 
-		Map<String, RangerPolicyResource> elements = new HashMap<>();
-		Boolean isExcludes  = Boolean.FALSE;
-		Boolean isRecursive = Boolean.TRUE;
+        Map<String, RangerPolicyResource> elements    = new HashMap<>();
+        Boolean                           isExcludes  = Boolean.FALSE;
+        Boolean                           isRecursive = Boolean.TRUE;
 
-		elements.put(RANGER_TYPE_STORM_TOPOLOGY, new RangerPolicyResource(topology, isExcludes, isRecursive));
+        elements.put(RANGER_TYPE_STORM_TOPOLOGY, new RangerPolicyResource(topology, isExcludes, isRecursive));
 
-		String entityGuid  = entity.getGuid();
-		String serviceName = getRangerServiceName(clusterName);
+        String entityGuid  = entity.getGuid();
+        String serviceName = getRangerServiceName(clusterName);
 
-		return new RangerServiceResource(entityGuid, serviceName, elements);
-	}
+        return new RangerServiceResource(entityGuid, serviceName, elements);
+    }
 }

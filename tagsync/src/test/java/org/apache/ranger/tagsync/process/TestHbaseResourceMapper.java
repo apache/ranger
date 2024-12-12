@@ -32,10 +32,10 @@ import java.util.Map;
 import static org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
 public class TestHbaseResourceMapper {
-    private static final String NAMESPACE_QUALIFIED_NAME            = "namespace@cl1";
-    private static final String TABLE_QUALIFIED_NAME                = "table@cl1";
-    private static final String COLUMN_FAMILY_QUALIFIED_NAME        = "table.family@cl1";
-    private static final String COLUMN_QUALIFIED_NAME               = "table.family.column@cl1";
+    private static final String NAMESPACE_QUALIFIED_NAME     = "namespace@cl1";
+    private static final String TABLE_QUALIFIED_NAME         = "table@cl1";
+    private static final String COLUMN_FAMILY_QUALIFIED_NAME = "table.family@cl1";
+    private static final String COLUMN_QUALIFIED_NAME        = "table.family.column@cl1";
 
     private static final String DOTTED_TABLE_QUALIFIED_NAME         = "table.prefix.1@cl1";
     private static final String DOTTED_COLUMN_FAMILY_QUALIFIED_NAME = "table.prefix.1.family@cl1";
@@ -43,14 +43,14 @@ public class TestHbaseResourceMapper {
 
     private static final String TABLE_WITH_NAMESPACE_QUALIFIED_NAME = "namespace:table@cl1";
 
-    private static final String SERVICE_NAME                        = "cl1_hbase";
-    private static final String RANGER_NAMESPACE                    = "namespace:*";
-    private static final String RANGER_TABLE                        = "table";
-    private static final String RANGER_COLUMN_FAMILY                = "family";
-    private static final String RANGER_COLUMN                       = "column";
+    private static final String SERVICE_NAME         = "cl1_hbase";
+    private static final String RANGER_NAMESPACE     = "namespace:*";
+    private static final String RANGER_TABLE         = "table";
+    private static final String RANGER_COLUMN_FAMILY = "family";
+    private static final String RANGER_COLUMN        = "column";
 
-    private static final String DOTTED_RANGER_TABLE                 = "table.prefix.1";
-    private static final String RANGER_TABLE_WITH_NAMESPACE         = "namespace:table";
+    private static final String DOTTED_RANGER_TABLE         = "table.prefix.1";
+    private static final String RANGER_TABLE_WITH_NAMESPACE = "namespace:table";
 
     AtlasHbaseResourceMapper resourceMapper = new AtlasHbaseResourceMapper();
 
@@ -60,8 +60,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, NAMESPACE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseNamespaceEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseNamespaceEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertNamespaceResource(resource);
     }
@@ -72,8 +72,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_WITH_NAMESPACE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableWithNamespaceResource(resource);
     }
@@ -84,8 +84,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, false);
     }
@@ -96,8 +96,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnFamilyEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, false);
     }
@@ -108,8 +108,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, false);
     }
@@ -124,7 +124,7 @@ public class TestHbaseResourceMapper {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
             Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -141,7 +141,7 @@ public class TestHbaseResourceMapper {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
             Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -158,7 +158,7 @@ public class TestHbaseResourceMapper {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
             Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -169,8 +169,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, true);
     }
@@ -181,8 +181,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnFamilyEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, true);
     }
@@ -193,8 +193,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, true);
     }

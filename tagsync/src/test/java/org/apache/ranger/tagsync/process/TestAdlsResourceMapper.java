@@ -27,9 +27,13 @@ import org.junit.Test;
 
 import java.util.Collections;
 
-import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.*;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.ENTITY_TYPE_ADLS_GEN2_ACCOUNT;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.ENTITY_TYPE_ADLS_GEN2_CONTAINER;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.ENTITY_TYPE_ADLS_GEN2_DIRECTORY;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.RANGER_TYPE_ADLS_GEN2_ACCOUNT;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.RANGER_TYPE_ADLS_GEN2_CONTAINER;
+import static org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper.RANGER_TYPE_ADLS_GEN2_RELATIVE_PATH;
 import static org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
-
 
 public class TestAdlsResourceMapper {
     private static final String ACCOUNT_QUALIFIED_NAME        = "abfs://myaccount@cl1";
@@ -38,11 +42,11 @@ public class TestAdlsResourceMapper {
     private static final String CONTAINER2_QUALIFIED_NAME     = "abfs://mycontainer@myaccount.dfs.core.windows.net@cl1";
     private static final String RELATIVE_PATH2_QUALIFIED_NAME = "abfs://mycontainer@myaccount.dfs.core.windows.net/tmp@cl1";
 
-    private static final String SERVICE_NAME                 = "cl1_adls";
-    private static final String ACCOUNT_NAME                 = "myaccount";
-    private static final String ACCOUNT2_NAME                = "myaccount.dfs.core.windows.net";
-    private static final String CONTAINER_NAME               = "mycontainer";
-    private static final String RELATIVE_PATH_NAME           = "/tmp";
+    private static final String SERVICE_NAME       = "cl1_adls";
+    private static final String ACCOUNT_NAME       = "myaccount";
+    private static final String ACCOUNT2_NAME      = "myaccount.dfs.core.windows.net";
+    private static final String CONTAINER_NAME     = "mycontainer";
+    private static final String RELATIVE_PATH_NAME = "/tmp";
 
     AtlasAdlsResourceMapper resourceMapper = new AtlasAdlsResourceMapper();
 

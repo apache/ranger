@@ -19,11 +19,6 @@
 
 package org.apache.ranger.tagsync.ha;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.RangerHAInitializer;
 import org.apache.ranger.ha.ActiveInstanceElectorService;
@@ -32,79 +27,86 @@ import org.apache.ranger.ha.ServiceState;
 import org.apache.ranger.ha.service.HARangerService;
 import org.apache.ranger.ha.service.ServiceManager;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class TagSyncHAInitializerImpl extends RangerHAInitializer {
-	private static final Logger LOG = Logger.getLogger(TagSyncHAInitializerImpl.class);
-	ActiveInstanceElectorService activeInstanceElectorService 	= null;
-	ActiveStateChangeHandler activeStateChangeHandler 			= null;
-	List<HARangerService> haRangerService 						= null;
-	ServiceManager serviceManager 								= null;
-	private static TagSyncHAInitializerImpl theInstance = null;
+    private static final    org.slf4j.Logger         LOG = LoggerFactory.getLogger(TagSyncHAInitializerImpl.class);
+    private static volatile TagSyncHAInitializerImpl theInstance;
+    ActiveInstanceElectorService activeInstanceElectorService;
+    List<HARangerService>        haRangerService;
+    ServiceManager               serviceManager;
 
-	private TagSyncHAInitializerImpl(Configuration configuration) {
-		if(LOG.isDebugEnabled()){
-			LOG.info("==> TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
-		}
-		try {
-			LOG.info("Ranger TagSync server is HA enabled : "+configuration.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false) );
-			init(configuration);
-		} catch (Exception e) {
-			LOG.error("TagSyncHAInitializerImpl initialization failed", e);
-		}
-		if(LOG.isDebugEnabled()){
-			LOG.info("<== TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
-		}
-	}
+    private TagSyncHAInitializerImpl(Configuration configuration) {
+        LOG.debug("==> TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
 
-	public void init(Configuration configuration) throws Exception {
-		super.init(configuration);
-		LOG.info("==> TagSyncHAInitializerImpl.init() initialization started");
-		Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<ActiveStateChangeHandler>();
-		activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders,
-				curatorFactory, activeInstanceState, serviceState, configuration);
+        try {
+            LOG.info("Ranger TagSync server is HA enabled : {}", configuration.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false));
+            init(configuration);
+        } catch (Exception e) {
+            LOG.error("TagSyncHAInitializerImpl initialization failed", e);
+        }
 
-		haRangerService = new ArrayList<HARangerService>();
-		haRangerService.add(activeInstanceElectorService);
-		serviceManager = new ServiceManager(haRangerService);
-		LOG.info("<== TagSyncHAInitializerImpl.init() initialization completed");
-	}
+        LOG.debug("<== TagSyncHAInitializerImpl.TagSyncHAInitializerImpl()");
+    }
 
+    public static TagSyncHAInitializerImpl getInstance(Configuration configuration) {
+        TagSyncHAInitializerImpl me = theInstance;
 
-	@Override
-	public void stop() {
-		if(LOG.isDebugEnabled()){
-			LOG.debug("==> TagSyncHAInitializerImpl.stop() ");
-		}
-		if (serviceManager != null) {
-			serviceManager.stop();
-		}
-		if(curatorFactory != null){
-			curatorFactory.close();
-		}
-		if(LOG.isDebugEnabled()){
-			LOG.debug("<== TagSyncHAInitializerImpl.stop() ");
-		}
-	}
+        if (me == null) {
+            synchronized (TagSyncHAInitializerImpl.class) {
+                me = theInstance;
 
-	public static TagSyncHAInitializerImpl getInstance(Configuration configuration) {
-		if(theInstance == null){
-			 synchronized(TagSyncHAInitializerImpl.class){
-				if(theInstance == null){
-					theInstance =  new TagSyncHAInitializerImpl(configuration);
-				}
-			}
-		}
-		return theInstance;
-	}
-	public boolean isActive() {
-		try {
-			// To let the curator thread a chance to run and set the active state if needed
-			Thread.sleep(0L);
-		} catch (InterruptedException exception) {
-			// Ignore
-		}
-		return serviceState.getState().equals(ServiceState.ServiceStateValue.ACTIVE);
-	}
+                if (me == null) {
+                    me          = new TagSyncHAInitializerImpl(configuration);
+                    theInstance = me;
+                }
+            }
+        }
+
+        return me;
+    }
+
+    public void init(Configuration configuration) throws Exception {
+        super.init(configuration);
+
+        LOG.info("==> TagSyncHAInitializerImpl.init() initialization started");
+
+        Set<ActiveStateChangeHandler> activeStateChangeHandlerProviders = new HashSet<>();
+        activeInstanceElectorService = new ActiveInstanceElectorService(activeStateChangeHandlerProviders, curatorFactory, activeInstanceState, serviceState, configuration);
+
+        haRangerService = new ArrayList<>();
+        haRangerService.add(activeInstanceElectorService);
+        serviceManager = new ServiceManager(haRangerService);
+
+        LOG.info("<== TagSyncHAInitializerImpl.init() initialization completed");
+    }
+
+    @Override
+    public void stop() {
+        LOG.debug("==> TagSyncHAInitializerImpl.stop()");
+
+        if (serviceManager != null) {
+            serviceManager.stop();
+        }
+        if (curatorFactory != null) {
+            curatorFactory.close();
+        }
+
+        LOG.debug("<== TagSyncHAInitializerImpl.stop()");
+    }
+
+    public boolean isActive() {
+        try {
+            // To let the curator thread a chance to run and set the active state if needed
+            Thread.sleep(0L);
+        } catch (InterruptedException exception) {
+            // Ignore
+        }
+        return serviceState.getState().equals(ServiceState.ServiceStateValue.ACTIVE);
+    }
 }
