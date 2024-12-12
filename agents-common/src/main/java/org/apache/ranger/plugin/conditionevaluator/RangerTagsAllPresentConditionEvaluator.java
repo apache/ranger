@@ -29,62 +29,51 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-
 public class RangerTagsAllPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTagsAllPresentConditionEvaluator.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerTagsAllPresentConditionEvaluator.class);
+    private final Set<String> policyConditionTags = new HashSet<>();
 
-	private final Set<String> policyConditionTags = new HashSet<>();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerTagsAllPresentConditionEvaluator.init({})", condition);
 
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.init(" + condition + ")");
-		}
+        super.init();
 
-		super.init();
+        if (condition != null) {
+            for (String value : condition.getValues()) {
+                policyConditionTags.add(value.trim());
+            }
+        }
 
-		if (condition != null ) {
-			for (String value : condition.getValues()) {
-				policyConditionTags.add(value.trim());
-			}
-		}
+        LOG.debug("<== RangerTagsAllPresentConditionEvaluator.init({}): Tags[{}]", condition, policyConditionTags);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
-		}
-	}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerTagsAllPresentConditionEvaluator.isMatched({})", request);
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
+        boolean matched = true;
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.isMatched(" + request + ")");
-		}
+        if (CollectionUtils.isNotEmpty(policyConditionTags)) {
+            Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		boolean matched = true;
+            // check if resource Tags  atleast have to have all the tags in policy Condition
+            if (CollectionUtils.isNotEmpty(resourceTags)) {
+                Set<String> tags = new HashSet<>(resourceTags.size());
 
-		if (CollectionUtils.isNotEmpty(policyConditionTags)) {
-			Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+                for (RangerTagForEval tag : resourceTags) {
+                    tags.add(tag.getType());
+                }
 
-			// check if resource Tags  atleast have to have all the tags in policy Condition
-			if (CollectionUtils.isNotEmpty(resourceTags)) {
-				Set<String> tags = new HashSet<>(resourceTags.size());
+                matched = tags.containsAll(policyConditionTags);
+            } else {
+                matched = false;
+            }
+        }
 
-				for (RangerTagForEval tag : resourceTags) {
-					tags.add(tag.getType());
-				}
+        LOG.debug("<== RangerTagsAllPresentConditionEvaluator.isMatched({}): {}", request, matched);
 
-				matched = tags.containsAll(policyConditionTags);
-			} else {
-				matched = false;
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.isMatched(" + request+ "): " + matched);
-		}
-
-		return matched;
-	}
+        return matched;
+    }
 }

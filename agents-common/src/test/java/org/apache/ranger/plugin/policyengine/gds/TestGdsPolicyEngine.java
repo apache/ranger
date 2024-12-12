@@ -19,11 +19,22 @@
 
 package org.apache.ranger.plugin.policyengine.gds;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.apache.ranger.plugin.policyengine.RangerSecurityZoneMatcher;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -37,7 +48,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -55,21 +74,21 @@ public class TestGdsPolicyEngine {
     }
 
     @Test
-    public void testGdsPolicyHiveAccess() throws Exception {
+    public void testGdsPolicyHiveAccess() {
         runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_access.json");
     }
 
     @Test
-    public void testGdsPolicyHiveDataMask() throws Exception {
+    public void testGdsPolicyHiveDataMask() {
         runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_data_mask.json");
     }
 
     @Test
-    public void testGdsPolicyHiveRowFilter() throws Exception {
+    public void testGdsPolicyHiveRowFilter() {
         runTestsFromResourceFile("/policyengine/gds/test_gds_policy_hive_row_filter.json");
     }
 
-    private void runTestsFromResourceFile(String resourceFile) throws Exception {
+    private void runTestsFromResourceFile(String resourceFile) {
         InputStream       inStream = this.getClass().getResourceAsStream(resourceFile);
         InputStreamReader reader   = new InputStreamReader(inStream);
 
@@ -201,7 +220,7 @@ public class TestGdsPolicyEngine {
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
         @Override
         public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-                                               JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
             ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
@@ -209,10 +228,10 @@ public class TestGdsPolicyEngine {
                 ret.setAccessTime(new Date());
             }
             Map<String, Object> reqContext  = ret.getContext();
-            Object accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
+            Object              accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
             if (accessTypes != null) {
                 Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
-                Set<String> requestedAccesses = new TreeSet<>(accessTypesCollection);
+                Set<String>        requestedAccesses     = new TreeSet<>(accessTypesCollection);
                 ret.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES, requestedAccesses);
             }
 
@@ -222,8 +241,8 @@ public class TestGdsPolicyEngine {
 
                 List<Object> listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
                 for (Object accessTypeGroup : listOfAccessTypeGroups) {
-                    List<String> accesses = (List<String>) accessTypeGroup;
-                    Set<String> setOfAccesses = new TreeSet<>(accesses);
+                    List<String> accesses      = (List<String>) accessTypeGroup;
+                    Set<String>  setOfAccesses = new TreeSet<>(accesses);
                     setOfAccessTypeGroups.add(setOfAccesses);
                 }
 
@@ -237,7 +256,7 @@ public class TestGdsPolicyEngine {
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
         public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

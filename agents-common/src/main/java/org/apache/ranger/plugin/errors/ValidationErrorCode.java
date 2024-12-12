@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 
 public enum ValidationErrorCode {
     // SERVICE VALIDATION
@@ -34,7 +33,7 @@ public enum ValidationErrorCode {
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID(1005, "No service found for id [{0}]"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME(1006, "Missing service name"),
     SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT(1007, "Duplicate service name: name=[{0}]"),
-    SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT(3051,"Display name [{0}] is already used by service [{1}]"),
+    SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT(3051, "Display name [{0}] is already used by service [{1}]"),
     SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME(3031, "Invalid service name=[{0}]. It should not be longer than 256 characters and special characters are not allowed (except underscore and hyphen)"),
     SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_DISPLAY_NAME(3050, "Invalid service display name [{0}]. It should not be longer than 256 characters, should not start with space, and should not include special characters (except underscore, hyphen and space)"),
     SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT(1008, "Duplicate service name: name=[{0}], id=[{1}]"),
@@ -108,7 +107,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP(3054, "policy items group was null"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
     POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE(3056, "Values for the resource={0} contained a duplicate value={1}. Ensure all values for a resource are unique"),
-    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
+    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009, " Invalid service type [{0}] provided for service [{1}]"),
     POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS_TYPE(4010, "policy items access object has empty or null values for type"),
 
     // SECURITY_ZONE Validations
@@ -170,40 +169,35 @@ public enum ValidationErrorCode {
     GDS_DATASHARE_NAME_TOO_LONG(4130, "Invalid datashare name=[{0}]. Datashare name should not be longer than 512 characters"),
     GDS_PROJECT_NAME_TOO_LONG(4131, "Invalid project name=[{0}]. Project name should not be longer than 512 characters"),
     GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL(4132, "Resource value in SharedResource [{0}] is null"),
-    GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE(4133, "Invalid resource: empty or no value provided for {0}"),
-    ;
-
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE(4133, "Invalid resource: empty or no value provided for {0}");
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationErrorCode.class);
 
-    final int _errorCode;
-    final String _template;
+    final int    errorCode;
+    final String template;
 
     ValidationErrorCode(int errorCode, String template) {
-        _errorCode = errorCode;
-        _template = template;
+        this.errorCode = errorCode;
+        this.template  = template;
     }
 
     public String getMessage(Object... items) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== ValidationErrorCode.getMessage(%s)", Arrays.toString(items)));
-        }
+        LOG.debug("<== ValidationErrorCode.getMessage({})", items);
 
-        MessageFormat mf = new MessageFormat(_template);
-        String result = mf.format(items);
+        MessageFormat mf     = new MessageFormat(template);
+        String        result = mf.format(items);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== ValidationErrorCode.getMessage(%s): %s", Arrays.toString(items), result));
-        }
+        LOG.debug("<== ValidationErrorCode.getMessage({}): {}", items, result);
+
         return result;
     }
 
     public int getErrorCode() {
-        return _errorCode;
+        return errorCode;
     }
 
     @Override
     public String toString() {
-        return String.format("Code: %d, template: %s", _errorCode, _template);
+        return String.format("Code: %d, template: %s", errorCode, template);
     }
 }

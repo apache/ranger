@@ -55,7 +55,9 @@ public class AutoClosableLock implements AutoCloseable {
             this.isLocked = isLocked;
         }
 
-        public boolean isLocked() { return isLocked; }
+        public boolean isLocked() {
+            return isLocked;
+        }
 
         @Override
         public void close() {
@@ -104,7 +106,9 @@ public class AutoClosableLock implements AutoCloseable {
             this.isLocked = this.lock.writeLock().tryLock();
         }
 
-        public boolean isLocked() { return isLocked; }
+        public boolean isLocked() {
+            return isLocked;
+        }
 
         @Override
         public void close() {

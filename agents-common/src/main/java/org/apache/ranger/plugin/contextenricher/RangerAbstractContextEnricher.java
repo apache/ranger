@@ -19,15 +19,6 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -40,298 +31,282 @@ import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Map;
+import java.util.Properties;
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractContextEnricher.class);
-
-	protected RangerContextEnricherDef enricherDef;
-	protected String                   serviceName;
-	protected String                   appId;
-	protected RangerServiceDef         serviceDef;
-	private   RangerPluginContext      pluginContext;
-	protected RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
-
-	@Override
-	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
-		this.enricherDef = enricherDef;
-	}
-
-	@Override
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-
-	@Override
-	public void setServiceDef(RangerServiceDef serviceDef) {
-		this.serviceDef = serviceDef;
-	}
-
-	@Override
-	public void setAppId(String appId) {
-		this.appId = appId;
-	}
-
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
-		}
-
-		RangerAuthContext authContext = getAuthContext();
-
-		if (authContext != null) {
-			authContext.addOrReplaceRequestContextEnricher(this, null);
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("authContext is null. This context-enricher is not added to authContext");
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
-		}
-	}
-
-	@Override
-	public void enrich(RangerAccessRequest request, Object dataStore) {
-		enrich(request);
-	}
-
-	@Override
-	public boolean preCleanup() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
-		}
-
-		RangerAuthContext authContext = getAuthContext();
-
-		if (authContext != null) {
-			authContext.cleanupRequestContextEnricher(this);
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("authContext is null. AuthContext need not be cleaned.");
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
-		}
-
-		return true;
-	}
-
-	@Override
-	public void cleanup() {
-		preCleanup();
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		try {
-			cleanup();
-		}
-		finally {
-			super.finalize();
-		}
-	}
-
-	@Override
-	public String getName() {
-		return enricherDef == null ? null : enricherDef.getName();
-	}
-
-	public RangerContextEnricherDef getEnricherDef() {
-		return enricherDef;
-	}
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractContextEnricher.class);
+
+    protected RangerContextEnricherDef  enricherDef;
+    protected String                    serviceName;
+    protected String                    appId;
+    protected RangerServiceDef          serviceDef;
+    protected RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
+    private   RangerPluginContext       pluginContext;
 
-	public String getServiceName() {
-		return serviceName;
-	}
+    public RangerContextEnricherDef getEnricherDef() {
+        return enricherDef;
+    }
 
-	public RangerServiceDef getServiceDef() {
-		return serviceDef;
-	}
+    @Override
+    public void setEnricherDef(RangerContextEnricherDef enricherDef) {
+        this.enricherDef = enricherDef;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
 
-	public String getAppId() {
-		return appId;
-	}
+    @Override
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
-	public String getOption(String name) {
-		String ret = null;
+    public RangerServiceDef getServiceDef() {
+        return serviceDef;
+    }
 
-		Map<String, String> options = enricherDef != null ? enricherDef.getEnricherOptions() : null;
+    @Override
+    public void setServiceDef(RangerServiceDef serviceDef) {
+        this.serviceDef = serviceDef;
+    }
 
-		if(options != null && name != null) {
-			ret = options.get(name);
-		}
+    public String getAppId() {
+        return appId;
+    }
 
-		return ret;
-	}
+    @Override
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
-	public RangerAuthContext getAuthContext() {
-		RangerPluginContext pluginContext = this.pluginContext;
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAbstractContextEnricher.init({})", enricherDef);
 
-		return pluginContext != null ? pluginContext.getAuthContext() : null;
-	}
+        RangerAuthContext authContext = getAuthContext();
 
-	final public void setPluginContext(RangerPluginContext pluginContext) {
-		this.pluginContext = pluginContext;
-	}
+        if (authContext != null) {
+            authContext.addOrReplaceRequestContextEnricher(this, null);
+        } else {
+            LOG.debug("authContext is null. This context-enricher is not added to authContext");
+        }
 
-	public RangerPluginContext getPluginContext() {
-		return this.pluginContext;
-	}
+        LOG.debug("<== RangerAbstractContextEnricher.init({})", enricherDef);
+    }
 
-	final public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
-		this.options = options;
-	}
+    @Override
+    public void enrich(RangerAccessRequest request, Object dataStore) {
+        enrich(request);
+    }
 
-	public RangerPluginConfig getPluginConfig() {
-		RangerPluginContext pluginContext = this.pluginContext;
+    @Override
+    public boolean preCleanup() {
+        LOG.debug("==> RangerAbstractContextEnricher.preCleanup({})", enricherDef);
 
-		return pluginContext != null ? pluginContext.getConfig() : null;
-	}
+        RangerAuthContext authContext = getAuthContext();
 
-	public RangerPolicyEngineOptions getPolicyEngineOptions() {
-		return options;
-	}
+        if (authContext != null) {
+            authContext.cleanupRequestContextEnricher(this);
+        } else {
+            LOG.debug("authContext is null. AuthContext need not be cleaned.");
+        }
 
-	public void notifyAuthContextChanged() {
-		RangerPluginContext pluginContext = this.pluginContext;
+        LOG.debug("<== RangerAbstractContextEnricher.preCleanup({})", enricherDef);
 
-		if (pluginContext != null) {
-			pluginContext.notifyAuthContextChanged();
-		}
-	}
+        return true;
+    }
 
-	public String getPropertyPrefix() {
-		RangerPluginConfig pluginConfig = getPluginConfig();
+    @Override
+    public void cleanup() {
+        preCleanup();
+    }
 
-		return pluginConfig != null ? pluginConfig.getPropertyPrefix() : "ranger.plugin." + serviceDef.getName();
-	}
+    @Override
+    public String getName() {
+        return enricherDef == null ? null : enricherDef.getName();
+    }
 
-	public String getConfig(String configName, String defaultValue) {
-		RangerPluginContext pluginContext = this.pluginContext;
-		String              ret           = defaultValue;
-		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+    public String getOption(String name) {
+        String ret = null;
 
-		if (config != null) {
-			ret = config.get(configName, defaultValue);
-		}
+        Map<String, String> options = enricherDef != null ? enricherDef.getEnricherOptions() : null;
 
-		return ret;
-	}
+        if (options != null && name != null) {
+            ret = options.get(name);
+        }
 
-	public int getIntConfig(String configName, int defaultValue) {
-		RangerPluginContext pluginContext = this.pluginContext;
-		int                 ret           = defaultValue;
-		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+        return ret;
+    }
 
-		if (config != null) {
-			ret = config.getInt(configName, defaultValue);
-		}
+    public RangerAuthContext getAuthContext() {
+        RangerPluginContext pluginContext = this.pluginContext;
 
-		return ret;
-	}
+        return pluginContext != null ? pluginContext.getAuthContext() : null;
+    }
 
-	public boolean getBooleanConfig(String configName, boolean defaultValue) {
-		RangerPluginContext pluginContext = this.pluginContext;
-		boolean             ret           = defaultValue;
-		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+    public RangerPluginContext getPluginContext() {
+        return this.pluginContext;
+    }
 
-		if (config != null) {
-			ret = config.getBoolean(configName, defaultValue);
-		}
+    public final void setPluginContext(RangerPluginContext pluginContext) {
+        this.pluginContext = pluginContext;
+    }
 
-		return ret;
-	}
+    public RangerPluginConfig getPluginConfig() {
+        RangerPluginContext pluginContext = this.pluginContext;
 
-	public String getOption(String name, String defaultValue) {
-		String ret = defaultValue;
-		String val = getOption(name);
+        return pluginContext != null ? pluginContext.getConfig() : null;
+    }
 
-		if(val != null) {
-			ret = val;
-		}
+    public RangerPolicyEngineOptions getPolicyEngineOptions() {
+        return options;
+    }
 
-		return ret;
-	}
+    public final void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
+        this.options = options;
+    }
 
-	public boolean getBooleanOption(String name, boolean defaultValue) {
-		boolean ret = defaultValue;
-		String  val = getOption(name);
+    public void notifyAuthContextChanged() {
+        RangerPluginContext pluginContext = this.pluginContext;
 
-		if(val != null) {
-			ret = Boolean.parseBoolean(val);
-		}
+        if (pluginContext != null) {
+            pluginContext.notifyAuthContextChanged();
+        }
+    }
 
-		return ret;
-	}
+    public String getPropertyPrefix() {
+        RangerPluginConfig pluginConfig = getPluginConfig();
 
-	public char getCharOption(String name, char defaultValue) {
-		char   ret = defaultValue;
-		String val = getOption(name);
+        return pluginConfig != null ? pluginConfig.getPropertyPrefix() : "ranger.plugin." + serviceDef.getName();
+    }
 
-		if(! StringUtils.isEmpty(val)) {
-			ret = val.charAt(0);
-		}
+    public String getConfig(String configName, String defaultValue) {
+        RangerPluginContext pluginContext = this.pluginContext;
+        String              ret           = defaultValue;
+        Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
-		return ret;
-	}
+        if (config != null) {
+            ret = config.get(configName, defaultValue);
+        }
 
-	public long getLongOption(String name, long defaultValue) {
-		long   ret = defaultValue;
-		String val = getOption(name);
+        return ret;
+    }
 
-		if(val != null) {
-			ret = Long.parseLong(val);
-		}
+    public int getIntConfig(String configName, int defaultValue) {
+        RangerPluginContext pluginContext = this.pluginContext;
+        int                 ret           = defaultValue;
+        Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
-		return ret;
-	}
+        if (config != null) {
+            ret = config.getInt(configName, defaultValue);
+        }
 
-	public Properties readProperties(String fileName) {
-		Properties  ret     = null;
-		URL         fileURL = null;
-		File        f       = new File(fileName);
+        return ret;
+    }
 
-		if (f.exists() && f.isFile() && f.canRead()) {
-			try (InputStream inStr   = new FileInputStream(f);) {
-				fileURL = f.toURI().toURL();
-			} catch (FileNotFoundException exception) {
-				LOG.error("Error processing input file:" + fileName + " or no privilege for reading file " + fileName, exception);
-			} catch (IOException malformedException) {
-				LOG.error("Error processing input file:" + fileName + " cannot be converted to URL " + fileName, malformedException);
-			}
-		} else {
-			fileURL = getClass().getResource(fileName);
+    public boolean getBooleanConfig(String configName, boolean defaultValue) {
+        RangerPluginContext pluginContext = this.pluginContext;
+        boolean             ret           = defaultValue;
+        Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
-			if (fileURL == null && !fileName.startsWith("/")) {
-				fileURL = getClass().getResource("/" + fileName);
-			}
+        if (config != null) {
+            ret = config.getBoolean(configName, defaultValue);
+        }
 
-			if (fileURL == null) {
-				fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
+        return ret;
+    }
 
-				if (fileURL == null && !fileName.startsWith("/")) {
-					fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
-				}
-			}
-		}
+    public String getOption(String name, String defaultValue) {
+        String ret = defaultValue;
+        String val = getOption(name);
 
-		if (fileURL != null) {
-			try(InputStream inStr = fileURL.openStream()) {
+        if (val != null) {
+            ret = val;
+        }
 
-				Properties prop = new Properties();
+        return ret;
+    }
 
-				prop.load(inStr);
+    public boolean getBooleanOption(String name, boolean defaultValue) {
+        boolean ret = defaultValue;
+        String  val = getOption(name);
 
-				ret = prop;
-			} catch (Exception excp) {
-				LOG.error("failed to load properties from file '" + fileName + "'", excp);
-			}
-		}
+        if (val != null) {
+            ret = Boolean.parseBoolean(val);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
+
+    public char getCharOption(String name, char defaultValue) {
+        String val = getOption(name);
+
+        return !StringUtils.isEmpty(val) ? val.charAt(0) : defaultValue;
+    }
+
+    public long getLongOption(String name, long defaultValue) {
+        String val = getOption(name);
+
+        return val != null ? Long.parseLong(val) : defaultValue;
+    }
+
+    public Properties readProperties(String fileName) {
+        Properties ret     = null;
+        URL        fileURL = null;
+        File       f       = new File(fileName);
+
+        if (f.exists() && f.isFile() && f.canRead()) {
+            try (InputStream inStr = new FileInputStream(f)) {
+                fileURL = f.toURI().toURL();
+            } catch (FileNotFoundException exception) {
+                LOG.error("Error processing input file:{} or no privilege for reading file {}", fileName, fileName, exception);
+            } catch (IOException malformedException) {
+                LOG.error("Error processing input file:{} cannot be converted to URL {}", fileName, fileName, malformedException);
+            }
+        } else {
+            fileURL = getClass().getResource(fileName);
+
+            if (fileURL == null && !fileName.startsWith("/")) {
+                fileURL = getClass().getResource("/" + fileName);
+            }
+
+            if (fileURL == null) {
+                fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
+
+                if (fileURL == null && !fileName.startsWith("/")) {
+                    fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
+                }
+            }
+        }
+
+        if (fileURL != null) {
+            try (InputStream inStr = fileURL.openStream()) {
+                Properties prop = new Properties();
+
+                prop.load(inStr);
+
+                ret = prop;
+            } catch (Exception excp) {
+                LOG.error("failed to load properties from file '{}'", fileName, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            cleanup();
+        } finally {
+            super.finalize();
+        }
+    }
 }
