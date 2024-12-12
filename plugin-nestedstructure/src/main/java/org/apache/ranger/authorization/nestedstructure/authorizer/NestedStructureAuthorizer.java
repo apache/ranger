@@ -1,20 +1,20 @@
 /**
-* Copyright 2022 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the ""License"");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an ""AS IS"" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2022 Comcast Cable Communications Management, LLC
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the ""License"");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an ""AS IS"" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * <p>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class NestedStructureAuthorizer {
-    static private final Logger logger = LoggerFactory.getLogger(NestedStructureAuthorizer.class);
+    private static final Logger logger = LoggerFactory.getLogger(NestedStructureAuthorizer.class);
 
     private static final String RANGER_CMT_SERVICETYPE = "nestedstructure";
     private static final String RANGER_CMT_APPID       = "nestedstructure";
@@ -72,7 +72,8 @@ public class NestedStructureAuthorizer {
                 ret = NestedStructureAuthorizer.instance;
 
                 if (ret == null) {
-                    NestedStructureAuthorizer.instance = ret = new NestedStructureAuthorizer();
+                    ret = new NestedStructureAuthorizer();
+                    NestedStructureAuthorizer.instance = ret;
                 }
             }
         }
@@ -98,7 +99,7 @@ public class NestedStructureAuthorizer {
         try {
             ret = privateAuthorize(schema, user, userGroups, json, accessType, auditHandler);
         } catch (Exception e) {
-            logger.warn("exception during processing, user: " + user + "\n json: " + json, e);
+            logger.warn("exception during processing, user: {}\n json: {}", user, json, e);
 
             ret = new AccessResult(false, null).addError(e);
         } finally {
@@ -122,7 +123,7 @@ public class NestedStructureAuthorizer {
 
             //check each field individually - both if the user has access and if so, what masking is required
             for (String field : jsonManipulator.getFields()) {
-                FieldLevelAccess fieldAccess =  hasFieldAccess(schema, user, userGroups, field, accessType, auditHandler);
+                FieldLevelAccess fieldAccess = hasFieldAccess(schema, user, userGroups, field, accessType, auditHandler);
 
                 fieldResults.add(fieldAccess);
 
@@ -158,24 +159,20 @@ public class NestedStructureAuthorizer {
      */
     private FieldLevelAccess hasFieldAccess(String schema, String user, Set<String> userGroups, String fld, NestedStructureAccessType accessType, NestedStructureAuditHandler auditHandler) {
         String atlasString = fld.replaceAll("\\.\\[\\*\\]\\.'", ".") //removes ".[*]."
-                                .replaceAll("\\.\\*\\.", "."); //removes ".*."
+                .replaceAll("\\.\\*\\.", "."); //removes ".*."
 
-        //   RangerAccessResource fldResource = new NestedStructure_Resource(Optional.of("json_object.cxt.cmt.product.vnull3"), Optional.of("partner"));
         NestedStructureResource resource = new NestedStructureResource(Optional.of(schema), Optional.of(atlasString));
         RangerAccessRequest     request  = new RangerAccessRequestImpl(resource, accessType.getValue(), user, userGroups, null);
         RangerAccessResult      result   = plugin.isAccessAllowed(request, auditHandler);
 
-        if (result == null){
+        if (result == null) {
             throw new MaskingException("unable to determine access");
         }
 
         boolean          hasAccess = result.getIsAccessDetermined() && result.getIsAllowed();
         FieldLevelAccess ret;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("checking at line 123 " + accessType + " access to " + schema + "." + fld + " as " + atlasString + " for user: " + user +
-                    " has access ? " + (hasAccess ? "yes" : "no") + " policyId:  " + result.getPolicyId());
-        }
+        logger.debug("checking at line 123 {} access to {}.{} as {} for user: {} has access ? {} policyId:  {}", accessType, schema, fld, atlasString, user, hasAccess ? "yes" : "no", result.getPolicyId());
 
         if (!hasAccess) {
             ret = new FieldLevelAccess(fld, hasAccess, -1L, true, null, null);
@@ -194,11 +191,9 @@ public class NestedStructureAuthorizer {
                 auditHandler.processResult(maskResult);
             }
 
-            if (logger.isDebugEnabled()) {
-                String maskPolicy = isMasked ? (" policyId:  " + maskPolicyId) : "";
+            String maskPolicy = isMasked ? (" policyId:  " + maskPolicyId) : "";
 
-                logger.debug("attribute " + fld + " as " + atlasString + " masked ? " + (isMasked ? "yes" : "no") + maskPolicy);
-            }
+            logger.debug("attribute {} as {} masked ? {}{}", fld, atlasString, isMasked ? "yes" : "no", maskPolicy);
 
             ret = new FieldLevelAccess(fld, hasAccess, maskPolicyId, isMasked, maskResult.getMaskType(), maskResult.getMaskedValue());
         }
@@ -232,9 +227,7 @@ public class NestedStructureAuthorizer {
         if (result.isRowFilterEnabled()) {
             String filterExpr = result.getFilterExpr();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("row level filter enabled with expression: " + filterExpr);
-            }
+            logger.debug("row level filter enabled with expression: {}", filterExpr);
 
             ret = RecordFilterJavaScript.filterRow(user, filterExpr, jsonString);
 
@@ -264,7 +257,7 @@ public class NestedStructureAuthorizer {
 
         RangerAccessResult result = plugin.isAccessAllowed(request, null);
 
-        if (result == null){
+        if (result == null) {
             throw new MaskingException("unable to determine access");
         }
 
@@ -275,10 +268,7 @@ public class NestedStructureAuthorizer {
             auditHandler.processResult(result);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("checking LINE 202 " + accessType + " access to " + schema + " for user: " + user + " has access ? "
-                    + (ret ? "yes" : "no") + " policyId:  " + result.getPolicyId());
-        }
+        logger.debug("checking LINE 202 {} access to {} for user: {} has access ? {} policyId:  {}", accessType, schema, user, ret ? "yes" : "no", result.getPolicyId());
 
         return ret;
     }

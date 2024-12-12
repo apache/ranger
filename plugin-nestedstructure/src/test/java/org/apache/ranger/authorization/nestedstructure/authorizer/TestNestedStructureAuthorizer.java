@@ -26,12 +26,14 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
-
-import java.io.*;
-import java.util.List;
-import java.util.Set;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Set;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
@@ -40,10 +42,8 @@ public class TestNestedStructureAuthorizer {
     static Gson gsonBuilder;
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
-                                       .setPrettyPrinting()
-                                       .create();
+    public static void setUpBeforeClass() {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ").setPrettyPrinting().create();
     }
 
     @Test
@@ -52,11 +52,10 @@ public class TestNestedStructureAuthorizer {
     }
 
     private void runTestsFromResourceFile(String resourceName) {
-        try(InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-            InputStreamReader reader   = new InputStreamReader(inStream)) {
+        try (InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+                InputStreamReader reader = new InputStreamReader(inStream)) {
             runTests(reader, resourceName);
-        } catch (IOException excp) {
-            // ignore
+        } catch (IOException ignored) {
         }
     }
 
@@ -66,11 +65,10 @@ public class TestNestedStructureAuthorizer {
         assertTrue("invalid input: " + testName, testCase != null && testCase.policies != null && testCase.tests != null);
 
         if (testCase.policies.getServiceDef() == null && StringUtils.isNotBlank(testCase.serviceDefFilename)) {
-            try (InputStream       inStream   = this.getClass().getResourceAsStream(testCase.serviceDefFilename);
-                 InputStreamReader sdefReader = new InputStreamReader(inStream)) {
+            try (InputStream inStream = this.getClass().getResourceAsStream(testCase.serviceDefFilename);
+                    InputStreamReader sdefReader = new InputStreamReader(inStream)) {
                 testCase.policies.setServiceDef(gsonBuilder.fromJson(sdefReader, RangerServiceDef.class));
-            } catch (IOException excp) {
-                // ignore
+            } catch (IOException ignored) {
             }
         }
 
