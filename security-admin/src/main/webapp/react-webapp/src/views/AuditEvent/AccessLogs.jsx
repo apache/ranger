@@ -495,6 +495,15 @@ function Access() {
       {
         Header: "Application",
         accessor: "agentId",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return "--";
+        },
         width: 100,
         disableResizing: true,
         disableSortBy: true,
@@ -503,6 +512,15 @@ function Access() {
       {
         Header: "User",
         accessor: "requestUser",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return "--";
+        },
         width: 120,
         disableResizing: true,
         getResizerProps: () => {}
@@ -542,7 +560,10 @@ function Access() {
 
           if (!isUndefined(resourcePath) || !isUndefined(requestData)) {
             let resourcePathText = isEmpty(resourcePath) ? "--" : resourcePath;
-            let resourceTypeText = isEmpty(resourceType) || resourceType=="@null" ? "--" : resourceType;
+            let resourceTypeText =
+              isEmpty(resourceType) || resourceType == "@null"
+                ? "--"
+                : resourceType;
             return (
               <React.Fragment>
                 <div className="clearfix d-flex flex-nowrap m-0">
@@ -569,7 +590,13 @@ function Access() {
         Header: "Access Type",
         accessor: "accessType",
         Cell: (rawValue) => {
-          return <p className="text-truncate">{rawValue.value}</p>;
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return "--";
         },
         width: 130,
         disableResizing: true,
@@ -581,11 +608,7 @@ function Access() {
         Cell: (rawValue) => {
           return (
             <h6>
-              <Badge
-                bg="info"
-                title={rawValue.value}
-                className="text-truncate mw-100"
-              >
+              <Badge bg="info" title={rawValue.value} className="text-truncate">
                 {rawValue.value}
               </Badge>
             </h6>
@@ -620,6 +643,15 @@ function Access() {
       {
         Header: "Access Enforcer",
         accessor: "aclEnforcer",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return "--";
+        },
         width: 120,
         disableResizing: true,
         getResizerProps: () => {}
@@ -644,6 +676,15 @@ function Access() {
       {
         Header: "Client IP",
         accessor: "clientIP",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return "--";
+        },
         width: 110,
         disableResizing: true,
         getResizerProps: () => {}
@@ -656,7 +697,11 @@ function Access() {
         disableSortBy: true,
         Cell: (rawValue) => {
           if (!isEmpty(rawValue?.value)) {
-            return <div className="text-truncate">{rawValue.value}</div>;
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
           } else {
             return <div className="text-center">--</div>;
           }
@@ -670,7 +715,11 @@ function Access() {
           if (!isEmpty(rawValue?.value)) {
             return (
               <h6>
-                <Badge bg="dark" className="text-truncate mw-100">
+                <Badge
+                  bg="dark"
+                  className="text-truncate"
+                  title={rawValue.value}
+                >
                   {rawValue.value}
                 </Badge>
               </h6>
