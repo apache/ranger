@@ -52,6 +52,8 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
+      - name: Install missing libraries
+        run: sudo apt-get install -y libssl-dev
       - name: build (8)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
       - name: Upload artifacts
