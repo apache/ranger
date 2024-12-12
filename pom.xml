@@ -837,6 +837,7 @@
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-authn</module>
                 <module>ranger-common-ha</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-examples</module>
@@ -847,6 +848,7 @@
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
                 <module>ranger-kylin-plugin-shim</module>
+                <module>ranger-metrics</module>
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-presto-plugin-shim</module>
@@ -1244,6 +1246,7 @@
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-authn</module>
                 <module>ranger-common-ha</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-examples</module>
@@ -1254,6 +1257,7 @@
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
                 <module>ranger-kylin-plugin-shim</module>
+                <module>ranger-metrics</module>
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-presto-plugin-shim</module>
