@@ -19,20 +19,19 @@
 
 package org.apache.ranger.services.storm.client.json.model;
 
-import java.util.List;
-
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class TopologyListResponse {
-	@SerializedName("topologies")
-	private List<Topology>	topologyList;
+    @SerializedName("topologies")
+    private List<Topology> topologyList;
 
-	public List<Topology> getTopologyList() {
-		return topologyList;
-	}
+    public List<Topology> getTopologyList() {
+        return topologyList;
+    }
 
-	public void setTopologyList(List<Topology> topologyList) {
-		this.topologyList = topologyList;
-	}
-	
+    public void setTopologyList(List<Topology> topologyList) {
+        this.topologyList = topologyList;
+    }
 }
