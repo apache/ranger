@@ -1,22 +1,20 @@
 /**
- *
- *
-* Copyright 2022 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the ""License"");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an ""AS IS"" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2022 Comcast Cable Communications Management, LLC
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the ""License"");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an ""AS IS"" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * <p>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
@@ -34,10 +32,13 @@ import javax.script.ScriptEngine;
 public class RecordFilterJavaScript {
     private static final Logger logger = LoggerFactory.getLogger(RecordFilterJavaScript.class);
 
+    private RecordFilterJavaScript() {
+    }
+
     /**
      * javascript primitive imports that the nashorn engine needs to function properly, e.g., with "includes"
      */
-    private static final String NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES  = "if (!Array.prototype.includes) " +
+    private static final String NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES = "if (!Array.prototype.includes) " +
             "{ Object.defineProperty(Array.prototype, 'includes', { value: function(valueToFind, fromIndex) " +
             "{ if (this == null) { throw new TypeError('\"this\" is null or not defined'); } var o = Object(this); " +
             "var len = o.length >>> 0; if (len === 0) { return false; } var n = fromIndex | 0; " +
@@ -46,6 +47,36 @@ public class RecordFilterJavaScript {
             "&& isNaN(x) && isNaN(y)); } while (k < len) { if (sameValueZero(o[k], valueToFind)) { return true; } k++; }" +
             " return false; } }); }";
 
+    public static boolean filterRow(String user, String filterExpr, String jsonString) {
+        SecurityFilter securityFilter = new SecurityFilter();
+
+        if (securityFilter.containsMalware(filterExpr)) {
+            throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
+        }
+
+        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
+
+        logger.debug("filterExpr: {}", filterExpr);
+
+        // convert the given JSON string to JavaScript object, which the filterExpr expects, and then exec the filterExpr
+        String script = " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + filterExpr;
+
+        try {
+            Bindings bindings = engine.createBindings();
+
+            bindings.put("jsonString", jsonString);
+            bindings.put("user", user);
+
+            boolean hasAccess = (boolean) engine.eval(script, bindings);
+
+            logger.debug("row filter access={}", hasAccess);
+
+            return hasAccess;
+        } catch (Exception e) {
+            throw new MaskingException("unable to properly evaluate filter expression: " + filterExpr, e);
+        }
+    }
 
     /**
      * This class filter prevents javascript from importing, using or reflecting any java classes
@@ -60,51 +91,12 @@ public class RecordFilterJavaScript {
 
         /**
          *
-          * @param filterExpr the javascript to check if it contains potentially harmful commands
+         * @param filterExpr the javascript to check if it contains potentially harmful commands
          * @return if this script is likely bad
          */
-        boolean containsMalware(String filterExpr){
-            //this.engine is the javascript notation for getting access to runtime that is executing the script
-            //more checks can be added here
+        boolean containsMalware(String filterExpr) {
+            //this.engine is the javascript notation for getting access to runtime that is executing the script, more checks can be added here
             return filterExpr.contains("this.engine");
         }
     }
-
-
-    public static boolean filterRow(String user, String filterExpr, String jsonString) {
-        SecurityFilter securityFilter = new SecurityFilter();
-
-        if (securityFilter.containsMalware(filterExpr)) {
-            throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
-        }
-
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("filterExpr: " + filterExpr);
-        }
-
-        // convert the given JSON string to JavaScript object, which the filterExpr expects, and then exec the filterExpr
-        String script = " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + filterExpr;
-
-        try {
-            Bindings bindings = engine.createBindings();
-
-            bindings.put("jsonString", jsonString);
-            bindings.put("user", user);
-
-            boolean hasAccess = (boolean) engine.eval(script, bindings);
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("row filter access=" + hasAccess);
-            }
-
-            return hasAccess;
-        } catch (Exception e) {
-            throw new MaskingException("unable to properly evaluate filter expression: " + filterExpr, e);
-        }
-    }
 }
-
- 

@@ -1,20 +1,20 @@
 /**
-* Copyright 2022 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the ""License"");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an ""AS IS"" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2022 Comcast Cable Communications Management, LLC
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the ""License"");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an ""AS IS"" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * <p>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
@@ -37,7 +37,7 @@ public class DataMasker {
     /**
      * The default numberic value when masking and no other value is defined.
      */
-    static final Number DEFAULT_NUMBER_MASK = new Long(-11111);
+    static final Number DEFAULT_NUMBER_MASK = (long) -11111;
 
     /**
      * The default boolean value when masking and no other value is defined.
@@ -49,21 +49,7 @@ public class DataMasker {
      */
     static final List<DateTimeFormatter> SUPPORTED_DATE_FORMATS;
 
-    static {
-        SUPPORTED_DATE_FORMATS = Arrays.asList(
-                DateTimeFormatter.BASIC_ISO_DATE,
-                DateTimeFormatter.ISO_LOCAL_DATE,
-                DateTimeFormatter.ISO_OFFSET_DATE,
-                DateTimeFormatter.ISO_DATE,
-                DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-                DateTimeFormatter.ISO_OFFSET_DATE_TIME,
-                DateTimeFormatter.ISO_ZONED_DATE_TIME,
-                DateTimeFormatter.ISO_DATE_TIME,
-                DateTimeFormatter.ISO_ORDINAL_DATE,
-                DateTimeFormatter.ISO_WEEK_DATE,
-                DateTimeFormatter.ISO_INSTANT,
-                DateTimeFormatter.RFC_1123_DATE_TIME
-        );
+    private DataMasker() {
     }
 
     /**
@@ -74,8 +60,8 @@ public class DataMasker {
      * @return the masked value
      */
     public static Boolean maskBoolean(Boolean value, String maskType, String customMaskValueStr) {
-        if (maskType == null){
-            throw new MaskingException("boolean doesn't support mask type: " + maskType);
+        if (maskType == null) {
+            throw new MaskingException("boolean doesn't support mask type: " + null);
         }
 
         final Boolean ret;
@@ -96,18 +82,17 @@ public class DataMasker {
                 break;
 
             case MaskTypes.CUSTOM: {
-                Boolean customMaskValue = DEFAULT_BOOLEAN_MASK;
+                boolean customMaskValue = DEFAULT_BOOLEAN_MASK;
 
                 try {
                     customMaskValue = Boolean.parseBoolean(customMaskValueStr);
-                } catch (Exception e) {
-                    // ignore
+                } catch (Exception ignored) {
                 }
 
                 // already done by the policy
                 ret = customMaskValue;
             }
-                break;
+            break;
 
             default:
                 // raise error, error message "unknown mask type"
@@ -125,15 +110,15 @@ public class DataMasker {
      * @return the masked value
      */
     public static Number maskNumber(Number value, String maskType, String customMaskValueStr) {
-        if (maskType == null){
-            throw new MaskingException("number doesn't support mask type: " + maskType);
+        if (maskType == null) {
+            throw new MaskingException("number doesn't support mask type: " + null);
         }
 
         final Number ret;
 
         switch (maskType) {
             case MaskTypes.MASK:
-                ret= DEFAULT_NUMBER_MASK;
+                ret = DEFAULT_NUMBER_MASK;
                 break;
 
             case MaskTypes.MASK_NULL:
@@ -153,7 +138,7 @@ public class DataMasker {
                     throw new MaskingException("unable to extract number from custom mask value: " + customMaskValueStr, e);
                 }
             }
-                break;
+            break;
 
             default:
                 // raise error, error message "unknown mask type"
@@ -171,8 +156,8 @@ public class DataMasker {
      * @return the masked value
      */
     public static String maskString(String value, String maskType, String customMaskValue) {
-        if (maskType == null){
-            throw new MaskingException("string doesn't support mask type: " + maskType);
+        if (maskType == null) {
+            throw new MaskingException("string doesn't support mask type: " + null);
         }
 
         final String ret;
@@ -241,19 +226,19 @@ public class DataMasker {
         return StringUtils.repeat("*", maskedValueLen);
     }
 
-    private static String showLastFour(String value){
+    private static String showLastFour(String value) {
         int length = StringUtils.length(value);
 
         return length <= 4 ? value : StringUtils.repeat("x", length - 4) + value.substring(length - 4);
     }
 
-    private static String showFirstFour(String value){
+    private static String showFirstFour(String value) {
         int length = StringUtils.length(value);
 
         return length <= 4 ? value : value.substring(0, 4) + StringUtils.repeat("x", length - 4);
     }
 
-    private static String maskYear(String value){
+    private static String maskYear(String value) {
         String ret = null;
 
         if (StringUtils.isEmpty(value)) {
@@ -267,8 +252,7 @@ public class DataMasker {
                     ret = localDateTime.format(DateTimeFormatter.ofPattern("yyyy"));
 
                     break;
-                } catch (Exception e) {
-                    // ignore
+                } catch (Exception ignored) {
                 }
             }
 
@@ -279,5 +263,21 @@ public class DataMasker {
         }
 
         return ret;
+    }
+
+    static {
+        SUPPORTED_DATE_FORMATS = Arrays.asList(
+                DateTimeFormatter.BASIC_ISO_DATE,
+                DateTimeFormatter.ISO_LOCAL_DATE,
+                DateTimeFormatter.ISO_OFFSET_DATE,
+                DateTimeFormatter.ISO_DATE,
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME,
+                DateTimeFormatter.ISO_ZONED_DATE_TIME,
+                DateTimeFormatter.ISO_DATE_TIME,
+                DateTimeFormatter.ISO_ORDINAL_DATE,
+                DateTimeFormatter.ISO_WEEK_DATE,
+                DateTimeFormatter.ISO_INSTANT,
+                DateTimeFormatter.RFC_1123_DATE_TIME);
     }
 }
