@@ -16,17 +16,22 @@
  */
 package org.apache.ranger.authentication.unix.jaas;
 
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+
 import java.io.IOException;
 
 public class UsernamePasswordCallbackHandler implements CallbackHandler {
-    private String _user;
-    private String _password;
+    private String user;
+    private String password;
 
     public UsernamePasswordCallbackHandler(String user, String password) {
         super();
-        _user = user;
-        _password = password;
+        user     = user;
+        password = password;
     }
 
     @Override
@@ -43,12 +48,11 @@ public class UsernamePasswordCallbackHandler implements CallbackHandler {
     }
 
     private void handleName(NameCallback callback) {
-        callback.setName(_user);
+        callback.setName(user);
     }
 
     private void handlePassword(PasswordCallback callback) {
-        char[] passwordChars = _password.toCharArray();
+        char[] passwordChars = password.toCharArray();
         callback.setPassword(passwordChars);
     }
 }
-
