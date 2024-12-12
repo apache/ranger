@@ -35,17 +35,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.security.AlgorithmParameters;
-import java.security.DigestInputStream;
-import java.security.DigestOutputStream;
-import java.security.Key;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.KeyStoreSpi;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
@@ -79,6 +69,7 @@ import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerKMSDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.bouncycastle.crypto.io.CipherIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -739,21 +730,17 @@ public class RangerKeyStore extends KeyStoreSpi {
                     SealedObject sealedKey;
 
                     try {
-                        Class<?>       c           = Class.forName("com.sun.crypto.provider.KeyProtector");
-                        Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
+                        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+                        keyGenerator.init(256);
+                        Key key = keyGenerator.generateKey();
 
-                        constructor.setAccessible(true);
+                        Cipher cipher = Cipher.getInstance("AES");
+                        cipher.init(Cipher.ENCRYPT_MODE, key);
 
-                        Object o = constructor.newInstance(masterKey);
+                        sealedKey = new SealedObject(masterKey, cipher);
 
-                        // seal and store the key
-                        Method m = c.getDeclaredMethod("seal", Key.class);
-
-                        m.setAccessible(true);
-
-                        sealedKey = (SealedObject) m.invoke(o, k);
-                    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
-                             InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    } catch (SecurityException | IllegalArgumentException | InvalidKeyException |
+                             NoSuchAlgorithmException | IOException | IllegalBlockSizeException e) {
                         logger.error(e.getMessage());
 
                         throw new IOException(e.getMessage());
