@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
-
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -41,12 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 public class TestRangerValidityScheduleConditionEvaluator {
     private static final String                   SERVICE_DEF_RESOURCE_PATH       = "/admin/service-defs/test-hive-servicedef.json";
     private static final RangerPolicyConditionDef VALIDITY_SCHEDULE_CONDITION_DEF = new RangerPolicyConditionDef(1L, "__validitySchedule", RangerValidityScheduleEvaluator.class.getName(), null);
     private static final RangerServiceDef         TEST_SERVICE_DEF                = initServiceDef();
-
 
     @Test
     public void testBothStartAndEndTime() {
@@ -124,7 +121,7 @@ public class TestRangerValidityScheduleConditionEvaluator {
         assertFalse(evaluator.isMatched(request));
     }
 
-    private RangerValidityScheduleConditionEvaluator getEvaluator(String...schedules) {
+    private RangerValidityScheduleConditionEvaluator getEvaluator(String... schedules) {
         RangerValidityScheduleConditionEvaluator evaluator = new RangerValidityScheduleConditionEvaluator();
 
         evaluator.setServiceDef(TEST_SERVICE_DEF);

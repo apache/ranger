@@ -25,16 +25,19 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RangerSecurityZoneHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
-    private String            name;
+
+    private String name;
 
     public RangerSecurityZoneHeaderInfo() {
         super();
+
         setId(-1L);
         setName("");
     }
 
     public RangerSecurityZoneHeaderInfo(Long id, String name) {
         super();
+
         setId(id);
         setName(name);
     }

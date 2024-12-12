@@ -55,15 +55,11 @@ public class MacroProcessor {
             }
 
             if (ret == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("expandMacros({}): no match found!", expr);
-                }
+                LOG.debug("expandMacros({}): no match found!", expr);
             } else {
                 matcher.appendTail(ret);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("expandMacros({}): match found. ret={}", expr, ret);
-                }
+                LOG.debug("expandMacros({}): match found. ret={}", expr, ret);
             }
         }
 

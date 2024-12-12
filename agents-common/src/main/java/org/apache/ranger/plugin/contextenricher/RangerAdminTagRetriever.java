@@ -31,48 +31,44 @@ import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
 public class RangerAdminTagRetriever extends RangerTagRetriever {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagRetriever.class);
 
-	private RangerAdminClient adminClient;
+    private RangerAdminClient adminClient;
 
-	@Override
-	public void init(Map<String, String> options) {
+    @Override
+    public void init(Map<String, String> options) {
+        if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
+            RangerPluginConfig pluginConfig = super.pluginConfig;
 
-		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
-			RangerPluginConfig pluginConfig = super.pluginConfig;
+            if (pluginConfig == null) {
+                pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
+            }
 
-			if (pluginConfig == null) {
-				pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
-			}
+            RangerPluginContext pluginContext = getPluginContext();
+            RangerAdminClient   rangerAdmin   = pluginContext.getAdminClient();
 
-			RangerPluginContext pluginContext = getPluginContext();
-			RangerAdminClient	rangerAdmin   = pluginContext.getAdminClient();
+            this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
+        } else {
+            LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
+        }
+    }
 
-			this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
-		} else {
-			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
-		}
-	}
+    @Override
+    public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        ServiceTags serviceTags = null;
 
-	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        if (adminClient != null) {
+            try {
+                serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
+            } catch (ClosedByInterruptException closedByInterruptException) {
+                LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
+                throw new InterruptedException();
+            } catch (Exception e) {
+                LOG.error("Tag-retriever encounterd exception, exception=", e);
+                LOG.error("Returning null service tags");
+            }
+        }
 
-		ServiceTags serviceTags = null;
-
-		if (adminClient != null) {
-			try {
-				serviceTags = adminClient.getServiceTagsIfUpdated(lastKnownVersion, lastActivationTimeInMillis);
-			} catch (ClosedByInterruptException closedByInterruptException) {
-				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
-				throw new InterruptedException();
-			} catch (Exception e) {
-				LOG.error("Tag-retriever encounterd exception, exception=", e);
-				LOG.error("Returning null service tags");
-			}
-		}
-
-		return serviceTags;
-	}
-
+        return serviceTags;
+    }
 }
-

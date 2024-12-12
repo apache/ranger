@@ -100,10 +100,10 @@ public class TestServiceTags {
     @Test
     public void testDedup_DupTagsWithAttr_MultipleCalls() {
         RangerTag[] tags = {
-            new RangerTag("PII", Collections.singletonMap("type", "email")),
-            new RangerTag("PII", Collections.singletonMap("type", "email")),
-            new RangerTag("PCI", Collections.emptyMap()),
-            new RangerTag("PCI", Collections.emptyMap())
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PCI", Collections.emptyMap()),
+                new RangerTag("PCI", Collections.emptyMap())
         };
 
         ServiceTags svcTags = createServiceTags(tags, RESOURCES);
@@ -111,7 +111,6 @@ public class TestServiceTags {
         assertEquals(2, svcTags.dedupTags());
         assertEquals(0, svcTags.dedupTags());
     }
-
 
     private ServiceTags createServiceTags(RangerTag[] tags, RangerServiceResource[] resources) {
         ServiceTags ret = new ServiceTags();

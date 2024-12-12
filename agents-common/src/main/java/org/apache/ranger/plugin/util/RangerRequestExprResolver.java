@@ -25,103 +25,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class RangerRequestExprResolver {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerRequestExprResolver.class);
-
-    private static final String  REGEX_GROUP_EXPR   = "expr";
-    private static final Pattern PATTERN            = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
-    public  static final String  EXPRESSION_START   = "${{";
-
-    private final String  str;
-    private final String  serviceType;
-    private final boolean hasTokens;
-
+    public static final  String  EXPRESSION_START = "${{";
+    private static final Logger  LOG              = LoggerFactory.getLogger(RangerRequestExprResolver.class);
+    private static final String  REGEX_GROUP_EXPR = "expr";
+    private static final Pattern PATTERN          = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
+    private final        String  str;
+    private final        String  serviceType;
+    private final        boolean hasTokens;
 
     public RangerRequestExprResolver(String str, String serviceType) {
         this.str         = str;
         this.serviceType = serviceType;
         this.hasTokens   = hasExpressions(str);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("RangerRequestExprResolver(" + str + "): hasTokens=" + hasTokens);
-        }
-    }
-
-    /*
-     * replaces expressions in this.str with corresponding values in exprValues map (argument).
-     * For example, given the following:
-     *   1. this.str has value:   "dept = '${{USER.dept}}'"
-     *   2. exprValues has value: { "dept": "marketing" }
-     * This method returns: "dept = 'marketing'"
-     */
-    public String resolveExpressions(Map<String, Object> exprValues) {
-        String ret = str;
-
-        if (hasTokens) {
-            StringBuffer sb      = new StringBuffer();
-            Matcher      matcher = PATTERN.matcher(str);
-
-            while (matcher.find()) {
-                String expr = matcher.group(REGEX_GROUP_EXPR);
-                Object oVal = exprValues.get(expr);
-                String val  = oVal == null ? "" : Objects.toString(oVal);
-
-                matcher.appendReplacement(sb, val);
-            }
-
-            matcher.appendTail(sb);
-
-            ret = sb.toString();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("RangerRequestExprResolver.resolveExpressions(" + str + "): ret=" + ret);
-            }
-        }
-
-        return  ret;
-    }
-
-    /*
-     * replaces expressions in this.str with corresponding values in request (argument).
-     * For example, given the following:
-     *   1. this.str has value:                         "dept = '${{USER.dept}}'"
-     *   2. request.user has attribute dept with value: "marketing"
-     * This method returns: "dept = 'marketing'"
-     */
-    public String resolveExpressions(RangerAccessRequest request) {
-        String ret = str;
-
-        if (hasTokens) {
-            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
-            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
-            StringBuffer                 sb              = new StringBuffer();
-            Matcher                      matcher         = PATTERN.matcher(str);
-
-            while (matcher.find()) {
-                String expr = matcher.group(REGEX_GROUP_EXPR);
-                Object oVal = scriptEvaluator.evaluateScript(expr);
-                String val  = oVal == null ? "" : Objects.toString(oVal);
-
-                matcher.appendReplacement(sb, val);
-            }
-
-            matcher.appendTail(sb);
-
-            ret = sb.toString();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("RangerRequestExprResolver.processExpressions(" + str + "): ret=" + ret);
-            }
-        }
-
-        return ret;
+        LOG.debug("RangerRequestExprResolver({}): hasTokens={}", str, hasTokens);
     }
 
     public static boolean hasExpressions(String str) {
@@ -239,6 +164,72 @@ public class RangerRequestExprResolver {
                     break;
                 }
             }
+        }
+
+        return ret;
+    }
+
+    /*
+     * replaces expressions in this.str with corresponding values in exprValues map (argument).
+     * For example, given the following:
+     *   1. this.str has value:   "dept = '${{USER.dept}}'"
+     *   2. exprValues has value: { "dept": "marketing" }
+     * This method returns: "dept = 'marketing'"
+     */
+    public String resolveExpressions(Map<String, Object> exprValues) {
+        String ret = str;
+
+        if (hasTokens) {
+            StringBuffer sb      = new StringBuffer();
+            Matcher      matcher = PATTERN.matcher(str);
+
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
+                Object oVal = exprValues.get(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
+
+                matcher.appendReplacement(sb, val);
+            }
+
+            matcher.appendTail(sb);
+
+            ret = sb.toString();
+
+            LOG.debug("RangerRequestExprResolver.resolveExpressions({}): ret={}", str, ret);
+        }
+
+        return ret;
+    }
+
+    /*
+     * replaces expressions in this.str with corresponding values in request (argument).
+     * For example, given the following:
+     *   1. this.str has value:                         "dept = '${{USER.dept}}'"
+     *   2. request.user has attribute dept with value: "marketing"
+     * This method returns: "dept = 'marketing'"
+     */
+    public String resolveExpressions(RangerAccessRequest request) {
+        String ret = str;
+
+        if (hasTokens) {
+            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
+            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
+            StringBuffer                 sb              = new StringBuffer();
+            Matcher                      matcher         = PATTERN.matcher(str);
+
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
+                Object oVal = scriptEvaluator.evaluateScript(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
+
+                matcher.appendReplacement(sb, val);
+            }
+
+            matcher.appendTail(sb);
+
+            ret = sb.toString();
+
+            LOG.debug("RangerRequestExprResolver.processExpressions({}): ret={}", str, ret);
         }
 
         return ret;
