@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 public abstract class AtlasResourceMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapper.class);
+
     public static final String    TAGSYNC_DEFAULT_CLUSTER_NAME    = "ranger.tagsync.atlas.default.cluster.name";
     public static final String    ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";
     public static final String    QUALIFIED_NAME_DELIMITER        = "\\.";
@@ -37,7 +39,6 @@ public abstract class AtlasResourceMapper {
     public static final String TAGSYNC_ATLAS_CLUSTER_IDENTIFIER                        = ".instance.";
     public static final String TAGSYNC_DEFAULT_CLUSTERNAME_AND_COMPONENTNAME_SEPARATOR = "_";
     public static final String CLUSTER_DELIMITER                                       = "@";
-    private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapper.class);
     protected final String   componentName;
     protected final String[] supportedEntityTypes;
 

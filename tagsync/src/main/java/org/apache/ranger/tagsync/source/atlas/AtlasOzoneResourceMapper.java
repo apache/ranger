@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Properties;
 
 public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasOzoneResourceMapper.class);
+
     public static final String ENTITY_TYPE_OZONE_VOLUME = "ozone_volume";
     public static final String ENTITY_TYPE_OZONE_BUCKET = "ozone_bucket";
     public static final String ENTITY_TYPE_OZONE_KEY    = "ozone_key";
@@ -45,7 +47,6 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
     public static final String PROP_OFS_BUCKET_DELIMITER = "ranger.tagsync.atlas.ozone.ofs.bucket_entity.separator";
     public static final String PROP_OFS_KEY_RECURSIVE_ENABLED  = "ranger.tagsync.atlas.ozone.ofs.key.is.recursive.enabled";
     public static final String PROP_O3FS_KEY_RECURSIVE_ENABLED = "ranger.tagsync.atlas.ozone.o3fs.key.is.recursive.enabled";
-    private static final Logger LOG = LoggerFactory.getLogger(AtlasOzoneResourceMapper.class);
     private static final String SEP_PROTOCOL      = "://";
     private static final String SEP_RELATIVE_PATH = "/";
     private static final int    IDX_VOLUME        = 0;
@@ -99,6 +100,7 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
         String   bktName     = resources[IDX_BUCKET];
         String   keyName     = resources[IDX_KEY];
         String   clusterName = resources[IDX_CLUSTER_NAME];
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("Ozone resources for entityType {} are {}", entityType, Arrays.toString(resources));
         }

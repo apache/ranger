@@ -34,6 +34,7 @@ import java.util.Properties;
 
 public final class AtlasResourceMapperUtil {
     private static final Logger                           LOG                  = LoggerFactory.getLogger(AtlasResourceMapperUtil.class);
+
     private static final Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<>();
 
     private AtlasResourceMapperUtil() {}

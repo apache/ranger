@@ -44,6 +44,7 @@ import java.util.Map;
 
 public class EntityNotificationWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(EntityNotificationWrapper.class);
+
     private final RangerAtlasEntity               rangerAtlasEntity;
     private final String                          entityTypeName;
     private final boolean                         isEntityActive;

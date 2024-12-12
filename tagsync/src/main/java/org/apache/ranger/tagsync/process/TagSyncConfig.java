@@ -41,6 +41,8 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 public class TagSyncConfig extends Configuration {
+    private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
+
     public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled";
     public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir";
     public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.source.file.filename";
@@ -49,7 +51,6 @@ public class TagSyncConfig extends Configuration {
     public static final  int  DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
     public static final String TAGSYNC_KERBEROS_IDENTITY = "tagsync.kerberos.identity";
     public static final  String TAGSYNC_SERVER_HA_ENABLED_PARAM              = "ranger-tagsync.server.ha.enabled";
-    private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
     private static final String        CONFIG_FILE = "ranger-tagsync-site.xml";
     private static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
     private static final String CORE_SITE_FILE = "core-site.xml";

@@ -39,10 +39,12 @@ import java.util.List;
 import java.util.Map;
 
 public final class AtlasNotificationMapper {
+    private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
+
     private AtlasNotificationMapper() {}
 
     private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
-    private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
+
     private static final Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     public static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
