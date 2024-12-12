@@ -99,8 +99,9 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
         String   bktName     = resources[IDX_BUCKET];
         String   keyName     = resources[IDX_KEY];
         String   clusterName = resources[IDX_CLUSTER_NAME];
-
-        LOG.debug("Ozone resources for entityType {} are {}", entityType, Arrays.toString(resources));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Ozone resources for entityType {} are {}", entityType, Arrays.toString(resources));
+        }
 
         if (StringUtils.isEmpty(clusterName)) {
             throwExceptionWithMessage("cluster-name not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
