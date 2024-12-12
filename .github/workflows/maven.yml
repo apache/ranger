@@ -34,7 +34,7 @@ env:
 
 jobs:
   build-8:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -52,8 +52,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
-      - name: Install missing libraries
-        run: sudo apt-get install -y libssl-dev
       - name: build (8)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
       - name: Upload artifacts
@@ -65,7 +63,7 @@ jobs:
   build-11:
     needs:
       - build-8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +92,7 @@ jobs:
   docker-build:
     needs:
       - build-8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
