@@ -37,9 +37,7 @@ public class TestAutocompletionAgent extends AutocompletionAgent {
     }
 
     @Override
-    public List<String> getSchemaMetadataList(String finalSchemaMetadataName,
-                                              List<String> schemaGroupList,
-                                              List<String> schemaMetadataList) {
+    public List<String> getSchemaMetadataList(String finalSchemaMetadataName, List<String> schemaGroupList, List<String> schemaMetadataList) {
         List<String> res = new ArrayList<>(schemaMetadataList);
         res.add("testSchema");
 
@@ -47,10 +45,7 @@ public class TestAutocompletionAgent extends AutocompletionAgent {
     }
 
     @Override
-    public List<String> getBranchList(String lookupBranchName,
-                                      List<String> groups,
-                                      List<String> schemaList,
-                                      List<String> branchList) {
+    public List<String> getBranchList(String lookupBranchName, List<String> groups, List<String> schemaList, List<String> branchList) {
         List<String> res = new ArrayList<>(branchList);
         res.add("testBranch");
 
