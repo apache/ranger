@@ -1,20 +1,20 @@
 /**
-* Copyright 2022 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the ""License"");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an ""AS IS"" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2022 Comcast Cable Communications Management, LLC
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the ""License"");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an ""AS IS"" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * <p>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.apache.ranger.tagsync.nestedstructureplugin;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,7 +37,7 @@ public class AtlasNestedStructureResourceMapper extends AtlasResourceMapper {
     public static final String RANGER_TYPE_NESTEDSTRUCTURE_FIELD  = "field";
     public static final String QUALIFIED_NAME_DELIMITER           = "#";
 
-    public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_NESTEDSTRUCTURE_SCHEMA, ENTITY_TYPE_NESTEDSTRUCTURE_FIELD };
+    public static final String[] SUPPORTED_ENTITY_TYPES = {ENTITY_TYPE_NESTEDSTRUCTURE_SCHEMA, ENTITY_TYPE_NESTEDSTRUCTURE_FIELD};
 
     public AtlasNestedStructureResourceMapper() {
         super(RANGER_SERVICETYPE, SUPPORTED_ENTITY_TYPES);
@@ -45,16 +45,16 @@ public class AtlasNestedStructureResourceMapper extends AtlasResourceMapper {
 
     @Override
     public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
-        String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+        String qualifiedName = (String) entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
 
         if (StringUtils.isEmpty(qualifiedName)) {
-            throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
+            throw new Exception("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
         }
 
         String resourceStr = getResourceNameFromQualifiedName(qualifiedName);
 
         if (StringUtils.isEmpty(resourceStr)) {
-            throwExceptionWithMessage("resource not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
+            throwExceptionWithMessage("resource not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
         }
 
         String clusterName = getClusterNameFromQualifiedName(qualifiedName);
@@ -73,7 +73,7 @@ public class AtlasNestedStructureResourceMapper extends AtlasResourceMapper {
 
         if (StringUtils.equals(entityType, ENTITY_TYPE_NESTEDSTRUCTURE_SCHEMA)) {
             if (StringUtils.isNotEmpty(schemaName)) {
-                elements.put(RANGER_TYPE_NESTEDSTRUCTURE_SCHEMA , new RangerPolicyResource(schemaName));
+                elements.put(RANGER_TYPE_NESTEDSTRUCTURE_SCHEMA, new RangerPolicyResource(schemaName));
             }
         } else if (StringUtils.equals(entityType, ENTITY_TYPE_NESTEDSTRUCTURE_FIELD)) {
             if (StringUtils.isNotEmpty(schemaName) && StringUtils.isNotEmpty(fieldName)) {
@@ -88,8 +88,6 @@ public class AtlasNestedStructureResourceMapper extends AtlasResourceMapper {
             throwExceptionWithMessage("invalid qualifiedName for entity-type '" + entityType + "': " + qualifiedName);
         }
 
-        RangerServiceResource ret = new RangerServiceResource(entityGuid, serviceName, elements);
-
-        return ret;
+        return new RangerServiceResource(entityGuid, serviceName, elements);
     }
 }
