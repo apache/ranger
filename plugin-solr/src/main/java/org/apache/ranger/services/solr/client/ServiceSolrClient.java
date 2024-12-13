@@ -152,7 +152,7 @@ public class ServiceSolrClient {
         if (userInput != null) {
             try {
                 Callable<List<String>> callableObj    = null;
-        
+
                 final String       userInputFinal      = userInput;
                 final List<String> finalCollectionList = collectionList;
                 final List<String> finalFieldList      = fieldList;
@@ -542,7 +542,7 @@ public class ServiceSolrClient {
         if (this.isKerberosAuth) {
             try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
                 SolrHttpClientBuilder kb = krbBuild.getBuilder();
- 
+
                 HttpClientUtil.setHttpClientBuilder(kb);
             }
         }
