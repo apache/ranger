@@ -62,7 +62,7 @@ public class SqoopResourceMgr {
         String                    resource    = context.getResourceName();
         Map<String, List<String>> resourceMap = context.getResources();
 
-        LOG.debug("==> SqoopResourceMgr.getSqoopResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource resourceMap);
+        LOG.debug("==> SqoopResourceMgr.getSqoopResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
 
         if (MapUtils.isEmpty(configs)) {
             LOG.error("Connection Config is empty!");
