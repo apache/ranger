@@ -94,12 +94,15 @@ public class TagSyncConfig extends Configuration {
     private static final int    DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
     private static final String TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
     private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
-    private static       TagSyncConfig instance;
-    private static String              localHostname;
+
+    private static TagSyncConfig instance;
+    private static String        localHostname;
+
     private Properties                 props;
 
     private TagSyncConfig() {
         super(false);
+
         init();
     }
 
@@ -111,6 +114,7 @@ public class TagSyncConfig extends Configuration {
                 }
             }
         }
+
         return instance;
     }
 
@@ -132,6 +136,7 @@ public class TagSyncConfig extends Configuration {
 
             if (ret == null) {
                 ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
+
                 if (ret == null) {
                     if (!path.startsWith("/")) {
                         ret = ClassLoader.getSystemResourceAsStream("/" + path);
@@ -153,6 +158,7 @@ public class TagSyncConfig extends Configuration {
                 ret = path;
             } else {
                 URL fileURL = TagSyncConfig.class.getResource(path);
+
                 if (fileURL == null) {
                     if (!path.startsWith("/")) {
                         fileURL = TagSyncConfig.class.getResource("/" + path);
@@ -161,6 +167,7 @@ public class TagSyncConfig extends Configuration {
 
                 if (fileURL == null) {
                     fileURL = ClassLoader.getSystemClassLoader().getResource(path);
+
                     if (fileURL == null) {
                         if (!path.startsWith("/")) {
                             fileURL = ClassLoader.getSystemClassLoader().getResource("/" + path);
@@ -193,15 +200,18 @@ public class TagSyncConfig extends Configuration {
 
     public static boolean isTagSyncRangerCookieEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_RANGER_COOKIE_ENABLED_PROP);
+
         return val == null || Boolean.parseBoolean(val.trim());
     }
 
     public static String getRangerAdminCookieName(Properties prop) {
         String ret = RangerCommonConstants.DEFAULT_COOKIE_NAME;
         String val = prop.getProperty(TAGSYNC_TAGADMIN_COOKIE_NAME_PROP);
+
         if (StringUtils.isNotBlank(val)) {
             ret = val;
         }
+
         return ret;
     }
 
@@ -212,6 +222,7 @@ public class TagSyncConfig extends Configuration {
     public static long getTagSourceFileModTimeCheckIntervalInMillis(Properties prop) {
         String val = prop.getProperty(TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP);
         long   ret = DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL;
+
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Long.parseLong(val);
@@ -219,12 +230,14 @@ public class TagSyncConfig extends Configuration {
                 // Ignore
             }
         }
+
         return ret;
     }
 
     public static long getTagSourceAtlasDownloadIntervalInMillis(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP);
         long   ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL;
+
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Long.parseLong(val);
@@ -232,11 +245,13 @@ public class TagSyncConfig extends Configuration {
                 // Ignore
             }
         }
+
         return ret;
     }
 
     public static String getTagSinkClassName(Properties prop) {
         String val = prop.getProperty(TAGSYNC_SINK_CLASS_PROP);
+
         if (StringUtils.equalsIgnoreCase(val, "ranger")) {
             return "org.apache.ranger.tagsync.sink.tagadmin.TagAdminRESTSink";
         } else {
@@ -250,20 +265,25 @@ public class TagSyncConfig extends Configuration {
 
     public static boolean isTagSyncEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
+
         return val == null || Boolean.parseBoolean(val.trim());
     }
 
     public static String getTagAdminPassword(Properties prop) {
         //update credential from keystore
         String password;
+
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_PASSWORD_PROP)) {
             password = prop.getProperty(TAGSYNC_TAGADMIN_PASSWORD_PROP);
+
             if (password != null && !password.isEmpty()) {
                 return password;
             }
         }
+
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_KEYSTORE_PROP)) {
             String path = prop.getProperty(TAGSYNC_TAGADMIN_KEYSTORE_PROP);
+
             if (path != null) {
                 if (!path.trim().isEmpty()) {
                     try {
@@ -277,17 +297,21 @@ public class TagSyncConfig extends Configuration {
                 }
             }
         }
+
         return null;
     }
 
     public static String getTagAdminUserName(Properties prop) {
         String userName = null;
+
         if (prop != null && prop.containsKey(TAGSYNC_TAGADMIN_USERNAME_PROP)) {
             userName = prop.getProperty(TAGSYNC_TAGADMIN_USERNAME_PROP);
         }
+
         if (StringUtils.isBlank(userName)) {
             userName = DEFAULT_TAGADMIN_USERNAME;
         }
+
         return userName;
     }
 
@@ -306,14 +330,18 @@ public class TagSyncConfig extends Configuration {
     public static String getAtlasRESTPassword(Properties prop) {
         //update credential from keystore
         String password = null;
+
         if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_PASSWORD_PROP)) {
             password = prop.getProperty(TAGSYNC_ATLASREST_PASSWORD_PROP);
+
             if (password != null && !password.isEmpty()) {
                 return password;
             }
         }
+
         if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_KEYSTORE_PROP)) {
             String path = prop.getProperty(TAGSYNC_ATLASREST_KEYSTORE_PROP);
+
             if (path != null) {
                 if (!path.trim().isEmpty()) {
                     try {
@@ -321,26 +349,32 @@ public class TagSyncConfig extends Configuration {
                     } catch (Exception ex) {
                         password = null;
                     }
+
                     if (password != null && !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")) {
                         return password;
                     }
                 }
             }
         }
+
         if (StringUtils.isBlank(password)) {
             return DEFAULT_ATLASREST_PASSWORD;
         }
+
         return null;
     }
 
     public static String getAtlasRESTUserName(Properties prop) {
         String userName = null;
+
         if (prop != null && prop.containsKey(TAGSYNC_ATLASREST_USERNAME_PROP)) {
             userName = prop.getProperty(TAGSYNC_ATLASREST_USERNAME_PROP);
         }
+
         if (StringUtils.isBlank(userName)) {
             userName = DEFAULT_ATLASREST_USERNAME;
         }
+
         return userName;
     }
 
@@ -368,6 +402,7 @@ public class TagSyncConfig extends Configuration {
         } catch (IOException ignored) {
             // do nothing
         }
+
         return principal;
     }
 
@@ -378,6 +413,7 @@ public class TagSyncConfig extends Configuration {
     public static long getTagAdminConnectionCheckInterval(Properties prop) {
         long   ret = DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL;
         String val = prop.getProperty(TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP);
+
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Long.parseLong(val);
@@ -385,12 +421,14 @@ public class TagSyncConfig extends Configuration {
                 // Ignore
             }
         }
+
         return ret;
     }
 
     public static long getTagSourceRetryInitializationInterval(Properties prop) {
         long   ret = DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL;
         String val = prop.getProperty(TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP);
+
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Long.parseLong(val);
@@ -398,6 +436,7 @@ public class TagSyncConfig extends Configuration {
                 // Ignore
             }
         }
+
         return ret;
     }
 
@@ -406,8 +445,7 @@ public class TagSyncConfig extends Configuration {
     }
 
     public static int getSinkMaxBatchSize(Properties prop) {
-        int ret = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
-
+        int   ret              = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
         String maxBatchSizeStr = prop.getProperty(TAGSYNC_SINK_MAX_BATCH_SIZE_PROP);
 
         if (StringUtils.isNotEmpty(maxBatchSizeStr)) {
@@ -416,11 +454,13 @@ public class TagSyncConfig extends Configuration {
             } catch (Exception ignored) {
             }
         }
+
         return ret;
     }
 
     public static boolean isTagSyncMetricsEnabled(Properties prop) {
         String val = prop.getProperty(TAGSYNC_METRICS_ENABLED_PROP);
+
         return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
     }
 
@@ -455,6 +495,7 @@ public class TagSyncConfig extends Configuration {
 
     public String getTagSyncMetricsFileName() {
         String val = getProperties().getProperty(TAGSYNC_METRICS_FILEPATH);
+
         if (StringUtils.isBlank(val)) {
             if (StringUtils.isBlank(System.getProperty("logdir"))) {
                 val = DEFAULT_TAGSYNC_METRICS_FILEPATH;
@@ -468,20 +509,26 @@ public class TagSyncConfig extends Configuration {
         }
 
         StringBuilder pathAndFileName = new StringBuilder(val);
+
         if (!val.endsWith("/")) {
             pathAndFileName.append("/");
         }
+
         String fileName = getProperties().getProperty(TAGSYNC_METRICS_FILENAME);
+
         if (StringUtils.isBlank(fileName)) {
             fileName = DEFAULT_TAGSYNC_METRICS_FILENAME;
         }
+
         pathAndFileName.append(fileName);
+
         return pathAndFileName.toString();
     }
 
     public long getTagSyncMetricsFrequency() {
         long   ret = DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS;
         String val = getProperties().getProperty(TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
+
         if (StringUtils.isNotBlank(val)) {
             try {
                 ret = Long.parseLong(val);
@@ -489,6 +536,7 @@ public class TagSyncConfig extends Configuration {
                 // Ignore
             }
         }
+
         return ret;
     }
 
@@ -505,6 +553,7 @@ public class TagSyncConfig extends Configuration {
         while (propertyNames.hasMoreElements()) {
             String propertyName        = propertyNames.nextElement();
             String systemPropertyValue = System.getProperty(propertyName);
+
             if (systemPropertyValue != null) {
                 props.setProperty(propertyName, systemPropertyValue);
             }
@@ -514,6 +563,7 @@ public class TagSyncConfig extends Configuration {
     private void readConfigFile(String fileName) {
         if (StringUtils.isNotBlank(fileName)) {
             String fName = getResourceFileName(fileName);
+
             if (StringUtils.isBlank(fName)) {
                 LOG.warn("Cannot find configuration file {} in the classpath", fileName);
             } else {
