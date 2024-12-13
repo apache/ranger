@@ -24,45 +24,36 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class RangerAccessedNotFromClusterCondition extends RangerAbstractConditionEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedNotFromClusterCondition.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedNotFromClusterCondition.class);
 
-	private boolean isAlwaysTrue = false;
+    private boolean isAlwaysTrue;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedNotFromClusterCondition.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAccessedNotFromClusterCondition.init({})", condition);
 
-		super.init();
+        super.init();
 
-		isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
+        isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedNotFromClusterCondition.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerAccessedNotFromClusterCondition.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedNotFromClusterCondition.isMatched(" + condition + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerAccessedNotFromClusterCondition.isMatched({})", condition);
 
-		final boolean ret;
+        final boolean ret;
 
-		if (isAlwaysTrue || request.getClusterName() == null) {
-			ret = true;
-		} else {
-			ret = !condition.getValues().contains(request.getClusterName());
-		}
+        if (isAlwaysTrue || request.getClusterName() == null) {
+            ret = true;
+        } else {
+            ret = !condition.getValues().contains(request.getClusterName());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedNotFromClusterCondition.isMatched(" + condition + "): " + ret);
-		}
+        LOG.debug("<== RangerAccessedNotFromClusterCondition.isMatched({}): {}", condition, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 }

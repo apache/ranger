@@ -25,21 +25,20 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 public class JavaScriptEditsTest {
+    @Test
+    public void testExpressions() {
+        Map<String, String> tests = new HashMap<>();
 
-	@Test
-	public void testExpressions() {
-		Map<String, String> tests = new HashMap<>();
+        tests.put("[[TAG.value]].intersects([[USER[TAG._type]]])", "TAG.value.split(\",\").intersects(USER[TAG._type].split(\",\"))");
+        tests.put("${{[[\"$USER.eventType\",'|']]}}.includes(jsonAttr.eventType)", "${{\"$USER.eventType\".split(\"|\")}}.includes(jsonAttr.eventType)");
+        tests.put("TAG.value == 'email'", "TAG.value == 'email'");       // output same as input
+        tests.put("UGNAMES[0] == 'analyst'", "UGNAMES[0] == 'analyst'"); // output same as input
 
-		tests.put("[[TAG.value]].intersects([[USER[TAG._type]]])", "TAG.value.split(\",\").intersects(USER[TAG._type].split(\",\"))");
-		tests.put("${{[[\"$USER.eventType\",'|']]}}.includes(jsonAttr.eventType)", "${{\"$USER.eventType\".split(\"|\")}}.includes(jsonAttr.eventType)");
-		tests.put("TAG.value == 'email'", "TAG.value == 'email'");       // output same as input
-		tests.put("UGNAMES[0] == 'analyst'", "UGNAMES[0] == 'analyst'"); // output same as input
+        for (Map.Entry<String, String> test : tests.entrySet()) {
+            String input  = test.getKey();
+            String output = test.getValue();
 
-		for (Map.Entry<String, String> test : tests.entrySet()) {
-			String input  = test.getKey();
-			String output = test.getValue();
-
-			assertEquals("input: " + input, output, JavaScriptEdits.replaceDoubleBrackets(input));
-		}
-	}
+            assertEquals("input: " + input, output, JavaScriptEdits.replaceDoubleBrackets(input));
+        }
+    }
 }

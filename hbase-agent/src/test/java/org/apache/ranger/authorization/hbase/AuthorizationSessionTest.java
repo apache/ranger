@@ -23,7 +23,6 @@ package org.apache.ranger.authorization.hbase;
 import static org.mockito.Mockito.*;
 
 import org.apache.hadoop.hbase.security.User;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,7 +70,7 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testIsBuildable() {
-		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
+		RangerHBasePlugin plugin = new RangerHBasePlugin( "hbase");
 		AuthorizationSession session = new AuthorizationSession(plugin);
 		try {
 			session.verifyBuildable();
@@ -136,7 +135,7 @@ public class AuthorizationSessionTest {
 
 	@Test
 	public void testAuthorize() {
-		RangerBasePlugin plugin = new RangerBasePlugin("hbase", "hbase");
+		RangerHBasePlugin plugin = new RangerHBasePlugin( "hbase");
 		
 		User user = mock(User.class);
 		when(user.getShortName()).thenReturn("user1");

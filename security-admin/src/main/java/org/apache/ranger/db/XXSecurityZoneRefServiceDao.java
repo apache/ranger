@@ -97,7 +97,7 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
             ret = new ArrayList<>(results.size());
 
             for (Object[] result : results) {
-                ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3]));
+                ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]));
             }
         } else {
             ret = Collections.emptyList();

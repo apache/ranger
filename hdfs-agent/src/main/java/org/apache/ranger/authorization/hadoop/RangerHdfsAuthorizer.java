@@ -741,13 +741,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 			RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, EXECUTE_ACCCESS_TYPE, operation, context.user, context.userGroups);
 
-			// if the request was already allowed by a Ranger policy (for ancestor/parent/node/child), skip chained plugin evaluations in subsequent calls
-			if (context.isAllowedByRangerPolicies) {
-				LOG.warn("This request is already allowed by Ranger policies. Ensuring that chained-plugins are not evaluated again for this request, request:[" + request + "]");
-
-				RangerAccessRequestUtil.setIsSkipChainedPlugins(request.getContext(), Boolean.TRUE);
-			}
-
 			RangerAccessResult result = context.plugin.isAccessAllowed(request, null);
 
 			context.saveResult(result);
@@ -761,8 +754,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("This request is for the first time allowed by Ranger policies. request:[" + request + "]");
 				}
-
-				context.isAllowedByRangerPolicies = true;
 			}
 
 			if (ret == AuthzStatus.DENY || (!skipAuditOnAllow && result != null && result.getIsAccessDetermined())) {
@@ -904,13 +895,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					}
 				}
 
-				// if the request was already allowed by a Ranger policy (for ancestor/parent/node/child), skip chained plugin evaluations in subsequent calls
-				if (context.isAllowedByRangerPolicies) {
-					LOG.warn("This request is already allowed by Ranger policies. Ensuring that chained-plugins are not evaluated again for this request, request:[" + request + "]");
-
-					RangerAccessRequestUtil.setIsSkipChainedPlugins(request.getContext(), Boolean.TRUE);
-				}
-
 				RangerAccessResult result = context.plugin.isAccessAllowed(request, context.auditHandler);
 
 				context.saveResult(result);
@@ -926,8 +910,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("This request is for the first time allowed by Ranger policies. request:[" + request + "]");
 					}
-
-					context.isAllowedByRangerPolicies = true;
 				}
 			}
 
@@ -1448,7 +1430,6 @@ class AuthzContext {
 	public final Set<String>            userGroups;
 	public final String                 operationName;
 	public       boolean                isTraverseOnlyCheck;
-	public       boolean                isAllowedByRangerPolicies;
 	public       RangerHdfsAuditHandler auditHandler = null;
 	private      RangerAccessResult     lastResult   = null;
 

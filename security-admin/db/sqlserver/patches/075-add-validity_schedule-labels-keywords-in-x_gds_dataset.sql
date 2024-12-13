@@ -13,7 +13,22 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-CREATE INDEX IF NOT EXISTS x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
 GO
-
-EXIT
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_gds_dataset' and column_name = 'validity_schedule')
+BEGIN
+	ALTER TABLE [dbo].[x_gds_dataset] ADD [validity_schedule] [nvarchar](max) DEFAULT NULL NULL;
+END
+GO
+GO
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_gds_dataset' and column_name = 'labels')
+BEGIN
+	ALTER TABLE [dbo].[x_gds_dataset] ADD [labels] [nvarchar](max) DEFAULT NULL NULL;
+END
+GO
+GO
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_gds_dataset' and column_name = 'keywords')
+BEGIN
+	ALTER TABLE [dbo].[x_gds_dataset] ADD [keywords] [nvarchar](max) DEFAULT NULL NULL;
+END
+GO
+exit

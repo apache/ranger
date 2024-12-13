@@ -26,53 +26,57 @@ import java.util.Map;
 import java.util.Set;
 
 public interface RangerAccessRequest {
-	RangerAccessResource getResource();
+    RangerAccessResource getResource();
 
-	String getAccessType();
+    String getAccessType();
 
-	boolean isAccessTypeAny();
+    boolean isAccessTypeAny();
 
-	boolean isAccessTypeDelegatedAdmin();
+    default boolean ignoreDescendantDeny() {
+        return true;
+    }
 
-	String getUser();
+    boolean isAccessTypeDelegatedAdmin();
 
-	Set<String> getUserGroups();
+    String getUser();
 
-	Set<String> getUserRoles();
+    Set<String> getUserGroups();
 
-	Date getAccessTime();
+    Set<String> getUserRoles();
 
-	String getClientIPAddress();
+    Date getAccessTime();
 
-	String getRemoteIPAddress();
+    String getClientIPAddress();
 
-	List<String> getForwardedAddresses();
+    String getRemoteIPAddress();
 
-	String getClientType();
+    List<String> getForwardedAddresses();
 
-	String getAction();
+    String getClientType();
 
-	String getRequestData();
+    String getAction();
 
-	String getSessionId();
-	
-	String getClusterName();
+    String getRequestData();
 
-	String getClusterType();
+    String getSessionId();
 
-	Map<String, Object> getContext();
+    String getClusterName();
 
-	RangerAccessRequest getReadOnlyCopy();
+    String getClusterType();
 
-	ResourceMatchingScope getResourceMatchingScope();
+    Map<String, Object> getContext();
 
-	default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
-		return Collections.emptyMap();
-	}
+    RangerAccessRequest getReadOnlyCopy();
 
-	enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }
+    ResourceMatchingScope getResourceMatchingScope();
 
-	enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
+    default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+        return Collections.emptyMap();
+    }
 
-	enum ResourceElementMatchType { NONE, SELF, CHILD, PREFIX }
+    enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }
+
+    enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
+
+    enum ResourceElementMatchType { NONE, SELF, CHILD, PREFIX }
 }

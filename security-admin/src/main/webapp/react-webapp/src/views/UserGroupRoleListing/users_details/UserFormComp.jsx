@@ -28,7 +28,7 @@ import {
   ActivationStatus,
   RegexValidation,
   UserRoles,
-  UserSource
+  UserTypes
 } from "Utils/XAEnums";
 import { toast } from "react-toastify";
 import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
@@ -71,6 +71,9 @@ function UserFormComp(props) {
   const { isEditView, userInfo } = props;
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const toastId = React.useRef(null);
+  const isExternalOrFederatedUser =
+    userInfo?.userSource == UserTypes.USER_EXTERNAL.value ||
+    userInfo?.userSource == UserTypes.USER_FEDERATED.value;
 
   const handleSubmit = async (formData) => {
     let userFormData = {};
@@ -215,11 +218,7 @@ function UserFormComp(props) {
         defaultOptions
         isMulti
         isDisabled={
-          isEditView &&
-          userInfo &&
-          userInfo.userSource == UserSource.XA_USER.value
-            ? true
-            : false
+          isEditView && userInfo && isExternalOrFederatedUser ? true : false
         }
       />
     );
@@ -229,8 +228,11 @@ function UserFormComp(props) {
     const userProps = getUserProfile();
     let disabledUserRolefield;
     if (isEditView && userInfo) {
-      if (userInfo.userSource == UserSource.XA_USER.value) {
+      if (userInfo.userSource == UserTypes.USER_EXTERNAL.value) {
         disabledUserRolefield = true;
+      }
+      if (userInfo.userSource == UserTypes.USER_FEDERATED.value) {
+        return (disabledUserRolefield = true);
       }
       if (userProps.loginId != "admin") {
         if (userInfo.name != "admin") {
@@ -297,7 +299,7 @@ function UserFormComp(props) {
     if (
       isEditView &&
       userInfo &&
-      userInfo.userSource == UserSource.XA_USER.value &&
+      userInfo.userSource == UserTypes.USER_EXTERNAL.value &&
       e.label != input.value.label
     ) {
       toast.dismiss(toastId.current);
@@ -328,7 +330,8 @@ function UserFormComp(props) {
     if (isEditView) {
       if (
         !values.firstName &&
-        userInfo.userSource !== UserSource.XA_USER.value
+        userInfo.userSource !== UserTypes.USER_EXTERNAL.value &&
+        userInfo.userSource !== UserTypes.USER_FEDERATED.value
       ) {
         errors.firstName = "Required";
       }
@@ -568,9 +571,7 @@ function UserFormComp(props) {
                             : "form-control"
                         }
                         disabled={
-                          isEditView &&
-                          userInfo &&
-                          userInfo.userSource == UserSource.XA_USER.value
+                          isEditView && userInfo && isExternalOrFederatedUser
                             ? true
                             : false
                         }
@@ -607,9 +608,7 @@ function UserFormComp(props) {
                             : "form-control"
                         }
                         disabled={
-                          isEditView &&
-                          userInfo &&
-                          userInfo.userSource == UserSource.XA_USER.value
+                          isEditView && userInfo && isExternalOrFederatedUser
                             ? true
                             : false
                         }
@@ -652,9 +651,7 @@ function UserFormComp(props) {
                             : "form-control"
                         }
                         disabled={
-                          isEditView &&
-                          userInfo &&
-                          userInfo.userSource == UserSource.XA_USER.value
+                          isEditView && userInfo && isExternalOrFederatedUser
                             ? true
                             : false
                         }

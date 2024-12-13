@@ -363,6 +363,18 @@
                 Cloudera
             </organization>
         </developer>
+        <developer>
+            <id>maheshbandal</id>
+            <name>Mahesh Bandal</name>
+            <email>maheshbandal@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
 	    <developer>
             <id>mehul</id>
             <name>Mehul Parikh</name>

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +55,7 @@ public class RangerAuthorizationFilterTest {
 
 		// auth session
 		AuthorizationSession session = createSessionMock();
-		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familiesAccessAllowed, familiesAccessDenied, familiesAccessIndeterminate, columnsAccessAllowed);
+		RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familiesAccessAllowed, familiesAccessDenied, familiesAccessIndeterminate, columnsAccessAllowed, new HashSet<>());
 
 		// evaluate access for various types of cases
 		Cell aCell = mock(Cell.class);

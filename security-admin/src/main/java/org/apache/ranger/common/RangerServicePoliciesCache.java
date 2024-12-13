@@ -453,14 +453,12 @@ public class RangerServicePoliciesCache {
 							LOG.debug("Initializing ServicePolicies cache for the first time");
 						}
 						servicePolicies = servicePoliciesFromDb;
-						pruneUnusedAttributes();
 					} else if (servicePoliciesFromDb.getPolicyDeltas() == null) {
 						// service-policies are loaded because service/service-def changed
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Complete set of policies are loaded from database, because of some disqualifying event");
 						}
 						servicePolicies = servicePoliciesFromDb;
-						pruneUnusedAttributes();
 						isCacheReloadedByDQEvent = true;
 					} else { // Previously cached service policies are still valid - no service/service-def change
 						// Rebuild policies cache from original policies and deltas
@@ -497,6 +495,7 @@ public class RangerServicePoliciesCache {
 							}
 						}
 					}
+					pruneUnusedAttributes();
 					this.deltaCache = null;
 				} else {
 					LOG.error("Could not get policies from database, from-version:[" + cachedServicePoliciesVersion + ")");

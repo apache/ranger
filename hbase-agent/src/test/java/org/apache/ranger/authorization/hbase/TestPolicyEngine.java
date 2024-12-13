@@ -82,6 +82,12 @@ public class TestPolicyEngine {
 
 		runTestsFromResourceFiles(hbaseTestResourceFiles);
 	}
+	@Test
+	public void testPolicyEngine_hbase_ignoreDescendantDeny() {
+		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase_ignoreDenyDescendant.json" };
+
+		runTestsFromResourceFiles(hbaseTestResourceFiles);
+	}
 
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {

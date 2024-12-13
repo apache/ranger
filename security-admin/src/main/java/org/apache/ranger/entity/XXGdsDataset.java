@@ -67,6 +67,15 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
     @Column(name = "additional_info")
     protected String additionalInfo;
 
+    @Column(name = "validity_schedule")
+    protected String validitySchedule;
+
+    @Column(name = "labels")
+    protected String labels;
+
+    @Column(name = "keywords")
+    protected String keywords;
+
 
     @Override
     public void setId(Long id) { this.id = id; }
@@ -110,12 +119,37 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
 
     public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
 
+    public String getValiditySchedule() {
+        return validitySchedule;
+    }
+
+    public void setValiditySchedule(String validitySchedule) {
+        this.validitySchedule = validitySchedule;
+    }
+
+    public String getLabels() {
+        return labels;
+    }
+
+    public void setLabels(String labels) {
+        this.labels = labels;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
+    }
+
     @Override
     public int getMyClassType() { return AppConstants.CLASS_TYPE_GDS_DATASET; }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, name, description, acl, termsOfUse, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, name, description, acl, termsOfUse, options, additionalInfo,
+                validitySchedule, labels, keywords);
     }
 
     @Override
@@ -139,7 +173,10 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
                Objects.equals(acl, other.acl) &&
                Objects.equals(termsOfUse, other.termsOfUse) &&
                Objects.equals(options, other.options) &&
-               Objects.equals(additionalInfo, other.additionalInfo);
+               Objects.equals(additionalInfo, other.additionalInfo) &&
+               Objects.equals(validitySchedule, other.validitySchedule) &&
+               Objects.equals(labels, other.labels) &&
+               Objects.equals(keywords, other.keywords);
     }
 
     @Override
@@ -161,6 +198,9 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
           .append("termsOfUse={").append(termsOfUse).append("} ")
           .append("options={").append(options).append("} ")
           .append("additionalInfo={").append(additionalInfo).append("} ")
+          .append("validitySchedule={").append(validitySchedule).append("} ")
+          .append("labels={").append(labels).append("} ")
+          .append("keywords={").append(keywords).append("} ")
           .append(" }");
 
         return sb;

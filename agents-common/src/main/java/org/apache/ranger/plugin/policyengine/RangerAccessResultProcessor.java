@@ -21,9 +21,8 @@ package org.apache.ranger.plugin.policyengine;
 
 import java.util.Collection;
 
-
 public interface RangerAccessResultProcessor {
-	void processResult(RangerAccessResult result);
+    void processResult(RangerAccessResult result);
 
-	void processResults(Collection<RangerAccessResult> results);
+    void processResults(Collection<RangerAccessResult> results);
 }

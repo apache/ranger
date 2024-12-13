@@ -25,12 +25,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
@@ -69,6 +71,7 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
+import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
@@ -166,6 +169,15 @@ public class TestServiceDBStore {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
+
+	private VXGroup vxGroup() {
+		VXGroup vXGroup = new VXGroup();
+		vXGroup.setId(Id);
+		vXGroup.setDescription("group test working");
+		vXGroup.setName(RangerConstants.GROUP_PUBLIC);
+		vXGroup.setIsVisible(1);
+		return vXGroup;
+	}
 
 	public void setup() {
 		RangerSecurityContext context = new RangerSecurityContext();
@@ -1999,6 +2011,25 @@ public class TestServiceDBStore {
 		policyListObj.setSortType("1");
 		policyListObj.setStartIndex(0);
 		policyListObj.setTotalCount(10);
+		
+		Set<String> groupNames = new HashSet<String>(){{add(RangerConstants.GROUP_PUBLIC);}};
+		XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
+		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+		XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
+		VXGroup vxGroup = vxGroup();
+		XXGroup xxGroup = new XXGroup();
+		xxGroup.setId(vxGroup.getId());
+		xxGroup.setName(vxGroup.getName());
+		xxGroup.setDescription(vxGroup.getDescription());
+		xxGroup.setIsVisible(vxGroup.getIsVisible());
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
+		Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
+		List<XXRole> xxRoles = new ArrayList<XXRole>();
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+		Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
 		List<RangerPolicy> dbRangerPolicy = serviceDBStore.getPolicies(filter);
 		Assert.assertNotNull(dbRangerPolicy);
@@ -2017,6 +2048,25 @@ public class TestServiceDBStore {
 		policyListObj.setSortType("1");
 		policyListObj.setStartIndex(0);
 		policyListObj.setTotalCount(10);
+		
+		Set<String> groupNames = new HashSet<String>(){{add(RangerConstants.GROUP_PUBLIC);}};
+		XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
+		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+		XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
+		VXGroup vxGroup = vxGroup();
+		XXGroup xxGroup = new XXGroup();
+		xxGroup.setId(vxGroup.getId());
+		xxGroup.setName(vxGroup.getName());
+		xxGroup.setDescription(vxGroup.getDescription());
+		xxGroup.setIsVisible(vxGroup.getIsVisible());
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
+		Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
+		List<XXRole> xxRoles = new ArrayList<XXRole>();
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+		Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
 		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
 				.getPaginatedPolicies(filter);
@@ -2113,6 +2163,25 @@ public class TestServiceDBStore {
 		SearchFilter filter = new SearchFilter();
 		filter.setParam(SearchFilter.POLICY_NAME, "policyName");
 		filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
+		
+		Set<String> groupNames = new HashSet<String>(){{add(RangerConstants.GROUP_PUBLIC);}};
+		XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
+		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+		XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
+		VXGroup vxGroup = vxGroup();
+		XXGroup xxGroup = new XXGroup();
+		xxGroup.setId(vxGroup.getId());
+		xxGroup.setName(vxGroup.getName());
+		xxGroup.setDescription(vxGroup.getDescription());
+		xxGroup.setIsVisible(vxGroup.getIsVisible());
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
+		Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
+		List<XXRole> xxRoles = new ArrayList<XXRole>();
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+		Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
 		PList<RangerPolicy> dbRangerPolicyList = serviceDBStore
 				.getPaginatedServicePolicies(serviceName, filter);
@@ -2131,6 +2200,25 @@ public class TestServiceDBStore {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+
+		Set<String> groupNames = new HashSet<String>(){{add(RangerConstants.GROUP_PUBLIC);}};
+		XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
+		Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+		XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+		XXRoleDao xxRoleDao = Mockito.mock(XXRoleDao.class);
+		VXGroup vxGroup = vxGroup();
+		XXGroup xxGroup = new XXGroup();
+		xxGroup.setId(vxGroup.getId());
+		xxGroup.setName(vxGroup.getName());
+		xxGroup.setDescription(vxGroup.getDescription());
+		xxGroup.setIsVisible(vxGroup.getIsVisible());
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
+		Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
+		List<XXRole> xxRoles = new ArrayList<XXRole>();
+		Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+		Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+		Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
 		//PList<RangerPolicy> dbRangerPolicyList =
         serviceDBStore.getPaginatedServicePolicies(rangerService.getId(), filter);
@@ -2325,7 +2413,6 @@ public void test44getMetricByTypePolicies() throws Exception {
     String                type    = "policies";
     RangerServiceList     svcList = new RangerServiceList();
     svcList.setTotalCount(10l);
-    Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
     serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
 }
 

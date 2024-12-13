@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -29,40 +28,43 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import java.util.Map;
 
 public class RangerTagAccessRequest extends RangerAccessRequestImpl {
-	private final RangerPolicyResourceMatcher.MatchType matchType;
-	public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
-		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+    private final RangerPolicyResourceMatcher.MatchType matchType;
 
-		matchType = resourceTag.getMatchType();
+    public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
+        String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
 
-		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, owner));
-		super.setUser(request.getUser());
-		super.setUserGroups(request.getUserGroups());
-		super.setUserRoles(request.getUserRoles());
-		super.setAction(request.getAction());
-		super.setAccessType(request.getAccessType());
-		super.setAccessTime(request.getAccessTime());
-		super.setRequestData(request.getRequestData());
+        matchType = resourceTag.getMatchType();
 
-		Map<String, Object> requestContext = request.getContext();
+        super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, owner));
+        super.setUser(request.getUser());
+        super.setUserGroups(request.getUserGroups());
+        super.setUserRoles(request.getUserRoles());
+        super.setAction(request.getAction());
+        super.setAccessType(request.getAccessType());
+        super.setAccessTime(request.getAccessTime());
+        super.setRequestData(request.getRequestData());
 
-		RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
-		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
-		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+        Map<String, Object> requestContext = request.getContext();
 
-		if (StringUtils.isNotEmpty(owner)) {
-			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
-		}
-		super.setContext(requestContext);
+        RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
+        RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
+        RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
-		super.setClientType(request.getClientType());
-		super.setClientIPAddress(request.getClientIPAddress());
-		super.setRemoteIPAddress(request.getRemoteIPAddress());
-		super.setForwardedAddresses(request.getForwardedAddresses());
-		super.setSessionId(request.getSessionId());
-		super.setResourceMatchingScope(request.getResourceMatchingScope());
-	}
-	public RangerPolicyResourceMatcher.MatchType getMatchType() {
-		return matchType;
-	}
+        if (StringUtils.isNotEmpty(owner)) {
+            RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
+        }
+        super.setContext(requestContext);
+
+        super.setClientType(request.getClientType());
+        super.setClientIPAddress(request.getClientIPAddress());
+        super.setRemoteIPAddress(request.getRemoteIPAddress());
+        super.setForwardedAddresses(request.getForwardedAddresses());
+        super.setSessionId(request.getSessionId());
+        super.setResourceMatchingScope(request.getResourceMatchingScope());
+        super.setIgnoreDescendantDeny(request.ignoreDescendantDeny());
+    }
+
+    public RangerPolicyResourceMatcher.MatchType getMatchType() {
+        return matchType;
+    }
 }

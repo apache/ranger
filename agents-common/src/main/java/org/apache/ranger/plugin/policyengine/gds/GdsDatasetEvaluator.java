@@ -22,16 +22,23 @@ package org.apache.ranger.plugin.policyengine.gds;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -42,7 +49,6 @@ public class GdsDatasetEvaluator {
 
     public static final GdsDatasetEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsDatasetEvalOrderComparator();
 
-
     private final DatasetInfo                     dataset;
     private final RangerServiceDef                gdsServiceDef;
     private final String                          name;
@@ -50,13 +56,12 @@ public class GdsDatasetEvaluator {
     private final List<GdsDipEvaluator>           dipEvaluators = new ArrayList<>();
     private final List<RangerPolicyEvaluator>     policyEvaluators;
 
-
     public GdsDatasetEvaluator(DatasetInfo dataset, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsDatasetEvaluator()");
 
-        this.dataset            = dataset;
-        this.gdsServiceDef      = gdsServiceDef;
-        this.name               = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
+        this.dataset       = dataset;
+        this.gdsServiceDef = gdsServiceDef;
+        this.name          = StringUtils.isBlank(dataset.getName()) ? StringUtils.EMPTY : dataset.getName();
 
         if (dataset.getValiditySchedule() != null) {
             scheduleEvaluator = new RangerValidityScheduleEvaluator(dataset.getValiditySchedule());
@@ -93,12 +98,16 @@ public class GdsDatasetEvaluator {
         return dipEvaluators.stream().anyMatch(e -> e.getProjectId().equals(projectId) && e.isActive());
     }
 
+    public boolean isInAnyProject(Set<String> projectNames) {
+        return dipEvaluators.stream().anyMatch(e -> projectNames.contains(e.getProjectEvaluator().getName()) && e.isActive());
+    }
+
     public boolean isActive() {
         return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> projectIds) {
-        LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
+    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Collection<GdsProjectEvaluator> projectsToEval) {
+        LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
 
         if (isActive()) {
             result.addDataset(getName());
@@ -107,7 +116,19 @@ public class GdsDatasetEvaluator {
                 GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
                 RangerAccessResult      datasetResult  = datasetRequest.createAccessResult();
 
-                policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
+                try {
+                    RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
+
+                    policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
+                } finally {
+                    RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
+                }
+
+                if (datasetResult.getIsAllowed()) {
+                    result.addAllowedByDataset(getName());
+                }
 
                 if (!result.getIsAllowed()) {
                     if (datasetResult.getIsAllowed()) {
@@ -122,10 +143,10 @@ public class GdsDatasetEvaluator {
                 }
             }
 
-            dipEvaluators.stream().filter(e -> !projectIds.contains(e.getProjectId()) && e.isAllowed(request) && e.getProjectEvaluator().isActive()).map(GdsDipEvaluator::getProjectId).forEach(projectIds::add);
+            dipEvaluators.stream().filter(e -> e.isAllowed(request) && e.getProjectEvaluator().isActive()).forEach(dip -> projectsToEval.add(dip.getProjectEvaluator()));
         }
 
-        LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
+        LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {

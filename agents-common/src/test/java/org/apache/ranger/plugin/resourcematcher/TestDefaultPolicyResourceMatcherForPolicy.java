@@ -19,15 +19,8 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -46,150 +39,157 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestDefaultPolicyResourceMatcherForPolicy {
-	static Gson gsonBuilder;
+    static Gson gsonBuilder;
 
-	static RangerServiceDef hdfsServiceDef;
-	static RangerServiceDef hiveServiceDef;
-	static RangerServiceDef hbaseServiceDef;
-	static RangerServiceDef tagServiceDef;
+    static RangerServiceDef hdfsServiceDef;
+    static RangerServiceDef hiveServiceDef;
+    static RangerServiceDef hbaseServiceDef;
+    static RangerServiceDef tagServiceDef;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				.setPrettyPrinting()
-				.registerTypeAdapter(RangerAccessResource.class, new TestDefaultPolicyResourceMatcherForPolicy.RangerResourceDeserializer())
-				.create();
-		initializeServiceDefs();
-	}
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+                .setPrettyPrinting()
+                .registerTypeAdapter(RangerAccessResource.class, new TestDefaultPolicyResourceMatcherForPolicy.RangerResourceDeserializer())
+                .create();
+        initializeServiceDefs();
+    }
 
-	private static void initializeServiceDefs() {
-		hdfsServiceDef = readServiceDef("hdfs");
-		hiveServiceDef = readServiceDef("hive");
-		hbaseServiceDef = readServiceDef("hbase");
-		tagServiceDef = readServiceDef("tag");
-	}
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+    }
 
-	private static RangerServiceDef readServiceDef(String name) {
-		InputStream inStream = TestDefaultPolicyResourceMatcherForPolicy.class.getResourceAsStream("/admin/service-defs/test-" + name + "-servicedef.json");
-		InputStreamReader reader = new InputStreamReader(inStream);
-		return gsonBuilder.fromJson(reader, RangerServiceDef.class);
-	}
+    @Before
+    public void setUp() throws Exception {
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+    @After
+    public void tearDown() throws Exception {
+    }
 
-	@Before
-	public void setUp() throws Exception {
-	}
+    @Test
+    public void testDefaultPolicyResourceMatcherForHdfs() throws Exception {
+        String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json"};
 
-	@After
-	public void tearDown() throws Exception {
-	}
+        runTestsFromResourceFiles(tests, null);
+    }
 
-	@Test
-	public void testDefaultPolicyResourceMatcherForHdfs() throws Exception {
-		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher_for_hdfs_policy.json" };
+    @Test
+    public void testDefaultPolicyResourceMatcherForHive() throws Exception {
+        String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
 
-		runTestsFromResourceFiles(tests, null);
-	}
+        runTestsFromResourceFiles(tests, null);
+    }
 
-	@Test
-	public void testDefaultPolicyResourceMatcherForHive() throws Exception {
-		String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
+    @Test
+    public void testDefaultPolicyResourceMatcherForHive_ResourceSpecific() throws Exception {
+        String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
 
-		runTestsFromResourceFiles(tests, null);
-	}
+        runTestsFromResourceFiles(tests, hiveServiceDef);
+    }
 
-	@Test
-	public void testDefaultPolicyResourceMatcherForHive_ResourceSpecific() throws Exception {
-		String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_for_hive_policy.json"};
+    private static void initializeServiceDefs() {
+        hdfsServiceDef  = readServiceDef("hdfs");
+        hiveServiceDef  = readServiceDef("hive");
+        hbaseServiceDef = readServiceDef("hbase");
+        tagServiceDef   = readServiceDef("tag");
+    }
 
-		runTestsFromResourceFiles(tests, hiveServiceDef);
-	}
+    private static RangerServiceDef readServiceDef(String name) {
+        InputStream       inStream = TestDefaultPolicyResourceMatcherForPolicy.class.getResourceAsStream("/admin/service-defs/test-" + name + "-servicedef.json");
+        InputStreamReader reader   = new InputStreamReader(inStream);
+        return gsonBuilder.fromJson(reader, RangerServiceDef.class);
+    }
 
-	private void runTestsFromResourceFiles(String[] resourceNames, RangerServiceDef serviceDef) throws Exception {
-		for(String resourceName : resourceNames) {
-			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader = new InputStreamReader(inStream, Charset.defaultCharset());
+    private void runTestsFromResourceFiles(String[] resourceNames, RangerServiceDef serviceDef) throws Exception {
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream, Charset.defaultCharset());
 
-			runTests(reader, serviceDef);
-		}
-	}
+            runTests(reader, serviceDef);
+        }
+    }
 
-	private void runTests(InputStreamReader reader, RangerServiceDef serviceDef) throws Exception {
-		DefaultPolicyResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, DefaultPolicyResourceMatcherTestCases.class);
+    private void runTests(InputStreamReader reader, RangerServiceDef serviceDef) throws Exception {
+        DefaultPolicyResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, DefaultPolicyResourceMatcherTestCases.class);
 
-		for (DefaultPolicyResourceMatcherTestCases.TestCase testCase : testCases.testCases) {
-			runTest(testCase, serviceDef == null ? testCases.serviceDef : serviceDef);
-		}
-	}
-	private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) throws Exception {
+        for (DefaultPolicyResourceMatcherTestCases.TestCase testCase : testCases.testCases) {
+            runTest(testCase, serviceDef == null ? testCases.serviceDef : serviceDef);
+        }
+    }
 
-		assertTrue("invalid input: " , testCase != null && testCase.tests != null);
+    private void runTest(DefaultPolicyResourceMatcherTestCases.TestCase testCase, RangerServiceDef serviceDef) {
+        assertTrue("invalid input: ", testCase != null && testCase.tests != null);
 
-		RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
-		matcher.setServiceDef(serviceDef);
-		matcher.setPolicyResources(testCase.policyResources);
-		matcher.init();
+        RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+        matcher.setServiceDef(serviceDef);
+        matcher.setPolicyResources(testCase.policyResources);
+        matcher.init();
 
-		for(DefaultPolicyResourceMatcherTestCases.TestCase.OneTest oneTest : testCase.tests) {
-			if(oneTest == null) {
-				continue;
-			}
+        for (DefaultPolicyResourceMatcherTestCases.TestCase.OneTest oneTest : testCase.tests) {
+            if (oneTest == null) {
+                continue;
+            }
 
-			boolean expected = oneTest.result;
-			RangerPolicyResourceMatcher.MatchScope scope;
-			if (StringUtils.equalsIgnoreCase(oneTest.type, "selfOrDescendantMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_DESCENDANT;
-			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "descendantMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.DESCENDANT;
-			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "exactMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.SELF;
-			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "selfOrAncestorMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
-			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
-			} else if (StringUtils.equalsIgnoreCase(oneTest.type, "anyMatch")) {
-				scope = RangerPolicyResourceMatcher.MatchScope.ANY;
-			} else {
-				continue;
-			}
-			boolean result = matcher.isMatch(oneTest.policy, scope, oneTest.evalContext);
+            boolean                                expected = oneTest.result;
+            RangerPolicyResourceMatcher.MatchScope scope;
+            if (StringUtils.equalsIgnoreCase(oneTest.type, "selfOrDescendantMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_DESCENDANT;
+            } else if (StringUtils.equalsIgnoreCase(oneTest.type, "descendantMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.DESCENDANT;
+            } else if (StringUtils.equalsIgnoreCase(oneTest.type, "exactMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.SELF;
+            } else if (StringUtils.equalsIgnoreCase(oneTest.type, "selfOrAncestorMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
+            } else if (StringUtils.equalsIgnoreCase(oneTest.type, "ancestorMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.ANCESTOR;
+            } else if (StringUtils.equalsIgnoreCase(oneTest.type, "anyMatch")) {
+                scope = RangerPolicyResourceMatcher.MatchScope.ANY;
+            } else {
+                continue;
+            }
+            boolean result = matcher.isMatch(oneTest.policy, scope, oneTest.evalContext);
 
-			assertEquals("match failed! " + ":" + testCase.name + ":" + oneTest.name + ":" + oneTest.type + ": policy=" + oneTest.policy, expected, result);
-		}
-	}
+            assertEquals("match failed! " + ":" + testCase.name + ":" + oneTest.name + ":" + oneTest.type + ": policy=" + oneTest.policy, expected, result);
+        }
+    }
 
-	private static class DefaultPolicyResourceMatcherTestCases {
-		RangerServiceDef serviceDef;
+    private static class DefaultPolicyResourceMatcherTestCases {
+        RangerServiceDef serviceDef;
 
-		List<TestCase> testCases;
+        List<TestCase> testCases;
 
-		static class TestCase {
-			String name;
-			Map<String, RangerPolicyResource> policyResources;
-			List<OneTest> tests;
+        static class TestCase {
+            String                            name;
+            Map<String, RangerPolicyResource> policyResources;
+            List<OneTest>                     tests;
 
-			static class OneTest {
-				String name;
-				String type;
-				RangerPolicy policy;
-				Map<String, Object> evalContext;
-				boolean result;
-			}
-		}
-	}
+            static class OneTest {
+                String              name;
+                String              type;
+                RangerPolicy        policy;
+                Map<String, Object> evalContext;
+                boolean             result;
+            }
+        }
+    }
 
-	private static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
-		@Override
-		public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-												JsonDeserializationContext context) throws JsonParseException {
-			return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
-		}
-	}
+    private static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
+        @Override
+        public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
+                JsonDeserializationContext context) throws JsonParseException {
+            return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
+        }
+    }
 }

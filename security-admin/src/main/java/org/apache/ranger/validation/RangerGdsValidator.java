@@ -31,11 +31,14 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
-import org.apache.ranger.plugin.model.RangerGds.RangerTagDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.view.VXResponse;
@@ -306,7 +309,7 @@ public class RangerGdsValidator {
             } else if (MapUtils.isEmpty(resource.getResource())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
-                validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(resource, dataShare, result);
 
                 if (result.isSuccess()) {
                     existing = dataProvider.getSharedResourceId(resource.getDataShareId(), new RangerPolicyResourceSignature(resource));
@@ -340,7 +343,7 @@ public class RangerGdsValidator {
             } else if (MapUtils.isEmpty(resource.getResource())) {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL, "resource", resource.getName()));
             } else {
-                validateSharedResourceCreateAndUpdate(dataShare, result);
+                validateSharedResourceCreateAndUpdate(resource, dataShare, result);
 
                 if (result.isSuccess()) {
                     boolean renamed = !StringUtils.equalsIgnoreCase(resource.getName(), existing.getName());
@@ -687,6 +690,23 @@ public class RangerGdsValidator {
         LOG.debug("<== validateDelete(dipId={}, existing={})", dipId, existing);
     }
 
+    public void validateCreateOrUpdate(RangerPolicy policy) {
+        LOG.debug("==> validateCreateOrUpdate(policy={})", policy);
+        if (policy == null || CollectionUtils.isEmpty(policy.getPolicyItems())) {
+            return;
+        }
+
+        ValidationResult result   = new ValidationResult();
+        List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+
+        validatePolicyItems(policyItems, result);
+
+        if (!result.isSuccess()) {
+            result.throwRESTException();
+        }
+        LOG.debug("<== validateCreateOrUpdate(policy={})", policy);
+    }
+
     public GdsPermission getGdsPermissionForUser(RangerGds.RangerGdsObjectACL acl, String user) {
         if (dataProvider.isAdminUser()) {
             return GdsPermission.ADMIN;
@@ -810,7 +830,7 @@ public class RangerGdsValidator {
         }
     }
 
-    private void validateSharedResourceCreateAndUpdate(RangerDataShare dataShare, ValidationResult result) {
+    private void validateSharedResourceCreateAndUpdate(RangerSharedResource resource, RangerDataShare dataShare, ValidationResult result) {
         if (!dataProvider.isAdminUser()) {
             validateAdmin(dataProvider.getCurrentUserLoginId(), "datashare", dataShare.getName(), dataShare.getAcl(), result);
 
@@ -818,6 +838,60 @@ public class RangerGdsValidator {
                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_OR_ZONE_ADMIN, null, dataShare.getService(), dataShare.getZone()));
             }
         }
+        validatePolicyResourceValuesNotEmpty(resource.getResource(), result);
+    }
+
+    private void validatePolicyResourceValuesNotEmpty(Map<String, RangerPolicyResource> resourceMap, ValidationResult result) {
+        for (String resourceName : resourceMap.keySet()) {
+            List<String> resourceValues = resourceMap.get(resourceName).getValues();
+            if (CollectionUtils.isEmpty(resourceValues)) {
+                result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE, null, resourceName));
+            } else {
+                for (String value : resourceValues) {
+                    if (StringUtils.isEmpty(value) || StringUtils.isBlank(value)) {
+                        result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE, null, resourceName));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void validatePolicyItems(List<RangerPolicyItem> policyItems, ValidationResult result) {
+        if (CollectionUtils.isEmpty(policyItems)) {
+            return;
+        }
+
+        for (RangerPolicyItem policyItem : policyItems) {
+            if (policyItem == null) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM);
+                continue;
+            }
+
+            boolean hasNoPrincipals = CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles());
+            boolean hasInvalidUsers = policyItem.getUsers() != null && policyItem.getUsers().stream().anyMatch(StringUtils::isBlank);
+            boolean hasInvalidGroups = policyItem.getGroups() != null && policyItem.getGroups().stream().anyMatch(StringUtils::isBlank);
+            boolean hasInvalidRoles = policyItem.getRoles() != null && policyItem.getRoles().stream().anyMatch(StringUtils::isBlank);
+
+            if (hasNoPrincipals || hasInvalidUsers || hasInvalidGroups || hasInvalidRoles) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS);
+            }
+
+            if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null)) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS);
+                continue;
+            }
+
+            boolean hasInvalidAccesses = policyItem.getAccesses().stream().anyMatch(itemAccess -> StringUtils.isBlank(itemAccess.getType()));
+
+            if (hasInvalidAccesses) {
+                addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS_TYPE);
+            }
+        }
+    }
+
+    private void addValidationFailure(ValidationResult result, ValidationErrorCode errorCode) {
+        result.addValidationFailure(new ValidationFailureDetails(errorCode, "policy items"));
     }
 
     private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {
@@ -918,12 +992,12 @@ public class RangerGdsValidator {
         }
     }
 
-    private void validateMaskTypes(String serviceName, String fieldName, List<RangerTagDataMaskInfo> maskTypes, ValidationResult result) {
+    private void validateMaskTypes(String serviceName, String fieldName, List<RangerGdsMaskInfo> maskTypes, ValidationResult result) {
         if (maskTypes != null && !maskTypes.isEmpty()) {
             Set<String> validMaskTypes = dataProvider.getMaskTypes(serviceName);
 
-            for (RangerTagDataMaskInfo tagMaskInfo : maskTypes) {
-                RangerPolicyItemDataMaskInfo maskInfo = tagMaskInfo.getMaskInfo();
+            for (RangerGdsMaskInfo maskType : maskTypes) {
+                RangerPolicyItemDataMaskInfo maskInfo = maskType.getMaskInfo();
                 if (!validMaskTypes.contains(maskInfo.getDataMaskType())) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_MASK_TYPE, fieldName, maskInfo.getDataMaskType()));
                 }

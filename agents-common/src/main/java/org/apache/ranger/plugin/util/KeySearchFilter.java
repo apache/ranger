@@ -19,117 +19,117 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-
 public class KeySearchFilter {
-	public static final String KEY_NAME    = "name";// search, sort
-	
-	public static final String START_INDEX     = "startIndex";
-	public static final String PAGE_SIZE       = "pageSize";
-	public static final String SORT_BY         = "sortBy";
-	
-	private Map<String, String> params;
-	private int                 startIndex;
-	private int                 maxRows    = Integer.MAX_VALUE;
-	private boolean             getCount   = true;
-	private String              sortBy;
-	private String              sortType;
-	
-	public KeySearchFilter() {
-		this(null);
-	}
+    public static final String KEY_NAME    = "name"; // search, sort
+    public static final String START_INDEX = "startIndex";
+    public static final String PAGE_SIZE   = "pageSize";
+    public static final String SORT_BY     = "sortBy";
 
-	public KeySearchFilter(String name, String value) {
-		setParam(name, value);
-	}
+    private Map<String, String> params;
+    private int                 startIndex;
+    private int                 maxRows  = Integer.MAX_VALUE;
+    private boolean             getCount = true;
+    private String              sortBy;
+    private String              sortType;
 
-	public KeySearchFilter(Map<String, String> values) {
-		setParams(values);
-	}
+    public KeySearchFilter() {
+        this(null);
+    }
 
-	public Map<String, String> getParams() {
-		return params;
-	}
+    public KeySearchFilter(String name, String value) {
+        setParam(name, value);
+    }
 
-	public void setParams(Map<String, String> params) {
-		this.params = params;
-	}
+    public KeySearchFilter(Map<String, String> values) {
+        setParams(values);
+    }
 
-	public String getParam(String name) {
-		return params == null ? null : params.get(name);
-	}
+    public Map<String, String> getParams() {
+        return params;
+    }
 
-	public void setParam(String name, String value) {
-		if(StringUtils.isEmpty(name) || StringUtils.isEmpty(value)) {
-			return;
-		}
+    public void setParams(Map<String, String> params) {
+        this.params = params;
+    }
 
-		if(params == null) {
-			params = new HashMap<>();
-		}
+    public String getParam(String name) {
+        return params == null ? null : params.get(name);
+    }
 
-		params.put(name, value);
-	}
-	public boolean isEmpty() {
-		return MapUtils.isEmpty(params);
-	}
-	
-	public int getStartIndex() {
-		return startIndex;
-	}
-	
-	public void setStartIndex(int startIndex) {
-		this.startIndex = startIndex;
-	}
+    public void setParam(String name, String value) {
+        if (StringUtils.isEmpty(name) || StringUtils.isEmpty(value)) {
+            return;
+        }
 
-	public int getMaxRows() {
-		return maxRows;
-	}
+        if (params == null) {
+            params = new HashMap<>();
+        }
 
-	public void setMaxRows(int maxRows) {
-		this.maxRows = maxRows;
-	}
-	
-	public boolean isGetCount() {
-		return getCount;
-	}
+        params.put(name, value);
+    }
 
-	public void setGetCount(boolean getCount) {
-		this.getCount = getCount;
-	}
-	
-	public String getSortBy() {
-		return sortBy;
-	}
+    public boolean isEmpty() {
+        return MapUtils.isEmpty(params);
+    }
 
-	public void setSortBy(String sortBy) {
-		this.sortBy = sortBy;
-	}
-	
-	public String getSortType() {
-		return sortType;
-	}
+    public int getStartIndex() {
+        return startIndex;
+    }
 
-	public void setSortType(String sortType) {
-		this.sortType = sortType;
-	}
+    public void setStartIndex(int startIndex) {
+        this.startIndex = startIndex;
+    }
 
-	@Override
-	public boolean equals(Object object) {
-		if (object == null || !(object instanceof KeySearchFilter)) {
-			return false;
-		}
-		KeySearchFilter that = (KeySearchFilter)object;
-		return Objects.equals(params, that.params);
-	}
-	
-	@Override
-	public int hashCode() {
-		return Objects.hash(params);
-	}
+    public int getMaxRows() {
+        return maxRows;
+    }
+
+    public void setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
+    }
+
+    public boolean isGetCount() {
+        return getCount;
+    }
+
+    public void setGetCount(boolean getCount) {
+        this.getCount = getCount;
+    }
+
+    public String getSortBy() {
+        return sortBy;
+    }
+
+    public void setSortBy(String sortBy) {
+        this.sortBy = sortBy;
+    }
+
+    public String getSortType() {
+        return sortType;
+    }
+
+    public void setSortType(String sortType) {
+        this.sortType = sortType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(params);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof KeySearchFilter)) {
+            return false;
+        }
+        KeySearchFilter that = (KeySearchFilter) object;
+        return Objects.equals(params, that.params);
+    }
 }

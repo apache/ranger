@@ -105,12 +105,12 @@
     }
   ],
   "dataShares": [
-    { "id": 1, "name": "hive-sales-2023",         "zoneName": "sales",    "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 2, "name": "hive-finance-2023",       "zoneName": "finance",  "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 3, "name": "hive-shipping-2023",      "zoneName": "shipping", "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 4, "name": "hive-new-customers-2023", "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 5, "name": "hive-facilities",         "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
-    { "id": 6, "name": "hive-eu-customers",       "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] }
+    { "id": 1, "name": "hive-sales",         "zoneName": "sales",    "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 2, "name": "hive-finance",       "zoneName": "finance",  "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 3, "name": "hive-shipping",      "zoneName": "shipping", "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 4, "name": "hive-new-customers", "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 5, "name": "hive-facilities",    "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] },
+    { "id": 6, "name": "hive-customers",     "zoneName": "",         "conditionExpr": "", "defaultAccessTypes": [ "_READ" ], "defaultTagMasks": [ ] }
   ],
   "dshids": [
     { "dataShareId": 1, "datasetId": 1, "status": "ACTIVE", "validitySchedule": null },
@@ -132,60 +132,44 @@
   "resources": [
     {
       "id": 11, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "prospects" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "prospects" ] } },
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 12, "dataShareId": 1, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "orders" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "resource": { "database": { "values": [ "sales" ] }, "table": { "values": [ "orders" ] } },
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 21, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "invoices" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "invoices" ] } },
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 22, "dataShareId": 2, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "payments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "resource": { "database": { "values": [ "finance" ] }, "table": { "values": [ "payments" ] } },
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 31, "dataShareId": 3, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "shipping" ] }, "table": { "values": [ "shipments" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
-      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": { }
+      "resource": { "database": { "values": [ "shipping" ] }, "table": { "values": [ "shipments" ] } },
+      "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": [ ]
     },
     {
       "id": 41, "dataShareId": 4, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } }, "rowFilter": { "filterExpr": "created_time >= '2023-01-01' and created_time < '2024-01-01'" },
+      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } },
       "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
     },
     {
       "id": 51, "dataShareId": 5, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "operations" ] }, "table": { "values": [ "facilities" ] } }, "rowFilter": null,
+      "resource": { "database": { "values": [ "operations" ] }, "table": { "values": [ "facilities" ] } },
       "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
     },
     {
       "id": 61, "dataShareId": 6, "conditionExpr": "", "accessTypes": [ "select" ],
-      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } }, "rowFilter": { "filterExpr": "country = 'US'" },
+      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } },
       "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
     }
   ],
-  "gdsServiceDef": {
-    "name": "gds",
-    "id":   3,
-    "resources": [
-      { "name": "dataset-id", "level":1, "parent": "", "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": false, "ignoreCase": true }, "label": "Dataset ID", "description": "Dataset ID" },
-      { "name": "project-id", "level":1, "parent": "", "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": false, "ignoreCase": true }, "label": "Project ID", "description": "Project ID" }
-    ],
-    "accessTypes":[
-      { "itemId": 1, "name": "_CREATE",  "label": "_CREATE" },
-      { "itemId": 2, "name": "_READ",    "label": "_READ" },
-      { "itemId": 3, "name": "_UPDATE",  "label": "_UPDATE" },
-      { "itemId": 4, "name": "_DELETE",  "label": "_DELETE" },
-      { "itemId": 5, "name": "_MANAGE",  "label": "_MANAGE" },
-      { "itemId": 6, "name": "_ALL",     "label": "_ALL" }
-    ]
-  },
   "gdsVersion": 1
 }

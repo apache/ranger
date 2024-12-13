@@ -288,7 +288,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return authentication;
 			}
 		} catch (Exception e) {
-			logger.debug("LDAP Authentication Failed:", e);
+			logger.error("LDAP Authentication Failed:", e);
 		}
 		return authentication;
 	}
@@ -333,7 +333,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return authentication;
 			}
 		}catch (Exception e) {
-			logger.debug("AD Authentication Failed:", e);
+			logger.error("AD Authentication Failed:", e);
 		}
 		return authentication;
 	}
@@ -523,7 +523,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return authentication;
 			}
 		} catch (Exception e) {
-			logger.debug("AD Authentication Failed:", e);
+			logger.error("AD bind Authentication Failed:", e);
 		}
 		return authentication;
 	}
@@ -595,7 +595,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				return authentication;
 			}
 		} catch (Exception e) {
-			logger.debug("LDAP Authentication Failed:", e);
+			logger.error("LDAP bind Authentication Failed:", e);
 		}
 		return authentication;
 	}
