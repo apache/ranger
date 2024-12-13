@@ -62,14 +62,16 @@ public class SubsetQueryPlugin extends QParserPlugin {
 
                 LongValuesSource  minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
                 Collection<Query> queries            = new ArrayList<>();
-
-                String fieldVals = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
+                String            fieldVals          = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
+ 
                 for (String v : fieldVals.split(",")) {
                     queries.add(new TermQuery(new Term(fieldName, v)));
                 }
+
                 if (wildcardToken != null && !wildcardToken.isEmpty()) {
                     queries.add(new TermQuery(new Term(fieldName, wildcardToken)));
                 }
+
                 if (allowMissingValues) {
                     // To construct this query we need to do a little trick tho construct a test for an empty field as follows:
                     // (*:* AND -fieldName:*) ==> parses as: (+*:* -fieldName:*)
@@ -77,11 +79,13 @@ public class SubsetQueryPlugin extends QParserPlugin {
                     // therefore we need to AND with *:*
                     // We can then pass this BooleanQuery to the CoveringQuery as one of its allowed matches.
                     BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
                     builder.add(new BooleanClause(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD));
                     builder.add(new BooleanClause(new WildcardQuery(new Term(fieldName, "*")), BooleanClause.Occur.MUST_NOT));
 
                     queries.add(builder.build());
                 }
+
                 return new CoveringQuery(queries, minimumNumberMatch);
             }
         };
