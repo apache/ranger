@@ -46,7 +46,8 @@ import java.util.Map;
 class SolrAuthzUtil {
     private static final Logger LOG = LoggerFactory.getLogger(SolrAuthzUtil.class);
 
-    private SolrAuthzUtil(){
+    private SolrAuthzUtil() {
+        // to block instantiation
     }
 
     /**
@@ -55,8 +56,10 @@ class SolrAuthzUtil {
      */
     static List<String> getConfigAuthorizables(AuthorizationContext ctx) {
         List<String> result = new ArrayList<>(1);
+
         if (ctx.getHandler() instanceof ConfigSetsHandler) { // For Solr configset APIs
             String name = ctx.getParams().get(CommonParams.NAME);
+
             if (name != null) {
                 result.add(name);
             }
@@ -65,9 +68,12 @@ class SolrAuthzUtil {
                 result.add(r.collectionName);
             }
         }
+
         if (result.isEmpty()) {
-            LOG.debug("Missing collection name for the config operation with authorization context {}."
-                    + " Using * permissions for authorization check", toString(ctx));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Missing collection name for the config operation with authorization context {}. Using * permissions for authorization check", toString(ctx));
+            }
+
             result.add("*");
         }
 
@@ -80,12 +86,15 @@ class SolrAuthzUtil {
      */
     static List<String> getSchemaAuthorizables(AuthorizationContext ctx) {
         List<String> result = new ArrayList<>(1);
+
         for (CollectionRequest r : ctx.getCollectionRequests()) {
             result.add(r.collectionName);
         }
+
         if (result.isEmpty()) {
-            LOG.debug("Missing collection name for the schema operation with authorization context {}."
-                    + " Using * permissions for authorization check", toString(ctx));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Missing collection name for the schema operation with authorization context {}. Using * permissions for authorization check", toString(ctx));
+            }
             result.add("*");
         }
 
@@ -100,24 +109,29 @@ class SolrAuthzUtil {
     static Map<String, RangerSolrConstants.AccessType> getCollectionsForAdminOp(AuthorizationContext ctx) {
         String           actionName = ctx.getParams().get(CoreAdminParams.ACTION);
         CollectionAction action     = CollectionAction.get(actionName);
+
         if (action != null) {
             switch (action) {
                 case LISTSNAPSHOTS:
                 case BACKUP: {
                     String name = ctx.getParams().get(CollectionAdminParams.COLLECTION);
+
                     return (name != null) ? Collections.singletonMap(name, RangerSolrConstants.AccessType.QUERY) : Collections.emptyMap();
                 }
 
                 case MIGRATE: {
                     Map<String, RangerSolrConstants.AccessType> result = new HashMap<>();
-                    String                                       source = ctx.getParams().get(CollectionAdminParams.COLLECTION);
-                    String                                       target = ctx.getParams().get("target." + CollectionAdminParams.COLLECTION);
+                    String                                      source = ctx.getParams().get(CollectionAdminParams.COLLECTION);
+                    String                                      target = ctx.getParams().get("target." + CollectionAdminParams.COLLECTION);
+
                     if (source != null) {
                         result.put(source, RangerSolrConstants.AccessType.QUERY);
                     }
+
                     if (target != null) {
                         result.put(source, RangerSolrConstants.AccessType.UPDATE);
                     }
+
                     return result;
                 }
 
@@ -130,8 +144,8 @@ class SolrAuthzUtil {
                 case RELOAD:
                 case CREATE: {
                     String name = ctx.getParams().get(CommonParams.NAME);
-                    return (name != null) ? Collections.singletonMap(name, RangerSolrConstants.AccessType.UPDATE)
-                            : Collections.emptyMap();
+
+                    return (name != null) ? Collections.singletonMap(name, RangerSolrConstants.AccessType.UPDATE) : Collections.emptyMap();
                 }
 
                 case DELETESNAPSHOT:
@@ -149,6 +163,7 @@ class SolrAuthzUtil {
                 case DELETEREPLICA:
                 case MODIFYCOLLECTION: {
                     String name = ctx.getParams().get(CollectionAdminParams.COLLECTION);
+
                     return (name != null) ? Collections.singletonMap(name, RangerSolrConstants.AccessType.UPDATE) : Collections.emptyMap();
                 }
 
@@ -182,14 +197,15 @@ class SolrAuthzUtil {
     static Map<String, RangerSolrConstants.AccessType> getCoresForAdminOp(AuthorizationContext ctx) {
         String          actionName = ctx.getParams().get(CoreAdminParams.ACTION);
         CoreAdminAction action     = CoreAdminAction.get(actionName);
+
         if (action != null) {
             switch (action) {
                 case REQUESTBUFFERUPDATES:
                 case REQUESTAPPLYUPDATES:
                 case CREATE: {
                     String coreName = ctx.getParams().get(CoreAdminParams.NAME);
-                    return (coreName != null) ? Collections.singletonMap(coreName, RangerSolrConstants.AccessType.UPDATE)
-                            : Collections.emptyMap();
+
+                    return (coreName != null) ? Collections.singletonMap(coreName, RangerSolrConstants.AccessType.UPDATE) : Collections.emptyMap();
                 }
 
                 case REQUESTSTATUS:
@@ -214,6 +230,7 @@ class SolrAuthzUtil {
                 case RENAME:
                 case RELOAD: {
                     String coreName = ctx.getParams().get(CoreAdminParams.CORE);
+
                     return (coreName != null) ? Collections.singletonMap(coreName, RangerSolrConstants.AccessType.UPDATE) : Collections.emptyMap();
                 }
 
@@ -221,18 +238,22 @@ class SolrAuthzUtil {
                 case BACKUPCORE:
                 case STATUS: {
                     String coreName = ctx.getParams().get(CoreAdminParams.CORE);
+
                     return (coreName != null) ? Collections.singletonMap(coreName, RangerSolrConstants.AccessType.QUERY) : Collections.emptyMap();
                 }
                 case SWAP: {
                     Map<String, RangerSolrConstants.AccessType> result = new HashMap<>();
-                    String                                       core1  = ctx.getParams().get(CoreAdminParams.CORE);
-                    String                                       core2  = ctx.getParams().get("other");
+                    String                                      core1  = ctx.getParams().get(CoreAdminParams.CORE);
+                    String                                      core2  = ctx.getParams().get("other");
+
                     if (core1 != null) {
                         result.put(core1, RangerSolrConstants.AccessType.UPDATE);
                     }
+
                     if (core2 != null) {
                         result.put(core2, RangerSolrConstants.AccessType.UPDATE);
                     }
+
                     return result;
                 }
             }
@@ -243,6 +264,7 @@ class SolrAuthzUtil {
 
     static String toString(AuthorizationContext ctx) {
         StringBuilder builder = new StringBuilder();
+
         builder.append("AuthorizationContext {");
         builder.append("userPrincipal : ");
         builder.append(ctx.getUserPrincipal().getName());
