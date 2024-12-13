@@ -34,7 +34,6 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.QParserPlugin;
-import org.apache.solr.search.SyntaxError;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,36 +44,30 @@ import java.util.Collection;
  * and the set against which subset queries are to be run ( as a comma separated string values).
  */
 public class SubsetQueryPlugin extends QParserPlugin {
-    public static final String SETVAL_PARAM_NAME = "set_value";
-    public static final String SETVAL_FIELD_NAME = "set_field";
-    public static final String COUNT_FIELD_NAME = "count_field";
+    public static final String SETVAL_PARAM_NAME   = "set_value";
+    public static final String SETVAL_FIELD_NAME   = "set_field";
+    public static final String COUNT_FIELD_NAME    = "count_field";
     public static final String MISSING_VAL_ALLOWED = "allow_missing_val";
-    public static final String WILDCARD_CHAR = "wildcard_token";
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void init(NamedList arg0) {
-    }
+    public static final String WILDCARD_CHAR       = "wildcard_token";
 
     @Override
     public QParser createParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req) {
         return new QParser(qstr, localParams, params, req) {
-
             @Override
-            public Query parse() throws SyntaxError {
-                String fieldName = Preconditions.checkNotNull(localParams.get(SETVAL_FIELD_NAME));
-                String countFieldName = Preconditions.checkNotNull(localParams.get(COUNT_FIELD_NAME));
+            public Query parse() {
+                String  fieldName          = Preconditions.checkNotNull(localParams.get(SETVAL_FIELD_NAME));
+                String  countFieldName     = Preconditions.checkNotNull(localParams.get(COUNT_FIELD_NAME));
                 boolean allowMissingValues = Boolean.parseBoolean(Preconditions.checkNotNull(localParams.get(MISSING_VAL_ALLOWED)));
-                String wildcardToken = localParams.get(WILDCARD_CHAR);
+                String  wildcardToken      = localParams.get(WILDCARD_CHAR);
 
-                LongValuesSource minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
-                Collection<Query> queries = new ArrayList<>();
+                LongValuesSource  minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
+                Collection<Query> queries            = new ArrayList<>();
 
                 String fieldVals = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
                 for (String v : fieldVals.split(",")) {
                     queries.add(new TermQuery(new Term(fieldName, v)));
                 }
-                if (wildcardToken != null && !wildcardToken.equals("")) {
+                if (wildcardToken != null && !wildcardToken.isEmpty()) {
                     queries.add(new TermQuery(new Term(fieldName, wildcardToken)));
                 }
                 if (allowMissingValues) {
@@ -94,4 +87,7 @@ public class SubsetQueryPlugin extends QParserPlugin {
         };
     }
 
+    @Override
+    public void init(NamedList arg0) {
+    }
 }

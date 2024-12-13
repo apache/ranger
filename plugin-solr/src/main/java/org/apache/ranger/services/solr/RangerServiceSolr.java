@@ -19,91 +19,82 @@
 
 package org.apache.ranger.services.solr;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.services.solr.client.ServiceSolrClient;
+import org.apache.ranger.services.solr.client.ServiceSolrConnectionMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
-import org.apache.ranger.plugin.service.RangerBaseService;
-import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.services.solr.client.ServiceSolrClient;
-import org.apache.ranger.services.solr.client.ServiceSolrConnectionMgr;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerServiceSolr extends RangerBaseService {
+    private static final Logger LOG               = LoggerFactory.getLogger(RangerServiceSolr.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSolr.class);
-	public static final String ACCESS_TYPE_QUERY  = RangerSolrConstants.ACCESS_TYPE.QUERY.toString();
+    public static final  String ACCESS_TYPE_QUERY = RangerSolrConstants.AccessType.QUERY.toString();
 
-	public RangerServiceSolr() {
-		super();
-	}
+    public RangerServiceSolr() {
+        super();
+    }
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceSolr.getDefaultRangerPolicies()");
-		}
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
-		for (RangerPolicy defaultPolicy : ret) {
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_QUERY)));
-				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.addPolicyItem(policyItemForLookupUser);
-			}
-		}
+        LOG.debug("==> RangerServiceSolr.validateConfig Service: ({} )", serviceName);
 
-		if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceSolr.getDefaultRangerPolicies()");
+        if (configs != null) {
+            try {
+                ret = ServiceSolrConnectionMgr.connectionTest(serviceName,
+                        configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceSolr.validateConfig Error:", e);
+                throw e;
+            }
         }
-		return ret;
-	}
+        LOG.debug("<== RangerServiceSolr.validateConfig Response : ({} )", ret);
 
-	@Override
-	public Map<String, Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String serviceName = getServiceName();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceSolr.validateConfig Service: ("
-					+ serviceName + " )");
-		}
-		if (configs != null) {
-			try {
-				ret = ServiceSolrConnectionMgr.connectionTest(serviceName,
-						configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceSolr.validateConfig Error:", e);
-				throw e;
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceSolr.validateConfig Response : (" + ret
-					+ " )");
-		}
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context)
-			throws Exception {
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        ServiceSolrClient serviceSolrClient = ServiceSolrConnectionMgr.getSolrClient(serviceName, configs);
+        return serviceSolrClient.getResources(context);
+    }
 
-		ServiceSolrClient serviceSolrClient = ServiceSolrConnectionMgr
-				.getSolrClient(serviceName, configs);
-		return serviceSolrClient.getResources(context);
-	}
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceSolr.getDefaultRangerPolicies()");
+
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        for (RangerPolicy defaultPolicy : ret) {
+            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_QUERY)));
+                policyItemForLookupUser.setDelegateAdmin(false);
+                defaultPolicy.addPolicyItem(policyItemForLookupUser);
+            }
+        }
+
+        LOG.debug("<== RangerServiceSolr.getDefaultRangerPolicies()");
+
+        return ret;
+    }
 }
