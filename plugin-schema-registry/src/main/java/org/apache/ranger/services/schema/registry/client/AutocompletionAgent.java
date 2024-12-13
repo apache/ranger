@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * The class that is used to get needed information for auto-completion feature.
  */
 public class AutocompletionAgent {
-    private static final Logger LOG        = LoggerFactory.getLogger(AutocompletionAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AutocompletionAgent.class);
 
     private static final String errMessage = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
     private static final String successMsg = "ConnectionTest Successful";
@@ -63,6 +63,7 @@ public class AutocompletionAgent {
             LOG.debug("ConnectionTest Successful");
         } catch (Exception e) {
             LOG.error("Error connecting to SchemaRegistry. schemaRegistryClient={}", this, e);
+
             BaseClient.generateResponseDataMap(false, errMessage, errMessage, null, null, responseData);
         }
 
@@ -72,6 +73,7 @@ public class AutocompletionAgent {
     public List<String> getSchemaGroupList(String lookupGroupName, List<String> groupList) {
         List<String>       res          = groupList;
         Collection<String> schemaGroups = client.getSchemaGroups();
+
         schemaGroups.forEach(gName -> {
             if (!res.contains(gName) && gName.contains(lookupGroupName)) {
                 res.add(gName);
@@ -82,9 +84,9 @@ public class AutocompletionAgent {
     }
 
     public List<String> getSchemaMetadataList(String lookupSchemaMetadataName, List<String> schemaGroupList, List<String> schemaMetadataList) {
-        List<String> res = schemaMetadataList;
-
+        List<String>       res     = schemaMetadataList;
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
+
         schemas.forEach(sName -> {
             if (!res.contains(sName) && sName.contains(lookupSchemaMetadataName)) {
                 res.add(sName);
@@ -95,7 +97,7 @@ public class AutocompletionAgent {
     }
 
     public List<String> getBranchList(String lookupBranchName, List<String> groupList, List<String> schemaList, List<String> branchList) {
-        List<String> res = branchList;
+        List<String> res                = branchList;
         List<String> expandedSchemaList = schemaList.stream().flatMap(schemaName -> expandSchemaMetadataNameRegex(groupList, schemaName).stream()).collect(Collectors.toList());
 
         expandedSchemaList.forEach(schemaMetadataName -> {
@@ -116,9 +118,9 @@ public class AutocompletionAgent {
     }
 
     List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
-        List<String> res = new ArrayList<>();
-
+        List<String>       res     = new ArrayList<>();
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
+
         schemas.forEach(sName -> {
             if (sName.matches(lookupSchemaMetadataName)) {
                 res.add(sName);
