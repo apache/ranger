@@ -71,7 +71,7 @@ Docker files in this folder create docker images and run them to build Apache Ra
    docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml up -d
    ~~~
 
-	- valid values for RANGER_DB_TYPE: mysql or postgres
+	- valid values for RANGER_DB_TYPE: mysql or postgres or oracle
 9. To run ranger enabled Trino in containers (Requires docker build with JDK 11):
    ~~~
    docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-trino.yml up -d
