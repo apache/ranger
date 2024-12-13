@@ -64,7 +64,8 @@ public class RangerSolrConstants {
     public static final String SCHEMA_KEY             = "schema";
     public static final long   LOOKUP_TIMEOUT_SEC     = 5;
 
-    private RangerSolrConstants(){
+    private RangerSolrConstants() {
+        // to block instantiation
     }
 
     public enum MatchType {
