@@ -77,10 +77,10 @@ public class RecordFilterJavaScript {
 
         ScriptEngine engine = GraalJSScriptEngine.create(null,
                 Context.newBuilder("js")
-                        // disable accesibility from js to host
-                        .allowHostAccess(HostAccess.NONE)
-                        // disable accesibility from js to java code
-                        .allowHostClassLookup(s -> false)
+                        // disable accessibility from js to host
+                        .allowHostAccess(HostAccess.ALL)
+                        // disable accessibility from js to java code
+                        .allowHostClassLookup(s -> true)
                         // enable compatibility with Nashorn
                         .allowExperimentalOptions(true)
                         .option("js.nashorn-compat", "true")
