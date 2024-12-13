@@ -50,33 +50,37 @@ import static com.hortonworks.registries.schemaregistry.client.SchemaRegistryCli
 public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultSchemaRegistryClient.class);
 
-    private static final String                             SCHEMA_REGISTRY_PATH         = "/api/v1/schemaregistry";
-    private static final String                             SCHEMAS_PATH                 = SCHEMA_REGISTRY_PATH + "/schemas/";
-    private static final String                             SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
-    private static final String                             SSL_ALGORITHM                = "TLSv1.2";
+    private static final String SCHEMA_REGISTRY_PATH         = "/api/v1/schemaregistry";
+    private static final String SCHEMAS_PATH                 = SCHEMA_REGISTRY_PATH + "/schemas/";
+    private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
+    private static final String SSL_ALGORITHM                = "TLSv1.2";
 
-    private final        javax.ws.rs.client.Client          client;
-    private final        Login                              login;
-    private final        UrlSelector                        urlSelector;
-    private final        Map<String, SchemaRegistryTargets> urlWithTargets;
-    private final        Configuration                      configuration;
+    private final javax.ws.rs.client.Client          client;
+    private final Login                              login;
+    private final UrlSelector                        urlSelector;
+    private final Map<String, SchemaRegistryTargets> urlWithTargets;
+    private final Configuration                      configuration;
 
     public DefaultSchemaRegistryClient(Map<String, ?> conf) {
         configuration               = new Configuration(conf);
         login                       = SecurityUtils.initializeSecurityContext(conf);
+
         ClientConfig  config        = createClientConfig(conf);
         final boolean sslEnabled    = SecurityUtils.isHttpsConnection(conf);
         ClientBuilder clientBuilder = JerseyClientBuilder.newBuilder().withConfig(config).property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE);
 
         if (sslEnabled) {
             SSLContext ctx;
+
             try {
                 ctx = SecurityUtils.createSSLContext(conf, SSL_ALGORITHM);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
             clientBuilder.sslContext(ctx);
         }
+
         client         = clientBuilder.build();
         urlSelector    = createUrlSelector();
         urlWithTargets = new ConcurrentHashMap<>();
@@ -88,17 +92,20 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
         ArrayList<String> res         = new ArrayList<>();
         WebTarget         webResource = currentSchemaRegistryTargets().schemasTarget;
+
         try {
             Response response = login.doAction(() -> webResource.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
-            LOG.debug("DefaultSchemaRegistryClient.getSchemaGroups(): response statusCode = " + response.getStatus());
+            LOG.debug("DefaultSchemaRegistryClient.getSchemaGroups(): response statusCode = {}", response.getStatus());
 
             JSONArray mDataList = new JSONObject(response.readEntity(String.class)).getJSONArray("entities");
             int       len       = mDataList.length();
+
             for (int i = 0; i < len; i++) {
                 JSONObject entity         = mDataList.getJSONObject(i);
                 JSONObject schemaMetadata = (JSONObject) entity.get("schemaMetadata");
                 String     group          = (String) schemaMetadata.get("schemaGroup");
+
                 res.add(group);
             }
         } catch (Exception e) {
@@ -116,6 +123,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
         ArrayList<String> res       = new ArrayList<>();
         WebTarget         webTarget = currentSchemaRegistryTargets().schemasTarget;
+
         try {
             Response response = login.doAction(() -> webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
@@ -123,13 +131,16 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
             JSONArray mDataList = new JSONObject(response.readEntity(String.class)).getJSONArray("entities");
             int       len       = mDataList.length();
+
             for (int i = 0; i < len; i++) {
                 JSONObject entity         = mDataList.getJSONObject(i);
                 JSONObject schemaMetadata = (JSONObject) entity.get("schemaMetadata");
                 String     group          = (String) schemaMetadata.get("schemaGroup");
+
                 for (String schemaGroup : schemaGroups) {
                     if (group.matches(schemaGroup)) {
                         String name = (String) schemaMetadata.get("name");
+
                         res.add(name);
                     }
                 }
@@ -149,6 +160,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
         ArrayList<String> res    = new ArrayList<>();
         WebTarget         target = currentSchemaRegistryTargets().schemasTarget.path(encode(schemaMetadataName) + "/branches");
+
         try {
             Response response = login.doAction(() -> target.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
@@ -160,8 +172,10 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
             for (int i = 0; i < len; i++) {
                 JSONObject branchInfo = mDataList.getJSONObject(i);
                 String     smName     = (String) branchInfo.get("schemaMetadataName");
+
                 if (smName.matches(schemaMetadataName)) {
                     String bName = (String) branchInfo.get("name");
+
                     res.add(bName);
                 }
             }
@@ -179,16 +193,18 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
         LOG.debug("==> DefaultSchemaRegistryClient.checkConnection(): trying to connect to the SR server... ");
 
         WebTarget webTarget = currentSchemaRegistryTargets().schemaRegistryVersion;
-        Response response = login.doAction(() -> webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
+        Response response   = login.doAction(() -> webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
         LOG.debug("DefaultSchemaRegistryClient.checkConnection(): response statusCode = {}", response.getStatus());
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {
             LOG.error("DefaultSchemaRegistryClient.checkConnection(): Connection failed. Response StatusCode = {}", response.getStatus());
+
             throw new Exception("Connection failed. StatusCode = " + response.getStatus());
         }
 
         String respStr = response.readEntity(String.class);
+
         if (!(respStr.contains("version") && respStr.contains("revision"))) {
             LOG.error("DefaultSchemaRegistryClient.checkConnection(): Connection failed. Bad response body.");
 
@@ -226,6 +242,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
                 throw new RuntimeException(e);
             }
         }
+
         urlSelector.init(configuration.getConfig());
 
         return urlSelector;
@@ -233,7 +250,9 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
     private SchemaRegistryTargets currentSchemaRegistryTargets() {
         String url = urlSelector.select();
+
         urlWithTargets.computeIfAbsent(url, s -> new SchemaRegistryTargets(client.target(s)));
+
         return urlWithTargets.get(url);
     }
 
