@@ -72,14 +72,15 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     private final List<FieldToAttributeMapping> fieldAttributeMappings = new LinkedList<>();
 
-    private String andQParserName;
-    private String authField;
-    private String allRolesToken;
-    private String qParserName;
-    private String tokenCountField;
+    private String  andQParserName;
+    private String  authField;
+    private String  allRolesToken;
+    private String  qParserName;
+    private String  tokenCountField;
     private boolean allowMissingValue;
     private boolean attrsEnabled;
     private boolean enabled;
+
     private RangerSolrConstants.MatchType matchMode;
 
     String  proxyIPHeader = "HTTP_X_FORWARDED_FOR";
@@ -98,8 +99,10 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     @Override
     public void close() {
         logger.info("close() called");
+
         try {
             solrPlugin.cleanup();
+
             /* Solr shutdown is not graceful so that JVM shutdown hooks
              * are not always invoked and the audit store are not flushed. So
              * we are forcing a cleanup here.
@@ -126,6 +129,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("==> RangerSolrAuthorizer.authorize()");
+
                 logAuthorizationContext(context);
             }
 
@@ -146,9 +150,11 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             if (useProxyIP) {
                 ip = context.getHttpHeader(proxyIPHeader);
             }
+
             if (ip == null) {
                 ip = context.getHttpHeader("REMOTE_ADDR");
             }
+
             if (ip == null) {
                 ip = context.getRemoteAddr();
             }
@@ -162,10 +168,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
             if (context.getHandler() instanceof PermissionNameProvider) {
                 PermissionNameProvider.Name perm = ((PermissionNameProvider) context.getHandler()).getPermissionName(context);
+
                 switch (perm) {
                     case READ_PERM:
                     case UPDATE_PERM: {
                         RangerSolrConstants.AccessType accessType = (perm == PermissionNameProvider.Name.READ_PERM) ? RangerSolrConstants.AccessType.QUERY : RangerSolrConstants.AccessType.UPDATE;
+
                         for (CollectionRequest req : context.getCollectionRequests()) {
                             rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.COLLECTION, req.collectionName, accessType));
                         }
@@ -183,23 +191,20 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                     case CORE_EDIT_PERM:
                     case COLL_READ_PERM:
                     case COLL_EDIT_PERM: {
-                        RangerSolrConstants.AdminType adminType = (perm == PermissionNameProvider.Name.COLL_READ_PERM
-                                || perm == PermissionNameProvider.Name.COLL_EDIT_PERM)
+                        RangerSolrConstants.AdminType adminType = (perm == PermissionNameProvider.Name.COLL_READ_PERM || perm == PermissionNameProvider.Name.COLL_EDIT_PERM)
                                 ? RangerSolrConstants.AdminType.COLLECTIONS : RangerSolrConstants.AdminType.CORES;
 
-                        RangerSolrConstants.AccessType accessType = (perm == PermissionNameProvider.Name.COLL_READ_PERM
-                                || perm == PermissionNameProvider.Name.CORE_READ_PERM)
+                        RangerSolrConstants.AccessType accessType = (perm == PermissionNameProvider.Name.COLL_READ_PERM || perm == PermissionNameProvider.Name.CORE_READ_PERM)
                                 ? RangerSolrConstants.AccessType.QUERY : RangerSolrConstants.AccessType.UPDATE;
 
                         // add admin permissions to the ranger request list
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context,
-                                adminType, accessType));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, adminType, accessType));
 
                         // add collection level permissions to the ranger request list
-                        Map<String, RangerSolrConstants.AccessType> collectionsForAdminOpMap =
-                                SolrAuthzUtil.getCollectionsForAdminOp(context);
+                        Map<String, RangerSolrConstants.AccessType> collectionsForAdminOpMap = SolrAuthzUtil.getCollectionsForAdminOp(context);
 
                         String finalIp = ip;
+
                         collectionsForAdminOpMap.forEach((k, v) -> rangerRequests.add(createRequest(userName, userGroups, finalIp, eventTime, context, RangerSolrConstants.ResourceType.COLLECTION, k, v)));
                         break;
                     }
@@ -229,8 +234,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                     }
                     case METRICS_HISTORY_READ_PERM:
                     case METRICS_READ_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context,
-                                RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
                     case AUTOSCALING_READ_PERM:
@@ -278,9 +282,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             }
         } catch (Throwable t) {
             isDenied = true;
+
             MiscUtil.logErrorMessageByInterval(logger, t.getMessage(), t);
         }
+
         AuthorizationResponse response;
+
         if (isDenied) {
             response = new AuthorizationResponse(403);
         } else {
@@ -303,27 +310,36 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
         try {
             RangerBasePlugin me = solrPlugin;
+
             if (me == null) {
                 synchronized (RangerSolrAuthorizer.class) {
                     me = solrPlugin;
+
                     logger.info("RangerSolrAuthorizer(): init called");
+
                     if (me == null) {
                         authToJAASFile();
+
                         logger.info("Creating RangerSolrPlugin");
 
                         me = new RangerBasePlugin("solr", "solr");
+
+                        logger.info("Calling solrPlugin.init()");
+
+                        me.init();
+                        me.setResultProcessor(new RangerSolrAuditHandler(solrPlugin.getConfig()));
+
                         solrPlugin = me;
                     }
-                    logger.info("Calling solrPlugin.init()");
-                    solrPlugin.init();
-                    solrPlugin.setResultProcessor(new RangerSolrAuditHandler(solrPlugin.getConfig()));
                 }
             }
 
             useProxyIP    = solrPlugin.getConfig().getBoolean(RangerSolrConstants.PROP_USE_PROXY_IP, useProxyIP);
             proxyIPHeader = solrPlugin.getConfig().get(RangerSolrConstants.PROP_PROXY_IP_HEADER, proxyIPHeader);
+
             // First get from the -D property
             solrAppName = System.getProperty("solr.kerberos.jaas.appname", solrAppName);
+
             // Override if required from Ranger properties
             solrAppName = solrPlugin.getConfig().get(RangerSolrConstants.PROP_SOLR_APP_NAME, solrAppName);
 
@@ -340,13 +356,16 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     public void prepare(ResponseBuilder rb) {
         if (!enabled) {
             logger.debug("Solr Document level Authorization is not enabled!");
+
             return;
         }
 
         String userName = getUserName(rb.req);
+
         if (RangerSolrConstants.SUPERUSER.equals(userName)) {
             return;
         }
+
         RangerSolrAuditHandler auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
         boolean                isDenied     = false;
 
@@ -355,6 +374,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
             if (getUserStoreEnricher() == null || getUserStoreEnricher().getRangerUserStore() == null) {
                 logger.error("No User store enricher to read the ldap attributes");
+
                 isDenied = true;
             }
 
@@ -363,6 +383,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             if (MapUtils.isNotEmpty(userAttrMapping)) {
                 ModifiableSolrParams newParams      = new ModifiableSolrParams(rb.req.getParams());
                 Map<String, String>  userAttributes = userAttrMapping.get(userName);
+
                 for (FieldToAttributeMapping mapping : fieldAttributeMappings) {
                     String filterQuery = buildFilterQueryString(userName, userAttributes, mapping);
 
@@ -377,14 +398,18 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             logger.debug("Checking User roles to be added to the query filter");
 
             Set<String> roles = getRolesForUser(userName);
+
             if (roles != null && !roles.isEmpty()) {
                 String filterQuery;
+
                 if (matchMode == RangerSolrConstants.MatchType.DISJUNCTIVE) {
                     filterQuery = getDisjunctiveFilterQueryStr(roles);
                 } else {
                     filterQuery = getConjunctiveFilterQueryStr(roles);
                 }
+
                 ModifiableSolrParams newParams = new ModifiableSolrParams(rb.req.getParams());
+
                 newParams.add("fq", filterQuery);
                 rb.req.setParams(newParams);
 
@@ -393,17 +418,22 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                 isDenied = true;
             }
         }
+
         HttpServletRequest httpServletRequest = (HttpServletRequest) rb.req.getContext().get("httpRequest");
         if (httpServletRequest == null) {
             SolrCore      solrCore = rb.req.getCore();
             StringBuilder builder  = new StringBuilder("Unable to locate HttpServletRequest");
+
             if (solrCore != null && !solrCore.getSolrConfig().get("requestDispatcher/requestParsers/@addHttpRequestToContext").boolVal(true)) {
                 builder.append(", ensure requestDispatcher/requestParsers/@addHttpRequestToContext is set to true in solrconfig.xml");
             }
+
             throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED, builder.toString());
         }
+
         String ip        = null;
         Date   eventTime = new Date();
+
         // Set the IP
         if (useProxyIP) {
             ip = httpServletRequest.getHeader("X-Forwarded-For");
@@ -415,12 +445,15 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
         try {
             RangerAccessRequestImpl rangerRequest = createQueryRequest(userName, getGroupsForUser(userName), ip, eventTime, rb.req);
+
             if (isDenied) {
                 RangerAccessResult result = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, solrPlugin.getServiceName(), solrPlugin.getServiceDef(), rangerRequest);
+
                 result.setIsAllowed(false);
                 result.setPolicyId(-1);
                 result.setIsAccessDetermined(true);
                 result.setIsAudited(true);
+
                 auditHandler.processResult(result);
             } else {
                 RangerAccessResult result = solrPlugin.isAccessAllowed(rangerRequest, auditHandler);
@@ -446,6 +479,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     @Override
     public void init(NamedList args) {
         SolrParams params = args.toSolrParams();
+
         this.authField     = params.get(RangerSolrConstants.AUTH_FIELD_PROP, RangerSolrConstants.DEFAULT_AUTH_FIELD);
         this.allRolesToken = params.get(RangerSolrConstants.ALL_ROLES_TOKEN_PROP, "");
         this.enabled       = params.getBool(RangerSolrConstants.ENABLED_PROP, false);
@@ -481,9 +515,11 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                     String                  regex         = getWithDefault(entry.getValue(), RangerSolrConstants.ATTRIBUTE_FILTER_REGEX, "");
                     String                  extraOpts     = getWithDefault(entry.getValue(), RangerSolrConstants.EXTRA_OPTS, "");
                     FieldToAttributeMapping mapping       = new FieldToAttributeMapping(solrFieldName, attributeNames, filterType, acceptEmpty, allUsersValue, regex, extraOpts);
+
                     fieldAttributeMappings.add(mapping);
                 }
             }
+
             this.andQParserName = this.<String>checkAndGet(args, RangerSolrConstants.AND_OP_QPARSER).trim();
         }
     }
@@ -496,6 +532,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     private void authToJAASFile() {
         try {
             MiscUtil.setUGIFromJAASConfig(solrAppName);
+
             logger.info("LoginUser= {}", MiscUtil.getUGILoginUser());
         } catch (Throwable t) {
             logger.error("Error authenticating for appName= {}", solrAppName, t);
@@ -507,25 +544,34 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         try {
             String collections = "";
             int    i           = -1;
+
             for (CollectionRequest collectionRequest : context.getCollectionRequests()) {
                 i++;
+
                 if (i > 0) {
                     collections += ",";
                 }
+
                 collections += collectionRequest.collectionName;
             }
 
             String headers = "";
+
             i = -1;
+
             @SuppressWarnings("unchecked")
             Enumeration<String> eList = context.getHeaderNames();
+
             while (eList.hasMoreElements()) {
                 i++;
+
                 if (i > 0) {
                     headers += ",";
                 }
+
                 String header = eList.nextElement();
                 String value  = context.getHttpHeader(header);
+
                 headers += header + "=" + value;
             }
 
@@ -533,26 +579,30 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
             if (ipAddress == null) {
                 ipAddress = context.getHttpHeader("REMOTE_HOST");
-            }
-            if (ipAddress == null) {
-                ipAddress = context.getHttpHeader("REMOTE_ADDR");
-            }
-            if (ipAddress == null) {
-                ipAddress = context.getRemoteAddr();
+
+                if (ipAddress == null) {
+                    ipAddress = context.getHttpHeader("REMOTE_ADDR");
+
+                    if (ipAddress == null) {
+                        ipAddress = context.getRemoteAddr();
+                    }
+                }
             }
 
             String      userName   = getUserName(context);
             Set<String> groups     = getGroupsForUser(userName);
             String      resource   = context.getResource();
             String      solrParams = "";
+
             try {
                 solrParams = context.getParams().toQueryString();
             } catch (Throwable ignored) {
             }
-            RequestType requestType = context.getRequestType();
-            Principal   principal   = context.getUserPrincipal();
 
-            String contextString = "AuthorizationContext: ";
+            RequestType requestType   = context.getRequestType();
+            Principal   principal     = context.getUserPrincipal();
+            String      contextString = "AuthorizationContext: ";
+
             contextString = contextString + "context.getResource()= " + ((resource != null) ? resource : "");
             contextString = contextString + ", solarParams= " + ((solrParams != null) ? solrParams : "");
             contextString = contextString + ", requestType= " + ((requestType != null) ? requestType : "");
@@ -581,8 +631,8 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
      * @return RangerAccessRequestImpl
      */
     private RangerAccessRequestImpl createRequest(String userName, Set<String> userGroups, String ip, Date eventTime, AuthorizationContext context, RangerSolrConstants.ResourceType resourceType, String resourceName, RangerSolrConstants.AccessType accessType) {
-        String action = accessType.toString();
-        RangerAccessRequestImpl rangerRequest   = createBaseRequest(userName, userGroups, ip, eventTime);
+        String                   action         = accessType.toString();
+        RangerAccessRequestImpl  rangerRequest  = createBaseRequest(userName, userGroups, ip, eventTime);
         RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
 
         rangerResource.setValue(resourceType.toString(), resourceName);
@@ -599,12 +649,14 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     }
 
     private RangerAccessRequestImpl createQueryRequest(String userName, Set<String> userGroups, String ip, Date eventTime, SolrQueryRequest queryRequest) {
-        String accessType = RangerSolrConstants.AccessType.QUERY.toString();
-        String action     = RangerSolrConstants.AccessType.QUERY.toString();
-        RangerAccessRequestImpl rangerRequest = createBaseRequest(userName, userGroups, ip, eventTime);
+        String                   accessType     = RangerSolrConstants.AccessType.QUERY.toString();
+        String                   action         = RangerSolrConstants.AccessType.QUERY.toString();
+        RangerAccessRequestImpl  rangerRequest  = createBaseRequest(userName, userGroups, ip, eventTime);
         RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+
         rangerResource.setServiceDef(solrPlugin.getServiceDef());
         rangerResource.setValue(RangerSolrConstants.ResourceType.COLLECTION.toString(), queryRequest.getCore().getCoreDescriptor().getCollectionName());
+
         rangerRequest.setResource(rangerResource);
         rangerRequest.setAccessType(accessType);
         rangerRequest.setAction(action);
@@ -616,24 +668,31 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     private RangerAccessRequestImpl createBaseRequest(String userName, Set<String> userGroups, String ip, Date eventTime) {
         RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
+
         if (userName != null && !userName.isEmpty()) {
             rangerRequest.setUser(userName);
         }
+
         if (userGroups != null && !userGroups.isEmpty()) {
             rangerRequest.setUserGroups(userGroups);
         }
+
         if (ip != null && !ip.isEmpty()) {
             rangerRequest.setClientIPAddress(ip);
         }
+
         rangerRequest.setAccessTime(eventTime);
+
         return rangerRequest;
     }
 
     private String getUserName(AuthorizationContext context) {
         Principal principal = context.getUserPrincipal();
+
         if (principal != null) {
             return MiscUtil.getShortNameFromPrincipalName(principal.getName());
         }
+
         return null;
     }
 
@@ -653,27 +712,34 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     private String getDisjunctiveFilterQueryStr(Set<String> roles) {
         if (roles != null && !roles.isEmpty()) {
             StringBuilder builder = new StringBuilder();
+
             for (String role : roles) {
                 addDisjunctiveRawClause(builder, "\"" + role + "\"");
             }
+
             if (allRolesToken != null && !allRolesToken.isEmpty()) {
                 addDisjunctiveRawClause(builder, allRolesToken);
             }
+
             return builder.toString();
         }
+
         return null;
     }
 
     private String getConjunctiveFilterQueryStr(Set<String> roles) {
         StringBuilder filterQuery = new StringBuilder();
+
         filterQuery
                 .append(" {!").append(qParserName)
                 .append(" set_field=\"").append(authField).append("\"")
                 .append(" set_value=\"").append(Joiner.on(',').join(roles.iterator())).append("\"")
                 .append(" count_field=\"").append(tokenCountField).append("\"");
+
         if (allRolesToken != null && !allRolesToken.equals("")) {
             filterQuery.append(" wildcard_token=\"").append(allRolesToken).append("\"");
         }
+
         filterQuery.append(" allow_missing_val=").append(allowMissingValue).append(" }");
 
         return filterQuery.toString();
@@ -684,6 +750,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             return solrPlugin.getRolesFromUserAndGroups(name, getGroupsForUser(name));
         } else {
             logger.info("Current Ranger Auth Context is null!!");
+
             return null;
         }
     }
@@ -697,11 +764,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             return RangerSolrConstants.SUPERUSER;
         }
 
-        SolrCore solrCore = req.getCore();
+        SolrCore           solrCore           = req.getCore();
         HttpServletRequest httpServletRequest = (HttpServletRequest) req.getContext().get("httpRequest");
 
         if (httpServletRequest == null) {
             StringBuilder builder = new StringBuilder("Unable to locate HttpServletRequest");
+
             if (solrCore != null && !solrCore.getSolrConfig().get("requestDispatcher/requestParsers/@addHttpRequestToContext").boolVal(true)) {
                 builder.append(", ensure requestDispatcher/requestParsers/@addHttpRequestToContext is set to true in solrconfig.xml");
             }
@@ -746,11 +814,13 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     private <T> T checkAndGet(NamedList args, String key) {
         logger.info("checkAndGet() {}", key);
+
         return (T) Preconditions.checkNotNull(args.get(key));
     }
 
     private <T> T getWithDefault(NamedList args, String key, T defaultValue) {
         T value = (T) args.get(key);
+
         if (value == null) {
             return defaultValue;
         } else {
@@ -761,6 +831,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     private String buildFilterQueryString(String userName, Map<String, String> userAttributes, FieldToAttributeMapping mapping) {
         String             fieldName       = mapping.getFieldName();
         Collection<String> attributeValues = getUserAttributesForField(userName, userAttributes, mapping);
+
         switch (mapping.getFilterType()) {
             case OR:
                 return buildSimpleORFilterQuery(fieldName, attributeValues, mapping.getAcceptEmpty(), mapping.getAllUsersValue(), mapping.getExtraOpts());
@@ -777,57 +848,73 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     private Collection<String> getUserAttributesForField(String userName, Map<String, String> userAttributes, FieldToAttributeMapping mapping) {
         Set<String> userAttributesSubset = new HashSet<>();
+
         if (CollectionUtils.isNotEmpty(mapping.getAttributes())) {
             if (mapping.getAttributes().contains("groups")) {
                 userAttributesSubset.addAll(getGroupsForUser(userName));
             }
         }
+
         for (String attributeName : mapping.getAttributes()) {
             userAttributesSubset.add(userAttributes.get(attributeName));
         }
+
         return userAttributesSubset;
     }
 
     private String buildSimpleORFilterQuery(String fieldName, Collection<String> attributeValues, boolean allowEmptyField, String allUsersValue, String extraOpts) {
         StringBuilder s = new StringBuilder();
+
         for (String attributeValue : attributeValues) {
             s.append(fieldName).append(":\"").append(attributeValue).append("\" ");
         }
+
         if (allUsersValue != null && !allUsersValue.isEmpty()) {
             s.append(fieldName).append(":\"").append(allUsersValue).append("\" ");
         }
+
         if (allowEmptyField) {
             s.append("(*:* AND -").append(fieldName).append(":*) ");
         }
+
         if (extraOpts != null && !extraOpts.isEmpty()) {
             s.append(extraOpts + " ");
         }
+
         s.deleteCharAt(s.length() - 1);
+
         return s.toString();
     }
 
     private String buildSubsetFilterQuery(String fieldName, Collection<String> attributeValues, boolean allowEmptyField, String allUsersValue, String extraOpts) {
         StringBuilder s = new StringBuilder();
+
         s.append("{!").append(andQParserName)
                 .append(" set_field=").append(fieldName)
                 .append(" set_value=").append(Joiner.on(',').join(attributeValues));
+
         if (allUsersValue != null && !allUsersValue.isEmpty()) {
             s.append(" wildcard_token=").append(allUsersValue);
         }
+
         if (allowEmptyField) {
             s.append(" allow_missing_val=true");
         } else {
             s.append(" allow_missing_val=false");
         }
+
         if (extraOpts != null && !extraOpts.isEmpty()) {
             s.append(" " + extraOpts);
         }
+
         s.append("}");
+
         return s.toString();
     }
 
     private String buildGreaterThanFilterQuery(String fieldName, Collection<String> attributeValues, boolean allowEmptyField, String allUsersValue, String extraOpts) {
         String value;
+
         if (attributeValues.size() == 1) {
             value = attributeValues.iterator().next();
         } else if (allUsersValue != null && !allUsersValue.equals("")) {
@@ -835,18 +922,23 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         } else {
             throw new IllegalArgumentException("Greater Than Filter Query cannot be built for field " + fieldName);
         }
+
         StringBuilder extraClause = new StringBuilder();
+
         if (allowEmptyField) {
             extraClause.append(" (*:* AND -").append(fieldName).append(":*)");
         }
+
         if (extraOpts != null && !extraOpts.equals("")) {
             extraClause.append(" ").append(extraOpts);
         }
+
         return fieldName + ":[" + value + " TO *]" + extraClause;
     }
 
     private String buildLessThanFilterQuery(String fieldName, Collection<String> attributeValues, boolean allowEmptyField, String allUsersValue, String extraOpts) {
         String value;
+
         if (attributeValues.size() == 1) {
             value = attributeValues.iterator().next();
         } else if (allUsersValue != null && !allUsersValue.equals("")) {
@@ -854,13 +946,17 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         } else {
             throw new IllegalArgumentException("Less Than Filter Query cannot be built for field " + fieldName);
         }
+
         StringBuilder extraClause = new StringBuilder();
+
         if (allowEmptyField) {
             extraClause.append(" (*:* AND -").append(fieldName).append(":*)");
         }
+
         if (extraOpts != null && !extraOpts.equals("")) {
             extraClause.append(" ").append(extraOpts);
         }
+
         return fieldName + ":[* TO " + value + "]" + extraClause;
     }
 }
