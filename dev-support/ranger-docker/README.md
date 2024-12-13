@@ -81,7 +81,7 @@ docker-compose -f docker-compose.ranger-base-ubi.yml build --no-cache
 # To enable file based sync source for usersync do:
 # export ENABLE_FILE_SYNC_SOURCE=true
 
-# valid values for RANGER_DB_TYPE: mysql/postgres
+# valid values for RANGER_DB_TYPE: mysql/postgres/oracle
 
 docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml up -d
 
