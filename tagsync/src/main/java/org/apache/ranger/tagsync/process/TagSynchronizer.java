@@ -41,16 +41,18 @@ public class TagSynchronizer {
     private static final Logger LOG = LoggerFactory.getLogger(TagSynchronizer.class);
 
     private static final String AUTH_TYPE_KERBEROS = "kerberos";
-
     private static final String TAGSYNC_SOURCE_BASE = "ranger.tagsync.source.";
     private static final String PROP_CLASS_NAME     = "class";
-    private final    Object                   shutdownNotifier         = new Object();
-    private       TagSink         tagSink;
+
+    private final Object          shutdownNotifier = new Object();
     private final List<TagSource> tagSources       = new ArrayList<>();
     private final List<TagSource> failedTagSources = new ArrayList<>();
-    private       Properties      properties;
-    private volatile boolean                  isShutdownInProgress;
-    private          TagSyncHAInitializerImpl tagSyncHAinitializerImpl;
+
+    private TagSink                  tagSink;
+    private Properties               properties;
+    private TagSyncHAInitializerImpl tagSyncHAinitializerImpl;
+
+    private volatile boolean isShutdownInProgress;
 
     TagSynchronizer() {
         this(null);
@@ -62,14 +64,13 @@ public class TagSynchronizer {
 
     public static void main(String[] args) {
         TagSynchronizer tagSynchronizer = new TagSynchronizer();
-
-        TagSyncConfig config = TagSyncConfig.getInstance();
-
-        Properties props = config.getProperties();
+        TagSyncConfig   config          = TagSyncConfig.getInstance();
+        Properties      props           = config.getProperties();
 
         tagSynchronizer.setProperties(props);
 
         boolean tagSynchronizerInitialized = tagSynchronizer.initialize();
+
         tagSynchronizer.tagSyncHAinitializerImpl = TagSyncHAInitializerImpl.getInstance(config);
 
         if (tagSynchronizerInitialized) {
@@ -77,16 +78,20 @@ public class TagSynchronizer {
                 tagSynchronizer.run();
             } catch (Throwable t) {
                 LOG.error("main thread caught exception..:", t);
+
                 if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
                     tagSynchronizer.tagSyncHAinitializerImpl.stop();
                 }
+
                 System.exit(1);
             }
         } else {
             LOG.error("TagSynchronizer failed to initialize correctly, exiting..");
+
             if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
                 tagSynchronizer.tagSyncHAinitializerImpl.stop();
             }
+
             System.exit(1);
         }
     }
@@ -95,6 +100,7 @@ public class TagSynchronizer {
         LOG.info("--------------------------------");
         LOG.info("");
         LOG.info("Ranger-TagSync Configuration: {\n");
+
         if (MapUtils.isNotEmpty(properties)) {
             for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                 LOG.info("\tProperty-Name:{}", entry.getKey());
@@ -102,6 +108,7 @@ public class TagSynchronizer {
                 LOG.info("\n");
             }
         }
+
         LOG.info("\n}");
         LOG.info("");
         LOG.info("--------------------------------");
@@ -109,6 +116,7 @@ public class TagSynchronizer {
 
     public static TagSink initializeTagSink(Properties properties) {
         LOG.debug("==> TagSynchronizer.initializeTagSink()");
+
         TagSink ret;
 
         try {
@@ -123,10 +131,12 @@ public class TagSynchronizer {
 
             if (!ret.initialize(properties)) {
                 LOG.error("Failed to initialize TAG sink {}", tagSinkClassName);
+
                 ret = null;
             }
         } catch (Throwable t) {
             LOG.error("Failed to initialize TAG sink. Error details: ", t);
+
             ret = null;
         }
 
@@ -138,12 +148,11 @@ public class TagSynchronizer {
     public static boolean initializeKerberosIdentity(Properties props) {
         LOG.debug("==> TagSynchronizer.initializeKerberosIdentity()");
 
-        boolean ret = false;
-
-        String authenticationType = TagSyncConfig.getAuthenticationType(props);
-        String principal          = TagSyncConfig.getKerberosPrincipal(props);
-        String keytab             = TagSyncConfig.getKerberosKeytab(props);
-        String nameRules          = TagSyncConfig.getNameRules(props);
+        boolean ret                = false;
+        String  authenticationType = TagSyncConfig.getAuthenticationType(props);
+        String  principal          = TagSyncConfig.getKerberosPrincipal(props);
+        String  keytab             = TagSyncConfig.getKerberosKeytab(props);
+        String  nameRules          = TagSyncConfig.getNameRules(props);
 
         LOG.debug("authenticationType= {}, principal= {}, keytab= {}, nameRules={}", authenticationType, principal, keytab, nameRules);
 
@@ -157,10 +166,14 @@ public class TagSynchronizer {
 
                 try {
                     UserGroupInformation.loginUserFromKeytab(principal, keytab);
+
                     UserGroupInformation kerberosIdentity = UserGroupInformation.getLoginUser();
+
                     if (kerberosIdentity != null) {
                         props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
+
                         LOG.debug("Got UGI, user:[{}]", kerberosIdentity.getUserName());
+
                         ret = true;
                     } else {
                         LOG.error("KerberosIdentity is null!");
@@ -197,11 +210,13 @@ public class TagSynchronizer {
 
         if (ret) {
             LOG.info("Initializing TAG source and sink");
+
             ret     = false;
             tagSink = initializeTagSink(properties);
 
             if (tagSink != null) {
                 initializeTagSources();
+
                 ret = true;
             }
         } else {
@@ -222,17 +237,21 @@ public class TagSynchronizer {
             boolean threadsStarted = tagSink.start();
 
             LOG.debug("==> starting TagSyncMetricsProducer with default metrics location : {}", System.getProperty("logdir"));
+
             //Start the tag sync metrics
             boolean isTagSyncMetricsEnabled = TagSyncConfig.isTagSyncMetricsEnabled(properties);
+
             if (isTagSyncMetricsEnabled) {
                 TagSyncMetricsProducer tagSyncMetricsProducer       = new TagSyncMetricsProducer();
                 Thread                 tagSyncMetricsProducerThread = new Thread(tagSyncMetricsProducer);
+
                 tagSyncMetricsProducerThread.setName("TagSyncMetricsProducerThread");
                 tagSyncMetricsProducerThread.setDaemon(true);
                 tagSyncMetricsProducerThread.start();
             } else {
                 LOG.info(" Ranger tagsync metrics is not enabled");
             }
+
             for (TagSource tagSource : tagSources) {
                 threadsStarted = threadsStarted && tagSource.start();
             }
@@ -243,6 +262,7 @@ public class TagSynchronizer {
                 synchronized (shutdownNotifier) {
                     while (!isShutdownInProgress) {
                         shutdownNotifier.wait(tagSourceRetryInitializationInterval);
+
                         if (CollectionUtils.isNotEmpty(failedTagSources)) {
                             reInitializeFailedTagSources();
                         }
@@ -257,6 +277,7 @@ public class TagSynchronizer {
             }
 
             LOG.info("Stopping tagSink");
+
             tagSink.stop();
         }
 
@@ -268,6 +289,7 @@ public class TagSynchronizer {
 
         synchronized (shutdownNotifier) {
             isShutdownInProgress = true;
+
             shutdownNotifier.notifyAll();
         }
     }
@@ -287,19 +309,23 @@ public class TagSynchronizer {
 
         for (Object propNameObj : properties.keySet()) {
             String propName = propNameObj.toString();
+
             if (!propName.startsWith(TAGSYNC_SOURCE_BASE)) {
                 continue;
             }
+
             String       tagSourceName = propName.substring(TAGSYNC_SOURCE_BASE.length());
             List<String> splits        = toArray(tagSourceName, ".");
+
             if (splits.size() > 1) {
                 continue;
             }
+
             String value = properties.getProperty(propName);
-            if (value.equalsIgnoreCase("enable")
-                    || value.equalsIgnoreCase("enabled")
-                    || value.equalsIgnoreCase("true")) {
+
+            if (value.equalsIgnoreCase("enable") || value.equalsIgnoreCase("enabled") || value.equalsIgnoreCase("true")) {
                 tagSourceNameList.add(tagSourceName);
+
                 LOG.info("Tag source {} is set to {}", propName, value);
             }
         }
@@ -308,13 +334,13 @@ public class TagSynchronizer {
 
         for (String tagSourceName : tagSourceNameList) {
             String tagSourcePropPrefix = TAGSYNC_SOURCE_BASE + tagSourceName;
-            TagSource tagSource = getTagSourceFromConfig(properties,
-                    tagSourcePropPrefix, tagSourceName);
+            TagSource tagSource        = getTagSourceFromConfig(properties, tagSourcePropPrefix, tagSourceName);
 
             if (tagSource != null) {
                 try {
                     if (!tagSource.initialize(properties)) {
                         LOG.error("Failed to initialize TAG source {}", tagSourceName);
+
                         failedTagSources.add(tagSource);
                     } else {
                         tagSource.setTagSink(tagSink);
@@ -323,6 +349,7 @@ public class TagSynchronizer {
                     }
                 } catch (Exception exception) {
                     LOG.error("tag-source:{} initialization failed with ", tagSourceName, exception);
+
                     failedTagSources.add(tagSource);
                 }
             }
@@ -341,12 +368,16 @@ public class TagSynchronizer {
 
         for (int index = 0; index < failedTagSources.size(); index++) {
             TagSource tagSource = failedTagSources.get(index);
+
             try {
                 if (tagSource.initialize(properties)) {
                     failedTagSources.remove(index);
+
                     --index;
+
                     tagSources.add(tagSource);
                     tagSource.setTagSink(tagSink);
+
                     if (tagSource.start()) {
                         tagSources.add(tagSource);
                     } else {
@@ -363,11 +394,10 @@ public class TagSynchronizer {
         LOG.debug("<== TagSynchronizer.reInitializeFailedTagSources()");
     }
 
-    private static TagSource getTagSourceFromConfig(Properties props,
-            String propPrefix, String tagSourceName) {
+    private static TagSource getTagSourceFromConfig(Properties props, String propPrefix, String tagSourceName) {
         TagSource tagSource = null;
-        String className = getStringProperty(props, propPrefix + "."
-                + PROP_CLASS_NAME);
+        String    className = getStringProperty(props, propPrefix + "." + PROP_CLASS_NAME);
+
         if (StringUtils.isBlank(className)) {
             if (tagSourceName.equals("file")) {
                 className = "org.apache.ranger.tagsync.source.file.FileTagSource";
@@ -379,12 +409,14 @@ public class TagSynchronizer {
                 LOG.error("tagSource name doesn't have any class associated with it. tagSourceName={}, propertyPrefix={}", tagSourceName, propPrefix);
             }
         }
+
         if (StringUtils.isNotBlank(className)) {
             try {
                 @SuppressWarnings("unchecked")
                 Class<TagSource> tagSourceClass = (Class<TagSource>) Class.forName(className);
 
                 tagSource = tagSourceClass.newInstance();
+
                 LOG.debug("Created instance of {}", className);
 
                 tagSource.setName(tagSourceName);
@@ -392,6 +424,7 @@ public class TagSynchronizer {
                 LOG.error("Can't instantiate tagSource class for tagSourceName={}, className={}, propertyPrefix={}", tagSourceName, className, propPrefix, e);
             }
         }
+
         return tagSource;
     }
 
@@ -400,6 +433,7 @@ public class TagSynchronizer {
 
         if (props != null && propName != null) {
             String val = props.getProperty(propName);
+
             if (val != null) {
                 ret = val;
             }
@@ -410,13 +444,15 @@ public class TagSynchronizer {
 
     private static List<String> toArray(String destListStr, String delim) {
         List<String> list = new ArrayList<>();
+
         if (destListStr != null && !destListStr.isEmpty()) {
-            StringTokenizer tokenizer = new StringTokenizer(destListStr,
-                    delim.trim());
+            StringTokenizer tokenizer = new StringTokenizer(destListStr, delim.trim());
+
             while (tokenizer.hasMoreTokens()) {
                 list.add(tokenizer.nextToken());
             }
         }
+
         return list;
     }
 }
