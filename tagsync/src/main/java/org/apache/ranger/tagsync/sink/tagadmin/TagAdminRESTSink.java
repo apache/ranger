@@ -48,33 +48,30 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     private static final String REST_PREFIX   = "/service";
     private static final String MODULE_PREFIX = "/tags";
-
     private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
+
     List<NewCookie> cookieList = new ArrayList<>();
-    private long rangerAdminConnectionCheckInterval;
-    private Cookie sessionId;
-    private boolean isValidRangerCookie;
-    private boolean isRangerCookieEnabled;
-    private String  rangerAdminCookieName;
 
-    private RangerRESTClient tagRESTClient;
-
-    private boolean isKerberized;
-
+    private long                          rangerAdminConnectionCheckInterval;
+    private Cookie                        sessionId;
+    private boolean                       isValidRangerCookie;
+    private boolean                       isRangerCookieEnabled;
+    private String                        rangerAdminCookieName;
+    private RangerRESTClient              tagRESTClient;
+    private boolean                       isKerberized;
     private BlockingQueue<UploadWorkItem> uploadWorkItems;
-
-    private Thread myThread;
+    private Thread                        myThread;
 
     @Override
     public boolean initialize(Properties properties) {
         LOG.debug("==> TagAdminRESTSink.initialize()");
 
-        boolean ret = false;
+        boolean ret           = false;
+        String  restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
+        String  sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
+        String  userName      = TagSyncConfig.getTagAdminUserName(properties);
+        String  password      = TagSyncConfig.getTagAdminPassword(properties);
 
-        String restUrl       = TagSyncConfig.getTagAdminRESTUrl(properties);
-        String sslConfigFile = TagSyncConfig.getTagAdminRESTSslConfigFile(properties);
-        String userName      = TagSyncConfig.getTagAdminUserName(properties);
-        String password      = TagSyncConfig.getTagAdminPassword(properties);
         rangerAdminConnectionCheckInterval = TagSyncConfig.getTagAdminConnectionCheckInterval(properties);
         isKerberized                       = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
         isRangerCookieEnabled              = TagSyncConfig.isTagSyncRangerCookieEnabled(properties);
@@ -89,9 +86,11 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
         if (StringUtils.isNotBlank(restUrl)) {
             tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance());
+
             if (!isKerberized) {
                 tagRESTClient.setBasicAuthInfo(userName, password);
             }
+
             // Build and cache REST client. This will catch any errors in building REST client up-front
             tagRESTClient.getClient();
 
@@ -125,6 +124,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
     @Override
     public boolean start() {
         myThread = new Thread(this);
+
         myThread.setDaemon(true);
         myThread.start();
 
@@ -144,12 +144,9 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
         while (true) {
             if (TagSyncConfig.isTagSyncServiceActive()) {
-                UploadWorkItem uploadWorkItem;
-
                 try {
-                    uploadWorkItem = uploadWorkItems.take();
-
-                    ServiceTags toUpload = uploadWorkItem.getServiceTags();
+                    UploadWorkItem uploadWorkItem = uploadWorkItems.take();
+                    ServiceTags    toUpload       = uploadWorkItem.getServiceTags();
 
                     boolean doRetry;
 
@@ -158,8 +155,10 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
                         try {
                             ServiceTags uploaded = doUpload(toUpload);
+
                             if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
                                 doRetry = true;
+
                                 Thread.sleep(rangerAdminConnectionCheckInterval);
                             } else {
                                 // ServiceTags uploaded successfully
@@ -167,15 +166,18 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                             }
                         } catch (InterruptedException interrupted) {
                             LOG.error("Caught exception..: ", interrupted);
+
                             return;
                         } catch (Exception exception) {
                             doRetry = true;
+
                             Thread.sleep(rangerAdminConnectionCheckInterval);
                         }
                     }
                     while (doRetry);
                 } catch (InterruptedException exception) {
                     LOG.error("Interrupted..: ", exception);
+
                     return;
                 }
             }
@@ -186,22 +188,27 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         if (isKerberized) {
             try {
                 UserGroupInformation userGroupInformation = UserGroupInformation.getLoginUser();
+
                 if (userGroupInformation != null) {
                     try {
                         userGroupInformation.checkTGTAndReloginFromKeytab();
                     } catch (IOException ioe) {
                         LOG.error("Error renewing TGT and relogin", ioe);
+
                         userGroupInformation = null;
                     }
                 }
+
                 if (userGroupInformation != null) {
                     LOG.debug("Using Principal = {}", userGroupInformation.getUserName());
+
                     return userGroupInformation.doAs((PrivilegedExceptionAction<ServiceTags>) () -> {
                         try {
                             return uploadServiceTags(serviceTags);
                         } catch (Exception e) {
                             LOG.error("Upload of service-tags failed with message ", e);
                         }
+
                         return null;
                     });
                 } else {
@@ -211,6 +218,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             } catch (Exception e) {
                 LOG.error("Upload of service-tags failed with message ", e);
             }
+
             return null;
         } else {
             return uploadServiceTags(serviceTags);
@@ -221,6 +229,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         LOG.debug("==> doUpload()");
 
         ClientResponse response;
+
         if (isRangerCookieEnabled) {
             response = uploadServiceTagsUsingCookie(serviceTags);
         } else {
@@ -245,13 +254,16 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     private ClientResponse uploadServiceTagsUsingCookie(ServiceTags serviceTags) {
         LOG.debug("==> uploadServiceTagCache()");
+
         ClientResponse clientResponse;
         if (sessionId != null && isValidRangerCookie) {
             clientResponse = tryWithCookie(serviceTags);
         } else {
             clientResponse = tryWithCred(serviceTags);
         }
+
         LOG.debug("<== uploadServiceTagCache()");
+
         return clientResponse;
     }
 
@@ -259,6 +271,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         LOG.debug("==> tryWithCred");
 
         ClientResponse clientResponsebyCred = uploadTagsWithCred(serviceTags);
+
         if (clientResponsebyCred != null && clientResponsebyCred.getStatus() != HttpServletResponse.SC_NO_CONTENT
                 && clientResponsebyCred.getStatus() != HttpServletResponse.SC_BAD_REQUEST
                 && clientResponsebyCred.getStatus() != HttpServletResponse.SC_OK) {
@@ -273,6 +286,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
     private ClientResponse tryWithCookie(ServiceTags serviceTags) {
         ClientResponse clientResponsebySessionId = uploadTagsWithCookie(serviceTags);
+
         if (clientResponsebySessionId != null
                 && clientResponsebySessionId.getStatus() != HttpServletResponse.SC_NO_CONTENT
                 && clientResponsebySessionId.getStatus() != HttpServletResponse.SC_BAD_REQUEST
@@ -281,6 +295,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             isValidRangerCookie       = false;
             clientResponsebySessionId = null;
         }
+
         return clientResponsebySessionId;
     }
 
@@ -289,18 +304,19 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             tagRESTClient.resetClient();
 
             ClientResponse response = null;
+
             try {
                 response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, null, serviceTags);
             } catch (Exception e) {
                 LOG.error("Failed to get response, Error is : {}", e.getMessage());
             }
+
             if (response != null) {
                 if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 } else if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
                     LOG.warn("Credentials response from ranger is 401.");
-                } else if (response.getStatus() == HttpServletResponse.SC_OK
-                        || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+                } else if (response.getStatus() == HttpServletResponse.SC_OK || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
                     cookieList = response.getCookies();
                     // save cookie received from credentials session login
                     for (NewCookie cookie : cookieList) {
@@ -314,6 +330,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                     }
                 }
             }
+
             return response;
         } else {
             ClientResponse clientResponsebySessionId = uploadTagsWithCookie(serviceTags);
@@ -321,6 +338,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             if (!(clientResponsebySessionId.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
                 clientResponsebySessionId.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
+
             return clientResponsebySessionId;
         }
     }
@@ -329,11 +347,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         LOG.debug("==> uploadTagsWithCookie");
 
         ClientResponse response = null;
+
         try {
             response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, serviceTags, sessionId);
         } catch (Exception e) {
             LOG.error("Failed to get response, Error is : {}", e.getMessage());
         }
+
         if (response != null) {
             if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -342,14 +362,15 @@ public class TagAdminRESTSink implements TagSink, Runnable {
             } else if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
                 sessionId           = null;
                 isValidRangerCookie = false;
-            } else if (response.getStatus() == HttpServletResponse.SC_NO_CONTENT
-                    || response.getStatus() == HttpServletResponse.SC_OK) {
+            } else if (response.getStatus() == HttpServletResponse.SC_NO_CONTENT || response.getStatus() == HttpServletResponse.SC_OK) {
                 List<NewCookie> respCookieList = response.getCookies();
+
                 for (NewCookie respCookie : respCookieList) {
                     if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
                         if (!(sessionId.getValue().equalsIgnoreCase(respCookie.toCookie().getValue()))) {
                             sessionId = respCookie.toCookie();
                         }
+
                         isValidRangerCookie = true;
                         break;
                     }
@@ -358,6 +379,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         }
 
         LOG.debug("<== uploadTagsWithCookie");
+
         return response;
     }
 
@@ -367,6 +389,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 
         UploadWorkItem(ServiceTags serviceTags) {
             setServiceTags(serviceTags);
+
             uploadedServiceTags = new ArrayBlockingQueue<>(1);
         }
 
