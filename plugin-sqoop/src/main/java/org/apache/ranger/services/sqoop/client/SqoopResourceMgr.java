@@ -35,52 +35,52 @@ public class SqoopResourceMgr {
     public static final String LINK      = "link";
     public static final String JOB       = "job";
 
-    private SqoopResourceMgr(){
+    private SqoopResourceMgr() {
+        // to block instantiation
     }
 
     public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) {
         Map<String, Object> ret;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SqoopResourceMgr.validateConfig ServiceName: " + serviceName + "Configs" + configs);
-        }
+        LOG.debug("==> SqoopResourceMgr.validateConfig ServiceName: {} Configs {}", serviceName, configs);
 
         try {
             ret = SqoopClient.connectionTest(serviceName, configs);
         } catch (Exception e) {
-            LOG.error("<== SqoopResourceMgr.validateConfig Error: " + e);
+            LOG.error("<== SqoopResourceMgr.validateConfig Error: ", e);
+
             throw e;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== SqoopResourceMgr.validateConfig Result: " + ret);
-        }
+        LOG.debug("<== SqoopResourceMgr.validateConfig Result: {}", ret);
+
         return ret;
     }
 
-    public static List<String> getSqoopResources(String serviceName, Map<String, String> configs,
-            ResourceLookupContext context) {
+    public static List<String> getSqoopResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) {
         String                    userInput   = context.getUserInput();
         String                    resource    = context.getResourceName();
         Map<String, List<String>> resourceMap = context.getResources();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SqoopResourceMgr.getSqoopResources()  userInput: " + userInput + ", resource: " + resource
-                    + ", resourceMap: " + resourceMap);
-        }
+
+        LOG.debug("==> SqoopResourceMgr.getSqoopResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource resourceMap);
 
         if (MapUtils.isEmpty(configs)) {
             LOG.error("Connection Config is empty!");
+
             return null;
         }
 
         if (StringUtils.isEmpty(userInput)) {
             LOG.warn("User input is empty, set default value : *");
+
             userInput = "*";
         }
 
         final SqoopClient sqoopClient = SqoopClient.getSqoopClient(serviceName, configs);
+
         if (sqoopClient == null) {
             LOG.error("Failed to getSqoopResources!");
+
             return null;
         }
 
@@ -90,14 +90,17 @@ public class SqoopResourceMgr {
             switch (resource) {
                 case CONNECTOR:
                     List<String> existingConnectors = resourceMap.get(CONNECTOR);
+
                     resultList = sqoopClient.getConnectorList(userInput, existingConnectors);
                     break;
                 case LINK:
                     List<String> existingLinks = resourceMap.get(LINK);
+
                     resultList = sqoopClient.getLinkList(userInput, existingLinks);
                     break;
                 case JOB:
                     List<String> existingJobs = resourceMap.get(JOB);
+
                     resultList = sqoopClient.getJobList(userInput, existingJobs);
                     break;
                 default:
@@ -105,9 +108,8 @@ public class SqoopResourceMgr {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== SqoopResourceMgr.getSqoopResources() result: " + resultList);
-        }
+        LOG.debug("<== SqoopResourceMgr.getSqoopResources() result: {}", resultList);
+
         return resultList;
     }
 }
