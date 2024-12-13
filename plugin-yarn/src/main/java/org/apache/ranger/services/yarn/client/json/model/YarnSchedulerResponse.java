@@ -25,89 +25,95 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-
-@JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class YarnSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    private YarnScheduler scheduler = null;
+    private final YarnScheduler scheduler = null;
 
-    public YarnScheduler getScheduler() { return scheduler; }
-
-    public List<String> getQueueNames() {
-    	List<String> ret = new ArrayList<String>();
-
-    	if(scheduler != null) {
-    		scheduler.collectQueueNames(ret);
-    	}
-
-    	return ret;
+    public YarnScheduler getScheduler() {
+        return scheduler;
     }
 
+    public List<String> getQueueNames() {
+        List<String> ret = new ArrayList<String>();
 
-    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+        if (scheduler != null) {
+            scheduler.collectQueueNames(ret);
+        }
+
+        return ret;
+    }
+
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class YarnScheduler implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private YarnSchedulerInfo schedulerInfo = null;
+        private YarnSchedulerInfo schedulerInfo;
 
-        public YarnSchedulerInfo getSchedulerInfo() { return schedulerInfo; }
+        public YarnSchedulerInfo getSchedulerInfo() {
+            return schedulerInfo;
+        }
 
         public void collectQueueNames(List<String> queueNames) {
-        	if(schedulerInfo != null) {
-        		schedulerInfo.collectQueueNames(queueNames, null);
-        	}
+            if (schedulerInfo != null) {
+                schedulerInfo.collectQueueNames(queueNames, null);
+            }
         }
     }
 
-    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class YarnSchedulerInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String     queueName = null;
-        private YarnQueues queues    = null;
+        private String     queueName;
+        private YarnQueues queues;
 
-        public String getQueueName() { return queueName; }
+        public String getQueueName()  {
+            return queueName;
+        }
 
-        public YarnQueues getQueues() { return queues; }
+        public YarnQueues getQueues() {
+            return queues;
+        }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queueName != null) {
-        		String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
+            if (queueName != null) {
+                String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
 
-        		queueNames.add(queueFqdn);
+                queueNames.add(queueFqdn);
 
-            	if(queues != null) {
-            		queues.collectQueueNames(queueNames, queueFqdn);
-            	}
-        	}
+                if (queues != null) {
+                    queues.collectQueueNames(queueNames, queueFqdn);
+                }
+            }
         }
     }
 
-    @JsonAutoDetect(getterVisibility= Visibility.NONE, setterVisibility= Visibility.NONE, fieldVisibility= Visibility.ANY)
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class YarnQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private List<YarnSchedulerInfo> queue = null;
+        private List<YarnSchedulerInfo> queue;
 
-        public List<YarnSchedulerInfo> getQueue() { return queue; }
+        public List<YarnSchedulerInfo> getQueue() {
+            return queue;
+        }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queue != null) {
-        		for(YarnSchedulerInfo schedulerInfo : queue) {
-        			schedulerInfo.collectQueueNames(queueNames, parentQueueName);
-        		}
-        	}
+            if (queue != null) {
+                for (YarnSchedulerInfo schedulerInfo : queue) {
+                    schedulerInfo.collectQueueNames(queueNames, parentQueueName);
+                }
+            }
         }
     }
 }

@@ -19,55 +19,53 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AtlasKafkaResourceMapper extends AtlasResourceMapper {
-	public static final String ENTITY_TYPE_KAFKA_TOPIC = "kafka_topic";
-	public static final String RANGER_TYPE_KAFKA_TOPIC = "topic";
+    public static final String ENTITY_TYPE_KAFKA_TOPIC = "kafka_topic";
+    public static final String RANGER_TYPE_KAFKA_TOPIC = "topic";
 
-	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_KAFKA_TOPIC };
+    public static final String[] SUPPORTED_ENTITY_TYPES = {ENTITY_TYPE_KAFKA_TOPIC};
 
-	public AtlasKafkaResourceMapper() {
-		super("kafka", SUPPORTED_ENTITY_TYPES);
-	}
+    public AtlasKafkaResourceMapper() {
+        super("kafka", SUPPORTED_ENTITY_TYPES);
+    }
 
-	@Override
-	public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
-		String qualifiedName = (String)entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
+    @Override
+    public RangerServiceResource buildResource(final RangerAtlasEntity entity) throws Exception {
+        String qualifiedName = (String) entity.getAttributes().get(AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME);
 
-		String topic = getResourceNameFromQualifiedName(qualifiedName);
+        String topic = getResourceNameFromQualifiedName(qualifiedName);
 
-		if(StringUtils.isEmpty(topic)) {
-			throwExceptionWithMessage("topic not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "'");
-		}
+        if (StringUtils.isEmpty(topic)) {
+            throwExceptionWithMessage("topic not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "'");
+        }
 
-		String clusterName = getClusterNameFromQualifiedName(qualifiedName);
+        String clusterName = getClusterNameFromQualifiedName(qualifiedName);
 
-		if(StringUtils.isEmpty(clusterName)) {
-			clusterName = defaultClusterName;
-		}
+        if (StringUtils.isEmpty(clusterName)) {
+            clusterName = defaultClusterName;
+        }
 
-		if(StringUtils.isEmpty(clusterName)) {
-			throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME +  "' not found in entity");
-		}
+        if (StringUtils.isEmpty(clusterName)) {
+            throwExceptionWithMessage("attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
+        }
 
+        Map<String, RangerPolicyResource> elements    = new HashMap<>();
+        Boolean                           isExcludes  = Boolean.FALSE;
+        Boolean                           isRecursive = Boolean.TRUE;
 
-		Map<String, RangerPolicyResource> elements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
-		Boolean isExcludes  = Boolean.FALSE;
-		Boolean isRecursive = Boolean.TRUE;
+        elements.put(RANGER_TYPE_KAFKA_TOPIC, new RangerPolicyResource(topic, isExcludes, isRecursive));
 
-		elements.put(RANGER_TYPE_KAFKA_TOPIC, new RangerPolicyResource(topic, isExcludes, isRecursive));
+        String entityGuid  = entity.getGuid();
+        String serviceName = getRangerServiceName(clusterName);
 
-		String  entityGuid  = entity.getGuid();
-		String  serviceName = getRangerServiceName(clusterName);
-
-		return new RangerServiceResource(entityGuid, serviceName, elements);
-	}
+        return new RangerServiceResource(entityGuid, serviceName, elements);
+    }
 }
