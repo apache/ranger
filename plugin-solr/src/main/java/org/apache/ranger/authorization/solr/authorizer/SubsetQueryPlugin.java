@@ -63,7 +63,7 @@ public class SubsetQueryPlugin extends QParserPlugin {
                 LongValuesSource  minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
                 Collection<Query> queries            = new ArrayList<>();
                 String            fieldVals          = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
- 
+
                 for (String v : fieldVals.split(",")) {
                     queries.add(new TermQuery(new Term(fieldName, v)));
                 }
