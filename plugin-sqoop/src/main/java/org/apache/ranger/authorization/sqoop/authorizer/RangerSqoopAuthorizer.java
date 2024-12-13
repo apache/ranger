@@ -65,7 +65,9 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
 
                 if (plugin == null) {
                     plugin = new RangerSqoopPlugin();
+
                     plugin.init();
+
                     sqoopPlugin = plugin;
 
                     clientIPAddress = getClientIPAddress();
@@ -82,6 +84,7 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
 
         if (CollectionUtils.isEmpty(privileges)) {
             LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges() return because privileges is empty.");
+
             return;
         }
 
@@ -90,8 +93,8 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
         if (plugin != null) {
             for (MPrivilege privilege : privileges) {
                 RangerSqoopAccessRequest request = new RangerSqoopAccessRequest(principal, privilege, clientIPAddress);
+                RangerAccessResult       result  = plugin.isAccessAllowed(request);
 
-                RangerAccessResult result = plugin.isAccessAllowed(request);
                 if (result != null && !result.getIsAllowed()) {
                     throw new SqoopException(SecurityError.AUTH_0014, "principal = " + principal + " does not have privileges for: " + privilege);
                 }
@@ -103,6 +106,7 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
 
     private String getClientIPAddress() {
         InetAddress ip = null;
+
         try {
             ip = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
@@ -110,9 +114,11 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
         }
 
         String ret = null;
+
         if (ip != null) {
             ret = ip.getHostAddress();
         }
+
         return ret;
     }
 
@@ -136,9 +142,11 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
             if (MResource.TYPE.CONNECTOR.name().equals(resource.getType())) {
                 setValue(SqoopResourceMgr.CONNECTOR, resource.getName());
             }
+
             if (MResource.TYPE.LINK.name().equals(resource.getType())) {
                 setValue(SqoopResourceMgr.LINK, resource.getName());
             }
+
             if (MResource.TYPE.JOB.name().equals(resource.getType())) {
                 setValue(SqoopResourceMgr.JOB, resource.getName());
             }
@@ -148,14 +156,17 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
     private static class RangerSqoopAccessRequest extends RangerAccessRequestImpl {
         public RangerSqoopAccessRequest(MPrincipal principal, MPrivilege privilege, String clientIPAddress) {
             super.setResource(new RangerSqoopResource(privilege.getResource()));
+
             if (MPrincipal.TYPE.USER.name().equals(principal.getType())) {
                 super.setUser(principal.getName());
             }
+
             if (MPrincipal.TYPE.GROUP.name().equals(principal.getType())) {
                 super.setUserGroups(Sets.newHashSet(principal.getName()));
             }
 
             String action = privilege.getAction();
+
             super.setAccessType(action);
             super.setAction(action);
 
