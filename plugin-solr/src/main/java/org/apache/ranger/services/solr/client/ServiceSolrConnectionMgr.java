@@ -28,16 +28,20 @@ public class ServiceSolrConnectionMgr {
     private static final String SOLR_URL              = "solr.url";
 
     private ServiceSolrConnectionMgr(){
+        // to block instantiation
     }
 
     public static ServiceSolrClient getSolrClient(String serviceName, Map<String, String> configs) throws Exception {
         String solrUrl = configs.get(SOLR_URL);
         String zkUrl   = configs.get(SOLR_ZOOKEEPER_QUORUM);
+
         if (solrUrl != null || zkUrl != null) {
             final boolean     isSolrCloud       = StringUtils.isNotEmpty(zkUrl);
             final String      url               = isSolrCloud ? zkUrl : solrUrl;
+
             return new ServiceSolrClient(serviceName, configs, url, isSolrCloud);
         }
+
         throw new Exception("Required properties are not set for " + serviceName + ". URL or Zookeeper information not provided.");
     }
 
@@ -48,6 +52,7 @@ public class ServiceSolrConnectionMgr {
      */
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
         ServiceSolrClient serviceSolrClient = getSolrClient(serviceName, configs);
+
         return serviceSolrClient.connectionTest();
     }
 }
