@@ -42,7 +42,8 @@ public class SchemaRegistryResourceMgr {
 
     private static final int LOOKUP_TIMEOUT_SEC = 5;
 
-    private SchemaRegistryResourceMgr(){
+    private SchemaRegistryResourceMgr() {
+        // to block instantiation
     }
 
     public static List<String> getSchemaRegistryResources(String serviceName, Map<String, String> configs, ResourceLookupContext context, AutocompletionAgent registryClient) throws Exception {
@@ -53,28 +54,26 @@ public class SchemaRegistryResourceMgr {
 
         LOG.debug("==> SchemaRegistryResourceMgr.getSchemaRegistryResources()  UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
 
-        if (userInput != null
-                && !userInput.isEmpty()
-                && serviceName != null
-                && resource != null
-                && resourceMap != null
-                && !resourceMap.isEmpty()) {
+        if (userInput != null && !userInput.isEmpty() && serviceName != null && resource != null && resourceMap != null && !resourceMap.isEmpty()) {
             if (registryClient != null) {
                 Callable<List<String>> callableObj = null;
+
                 try {
                     switch (resource.trim().toLowerCase()) {
                         case SCHEMA_GROUP: {
-                            List<String> schemaGroupList = resourceMap.get(SCHEMA_GROUP);
-                            // get the SchemaGroupList for given Input
+                            List<String> schemaGroupList      = resourceMap.get(SCHEMA_GROUP);
                             final String finalSchemaGroupName = userInput;
+
+                            // get the SchemaGroupList for given Input
                             callableObj = () -> registryClient.getSchemaGroupList(finalSchemaGroupName, schemaGroupList);
                             break;
                         }
                         case SCHEMA_METADATA: {
                             List<String> schemaGroupList     = resourceMap.get(SCHEMA_GROUP);
                             List<String> schemaMeatadataList = resourceMap.get(SCHEMA_METADATA);
+                            final String finalSchemaName     = userInput;
+
                             // get the SchemaMetadataList for the given Input
-                            final String finalSchemaName = userInput;
                             callableObj = () -> registryClient.getSchemaMetadataList(finalSchemaName, schemaGroupList, schemaMeatadataList);
                             break;
                         }
@@ -82,9 +81,9 @@ public class SchemaRegistryResourceMgr {
                             List<String> schemaGroupList     = resourceMap.get(SCHEMA_GROUP);
                             List<String> schemaMeatadataList = resourceMap.get(SCHEMA_METADATA);
                             List<String> branchList          = resourceMap.get(SCHEMA_BRANCH);
+                            final String finalBranchName     = userInput;
 
                             // get the SchemaBranchList for given Input
-                            final String finalBranchName = userInput;
                             callableObj = () -> registryClient.getBranchList(finalBranchName, schemaGroupList, schemaMeatadataList, branchList);
                             break;
                         }
@@ -98,6 +97,7 @@ public class SchemaRegistryResourceMgr {
                     }
                 } catch (Exception e) {
                     LOG.error("Unable to get Schema Registry resources", e);
+
                     throw e;
                 }
                 if (callableObj != null) {
