@@ -253,101 +253,101 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 
         return "null";
     }
-}
 
-class RangerYarnPlugin extends RangerBasePlugin {
-    public RangerYarnPlugin() {
-        super("yarn", "yarn");
-    }
-
-    @Override
-    public void init() {
-        super.init();
-
-        RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
-
-        super.setResultProcessor(auditHandler);
-    }
-}
-
-class RangerYarnResource extends RangerAccessResourceImpl {
-    public RangerYarnResource(PrivilegedEntity entity) {
-        setValue(RangerYarnAuthorizer.KEY_RESOURCE_QUEUE, entity != null ? entity.getName() : null);
-    }
-}
-
-class RangerYarnAccessRequest extends RangerAccessRequestImpl {
-    public RangerYarnAccessRequest(PrivilegedEntity entity, String accessType, String action, UserGroupInformation ugi, List<String> forwardedAddresses, String remoteIpAddress) {
-        super.setResource(new RangerYarnResource(entity));
-        super.setAccessType(accessType);
-        super.setUser(ugi.getShortUserName());
-        super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
-        super.setAccessTime(new Date());
-
-        String clientIPAddress = remoteIpAddress;
-        if (StringUtils.isEmpty(clientIPAddress)) {
-            clientIPAddress = getRemoteIp();
-        }
-        super.setClientIPAddress(clientIPAddress);
-
-        super.setAction(action);
-        super.setRemoteIPAddress(remoteIpAddress);
-        super.setForwardedAddresses(forwardedAddresses);
-    }
-
-    private static String getRemoteIp() {
-        String      ret = null;
-        InetAddress ip  = Server.getRemoteIp();
-        if (ip != null) {
-            ret = ip.getHostAddress();
-        }
-        return ret;
-    }
-}
-
-class RangerYarnAuditHandler extends RangerDefaultAuditHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerYarnAuditHandler.class);
-
-    private final String          yarnModuleName;
-    private       boolean         isAuditEnabled;
-    private       AuthzAuditEvent auditEvent;
-
-    public RangerYarnAuditHandler(String yarnModuleName) {
-        this.yarnModuleName = yarnModuleName;
-    }
-
-    @Override
-    public void processResult(RangerAccessResult result) {
-        LOG.debug("==> RangerYarnAuditHandler.logAudit({})", result);
-
-        if (!isAuditEnabled && result.getIsAudited()) {
-            isAuditEnabled = true;
+    private static class RangerYarnPlugin extends RangerBasePlugin {
+        public RangerYarnPlugin() {
+            super("yarn", "yarn");
         }
 
-        auditEvent = super.getAuthzEvents(result);
+        @Override
+        public void init() {
+            super.init();
 
-        LOG.debug("<== RangerYarnAuditHandler.logAudit({}): {}", result, auditEvent);
+            RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
+
+            super.setResultProcessor(auditHandler);
+        }
     }
 
-    public void logYarnAclEvent(boolean accessGranted) {
-        LOG.debug("==> RangerYarnAuditHandler.logYarnAclEvent({})", accessGranted);
-
-        if (auditEvent != null) {
-            auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
-            auditEvent.setAclEnforcer(yarnModuleName);
-            auditEvent.setPolicyId(-1);
+    private static class RangerYarnResource extends RangerAccessResourceImpl {
+        public RangerYarnResource(PrivilegedEntity entity) {
+            setValue(RangerYarnAuthorizer.KEY_RESOURCE_QUEUE, entity != null ? entity.getName() : null);
         }
-
-        LOG.debug("<== RangerYarnAuditHandler.logYarnAclEvent({}): {}", accessGranted, auditEvent);
     }
 
-    public void flushAudit() {
-        LOG.debug("==> RangerYarnAuditHandler.flushAudit({}, {})", isAuditEnabled, auditEvent);
+    private static class RangerYarnAccessRequest extends RangerAccessRequestImpl {
+        public RangerYarnAccessRequest(PrivilegedEntity entity, String accessType, String action, UserGroupInformation ugi, List<String> forwardedAddresses, String remoteIpAddress) {
+            super.setResource(new RangerYarnResource(entity));
+            super.setAccessType(accessType);
+            super.setUser(ugi.getShortUserName());
+            super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
+            super.setAccessTime(new Date());
 
-        if (isAuditEnabled) {
-            super.logAuthzAudit(auditEvent);
+            String clientIPAddress = remoteIpAddress;
+            if (StringUtils.isEmpty(clientIPAddress)) {
+                clientIPAddress = getRemoteIp();
+            }
+            super.setClientIPAddress(clientIPAddress);
+
+            super.setAction(action);
+            super.setRemoteIPAddress(remoteIpAddress);
+            super.setForwardedAddresses(forwardedAddresses);
         }
 
-        LOG.debug("<== RangerYarnAuditHandler.flushAudit({}, {})", isAuditEnabled, auditEvent);
+        private static String getRemoteIp() {
+            String      ret = null;
+            InetAddress ip  = Server.getRemoteIp();
+            if (ip != null) {
+                ret = ip.getHostAddress();
+            }
+            return ret;
+        }
+    }
+
+    private static class RangerYarnAuditHandler extends RangerDefaultAuditHandler {
+        private static final Logger LOG = LoggerFactory.getLogger(RangerYarnAuditHandler.class);
+
+        private final String          yarnModuleName;
+        private       boolean         isAuditEnabled;
+        private       AuthzAuditEvent auditEvent;
+
+        public RangerYarnAuditHandler(String yarnModuleName) {
+            this.yarnModuleName = yarnModuleName;
+        }
+
+        @Override
+        public void processResult(RangerAccessResult result) {
+            LOG.debug("==> RangerYarnAuditHandler.logAudit({})", result);
+
+            if (!isAuditEnabled && result.getIsAudited()) {
+                isAuditEnabled = true;
+            }
+
+            auditEvent = super.getAuthzEvents(result);
+
+            LOG.debug("<== RangerYarnAuditHandler.logAudit({}): {}", result, auditEvent);
+        }
+
+        public void logYarnAclEvent(boolean accessGranted) {
+            LOG.debug("==> RangerYarnAuditHandler.logYarnAclEvent({})", accessGranted);
+
+            if (auditEvent != null) {
+                auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
+                auditEvent.setAclEnforcer(yarnModuleName);
+                auditEvent.setPolicyId(-1);
+            }
+
+            LOG.debug("<== RangerYarnAuditHandler.logYarnAclEvent({}): {}", accessGranted, auditEvent);
+        }
+
+        public void flushAudit() {
+            LOG.debug("==> RangerYarnAuditHandler.flushAudit({}, {})", isAuditEnabled, auditEvent);
+
+            if (isAuditEnabled) {
+                super.logAuthzAudit(auditEvent);
+            }
+
+            LOG.debug("<== RangerYarnAuditHandler.flushAudit({}, {})", isAuditEnabled, auditEvent);
+        }
     }
 }
