@@ -17,11 +17,6 @@
 
 package org.apache.ranger.authorization.sqoop.authorizer;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -39,147 +34,133 @@ import org.apache.sqoop.security.SecurityError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.List;
 
 public class RangerSqoopAuthorizer extends AuthorizationValidator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSqoopAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSqoopAuthorizer.class);
 
-	private static volatile RangerSqoopPlugin sqoopPlugin = null;
+    private static volatile RangerSqoopPlugin sqoopPlugin;
 
-	private static String clientIPAddress = null;
+    private static String clientIPAddress;
 
-	public RangerSqoopAuthorizer() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
-		}
+    public RangerSqoopAuthorizer() {
+        LOG.debug("==> RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
 
-		this.init();
+        this.init();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
-		}
-	}
+        LOG.debug("<== RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
+    }
 
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.init()");
-		}
+    public void init() {
+        LOG.debug("==> RangerSqoopAuthorizer.init()");
 
-		RangerSqoopPlugin plugin = sqoopPlugin;
+        RangerSqoopPlugin plugin = sqoopPlugin;
 
-		if (plugin == null) {
-			synchronized (RangerSqoopAuthorizer.class) {
-				plugin = sqoopPlugin;
+        if (plugin == null) {
+            synchronized (RangerSqoopAuthorizer.class) {
+                plugin = sqoopPlugin;
 
-				if (plugin == null) {
-					plugin = new RangerSqoopPlugin();
-					plugin.init();
-					sqoopPlugin = plugin;
+                if (plugin == null) {
+                    plugin = new RangerSqoopPlugin();
+                    plugin.init();
+                    sqoopPlugin = plugin;
 
-					clientIPAddress = getClientIPAddress();
-				}
-			}
-		}
+                    clientIPAddress = getClientIPAddress();
+                }
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.init()");
-		}
-	}
+        LOG.debug("<== RangerSqoopAuthorizer.init()");
+    }
 
-	@Override
-	public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.checkPrivileges( principal=" + principal + ", privileges="
-					+ privileges + ")");
-		}
+    @Override
+    public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {
+        LOG.debug("==> RangerSqoopAuthorizer.checkPrivileges( principal={}, privileges={})", principal, privileges);
 
-		if (CollectionUtils.isEmpty(privileges)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges() return because privileges is empty.");
-			}
-			return;
-		}
+        if (CollectionUtils.isEmpty(privileges)) {
+            LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges() return because privileges is empty.");
+            return;
+        }
 
-		RangerSqoopPlugin plugin = sqoopPlugin;
+        RangerSqoopPlugin plugin = sqoopPlugin;
 
-		if (plugin != null) {
-			for (MPrivilege privilege : privileges) {
-				RangerSqoopAccessRequest request = new RangerSqoopAccessRequest(principal, privilege, clientIPAddress);
+        if (plugin != null) {
+            for (MPrivilege privilege : privileges) {
+                RangerSqoopAccessRequest request = new RangerSqoopAccessRequest(principal, privilege, clientIPAddress);
 
-				RangerAccessResult result = plugin.isAccessAllowed(request);
-				if (result != null && !result.getIsAllowed()) {
-					throw new SqoopException(SecurityError.AUTH_0014, "principal=" + principal
-							+ " does not have privileges for : " + privilege);
-				}
-			}
-		}
+                RangerAccessResult result = plugin.isAccessAllowed(request);
+                if (result != null && !result.getIsAllowed()) {
+                    throw new SqoopException(SecurityError.AUTH_0014, "principal = " + principal + " does not have privileges for: " + privilege);
+                }
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges() success without exception.");
-		}
-	}
+        LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges() success without exception.");
+    }
 
-	private String getClientIPAddress() {
-		InetAddress ip = null;
-		try {
-			ip = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Failed to get Client IP Address" + e);
-			}
-		}
+    private String getClientIPAddress() {
+        InetAddress ip = null;
+        try {
+            ip = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            LOG.debug("Failed to get Client IP Address {}", String.valueOf(e));
+        }
 
-		String ret = null;
-		if (ip != null) {
-			ret = ip.getHostAddress();
-		}
-		return ret;
-	}
-}
+        String ret = null;
+        if (ip != null) {
+            ret = ip.getHostAddress();
+        }
+        return ret;
+    }
 
-class RangerSqoopPlugin extends RangerBasePlugin {
-	public RangerSqoopPlugin() {
-		super("sqoop", "sqoop");
-	}
+    private static class RangerSqoopPlugin extends RangerBasePlugin {
+        public RangerSqoopPlugin() {
+            super("sqoop", "sqoop");
+        }
 
-	@Override
-	public void init() {
-		super.init();
+        @Override
+        public void init() {
+            super.init();
 
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
+            RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
 
-		super.setResultProcessor(auditHandler);
-	}
-}
+            super.setResultProcessor(auditHandler);
+        }
+    }
 
-class RangerSqoopResource extends RangerAccessResourceImpl {
-	public RangerSqoopResource(MResource resource) {
-		if (MResource.TYPE.CONNECTOR.name().equals(resource.getType())) {
-			setValue(SqoopResourceMgr.CONNECTOR, resource.getName());
-		}
-		if (MResource.TYPE.LINK.name().equals(resource.getType())) {
-			setValue(SqoopResourceMgr.LINK, resource.getName());
-		}
-		if (MResource.TYPE.JOB.name().equals(resource.getType())) {
-			setValue(SqoopResourceMgr.JOB, resource.getName());
-		}
-	}
-}
+    private static class RangerSqoopResource extends RangerAccessResourceImpl {
+        public RangerSqoopResource(MResource resource) {
+            if (MResource.TYPE.CONNECTOR.name().equals(resource.getType())) {
+                setValue(SqoopResourceMgr.CONNECTOR, resource.getName());
+            }
+            if (MResource.TYPE.LINK.name().equals(resource.getType())) {
+                setValue(SqoopResourceMgr.LINK, resource.getName());
+            }
+            if (MResource.TYPE.JOB.name().equals(resource.getType())) {
+                setValue(SqoopResourceMgr.JOB, resource.getName());
+            }
+        }
+    }
 
-class RangerSqoopAccessRequest extends RangerAccessRequestImpl {
-	public RangerSqoopAccessRequest(MPrincipal principal, MPrivilege privilege,String clientIPAddress) {
-		super.setResource(new RangerSqoopResource(privilege.getResource()));
-		if (MPrincipal.TYPE.USER.name().equals(principal.getType())) {
-			super.setUser(principal.getName());
-		}
-		if (MPrincipal.TYPE.GROUP.name().equals(principal.getType())) {
-			super.setUserGroups(Sets.newHashSet(principal.getName()));
-		}
+    private static class RangerSqoopAccessRequest extends RangerAccessRequestImpl {
+        public RangerSqoopAccessRequest(MPrincipal principal, MPrivilege privilege, String clientIPAddress) {
+            super.setResource(new RangerSqoopResource(privilege.getResource()));
+            if (MPrincipal.TYPE.USER.name().equals(principal.getType())) {
+                super.setUser(principal.getName());
+            }
+            if (MPrincipal.TYPE.GROUP.name().equals(principal.getType())) {
+                super.setUserGroups(Sets.newHashSet(principal.getName()));
+            }
 
-		String action = privilege.getAction();
-		super.setAccessType(action);
-		super.setAction(action);
+            String action = privilege.getAction();
+            super.setAccessType(action);
+            super.setAction(action);
 
-		super.setAccessTime(new Date());
-		super.setClientIPAddress(clientIPAddress);
-	}
+            super.setAccessTime(new Date());
+            super.setClientIPAddress(clientIPAddress);
+        }
+    }
 }
