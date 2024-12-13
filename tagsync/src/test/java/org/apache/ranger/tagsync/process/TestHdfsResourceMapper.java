@@ -184,14 +184,7 @@ public class TestHdfsResourceMapper {
 	}
 
 	private RangerAtlasEntity getHdfsPathEntity(Map<String, Object> entAttribs) throws Exception {
-		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-		Mockito.when(entity.getTypeName()).thenReturn(AtlasHdfsResourceMapper.ENTITY_TYPE_HDFS_PATH);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-		return entity;
+		return new RangerAtlasEntity(AtlasHdfsResourceMapper.ENTITY_TYPE_HDFS_PATH, "guid", entAttribs);
 	}
 
 	private void assertServiceResource(RangerServiceResource resource) {

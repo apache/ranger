@@ -94,30 +94,15 @@ public class TestHiveResourceMapper {
 	}
 
 	private RangerAtlasEntity getHiveDbEntity(Map<String, Object> entAttribs) throws Exception {
-		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-		Mockito.when(entity.getTypeName()).thenReturn(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_DB);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-		return entity;
+		return new RangerAtlasEntity(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_DB, "guid", entAttribs);
 	}
 
 	private RangerAtlasEntity getHiveTableEntity(Map<String, Object> entAttribs) throws Exception {
-		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-		Mockito.when(entity.getTypeName()).thenReturn(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_TABLE);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-		return entity;
+		return new RangerAtlasEntity(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_TABLE, "guid", entAttribs);
 	}
 
 	private RangerAtlasEntity getHiveColumnEntity(Map<String, Object> entAttribs) throws Exception {
-		RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-		Mockito.when(entity.getTypeName()).thenReturn(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_COLUMN);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-		return entity;
+		return new RangerAtlasEntity(AtlasHiveResourceMapper.ENTITY_TYPE_HIVE_COLUMN, "guid", entAttribs);
 	}
 
 	private void assertServiceResource(RangerServiceResource resource) {

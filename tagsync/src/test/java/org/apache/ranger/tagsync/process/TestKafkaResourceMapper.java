@@ -102,12 +102,7 @@ public class TestKafkaResourceMapper {
     }
 
     private RangerAtlasEntity getKafkaTopicEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-        Mockito.when(entity.getTypeName()).thenReturn(AtlasKafkaResourceMapper.ENTITY_TYPE_KAFKA_TOPIC);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-        return entity;
+        return new RangerAtlasEntity(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC, "guid", entAttribs);
     }
 
     private void assertServiceResource(RangerServiceResource resource) {

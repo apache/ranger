@@ -200,39 +200,19 @@ public class TestHbaseResourceMapper {
     }
 
     private RangerAtlasEntity getHbaseNamespaceEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-        Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_NAMESPACE);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-        return entity;
+        return new RangerAtlasEntity(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_NAMESPACE, "guid", entAttribs);
     }
 
     private RangerAtlasEntity getHbaseTableEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-        Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_TABLE);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-        return entity;
+        return new RangerAtlasEntity(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_TABLE, "guid", entAttribs);
     }
 
     private RangerAtlasEntity getHbaseColumnFamilyEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-        Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN_FAMILY);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-        return entity;
+        return new RangerAtlasEntity(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN_FAMILY, "guid", entAttribs);
     }
 
     private RangerAtlasEntity getHbaseColumnEntity(Map<String, Object> entAttribs) throws Exception {
-        RangerAtlasEntity entity = Mockito.mock(RangerAtlasEntity.class);
-
-        Mockito.when(entity.getTypeName()).thenReturn(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN);
-        Mockito.when(entity.getAttributes()).thenReturn(entAttribs);
-
-        return entity;
+        return new RangerAtlasEntity(AtlasHbaseResourceMapper.ENTITY_TYPE_HBASE_COLUMN, "guid", entAttribs);
     }
 
     private void assertServiceResource(RangerServiceResource resource) {
