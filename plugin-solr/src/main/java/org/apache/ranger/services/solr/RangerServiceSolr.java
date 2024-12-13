@@ -38,9 +38,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceSolr extends RangerBaseService {
-    private static final Logger LOG               = LoggerFactory.getLogger(RangerServiceSolr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSolr.class);
 
-    public static final  String ACCESS_TYPE_QUERY = RangerSolrConstants.AccessType.QUERY.toString();
+    public static final String ACCESS_TYPE_QUERY = RangerSolrConstants.AccessType.QUERY.toString();
 
     public RangerServiceSolr() {
         super();
@@ -60,13 +60,14 @@ public class RangerServiceSolr extends RangerBaseService {
 
         if (configs != null) {
             try {
-                ret = ServiceSolrConnectionMgr.connectionTest(serviceName,
-                        configs);
+                ret = ServiceSolrConnectionMgr.connectionTest(serviceName, configs);
             } catch (Exception e) {
                 LOG.error("<== RangerServiceSolr.validateConfig Error:", e);
+
                 throw e;
             }
         }
+
         LOG.debug("<== RangerServiceSolr.validateConfig Response : ({} )", ret);
 
         return ret;
@@ -75,6 +76,7 @@ public class RangerServiceSolr extends RangerBaseService {
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
         ServiceSolrClient serviceSolrClient = ServiceSolrConnectionMgr.getSolrClient(serviceName, configs);
+
         return serviceSolrClient.getResources(context);
     }
 
@@ -83,12 +85,15 @@ public class RangerServiceSolr extends RangerBaseService {
         LOG.debug("==> RangerServiceSolr.getDefaultRangerPolicies()");
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
                 RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+
                 policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
                 policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_QUERY)));
                 policyItemForLookupUser.setDelegateAdmin(false);
+
                 defaultPolicy.addPolicyItem(policyItemForLookupUser);
             }
         }
