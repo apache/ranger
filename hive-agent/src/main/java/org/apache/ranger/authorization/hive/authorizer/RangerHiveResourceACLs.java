@@ -25,22 +25,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerHiveResourceACLs implements HiveResourceACLs {
+    private final Map<String, Map<Privilege, AccessResult>> userPermissions;
+    private final Map<String, Map<Privilege, AccessResult>> groupPermissions;
 
-	private final Map<String, Map<Privilege, AccessResult>> userPermissions;
-	private final Map<String, Map<Privilege, AccessResult>> groupPermissions;
+    RangerHiveResourceACLs() {
+        this(null, null);
+    }
 
-	RangerHiveResourceACLs() {
-		this(null, null);
-	}
+    RangerHiveResourceACLs(Map<String, Map<Privilege, AccessResult>> userPermissions, Map<String, Map<Privilege, AccessResult>> groupPermissions) {
+        this.userPermissions  = userPermissions != null ? userPermissions : new HashMap<>();
+        this.groupPermissions = groupPermissions != null ? groupPermissions : new HashMap<>();
+    }
 
-	RangerHiveResourceACLs(Map<String, Map<Privilege, AccessResult>> userPermissions, Map<String, Map<Privilege, AccessResult>> groupPermissions) {
-		this.userPermissions = userPermissions != null ? userPermissions : new HashMap<>();
-		this.groupPermissions = groupPermissions != null ? groupPermissions : new HashMap<>();
-	}
+    @Override
+    public Map<String, Map<Privilege, AccessResult>> getUserPermissions() {
+        return userPermissions;
+    }
 
-	@Override
-	public Map<String, Map<Privilege, AccessResult>> getUserPermissions() { return userPermissions; }
-
-	@Override
-	public Map<String, Map<Privilege, AccessResult>> getGroupPermissions() { return groupPermissions; }
+    @Override
+    public Map<String, Map<Privilege, AccessResult>> getGroupPermissions() {
+        return groupPermissions;
+    }
 }
