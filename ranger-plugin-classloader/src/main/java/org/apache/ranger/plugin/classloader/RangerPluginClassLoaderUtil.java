@@ -33,8 +33,9 @@ import java.util.List;
 public class RangerPluginClassLoaderUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoaderUtil.class);
 
-    private static final    String                      RANGER_PLUGIN_LIB_DIR = "ranger-%-plugin-impl";
-    private static volatile RangerPluginClassLoaderUtil config                = null;
+    private static final String RANGER_PLUGIN_LIB_DIR = "ranger-%-plugin-impl";
+
+    private static volatile RangerPluginClassLoaderUtil config;
 
     public static RangerPluginClassLoaderUtil getInstance() {
         RangerPluginClassLoaderUtil result = config;

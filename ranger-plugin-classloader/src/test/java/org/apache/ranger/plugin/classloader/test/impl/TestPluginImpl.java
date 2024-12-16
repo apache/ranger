@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.classloader.test.Impl;
+package org.apache.ranger.plugin.classloader.test.impl;
 
 import org.apache.ranger.plugin.classloader.test.TestPlugin;
 

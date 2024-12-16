@@ -21,6 +21,6 @@ package org.apache.ranger.plugin.classloader.test;
 
 public class TestPrintParent {
     public String getString() {
-       return "Loaded by Component ClassLoader";
+        return "Loaded by Component ClassLoader";
     }
 }

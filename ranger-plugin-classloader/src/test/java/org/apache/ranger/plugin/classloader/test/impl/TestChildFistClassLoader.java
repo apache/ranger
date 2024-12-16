@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.classloader.test.Impl;
+package org.apache.ranger.plugin.classloader.test.impl;
 
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.classloader.test.TestPlugin;
@@ -47,7 +47,7 @@ public class TestChildFistClassLoader {
             @SuppressWarnings("resource")
             RangerPluginClassLoader rangerPluginClassLoader = new RangerPluginClassLoader("hdfs", TestChildFistClassLoader.class);
 
-            TestPlugin testPlugin = (TestPlugin) rangerPluginClassLoader.loadClass("org.apache.ranger.plugin.classloader.test.Impl.TestPluginImpl").newInstance();
+            TestPlugin testPlugin = (TestPlugin) rangerPluginClassLoader.loadClass("org.apache.ranger.plugin.classloader.test.impl.TestPluginImpl").newInstance();
 
             System.out.println(testPlugin.print());
         } catch (Throwable t) {
