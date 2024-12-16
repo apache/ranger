@@ -40,6 +40,7 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
+
 import java.math.BigDecimal;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -50,35 +51,24 @@ import java.util.Date;
 import java.util.Set;
 
 public class CredentialsProviderUtil {
-    private static final Logger logger = LoggerFactory.getLogger(CredentialsProviderUtil.class);
-    private static final Oid SPNEGO_OID = getSpnegoOid();
-    private static final String CRED_CONF_NAME = "ESClientLoginConf";
-    public static long ticketExpireTime80 = 0;
+    private static final Logger logger             = LoggerFactory.getLogger(CredentialsProviderUtil.class);
+    private static final Oid    SPNEGO_OID         = getSpnegoOid();
+    private static final String CRED_CONF_NAME     = "ESClientLoginConf";
+    public static        long   ticketExpireTime80;
 
-    private static Oid getSpnegoOid() {
-        Oid oid = null;
-        try {
-            oid = new Oid("1.3.6.1.5.5.2");
-        } catch (GSSException gsse) {
-            throw new RuntimeException(gsse);
-        }
-        return oid;
+    private CredentialsProviderUtil() {
+        // to block instantiation
     }
 
-    public static KerberosCredentialsProvider getKerberosCredentials(String user, String password){
+    public static KerberosCredentialsProvider getKerberosCredentials(String user, String password) {
         KerberosCredentialsProvider credentialsProvider = new KerberosCredentialsProvider();
-        final GSSManager gssManager = GSSManager.getInstance();
+        final GSSManager            gssManager          = GSSManager.getInstance();
         try {
-            final GSSName gssUserPrincipalName = gssManager.createName(user, GSSName.NT_USER_NAME);
-            Subject subject = login(user, password);
-            final AccessControlContext acc = AccessController.getContext();
-            final GSSCredential credential = doAsPrivilegedWrapper(subject,
-                    (PrivilegedExceptionAction<GSSCredential>) () -> gssManager.createCredential(gssUserPrincipalName,
-                            GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY),
-                    acc);
-            credentialsProvider.setCredentials(
-                    new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthSchemes.SPNEGO),
-                    new KerberosCredentials(credential));
+            final GSSName              gssUserPrincipalName = gssManager.createName(user, GSSName.NT_USER_NAME);
+            Subject                    subject              = login(user, password);
+            final AccessControlContext acc                  = AccessController.getContext();
+            final GSSCredential credential = doAsPrivilegedWrapper(subject, (PrivilegedExceptionAction<GSSCredential>) () -> gssManager.createCredential(gssUserPrincipalName, GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY), acc);
+            credentialsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthSchemes.SPNEGO), new KerberosCredentials(credential));
         } catch (GSSException e) {
             logger.error("GSSException:", e);
             throw new RuntimeException(e);
@@ -91,7 +81,7 @@ public class CredentialsProviderUtil {
 
     public static synchronized KerberosTicket getTGT(Subject subject) {
         Set<KerberosTicket> tickets = subject.getPrivateCredentials(KerberosTicket.class);
-        for(KerberosTicket ticket: tickets) {
+        for (KerberosTicket ticket : tickets) {
             KerberosPrincipal server = ticket.getServer();
             if (server.getName().equals("krbtgt/" + server.getRealm() + "@" + server.getRealm())) {
                 if (logger.isDebugEnabled()) {
@@ -104,15 +94,15 @@ public class CredentialsProviderUtil {
         return null;
     }
 
-    public static Boolean ticketWillExpire(KerberosTicket ticket){
+    public static Boolean ticketWillExpire(KerberosTicket ticket) {
         long ticketExpireTime = ticket.getEndTime().getTime();
-        long currrentTime = new Date().getTime();
+        long currrentTime     = new Date().getTime();
         if (logger.isDebugEnabled()) {
             logger.debug("TicketExpireTime is:" + ticketExpireTime);
             logger.debug("currrentTime is:" + currrentTime);
         }
         if (ticketExpireTime80 == 0) {
-            long timeDiff = ticketExpireTime - currrentTime;
+            long timeDiff   = ticketExpireTime - currrentTime;
             long timeDiff20 = Math.round(Float.parseFloat(BigDecimal.valueOf(timeDiff * 0.2).toPlainString()));
             ticketExpireTime80 = ticketExpireTime - timeDiff20;
         }
@@ -130,21 +120,23 @@ public class CredentialsProviderUtil {
     }
 
     public static synchronized Subject login(String userPrincipalName, String keytabPath) throws PrivilegedActionException {
-             Subject sub = AccessController.doPrivileged((PrivilegedExceptionAction<Subject>) () -> {
-                final Subject subject = new Subject(false, Collections.singleton(new KerberosPrincipal(userPrincipalName)),
-                        Collections.emptySet(), Collections.emptySet());
-                Configuration conf = new KeytabJaasConf(userPrincipalName, keytabPath, false);
-
-                LoginContext loginContext = new LoginContext(CRED_CONF_NAME, subject, null, conf);
-                loginContext.login();
-                return loginContext.getSubject();
-            });
+        Subject sub = AccessController.doPrivileged((PrivilegedExceptionAction<Subject>) () -> {
+            final Subject subject = new Subject(false, Collections.singleton(new KerberosPrincipal(userPrincipalName)), Collections.emptySet(), Collections.emptySet());
+            Configuration conf = new KeytabJaasConf(userPrincipalName, keytabPath, false);
+            LoginContext loginContext = new LoginContext(CRED_CONF_NAME, subject, null, conf);
+            loginContext.login();
+            return loginContext.getSubject();
+        });
         return sub;
     }
 
+    public static CredentialsProvider getBasicCredentials(String user, String password) {
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+        return credentialsProvider;
+    }
 
-    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action, final AccessControlContext acc)
-            throws PrivilegedActionException {
+    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action, final AccessControlContext acc) throws PrivilegedActionException {
         try {
             return AccessController.doPrivileged((PrivilegedExceptionAction<T>) () -> Subject.doAsPrivileged(subject, action, acc));
         } catch (PrivilegedActionException pae) {
@@ -155,11 +147,13 @@ public class CredentialsProviderUtil {
         }
     }
 
-    public static CredentialsProvider getBasicCredentials(String user, String password) {
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY,
-                new UsernamePasswordCredentials(user, password));
-        return credentialsProvider;
+    private static Oid getSpnegoOid() {
+        Oid oid = null;
+        try {
+            oid = new Oid("1.3.6.1.5.5.2");
+        } catch (GSSException gsse) {
+            throw new RuntimeException(gsse);
+        }
+        return oid;
     }
-
 }
