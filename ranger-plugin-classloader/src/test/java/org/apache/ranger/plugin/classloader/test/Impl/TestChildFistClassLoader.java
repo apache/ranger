@@ -19,37 +19,39 @@
 
 package org.apache.ranger.plugin.classloader.test.Impl;
 
-import java.io.File;
-import java.net.URL;
-
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.classloader.test.TestPlugin;
 import org.apache.ranger.plugin.classloader.test.TestPrintParent;
 
-public class TestChildFistClassLoader {
+import java.io.File;
 
-	public static void main(String [] args){
-		TestPrintParent testPrint = new TestPrintParent();
-		System.out.println(testPrint.getString());
-		File   file = null;
-		URL[]  urls = null;
-		try {
-			file = new File(".." + File.separatorChar + "TestPluginImpl.class");
-		    URL url = file.toPath().toUri().toURL();		
-		    urls = new URL[] {url};
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		String[] libdirs = new String[] { file.getAbsolutePath() };
-	
-		try {
-			@SuppressWarnings("resource")
-			RangerPluginClassLoader rangerPluginClassLoader = new RangerPluginClassLoader("hdfs", TestChildFistClassLoader.class);
-			TestPlugin testPlugin = (TestPlugin) rangerPluginClassLoader.loadClass("org.apache.ranger.plugin.classloader.test.Impl.TestPluginImpl").newInstance();
-			System.out.println(testPlugin.print());
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
-	}
+public class TestChildFistClassLoader {
+    private TestChildFistClassLoader() {
+        // to block instantiation
+    }
+
+    public static void main(String[] args) {
+        TestPrintParent testPrint = new TestPrintParent();
+
+        System.out.println(testPrint.getString());
+
+        try {
+            File file = new File(".." + File.separatorChar + "TestPluginImpl.class");
+
+            file.toPath().toUri().toURL();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            @SuppressWarnings("resource")
+            RangerPluginClassLoader rangerPluginClassLoader = new RangerPluginClassLoader("hdfs", TestChildFistClassLoader.class);
+
+            TestPlugin testPlugin = (TestPlugin) rangerPluginClassLoader.loadClass("org.apache.ranger.plugin.classloader.test.Impl.TestPluginImpl").newInstance();
+
+            System.out.println(testPlugin.print());
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
 }

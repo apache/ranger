@@ -20,9 +20,7 @@
 package org.apache.ranger.plugin.classloader.test.Impl;
 
 public class TestPrint {
-
-	public String getString(){
-		String ret = "Class Loaded by RangerPlugingClassLoader";
-		return ret;
-	}
+    public String getString() {
+        return "Class Loaded by RangerPlugingClassLoader";
+    }
 }

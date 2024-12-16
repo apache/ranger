@@ -22,11 +22,8 @@ package org.apache.ranger.plugin.classloader.test.Impl;
 import org.apache.ranger.plugin.classloader.test.TestPlugin;
 
 public class TestPluginImpl implements TestPlugin {
-
-	@Override
-	public String print() {
-		String ret = new TestPrint().getString();
-		return ret;
-	}
-	
+    @Override
+    public String print() {
+        return new TestPrint().getString();
+    }
 }

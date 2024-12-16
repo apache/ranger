@@ -20,5 +20,5 @@
 package org.apache.ranger.plugin.classloader.test;
 
 public interface TestPlugin {
-	String print();
+    String print();
 }
