@@ -1,5 +1,3 @@
-package org.apache.ranger.authorization.hadoop;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.ranger.authorization.hadoop;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.ranger.authorization.hadoop;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
