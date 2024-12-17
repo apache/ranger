@@ -26,13 +26,13 @@ import java.util.Collections;
 import java.util.Set;
 
 public class PamPrincipal implements Principal {
-    private String      userName;
-    private String      gecos;
-    private String      homeDir;
-    private String      shell;
-    private int         uid;
-    private int         gid;
-    private Set<String> groups;
+    private final String userName;
+    private final String gecos;
+    private final String homeDir;
+    private final String shell;
+    private final Set<String> groups;
+    private final int uid;
+    private final int gid;
 
     public PamPrincipal(UnixUser user) {
         super();

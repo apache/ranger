@@ -57,35 +57,30 @@ public class UnixUserGroupBuilder implements UserGroupSource {
     static final String LINUX_GET_GROUP_CMD      = "getent group %s";
 
     // mainly for testing purposes, there might be a better way
-    static final String MAC_GET_ALL_USERS_CMD  = "dscl . -readall /Users UniqueID PrimaryGroupID | " +
-            "awk 'BEGIN { OFS = \":\"; ORS=\"\\n\"; i=0;}" +
-            "/RecordName: / {name = $2;i = 0;}/PrimaryGroupID: / {gid = $2;}" +
-            "/^ / {if (i == 0) { i++; name = $1;}}" +
-            "/UniqueID: / {uid = $2;print name, \"*\", gid, uid;}'";
-    static final String MAC_GET_ALL_GROUPS_CMD = "dscl . -list /Groups PrimaryGroupID | " +
-            "awk -v OFS=\":\" '{print $1, \"*\", $2, \"\"}'";
-    static final String MAC_GET_GROUP_CMD      = "dscl . -read /Groups/%1$s | paste -d, -s - | sed -e 's/:/|/g' | " +
-            "awk -v OFS=\":\" -v ORS=\"\\n\" -F, '{print \"%1$s\",\"*\",$6,$4}' | " +
-            "sed -e 's/:[^:]*| /:/g' | sed -e 's/ /,/g'";
-    static final String BACKEND_PASSWD = "passwd";
-    Set<String> allGroups = new HashSet<>();
-    private boolean useNss;
+    static final String MAC_GET_ALL_USERS_CMD    = "dscl . -readall /Users UniqueID PrimaryGroupID | awk 'BEGIN { OFS = \":\"; ORS=\"\\n\"; i=0;}/RecordName: / {name = $2;i = 0;}/PrimaryGroupID: / {gid = $2;}/^ / {if (i == 0) { i++; name = $1;}}/UniqueID: / {uid = $2;print name, \"*\", gid, uid;}'";
+    static final String MAC_GET_ALL_GROUPS_CMD   = "dscl . -list /Groups PrimaryGroupID | awk -v OFS=\":\" '{print $1, \"*\", $2, \"\"}'";
+    static final String MAC_GET_GROUP_CMD        = "dscl . -read /Groups/%1$s | paste -d, -s - | sed -e 's/:/|/g' | awk -v OFS=\":\" -v ORS=\"\\n\" -F, '{print \"%1$s\",\"*\",$6,$4}' | sed -e 's/:[^:]*| /:/g' | sed -e 's/ /,/g'";
+    static final String BACKEND_PASSWD           = "passwd";
+
     private final boolean enumerateGroupMembers;
-    private boolean isUpdateSinkSucc      = true;
-    private final UserGroupSyncConfig              config         = UserGroupSyncConfig.getInstance();
-    private Map<String, String>              groupId2groupNameMap;
-    private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
-    private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
-    private Map<String, Set<String>>         sourceGroupUsers;
-    private Table<String, String, String>    groupUserTable; // groupname, username, group id
-    private final String  unixPasswordFile;
-    private final String unixGroupFile;
-    private String currentSyncSource;
-    private int deleteCycles;
+    private final UserGroupSyncConfig config     = UserGroupSyncConfig.getInstance();
     private final int minimumUserId;
     private final int minimumGroupId;
-    private long lastUpdateTime;
+    private final String  unixPasswordFile;
+    private final String unixGroupFile;
     private final long timeout;
+
+    Set<String> allGroups = new HashSet<>();
+    private boolean useNss;
+    private boolean isUpdateSinkSucc      = true;
+    private Map<String, String> groupId2groupNameMap;
+    private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
+    private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
+    private Map<String, Set<String>> sourceGroupUsers;
+    private Table<String, String, String> groupUserTable; // groupname, username, group id
+    private String currentSyncSource;
+    private int deleteCycles;
+    private long lastUpdateTime;
     private long passwordFileModifiedAt;
     private long groupFileModifiedAt;
     private UgsyncAuditInfo    ugsyncAuditInfo;
@@ -99,13 +94,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
         minimumGroupId   = Integer.parseInt(config.getMinGroupId());
         unixPasswordFile = config.getUnixPasswordFile();
         unixGroupFile    = config.getUnixGroupFile();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Minimum UserId: {}, minimum GroupId: {}", minimumUserId, minimumGroupId);
-        }
-
-        timeout               = config.getUpdateMillisMin();
+        timeout          = config.getUpdateMillisMin();
         enumerateGroupMembers = config.isGroupEnumerateEnabled();
+
+        LOG.debug("Minimum UserId: {}, minimum GroupId: {}", minimumUserId, minimumGroupId);
     }
 
     public static void main(String[] args) throws Throwable {

@@ -52,8 +52,7 @@ public class LdapConfigCheckMain {
 
         LdapConfig config = new LdapConfig(inFileName, cli.getBindPassword());
         if (cli.getLdapUrl() != null && !cli.getLdapUrl().isEmpty()) {
-            config.updateInputPropFile(cli.getLdapUrl(), cli.getBindDn(), cli.getBindPassword(),
-                    cli.getUserSearchBase(), cli.getUserSearchFilter(), cli.getAuthUser(), cli.getAuthPass());
+            config.updateInputPropFile(cli.getLdapUrl(), cli.getBindDn(), cli.getBindPassword(), cli.getUserSearchBase(), cli.getUserSearchFilter(), cli.getAuthUser(), cli.getAuthPass());
         }
 
         PrintStream logFile      = null;

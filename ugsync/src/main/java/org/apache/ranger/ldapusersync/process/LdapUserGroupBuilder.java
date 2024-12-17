@@ -70,26 +70,30 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     private static final String DATE_FORMAT          = "yyyyMMddHHmmss";
     private static final String MEMBER_OF_ATTR       = "memberof=";
     private static final String GROUP_NAME_ATTRIBUTE = "cn=";
-    private static final int    PAGE_SIZE            = 500;
+    private static final int PAGE_SIZE               = 500;
+
     /* for AD uSNChanged */
-    private static       long   deltaSyncUserTime;
-    private static       long   deltaSyncGroupTime;
+    private static long deltaSyncUserTime;
+    private static long deltaSyncGroupTime;
     /* ***************** */
-    private boolean   pagedResultsEnabled     = true;
-    private boolean   groupSearchFirstEnabled = true;
-    private boolean   userSearchEnabled       = true;
-    private boolean   groupSearchEnabled      = true;
-    private int       pagedResultsSize        = PAGE_SIZE;
-    private int       groupHierarchyLevels;
-    private int       deleteCycles;
-    private int       userSearchScope;
-    private int       groupSearchScope;
 
     private final UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
+
+    private boolean pagedResultsEnabled     = true;
+    private boolean groupSearchFirstEnabled = true;
+    private boolean userSearchEnabled       = true;
+    private boolean groupSearchEnabled      = true;
+    private int     pagedResultsSize        = PAGE_SIZE;
+    private int     groupHierarchyLevels;
+    private int     deleteCycles;
+    private int     userSearchScope;
+    private int     groupSearchScope;
+
     /* for OpenLdap modifyTimestamp */
-    private       String              deltaSyncUserTimeStamp;
+    private String deltaSyncUserTimeStamp;
     private String deltaSyncGroupTimeStamp;
     /* ******************************** */
+
     private String         ldapUrl;
     private String         ldapBindDn;
     private String         ldapBindPassword;
@@ -118,13 +122,16 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     private LdapContext    ldapContext;
     private SearchControls userSearchControls;
     private SearchControls groupSearchControls;
-    private Table<String, String, String>    groupUserTable;
+    private Table<String, String, String> groupUserTable;
+
     /* { key = user DN, value = map of user attributes {original name, DN, etc.}} */
     private Map<String, Map<String, String>> sourceUsers;
+
     /* { key = group DN, value = map of group attributes {original name, DN, etc.}} */
     private Map<String, Map<String, String>> sourceGroups;
+
     /* { key = group DN, value = set of user DNs (members) } */
-    private Map<String, Set<String>>         sourceGroupUsers;
+    private Map<String, Set<String>> sourceGroupUsers;
 
     StartTlsResponse   tls;
     UgsyncAuditInfo    ugsyncAuditInfo;
@@ -221,7 +228,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         try {
             sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
             DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-            LOG.info("deltaSyncUserTime = {} and highestdeltaSyncUserTime = {}", deltaSyncUserTime, highestdeltaSyncUserTime);
+            LOG.info("deltaSyncUserTime = {} and highestDeltaSyncUserTime = {}", deltaSyncUserTime, highestdeltaSyncUserTime);
             if (deltaSyncUserTime < highestdeltaSyncUserTime) {
                 // Incrementing highestdeltaSyncUserTime (for AD) in order to avoid search record repetition for next sync cycle.
                 deltaSyncUserTime = highestdeltaSyncUserTime + 1;
@@ -229,7 +236,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                 deltaSyncUserTimeStamp = dateFormat.format(new Date(highestdeltaSyncUserTime + 60L));
             }
 
-            LOG.info("deltaSyncGroupTime = {} and highestdeltaSyncGroupTime = {} ", deltaSyncGroupTime, highestdeltaSyncGroupTime);
+            LOG.info("deltaSyncGroupTime = {} and highestDeltaSyncGroupTime = {} ", deltaSyncGroupTime, highestdeltaSyncGroupTime);
             // Update deltaSyncUserTime/deltaSyncUserTimeStamp here so that in case of failures, we get updates in next cycle
             if (deltaSyncGroupTime < highestdeltaSyncGroupTime) {
                 // Incrementing highestdeltaSyncGroupTime (for AD) in order to avoid search record repetition for next sync cycle.
@@ -480,13 +487,30 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                             // searchResults contains all the user entries
                             final SearchResult userEntry = userSearchResultEnum.next();
 
-                            if (!isSearchResultValid(userEntry, false)) {
+                            if (userEntry == null)  {
+                                LOG.info("userEntry null, skipping sync for the entry");
                                 continue;
                             }
 
-                            Attributes attributes = userEntry.getAttributes();
-                            String userName       = (String) attributes.get(userNameAttribute).get();
-                            String userFullName   = userEntry.getNameInNamespace();
+                            Attributes attributes =   userEntry.getAttributes();
+                            if (attributes == null)  {
+                                LOG.info("attributes  missing for entry {}, skipping sync", userEntry.getNameInNamespace());
+                                continue;
+                            }
+
+                            Attribute userNameAttr  = attributes.get(userNameAttribute);
+                            if (userNameAttr == null)  {
+                                LOG.info("{} missing for entry {}, skipping sync", userNameAttribute, userEntry.getNameInNamespace());
+                                continue;
+                            }
+
+                            String userFullName = (userEntry.getNameInNamespace());
+                            String userName     = (String) userNameAttr.get();
+
+                            if (userName == null || userName.trim().isEmpty())  {
+                                LOG.info("{} empty for entry {}, skipping sync", userNameAttribute, userEntry.getNameInNamespace());
+                                continue;
+                            }
 
                             Attribute timeStampAttr = attributes.get("uSNChanged");
                             if (timeStampAttr != null) {
@@ -618,7 +642,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             closeLdapContext();
         }
 
-        LOG.debug("highestdeltaSyncUserTime = {}", highestdeltaSyncUserTime);
+        LOG.debug("highestDeltaSyncUserTime = {}", highestdeltaSyncUserTime);
         return highestdeltaSyncUserTime;
     }
 
@@ -1171,51 +1195,5 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         LOG.debug("computedSearchFilter = {}", computedSearchFilter);
 
         return computedSearchFilter;
-    }
-
-    private boolean isSearchResultValid(SearchResult searchResult, boolean isGroup) throws NamingException {
-        boolean result = true;
-        if (searchResult == null) {
-            LOG.debug("searchResult is null!");
-            result = false;
-        } else {
-            Attributes attributes = searchResult.getAttributes();
-            if (attributes == null) {
-                LOG.debug("Attributes missing for entry {}", searchResult.getNameInNamespace());
-                result = false;
-            } else {
-                if (!isGroup) {
-                    Attribute userNameAttr = attributes.get(userNameAttribute);
-                    if (userNameAttr == null) {
-                        LOG.debug("{} missing for entry {}", userNameAttribute, searchResult.getNameInNamespace());
-                        result = false;
-                    } else {
-                        String userName = (String) userNameAttr.get();
-
-                        if (userName == null || userName.trim().isEmpty()) {
-                            LOG.debug("{} empty for entry {}", userNameAttribute, searchResult.getNameInNamespace());
-                            result = false;
-                        }
-                    }
-                } else {
-                    Attribute groupNameAttr = attributes.get(groupNameAttribute);
-                    if (groupNameAttr == null) {
-                        LOG.debug("{} missing for entry {}", groupNameAttribute, searchResult.getNameInNamespace());
-                        result = false;
-                    } else {
-                        String groupName = (String) groupNameAttr.get();
-
-                        if (groupName == null || groupName.trim().isEmpty()) {
-                            LOG.debug("{} empty for entry {}", groupNameAttr, searchResult.getNameInNamespace());
-                            result = false;
-                        }
-                    }
-                }
-            }
-        }
-        if (!result) {
-            LOG.debug("Skipping sync!");
-        }
-        return result;
     }
 }

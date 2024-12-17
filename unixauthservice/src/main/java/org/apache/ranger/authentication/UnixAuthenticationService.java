@@ -54,6 +54,7 @@ import java.util.Set;
 
 public class UnixAuthenticationService {
     private static final Logger LOG = LoggerFactory.getLogger(UnixAuthenticationService.class);
+
     private static final String serviceName                          = "UnixAuthenticationService";
     private static final String SSL_ALGORITHM                        = "TLSv1.2";
     private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
@@ -69,17 +70,20 @@ public class UnixAuthenticationService {
     private static final String SSL_ENABLED_PARAM                    = "ranger.usersync.ssl";
     private static final String CREDSTORE_FILENAME_PARAM             = "ranger.usersync.credstore.filename";
     private static final String[] UGSYNC_CONFIG_XML_FILES            = {"ranger-ugsync-default.xml", "ranger-ugsync-site.xml"};
+
     private static boolean enableUnixAuth;
-    private String                    keyStorePath;
-    private String                    keyStoreType;
-    private List<String>              enabledProtocolsList;
-    private List<String>              enabledCipherSuiteList;
-    private String                    keyStorePathPassword;
-    private String                    trustStorePath;
-    private String                    trustStorePathPassword;
-    private String                    trustStoreType;
-    private List<String>              adminUserList             = new ArrayList<String>();
-    private String                    adminRoleNames;
+
+    private final List<String> adminUserList = new ArrayList<>();
+
+    private String adminRoleNames;
+    private String keyStorePath;
+    private String keyStorePathPassword;
+    private String keyStoreType;
+    private String trustStorePath;
+    private String trustStorePathPassword;
+    private String trustStoreType;
+    private List<String> enabledProtocolsList;
+    private List<String> enabledCipherSuiteList;
     private UserSyncHAInitializerImpl userSyncHAInitializerImpl;
     private int portNum;
     private boolean sslEnabled;
@@ -88,7 +92,7 @@ public class UnixAuthenticationService {
     }
 
     public static void main(String[] args) {
-        enableUnixAuth = Arrays.stream(args).anyMatch(arg -> "-enableUnixAuth".equalsIgnoreCase(arg));
+        enableUnixAuth = Arrays.stream(args).anyMatch("-enableUnixAuth"::equalsIgnoreCase);
         UnixAuthenticationService service = new UnixAuthenticationService();
         service.userSyncHAInitializerImpl = UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig());
         service.run();
@@ -125,19 +129,11 @@ public class UnixAuthenticationService {
         if (keyStorePath != null && !keyStorePath.isEmpty()) {
             KeyStore ks = KeyStore.getInstance(keyStoreType);
 
-            InputStream in = null;
-
-            in = getFileInputStream(keyStorePath);
-
-            try {
+            try (InputStream in = getFileInputStream(keyStorePath)) {
                 if (keyStorePathPassword == null) {
                     keyStorePathPassword = "";
                 }
                 ks.load(in, keyStorePathPassword.toCharArray());
-            } finally {
-                if (in != null) {
-                    in.close();
-                }
             }
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -152,19 +148,11 @@ public class UnixAuthenticationService {
         if (trustStorePath != null && !trustStorePath.isEmpty()) {
             trustStoreKeyStore = KeyStore.getInstance(trustStoreType);
 
-            InputStream in = null;
-
-            in = getFileInputStream(trustStorePath);
-
-            try {
+            try (InputStream in = getFileInputStream(trustStorePath)) {
                 if (trustStorePathPassword == null) {
                     trustStorePathPassword = "";
                 }
                 trustStoreKeyStore.load(in, trustStorePathPassword.toCharArray());
-            } finally {
-                if (in != null) {
-                    in.close();
-                }
             }
         }
 
@@ -182,7 +170,7 @@ public class UnixAuthenticationService {
             if (sslEnabled) {
                 SSLServerSocket secureSocket     = (SSLServerSocket) socket;
                 String[]        protocols        = secureSocket.getEnabledProtocols();
-                Set<String>     allowedProtocols = new HashSet<String>();
+                Set<String>     allowedProtocols = new HashSet<>();
                 for (String ep : protocols) {
                     if (enabledProtocolsList.contains(ep.toUpperCase())) {
                         LOG.info("Enabling Protocol: [{}]", ep);
@@ -196,17 +184,13 @@ public class UnixAuthenticationService {
                     secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
                 }
                 String[]    enabledCipherSuites = secureSocket.getEnabledCipherSuites();
-                Set<String> allowedCipherSuites = new HashSet<String>();
+                Set<String> allowedCipherSuites = new HashSet<>();
                 for (String enabledCipherSuite : enabledCipherSuites) {
                     if (enabledCipherSuiteList.contains(enabledCipherSuite)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Enabling CipherSuite : [{}]", enabledCipherSuite);
-                        }
+                        LOG.debug("Enabling CipherSuite : [{}]", enabledCipherSuite);
                         allowedCipherSuites.add(enabledCipherSuite);
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Disabling CipherSuite : [{}]", enabledCipherSuite);
-                        }
+                        LOG.debug("Disabling CipherSuite : [{}]", enabledCipherSuite);
                     }
                 }
                 if (!allowedCipherSuites.isEmpty()) {
@@ -214,7 +198,7 @@ public class UnixAuthenticationService {
                 }
             }
 
-            Socket client = null;
+            Socket client;
 
             try {
                 while ((client = socket.accept()) != null) {
@@ -234,12 +218,15 @@ public class UnixAuthenticationService {
         UserGroupSync syncProc          = new UserGroupSync();
         Thread        newSyncProcThread = new Thread(syncProc);
         newSyncProcThread.setName("UnixUserSyncThread");
-        // If this thread is set as daemon, then the entire process will terminate if enableUnixAuth is false
-        // Therefore this is marked as non-daemon thread. Don't change the following line
+
+        /* If this thread is set as daemon, then the entire process will terminate if enableUnixAuth is false
+           Therefore this is marked as non-daemon thread. Don't change the following line
+         */
         newSyncProcThread.setDaemon(false);
         newSyncProcThread.start();
         LOG.info("UnixUserSyncThread started");
         LOG.info("creating UserSyncMetricsProducer thread with default metrics location : {}", System.getProperty("logdir"));
+
         //Start the user sync metrics
         boolean isUserSyncMetricsEnabled = UserGroupSyncConfig.getInstance().isUserSyncMetricsEnabled();
         if (isUserSyncMetricsEnabled) {
@@ -255,7 +242,7 @@ public class UnixAuthenticationService {
     }
 
     //TODO: add more validation code
-    private void init() throws Throwable {
+    private void init() {
         Properties prop = new Properties();
 
         for (String fn : UGSYNC_CONFIG_XML_FILES) {
@@ -263,9 +250,8 @@ public class UnixAuthenticationService {
         }
 
         String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM);
-
-        keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
-
+        keyStorePath   = prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
+        trustStorePath = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM);
         keyStoreType   = prop.getProperty(SSL_KEYSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
         trustStoreType = prop.getProperty(SSL_TRUSTSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
 
@@ -287,19 +273,19 @@ public class UnixAuthenticationService {
             String crendentialProviderPrefixBcfks = "bcfks://file";
             credStoreFileName = crendentialProviderPrefixBcfks + credStoreFileName;
         }
+
         keyStorePathPassword   = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS, keyStoreType);
         trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS, trustStoreType);
+        portNum                = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM));
+        String validatorProg   = prop.getProperty(CRED_VALIDATOR_PROG);
 
-        trustStorePath = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM);
-        portNum        = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM));
-        String validatorProg = prop.getProperty(CRED_VALIDATOR_PROG);
         if (validatorProg != null) {
             PasswordValidator.setValidatorProgram(validatorProg);
         }
 
         String adminUsers = prop.getProperty(ADMIN_USER_LIST_PARAM);
 
-        if (adminUsers != null && adminUsers.trim().length() > 0) {
+        if (adminUsers != null && !adminUsers.trim().isEmpty()) {
             for (String u : adminUsers.split(",")) {
                 LOG.info("Adding Admin User: {}", u.trim());
                 adminUserList.add(u.trim());
@@ -320,12 +306,12 @@ public class UnixAuthenticationService {
         String defaultEnabledProtocols = "TLSv1.2";
         String enabledProtocols        = prop.getProperty("ranger.usersync.https.ssl.enabled.protocols", defaultEnabledProtocols);
         String enabledCipherSuites     = prop.getProperty("ranger.usersync.https.ssl.enabled.cipher.suites", "");
-        enabledProtocolsList   = new ArrayList<String>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
-        enabledCipherSuiteList = new ArrayList<String>(Arrays.asList(enabledCipherSuites.toUpperCase().trim().split("\\s*,\\s*")));
+        enabledProtocolsList           = new ArrayList<>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
+        enabledCipherSuiteList         = new ArrayList<>(Arrays.asList(enabledCipherSuites.toUpperCase().trim().split("\\s*,\\s*")));
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
-        InputStream ret = null;
+        InputStream ret;
 
         File f = new File(path);
 

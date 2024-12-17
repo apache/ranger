@@ -29,6 +29,7 @@ import java.io.File;
 
 public class UserSyncMetricsProducer implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(UserSyncMetricsProducer.class);
+
     private boolean shutdownFlag;
 
     public static void main(String[] args) {

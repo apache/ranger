@@ -26,10 +26,10 @@ public class UnixSyncSourceInfo {
     private String lastModified;
     private String minUserId;
     private String minGroupId;
-    private long   totalUsersSynced;
-    private long   totalGroupsSynced;
-    private long   totalUsersDeleted;
-    private long   totalGroupsDeleted;
+    private long totalUsersSynced;
+    private long totalGroupsSynced;
+    private long totalUsersDeleted;
+    private long totalGroupsDeleted;
 
     public String getMinGroupId() {
         return minGroupId;

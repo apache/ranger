@@ -44,7 +44,7 @@ import java.security.SecureRandom;
 public class CustomSSLSocketFactory extends SSLSocketFactory {
     private static final Logger              LOG    = LoggerFactory.getLogger(CustomSSLSocketFactory.class);
 
-    private              SSLSocketFactory    sockFactory;
+    private SSLSocketFactory sockFactory;
 
     public CustomSSLSocketFactory() {
         SSLContext          sslContext;

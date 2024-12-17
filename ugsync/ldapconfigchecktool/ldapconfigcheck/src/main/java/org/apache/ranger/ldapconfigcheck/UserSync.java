@@ -58,22 +58,22 @@ public class UserSync {
             "member", "memberUid"
     };
 
-    private String      userNameAttribute;
-    private String      userObjClassName;
-    private String      userGroupMemberName;
-    private String      groupMemberName;
-    private String      groupNameAttrName;
-    private String      groupObjClassName;
-    private String      groupSearchBase;
-    private String      groupSearchFilter;
-    private String      userSearchBase;
-    private String      userSearchFilter;
-    private String      searchBase;
-    private       String      groupName;
+    private String userNameAttribute;
+    private String userObjClassName;
+    private String userGroupMemberName;
+    private String groupMemberName;
+    private String groupNameAttrName;
+    private String groupObjClassName;
+    private String groupSearchBase;
+    private String groupSearchFilter;
+    private String userSearchBase;
+    private String userSearchFilter;
+    private String searchBase;
+    private String groupName;
     private final PrintStream logFile;
     private final PrintStream ambariProps;
     private final PrintStream installProps;
-    private final LdapConfig  config;
+    private final LdapConfig config;
 
     public UserSync(LdapConfig config, PrintStream logFile, PrintStream ambariProps, PrintStream installProps) {
         this.config       = config;
@@ -123,14 +123,12 @@ public class UserSync {
         // 1. find basic user properties
         // 2. find user search base and user search filter by passing basic attributes
         findBasicUserProperties(ldapContext, true);
-
         findAdvUserProperties(ldapContext, true);
     }
 
     public void getAllUsers(LdapContext ldapContext) throws Throwable {
         int       noOfUsers    = 0;
         Attribute userNameAttr = null;
-        //String groupName = null;
         Attribute                       groupMemberAttr;
         NamingEnumeration<SearchResult> userSearchResultEnum = null;
         SearchControls                  userSearchControls   = new SearchControls();
@@ -257,11 +255,7 @@ public class UserSync {
                     (config.getGroupNameAttribute() != null && !config.getGroupNameAttribute().isEmpty()) ||
                     (config.getUserSearchBase() != null && !config.getUserSearchBase().isEmpty()) ||
                     (config.getUserSearchFilter() != null && !config.getUserSearchFilter().isEmpty())) {
-                throw new Exception("Please verify values for:\n ranger.usersync.ldap.user.nameattribute\n " +
-                        "ranger.usersync.ldap.user.objectclass\n" +
-                        "ranger.usersync.ldap.user.groupnameattribute\n" +
-                        "ranger.usersync.ldap.user.searchbase\n" +
-                        "ranger.usersync.ldap.user.searchfilter\n");
+                throw new Exception("Please verify values for:\n ranger.usersync.ldap.user.nameattribute\n " + "ranger.usersync.ldap.user.objectclass\n" + "ranger.usersync.ldap.user.groupnameattribute\n" + "ranger.usersync.ldap.user.searchbase\n" + "ranger.usersync.ldap.user.searchfilter\n");
             } else {
                 throw new Exception(msg + ne);
             }
@@ -302,8 +296,7 @@ public class UserSync {
         groupSearchAttributes.add(groupNameAttrName);
         groupSearchAttributes.add(groupMemberName);
         groupSearchAttributes.add("distinguishedName");
-        groupSearchControls.setReturningAttributes(groupSearchAttributes.toArray(
-                new String[groupSearchAttributes.size()]));
+        groupSearchControls.setReturningAttributes(groupSearchAttributes.toArray(new String[groupSearchAttributes.size()]));
 
         String extendedGroupSearchFilter = "(objectclass=" + groupObjClassName + ")";
         if (groupSearchFilter != null && !groupSearchFilter.trim().isEmpty()) {
@@ -358,11 +351,7 @@ public class UserSync {
                     (config.getUserGroupMemberAttributeName() != null && !config.getUserGroupMemberAttributeName().isEmpty()) ||
                     (config.getGroupSearchBase() != null && !config.getGroupSearchBase().isEmpty()) ||
                     (config.getGroupSearchFilter() != null && !config.getGroupSearchFilter().isEmpty())) {
-                throw new Exception("Please verify values for:\n ranger.usersync.group.memberattributename\n " +
-                        "ranger.usersync.group.nameattribute\n" +
-                        "ranger.usersync.group.objectclass\n" +
-                        "ranger.usersync.group.searchbase\n" +
-                        "ranger.usersync.group.searchfilter\n");
+                throw new Exception("Please verify values for:\n ranger.usersync.group.memberattributename\n " + "ranger.usersync.group.nameattribute\n" + "ranger.usersync.group.objectclass\n" + "ranger.usersync.group.searchbase\n" + "ranger.usersync.group.searchfilter\n");
             } else {
                 throw new Exception(msg + ne);
             }
@@ -403,8 +392,7 @@ public class UserSync {
         }
     }
 
-    /* Use the provided bind dn or the user search base and user search filter for sample user and determine the basic user attribute.
-     */
+    // Use the provided bind dn or the user search base and user search filter for sample user and determine the basic user attribute.
     private void findBasicUserProperties(LdapContext ldapContext, boolean isOutputNeeded) throws Throwable {
         String         bindDn             = config.getLdapBindDn();
         String         userSFilter        = config.getUserSearchFilter();
@@ -428,7 +416,6 @@ public class UserSync {
                     //int dcIndex = bindDn.toLowerCase().indexOf("dc=");
                     userSBase = bindDn.substring(bindDn.indexOf(",") + 1);
                 }
-                //System.out.println("Derived user search base = " + userSearchBase);
             }
 
             if (userSFilter == null || userSFilter.isEmpty()) {
@@ -438,13 +425,11 @@ public class UserSync {
                     int cnEndIndex = bindDn.indexOf(",");
                     userSFilter = bindDn.substring(0, cnEndIndex);
                 }
-                //System.out.println("Derived user search filter = " + userSearchFilter);
             }
 
             try {
                 userSearchResultEnum = ldapContext.search(userSBase, userSFilter, userSearchControls);
                 while (userSearchResultEnum.hasMore()) {
-
                     if (noOfUsers >= 5) {
                         break;
                     }
@@ -529,12 +514,8 @@ public class UserSync {
                     noOfUsers++;
                 }
             } catch (NamingException ne) {
-                String msg = "Exception occurred while discovering basic user properties:\n" +
-                        "ranger.usersync.ldap.user.nameattribute\n" +
-                        "ranger.usersync.ldap.user.objectclass\n" +
-                        "ranger.usersync.ldap.user.groupnameattribute\n";
-                if ((config.getUserSearchBase() != null && !config.getUserSearchBase().isEmpty()) ||
-                        (config.getUserSearchFilter() != null && !config.getUserSearchFilter().isEmpty())) {
+                String msg = "Exception occurred while discovering basic user properties:\n" + "ranger.usersync.ldap.user.nameattribute\n" + "ranger.usersync.ldap.user.objectclass\n" + "ranger.usersync.ldap.user.groupnameattribute\n";
+                if ((config.getUserSearchBase() != null && !config.getUserSearchBase().isEmpty()) || (config.getUserSearchFilter() != null && !config.getUserSearchFilter().isEmpty())) {
                     throw new Exception(msg + "Please verify values for ranger.usersync.ldap.user.searchbase and ranger.usersync.ldap.user.searchfilter");
                 } else {
                     throw new Exception(msg + ne);
@@ -620,7 +601,7 @@ public class UserSync {
                         dnValue = dnValue.substring(dnValue.indexOf(",") + 1);
                     }
                 } else {
-                    // If distinguishedName is not found, strip off the userName from the long name for OU or sub domain
+                    // If distinguishedName is not found, strip off the userName from the long name for OU or subdomain
                     dnValue = userEntry.getNameInNamespace();
                     dnValue = dnValue.substring(dnValue.indexOf(",") + 1);
                 }
@@ -659,15 +640,11 @@ public class UserSync {
                 ambariProps.println("ranger.usersync.ldap.user.searchfilter=" + userSearchFilter);
             }
         } catch (NamingException ne) {
-            String msg = "Exception occured while discovering user properties:\n" +
-                    "ranger.usersync.ldap.user.searchbase\n" +
-                    "ranger.usersync.ldap.user.searchfilter\n";
+            String msg = "Exception occured while discovering user properties:\n" + "ranger.usersync.ldap.user.searchbase\n" + "ranger.usersync.ldap.user.searchfilter\n";
             if ((config.getUserNameAttribute() != null && !config.getUserNameAttribute().isEmpty()) ||
                     (config.getUserObjectClass() != null && !config.getUserObjectClass().isEmpty()) ||
                     (config.getGroupNameAttribute() != null && !config.getGroupNameAttribute().isEmpty())) {
-                throw new Exception("Please verify values for ranger.usersync.ldap.user.nameattribute, " +
-                        "ranger.usersync.ldap.user.objectclass, and" +
-                        "ranger.usersync.ldap.user.groupnameattribute");
+                throw new Exception("Please verify values for ranger.usersync.ldap.user.nameattribute, ranger.usersync.ldap.user.objectclass, and ranger.usersync.ldap.user.groupnameattribute");
             } else {
                 throw new Exception(msg + ne);
             }
@@ -815,7 +792,7 @@ public class UserSync {
                         dnValue = dnValue.substring(dnValue.indexOf(",") + 1);
                     }
                 } else {
-                    // If distinguishedName is not found, strip off the userName from the long name for OU or sub domain
+                    // If distinguishedName is not found, strip off the userName from the long name for OU or subdomain
                     dnValue = groupEntry.getNameInNamespace();
                     dnValue = dnValue.substring(dnValue.indexOf(",") + 1);
                 }

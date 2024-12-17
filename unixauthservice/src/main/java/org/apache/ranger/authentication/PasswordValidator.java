@@ -33,11 +33,9 @@ import java.util.List;
 public class PasswordValidator implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(PasswordValidator.class);
 
-    private static String validatorProgram;
-
     private static List<String> adminUserList;
-
     private static String adminRoleNames;
+    private static String validatorProgram;
 
     private Socket client;
 
@@ -71,7 +69,7 @@ public class PasswordValidator implements Runnable {
 
     @Override
     public void run() {
-        BufferedReader reader = null;
+        BufferedReader reader;
         PrintWriter    writer = null;
 
         String userName = null;
@@ -95,15 +93,14 @@ public class PasswordValidator implements Runnable {
                 writer.flush();
                 LOG.error("Response [{}] for user: {} as ValidatorProgram is not defined in configuration", res, userName);
             } else {
-                BufferedReader pReader = null;
-                PrintWriter    pWriter = null;
+                BufferedReader pReader;
+                PrintWriter    pWriter;
                 Process        p       = null;
 
                 try {
                     p = Runtime.getRuntime().exec(validatorProgram);
 
                     pReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
                     pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream()));
 
                     pWriter.println(request);

@@ -27,8 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegEx extends AbstractMapper {
-    private UserGroupSyncConfig           config = UserGroupSyncConfig.getInstance();
-    private LinkedHashMap<String, String> replacementPattern;
+    private final UserGroupSyncConfig           config = UserGroupSyncConfig.getInstance();
+    private       LinkedHashMap<String, String> replacementPattern;
 
     public LinkedHashMap<String, String> getReplacementPattern() {
         return replacementPattern;

@@ -23,8 +23,9 @@ import java.io.Serializable;
 import java.security.Principal;
 
 public class UnixUserPrincipal implements Principal, Serializable {
-    private static final long serialVersionUID = -3568658536591178268L;
-    private String userName;
+    private static final long   serialVersionUID = -3568658536591178268L;
+
+    private final String userName;
 
     public UnixUserPrincipal(String userName) {
         this.userName = userName;

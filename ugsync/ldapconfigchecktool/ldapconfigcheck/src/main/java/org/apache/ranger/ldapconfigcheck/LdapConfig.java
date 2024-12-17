@@ -54,28 +54,29 @@ public class LdapConfig {
     private static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM         = "ranger.usersync.ldap.groupname.caseconversion";
     private static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE  = UGSYNC_NONE_CASE_CONVERSION_VALUE;
     private static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_NONE_CASE_CONVERSION_VALUE;
-    private static final String  LGSYNC_PAGED_RESULTS_ENABLED                  = "ranger.usersync.pagedresultsenabled";
-    private static final String  LGSYNC_PAGED_RESULTS_SIZE                     = "ranger.usersync.pagedresultssize";
-    private static final String  LGSYNC_GROUP_SEARCH_ENABLED                   = "ranger.usersync.group.searchenabled";
-    private static final String  LGSYNC_GROUP_SEARCH_BASE                      = "ranger.usersync.group.searchbase";
-    private static final String  LGSYNC_GROUP_SEARCH_SCOPE                     = "ranger.usersync.group.searchscope";
-    private static final String  LGSYNC_GROUP_OBJECT_CLASS                     = "ranger.usersync.group.objectclass";
-    private static final String  LGSYNC_GROUP_SEARCH_FILTER                    = "ranger.usersync.group.searchfilter";
-    private static final String  LGSYNC_GROUP_NAME_ATTRIBUTE                   = "ranger.usersync.group.nameattribute";
-    private static final String  LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME            = "ranger.usersync.group.memberattributename";
+    private static final String LGSYNC_PAGED_RESULTS_ENABLED                   = "ranger.usersync.pagedresultsenabled";
+    private static final String LGSYNC_PAGED_RESULTS_SIZE                      = "ranger.usersync.pagedresultssize";
+    private static final String LGSYNC_GROUP_SEARCH_ENABLED                    = "ranger.usersync.group.searchenabled";
+    private static final String LGSYNC_GROUP_SEARCH_BASE                       = "ranger.usersync.group.searchbase";
+    private static final String LGSYNC_GROUP_SEARCH_SCOPE                      = "ranger.usersync.group.searchscope";
+    private static final String LGSYNC_GROUP_OBJECT_CLASS                      = "ranger.usersync.group.objectclass";
+    private static final String LGSYNC_GROUP_SEARCH_FILTER                     = "ranger.usersync.group.searchfilter";
+    private static final String LGSYNC_GROUP_NAME_ATTRIBUTE                    = "ranger.usersync.group.nameattribute";
+    private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME             = "ranger.usersync.group.memberattributename";
+
     private static final int     DEFAULT_LGSYNC_PAGED_RESULTS_SIZE             = 500;
     private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED          = true;
     private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED           = false;
 
     //Authentication related properties
-    private static final String     AUTHENTICATION_METHOD = "ranger.authentication.method";
-    private static final String     AD_DOMAIN             = "ranger.ldap.ad.domain";
-    private static final String     USER_DN_PATTERN       = "ranger.ldap.user.dnpattern";
-    private static final String     GROUP_ROLE_ATTRIBUTE  = "ranger.ldap.group.roleattribute";
-    private static final String     GROUP_SEARCH_BASE     = "ranger.ldap.group.searchbase";
-    private static final String     GROUP_SEARCH_FILTER   = "ranger.ldap.group.searchfilter";
-    private static final String     AUTH_USERNAME         = "ranger.admin.auth.sampleuser";
-    private static final String     AUTH_PASSWORD         = "ranger.admin.auth.samplepassword";
+    private static final String AUTHENTICATION_METHOD = "ranger.authentication.method";
+    private static final String AD_DOMAIN             = "ranger.ldap.ad.domain";
+    private static final String USER_DN_PATTERN       = "ranger.ldap.user.dnpattern";
+    private static final String GROUP_ROLE_ATTRIBUTE  = "ranger.ldap.group.roleattribute";
+    private static final String GROUP_SEARCH_BASE     = "ranger.ldap.group.searchbase";
+    private static final String GROUP_SEARCH_FILTER   = "ranger.ldap.group.searchfilter";
+    private static final String AUTH_USERNAME         = "ranger.admin.auth.sampleuser";
+    private static final String AUTH_PASSWORD         = "ranger.admin.auth.samplepassword";
 
     private final Properties prop = new Properties();
 

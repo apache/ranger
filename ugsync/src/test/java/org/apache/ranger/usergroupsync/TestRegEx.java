@@ -38,22 +38,22 @@ public class TestRegEx {
     List<String> groupRegexPatterns;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         userNameRegEx      = new RegEx();
         groupNameRegEx     = new RegEx();
-        userRegexPatterns  = new ArrayList<String>();
-        groupRegexPatterns = new ArrayList<String>();
+        userRegexPatterns  = new ArrayList<>();
+        groupRegexPatterns = new ArrayList<>();
     }
 
     @Test
-    public void testUserNameTransform() throws Throwable {
+    public void testUserNameTransform() {
         userRegexPatterns.add("s/\\s/_/");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
         assertEquals("test_user", userNameRegEx.transform("test user"));
     }
 
     @Test
-    public void testGroupNameTransform() throws Throwable {
+    public void testGroupNameTransform() {
         groupRegexPatterns.add("s/\\s/_/g");
         groupRegexPatterns.add("s/_/\\$/g");
         groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
@@ -67,7 +67,7 @@ public class TestRegEx {
     }
 
     @Test
-    public void testTransform() throws Throwable {
+    public void testTransform() {
         userRegexPatterns.add("s/\\s/_/g");
         groupRegexPatterns.add("s/\\s/_/g");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
@@ -77,7 +77,7 @@ public class TestRegEx {
     }
 
     @Test
-    public void testTransform1() throws Throwable {
+    public void testTransform1() {
         userRegexPatterns.add("s/\\\\/ /g");
         userRegexPatterns.add("s//_/g");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
@@ -90,10 +90,10 @@ public class TestRegEx {
     }
 
     @Test
-    public void testTransformWithSeparators() throws Throwable {
+    public void testTransformWithSeparators() {
         String[] separators = {"%", "#", "&", "!", "@", "-", "~", "=", ",", " "};
         for (String separator : separators) {
-            userRegexPatterns = new ArrayList<String>();
+            userRegexPatterns = new ArrayList<>();
             userRegexPatterns.add(String.format("s%sdark%sDE/dark%sg", separator, separator, separator));
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
             assertEquals("DE/dark_knight_admin", userNameRegEx.transform("dark_knight_admin"));
@@ -101,7 +101,7 @@ public class TestRegEx {
     }
 
     @Test
-    public void testUsernamePrefix() throws Throwable {
+    public void testUsernamePrefix() {
         // appends PR/ to the beginning
         String separator = "#";
         userRegexPatterns = Collections.singletonList("s#^(.*)#PR/$1#g");
@@ -113,7 +113,7 @@ public class TestRegEx {
     }
 
     @Test
-    public void testUsernameSuffix() throws Throwable {
+    public void testUsernameSuffix() {
         // appends _ty to the end
         String separator = "#";
         userRegexPatterns = Collections.singletonList("s#^(.*)#$1_ty#g");

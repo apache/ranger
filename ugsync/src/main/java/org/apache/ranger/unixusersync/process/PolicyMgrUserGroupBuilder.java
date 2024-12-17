@@ -62,12 +62,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private static final Logger  LOG = LoggerFactory.getLogger(PolicyMgrUserGroupBuilder.class);
 
     /* ***** POST APIs **** */
-    private static final String PM_ADD_USERS_URI             = "/service/xusers/ugsync/users";
-    private static final String PM_ADD_GROUPS_URI            = "/service/xusers/ugsync/groups/";
-    private static final String PM_ADD_GROUP_USER_LIST_URI   = "/service/xusers/ugsync/groupusers";
-    private static final String PM_AUDIT_INFO_URI            = "/service/xusers/ugsync/auditinfo/";
-    private static final String PM_UPDATE_DELETED_USERS_URI  = "/service/xusers/ugsync/users/visibility";
-    private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";
+    private static final String PM_ADD_USERS_URI                   = "/service/xusers/ugsync/users";
+    private static final String PM_ADD_GROUPS_URI                  = "/service/xusers/ugsync/groups/";
+    private static final String PM_ADD_GROUP_USER_LIST_URI         = "/service/xusers/ugsync/groupusers";
+    private static final String PM_AUDIT_INFO_URI                  = "/service/xusers/ugsync/auditinfo/";
+    private static final String PM_UPDATE_DELETED_USERS_URI        = "/service/xusers/ugsync/users/visibility";
+    private static final String PM_UPDATE_DELETED_GROUPS_URI       = "/service/xusers/ugsync/groups/visibility";
     /* ******************* */
 
     /* ***** GET APIs **** */
@@ -90,8 +90,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private static final String ISVISIBLE                            = "1";
     private static final String ISHIDDEN                             = "0";
     private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX = Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
-    private static String  localHostname           = "unknown";
-    private static String  errMsgForInactiveServer = "This userGroupSync server is not in active state. Cannot commit transaction!";
+
+    private static String  localHostname                             = "unknown";
+    private static String  errMsgForInactiveServer                   = "This userGroupSync server is not in active state. Cannot commit transaction!";
+
     private volatile RangerUgSyncRESTClient ldapUgSyncClient;
     /* {key: user name in DB} */
     private Map<String, XUserInfo>   userCache;
@@ -103,10 +105,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private Map<String, String>      groupNameMap;
     /* {key: userDN, value: user name in DB} */
     private Map<String, String>      userNameMap;
+    private Set<String>              computeRolesForUsers;
     private Map<String, XGroupInfo>  deltaGroups;
     private Map<String, XUserInfo>   deltaUsers;
     private Map<String, Set<String>> deltaGroupUsers;
-    private Set<String>              computeRolesForUsers;
     private Map<String, XGroupInfo>  deletedGroups;
     private Map<String, XUserInfo>   deletedUsers;
     private int noOfNewUsers;
@@ -411,7 +413,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private void buildUserGroupInfo() throws Throwable {
         if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             LOG.info(String.format("Using principal: %s and keytab: %s", principal, keytab));
-            Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+
+            Subject sub        = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
             Boolean isInitDone = Subject.doAs(sub, new PrivilegedAction<Boolean>() {
                 @Override
                 public Boolean run() {
@@ -427,7 +430,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             });
             if (isInitDone.booleanValue() == false) {
-                String msg = ("Failed to build Users and Groups from Ranger admin");
+                String msg = "Failed to build Users and Groups from Ranger admin";
                 LOG.error(msg);
                 throw new Exception(msg);
             }
@@ -440,6 +443,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
     private void buildGroupList() throws Throwable {
         LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList()");
+
         int totalCount     = 100;
         int retrievedCount = 0;
 
@@ -465,9 +469,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             }
             LOG.debug(String.format("REST response from %s : %s", PM_GROUP_LIST_URI, response));
-            GetXGroupListResponse groupList = JsonUtils.jsonToObject(response, GetXGroupListResponse.class);
 
-            totalCount = groupList.getTotalCount();
+            GetXGroupListResponse groupList = JsonUtils.jsonToObject(response, GetXGroupListResponse.class);
+            totalCount                      = groupList.getTotalCount();
 
             if (groupList.getXgroupInfoList() != null) {
                 for (XGroupInfo g : groupList.getXgroupInfoList()) {
@@ -513,8 +517,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             }
 
             LOG.debug(String.format("REST response from %s : %s", PM_USER_LIST_URI, response));
+
             GetXUserListResponse userList = JsonUtils.jsonToObject(response, GetXUserListResponse.class);
-            totalCount = userList.getTotalCount();
+            totalCount                    = userList.getTotalCount();
 
             if (userList.getXuserInfoList() != null) {
                 for (XUserInfo u : userList.getXuserInfoList()) {
@@ -551,6 +556,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             }
         }
         LOG.debug(String.format("REST response from %s : %s", PM_GET_ALL_GROUP_USER_MAP_LIST_URI, response));
+
         groupUsersCache = JsonUtils.jsonToObject(response, Map.class);
         if (MapUtils.isEmpty(groupUsersCache)) {
             groupUsersCache = new HashMap<>();
@@ -925,19 +931,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
     private int getUsers(GetXUserListResponse xUserList) throws Throwable {
         LOG.debug("==> PolicyMgrUserGroupBuilder.getUsers()");
+
         int ret           = 0;
         int totalCount    = xUserList.getTotalCount();
         int uploadedCount = 0;
         int pageSize      = Integer.parseInt(recordsToPullPerCall);
+
         while (uploadedCount < totalCount) {
             checkStatus();
             GetXUserListResponse pagedXUserList    = new GetXUserListResponse();
             int                  pagedXUserListLen = uploadedCount + pageSize;
-            pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount,
-                    pagedXUserListLen > totalCount ? totalCount : pagedXUserListLen));
+
+            pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount, pagedXUserListLen > totalCount ? totalCount : pagedXUserListLen));
             pagedXUserList.setTotalCount(pageSize);
             if (pagedXUserList.getXuserInfoList().isEmpty()) {
                 LOG.info("PolicyMgrUserGroupBuilder.getUsers() done updating users");
+
                 return 1;
             }
 
@@ -1028,8 +1037,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             checkStatus();
             GetXGroupListResponse pagedXGroupList    = new GetXGroupListResponse();
             int                   pagedXGroupListLen = uploadedCount + pageSize;
-            pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount,
-                    pagedXGroupListLen > totalCount ? totalCount : pagedXGroupListLen));
+
+            pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount, pagedXGroupListLen > totalCount ? totalCount : pagedXGroupListLen));
             pagedXGroupList.setTotalCount(pageSize);
 
             String response = getDataFromLdap(PM_ADD_GROUPS_URI, pagedXGroupList);
@@ -1094,10 +1103,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         while (uploadedCount < totalCount) {
             checkStatus();
 
-            int pagedGroupUserInfoListLen = uploadedCount + pageSize;
+            int pagedGroupUserInfoListLen              = uploadedCount + pageSize;
             List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount, pagedGroupUserInfoListLen > totalCount ? totalCount : pagedGroupUserInfoListLen);
+            String response                            = getDataFromLdap(PM_ADD_GROUP_USER_LIST_URI, pagedGroupUserInfoList);
 
-            String response = getDataFromLdap(PM_ADD_GROUP_USER_LIST_URI, pagedGroupUserInfoList);
             if (StringUtils.isNotEmpty(response)) {
                 try {
                     ret = Integer.valueOf(response);
@@ -1153,20 +1162,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 checkStatus();
                 int                       pagedUgRoleAssignmentsListLen = uploadedCount + pageSize;
                 UsersGroupRoleAssignments pagedUgRoleAssignmentsList    = new UsersGroupRoleAssignments();
-                pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount,
-                        pagedUgRoleAssignmentsListLen > totalCount ? totalCount : pagedUgRoleAssignmentsListLen));
+
+                pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount, pagedUgRoleAssignmentsListLen > totalCount ? totalCount : pagedUgRoleAssignmentsListLen));
                 pagedUgRoleAssignmentsList.setGroupRoleAssignments(ugRoleAssignments.getGroupRoleAssignments());
                 pagedUgRoleAssignmentsList.setUserRoleAssignments(ugRoleAssignments.getUserRoleAssignments());
                 pagedUgRoleAssignmentsList.setWhiteListGroupRoleAssignments(ugRoleAssignments.getWhiteListGroupRoleAssignments());
                 pagedUgRoleAssignmentsList.setWhiteListUserRoleAssignments(ugRoleAssignments.getWhiteListUserRoleAssignments());
                 pagedUgRoleAssignmentsList.setReset(ugRoleAssignments.isReset());
+
                 if ((uploadedCount + pageSize) >= totalCount) { // this is the last iteration of the loop
                     pagedUgRoleAssignmentsList.setLastPage(true);
                 }
                 ClientResponse clientRes;
-                String         url = PM_UPDATE_USERS_ROLES_URI;
 
+                String         url = PM_UPDATE_USERS_ROLES_URI;
                 String jsonString = JsonUtils.objectToJson(pagedUgRoleAssignmentsList);
+
                 LOG.debug(String.format("Paged RoleAssignments Request to %s: %s", url, jsonString));
 
                 if (isRangerCookieEnabled) {
@@ -1345,8 +1356,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
                 }
             }
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
-                    && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
@@ -1387,8 +1397,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
                 }
             }
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
-                    && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
@@ -1451,6 +1460,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         String              roleDelimiter      = config.getRoleDelimiter();
         String              userGroupDelimiter = config.getUserGroupDelimiter();
         String              userNameDelimiter  = config.getUserGroupNameDelimiter();
+
         roleDelimiter         = StringUtils.isEmpty(roleDelimiter) ? "&" : roleDelimiter;
         userGroupDelimiter    = StringUtils.isEmpty(userGroupDelimiter) ? ":" : userGroupDelimiter;
         userNameDelimiter     = StringUtils.isEmpty(userNameDelimiter) ? "," : userNameDelimiter;
@@ -1649,10 +1659,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.updateDeletedUsers({})", deletedUsers);
         int ret = 0;
 
-        if (authenticationType != null
-                && AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
-                && SecureClientLogin.isKerberosCredentialExists(principal,
-                keytab)) {
+        if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
             try {
                 Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
                 ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
@@ -1679,6 +1686,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
     private int getDeletedUsers() throws Throwable {
         LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedUsers()");
+
         checkStatus();
         int            ret       = 0;
         String         response  = null;
@@ -1696,7 +1704,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 LOG.error("Failed to get response, Error is : ", t);
             }
         }
+
         LOG.debug(String.format("REST response from %s : %s", PM_UPDATE_DELETED_USERS_URI, response));
+
         if (response != null) {
             try {
                 ret = Integer.valueOf(response);

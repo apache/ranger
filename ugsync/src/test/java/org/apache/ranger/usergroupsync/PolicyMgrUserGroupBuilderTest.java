@@ -39,7 +39,7 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
     }
 
     @Override
-    public void init() throws Throwable {
+    public void init() {
         allGroups     = new HashSet<>();
         allUsers      = new HashSet<>();
         groupUsers    = new HashMap<>();
@@ -48,16 +48,16 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
     }
 
     @Override
-    public void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups, Map<String, Map<String, String>> sourceUsers, Map<String, Set<String>> sourceGroupUsers, boolean computeDeletes) throws Throwable {
-        for (String userdn : sourceUsers.keySet()) {
-            String username = userNameTransform(sourceUsers.get(userdn).get("original_name"));
+    public void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups, Map<String, Map<String, String>> sourceUsers, Map<String, Set<String>> sourceGroupUsers, boolean computeDeletes) {
+        for (String userDn : sourceUsers.keySet()) {
+            String username = userNameTransform(sourceUsers.get(userDn).get("original_name"));
             allUsers.add(username);
             if (!isValidString(username)) {
                 invalidUsers.add(username);
             }
         }
-        for (String groupdn : sourceGroups.keySet()) {
-            String groupname = groupNameTransform(sourceGroups.get(groupdn).get("original_name"));
+        for (String groupDn : sourceGroups.keySet()) {
+            String groupname = groupNameTransform(sourceGroups.get(groupDn).get("original_name"));
             allGroups.add(groupname);
             if (!isValidString(groupname)) {
                 invalidGroups.add(groupname);

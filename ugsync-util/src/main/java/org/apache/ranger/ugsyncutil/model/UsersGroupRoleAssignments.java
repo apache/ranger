@@ -31,13 +31,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsersGroupRoleAssignments {
     List<String> users;
-
     Map<String, String> groupRoleAssignments;
-
     Map<String, String> userRoleAssignments;
-
     Map<String, String> whiteListGroupRoleAssignments;
-
     Map<String, String> whiteListUserRoleAssignments;
 
     boolean isReset;

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestFileSourceUserGroupBuilder {
-    private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
+    private final UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
     @Test
     public void testUpdateSinkFromCsvFile() throws Throwable {

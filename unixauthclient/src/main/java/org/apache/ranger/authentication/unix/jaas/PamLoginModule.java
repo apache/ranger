@@ -42,6 +42,7 @@ import java.util.Set;
 
 public class PamLoginModule implements LoginModule {
     public static final String SERVICE_KEY = "ranger.pam.service";
+
     private PAM             pam;
     private Subject         subject;
     private CallbackHandler callbackHandler;

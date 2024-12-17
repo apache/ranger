@@ -31,12 +31,12 @@ public class XUserInfo {
     private String              description;
     private String              otherAttributes;
     private String              syncSource;
-    private Map<String, String> otherAttrsMap = new HashMap<>();
     private String              userSource;
     private String              status;
     private String              isVisible;
-    private List<String>        groupNameList = new ArrayList<String>();
-    private List<String>        userRoleList  = new ArrayList<String>();
+    private List<String>        groupNameList = new ArrayList<>();
+    private List<String>        userRoleList  = new ArrayList<>();
+    private Map<String, String> otherAttrsMap = new HashMap<>();
 
     public String getId() {
         return id;

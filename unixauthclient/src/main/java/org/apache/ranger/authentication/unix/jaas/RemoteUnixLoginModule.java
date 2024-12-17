@@ -46,7 +46,6 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Map;
@@ -64,6 +63,7 @@ public class RemoteUnixLoginModule implements LoginModule {
     private static final String SERVER_CERT_VALIDATION_PARAM         = "ranger.unixauth.server.cert.validation";
     private static final String JAAS_ENABLED_PARAM                   = "ranger.unixauth.remote.login.enabled";
     private static final String SSL_ALGORITHM                        = "TLSv1.2";
+
     private String userName;
     private String remoteHostName;
     private String loginGroups;
@@ -194,11 +194,7 @@ public class RemoteUnixLoginModule implements LoginModule {
         }
 
         val = (String) options.get(DEBUG_PARAM);
-        if (val != null && (!val.equalsIgnoreCase("false"))) {
-            debug = true;
-        } else {
-            debug = false;
-        }
+        debug = val != null && (!val.equalsIgnoreCase("false"));
 
         remoteHostName = (String) options.get(REMOTE_LOGIN_HOST_PARAM);
         log("RemoteHostName:" + remoteHostName);
@@ -284,16 +280,8 @@ public class RemoteUnixLoginModule implements LoginModule {
                     if (keyStorePath != null) {
                         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
 
-                        InputStream in = null;
-
-                        in = getFileInputStream(keyStorePath);
-
-                        try {
+                        try (InputStream in = getFileInputStream(keyStorePath)) {
                             ks.load(in, keyStorePathPassword.toCharArray());
-                        } finally {
-                            if (in != null) {
-                                in.close();
-                            }
                         }
 
                         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -306,34 +294,26 @@ public class RemoteUnixLoginModule implements LoginModule {
                     TrustManager[] tm = null;
 
                     if (serverCertValidation) {
-                        KeyStore trustStoreKeyStore = null;
+                        KeyStore trustStoreKeyStore;
 
                         if (trustStorePath != null) {
                             trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
-                            InputStream in = null;
-
-                            in = getFileInputStream(trustStorePath);
-
-                            try {
+                            try (InputStream in = getFileInputStream(trustStorePath)) {
                                 trustStoreKeyStore.load(in, trustStorePathPassword.toCharArray());
 
                                 trustManagerFactory.init(trustStoreKeyStore);
 
                                 tm = trustManagerFactory.getTrustManagers();
-                            } finally {
-                                if (in != null) {
-                                    in.close();
-                                }
                             }
                         }
                     } else {
                         TrustManager ignoreValidationTM = new X509TrustManager() {
-                            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            public void checkClientTrusted(X509Certificate[] chain, String authType) {
                                 // Ignore Server Certificate Validation
                             }
 
-                            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            public void checkServerTrusted(X509Certificate[] chain, String authType) {
                                 // Ignore Server Certificate Validation
                             }
 
@@ -359,7 +339,6 @@ public class RemoteUnixLoginModule implements LoginModule {
                 OutputStreamWriter writer = new OutputStreamWriter(sslsocket.getOutputStream());
 
                 writer.write(loginData);
-
                 writer.flush();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(sslsocket.getInputStream()));
@@ -367,7 +346,6 @@ public class RemoteUnixLoginModule implements LoginModule {
                 ret = reader.readLine();
 
                 reader.close();
-
                 writer.close();
             } finally {
                 if (sslsocket != null) {
@@ -386,7 +364,7 @@ public class RemoteUnixLoginModule implements LoginModule {
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
-        InputStream ret = null;
+        InputStream ret;
 
         File f = new File(path);
 

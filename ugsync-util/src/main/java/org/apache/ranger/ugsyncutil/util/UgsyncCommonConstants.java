@@ -26,5 +26,6 @@ public class UgsyncCommonConstants {
     public static final String LDAP_URL      = "ldap_url";
 
     private UgsyncCommonConstants() {
+        // to block instantiation
     }
 }

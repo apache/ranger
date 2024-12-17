@@ -55,8 +55,8 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
     private String currentSyncSource;
     private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
     private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
-    private Map<String, Set<String>>         sourceGroupUsers;
-    private Map<String, List<String>>        user2GroupListMap  = new HashMap<>();
+    private Map<String, Set<String>> sourceGroupUsers;
+    private Map<String, List<String>> user2GroupListMap  = new HashMap<>();
     private UgsyncAuditInfo ugsyncAuditInfo;
     private FileSyncSourceInfo fileSyncSourceInfo;
     private int deleteCycles;

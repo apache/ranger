@@ -32,18 +32,18 @@ public class CommandLineOptions {
     private final Options options = new Options();
     private final String[] args;
 
-    private String   input;
-    private String   output;
-    private String   discoverProperties;
-    private String   retrieveValues;
-    private String   ldapUrl           = "";
-    private String   bindDn            = "";
-    private String   bindPassword      = "";
-    private String   userSearchBase    = "";
-    private String   userSearchFilter  = "";
-    private String   authUser          = "";
-    private String  authPass           = "";
-    private boolean isAuthEnabled      = true;
+    private String input;
+    private String output;
+    private String discoverProperties;
+    private String retrieveValues;
+    private String ldapUrl           = "";
+    private String bindDn            = "";
+    private String bindPassword      = "";
+    private String userSearchBase    = "";
+    private String userSearchFilter  = "";
+    private String authUser          = "";
+    private String authPass          = "";
+    private boolean isAuthEnabled    = true;
 
     public CommandLineOptions(String[] args) {
         this.args = args;
