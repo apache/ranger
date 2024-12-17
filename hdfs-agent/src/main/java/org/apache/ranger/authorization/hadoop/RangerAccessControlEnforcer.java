@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -54,6 +53,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+import static org.apache.ranger.authorization.hadoop.OperationOptimizer.OPT_BYPASS_AUTHZ;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.EXECUTE_ACCCESS_TYPE;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.HDFS_ROOT_FOLDER_PATH;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.READ_ACCCESS_TYPE;
@@ -63,16 +63,7 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
     private static final Logger LOG                       = LoggerFactory.getLogger(RangerAccessControlEnforcer.class);
     private static final Logger PERF_HDFSAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hdfsauth.request");
 
-    public static final String OPERATION_NAME_CREATE       = "create";
-    public static final String OPERATION_NAME_DELETE       = "delete";
-    public static final String OPERATION_NAME_RENAME       = "rename";
-    public static final String OPERATION_NAME_LISTSTATUS   = "listStatus";
-    public static final String OPERATION_NAME_MKDIRS       = "mkdirs";
-    public static final String OPERATION_NAME_GETEZFORPATH = "getEZForPath";
-
-    private static final Set<String>                OPTIMIZED_OPERATIONS;
     private static final Map<FsAction, Set<String>> ACCESS_TO_ACTIONS;
-    private static final OptimizedAuthzContext      OPT_BYPASS_AUTHZ = new OptimizedAuthzContext("", FsAction.NONE, FsAction.NONE, FsAction.NONE, AuthzStatus.ALLOW);
 
     private final RangerHdfsPlugin      plugin;
     private final AccessControlEnforcer defaultEnforcer;
@@ -86,6 +77,18 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
         this.defaultEnforcer = defaultEnforcer;
 
         LOG.debug("<== RangerAccessControlEnforcer.RangerAccessControlEnforcer()");
+    }
+
+    public Map<String, OptimizedAuthzContext> getOrCreateCache() {
+        Map<String, OptimizedAuthzContext> ret = pathToContextCache;
+
+        if (ret == null) {
+            ret = new HashMap<>();
+
+            pathToContextCache = ret;
+        }
+
+        return ret;
     }
 
     @Override
@@ -198,7 +201,9 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
                 /*
                     Check if optimization is done
                  */
-                optAuthzContext = (new OperationOptimizer(operationName, resourcePath, ancestorAccess, parentAccess, access, subAccess, components, inodeAttrs, ancestorIndex, ancestor, parent, inode)).optimize();
+                if (plugin.isAuthzOptimizationEnabled() && OperationOptimizer.isOptimizableOperation(operationName)) {
+                    optAuthzContext = (new OperationOptimizer(this, operationName, resourcePath, ancestorAccess, parentAccess, access, subAccess, components, inodeAttrs, ancestorIndex, ancestor, parent, inode)).optimize();
+                }
 
                 if (optAuthzContext == OPT_BYPASS_AUTHZ) {
                     authzStatus = AuthzStatus.ALLOW;
@@ -230,12 +235,12 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
                     authzStatus = useDefaultAuthorizerOnly ? AuthzStatus.NOT_DETERMINED : AuthzStatus.ALLOW;
                 }
 
-                LOG.debug("OperationOptimizer.optimize() returned null, operationName={} needs to be evaluated!", operationName);
-
                 if (optAuthzContext != null) {
                     access         = optAuthzContext.access;
                     parentAccess   = optAuthzContext.parentAccess;
                     ancestorAccess = optAuthzContext.ancestorAccess;
+                } else {
+                    LOG.debug("OperationOptimizer.optimize() returned null, operationName={} needs to be evaluated!", operationName);
                 }
 
                 context.isTraverseOnlyCheck = parentAccess == null && ancestorAccess == null && access == null && subAccess == null;
@@ -755,7 +760,7 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
         return ret;
     }
 
-    private enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED }
+    public enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED }
 
     /*
         Description    : optimize() checks if the given operation is a candidate for optimizing (reducing) the number of times it is authorized
@@ -787,7 +792,7 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
                               on the directory, and second checks if the user has a READ_EXECUTE access on the directory. The optimized code combines these checks into a READ_EXECUTE access
                               for the first invocation.
      */
-    private static class OptimizedAuthzContext {
+    public static class OptimizedAuthzContext {
         private final String      path;
         private final FsAction    ancestorAccess;
         private final FsAction    parentAccess;
@@ -808,12 +813,12 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
         }
     }
 
-    private static class AuthzContext {
+    public static class AuthzContext {
         public final String                 user;
         public final Set<String>            userGroups;
         public final String                 operationName;
-        public       boolean                isTraverseOnlyCheck;
-        public       RangerHdfsAuditHandler auditHandler;
+        private      boolean                isTraverseOnlyCheck;
+        private      RangerHdfsAuditHandler auditHandler;
         private      RangerAccessResult     lastResult;
 
         public AuthzContext(UserGroupInformation ugi, String operationName, boolean isTraverseOnlyCheck) {
@@ -848,240 +853,7 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
         }
     }
 
-    private class OperationOptimizer {
-        private final String operationName;
-
-        private final byte[][]          components;
-        private final INodeAttributes[] inodeAttrs;
-        private final int               ancestorIndex;
-        private final INode             ancestor;
-        private final INode             parent;
-        private final INode             inode;
-        private final FsAction          subAccess;
-        private       String            resourcePath;
-        private       FsAction          ancestorAccess;
-        private       FsAction          parentAccess;
-        private       FsAction          access;
-
-        OperationOptimizer(String operationName, String resourcePath, FsAction ancestorAccess, FsAction parentAccess, FsAction access, FsAction subAccess, byte[][] components, INodeAttributes[] inodeAttrs, int ancestorIndex, INode ancestor, INode parent, INode inode) {
-            this.operationName = operationName;
-
-            this.resourcePath   = resourcePath;
-            this.ancestorAccess = ancestorAccess;
-            this.parentAccess   = parentAccess;
-            this.access         = access;
-            this.subAccess      = subAccess;
-
-            this.components    = components;
-            this.inodeAttrs    = inodeAttrs;
-            this.ancestorIndex = ancestorIndex;
-            this.ancestor      = ancestor;
-            this.parent        = parent;
-            this.inode         = inode;
-        }
-
-        OptimizedAuthzContext optimize() {
-            if (!plugin.isAuthzOptimizationEnabled() || !OPTIMIZED_OPERATIONS.contains(operationName)) {
-                return null;
-            }
-
-            return optimizeOp(operationName);
-        }
-
-        OptimizedAuthzContext optimizeOp(String operationName) {
-            switch (operationName) {
-                case OPERATION_NAME_CREATE:
-                    return optimizeCreateOp();
-                case OPERATION_NAME_DELETE:
-                    return optimizeDeleteOp();
-                case OPERATION_NAME_RENAME:
-                    return optimizeRenameOp();
-                case OPERATION_NAME_MKDIRS:
-                    return optimizeMkdirsOp();
-                case OPERATION_NAME_LISTSTATUS:
-                    return optimizeListStatusOp();
-                case OPERATION_NAME_GETEZFORPATH:
-                    return optimizeGetEZForPathOp();
-                default:
-                    break;
-            }
-
-            return null;
-        }
-
-        private OptimizedAuthzContext optimizeCreateOp() {
-            INode nodeToAuthorize = getINodeToAuthorize();
-
-            if (nodeToAuthorize == null) {
-                return OPT_BYPASS_AUTHZ;
-            }
-
-            if (!nodeToAuthorize.isDirectory() && access == null) {        // If not a directory, the access must be non-null as when recreating existing file
-                LOG.debug("nodeToCheck is not a directory and access is null for a create operation! Optimization skipped");
-
-                return null;
-            }
-
-            return getOrCreateOptimizedAuthzContext();
-        }
-
-        private OptimizedAuthzContext optimizeDeleteOp() {
-            int numOfRequestedAccesses = 0;
-
-            if (ancestorAccess != null) {
-                numOfRequestedAccesses++;
-            }
-
-            if (parentAccess != null) {
-                numOfRequestedAccesses++;
-            }
-
-            if (access != null) {
-                numOfRequestedAccesses++;
-            }
-
-            if (subAccess != null) {
-                numOfRequestedAccesses++;
-            }
-
-            if (numOfRequestedAccesses == 0) {
-                return OPT_BYPASS_AUTHZ;
-            } else {
-                parentAccess = FsAction.WRITE_EXECUTE;
-
-                return getOrCreateOptimizedAuthzContext();
-            }
-        }
-
-        private OptimizedAuthzContext optimizeRenameOp() {
-            INode nodeToAuthorize = getINodeToAuthorize();
-
-            if (nodeToAuthorize == null) {
-                return OPT_BYPASS_AUTHZ;
-            }
-
-            if (!nodeToAuthorize.isDirectory()) {
-                LOG.debug("nodeToCheck is not a directory for a rename operation! Optimization skipped");
-
-                return null;
-            }
-
-            return getOrCreateOptimizedAuthzContext();
-        }
-
-        private OptimizedAuthzContext optimizeMkdirsOp() {
-            INode nodeToAuthorize = getINodeToAuthorize();
-
-            if (nodeToAuthorize == null) {
-                return OPT_BYPASS_AUTHZ;
-            }
-
-            if (!nodeToAuthorize.isDirectory()) {
-                LOG.debug("nodeToCheck is not a directory for a mkdirs operation! Optimization skipped");
-
-                return null;
-            }
-
-            return getOrCreateOptimizedAuthzContext();
-        }
-
-        private OptimizedAuthzContext optimizeListStatusOp() {
-            if (inode == null || inode.isFile()) {
-                LOG.debug("inode is null or is a file for a listStatus/getEZForPath operation! Optimization skipped");
-
-                return null;
-            } else {
-                if (resourcePath.length() > 1) {
-                    if (resourcePath.endsWith(HDFS_ROOT_FOLDER_PATH)) {
-                        resourcePath = resourcePath.substring(0, resourcePath.length() - 1);
-                    }
-                }
-
-                access = FsAction.READ_EXECUTE;
-
-                return getOrCreateOptimizedAuthzContext();
-            }
-        }
-
-        private OptimizedAuthzContext optimizeGetEZForPathOp() {
-            if (inode == null || inode.isFile()) {
-                LOG.debug("inode is null or is a file for a listStatus/getEZForPath operation! Optimization skipped");
-
-                return null;
-            } else {
-                access = FsAction.READ_EXECUTE;
-
-                return getOrCreateOptimizedAuthzContext();
-            }
-        }
-
-        private INode getINodeToAuthorize() {
-            INode ret             = null;
-            INode nodeToAuthorize = inode;
-
-            if (nodeToAuthorize == null || nodeToAuthorize.isFile()) {
-                // Case where the authorizer is called to authorize re-creation of an existing file. This is to check if the file itself is write-able
-
-                if (StringUtils.equals(operationName, OPERATION_NAME_CREATE) && inode != null && access != null) {
-                    LOG.debug("Create operation with non-null access is being authorized. authorize for write access for the file!!");
-                } else {
-                    if (parent != null) {
-                        nodeToAuthorize = parent;
-                        resourcePath    = inodeAttrs.length > 0 ? DFSUtil.byteArray2PathString(components, 0, inodeAttrs.length - 1) : HDFS_ROOT_FOLDER_PATH;
-                        parentAccess    = FsAction.WRITE_EXECUTE;
-                    } else if (ancestor != null) {
-                        INodeAttributes nodeAttribs = inodeAttrs.length > ancestorIndex ? inodeAttrs[ancestorIndex] : null;
-
-                        nodeToAuthorize = ancestor;
-                        resourcePath    = nodeAttribs != null ? DFSUtil.byteArray2PathString(components, 0, ancestorIndex + 1) : HDFS_ROOT_FOLDER_PATH;
-                        ancestorAccess  = FsAction.WRITE_EXECUTE;
-                    }
-                    if (resourcePath.length() > 1) {
-                        if (resourcePath.endsWith(HDFS_ROOT_FOLDER_PATH)) {
-                            resourcePath = resourcePath.substring(0, resourcePath.length() - 1);
-                        }
-                    }
-                }
-
-                ret = nodeToAuthorize;
-            } else {
-                LOG.debug("inode is not null and it is not a file for a create/rename/mkdirs operation! Optimization skipped");
-            }
-
-            return ret;
-        }
-
-        private OptimizedAuthzContext getOrCreateOptimizedAuthzContext() {
-            if (pathToContextCache == null) {
-                pathToContextCache = new HashMap<>();
-            }
-
-            OptimizedAuthzContext opContext = pathToContextCache.get(resourcePath);
-
-            if (opContext == null) {
-                opContext = new OptimizedAuthzContext(resourcePath, ancestorAccess, parentAccess, access, null);
-
-                pathToContextCache.put(resourcePath, opContext);
-
-                LOG.debug("Added OptimizedAuthzContext:[{}] to cache", opContext);
-            }
-
-            return opContext;
-        }
-    }
-
     static {
-        Set<String> optimizedOperations = new HashSet<>();
-
-        optimizedOperations.add(OPERATION_NAME_CREATE);
-        optimizedOperations.add(OPERATION_NAME_DELETE);
-        optimizedOperations.add(OPERATION_NAME_RENAME);
-        optimizedOperations.add(OPERATION_NAME_LISTSTATUS);
-        optimizedOperations.add(OPERATION_NAME_MKDIRS);
-        optimizedOperations.add(OPERATION_NAME_GETEZFORPATH);
-
-        OPTIMIZED_OPERATIONS = Collections.unmodifiableSet(optimizedOperations);
-
         Map<FsAction, Set<String>> accessToActions = new HashMap<>();
 
         accessToActions.put(FsAction.NONE, new TreeSet<>());
