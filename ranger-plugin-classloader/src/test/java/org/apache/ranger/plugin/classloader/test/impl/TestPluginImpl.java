@@ -17,12 +17,13 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.classloader.test.Impl;
+package org.apache.ranger.plugin.classloader.test.impl;
 
-public class TestPrint {
+import org.apache.ranger.plugin.classloader.test.TestPlugin;
 
-	public String getString(){
-		String ret = "Class Loaded by RangerPlugingClassLoader";
-		return ret;
-	}
+public class TestPluginImpl implements TestPlugin {
+    @Override
+    public String print() {
+        return new TestPrint().getString();
+    }
 }
