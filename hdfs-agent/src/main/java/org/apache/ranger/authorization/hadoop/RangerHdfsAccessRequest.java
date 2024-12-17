@@ -22,7 +22,6 @@ package org.apache.ranger.authorization.hadoop;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.ipc.Server;
-import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer.RangerHdfsPlugin;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
