@@ -263,23 +263,23 @@ public class RangerHdfsAuthorizerTest {
             final UserGroupInformation user = UserGroupInformation.createUserForTesting(userName, groups);
 
             INodeAttributeProvider.AuthorizationContext.Builder builder = new INodeAttributeProvider.AuthorizationContext.Builder()
-                            .fsOwner(FILE_OWNER)
-                            .supergroup(FILE_GROUP)
-                            .callerUgi(user)
-                            .inodeAttrs(Arrays.copyOf(attributes, attributes.length - 1))
-                            .inodes(Arrays.copyOf(nodes, nodes.length - 1))
-                            .pathByNameArr(new byte[0][0])
-                            .snapshotId(SNAPSHOT_ID)
-                            .path(path)
-                            .ancestorIndex(ancestorIndex - 1)
-                            .doCheckOwner(false)
-                            .ancestorAccess(null)
-                            .parentAccess(null)
-                            .access(access)
-                            .subAccess(null)
-                            .ignoreEmptyDir(false)
-                            .operationName(null)
-                            .callerContext(null);
+                    .fsOwner(FILE_OWNER)
+                    .supergroup(FILE_GROUP)
+                    .callerUgi(user)
+                    .inodeAttrs(Arrays.copyOf(attributes, attributes.length - 1))
+                    .inodes(Arrays.copyOf(nodes, nodes.length - 1))
+                    .pathByNameArr(new byte[0][0])
+                    .snapshotId(SNAPSHOT_ID)
+                    .path(path)
+                    .ancestorIndex(ancestorIndex - 1)
+                    .doCheckOwner(false)
+                    .ancestorAccess(null)
+                    .parentAccess(null)
+                    .access(access)
+                    .subAccess(null)
+                    .ignoreEmptyDir(false)
+                    .operationName(null)
+                    .callerContext(null);
 
             INodeAttributeProvider.AuthorizationContext authorizationContext = new INodeAttributeProvider.AuthorizationContext(builder);
 
@@ -294,23 +294,23 @@ public class RangerHdfsAuthorizerTest {
             final UserGroupInformation user = UserGroupInformation.createUserForTesting(userName, groups);
 
             INodeAttributeProvider.AuthorizationContext.Builder builder = new INodeAttributeProvider.AuthorizationContext.Builder()
-                            .fsOwner(FILE_OWNER)
-                            .supergroup(FILE_GROUP)
-                            .callerUgi(user)
-                            .inodeAttrs(attributes)
-                            .inodes(nodes)
-                            .pathByNameArr(new byte[0][0])
-                            .snapshotId(SNAPSHOT_ID)
-                            .path(path)
-                            .ancestorIndex(ancestorIndex - 1)
-                            .doCheckOwner(false)
-                            .ancestorAccess(null)
-                            .parentAccess(null)
-                            .access(access)
-                            .subAccess(null)
-                            .ignoreEmptyDir(false)
-                            .operationName(null)
-                            .callerContext(null);
+                    .fsOwner(FILE_OWNER)
+                    .supergroup(FILE_GROUP)
+                    .callerUgi(user)
+                    .inodeAttrs(attributes)
+                    .inodes(nodes)
+                    .pathByNameArr(new byte[0][0])
+                    .snapshotId(SNAPSHOT_ID)
+                    .path(path)
+                    .ancestorIndex(ancestorIndex - 1)
+                    .doCheckOwner(false)
+                    .ancestorAccess(null)
+                    .parentAccess(null)
+                    .access(access)
+                    .subAccess(null)
+                    .ignoreEmptyDir(false)
+                    .operationName(null)
+                    .callerContext(null);
 
             INodeAttributeProvider.AuthorizationContext authorizationContext = new INodeAttributeProvider.AuthorizationContext(builder);
 

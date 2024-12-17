@@ -88,7 +88,7 @@ public class HDFSRangerTest {
         // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
         final Path file = new Path("/tmp/tmpdir2/data-file3");
 
-        try (FSDataOutputStream out  = fileSystem.create(file)) {
+        try (FSDataOutputStream out = fileSystem.create(file)) {
             for (int i = 0; i < 1024; ++i) {
                 out.write(("data" + i + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();
@@ -156,7 +156,7 @@ public class HDFSRangerTest {
         // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
         final Path file = new Path("/tmp/tmpdir3/data-file2");
 
-        try (FSDataOutputStream out  = fileSystem.create(file)) {
+        try (FSDataOutputStream out = fileSystem.create(file)) {
             for (int i = 0; i < 1024; ++i) {
                 out.write(("data" + i + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();
@@ -234,7 +234,7 @@ public class HDFSRangerTest {
         // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
         final Path file = new Path("/tmp/tmpdir6/data-file2");
 
-        try (FSDataOutputStream out  = fileSystem.create(file)) {
+        try (FSDataOutputStream out = fileSystem.create(file)) {
             for (int i = 0; i < 1024; ++i) {
                 out.write(("data" + i + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();
@@ -360,9 +360,9 @@ public class HDFSRangerTest {
         FileSystem fileSystem = hdfsCluster.getFileSystem();
 
         // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
-        final Path         file = new Path(fileName);
+        final Path file = new Path(fileName);
 
-        try (FSDataOutputStream out  = fileSystem.create(file)) {
+        try (FSDataOutputStream out = fileSystem.create(file)) {
             for (int i = 0; i < 1024; ++i) {
                 out.write(("data" + i + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();
@@ -446,7 +446,7 @@ public class HDFSRangerTest {
         // Write a file - the AccessControlEnforcer won't be invoked as we are the "superuser"
         final Path file = new Path(fileName);
 
-        try (FSDataOutputStream out  = fileSystem.create(file)) {
+        try (FSDataOutputStream out = fileSystem.create(file)) {
             for (int i = 0; i < 1024; ++i) {
                 out.write(("data" + i + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();

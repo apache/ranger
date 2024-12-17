@@ -36,6 +36,7 @@ public class RangerHdfsPlugin extends RangerBasePlugin {
 
     private static String fileNameExtensionSeparator = RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR;
 
+    private final boolean     authzOptimizationEnabled;
     private final boolean     hadoopAuthEnabled;
     private final boolean     optimizeSubAccessAuthEnabled;
     private final String      randomizedWildcardPathName;
@@ -56,7 +57,8 @@ public class RangerHdfsPlugin extends RangerBasePlugin {
 
         RangerHdfsPlugin.fileNameExtensionSeparator = config.get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
 
-        this.hadoopAuthEnabled = config.getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
+        this.hadoopAuthEnabled        = config.getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
+        this.authzOptimizationEnabled = config.getBoolean("ranger.hdfs.authz.enable.optimization", false);
 
         config.setIsFallbackSupported(this.hadoopAuthEnabled);
 
@@ -77,10 +79,16 @@ public class RangerHdfsPlugin extends RangerBasePlugin {
                 excludeUsers.add(excludeUser);
             }
         }
+
+        LOG.info("AUTHZ_OPTIMIZATION_ENABLED:[{}]", authzOptimizationEnabled);
     }
 
     public static String getFileNameExtensionSeparator() {
         return fileNameExtensionSeparator;
+    }
+
+    public boolean isAuthzOptimizationEnabled() {
+        return authzOptimizationEnabled;
     }
 
     public boolean isHadoopAuthEnabled() {

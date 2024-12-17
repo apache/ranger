@@ -44,12 +44,13 @@ import java.util.Map;
 public class RangerServiceHdfs extends RangerBaseService {
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceHdfs.class);
 
-    private static final String AUDITTOHDFS_KMS_PATH    = "/ranger/audit/kms";
-    private static final String AUDITTOHDFS_POLICY_NAME = "kms-audit-path";
+    public static final  String ACCESS_TYPE_READ = "read";
+
+    private static final String AUDITTOHDFS_KMS_PATH      = "/ranger/audit/kms";
+    private static final String AUDITTOHDFS_POLICY_NAME   = "kms-audit-path";
     private static final String HBASE_ARCHIVE_POLICY_NAME = "hbase-archive";
     private static final String HBASE_ARCHIVE_POLICY_PATH = "/hbase/archive";
     private static final String HBASE_ARCHIVE_POLICY_DESC = "Policy for hbase archive location";
-    public  static final String ACCESS_TYPE_READ          = "read";
 
     public RangerServiceHdfs() {
         super();
