@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -350,6 +351,10 @@ public class RangerServiceDefHelper {
 		return _delegate.getWildcardEnabledResourceDef(resourceName, policyType);
 	}
 
+	public Set<String> getAllAccessTypes() {
+		return _delegate.getAllAccessTypes();
+	}
+
 	public Map<String, Collection<String>> getImpliedAccessGrants() {
 		return _delegate.getImpliedAccessGrants();
 	}
@@ -368,6 +373,7 @@ public class RangerServiceDefHelper {
 		final boolean _valid;
 		final List<String> _orderedResourceNames;
 		final Map<String, Collection<String>> _impliedGrants;
+		final Set<String>                     _allAccessTypes;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -406,7 +412,8 @@ public class RangerServiceDefHelper {
 				}
 			}
 
-			_impliedGrants = computeImpliedGrants();
+			_impliedGrants  = computeImpliedGrants();
+			_allAccessTypes = Collections.unmodifiableSet(serviceDef.getAccessTypes().stream().map(RangerAccessTypeDef::getName).collect(Collectors.toSet()));
 
 			if (isValid) {
 				_orderedResourceNames = buildSortedResourceNames();
@@ -493,6 +500,11 @@ public class RangerServiceDefHelper {
 		public boolean isResourceGraphValid() {
 			return _valid;
 		}
+
+		public Set<String> getAllAccessTypes() {
+			return _allAccessTypes;
+		}
+
 		/**
 		 * Builds a directed graph where each resource is node and arc goes from parent level to child level
 		 *
