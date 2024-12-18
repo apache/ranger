@@ -1194,7 +1194,6 @@
                 <module>ugsync-util</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
-                <module>unixauthnative</module>
                 <module>unixauthservice</module>
             </modules>
         </profile>
