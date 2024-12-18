@@ -16,20 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.ranger.authorization.hadoop;
 
-import java.util.Set;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
-public interface HDFSAccessVerifier {
-	class AccessContext {
-		String agentId;
-		int repositoryType;
-		String sessionId;
-		String clientType;
-		String clientIP;
-		String requestData;
-	}
-	
-	boolean isAccessGranted(String aPathName, String aPathOwnerName, String access, String username, Set<String> groups);
-	boolean isAuditLogEnabled(String aPathName);
+import java.util.Objects;
+
+class RangerHdfsResource extends RangerAccessResourceImpl {
+    public RangerHdfsResource(String path, String owner) {
+        super.setValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH, path);
+        super.setOwnerUser(owner);
+    }
+
+    @Override
+    public String getAsString() {
+        String ret = super.getStringifiedValue();
+
+        if (ret == null) {
+            ret = Objects.toString(super.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH));
+
+            super.setStringifiedValue(ret);
+        }
+
+        return ret;
+    }
 }
