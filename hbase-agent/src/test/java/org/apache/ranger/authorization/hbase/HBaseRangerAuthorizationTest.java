@@ -1234,7 +1234,7 @@ public class HBaseRangerAuthorizationTest {
                     Assert.assertEquals(1,numRowsInResult);
                 }
                 catch (IOException ex) {
-                    // expected
+                    throw new Exception(ex);
                 }
                 conn.close();
                 return null;
@@ -1259,7 +1259,7 @@ public class HBaseRangerAuthorizationTest {
                     Assert.assertEquals(2,numRowsInResult);
                 }
                 catch (IOException ex) {
-                    // expected
+                    throw new Exception(ex);
                 }
                 conn.close();
                 return null;
