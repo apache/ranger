@@ -35,12 +35,13 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
     @Override
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes, Charset.defaultCharset()), ServicePolicies.class);
     }
