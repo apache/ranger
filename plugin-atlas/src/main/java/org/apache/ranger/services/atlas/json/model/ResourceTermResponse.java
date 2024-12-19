@@ -19,33 +19,31 @@
 package org.apache.ranger.services.atlas.json.model;
 
 public class ResourceTermResponse {
+    private String href;
+    private String name;
+    private String description;
 
-	private String href;
-	private String name;
-	private String description;
+    public String getHref() {
+        return href;
+    }
 
-	public String getHref() {
-		return href;
-	}
+    public void setHref(String href) {
+        this.href = href;
+    }
 
-	public void setHref(String href) {
-		this.href = href;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
