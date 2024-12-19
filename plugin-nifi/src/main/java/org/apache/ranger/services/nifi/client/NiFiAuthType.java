@@ -22,8 +22,6 @@ package org.apache.ranger.services.nifi.client;
  * Possible authentication types for NiFi.
  */
 public enum NiFiAuthType {
-
     NONE,
     SSL
-
 }
