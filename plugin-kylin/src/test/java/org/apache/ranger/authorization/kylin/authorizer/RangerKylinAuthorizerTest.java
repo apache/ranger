@@ -17,15 +17,6 @@
 
 package org.apache.ranger.authorization.kylin.authorizer;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -40,7 +31,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -49,491 +39,529 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
-*
-* Here we plug the Ranger RangerKylinAuthorizer into Kylin.
-*
-* A custom RangerAdminClient is plugged into Ranger in turn, which loads security policies from a local file.
-* These policies were generated in the Ranger Admin UI for a kylin service called "kylinTest":
-*
-* a) A user "kylin" can do all permissions(contains "ADMIN", "MANAGEMENT", "OPERATION", "QUERY")
-* on all kylin projects;
-* b) A user "zhangqiang" can do a "ADMIN" on the project "test_project",
-* and do a "OPERATION" on the project "kylin_project";
-* c) A user "yuwen" can do a "ADMIN" on the project "test_project",
-* and do a "OPERATION" on the project "kylin_project";
-* d) A user "admin" has role "ROLE_ADMIN",
-* and the others have role "ROLE_USER" by mock for test.
-*
-*/
+ * Here we plug the Ranger RangerKylinAuthorizer into Kylin.
+ * <p>
+ * A custom RangerAdminClient is plugged into Ranger in turn, which loads security policies from a local file.
+ * These policies were generated in the Ranger Admin UI for a kylin service called "kylinTest":
+ * <p>
+ * a) A user "kylin" can do all permissions(contains "ADMIN", "MANAGEMENT", "OPERATION", "QUERY")
+ * on all kylin projects;
+ * b) A user "zhangqiang" can do a "ADMIN" on the project "test_project",
+ * and do a "OPERATION" on the project "kylin_project";
+ * c) A user "yuwen" can do a "ADMIN" on the project "test_project",
+ * and do a "OPERATION" on the project "kylin_project";
+ * d) A user "admin" has role "ROLE_ADMIN",
+ * and the others have role "ROLE_USER" by mock for test.
+ */
 @Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath*:applicationContext.xml", "classpath*:kylinSecurity.xml" })
+@ContextConfiguration(locations = {"classpath*:applicationContext.xml", "classpath*:kylinSecurity.xml"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RangerKylinAuthorizerTest {
-	private static final Map<String, ProjectInstance> uuid2Projects = new HashMap<>();
+    private static final Map<String, ProjectInstance> uuid2Projects = new HashMap<>();
+    private static final Map<String, ProjectInstance> name2Projects = new HashMap<>();
 
-	private static final Map<String, ProjectInstance> name2Projects = new HashMap<>();
+    private static final String ADMIN          = "admin";
+    private static final String KYLIN          = "kylin";
+    private static final String ZHANGQIANG     = "zhangqiang";
+    private static final String YUWEN          = "yuwen";
+    private static final String LEARN_PROJECT  = "learn_project";
+    private static final String TEST_PROJECT   = "test_project";
+    private static final String KYLIN_PROJECT  = "kylin_project";
+    private static final String[] PROJECTNAMES = new String[] {LEARN_PROJECT, TEST_PROJECT, KYLIN_PROJECT};
+    private static final String ROLE_ADMIN     = "ADMIN";
+    private static final String ROLE_USER      = "USER";
 
-	private static final String ADMIN = "admin";
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
-	private static final String KYLIN = "kylin";
+    @BeforeClass
+    public static void setup() {
+        // set kylin conf path
+        System.setProperty(KylinConfig.KYLIN_CONF, "src/test/resources");
 
-	private static final String ZHANGQIANG = "zhangqiang";
+        // init kylin projects
+        initKylinProjects();
 
-	private static final String YUWEN = "yuwen";
+        // mock kylin projects, to match projectUuid and projectName for kylin
+        mockKylinProjects();
+    }
 
-	private static final String LEARN_PROJECT = "learn_project";
+    @AfterClass
+    public static void cleanup() {
+        // do nothing
+    }
 
-	private static final String TEST_PROJECT = "test_project";
+    /**
+     * no credentials read any project failed
+     */
+    @Test(expected = AuthenticationCredentialsNotFoundException.class)
+    public void readProjectAnyWithoutCredentials() {
+        ProjectInstance project = getRandomProjectInstance();
 
-	private static final String KYLIN_PROJECT = "kylin_project";
+        aclEvaluate.hasProjectReadPermission(project);
+    }
 
-	private static final String[] PROJECTNAMES = new String[] { LEARN_PROJECT, TEST_PROJECT, KYLIN_PROJECT };
+    /**
+     * admin read all projects sueecss
+     */
+    @Test
+    @WithMockUser(username = ADMIN, roles = ROLE_ADMIN)
+    public void readProjectAllAsRoleAdmin() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectReadPermission(project);
 
-	private static final String ROLE_ADMIN = "ADMIN";
+            Assert.assertTrue(result);
+        }
+    }
 
-	private static final String ROLE_USER = "USER";
+    /**
+     * kylin read all projects success
+     */
+    @Test
+    @WithMockUser(username = KYLIN, roles = ROLE_USER)
+    public void readProjectAllWithAdminPermission() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectReadPermission(project);
 
-	@Autowired
-	private AclEvaluate aclEvaluate;
+            Assert.assertTrue(result);
+        }
+    }
 
-	@BeforeClass
-	public static void setup() throws Exception {
-		// set kylin conf path
-		System.setProperty(KylinConfig.KYLIN_CONF, "src/test/resources");
+    /**
+     * zhangqiang read test_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void readProjectTestWithAdminPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectReadPermission(project);
 
-		// init kylin projects
-		initKylinProjects();
+        Assert.assertTrue(result);
+    }
 
-		// mock kylin projects, to match projectUuid and projectName for kylin
-		mockKylinProjects();
-	}
+    // No.1 hasProjectReadPermission test start
 
-	@AfterClass
-	public static void cleanup() throws Exception {
-		// do nothing
-	}
+    /**
+     * zhangqiang read kylin_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void readProjectKylinWithOperationPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectReadPermission(project);
 
-	/**
-	 * Help function: init kylin projects
-	 */
-	private static void initKylinProjects() {
-		for (String projectName : PROJECTNAMES) {
-			ProjectInstance projectInstance = getProjectInstance(projectName);
-			name2Projects.put(projectName, projectInstance);
+        Assert.assertTrue(result);
+    }
 
-			uuid2Projects.put(projectInstance.getUuid(), projectInstance);
-		}
-	}
+    /**
+     * yuwen read test_project success
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void readProjectTestWithManagementPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectReadPermission(project);
 
-	/**
-	 * Help function: mock kylin projects, to match projectUuid and projectName
-	 */
-	private static void mockKylinProjects() {
-		KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-		ProjectManager projectManager = mock(ProjectManager.class);
+        Assert.assertTrue(result);
+    }
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		Map<Class, Object> managersCache = (Map<Class, Object>) ReflectionTestUtils.getField(kylinConfig,
-				"managersCache");
-		managersCache.put(ProjectManager.class, projectManager);
+    /**
+     * yuwen read kylin_project success
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void readProjectKylinWithQueryPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectReadPermission(project);
 
-		Answer<ProjectInstance> answer = new Answer<ProjectInstance>() {
-			@Override
-			public ProjectInstance answer(InvocationOnMock invocation) throws Throwable {
-				Object[] args = invocation.getArguments();
-				if (args == null || args.length == 0) {
-					return null;
-				}
-				String uuid = (String) args[0];
-				return uuid2Projects.get(uuid);
-			}
-		};
-		when(projectManager.getPrjByUuid(anyString())).thenAnswer(answer);
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * Help function: get random project instance for test
-	 */
-	private static ProjectInstance getRandomProjectInstance() {
-		String name = RandomStringUtils.randomAlphanumeric(10) + "-project";
-		return getProjectInstance(name);
-	}
+    /**
+     * yuwen read learn_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void readProjectLearnWithoutPermission() {
+        ProjectInstance project = name2Projects.get(LEARN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectReadPermission(project);
 
-	/**
-	 * Help function: get specific project instance for test
-	 */
-	private static ProjectInstance getProjectInstance(String name) {
-		String owner = null;
-		String description = null;
-		LinkedHashMap<String, String> overrideProps = null;
-		List<RealizationEntry> realizationEntries = null;
-		List<String> models = null;
+        Assert.assertFalse(result);
+    }
 
-		return ProjectInstance.create(name, owner, description, overrideProps, realizationEntries, models);
-	}
+    /**
+     * no credentials operation any project failed
+     */
+    @Test(expected = AuthenticationCredentialsNotFoundException.class)
+    public void operationProjectAnyWithoutCredentials() {
+        ProjectInstance project = getRandomProjectInstance();
 
-	// No.1 hasProjectReadPermission test start
-	/**
-	 * no credentials read any project failed
-	 */
-	@Test(expected = AuthenticationCredentialsNotFoundException.class)
-	public void readProjectAnyWithoutCredentials() {
-		ProjectInstance project = getRandomProjectInstance();
-		aclEvaluate.hasProjectReadPermission(project);
-	}
+        aclEvaluate.hasProjectOperationPermission(project);
+    }
 
-	/**
-	 * admin read all projects sueecss
-	 */
-	@Test
-	@WithMockUser(username = ADMIN, roles = { ROLE_ADMIN })
-	public void readProjectAllAsRoleAdmin() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectReadPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+    /**
+     * admin operation all projects sueecss
+     */
+    @Test
+    @WithMockUser(username = ADMIN, roles = ROLE_ADMIN)
+    public void operationProjectAllAsRoleAdmin() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * kylin read all projects success
-	 */
-	@Test
-	@WithMockUser(username = KYLIN, roles = { ROLE_USER })
-	public void readProjectAllWithAdminPermission() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectReadPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+            Assert.assertTrue(result);
+        }
+    }
 
-	/**
-	 * zhangqiang read test_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void readProjectTestWithAdminPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectReadPermission(project);
-		Assert.assertTrue(result);
-	}
+    /**
+     * kylin operation all projects success
+     */
+    @Test
+    @WithMockUser(username = KYLIN, roles = ROLE_USER)
+    public void operationProjectAllWithAdminPermission() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * zhangqiang read kylin_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void readProjectKylinWithOperationPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectReadPermission(project);
-		Assert.assertTrue(result);
-	}
+            Assert.assertTrue(result);
+        }
+    }
 
-	/**
-	 * yuwen read test_project success
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void readProjectTestWithManagementPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectReadPermission(project);
-		Assert.assertTrue(result);
-	}
+    /**
+     * zhangqiang operation test_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void operationProjectTestWithAdminPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * yuwen read kylin_project success
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void readProjectKylinWithQueryPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectReadPermission(project);
-		Assert.assertTrue(result);
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * yuwen read learn_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void readProjectLearnWithoutPermission() {
-		ProjectInstance project = name2Projects.get(LEARN_PROJECT);
-		boolean result = aclEvaluate.hasProjectReadPermission(project);
-		Assert.assertFalse(result);
-	}
+    // No.1 hasProjectReadPermission test end
 
-	// No.1 hasProjectReadPermission test end
+    // No.2 hasProjectOperationPermission test start
 
-	// No.2 hasProjectOperationPermission test start
-	/**
-	 * no credentials operation any project failed
-	 */
-	@Test(expected = AuthenticationCredentialsNotFoundException.class)
-	public void operationProjectAnyWithoutCredentials() {
-		ProjectInstance project = getRandomProjectInstance();
-		aclEvaluate.hasProjectOperationPermission(project);
-	}
+    /**
+     * zhangqiang operation kylin_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void operationProjectKylinWithOperationPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * admin operation all projects sueecss
-	 */
-	@Test
-	@WithMockUser(username = ADMIN, roles = { ROLE_ADMIN })
-	public void operationProjectAllAsRoleAdmin() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectOperationPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * kylin operation all projects success
-	 */
-	@Test
-	@WithMockUser(username = KYLIN, roles = { ROLE_USER })
-	public void operationProjectAllWithAdminPermission() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectOperationPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+    /**
+     * yuwen operation test_project success
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void operationProjectTestWithManagementPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * zhangqiang operation test_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void operationProjectTestWithAdminPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectOperationPermission(project);
-		Assert.assertTrue(result);
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * zhangqiang operation kylin_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void operationProjectKylinWithOperationPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectOperationPermission(project);
-		Assert.assertTrue(result);
-	}
+    /**
+     * yuwen operation kylin_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void operationProjectKylinWithoutPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * yuwen operation test_project success
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void operationProjectTestWithManagementPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectOperationPermission(project);
-		Assert.assertTrue(result);
-	}
+        Assert.assertFalse(result);
+    }
 
-	/**
-	 * yuwen operation kylin_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void operationProjectKylinWithoutPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectOperationPermission(project);
-		Assert.assertFalse(result);
-	}
+    /**
+     * yuwen operation learn_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void operationProjectLearnWithoutPermission() {
+        ProjectInstance project = name2Projects.get(LEARN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectOperationPermission(project);
 
-	/**
-	 * yuwen operation learn_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void operationProjectLearnWithoutPermission() {
-		ProjectInstance project = name2Projects.get(LEARN_PROJECT);
-		boolean result = aclEvaluate.hasProjectOperationPermission(project);
-		Assert.assertFalse(result);
-	}
+        Assert.assertFalse(result);
+    }
 
-	// No.2 hasProjectOperationPermission test end
+    /**
+     * no credentials write any project failed
+     */
+    @Test(expected = AuthenticationCredentialsNotFoundException.class)
+    public void writeProjectAnyWithoutCredentials() {
+        ProjectInstance project = getRandomProjectInstance();
 
-	// No.3 hasProjectWritePermission test start
-	/**
-	 * no credentials write any project failed
-	 */
-	@Test(expected = AuthenticationCredentialsNotFoundException.class)
-	public void writeProjectAnyWithoutCredentials() {
-		ProjectInstance project = getRandomProjectInstance();
-		aclEvaluate.hasProjectWritePermission(project);
-	}
+        aclEvaluate.hasProjectWritePermission(project);
+    }
 
-	/**
-	 * admin write all projects sueecss
-	 */
-	@Test
-	@WithMockUser(username = ADMIN, roles = { ROLE_ADMIN })
-	public void writeProjectAllAsRoleAdmin() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectWritePermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+    /**
+     * admin write all projects sueecss
+     */
+    @Test
+    @WithMockUser(username = ADMIN, roles = ROLE_ADMIN)
+    public void writeProjectAllAsRoleAdmin() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * kylin write all projects success
-	 */
-	@Test
-	@WithMockUser(username = KYLIN, roles = { ROLE_USER })
-	public void writeProjectAllWithAdminPermission() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectWritePermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+            Assert.assertTrue(result);
+        }
+    }
 
-	/**
-	 * zhangqiang write test_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void writeProjectTestWithAdminPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectWritePermission(project);
-		Assert.assertTrue(result);
-	}
+    /**
+     * kylin write all projects success
+     */
+    @Test
+    @WithMockUser(username = KYLIN, roles = ROLE_USER)
+    public void writeProjectAllWithAdminPermission() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * zhangqiang write kylin_project failed
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void writeProjectKylinWithoutPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectWritePermission(project);
-		Assert.assertFalse(result);
-	}
+            Assert.assertTrue(result);
+        }
+    }
 
-	/**
-	 * yuwen write test_project success
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void writeProjectTestWithManagementPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectWritePermission(project);
-		Assert.assertTrue(result);
-	}
+    /**
+     * zhangqiang write test_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void writeProjectTestWithAdminPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * yuwen write kylin_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void writeProjectKylinWithoutPermission2() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectWritePermission(project);
-		Assert.assertFalse(result);
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * yuwen write learn_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void writeProjectLearnWithoutPermission() {
-		ProjectInstance project = name2Projects.get(LEARN_PROJECT);
-		boolean result = aclEvaluate.hasProjectWritePermission(project);
-		Assert.assertFalse(result);
-	}
+    // No.2 hasProjectOperationPermission test end
 
-	// No.3 hasProjectWritePermission test end
+    // No.3 hasProjectWritePermission test start
 
-	// No.4 hasProjectAdminPermission test start
-	/**
-	 * no credentials admin any project failed
-	 */
-	@Test(expected = AuthenticationCredentialsNotFoundException.class)
-	public void adminProjectAnyWithoutCredentials() {
-		ProjectInstance project = getRandomProjectInstance();
-		aclEvaluate.hasProjectAdminPermission(project);
-	}
+    /**
+     * zhangqiang write kylin_project failed
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void writeProjectKylinWithoutPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * admin admin all projects sueecss
-	 */
-	@Test
-	@WithMockUser(username = ADMIN, roles = { ROLE_ADMIN })
-	public void adminProjectAllAsRoleAdmin() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectAdminPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+        Assert.assertFalse(result);
+    }
 
-	/**
-	 * kylin admin all projects success
-	 */
-	@Test
-	@WithMockUser(username = KYLIN, roles = { ROLE_USER })
-	public void adminProjectAllWithAdminPermission() {
-		for (ProjectInstance project : uuid2Projects.values()) {
-			boolean result = aclEvaluate.hasProjectAdminPermission(project);
-			Assert.assertTrue(result);
-		}
-	}
+    /**
+     * yuwen write test_project success
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void writeProjectTestWithManagementPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * zhangqiang admin test_project success
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void adminProjectTestWithAdminPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectAdminPermission(project);
-		Assert.assertTrue(result);
-	}
+        Assert.assertTrue(result);
+    }
 
-	/**
-	 * zhangqiang admin kylin_project failed
-	 */
-	@Test
-	@WithMockUser(username = ZHANGQIANG, roles = { ROLE_USER })
-	public void adminProjectKylinWithoutPermission() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectAdminPermission(project);
-		Assert.assertFalse(result);
-	}
+    /**
+     * yuwen write kylin_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void writeProjectKylinWithoutPermission2() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * yuwen admin test_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void adminProjectTestWithoutPermission() {
-		ProjectInstance project = name2Projects.get(TEST_PROJECT);
-		boolean result = aclEvaluate.hasProjectAdminPermission(project);
-		Assert.assertFalse(result);
-	}
+        Assert.assertFalse(result);
+    }
 
-	/**
-	 * yuwen admin kylin_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void adminProjectKylinWithoutPermission2() {
-		ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
-		boolean result = aclEvaluate.hasProjectAdminPermission(project);
-		Assert.assertFalse(result);
-	}
+    /**
+     * yuwen write learn_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void writeProjectLearnWithoutPermission() {
+        ProjectInstance project = name2Projects.get(LEARN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectWritePermission(project);
 
-	/**
-	 * yuwen admin learn_project failed
-	 */
-	@Test
-	@WithMockUser(username = YUWEN, roles = { ROLE_USER })
-	public void adminProjectLearnWithoutPermission() {
-		ProjectInstance project = name2Projects.get(LEARN_PROJECT);
-		boolean result = aclEvaluate.hasProjectAdminPermission(project);
-		Assert.assertFalse(result);
-	}
-	// No.4 hasProjectAdminPermission test end
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * no credentials admin any project failed
+     */
+    @Test(expected = AuthenticationCredentialsNotFoundException.class)
+    public void adminProjectAnyWithoutCredentials() {
+        ProjectInstance project = getRandomProjectInstance();
+
+        aclEvaluate.hasProjectAdminPermission(project);
+    }
+
+    /**
+     * admin admin all projects sueecss
+     */
+    @Test
+    @WithMockUser(username = ADMIN, roles = ROLE_ADMIN)
+    public void adminProjectAllAsRoleAdmin() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectAdminPermission(project);
+
+            Assert.assertTrue(result);
+        }
+    }
+
+    /**
+     * kylin admin all projects success
+     */
+    @Test
+    @WithMockUser(username = KYLIN, roles = ROLE_USER)
+    public void adminProjectAllWithAdminPermission() {
+        for (ProjectInstance project : uuid2Projects.values()) {
+            boolean result = aclEvaluate.hasProjectAdminPermission(project);
+
+            Assert.assertTrue(result);
+        }
+    }
+
+    /**
+     * zhangqiang admin test_project success
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void adminProjectTestWithAdminPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectAdminPermission(project);
+
+        Assert.assertTrue(result);
+    }
+
+    // No.3 hasProjectWritePermission test end
+
+    // No.4 hasProjectAdminPermission test start
+
+    /**
+     * zhangqiang admin kylin_project failed
+     */
+    @Test
+    @WithMockUser(username = ZHANGQIANG, roles = ROLE_USER)
+    public void adminProjectKylinWithoutPermission() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectAdminPermission(project);
+
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * yuwen admin test_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void adminProjectTestWithoutPermission() {
+        ProjectInstance project = name2Projects.get(TEST_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectAdminPermission(project);
+
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * yuwen admin kylin_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void adminProjectKylinWithoutPermission2() {
+        ProjectInstance project = name2Projects.get(KYLIN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectAdminPermission(project);
+
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * yuwen admin learn_project failed
+     */
+    @Test
+    @WithMockUser(username = YUWEN, roles = ROLE_USER)
+    public void adminProjectLearnWithoutPermission() {
+        ProjectInstance project = name2Projects.get(LEARN_PROJECT);
+        boolean         result  = aclEvaluate.hasProjectAdminPermission(project);
+
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * Help function: init kylin projects
+     */
+    private static void initKylinProjects() {
+        for (String projectName : PROJECTNAMES) {
+            ProjectInstance projectInstance = getProjectInstance(projectName);
+
+            name2Projects.put(projectName, projectInstance);
+
+            uuid2Projects.put(projectInstance.getUuid(), projectInstance);
+        }
+    }
+
+    /**
+     * Help function: mock kylin projects, to match projectUuid and projectName
+     */
+    private static void mockKylinProjects() {
+        KylinConfig    kylinConfig    = KylinConfig.getInstanceFromEnv();
+        ProjectManager projectManager = mock(ProjectManager.class);
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Map<Class, Object> managersCache = (Map<Class, Object>) ReflectionTestUtils.getField(kylinConfig, "managersCache");
+
+        if (managersCache != null) {
+            managersCache.put(ProjectManager.class, projectManager);
+        }
+
+        Answer<ProjectInstance> answer = invocation -> {
+            Object[] args = invocation.getArguments();
+
+            if (args == null || args.length == 0) {
+                return null;
+            }
+
+            String uuid = (String) args[0];
+
+            return uuid2Projects.get(uuid);
+        };
+
+        when(projectManager.getPrjByUuid(anyString())).thenAnswer(answer);
+    }
+
+    /**
+     * Help function: get random project instance for test
+     */
+    private static ProjectInstance getRandomProjectInstance() {
+        String name = RandomStringUtils.randomAlphanumeric(10) + "-project";
+
+        return getProjectInstance(name);
+    }
+
+    /**
+     * Help function: get specific project instance for test
+     */
+    private static ProjectInstance getProjectInstance(String name) {
+        String                        owner              = null;
+        String                        description        = null;
+        LinkedHashMap<String, String> overrideProps      = null;
+        List<RealizationEntry>        realizationEntries = null;
+        List<String>                  models             = null;
+
+        return ProjectInstance.create(name, owner, description, overrideProps, realizationEntries, models);
+    }
+    // No.4 hasProjectAdminPermission test end
 }
