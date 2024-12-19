@@ -19,11 +19,6 @@
 
 package org.apache.ranger.services.kafka;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -37,107 +32,94 @@ import org.apache.ranger.services.kafka.client.ServiceKafkaConnectionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUBLIC;
 
 public class RangerServiceKafka extends RangerBaseService {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKafka.class);
-	public static final String ACCESS_TYPE_DESCRIBE = "describe";
+    private static final Logger LOG                  = LoggerFactory.getLogger(RangerServiceKafka.class);
+    public static final  String ACCESS_TYPE_DESCRIBE = "describe";
 
-	public RangerServiceKafka() {
-		super();
-	}
+    public RangerServiceKafka() {
+        super();
+    }
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public Map<String, Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        Map<String, Object> ret = new HashMap<>();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKafka.validateConfig(" + serviceName + ")");
-		}
+        LOG.debug("==> RangerServiceKafka.validateConfig({})", serviceName);
 
-		if (configs != null) {
-			try {
-				ret = ServiceKafkaConnectionMgr.connectionTest(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceKafka.validateConfig Error:" + e);
-				throw e;
-			}
-		}
+        if (configs != null) {
+            try {
+                ret = ServiceKafkaConnectionMgr.connectionTest(serviceName, configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceKafka.validateConfig Error:{}", String.valueOf(e));
+                throw e;
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKafka.validateConfig(" + serviceName + "): ret=" + ret);
-		}
+        LOG.debug("<== RangerServiceKafka.validateConfig({}): ret={}", serviceName, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		List<String> ret = null;
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        List<String> ret = null;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKafka.lookupResource(" + serviceName + ")");
-		}
+        LOG.debug("==> RangerServiceKafka.lookupResource({})", serviceName);
 
-		if (configs != null) {
-			ServiceKafkaClient serviceKafkaClient = ServiceKafkaConnectionMgr.getKafkaClient(serviceName, configs);
+        if (configs != null) {
+            ServiceKafkaClient serviceKafkaClient = ServiceKafkaConnectionMgr.getKafkaClient(serviceName, configs);
 
-			ret = serviceKafkaClient.getResources(context);
-		}
+            ret = serviceKafkaClient.getResources(context);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKafka.lookupResource(" + serviceName + "): ret=" + ret);
-		}
+        LOG.debug("<== RangerServiceKafka.lookupResource({}): ret={}", serviceName, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceKafka.getDefaultRangerPolicies() ");
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKafka.getDefaultRangerPolicies() ");
-		}
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        String authType = getConfig().get(RANGER_AUTH_TYPE, "simple");
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        if (StringUtils.equalsIgnoreCase(authType, KERBEROS_TYPE)) {
+            LOG.debug("Auth type is " + KERBEROS_TYPE);
+        } else {
+            LOG.debug("Auth type is {}", authType);
+            for (RangerPolicy defaultPolicy : ret) {
+                if (defaultPolicy.getName().contains("all")) {
+                    for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
+                        defaultPolicyItem.addGroup(GROUP_PUBLIC);
+                    }
+                }
+            }
+        }
 
-		String authType = getConfig().get(RANGER_AUTH_TYPE,"simple");
+        for (RangerPolicy defaultPolicy : ret) {
+            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_DESCRIBE)));
+                policyItemForLookupUser.setDelegateAdmin(false);
+                defaultPolicy.addPolicyItem(policyItemForLookupUser);
+            }
+        }
 
-		if (StringUtils.equalsIgnoreCase(authType, KERBEROS_TYPE)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Auth type is " + KERBEROS_TYPE);
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Auth type is " + authType);
-			}
-			for (RangerPolicy defaultPolicy : ret) {
-				if(defaultPolicy.getName().contains("all")){
-					for (RangerPolicy.RangerPolicyItem defaultPolicyItem : defaultPolicy.getPolicyItems()) {
-						defaultPolicyItem.addGroup(GROUP_PUBLIC);
-					}
-				}
-			}
-		}
-		for (RangerPolicy defaultPolicy : ret) {
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(Collections.singletonList(
-						new RangerPolicyItemAccess(ACCESS_TYPE_DESCRIBE)));
-				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.addPolicyItem(policyItemForLookupUser);
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKafka.getDefaultRangerPolicies() ");
-		}
-		return ret;
-	}
+        LOG.debug("<== RangerServiceKafka.getDefaultRangerPolicies() ");
+        return ret;
+    }
 }

@@ -17,17 +17,8 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import java.io.File;
-import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
@@ -46,19 +37,26 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import kafka.server.KafkaConfig;
-import kafka.server.KafkaServer;
 import scala.Some;
 
+import java.io.File;
+import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class KafkaRangerTopicCreationTest {
-    private final static Logger LOG = LoggerFactory.getLogger(KafkaRangerTopicCreationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaRangerTopicCreationTest.class);
 
-    private static KafkaServer kafkaServer;
-    private static TestingServer zkServer;
-    private static int port;
-    private static Path tempDir;
+    private static KafkaServer     kafkaServer;
+    private static TestingServer   zkServer;
+    private static int             port;
+    private static Path            tempDir;
     private static SimpleKdcServer kerbyServer;
 
     @BeforeAll
@@ -72,7 +70,7 @@ public class KafkaRangerTopicCreationTest {
         configureKerby(basedir);
 
         // JAAS Config file - We need to point to the correct keytab files
-        Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
+        Path   path    = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
         String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         content = content.replaceAll("<basedir>", basedir);
         //content = content.replaceAll("zookeeper/localhost", "zookeeper/" + address);
@@ -83,12 +81,12 @@ public class KafkaRangerTopicCreationTest {
         System.setProperty("java.security.auth.login.config", path2.toString());
 
         // Set up Zookeeper to require SASL
-        Map<String,Object> zookeeperProperties = new HashMap<>();
+        Map<String, Object> zookeeperProperties = new HashMap<>();
         zookeeperProperties.put("authProvider.1", "org.apache.zookeeper.server.auth.SASLAuthenticationProvider");
         zookeeperProperties.put("requireClientAuthScheme", "sasl");
         zookeeperProperties.put("jaasLoginRenew", "3600000");
 
-        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1,-1, -1, zookeeperProperties, "localhost");
+        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1, -1, -1, zookeeperProperties, "localhost");
 
         zkServer = new TestingServer(instanceSpec, true);
 
@@ -129,39 +127,6 @@ public class KafkaRangerTopicCreationTest {
         KafkaConfig config = new KafkaConfig(props);
         kafkaServer = new KafkaServer(config, Time.SYSTEM, new Some<String>("KafkaRangerTopicCreationTest"), false);
         kafkaServer.startup();
-   }
-
-    private static void configureKerby(String baseDir) throws Exception {
-
-        //System.setProperty("sun.security.krb5.debug", "true");
-        System.setProperty("java.security.krb5.conf", baseDir + "/target/krb5.conf");
-
-        kerbyServer = new SimpleKdcServer();
-
-        kerbyServer.setKdcRealm("kafka.apache.org");
-        kerbyServer.setAllowUdp(false);
-        kerbyServer.setWorkDir(new File(baseDir + "/target"));
-
-        kerbyServer.init();
-
-        // Create principals
-        String zookeeper = "zookeeper/localhost@kafka.apache.org";
-        String kafka = "kafka/localhost@kafka.apache.org";
-        String client = "client@kafka.apache.org";
-
-        kerbyServer.createPrincipal(zookeeper, "zookeeper");
-        File keytabFile = new File(baseDir + "/target/zookeeper.keytab");
-        kerbyServer.exportPrincipal(zookeeper, keytabFile);
-
-        kerbyServer.createPrincipal(kafka, "kafka");
-        keytabFile = new File(baseDir + "/target/kafka.keytab");
-        kerbyServer.exportPrincipal(kafka, keytabFile);
-
-        kerbyServer.createPrincipal(client, "client");
-        keytabFile = new File(baseDir + "/target/client.keytab");
-        kerbyServer.exportPrincipal(client, keytabFile);
-
-        kerbyServer.start();
     }
 
     @AfterAll
@@ -182,8 +147,8 @@ public class KafkaRangerTopicCreationTest {
 
     @Test
     public void testCreateTopic() throws Exception {
-        final String topic = "test";
-        Properties properties = new Properties();
+        final String topic      = "test";
+        Properties   properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
         properties.put("client.id", "test-consumer-id");
         properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
@@ -192,10 +157,41 @@ public class KafkaRangerTopicCreationTest {
             result.values().get(topic).get();
             for (Map.Entry<String, KafkaFuture<Void>> entry : result.values().entrySet()) {
                 System.out.println("Create Topic : " + entry.getKey() + " " +
-                    "isCancelled : " + entry.getValue().isCancelled() + " " +
-                    "isCompletedExceptionally : " + entry.getValue().isCompletedExceptionally() + " " +
-                    "isDone : " + entry.getValue().isDone());
+                        "isCancelled : " + entry.getValue().isCancelled() + " " +
+                        "isCompletedExceptionally : " + entry.getValue().isCompletedExceptionally() + " " +
+                        "isDone : " + entry.getValue().isDone());
             }
         }
+    }
+
+    private static void configureKerby(String baseDir) throws Exception {
+        System.setProperty("java.security.krb5.conf", baseDir + "/target/krb5.conf");
+
+        kerbyServer = new SimpleKdcServer();
+
+        kerbyServer.setKdcRealm("kafka.apache.org");
+        kerbyServer.setAllowUdp(false);
+        kerbyServer.setWorkDir(new File(baseDir + "/target"));
+
+        kerbyServer.init();
+
+        // Create principals
+        String zookeeper = "zookeeper/localhost@kafka.apache.org";
+        String kafka     = "kafka/localhost@kafka.apache.org";
+        String client    = "client@kafka.apache.org";
+
+        kerbyServer.createPrincipal(zookeeper, "zookeeper");
+        File keytabFile = new File(baseDir + "/target/zookeeper.keytab");
+        kerbyServer.exportPrincipal(zookeeper, keytabFile);
+
+        kerbyServer.createPrincipal(kafka, "kafka");
+        keytabFile = new File(baseDir + "/target/kafka.keytab");
+        kerbyServer.exportPrincipal(kafka, keytabFile);
+
+        kerbyServer.createPrincipal(client, "client");
+        keytabFile = new File(baseDir + "/target/client.keytab");
+        kerbyServer.exportPrincipal(client, keytabFile);
+
+        kerbyServer.start();
     }
 }

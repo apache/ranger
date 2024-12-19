@@ -17,22 +17,8 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import java.io.File;
-import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Future;
-
+import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
@@ -49,37 +35,49 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import kafka.server.KafkaConfig;
 import scala.Some;
+
+import java.io.File;
+import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Future;
 
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics,
  * sends a message to them and consumes it.
  * The RangerKafkaAuthorizer enforces the following authorization rules:
- *
- *  - The "IT" group can do anything
- *  - The "public" group can "read/describe/write" on the "test" topic.
- *
+ * <p>
+ * - The "IT" group can do anything
+ * - The "public" group can "read/describe/write" on the "test" topic.
+ * <p>
  * Policies available from admin via:
- *
+ * <p>
  * http://localhost:6080/service/plugins/policies/download/cl1_kafka
- *
+ * <p>
  * Authentication is done via Kerberos/GSS.
  */
 public class KafkaRangerAuthorizerGSSTest {
-    private final static Logger LOG = LoggerFactory.getLogger(KafkaRangerAuthorizerGSSTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaRangerAuthorizerGSSTest.class);
 
-    private static KafkaServer kafkaServer;
-    private static TestingServer zkServer;
-    private static int port;
-    private static Path tempDir;
+    private static KafkaServer     kafkaServer;
+    private static TestingServer   zkServer;
+    private static int             port;
+    private static Path            tempDir;
     private static SimpleKdcServer kerbyServer;
 
     @BeforeAll
@@ -92,7 +90,7 @@ public class KafkaRangerAuthorizerGSSTest {
         configureKerby(basedir);
 
         // JAAS Config file - We need to point to the correct keytab files
-        Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
+        Path   path    = FileSystems.getDefault().getPath(basedir, "/src/test/resources/kafka_kerberos.jaas");
         String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         content = content.replaceAll("<basedir>", basedir);
         //content = content.replaceAll("zookeeper/localhost", "zookeeper/" + address);
@@ -103,12 +101,12 @@ public class KafkaRangerAuthorizerGSSTest {
         System.setProperty("java.security.auth.login.config", path2.toString());
 
         // Set up Zookeeper to require SASL
-        Map<String,Object> zookeeperProperties = new HashMap<>();
+        Map<String, Object> zookeeperProperties = new HashMap<>();
         zookeeperProperties.put("authProvider.1", "org.apache.zookeeper.server.auth.SASLAuthenticationProvider");
         zookeeperProperties.put("requireClientAuthScheme", "sasl");
         zookeeperProperties.put("jaasLoginRenew", "3600000");
 
-        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1,-1, -1, zookeeperProperties, "localhost");
+        InstanceSpec instanceSpec = new InstanceSpec(null, -1, -1, -1, true, 1, -1, -1, zookeeperProperties, "localhost");
 
         zkServer = new TestingServer(instanceSpec, true);
 
@@ -156,39 +154,6 @@ public class KafkaRangerAuthorizerGSSTest {
         adminProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
         adminProps.put(SaslConfigs.SASL_MECHANISM, "GSSAPI");
         KafkaTestUtils.createSomeTopics(adminProps);
-    }
-
-    private static void configureKerby(String baseDir) throws Exception {
-
-        //System.setProperty("sun.security.krb5.debug", "true");
-        System.setProperty("java.security.krb5.conf", baseDir + "/target/krb5.conf");
-
-        kerbyServer = new SimpleKdcServer();
-
-        kerbyServer.setKdcRealm("kafka.apache.org");
-        kerbyServer.setAllowUdp(false);
-        kerbyServer.setWorkDir(new File(baseDir + "/target"));
-
-        kerbyServer.init();
-
-        // Create principals
-        String zookeeper = "zookeeper/localhost@kafka.apache.org";
-        String kafka = "kafka/localhost@kafka.apache.org";
-        String client = "client@kafka.apache.org";
-
-        kerbyServer.createPrincipal(zookeeper, "zookeeper");
-        File keytabFile = new File(baseDir + "/target/zookeeper.keytab");
-        kerbyServer.exportPrincipal(zookeeper, keytabFile);
-
-        kerbyServer.createPrincipal(kafka, "kafka");
-        keytabFile = new File(baseDir + "/target/kafka.keytab");
-        kerbyServer.exportPrincipal(kafka, keytabFile);
-
-        kerbyServer.createPrincipal(client, "client");
-        keytabFile = new File(baseDir + "/target/client.keytab");
-        kerbyServer.exportPrincipal(client, keytabFile);
-
-        kerbyServer.start();
     }
 
     @AfterAll
@@ -262,6 +227,82 @@ public class KafkaRangerAuthorizerGSSTest {
         }
     }
 
+    // The "public" group can't write to "dev"
+    @Test
+    public void testUnauthorizedWrite() {
+        // Create the Producer
+        Properties producerProps = new Properties();
+        producerProps.put("bootstrap.servers", "localhost:" + port);
+        producerProps.put("acks", "all");
+        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        producerProps.put("sasl.mechanism", "GSSAPI");
+        producerProps.put("sasl.kerberos.service.name", "kafka");
+        producerProps.put("enable.idempotence", "false");
+
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            // Send a message
+            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("dev", "somekey", "somevalue"));
+            producer.flush();
+            record.get();
+        } catch (Exception ex) {
+            Assertions.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
+        }
+    }
+
+    @Test
+    public void testAuthorizedIdempotentWrite() throws Exception {
+        // Create the Producer
+        Properties producerProps = new Properties();
+        producerProps.put("bootstrap.servers", "localhost:" + port);
+        producerProps.put("acks", "all");
+        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        producerProps.put("sasl.mechanism", "GSSAPI");
+        producerProps.put("sasl.kerberos.service.name", "kafka");
+        producerProps.put("enable.idempotence", "true");
+
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            // Send a message
+            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
+            producer.flush();
+            record.get();
+        }
+    }
+
+    private static void configureKerby(String baseDir) throws Exception {
+        System.setProperty("java.security.krb5.conf", baseDir + "/target/krb5.conf");
+
+        kerbyServer = new SimpleKdcServer();
+
+        kerbyServer.setKdcRealm("kafka.apache.org");
+        kerbyServer.setAllowUdp(false);
+        kerbyServer.setWorkDir(new File(baseDir + "/target"));
+
+        kerbyServer.init();
+
+        // Create principals
+        String zookeeper = "zookeeper/localhost@kafka.apache.org";
+        String kafka     = "kafka/localhost@kafka.apache.org";
+        String client    = "client@kafka.apache.org";
+
+        kerbyServer.createPrincipal(zookeeper, "zookeeper");
+        File keytabFile = new File(baseDir + "/target/zookeeper.keytab");
+        kerbyServer.exportPrincipal(zookeeper, keytabFile);
+
+        kerbyServer.createPrincipal(kafka, "kafka");
+        keytabFile = new File(baseDir + "/target/kafka.keytab");
+        kerbyServer.exportPrincipal(kafka, keytabFile);
+
+        kerbyServer.createPrincipal(client, "client");
+        keytabFile = new File(baseDir + "/target/client.keytab");
+        kerbyServer.exportPrincipal(client, keytabFile);
+
+        kerbyServer.start();
+    }
+
     private void checkTopicExists(final KafkaConsumer<String, String> consumer) {
         Map<String, List<PartitionInfo>> topics = consumer.listTopics();
         while (!topics.containsKey("test")) {
@@ -288,52 +329,6 @@ public class KafkaRangerAuthorizerGSSTest {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             LOG.info("Interrupted sleep, nothing important");
-        }
-    }
-
-    // The "public" group can't write to "dev"
-    @Test
-    public void testUnauthorizedWrite() throws Exception {
-        // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        producerProps.put("sasl.mechanism", "GSSAPI");
-        producerProps.put("sasl.kerberos.service.name", "kafka");
-        producerProps.put("enable.idempotence", "false");
-
-        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
-            // Send a message
-            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("dev", "somekey", "somevalue"));
-            producer.flush();
-            record.get();
-        } catch (Exception ex) {
-            Assertions.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
-        }
-    }
-
-
-    @Test
-    public void testAuthorizedIdempotentWrite() throws Exception {
-        // Create the Producer
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:" + port);
-        producerProps.put("acks", "all");
-        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        producerProps.put("sasl.mechanism", "GSSAPI");
-        producerProps.put("sasl.kerberos.service.name", "kafka");
-        producerProps.put("enable.idempotence", "true");
-
-        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
-            // Send a message
-            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
-            producer.flush();
-            record.get();
         }
     }
 }

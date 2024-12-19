@@ -17,19 +17,7 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.ServerSocket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.KeyStore;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.concurrent.Future;
-
+import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
@@ -44,74 +32,84 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.utils.Time;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import kafka.server.KafkaConfig;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import scala.Some;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyStore;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.concurrent.Future;
+
 /**
- * A simple test that starts a Kafka broker, creates "test" and "dev" topics, sends a message to them and consumes it. We also plug in a 
+ * A simple test that starts a Kafka broker, creates "test" and "dev" topics, sends a message to them and consumes it. We also plug in a
  * CustomAuthorizer that enforces some authorization rules:
- * 
- *  - The "IT" group can do anything
- *  - The "public" group can "read/describe/write" on the "test" topic.
- *  - The "public" group can only "read/describe" on the "dev" topic, but not write.
- *
+ * <p>
+ * - The "IT" group can do anything
+ * - The "public" group can "read/describe/write" on the "test" topic.
+ * - The "public" group can only "read/describe" on the "dev" topic, but not write.
+ * <p>
  * In addition we have a TAG based policy, which grants "read/describe" access to the "public" group to the "messages" topic (which is associated
  * with the tag called "MessagesTag". A "kafka_topic" entity was created in Apache Atlas + then associated with the "MessagesTag". This was
  * then imported into Ranger using the TagSyncService. The policies were then downloaded locally and saved for testing off-line.
- * 
+ * <p>
  * Policies available from admin via:
- * 
+ * <p>
  * http://localhost:6080/service/plugins/policies/download/cl1_kafka
  */
 public class KafkaRangerAuthorizerTest {
-    
-    private static KafkaServer kafkaServer;
+    private static KafkaServer   kafkaServer;
     private static TestingServer zkServer;
-    private static int port;
-    private static String serviceKeystorePath;
-    private static String clientKeystorePath;
-    private static String truststorePath;
-    private static Path tempDir;
-    
+    private static int           port;
+    private static String        serviceKeystorePath;
+    private static String        clientKeystorePath;
+    private static String        truststorePath;
+    private static Path          tempDir;
+
     @BeforeAll
     public static void setup() throws Exception {
-    	// Create keys
+        // Create keys
         String serviceDN = "CN=localhost,O=Apache,L=Dublin,ST=Leinster,C=IE";
-        String clientDN = "CN=localhost,O=Apache,L=Dublin,ST=Leinster,C=IE";
-    	
-    	// Create a truststore
-    	KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-    	keystore.load(null, "security".toCharArray());
-    	
-    	serviceKeystorePath = 
-    			KafkaTestUtils.createAndStoreKey(serviceDN, serviceDN, BigInteger.valueOf(30), 
-    					"sspass", "myservicekey", "skpass", keystore);
-    	clientKeystorePath = 
-    			KafkaTestUtils.createAndStoreKey(clientDN, clientDN, BigInteger.valueOf(31), 
-    					"cspass", "myclientkey", "ckpass", keystore);
-    	
-    	File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
-    	try (OutputStream output = new FileOutputStream(truststoreFile)) {
-    		keystore.store(output, "security".toCharArray());
-    	}
-    	truststorePath = truststoreFile.getPath();
-    			
+        String clientDN  = "CN=localhost,O=Apache,L=Dublin,ST=Leinster,C=IE";
+
+        // Create a truststore
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keystore.load(null, "security".toCharArray());
+
+        serviceKeystorePath =
+                KafkaTestUtils.createAndStoreKey(serviceDN, serviceDN, BigInteger.valueOf(30),
+                        "sspass", "myservicekey", "skpass", keystore);
+        clientKeystorePath  =
+                KafkaTestUtils.createAndStoreKey(clientDN, clientDN, BigInteger.valueOf(31),
+                        "cspass", "myclientkey", "ckpass", keystore);
+
+        File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
+        try (OutputStream output = new FileOutputStream(truststoreFile)) {
+            keystore.store(output, "security".toCharArray());
+        }
+        truststorePath = truststoreFile.getPath();
+
         zkServer = new TestingServer();
-		zkServer.start() ;
-        
+        zkServer.start();
+
         // Get a random port
         try (ServerSocket serverSocket = new ServerSocket(0)) {
-			Assertions.assertNotNull(serverSocket) ;
-			port = serverSocket.getLocalPort() ;
-			Assertions.assertTrue(port > 0) ;
-		} catch (java.io.IOException e) {
-			throw new RuntimeException("Local socket port not available", e) ;
-		}
+            Assertions.assertNotNull(serverSocket);
+            port = serverSocket.getLocalPort();
+            Assertions.assertTrue(port > 0);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Local socket port not available", e);
+        }
 
         tempDir = Files.createTempDirectory("kafka");
 
@@ -137,11 +135,11 @@ public class KafkaRangerAuthorizerTest {
 
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
-        
+
         // Create users for testing
         UserGroupInformation.createUserForTesting(clientDN, new String[] {"public"});
         UserGroupInformation.createUserForTesting(serviceDN, new String[] {"IT"});
-        
+
         KafkaConfig config = new KafkaConfig(props);
         kafkaServer = new KafkaServer(config, Time.SYSTEM, new Some<String>("KafkaRangerAuthorizerTest"), false);
         kafkaServer.startup();
@@ -158,7 +156,7 @@ public class KafkaRangerAuthorizerTest {
         adminProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
         KafkaTestUtils.createSomeTopics(adminProps);
     }
-    
+
     @AfterAll
     public static void cleanup() throws Exception {
         if (kafkaServer != null) {
@@ -167,24 +165,24 @@ public class KafkaRangerAuthorizerTest {
         if (zkServer != null) {
             zkServer.stop();
         }
-        
+
         File clientKeystoreFile = new File(clientKeystorePath);
         if (clientKeystoreFile.exists()) {
-        	FileUtils.forceDelete(clientKeystoreFile);
+            FileUtils.forceDelete(clientKeystoreFile);
         }
         File serviceKeystoreFile = new File(serviceKeystorePath);
         if (serviceKeystoreFile.exists()) {
-        	FileUtils.forceDelete(serviceKeystoreFile);
+            FileUtils.forceDelete(serviceKeystoreFile);
         }
         File truststoreFile = new File(truststorePath);
         if (truststoreFile.exists()) {
-        	FileUtils.forceDelete(truststoreFile);
+            FileUtils.forceDelete(truststoreFile);
         }
         if (tempDir != null) {
             FileUtils.deleteDirectory(tempDir.toFile());
         }
     }
-    
+
     // The "public" group can read from "test"
     @Test
     public void testAuthorizedRead() throws Exception {
@@ -201,7 +199,7 @@ public class KafkaRangerAuthorizerTest {
         producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
+
         // Create the Consumer
         Properties consumerProps = new Properties();
         consumerProps.put("bootstrap.servers", "localhost:" + port);
@@ -244,7 +242,7 @@ public class KafkaRangerAuthorizerTest {
             Assertions.assertEquals("somevalue", record.value());
         }
     }
-    
+
     // The "IT" group can write to any topic
     @Test
     public void testAuthorizedWrite() throws Exception {
@@ -269,7 +267,7 @@ public class KafkaRangerAuthorizerTest {
             record.get();
         }
     }
-    
+
     // The "public" group can write to "test" but not "dev"
     @Test
     public void testUnauthorizedWrite() throws Exception {
@@ -290,7 +288,7 @@ public class KafkaRangerAuthorizerTest {
         try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
             // Send a message
             Future<RecordMetadata> record =
-                producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
+                    producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
             producer.flush();
             record.get();
 
@@ -363,5 +361,4 @@ public class KafkaRangerAuthorizerTest {
             Assertions.assertEquals("somevalue", record.value());
         }
     }
-
 }
