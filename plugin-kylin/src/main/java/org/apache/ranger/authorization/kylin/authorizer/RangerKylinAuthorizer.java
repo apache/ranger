@@ -60,7 +60,9 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
 
                 if (plugin == null) {
                     plugin = new RangerKylinPlugin();
+
                     plugin.init();
+
                     kylinPlugin = plugin;
 
                     clientIPAddress = getClientIPAddress();
@@ -80,8 +82,10 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
         if (kylinPlugin != null) {
             String      projectName = null;
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
             if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
                 ProjectInstance projectInstance = ProjectManager.getInstance(kylinConfig).getPrjByUuid(entityUuid);
+
                 if (projectInstance != null) {
                     projectName = projectInstance.getName();
                 } else {
@@ -89,11 +93,10 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
                 }
             }
 
-            String accessType = ExternalAclProvider.transformPermission(permission);
-            RangerKylinAccessRequest request = new RangerKylinAccessRequest(projectName, user, groups, accessType,
-                    clientIPAddress);
+            String                   accessType = ExternalAclProvider.transformPermission(permission);
+            RangerKylinAccessRequest request    = new RangerKylinAccessRequest(projectName, user, groups, accessType, clientIPAddress);
+            RangerAccessResult       result     = kylinPlugin.isAccessAllowed(request);
 
-            RangerAccessResult result = kylinPlugin.isAccessAllowed(request);
             if (result != null && result.getIsAllowed()) {
                 ret = true;
             }
@@ -112,6 +115,7 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
 
     private String getClientIPAddress() {
         InetAddress ip = null;
+
         try {
             ip = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
@@ -119,9 +123,11 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
         }
 
         String ret = null;
+
         if (ip != null) {
             ret = ip.getHostAddress();
         }
+
         return ret;
     }
 
