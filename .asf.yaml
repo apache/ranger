@@ -25,6 +25,8 @@ github:
     - java
     - python
     - docker
+  autolink_jira:
+    - RANGER
   enabled_merge_buttons:
     squash:  true
     merge:   false
