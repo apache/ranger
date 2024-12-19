@@ -19,6 +19,7 @@
 package org.apache.ranger.security.web.filter;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -33,6 +34,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.authz.authority.JwtAuthority;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
 import org.apache.ranger.authz.handler.jwt.RangerJwtAuthHandler;
@@ -42,7 +44,6 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -101,7 +102,8 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         RangerAuth rangerAuth = authenticate(httpServletRequest);
 
         if (rangerAuth != null) {
-            final List<GrantedAuthority>   grantedAuths        = Arrays.asList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
+            final Set<String>                    groups        = getGroupsFromClaimSet();
+            final List<GrantedAuthority>   grantedAuths        = Arrays.asList(new JwtAuthority(DEFAULT_RANGER_ROLE, groups));
             final UserDetails              principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
             final Authentication           finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
             final WebAuthenticationDetails webDetails          = new WebAuthenticationDetails(httpServletRequest);
