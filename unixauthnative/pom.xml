@@ -27,6 +27,10 @@
     <packaging>uexe</packaging>
     <name>Unix Native Authenticator</name>
     <description>Unix authentication service</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <build>
         <plugins>
             <plugin>
