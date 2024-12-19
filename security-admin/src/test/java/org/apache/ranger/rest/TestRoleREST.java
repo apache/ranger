@@ -16,6 +16,10 @@
  */
 package org.apache.ranger.rest;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.*;
 import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
@@ -35,6 +39,7 @@ import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.RangerUsersAndGroups;
 import org.apache.ranger.view.VXUser;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.After;
@@ -48,10 +53,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -286,7 +290,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups, isAdmin));
         Assert.assertNotNull(returnedRole);
         Assert.assertEquals(returnedRole.getUsers().size(), users.size());
         Assert.assertEquals(returnedRole.getGroups().size(), groups.size());
@@ -316,12 +320,12 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, users, groups);
+        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups));
         Assert.assertNotNull(returnedRole);
         Assert.assertEquals(createdRoleUsers,users);
         Assert.assertEquals(createdRoleGroups,groups);
-        Assert.assertEquals(returnedRole.getUsers().size(), 0);
-        Assert.assertEquals(returnedRole.getGroups().size(), 0);
+        Assert.assertEquals(0, returnedRole.getUsers().size());
+        Assert.assertEquals(0, returnedRole.getGroups().size());
     }
 
     @Test
@@ -355,7 +359,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.removeAdminFromUsersAndGroups(roleId, users, groups);
+        RangerRole returnedRole = roleRest.removeAdminFromUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups));
         Assert.assertNotNull(returnedRole);
         Assert.assertEquals(createdRoleUsers,users);
         Assert.assertEquals(createdRoleGroups,groups);
@@ -609,7 +613,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups, isAdmin));
         Assert.assertNotNull(returnedRole);
         Assert.assertEquals(returnedRole.getGroups().size(), groups.size() + currentGroupsCount);
     }
@@ -620,7 +624,7 @@ public class TestRoleREST {
         List<String> users = new ArrayList<>(Arrays.asList("{OWNER}","test-role3"));
         List<String> groups = new ArrayList<>(Arrays.asList("test-group2","test-group3"));
         Boolean isAdmin = Boolean.TRUE;
-        roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        roleRest.addUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups, isAdmin));
     }
 
     @Test(expected = Throwable.class)
@@ -632,7 +636,7 @@ public class TestRoleREST {
         for(RangerRole.RoleMember roleMember : rangerRole.getUsers()){
             createdRoleUsers.add(roleMember.getName());
         }
-        roleRest.removeUsersAndGroups(roleId, users, groups);
+        roleRest.removeUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups));
     }
 
     @Test(expected = Throwable.class)
@@ -647,7 +651,7 @@ public class TestRoleREST {
         for(RangerRole.RoleMember roleMember : rangerRole.getUsers()){
             createdRoleUsers.add(roleMember.getName());
         }
-        roleRest.removeAdminFromUsersAndGroups(roleId, users, groups);
+        roleRest.removeAdminFromUsersAndGroups(roleId, new RangerUsersAndGroups(users, groups));
     }
 
     @Test(expected = Throwable.class)
@@ -831,15 +835,28 @@ public class TestRoleREST {
 
 		// mock
 		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
-		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
 		// stubs
 		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
+        Mockito.when(svcStore.getJsonFileName(JSON_FILE_NAME_TYPE.ROLE)).thenReturn("filename.json");
+        Mockito.when(svcStore.getObjectInJson(rangerRolesProcessed, JSON_FILE_NAME_TYPE.ROLE))
+                .thenReturn("{\"roles\":[\"role1\",\"role2\",\"role3\",\"adm\",\"user\"]}");
 
 		// test
-		roleRest.getRolesInJson(requestMock, responseMock);
-		Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
-	}
+		Response response = roleRest.getRolesInJson(requestMock);
+
+        Assert.assertNotNull(response);
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_JSON, response.getMediaType().toString());
+        Assert.assertEquals("attachment; filename=\"filename.json\"", response.getHeaderString("Content-Disposition"));
+
+        StreamingOutput streamingOutput = (StreamingOutput) response.getEntity();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        streamingOutput.write(outputStream);
+
+        String outputJson = outputStream.toString(StandardCharsets.UTF_8.name());
+        Assert.assertEquals("{\"roles\":[\"role1\",\"role2\",\"role3\",\"adm\",\"user\"]}", outputJson);
+    }
 
 	// non-empty request roles (requestParamRoles = 2, dbRoles = 5, return = 2 requestParamRoles)
 	@Test
@@ -855,14 +872,26 @@ public class TestRoleREST {
 
 		// mock
 		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
-		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
 		// stubs
 		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
+		Mockito.when(svcStore.getObjectInJson(rangerRolesProcessed, JSON_FILE_NAME_TYPE.ROLE))
+                .thenReturn("{\"roles\":[\"adm\",\"user\"]}");
+        Mockito.when(svcStore.getJsonFileName(Mockito.any())).thenReturn("filename.json");
 
 		// test
-		roleRest.getRolesInJson(requestMock, responseMock);
-		Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+		Response response = roleRest.getRolesInJson(requestMock);
+
+        Assert.assertNotNull(response);
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_JSON, response.getMediaType().toString());
+        Assert.assertEquals("attachment; filename=\"filename.json\"", response.getHeaderString("Content-Disposition"));
+
+        StreamingOutput streamingOutput = (StreamingOutput) response.getEntity();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        streamingOutput.write(outputStream);
+        String outputJson = outputStream.toString(StandardCharsets.UTF_8.name());
+        Assert.assertEquals("{\"roles\":[\"adm\",\"user\"]}", outputJson);
 	}
 
 	// non-empty request roles (requestParamRoles = 3, dbRoles = 0, return = 0 dbRoles)
@@ -873,33 +902,40 @@ public class TestRoleREST {
 
 		// mock
 		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
-		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
 		// stubs
 		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
 
 		// test
-		roleRest.getRolesInJson(requestMock, responseMock);
-		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+        WebApplicationException exception = Assert.assertThrows(
+                WebApplicationException.class,
+                () -> roleRest.getRolesInJson(requestMock)
+        );
+
+        Assert.assertEquals(Response.Status.NO_CONTENT.getStatusCode(), exception.getResponse().getStatus());
+		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, ROLE);
 	}
 
 	// getAllFilteredRoleList throws Exception
-	@Test(expected = Throwable.class)
+	@Test()
 	public void test18dGetRolesInJson() throws Exception {
 		// pre-requisites
 		List<RangerRole> rangerRolesProcessed = new ArrayList<>();
 
 		// mock
 		HttpServletRequest requestMock = Mockito.mock(HttpServletRequest.class);
-		HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
 		// stubs
-		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenThrow(new Throwable());
+		Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenThrow(new Exception("message"));
 
 		// test
-		Assert.assertThrows(Throwable.class, () -> roleRest.getRolesInJson(requestMock, responseMock));
-		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
-		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString());
+        Assert.assertThrows(
+                Exception.class,
+                () -> roleRest.getRolesInJson(requestMock)
+        );
+
+		Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, ROLE);
+		Mockito.verify(restErrorUtil).createRESTException("message");
 	}
 
 	// full match: requestParamRoles = 0, dbRoles = 5, return = all dbRoles

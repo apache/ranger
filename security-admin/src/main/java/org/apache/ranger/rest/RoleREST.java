@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,6 +35,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -76,6 +79,7 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.RangerUsersAndGroups;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
@@ -387,34 +391,48 @@ public class RoleREST {
         return ret;
     }
 
-//	ToDo: fixes jersey validations
-//	@GET
-//	@Path("/roles/exportJson")
-//	@Produces({ "application/json" })
-//	@PreAuthorize("@rangerPreAuthSecurityHandler.isAdminRole()")
-	public void getRolesInJson(@Context HttpServletRequest request, @Context HttpServletResponse response) {
+	@GET
+	@Path("/roles/exportJson")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAdminRole()")
+	public Response getRolesInJson(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> getRolesInJson()");
 		}
-		try {
-			List<RangerRole> roleLists = getAllFilteredRoleList(request);
 
-			if (CollectionUtils.isNotEmpty(roleLists)) {
-				svcStore.getObjectInJson(roleLists, response, JSON_FILE_NAME_TYPE.ROLE);
-			} else {
-				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-				LOG.error("There is no Role to Export!!");
-			}
+        try {
+            List<RangerRole> roleLists = getAllFilteredRoleList(request);
 
-		} catch (WebApplicationException excp) {
-			throw excp;
-		} catch (Throwable excp) {
-			LOG.error("Error while exporting policy file!!", excp);
-			throw restErrorUtil.createRESTException(excp.getMessage());
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== getRolesInJson()");
-		}
+            if (CollectionUtils.isEmpty(roleLists)){
+                throw new WebApplicationException(
+                        Response
+                                .status(Response.Status.NO_CONTENT)
+                                .type(MediaType.TEXT_PLAIN)
+                                .entity("There is no Role to Export").
+                                build()
+                );
+            }
+
+            StreamingOutput streamingOutput = outputStream -> {
+                String json = svcStore.getObjectInJson(roleLists, JSON_FILE_NAME_TYPE.ROLE);
+                outputStream.write(json.getBytes(StandardCharsets.UTF_8));
+            };
+
+            return Response
+                    .ok(streamingOutput, MediaType.APPLICATION_JSON_TYPE)
+                    .header("Content-Disposition","attachment; filename=\""+svcStore.getJsonFileName(JSON_FILE_NAME_TYPE.ROLE)+"\"")
+                    .build();
+
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (Throwable e) {
+            LOG.error("Error while exporting policy file!!", e);
+            throw restErrorUtil.createRESTException(e.getMessage());
+        } finally {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== getRolesInJson()");
+            }
+        }
 	}
 
 	@POST
@@ -622,14 +640,13 @@ public class RoleREST {
     /*
         This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
      */
-//	ToDo: fixes jersey validations
-//    @PUT
-//    @Path("/roles/{id}/addUsersAndGroups")
-//    @Consumes({ "application/json" })
-//    @Produces({ "application/json" })
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    @PUT
+    @Path("/roles/{id}/addUsersAndGroups")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, RangerUsersAndGroups body) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ", isAdmin=" + isAdmin + ")");
+            LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ", isAdmin=" + body.getAdmin() + ")");
         }
 
         RangerRole role;
@@ -637,7 +654,7 @@ public class RoleREST {
         try {
             // Real processing
             ensureAdminAccess(null, null);
-            if (containsInvalidUser(users)) {
+            if (containsInvalidUser(body.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
 
@@ -647,25 +664,25 @@ public class RoleREST {
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
 
             for (RangerRole.RoleMember user : role.getUsers()) {
-                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
-                    user.setIsAdmin(isAdmin);
+                if (body.getUsers().contains(user.getName()) && body.getAdmin() == Boolean.TRUE) {
+                    user.setIsAdmin(body.getAdmin());
                     roleUsers.add(user);
                 }
             }
             Set<String> existingUsernames = getUserNames(role);
-            for (String user : users) {
+            for (String user : body.getUsers()) {
                 if (!existingUsernames.contains(user)) {
-                    roleUsers.add(new RangerRole.RoleMember(user, isAdmin));
+                    roleUsers.add(new RangerRole.RoleMember(user, body.getAdmin()));
                 }
             }
 
             for (RangerRole.RoleMember group : role.getGroups()) {
-                if (group.getIsAdmin() == isAdmin) {
+                if (group.getIsAdmin() == body.getAdmin()) {
                     roleGroups.add(group);
                 }
             }
-            for (String group : groups) {
-                roleGroups.add(new RangerRole.RoleMember(group, isAdmin));
+            for (String group : body.getGroups()) {
+                roleGroups.add(new RangerRole.RoleMember(group, body.getAdmin()));
             }
             role.setUsers(new ArrayList<>(roleUsers));
             role.setGroups(new ArrayList<>(roleGroups));
@@ -681,7 +698,7 @@ public class RoleREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ", isAdmin=" + isAdmin + ")");
+            LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ", isAdmin=" + body.getUsers() + ")");
         }
 
         return role;
@@ -690,14 +707,13 @@ public class RoleREST {
     /*
         This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
      */
-//	ToDo: fixes jersey validations
-//    @PUT
-//    @Path("/roles/{id}/removeUsersAndGroups")
-//    @Consumes({ "application/json" })
-//    @Produces({ "application/json" })
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    @PUT
+    @Path("/roles/{id}/removeUsersAndGroups")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, RangerUsersAndGroups body) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
+            LOG.debug("==> removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ")");
         }
         RangerRole role;
 
@@ -706,7 +722,7 @@ public class RoleREST {
             ensureAdminAccess(null, null);
             role = getRole(roleId);
 
-            for (String user : users) {
+            for (String user : body.getUsers()) {
                 Iterator<RangerRole.RoleMember> iter = role.getUsers().iterator();
                 while (iter.hasNext()) {
                     RangerRole.RoleMember member = iter.next();
@@ -716,7 +732,7 @@ public class RoleREST {
                     }
                 }
             }
-            for (String group : groups) {
+            for (String group : body.getGroups()) {
                 Iterator<RangerRole.RoleMember> iter = role.getGroups().iterator();
                 while (iter.hasNext()) {
                     RangerRole.RoleMember member = iter.next();
@@ -737,7 +753,7 @@ public class RoleREST {
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
+            LOG.debug("<== removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ")");
         }
 
         return role;
@@ -746,14 +762,13 @@ public class RoleREST {
     /*
         This API is used to remove GRANT privilege from listed users and groups.
      */
-//	ToDo: fixes jersey validations
-//    @PUT
-//    @Path("/roles/{id}/removeAdminFromUsersAndGroups")
-//    @Consumes({ "application/json" })
-//    @Produces({ "application/json" })
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    @PUT
+    @Path("/roles/{id}/removeAdminFromUsersAndGroups")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, RangerUsersAndGroups body) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
+            LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ")");
         }
         RangerRole role;
         try {
@@ -761,14 +776,14 @@ public class RoleREST {
             ensureAdminAccess(null, null);
             role = getRole(roleId);
 
-            for (String user : users) {
+            for (String user : body.getUsers()) {
                 for (RangerRole.RoleMember member : role.getUsers()) {
                     if (StringUtils.equals(member.getName(), user) && member.getIsAdmin()) {
                         member.setIsAdmin(false);
                     }
                 }
             }
-            for (String group : groups) {
+            for (String group : body.getGroups()) {
                 for (RangerRole.RoleMember member : role.getGroups()) {
                     if (StringUtils.equals(member.getName(), group) && member.getIsAdmin()) {
                         member.setIsAdmin(false);
@@ -787,7 +802,7 @@ public class RoleREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
+            LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(body.getUsers().toArray()) + ", groups=" + Arrays.toString(body.getGroups().toArray()) + ")");
         }
 
         return role;

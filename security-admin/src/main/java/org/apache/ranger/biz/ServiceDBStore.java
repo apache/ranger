@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,9 +45,8 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
 
+import jakarta.ws.rs.WebApplicationException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -2510,62 +2510,82 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 
-	public void getPoliciesInExcel(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
+	public ByteArrayOutputStream getPoliciesInExcel(List<RangerPolicy> policies) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPoliciesInExcel()");
 		}
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String excelFileName = "Ranger_Policies_"+timeStamp+".xls";
-		writeExcel(policies, excelFileName, response);
+
+		return writeExcel(policies);
 	}
 
-	public void getPoliciesInCSV(List<RangerPolicy> policies,
-			HttpServletResponse response) throws Exception {
+	public String getPoliciesInCSV(List<RangerPolicy> policies) throws WebApplicationException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
 		}
-		ServletOutputStream out = null;
-		String CSVFileName = null;
 		try {
-			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-			CSVFileName = "Ranger_Policies_" + timeStamp + ".csv";
-			out = response.getOutputStream();
-			StringBuilder sb = writeCSV(policies, CSVFileName, response);
-			IOUtils.write(sb.toString(), out, "UTF-8");
+			StringBuilder sb =  writeCSV(policies);
+			return sb.toString();
 		} catch (Exception e) {
-			LOG.error("Error while generating report file " + CSVFileName, e);
+			LOG.error("Error while generating report file", e);
 			e.printStackTrace();
-		} finally {
-			try {
-				if (out != null) {
-					out.flush();
-					out.close();
-				}
-			} catch (Exception ex) {
-			}
+			throw new WebApplicationException("Error while generating report file", e);
 		}
-	}
+
+    }
 
 	public enum JSON_FILE_NAME_TYPE { POLICY, ROLE }
-	public <T> void getObjectInJson(List<T> objList,
-			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws Exception {
+	public <T> String getObjectInJson(List<T> objList, JSON_FILE_NAME_TYPE type) throws WebApplicationException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getObjectInJson()");
 		}
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String jsonFileName;
+		String json;
 		switch(type) {
 		case POLICY :
-			jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+			rangerExportPolicyList.setGenericPolicies(objList);
+			rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
+			json = JsonUtils.objectToJson(rangerExportPolicyList);
 			break;
 		case ROLE :
-			jsonFileName = "Ranger_Roles_" + timeStamp + ".json";
+			RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
+			rangerExportRoleList.setGenericRoleList(objList);
+			Map<String, Object> metaDataInfo = getMetaDataInfo();
+			metaDataInfo.put(EXPORT_COUNT,rangerExportRoleList.getListSize());
+			rangerExportRoleList.setMetaDataInfo(metaDataInfo);
+			json = JsonUtils.objectToJson(rangerExportRoleList);
 			break;
 		default :
 			throw restErrorUtil.createRESTException("Invalid type "+type);
 		}
-		writeJson(objList, jsonFileName, response, type);
+		return json;
 	}
+
+	public String getCsvFileName(){
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		return "Ranger_Policies_"+timeStamp+".csv";
+	}
+
+	public String getExcelFileName(){
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		return "Ranger_Policies_"+timeStamp+".xls";
+	}
+
+	public String getJsonFileName(JSON_FILE_NAME_TYPE type) {
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String jsonFileName;
+		switch(type) {
+			case POLICY :
+				jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+				break;
+			case ROLE :
+				jsonFileName = "Ranger_Roles_" + timeStamp + ".json";
+				break;
+			default :
+				throw restErrorUtil.createRESTException("Invalid type "+type);
+		}
+		return jsonFileName;
+	}
+
 
 	public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -4106,9 +4126,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return false;
 	}
 
-	private void writeExcel(List<RangerPolicy> policies, String excelFileName, HttpServletResponse response) throws IOException {
-		OutputStream outStream = null;
+	private ByteArrayOutputStream writeExcel(List<RangerPolicy> policies) throws Exception {
 		try (Workbook workbook = new HSSFWorkbook()) {
+			ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
 			Sheet sheet = workbook.createSheet();
 			createHeaderRow(sheet);
 			int rowCount = 0;
@@ -4180,30 +4200,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 			}
-			ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
 			workbook.write(outByteStream);
-			byte[] outArray = outByteStream.toByteArray();
-			response.setContentType("application/ms-excel");
-			response.setContentLength(outArray.length);
-			response.setHeader("Expires:", "0");
-			response.setHeader("Content-Disposition", "attachment; filename=" + excelFileName);
-			response.setStatus(HttpServletResponse.SC_OK);
-			outStream = response.getOutputStream();
-			outStream.write(outArray);
-			outStream.flush();
+
+			return outByteStream;
 		} catch (IOException ex) {
-			LOG.error("Failed to create report file " + excelFileName, ex);
+			LOG.error("Failed to create report file", ex);
+			throw new Exception("Failed to create report file", ex);
 		} catch (Exception ex) {
-			LOG.error("Error while generating report file " + excelFileName, ex);
-		} finally {
-			if (outStream != null) {
-				outStream.close();
-			}
+			LOG.error("Error while generating report file", ex);
+			throw new Exception("Error while generating report file", ex);
 		}
 	}
 
-	private StringBuilder writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
-		response.setContentType("text/csv");
+	private StringBuilder writeCSV(List<RangerPolicy> policies) {
 
 		final String LINE_SEPARATOR = "\n";
 		final String FILE_HEADER = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|"
@@ -4270,8 +4279,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		}
-		response.setHeader("Content-Disposition", "attachment; filename=" + cSVFileName);
-		response.setStatus(HttpServletResponse.SC_OK);
 		return csvBuffer;
 	}
 
@@ -4530,49 +4537,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		metaDataInfo.put(RANGER_VERSION, RangerVersionInfo.getVersion());
 
 		return metaDataInfo;
-	}
-
-	private <T> void writeJson(List<T> objList, String jsonFileName,
-			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws IOException {
-		response.setContentType("text/json");
-		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
-		ServletOutputStream out = null;
-
-		String json = null;
-
-		switch(type) {
-		case POLICY :
-			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-			rangerExportPolicyList.setGenericPolicies(objList);
-			rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
-			json = JsonUtils.objectToJson(rangerExportPolicyList);
-			break;
-		case ROLE :
-			RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
-			rangerExportRoleList.setGenericRoleList(objList);
-			Map<String, Object> metaDataInfo = getMetaDataInfo();
-			metaDataInfo.put(EXPORT_COUNT,rangerExportRoleList.getListSize());
-			rangerExportRoleList.setMetaDataInfo(metaDataInfo);
-			json = JsonUtils.objectToJson(rangerExportRoleList);
-			break;
-		default :
-			throw restErrorUtil.createRESTException("Invalid type "+type);
-		}
-		try {
-			out = response.getOutputStream();
-			response.setStatus(HttpServletResponse.SC_OK);
-			IOUtils.write(json, out, "UTF-8");
-		} catch (Exception e) {
-			LOG.error("Error while exporting json file " + jsonFileName, e);
-		} finally {
-			try {
-				if (out != null) {
-					out.flush();
-					out.close();
-				}
-			} catch (Exception ex) {
-			}
-		}
 	}
 
 	public Map<String, String> getMapFromInputStream(InputStream mapStream) throws IOException {

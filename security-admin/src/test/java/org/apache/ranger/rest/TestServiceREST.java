@@ -17,16 +17,16 @@
  */
 package org.apache.ranger.rest;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.WebApplicationException;
 
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -337,6 +337,8 @@ public class TestServiceREST {
 		policy.setIsAuditEnabled(true);
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
+		policy.setServiceType("type");
+		policy.setPolicyType(1);
 
 		return policy;
 	}
@@ -1685,11 +1687,11 @@ public class TestServiceREST {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-		HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 		SearchFilter filter = new SearchFilter();
 		filter.setParam("zoneName", "zone1");
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+		Mockito.doCallRealMethod().when(svcStore).getObjectInJson(rangerPolicyList, JSON_FILE_NAME_TYPE.POLICY);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
@@ -1700,9 +1702,19 @@ public class TestServiceREST {
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-		serviceREST.getPoliciesInJson(request, response, false);
 
-		Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, response, JSON_FILE_NAME_TYPE.POLICY);
+		Response response = serviceREST.getPoliciesInJson(request, false);
+
+		StreamingOutput streamingOutput = (StreamingOutput) response.getEntity();
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		streamingOutput.write(byteArrayOutputStream);
+		String jsonResponse = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
+
+		Assert.assertNotNull(response);
+		Assert.assertNotNull(jsonResponse);
+		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+		Assert.assertTrue(jsonResponse.contains("HDFS_1-1-20150316062453"));
 	}
 
 	@Test
@@ -1720,11 +1732,12 @@ public class TestServiceREST {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-		HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 		SearchFilter filter = new SearchFilter();
 
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+		Mockito.when(svcStore.getCsvFileName()).thenReturn("Ranger_policies.csv");
+		Mockito.doCallRealMethod().when(svcStore).getPoliciesInCSV(rangerPolicyList);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
@@ -1736,9 +1749,22 @@ public class TestServiceREST {
 
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-		serviceREST.getPoliciesInCsv(request, response);
 
-		Mockito.verify(svcStore).getPoliciesInCSV(rangerPolicyList, response);
+		Response response = serviceREST.getPoliciesInCsv(request);
+
+		StreamingOutput streamingOutput = (StreamingOutput) response.getEntity();
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		streamingOutput.write(byteArrayOutputStream);
+		String csvResponse = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
+
+		Assert.assertNotNull(response);
+		Assert.assertNotNull(csvResponse);
+		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals("text/csv", response.getMediaType().toString());
+		Assert.assertTrue(csvResponse.contains("HDFS_1-1-20150316062453"));
+		Assert.assertEquals(
+				"attachment; filename=\"Ranger_policies.csv\"",
+				response.getHeaderString("Content-Disposition"));
 	}
 
       /*  @Test
@@ -1774,11 +1800,12 @@ public class TestServiceREST {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
 		request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-		HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 		SearchFilter filter = new SearchFilter();
 
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(rangerPolicyList);
+		Mockito.when(svcStore.getExcelFileName()).thenReturn("Ranger_policies.xls");
+		Mockito.doCallRealMethod().when(svcStore).getPoliciesInExcel(rangerPolicyList);
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
 		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
@@ -1790,8 +1817,21 @@ public class TestServiceREST {
 
 		Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
 		Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-		serviceREST.getPoliciesInExcel(request, response);
-		Mockito.verify(svcStore).getPoliciesInExcel(rangerPolicyList, response);
+
+		Response response = serviceREST.getPoliciesInExcel(request);
+
+		StreamingOutput streamingOutput = (StreamingOutput) response.getEntity();
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		streamingOutput.write(byteArrayOutputStream);
+
+		Assert.assertNotNull(response);
+		Assert.assertNotNull(byteArrayOutputStream);
+		Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals("application/ms-excel", response.getMediaType().toString());
+		Assert.assertTrue(byteArrayOutputStream.toByteArray().length > 0);
+		Assert.assertEquals(
+				"attachment; filename=\"Ranger_policies.xls\"",
+				response.getHeaderString("Content-Disposition"));
 	}
 
 

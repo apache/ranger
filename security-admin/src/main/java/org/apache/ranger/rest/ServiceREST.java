@@ -19,8 +19,10 @@
 
 package org.apache.ranger.rest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.Map.Entry;
@@ -44,6 +46,8 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -582,10 +586,9 @@ public class ServiceREST {
 		return ret;
 	}
 
-//	ToDo: fixes jersey validations
-//	@GET
-//	@Path("/policies/{serviceDefName}/for-resource")
-//	@Produces({ "application/json" })
+	@GET
+	@Path("/policies/{serviceDefName}/for-resource")
+	@Produces({ "application/json" })
 	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
 												  @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												  @Context HttpServletRequest request) {
@@ -2104,93 +2107,127 @@ public class ServiceREST {
         return ret;
     }
 
-	//	ToDo: fixes jersey validations
-	//	@GET
-//	@Path("/policies/downloadExcel")
-//	@Produces("application/ms-excel")
-	public void getPoliciesInExcel(@Context HttpServletRequest request,
-			@Context HttpServletResponse response) {
-
+	@GET
+	@Path("/policies/downloadExcel")
+	@Produces("application/ms-excel")
+	public Response getPoliciesInExcel(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPoliciesInExcel()");
 		}
-		RangerPerfTracer perf = null;
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
-		try {
+		long contentLength;
+		RangerPerfTracer perf = null;
+
+		try{
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPoliciesInExcel()");
 			}
-			List<RangerPolicy> policyLists = new ArrayList<RangerPolicy>();
-			
-			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
-			if (CollectionUtils.isNotEmpty(policyLists)){
-				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String>();
-				for (RangerPolicy rangerPolicy : policyLists) {
-					if (rangerPolicy != null) {
-						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
-					}
-				}
-				svcStore.getPoliciesInExcel(policyLists, response);
-			}else{
-				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-				LOG.error("No policies found to download!");
+
+			SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+			final List<RangerPolicy> policyLists = getAllFilteredPolicyList(filter, request, new ArrayList<>());
+			if (!CollectionUtils.isNotEmpty(policyLists)) {
+				throw new WebApplicationException(
+						Response
+								.status(Response.Status.NO_CONTENT)
+								.type(MediaType.TEXT_PLAIN)
+								.entity("No policies found to download!").
+								build()
+				);
 			}
 
-			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
-			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
+			Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String>();
+			for (RangerPolicy rangerPolicy : policyLists) {
+				if (rangerPolicy != null) {
+					ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
+				}
+			}
 
-			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT EXCEL"), "Export Excel", metaDataInfo, null);
-		} catch (WebApplicationException excp) {
-			throw excp;
-		} catch (Throwable excp) {
-			LOG.error("Error while downloading policy report", excp);
-			throw restErrorUtil.createRESTException(excp.getMessage());
+			try (ByteArrayOutputStream outByteStream = svcStore.getPoliciesInExcel(policyLists)) {
+				contentLength = outByteStream.size();
+
+				StreamingOutput streamingOutput = outputStream -> {
+					try {
+						outByteStream.writeTo(outputStream);
+					} finally {
+						outByteStream.close();
+					}
+				};
+
+				RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+				rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
+				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
+
+				policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT EXCEL"), "Export Excel", metaDataInfo, null);
+
+				return Response.ok(streamingOutput, "application/ms-excel")
+						.header("Content-Disposition", "attachment; filename=\"" + svcStore.getExcelFileName() + "\"")
+						.header("Content-Length", contentLength)
+						.header("Expires", "0")
+						.build();
+			}
+		} catch (WebApplicationException e) {
+			throw e;
+		} catch (Throwable e) {
+			LOG.error("Error while downloading policy report", e);
+			throw restErrorUtil.createRESTException(e.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
 		}
 	}
 
 
-	//	ToDo: fixes jersey validations
-	//	@GET
-//	@Path("/policies/csv")
-//	@Produces("text/csv")
-	public void getPoliciesInCsv(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
+	@GET
+	@Path("/policies/csv")
+	@Produces("text/csv")
+	public Response getPoliciesInCsv(@Context HttpServletRequest request) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPoliciesInCsv()");
 		}
-		RangerPerfTracer perf = null;
-		
-		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
 
-		try {
+		RangerPerfTracer perf = null;
+
+		try	{
+			SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPoliciesInCsv()");
 			}
-			List<RangerPolicy> policyLists = new ArrayList<RangerPolicy>();
-			
-			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
-			if (CollectionUtils.isNotEmpty(policyLists)){
-				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
-				for (RangerPolicy rangerPolicy : policyLists) {
-					if (rangerPolicy != null) {
-						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
-					}
-				}
-				svcStore.getPoliciesInCSV(policyLists, response);
-			}else{
-				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-				LOG.error("No policies found to download!");
+
+			final List<RangerPolicy> policyLists = getAllFilteredPolicyList(filter, request, new ArrayList<>());
+			if (!CollectionUtils.isNotEmpty(policyLists)) {
+				throw new WebApplicationException(
+						Response
+								.status(Response.Status.NO_CONTENT)
+								.type(MediaType.TEXT_PLAIN)
+								.entity("No policies found to download!").
+								build()
+				);
 			}
+
+			Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
+			for (RangerPolicy rangerPolicy : policyLists) {
+				if (rangerPolicy != null) {
+					ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
+				}
+			}
+
+			StreamingOutput streamingOutput = outputStream -> {
+				String csv = svcStore.getPoliciesInCSV(policyLists);
+				outputStream.write(csv.getBytes(StandardCharsets.UTF_8));
+			};
 
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-
 			policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT CSV"), "Export CSV", metaDataInfo, null);
+
+			RangerPerfTracer.log(perf);
+
+			return Response.ok(streamingOutput, "text/csv")
+					.header("Content-Disposition", "attachment; filename=\""+svcStore.getCsvFileName()+"\"")
+					.build();
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
@@ -2201,13 +2238,11 @@ public class ServiceREST {
 		}
 	}
 
-	//	ToDo: fixes jersey validations
-//	@GET
-//	@Path("/policies/exportJson")
-//	@Produces("text/json")
-	public void getPoliciesInJson(@Context HttpServletRequest request,
-			@Context HttpServletResponse response,
-			@QueryParam("checkPoliciesExists") Boolean checkPoliciesExists) {
+	@GET
+	@Path("/policies/exportJson")
+	@Produces("text/json")
+	public Response getPoliciesInJson(@Context HttpServletRequest request,
+			@QueryParam("checkPoliciesExists") @DefaultValue("false") final Boolean checkPoliciesExists) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPoliciesInJson()");
 		}
@@ -2219,41 +2254,49 @@ public class ServiceREST {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG,"ServiceREST.getPoliciesInJson()");
 			}
-			if (checkPoliciesExists == null){
-				checkPoliciesExists = false;
-			}
 
-			List<RangerPolicy> policyLists = new ArrayList<RangerPolicy>();
-			
-			policyLists = getAllFilteredPolicyList(filter, request, policyLists);
+			final List<RangerPolicy> policyLists = getAllFilteredPolicyList(filter, request, new ArrayList<>());
 
-			if (CollectionUtils.isNotEmpty(policyLists)) {
-				Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
-				for (RangerPolicy rangerPolicy : policyLists) {
-					if (rangerPolicy != null) {
-						ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
-					}
-				}
-				bizUtil.blockAuditorRoleUser();
-				svcStore.getObjectInJson(policyLists, response, JSON_FILE_NAME_TYPE.POLICY);
-			} else {
-				checkPoliciesExists = true;
-				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-				LOG.error("There is no Policy to Export!!");
-			}
+            if (CollectionUtils.isEmpty(policyLists)) {
+				throw new WebApplicationException(
+						Response
+								.status(Response.Status.NO_CONTENT)
+								.type(MediaType.TEXT_PLAIN)
+								.entity("No policies found to download!").
+								build()
+				);
+            }
 
-			if(!checkPoliciesExists){
+            Map<String, String> mapServiceTypeAndImplClass = new HashMap<String, String> ();
+            for (RangerPolicy rangerPolicy : policyLists) {
+                if (rangerPolicy != null) {
+                    ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
+                }
+            }
+            bizUtil.blockAuditorRoleUser();
+
+			StreamingOutput streamingOutput = outputStream -> {
+				String json = svcStore.getObjectInJson(policyLists, JSON_FILE_NAME_TYPE.POLICY);
+				outputStream.write(json.getBytes(StandardCharsets.UTF_8));
+            };
+
+			if(!checkPoliciesExists) {
 				RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 				rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
 				policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT JSON"), "Export Json", metaDataInfo, null);
 			}
-		} catch (WebApplicationException excp) {
-			throw excp;
-		} catch (Throwable excp) {
-			LOG.error("Error while exporting policy file!!", excp);
-			throw restErrorUtil.createRESTException(excp.getMessage());
+
+			return Response.ok(streamingOutput, MediaType.APPLICATION_JSON_TYPE)
+					.header("Content-Disposition", "attachment; filename=\""+svcStore.getJsonFileName(JSON_FILE_NAME_TYPE.POLICY)+"\"")
+					.build();
+
+		} catch (WebApplicationException e) {
+			throw e;
+		} catch (Throwable e) {
+			LOG.error("Error while exporting policy file!!", e);
+			throw restErrorUtil.createRESTException(e.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
 		}
@@ -4014,7 +4057,7 @@ public class ServiceREST {
 		if (map != null) {
 			ret = new HashMap<>(map.size());
 
-			for (Map.Entry<String, String> e : map.entrySet()) {
+			for (Entry<String, String> e : map.entrySet()) {
 				if (e.getValue().contains(",")) {
 					List<String> values = Arrays.asList(e.getValue().split(","));
 					ret.put(e.getKey(),values);
