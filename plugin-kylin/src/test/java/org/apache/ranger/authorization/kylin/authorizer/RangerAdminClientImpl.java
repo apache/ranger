@@ -17,35 +17,32 @@
 
 package org.apache.ranger.authorization.kylin.authorizer;
 
+import org.apache.ranger.admin.client.AbstractRangerAdminClient;
+import org.apache.ranger.plugin.util.ServicePolicies;
+
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-
-import org.apache.ranger.admin.client.AbstractRangerAdminClient;
-import org.apache.ranger.plugin.util.ServicePolicies;
 
 /**
  * A test implementation of the RangerAdminClient interface that just reads
  * policies in from a file and returns them.
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
-	private static final String cacheFilename = "kylin-policies.json";
+    private static final String cacheFilename = "kylin-policies.json";
 
-	@Override
-	public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis)
-			throws Exception {
+    @Override
+    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        String basedir = System.getProperty("basedir");
 
-		String basedir = System.getProperty("basedir");
-		if (basedir == null) {
-			basedir = new File(".").getCanonicalPath();
-		}
+        if (basedir == null) {
+            basedir = new File(".").getCanonicalPath();
+        }
 
-		java.nio.file.Path cachePath = FileSystems.getDefault()
-				.getPath(basedir, "/src/test/resources/" + cacheFilename);
-		byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
-		return gson.fromJson(new String(cacheBytes, Charset.defaultCharset()), ServicePolicies.class);
-	}
-
+        return gson.fromJson(new String(cacheBytes, Charset.defaultCharset()), ServicePolicies.class);
+    }
 }

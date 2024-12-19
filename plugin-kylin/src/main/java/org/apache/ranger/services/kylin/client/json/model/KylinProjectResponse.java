@@ -20,90 +20,90 @@ package org.apache.ranger.services.kylin.client.json.model;
 import java.util.List;
 
 public class KylinProjectResponse {
-	private String uuid;
+    private String uuid;
 
-	private String version;
+    private String version;
 
-	private String name;
+    private String name;
 
-	private String owner;
+    private String owner;
 
-	private String status;
+    private String status;
 
-	private String description;
+    private String description;
 
-	private List<String> tables;
+    private List<String> tables;
 
-	private List<String> models;
+    private List<String> models;
 
-	public String getUuid() {
-		return uuid;
-	}
+    public String getUuid() {
+        return uuid;
+    }
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
-	public String getVersion() {
-		return version;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getOwner() {
-		return owner;
-	}
+    public String getOwner() {
+        return owner;
+    }
 
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
-	public String getStatus() {
-		return status;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public List<String> getTables() {
-		return tables;
-	}
+    public List<String> getTables() {
+        return tables;
+    }
 
-	public void setTables(List<String> tables) {
-		this.tables = tables;
-	}
+    public void setTables(List<String> tables) {
+        this.tables = tables;
+    }
 
-	public List<String> getModels() {
-		return models;
-	}
+    public List<String> getModels() {
+        return models;
+    }
 
-	public void setModels(List<String> models) {
-		this.models = models;
-	}
+    public void setModels(List<String> models) {
+        this.models = models;
+    }
 
-	@Override
-	public String toString() {
-		return "KylinProjectResponse [uuid=" + uuid + ", version=" + version + ", name=" + name + ", owner=" + owner
-				+ ", status=" + status + ", description=" + description + ", tables=" + tables + ", models=" + models
-				+ "]";
-	}
+    @Override
+    public String toString() {
+        return "KylinProjectResponse [uuid=" + uuid + ", version=" + version + ", name=" + name + ", owner=" + owner
+                + ", status=" + status + ", description=" + description + ", tables=" + tables + ", models=" + models
+                + "]";
+    }
 }
