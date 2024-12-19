@@ -68,36 +68,40 @@ public class ServiceKafkaClient {
     public Map<String, Object> connectionTest() {
         String              errMsg       = errMessage;
         Map<String, Object> responseData = new HashMap<>();
+
         try {
             getTopicList(null);
+
             // If it doesn't throw exception, then assume the instance is reachable
             String successMsg = "ConnectionTest Successful";
+
             BaseClient.generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
         } catch (Exception e) {
             LOG.error("Error connecting to Kafka. kafkaClient = {}", this, e);
+
             String failureMsg = "Unable to connect to Kafka instance." + e.getMessage();
+
             BaseClient.generateResponseDataMap(false, failureMsg, failureMsg + errMsg, null, null, responseData);
         }
+
         return responseData;
     }
 
     public List<String> getResources(ResourceLookupContext context) {
-        String                    userInput   = context.getUserInput();
-        String                    resource    = context.getResourceName();
-        Map<String, List<String>> resourceMap = context.getResources();
-        List<String>              resultList  = null;
-        List<String>              topicList   = null;
+        String                    userInput      = context.getUserInput();
+        String                    resource       = context.getResourceName();
+        Map<String, List<String>> resourceMap    = context.getResources();
+        List<String>              resultList     = null;
+        List<String>              topicList      = null;
+        ResourceType              lookupResource = ResourceType.TOPIC;
 
-        ResourceType lookupResource = ResourceType.TOPIC;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getResources()  UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
-        }
+        LOG.debug("<== getResources()  UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
 
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
                 topicList = resourceMap.get(TOPIC_KEY);
             }
+
             if (resource.trim().equalsIgnoreCase(TOPIC_KEY)) {
                 lookupResource = ResourceType.TOPIC;
             }
@@ -107,15 +111,16 @@ public class ServiceKafkaClient {
             try {
                 Callable<List<String>> callableObj    = null;
                 final String           userInputFinal = userInput;
-
-                final List<String> finalTopicList = topicList;
+                final List<String>     finalTopicList = topicList;
 
                 if (lookupResource == ResourceType.TOPIC) {
                     // get the topic list for given Input
                     callableObj = () -> {
                         List<String> retList = new ArrayList<>();
+
                         try {
                             List<String> list = getTopicList(finalTopicList);
+
                             if (userInputFinal != null && !userInputFinal.isEmpty()) {
                                 for (String value : list) {
                                     if (value.startsWith(userInputFinal)) {
@@ -128,9 +133,11 @@ public class ServiceKafkaClient {
                         } catch (Exception ex) {
                             LOG.error("Error getting topic.", ex);
                         }
+
                         return retList;
                     };
                 }
+
                 // If we need to do lookup
                 if (callableObj != null) {
                     synchronized (this) {
@@ -151,26 +158,31 @@ public class ServiceKafkaClient {
     }
 
     private List<String> getTopicList(List<String> ignoreTopicList) throws Exception {
-        List<String> ret = new ArrayList<>();
-
-        int         sessionTimeout    = 5000;
-        int         connectionTimeout = 10000;
-        AdminClient adminClient       = null;
+        List<String> ret               = new ArrayList<>();
+        int          sessionTimeout    = 5000;
+        int          connectionTimeout = 10000;
+        AdminClient  adminClient       = null;
 
         try {
             Properties props = new Properties();
+
             props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, configs.get(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG));
             props.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, configs.get(AdminClientConfig.SECURITY_PROTOCOL_CONFIG));
             props.put(KEY_SASL_MECHANISM, configs.get(KEY_SASL_MECHANISM));
             props.put(KEY_SASL_JAAS_CONFIG, getJAASConfig(configs));
             props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, getIntProperty(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, sessionTimeout));
             props.put(AdminClientConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, getIntProperty(AdminClientConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, connectionTimeout));
+
             adminClient = KafkaAdminClient.create(props);
+
             ListTopicsResult listTopicsResult = adminClient.listTopics();
+
             if (listTopicsResult != null) {
                 Collection<TopicListing> topicListings = listTopicsResult.listings().get();
+
                 for (TopicListing topicListing : topicListings) {
                     String topicName = topicListing.name();
+
                     if (ignoreTopicList == null || !ignoreTopicList.contains(topicName)) {
                         ret.add(topicName);
                     }
@@ -181,6 +193,7 @@ public class ServiceKafkaClient {
                 adminClient.close();
             }
         }
+
         return ret;
     }
 
@@ -188,10 +201,13 @@ public class ServiceKafkaClient {
         if (key == null) {
             return defaultValue;
         }
+
         String returnVal = configs.get(key);
+
         if (returnVal == null) {
             return defaultValue;
         }
+
         return Integer.valueOf(returnVal);
     }
 
@@ -207,6 +223,7 @@ public class ServiceKafkaClient {
                 .toString();
 
         LOG.debug("KafkaClient JAAS: {}", jaasConfig);
+
         return jaasConfig;
     }
 
