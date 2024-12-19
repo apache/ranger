@@ -17,11 +17,6 @@
 
 package org.apache.ranger.authorization.kylin.authorizer;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
@@ -41,140 +36,129 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.acls.model.Permission;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.List;
 
 public class RangerKylinAuthorizer extends ExternalAclProvider {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerKylinAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKylinAuthorizer.class);
 
-	private static volatile RangerKylinPlugin kylinPlugin = null;
+    private static volatile RangerKylinPlugin kylinPlugin;
 
-	private static String clientIPAddress = null;
+    private static String clientIPAddress;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKylinAuthorizer.init()");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerKylinAuthorizer.init()");
 
-		RangerKylinPlugin plugin = kylinPlugin;
+        RangerKylinPlugin plugin = kylinPlugin;
 
-		if (plugin == null) {
-			synchronized (RangerKylinAuthorizer.class) {
-				plugin = kylinPlugin;
+        if (plugin == null) {
+            synchronized (RangerKylinAuthorizer.class) {
+                plugin = kylinPlugin;
 
-				if (plugin == null) {
-					plugin = new RangerKylinPlugin();
-					plugin.init();
-					kylinPlugin = plugin;
+                if (plugin == null) {
+                    plugin = new RangerKylinPlugin();
+                    plugin.init();
+                    kylinPlugin = plugin;
 
-					clientIPAddress = getClientIPAddress();
-				}
-			}
-		}
+                    clientIPAddress = getClientIPAddress();
+                }
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKylinAuthorizer.init()");
-		}
-	}
+        LOG.debug("<== RangerKylinAuthorizer.init()");
+    }
 
-	@Override
-	public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid,
-			Permission permission) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKylinAuthorizer.checkPermission( user=" + user + ", groups=" + groups
-					+ ", entityType=" + entityType + ", entityUuid=" + entityUuid + ", permission=" + permission + ")");
-		}
+    @Override
+    public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid, Permission permission) {
+        LOG.debug("==> RangerKylinAuthorizer.checkPermission( user={}, groups={}, entityType={}, entityUuid={}, permission={})", user, groups, entityType, entityUuid, permission);
 
-		boolean ret = false;
+        boolean ret = false;
 
-		if (kylinPlugin != null) {
-			String projectName = null;
-			KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-			if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
-				ProjectInstance projectInstance = ProjectManager.getInstance(kylinConfig).getPrjByUuid(entityUuid);
-				if (projectInstance != null) {
-					projectName = projectInstance.getName();
-				} else {
-					if (LOG.isWarnEnabled()) {
-						LOG.warn("Could not find kylin project for given uuid=" + entityUuid);
-					}
-				}
-			}
+        if (kylinPlugin != null) {
+            String      projectName = null;
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
+                ProjectInstance projectInstance = ProjectManager.getInstance(kylinConfig).getPrjByUuid(entityUuid);
+                if (projectInstance != null) {
+                    projectName = projectInstance.getName();
+                } else {
+                    LOG.warn("Could not find kylin project for given uuid = {}", entityUuid);
+                }
+            }
 
-			String accessType = ExternalAclProvider.transformPermission(permission);
-			RangerKylinAccessRequest request = new RangerKylinAccessRequest(projectName, user, groups, accessType,
-					clientIPAddress);
+            String accessType = ExternalAclProvider.transformPermission(permission);
+            RangerKylinAccessRequest request = new RangerKylinAccessRequest(projectName, user, groups, accessType,
+                    clientIPAddress);
 
-			RangerAccessResult result = kylinPlugin.isAccessAllowed(request);
-			if (result != null && result.getIsAllowed()) {
-				ret = true;
-			}
-		}
+            RangerAccessResult result = kylinPlugin.isAccessAllowed(request);
+            if (result != null && result.getIsAllowed()) {
+                ret = true;
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKylinAuthorizer.checkPermission(): result=" + ret);
-		}
+        LOG.debug("<== RangerKylinAuthorizer.checkPermission(): result={}", ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private String getClientIPAddress() {
-		InetAddress ip = null;
-		try {
-			ip = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Failed to get client IP address." + e);
-			}
-		}
+    @Override
+    public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid) {
+        // No need to implement
+        return null;
+    }
 
-		String ret = null;
-		if (ip != null) {
-			ret = ip.getHostAddress();
-		}
-		return ret;
-	}
+    private String getClientIPAddress() {
+        InetAddress ip = null;
+        try {
+            ip = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            LOG.debug("Failed to get client IP address. {}", String.valueOf(e));
+        }
 
-	@Override
-	public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid) {
-		// No need to implement
-		return null;
-	}
-}
+        String ret = null;
+        if (ip != null) {
+            ret = ip.getHostAddress();
+        }
+        return ret;
+    }
 
-class RangerKylinPlugin extends RangerBasePlugin {
-	public RangerKylinPlugin() {
-		super("kylin", "kylin");
-	}
+    private static class RangerKylinPlugin extends RangerBasePlugin {
+        public RangerKylinPlugin() {
+            super("kylin", "kylin");
+        }
 
-	@Override
-	public void init() {
-		super.init();
+        @Override
+        public void init() {
+            super.init();
 
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
+            RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
 
-		super.setResultProcessor(auditHandler);
-	}
-}
+            super.setResultProcessor(auditHandler);
+        }
+    }
 
-class RangerKylinResource extends RangerAccessResourceImpl {
-	public RangerKylinResource(String projectName) {
-		if (StringUtils.isEmpty(projectName)) {
-			projectName = "*";
-		}
+    private static class RangerKylinResource extends RangerAccessResourceImpl {
+        public RangerKylinResource(String projectName) {
+            if (StringUtils.isEmpty(projectName)) {
+                projectName = "*";
+            }
 
-		setValue(KylinResourceMgr.PROJECT, projectName);
-	}
-}
+            setValue(KylinResourceMgr.PROJECT, projectName);
+        }
+    }
 
-class RangerKylinAccessRequest extends RangerAccessRequestImpl {
-	public RangerKylinAccessRequest(String projectName, String user, List<String> groups, String accessType,
-			String clientIPAddress) {
-		super.setResource(new RangerKylinResource(projectName));
-		super.setAccessType(accessType);
-		super.setUser(user);
-		super.setUserGroups(Sets.newHashSet(groups));
-		super.setAccessTime(new Date());
-		super.setClientIPAddress(clientIPAddress);
-		super.setAction(accessType);
-	}
+    private static class RangerKylinAccessRequest extends RangerAccessRequestImpl {
+        public RangerKylinAccessRequest(String projectName, String user, List<String> groups, String accessType, String clientIPAddress) {
+            super.setResource(new RangerKylinResource(projectName));
+            super.setAccessType(accessType);
+            super.setUser(user);
+            super.setUserGroups(Sets.newHashSet(groups));
+            super.setAccessTime(new Date());
+            super.setClientIPAddress(clientIPAddress);
+            super.setAction(accessType);
+        }
+    }
 }
