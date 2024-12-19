@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 public class KylinResourceMgr {
-    private static final Logger LOG    = LoggerFactory.getLogger(KylinResourceMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KylinResourceMgr.class);
 
     public static final String PROJECT = "project";
 
@@ -50,6 +50,7 @@ public class KylinResourceMgr {
         }
 
         LOG.debug("<== KylinResourceMgr.validateConfig Result: {}", ret);
+
         return ret;
     }
 
@@ -57,32 +58,39 @@ public class KylinResourceMgr {
         String                    userInput   = context.getUserInput();
         String                    resource    = context.getResourceName();
         Map<String, List<String>> resourceMap = context.getResources();
+
         LOG.debug("==> KylinResourceMgr.getKylinResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
 
         if (MapUtils.isEmpty(configs)) {
             LOG.error("Connection Config is empty!");
+
             return null;
         }
 
         if (StringUtils.isEmpty(userInput)) {
             LOG.warn("User input is empty, set default value : *");
+
             userInput = "*";
         }
 
         List<String> projectList = null;
+
         if (MapUtils.isNotEmpty(resourceMap)) {
             projectList = resourceMap.get(PROJECT);
         }
 
         final KylinClient kylinClient = KylinClient.getKylinClient(serviceName, configs);
+
         if (kylinClient == null) {
             LOG.error("Failed to getKylinClient!");
+
             return null;
         }
 
         List<String> resultList = kylinClient.getProjectList(userInput, projectList);
 
         LOG.debug("<== KylinResourceMgr.getKylinResources() result: {}", resultList);
+
         return resultList;
     }
 }
