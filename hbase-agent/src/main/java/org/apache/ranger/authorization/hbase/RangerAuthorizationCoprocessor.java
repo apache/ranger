@@ -123,7 +123,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -158,7 +157,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     final                   HbaseAuthUtils    authUtils   = factory.getAuthUtils();
     private UserProvider                      userProvider;
     private RegionCoprocessorEnvironment regionEnv;
-    private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
+    private final Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
     /**
      * if we should check EXEC permissions
      */
@@ -176,48 +175,27 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public Optional<RegionObserver> getRegionObserver() {
-        return Optional.<RegionObserver>of(this);
+        return Optional.of(this);
     }
 
     @Override
     public Optional<EndpointObserver> getEndpointObserver() {
-        return Optional.<EndpointObserver>of(this);
+        return Optional.of(this);
     }
-
-/*
-private User getActiveUser() {
-    User user = null;
-    try {
-        user = RpcServer.getRequestUser().get();
-    } catch (NoSuchElementException e) {
-        LOG.info("Unable to get request user");
-    }
-
-    if (user == null) {
-        // for non-rpc handling, fallback to system user
-        try {
-            user = User.getCurrent();
-        } catch (IOException e) {
-            LOG.error("Unable to find the current user");
-            user = null;
-        }
-    }
-    return user;
-}*/
 
     @Override
     public Optional<BulkLoadObserver> getBulkLoadObserver() {
-        return Optional.<BulkLoadObserver>of(this);
+        return Optional.of(this);
     }
 
     @Override
     public Optional<MasterObserver> getMasterObserver() {
-        return Optional.<MasterObserver>of(this);
+        return Optional.of(this);
     }
 
     @Override
     public Optional<RegionServerObserver> getRegionServerObserver() {
-        return Optional.<RegionServerObserver>of(this);
+        return Optional.of(this);
     }
 
     @Override
@@ -254,23 +232,6 @@ private User getActiveUser() {
 
     @Override
     public void postGetProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
-        //if(!procInfoList.isEmpty()) {
-        //    Iterator<Procedure<?>> itr = procInfoList.iterator();
-        //    User user = this.getActiveUser();
-        //
-        //    while(itr.hasNext()) {
-        //        Procedure procInfo = itr.next();
-        //        try {
-        //            String owner = procInfo.getOwner();
-        //            if (owner == null || !owner.equals(user.getShortName())) {
-        //                requirePermission("getProcedures", Action.ADMIN);
-        //            }
-        //        } catch (AccessDeniedException var7) {
-        //            itr.remove();
-        //        }
-        //    }
-        //}
-
         requirePermission(observerContext, "getProcedures", Action.ADMIN);
     }
 
@@ -367,29 +328,27 @@ private User getActiveUser() {
     }
 
     @Override
-    public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) throws IOException {
+    public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
-                    descriptors == null ? 0 : descriptors.size(), regex));
+            LOG.debug("==> postGetTableDescriptors(count(tableNamesList)={}, count(descriptors)={}, regex={})", tableNamesList == null ? 0 : tableNamesList.size(), descriptors == null ? 0 : descriptors.size(), regex);
         }
 
         checkGetTableInfoAccess(ctx, "getTableDescriptors", descriptors, regex, authUtils.getAccess(Action.CREATE));
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
-                    descriptors == null ? 0 : descriptors.size(), regex));
+            LOG.debug("<== postGetTableDescriptors(count(tableNamesList)={}, count(descriptors)={}, regex={})", tableNamesList == null ? 0 : tableNamesList.size(), descriptors == null ? 0 : descriptors.size(), regex);
         }
     }
 
     @Override
-    public void postGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) throws IOException {
+    public void postGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("==> postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+            LOG.debug("==> postGetTableNames(count(descriptors)={}, regex={})", descriptors == null ? 0 : descriptors.size(), regex);
         }
         checkGetTableInfoAccess(ctx, "getTableNames", descriptors, regex, RangerPolicyEngine.ANY_ACCESS);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+            LOG.debug("<== postGetTableNames(count(descriptors)={}, regex={})", descriptors == null ? 0 : descriptors.size(), regex);
         }
     }
 
@@ -409,7 +368,7 @@ private User getActiveUser() {
     }
 
     @Override
-    public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<NamespaceDescriptor> descriptors) throws IOException {
+    public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<NamespaceDescriptor> descriptors) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
         }
@@ -452,17 +411,17 @@ private User getActiveUser() {
     }
 
     @Override
-    public void preOpen(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
-        RegionCoprocessorEnvironment env    = e.getEnvironment();
+    public void preOpen(ObserverContext<RegionCoprocessorEnvironment> observerContext) throws IOException {
+        RegionCoprocessorEnvironment env    = observerContext.getEnvironment();
         final Region                 region = env.getRegion();
         if (region == null) {
             LOG.error("NULL region from RegionCoprocessorEnvironment in preOpen()");
         } else {
             RegionInfo regionInfo = region.getRegionInfo();
             if (isSpecialTable(regionInfo)) {
-                requireSystemOrSuperUser(regionEnv.getConfiguration(), e);
+                requireSystemOrSuperUser(observerContext);
             } else {
-                requirePermission(e, "open", getTableName(e.getEnvironment()), Action.ADMIN);
+                requirePermission(observerContext, "open", getTableName(observerContext.getEnvironment()), Action.ADMIN);
             }
         }
     }
@@ -517,7 +476,7 @@ private User getActiveUser() {
             }
         } finally {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== preGetOp: commandStr: " + commandStr);
+                LOG.debug("<== preGetOp: commandStr: {}", commandStr);
             }
         }
     }
@@ -596,13 +555,13 @@ private User getActiveUser() {
             }
         } finally {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== preScannerOpen: commandStr: " + commandStr);
+                LOG.debug("<== preScannerOpen: commandStr: {}", commandStr);
             }
         }
     }
 
     @Override
-    public RegionScanner postScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) throws IOException {
+    public RegionScanner postScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) {
         User user = getActiveUser(c);
         if (user != null && user.getShortName() != null) {
             scannerOwners.put(s, user.getShortName());
@@ -622,13 +581,13 @@ private User getActiveUser() {
     }
 
     @Override
-    public void postScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) throws IOException {
+    public void postScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) {
         scannerOwners.remove(s);
     }
 
     @Override
     public void preBulkLoadHFile(ObserverContext<RegionCoprocessorEnvironment> ctx, List<Pair<byte[], String>> familyPaths) throws IOException {
-        List<byte[]> cfs = new LinkedList<byte[]>();
+        List<byte[]> cfs = new LinkedList<>();
         for (Pair<byte[], String> el : familyPaths) {
             cfs.add(el.getFirst());
         }
@@ -642,7 +601,7 @@ private User getActiveUser() {
     }
 
     @Override
-    public void start(CoprocessorEnvironment env) throws IOException {
+    public void start(CoprocessorEnvironment env) {
         String appType = "unknown";
 
         shouldCheckExecPermission = env.getConfiguration().getBoolean(
@@ -685,7 +644,7 @@ private User getActiveUser() {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Start of Coprocessor: [" + coprocessorType + "]");
+            LOG.debug("Start of Coprocessor: [{}]", coprocessorType);
         }
     }
 
@@ -725,7 +684,7 @@ private User getActiveUser() {
         boolean isSuccess = false;
 
         if (updateRangerPoliciesOnGrantRevoke) {
-            GrantRevokeRequest grData = null;
+            GrantRevokeRequest grData;
 
             try {
                 grData = createGrantData(request);
@@ -764,7 +723,7 @@ private User getActiveUser() {
         boolean isSuccess = false;
 
         if (updateRangerPoliciesOnGrantRevoke) {
-            GrantRevokeRequest grData = null;
+            GrantRevokeRequest grData;
 
             try {
                 grData = createRevokeData(request);
@@ -818,42 +777,27 @@ private User getActiveUser() {
             rangerAccessrequest.setAction(operation);
             rangerAccessrequest.setClientIPAddress(getRemoteAddress());
             rangerAccessrequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
-            List<UserPermission> perms = null;
+            List<UserPermission> perms;
             if (request.getType() == AccessControlProtos.Permission.Type.Table) {
                 final TableName table = request.hasTableName() ? ProtobufUtil.toTableName(request.getTableName()) : null;
                 requirePermission(null, operation, table.getName(), Action.ADMIN);
                 resource.setValue(RangerHBaseResource.KEY_TABLE, table.getNameAsString());
-                perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
-                    @Override
-                    public List<UserPermission> run() throws Exception {
-                        return getUserPermissions(
-                                hbasePlugin.getResourceACLs(rangerAccessrequest),
-                                table.getNameAsString(), false);
-                    }
-                });
+                perms = User.runAsLoginUser(() -> getUserPermissions(
+                        hbasePlugin.getResourceACLs(rangerAccessrequest),
+                        table.getNameAsString(), false));
             } else if (request.getType() == AccessControlProtos.Permission.Type.Namespace) {
                 final String namespace = request.getNamespaceName().toStringUtf8();
                 requireGlobalPermission(null, "getUserPermissionForNamespace", namespace, Action.ADMIN);
                 resource.setValue(RangerHBaseResource.KEY_TABLE, namespace + RangerHBaseResource.NAMESPACE_SEPARATOR);
                 rangerAccessrequest.setRequestData(namespace);
-                perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
-                    @Override
-                    public List<UserPermission> run() throws Exception {
-                        return getUserPermissions(
-                                hbasePlugin.getResourceACLs(rangerAccessrequest),
-                                namespace, true);
-                    }
-                });
+                perms = User.runAsLoginUser(() -> getUserPermissions(
+                        hbasePlugin.getResourceACLs(rangerAccessrequest),
+                        namespace, true));
             } else {
                 requirePermission(null, "userPermissions", Action.ADMIN);
-                perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
-                    @Override
-                    public List<UserPermission> run() throws Exception {
-                        return getUserPermissions(
-                                hbasePlugin.getResourceACLs(rangerAccessrequest), null,
-                                false);
-                    }
-                });
+                perms = User.runAsLoginUser(() -> getUserPermissions(
+                        hbasePlugin.getResourceACLs(rangerAccessrequest), null,
+                        false));
                 if (userUtils.isSuperUser(user)) {
                     perms.add(new UserPermission(userUtils.getUserAsString(user),
                             Permission.newBuilder(PermissionStorage.ACL_TABLE_NAME).withActions(Action.values()).build()));
@@ -890,7 +834,7 @@ private User getActiveUser() {
         return tableName;
     }
 
-    protected void requireSystemOrSuperUser(Configuration conf, ObserverContext<?> ctx) throws IOException {
+    protected void requireSystemOrSuperUser(ObserverContext<?> ctx) throws IOException {
         User user = User.getCurrent();
         if (user == null) {
             throw new IOException("Unable to obtain the current user, authorization checks for internal operations will not work correctly!");
@@ -923,12 +867,7 @@ private User getActiveUser() {
 
     protected boolean isAccessForMetaTables(RegionCoprocessorEnvironment env) {
         RegionInfo hri = env.getRegion().getRegionInfo();
-
-        if (hri.isMetaRegion()) {
-            return true;
-        } else {
-            return false;
-        }
+        return hri.isMetaRegion();
     }
 
     // Check if the user has global permission ...
@@ -955,7 +894,7 @@ private User getActiveUser() {
     }
 
     protected void requirePermission(ObserverContext<?> ctx, String request, Permission.Action perm, RegionCoprocessorEnvironment env, Collection<byte[]> families) throws IOException {
-        HashMap<byte[], Set<byte[]>> familyMap = new HashMap<byte[], Set<byte[]>>();
+        HashMap<byte[], Set<byte[]>> familyMap = new HashMap<>();
 
         if (families != null) {
             for (byte[] family : families) {
@@ -966,15 +905,14 @@ private User getActiveUser() {
     }
 
     /**
-     * @param families
      * @return empty map if families is null, would never have empty or null keys, would never have null values, values could be empty (non-null) set
      */
     Map<String, Set<String>> getColumnFamilies(Map<byte[], ? extends Collection<?>> families) {
         if (families == null) {
             // null families map passed.  Ok, returning empty map.
-            return Collections.<String, Set<String>>emptyMap();
+            return Collections.emptyMap();
         }
-        Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> result = new HashMap<>();
         for (Map.Entry<byte[], ? extends Collection<?>> anEntry : families.entrySet()) {
             byte[] familyBytes = anEntry.getKey();
             String family      = Bytes.toString(familyBytes);
@@ -989,21 +927,21 @@ private User getActiveUser() {
                         LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns are empty. " +
                                 "Setting columns to emptySet in familyMap");
                     }
-                    result.put(family, Collections.<String>emptySet());
+                    result.put(family, Collections.emptySet());
                 } else {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns exist");
                     }
                     Iterator<String> columnIterator = new ColumnIterator(columnCollection);
-                    Set<String>      columns        = new HashSet<String>();
+                    Set<String>      columns        = new HashSet<>();
                     try {
                         while (columnIterator.hasNext()) {
                             String column = columnIterator.next();
                             columns.add(column);
                         }
                     } catch (Throwable t) {
-                        LOG.error("Exception encountered when converting family-map to set of columns. Ignoring and returning empty set of columns for family[" + family + "]", t);
-                        LOG.error("Ignoring exception and returning empty set of columns for family[" + family + "]");
+                        LOG.error("Exception encountered when converting family-map to set of columns. Ignoring and returning empty set of columns for family[{}]", family, t);
+                        LOG.error("Ignoring exception and returning empty set of columns for family[{}]", family);
                         columns.clear();
                     }
                     result.put(family, columns);
@@ -1016,7 +954,7 @@ private User getActiveUser() {
     ColumnFamilyAccessResult evaluateAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env,
             final Map<byte[], ? extends Collection<?>> familyMap, String commandStr) throws AccessDeniedException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled=" + hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled());
+            LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled={}", hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled());
         }
 
         String                         access   = authUtils.getAccess(action);
@@ -1026,8 +964,7 @@ private User getActiveUser() {
 
         if (LOG.isDebugEnabled()) {
             colFamiliesForDebugLoggingOnly = getColumnFamilies(familyMap);
-            LOG.debug(String.format("evaluateAccess: entered: user[%s], Operation[%s], access[%s], families[%s]",
-                    userName, operation, access, colFamiliesForDebugLoggingOnly));
+            LOG.debug("evaluateAccess: entered: user[{}], Operation[{}], access[{}], families[{}]", userName, operation, access, colFamiliesForDebugLoggingOnly);
         } else {
             colFamiliesForDebugLoggingOnly = Collections.emptyMap();
         }
@@ -1046,7 +983,7 @@ private User getActiveUser() {
             LOG.debug("evaluateAccess: exiting: isKnownAccessPattern returned true: access allowed, not audited");
             result = new ColumnFamilyAccessResult(true, true, null, null, null, null, null);
             if (LOG.isDebugEnabled()) {
-                String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
+                String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result);
                 LOG.debug(message);
             }
             return result;
@@ -1063,7 +1000,7 @@ private User getActiveUser() {
                 .access(access)
                 .table(table);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("evaluateAccess: families to process: " + colFamiliesForDebugLoggingOnly);
+            LOG.debug("evaluateAccess: families to process: {}", colFamiliesForDebugLoggingOnly);
         }
         if (familyMap == null || familyMap.isEmpty()) {
             LOG.debug("evaluateAccess: Null or empty families collection, ok.  Table level access is desired");
@@ -1073,7 +1010,7 @@ private User getActiveUser() {
             String  reason     = "";
             if (authorized) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("evaluateAccess: table level access granted [" + table + "]");
+                    LOG.debug("evaluateAccess: table level access granted [{}]", table);
                 }
             } else {
                 reason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, no column families found.", user.getName(), operation, table);
@@ -1084,7 +1021,7 @@ private User getActiveUser() {
                     authorized ? Collections.singletonList(event) : null,
                     null, authorized ? null : event, reason, null);
             if (LOG.isDebugEnabled()) {
-                String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
+                String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result);
                 LOG.debug(message);
             }
             return result;
@@ -1098,22 +1035,22 @@ private User getActiveUser() {
          * we would have to accumulate audits of all successful accesses and any one denial (which in our case ends up being the last denial)
          * We need to keep audit events for family level access check seperate because we don't want them logged in some cases.
          */
-        List<AuthzAuditEvent> authorizedEvents        = new ArrayList<AuthzAuditEvent>();
-        List<AuthzAuditEvent> familyLevelAccessEvents = new ArrayList<AuthzAuditEvent>();
+        List<AuthzAuditEvent> authorizedEvents        = new ArrayList<>();
+        List<AuthzAuditEvent> familyLevelAccessEvents = new ArrayList<>();
         AuthzAuditEvent       deniedEvent             = null;
         String                denialReason            = null;
         // we need to cache the auths results so that we can create a filter, if needed
-        Map<String, Set<String>> columnsAccessAllowed       = new HashMap<String, Set<String>>();
-        Set<String>              familesAccessAllowed       = new HashSet<String>();
-        Set<String>              familesAccessDenied        = new HashSet<String>();
-        Set<String>              familesAccessIndeterminate = new HashSet<String>();
+        Map<String, Set<String>> columnsAccessAllowed       = new HashMap<>();
+        Set<String>              familesAccessAllowed       = new HashSet<>();
+        Set<String>              familesAccessDenied        = new HashSet<>();
+        Set<String>              familesAccessIndeterminate = new HashSet<>();
         Set<String>              familiesFullyAuthorized    = new HashSet<>();
 
         for (Map.Entry<byte[], ? extends Collection<?>> anEntry : familyMap.entrySet()) {
             String family = Bytes.toString(anEntry.getKey());
             session.columnFamily(family);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("evaluateAccess: Processing family: " + family);
+                LOG.debug("evaluateAccess: Processing family: {}", family);
             }
             Collection<?> columns = anEntry.getValue();
             if (columns == null || columns.isEmpty()) {
@@ -1137,7 +1074,7 @@ private User getActiveUser() {
                     }
                 }
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("evaluateAccess: family level access for [" + family + "] is evaluated to " + isColumnFamilyAuthorized + ". Checking if [" + family + "] descendants have access.");
+                    LOG.debug("evaluateAccess: family level access for [{}] is evaluated to {}. Checking if [{}] descendants have access.", family, isColumnFamilyAuthorized, family);
                 }
                 // buildRequest again since resourceMatchingScope changed
                 // reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
@@ -1148,7 +1085,7 @@ private User getActiveUser() {
                 auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
                 if (session.isAuthorized()) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("evaluateAccess: [" + family + "] descendants have access");
+                        LOG.debug("evaluateAccess: [{}] descendants have access", family);
                     }
                     somethingIsAccessible = true;
                     if (isColumnFamilyAuthorized) {
@@ -1160,7 +1097,7 @@ private User getActiveUser() {
                     } else {
                         familesAccessIndeterminate.add(family);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
+                            LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
                         }
                         everythingIsAccessible = false;
                         if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
@@ -1174,7 +1111,7 @@ private User getActiveUser() {
                         somethingIsAccessible = true;
                         familesAccessIndeterminate.add(family);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has partial access (of some type) in family [" + family + "]");
+                            LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
                         }
                         if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
                             LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
@@ -1182,7 +1119,7 @@ private User getActiveUser() {
                         }
                     } else {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has no access of [" + access + "] type in family [" + family + "]");
+                            LOG.debug("evaluateAccess: has no access of [{}] type in family [{}]", access, family);
                         }
                         familesAccessDenied.add(family);
                         denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
@@ -1236,12 +1173,12 @@ private User getActiveUser() {
                         }
                     }
                 }
-                Set<String>      accessibleColumns = new HashSet<String>(); // will be used in to populate our results cache for the filter
+                Set<String>      accessibleColumns = new HashSet<>(); // will be used in to populate our results cache for the filter
                 Iterator<String> columnIterator    = new ColumnIterator(columns);
                 while (columnIterator.hasNext()) {
                     String column = columnIterator.next();
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("evaluateAccess: Processing column: " + column);
+                        LOG.debug("evaluateAccess: Processing column: {}", column);
                     }
                     //buildRequest required again since now column is being set
                     session.column(column)
@@ -1250,7 +1187,7 @@ private User getActiveUser() {
                     AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
                     if (session.isAuthorized()) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has column level access [" + family + ", " + column + "]");
+                            LOG.debug("evaluateAccess: has column level access [{}, {}]", family, column);
                         }
                         // we need to do 3 things: housekeeping, capturing audit events, building the results cache for filter
                         somethingIsAccessible = true;
@@ -1261,7 +1198,7 @@ private User getActiveUser() {
                         }
                     } else {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: no column level access [" + family + ", " + column + "]");
+                            LOG.debug("evaluateAccess: no column level access [{}, {}]", family, column);
                         }
                         somethingIsAccessible  = false;
                         everythingIsAccessible = false;
@@ -1281,7 +1218,7 @@ private User getActiveUser() {
         RangerAuthorizationFilter filter = new RangerAuthorizationFilter(session, familesAccessAllowed, familesAccessDenied, familesAccessIndeterminate, columnsAccessAllowed, familiesFullyAuthorized);
         result = new ColumnFamilyAccessResult(everythingIsAccessible, somethingIsAccessible, authorizedEvents, familyLevelAccessEvents, deniedEvent, denialReason, filter);
         if (LOG.isDebugEnabled()) {
-            String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result.toString());
+            String message = String.format(messageTemplate, userName, operation, access, colFamiliesForDebugLoggingOnly, result);
             LOG.debug(message);
         }
         return result;
@@ -1343,7 +1280,6 @@ private User getActiveUser() {
                 auditHandler.logAuthzAudits(accessResult.accessAllowedEvents);
                 auditHandler.logAuthzAudits(accessResult.familyLevelAccessEvents);
                 LOG.debug("requirePermission: exiting: all access was allowed");
-                return;
             } else {
                 auditHandler.logAuthzAudit(accessResult.accessDeniedEvent);
                 LOG.debug("requirePermission: exiting: throwing exception as everything wasn't accessible");
@@ -1354,17 +1290,6 @@ private User getActiveUser() {
         }
     }
 
-    /**
-     * This could run s
-     *
-     * @param operation
-     * @param otherInformation
-     * @param table
-     * @param columnFamily
-     * @param column
-     * @return
-     * @throws AccessDeniedException
-     */
     void authorizeAccess(ObserverContext<?> ctx, String operation, String otherInformation, Action action, String table, String columnFamily, String column) throws AccessDeniedException {
         User   user   = getActiveUser(ctx);
         String access = authUtils.getAccess(action);
@@ -1411,7 +1336,7 @@ private User getActiveUser() {
         boolean result = false;
         if (user == null) {
             String message = "Unexpeceted: User is null: access denied, not audited!";
-            LOG.warn("canSkipAccessCheck: exiting" + message);
+            LOG.warn("canSkipAccessCheck: exiting{}", message);
             throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
         } else if (isAccessForMetadataRead(access, table)) {
             LOG.debug("canSkipAccessCheck: true: metadata read access always allowed, not audited");
@@ -1465,7 +1390,7 @@ private User getActiveUser() {
                 Optional optionalUser = ctx.getCaller();
                 user = optionalUser.isPresent() ? (User) optionalUser.get() : this.userProvider.getCurrent();
             } catch (Exception e) {
-                LOG.info("Unable to get request user using context" + ctx);
+                LOG.info("Unable to get request user using context{}", ctx);
             }
         }
 
@@ -1504,9 +1429,7 @@ private User getActiveUser() {
             remoteAddr = RpcServer.getRemoteIp();
         }
 
-        String strAddr = remoteAddr != null ? remoteAddr.getHostAddress() : null;
-
-        return strAddr;
+        return remoteAddr != null ? remoteAddr.getHostAddress() : null;
     }
 
     // Methods that are used within the CoProcessor
@@ -1531,9 +1454,9 @@ private User getActiveUser() {
 
     private List<UserPermission> getUserPermissions(RangerResourceACLs rangerResourceACLs, String resource,
             boolean isNamespace) {
-        List<UserPermission> userPermissions  = new ArrayList<UserPermission>();
+        List<UserPermission> userPermissions  = new ArrayList<>();
         Action[]             hbaseActions     = Action.values();
-        List<String>         hbaseActionsList = new ArrayList<String>();
+        List<String>         hbaseActionsList = new ArrayList<>();
         for (Action action : hbaseActions) {
             hbaseActionsList.add(action.name());
         }
@@ -1548,7 +1471,7 @@ private User getActiveUser() {
             List<String> hbaseActionsList, List<UserPermission> userPermissions, String resource, boolean isGroup) {
         for (Entry<String, Map<String, AccessResult>> userAcls : acls.entrySet()) {
             String       user               = !isGroup ? userAcls.getKey() : AuthUtil.toGroupEntry(userAcls.getKey());
-            List<Action> allowedPermissions = new ArrayList<Action>();
+            List<Action> allowedPermissions = new ArrayList<>();
             for (Entry<String, AccessResult> permissionAccess : userAcls.getValue().entrySet()) {
                 String permission = authUtils.getActionName(permissionAccess.getKey());
                 if (hbaseActionsList.contains(permission)
@@ -1557,7 +1480,7 @@ private User getActiveUser() {
                 }
             }
             if (!allowedPermissions.isEmpty()) {
-                UserPermission up = null;
+                UserPermission up;
                 if (isNamespace) {
                     up = new UserPermission(user,
                             Permission.newBuilder(resource).withActions(allowedPermissions.toArray(new Action[allowedPermissions.size()])).build());
@@ -1636,7 +1559,7 @@ private User getActiveUser() {
             grantorGroups = new HashSet<>(Arrays.asList(groups));
         }
 
-        Map<String, String> mapResource = new HashMap<String, String>();
+        Map<String, String> mapResource = new HashMap<>();
         mapResource.put(RangerHBaseResource.KEY_TABLE, tableName);
         mapResource.put(RangerHBaseResource.KEY_COLUMN_FAMILY, colFamily);
         mapResource.put(RangerHBaseResource.KEY_COLUMN, qualifier);
@@ -1682,7 +1605,7 @@ private User getActiveUser() {
                     ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_EXECUTE);
                     break;
                 default:
-                    LOG.warn("grant(): ignoring action '" + action.name() + "' for user '" + userName + "'");
+                    LOG.warn("grant(): ignoring action '{}' for user '{}'", action.name(), userName);
             }
         }
 
@@ -1750,7 +1673,7 @@ private User getActiveUser() {
             grantorGroups = new HashSet<>(Arrays.asList(groups));
         }
 
-        Map<String, String> mapResource = new HashMap<String, String>();
+        Map<String, String> mapResource = new HashMap<>();
         mapResource.put(RangerHBaseResource.KEY_TABLE, tableName);
         mapResource.put(RangerHBaseResource.KEY_COLUMN_FAMILY, colFamily);
         mapResource.put(RangerHBaseResource.KEY_COLUMN, qualifier);
@@ -1863,7 +1786,7 @@ private User getActiveUser() {
 
     private String formatPredicate(StringBuilder commandStr, PredicateType predicateType, String val) {
         StringBuilder ret = new StringBuilder();
-        if (HbaseConstants.OPEN_BRACES.equals(commandStr.toString())) {
+        if (HbaseConstants.OPEN_BRACES.contentEquals(commandStr)) {
             ret.append(HbaseConstants.SPACE);
         } else {
             ret.append(HbaseConstants.COMMA).append(HbaseConstants.SPACE);
@@ -1931,7 +1854,7 @@ private User getActiveUser() {
                     auditHandler.logAuthzAudits(events);
                 }
             }
-            if (descriptors.size() > 0) {
+            if (!descriptors.isEmpty()) {
                 session.logCapturedEvents();
             }
         }
@@ -1965,7 +1888,7 @@ private User getActiveUser() {
                     auditHandler.logAuthzAudits(events);
                 }
             }
-            if (descriptors.size() > 0) {
+            if (!descriptors.isEmpty()) {
                 session.logCapturedEvents();
             }
         }

@@ -38,7 +38,7 @@ public class HbaseFactory {
     }
 
     static void initialize(Configuration conf) {
-        HbaseUserUtilsImpl.initiailize(conf);
+        HbaseUserUtilsImpl.initialize(conf);
     }
 
     HbaseAuthUtils getAuthUtils() {

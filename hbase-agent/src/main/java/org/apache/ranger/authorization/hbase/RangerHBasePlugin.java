@@ -45,12 +45,12 @@ public class RangerHBasePlugin extends RangerBasePlugin {
     public void setPolicies(ServicePolicies policies) {
         super.setPolicies(policies);
         this.isColumnAuthOptimizationEnabled = Boolean.parseBoolean(this.getServiceConfigs().get(RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION));
-        LOG.info("isColumnAuthOptimizationEnabled=" + this.isColumnAuthOptimizationEnabled);
+        LOG.info("isColumnAuthOptimizationEnabled={}", this.isColumnAuthOptimizationEnabled);
     }
 
     @Override
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        RangerAccessResult ret = null;
+        RangerAccessResult ret;
         if (isHBaseShuttingDown) {
             ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, this.getServiceName(), this.getServiceDef(), request);
             ret.setIsAllowed(true);

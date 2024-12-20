@@ -28,7 +28,6 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -58,25 +57,25 @@ public class RangerAuthorizationFilter extends FilterBase {
     }
 
     @Override
-    public ReturnCode filterKeyValue(Cell kv) throws IOException {
+    public ReturnCode filterKeyValue(Cell kv) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> filterKeyValue");
         }
 
         String family      = null;
         byte[] familyBytes = CellUtil.cloneFamily(kv);
-        if (familyBytes != null && familyBytes.length > 0) {
+        if (familyBytes.length > 0) {
             family = Bytes.toString(familyBytes);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("filterKeyValue: evaluating family[" + family + "].");
+                LOG.debug("filterKeyValue: evaluating family[{}].", family);
             }
         }
         String column    = null;
         byte[] qualifier = CellUtil.cloneQualifier(kv);
-        if (qualifier != null && qualifier.length > 0) {
+        if (qualifier.length > 0) {
             column = Bytes.toString(qualifier);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("filterKeyValue: evaluating column[" + column + "].");
+                LOG.debug("filterKeyValue: evaluating column[{}].", column);
             }
         } else {
             LOG.warn("filterKeyValue: empty/null column set! Unexpected!");
@@ -131,7 +130,7 @@ public class RangerAuthorizationFilter extends FilterBase {
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("filterKeyValue: " + result);
+            LOG.debug("filterKeyValue: {}", result);
         }
         return result;
     }

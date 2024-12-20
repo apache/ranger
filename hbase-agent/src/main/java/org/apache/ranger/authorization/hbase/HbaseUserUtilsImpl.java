@@ -36,11 +36,11 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
     // only to detect problems with initialization order, not for thread-safety.
     static final AtomicBoolean                _Initialized = new AtomicBoolean(false);
     // should never be null
-    static final AtomicReference<Set<String>> _SuperUsers  = new AtomicReference<Set<String>>(new HashSet<String>());
+    static final AtomicReference<Set<String>> _SuperUsers  = new AtomicReference<>(new HashSet<>());
     private static final Logger LOG                   = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
     private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
-    public static void initiailize(Configuration conf) {
+    public static void initialize(Configuration conf) {
         if (_Initialized.get()) {
             LOG.warn("HbaseUserUtilsImpl.initialize: Unexpected: initialization called more than once!");
         } else {
@@ -49,10 +49,10 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
             } else {
                 String[] users = conf.getStrings(SUPERUSER_CONFIG_PROP);
                 if (users != null && users.length > 0) {
-                    Set<String> superUsers = new HashSet<String>(users.length);
+                    Set<String> superUsers = new HashSet<>(users.length);
                     for (String user : users) {
                         user = user.trim();
-                        LOG.info("HbaseUserUtilsImpl.initialize: Adding Super User(" + user + ")");
+                        LOG.info("HbaseUserUtilsImpl.initialize: Adding Super User({})", user);
                         superUsers.add(user);
                     }
                     _SuperUsers.set(superUsers);
@@ -77,7 +77,7 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
             throw new IllegalArgumentException("User is null!");
         } else {
             String[] groupsArray = user.getGroupNames();
-            return new HashSet<String>(Arrays.asList(groupsArray));
+            return new HashSet<>(Arrays.asList(groupsArray));
         }
     }
 
@@ -95,7 +95,6 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
                 user = User.getCurrent();
             } catch (IOException e) {
                 LOG.error("Unable to get current user: User.getCurrent() threw IOException");
-                user = null;
             }
         }
         return user;
@@ -123,7 +122,7 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
         Set<String> superUsers = _SuperUsers.get(); // can never be null
         boolean     isSuper    = superUsers.contains(user.getShortName());
         if (LOG.isDebugEnabled()) {
-            LOG.debug("IsSuperCheck on [" + user.getShortName() + "] returns [" + isSuper + "]");
+            LOG.debug("IsSuperCheck on [{}] returns [{}]", user.getShortName(), isSuper);
         }
         return isSuper;
     }

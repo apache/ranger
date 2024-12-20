@@ -46,7 +46,7 @@ public class ColumnIterator implements Iterator<String> {
                 listIterator = ((List<Cell>) columnCollection).iterator();
             } else { // unexpected
                 // TODO make message better
-                LOG.error("Unexpected type " + columnCollection.getClass().getName() + " passed as value in column family collection");
+                LOG.error("Unexpected type {} passed as value in column family collection", columnCollection.getClass().getName());
             }
         }
     }
@@ -76,9 +76,7 @@ public class ColumnIterator implements Iterator<String> {
         } else if (listIterator != null) {
             Cell   cell = listIterator.next();
             byte[] v    = CellUtil.cloneQualifier(cell);
-            if (v != null) {
-                value = Bytes.toString(v);
-            }
+            value = Bytes.toString(v);
         } else {
             // TODO make the error message better
             throw new NoSuchElementException("Empty values passed in!");

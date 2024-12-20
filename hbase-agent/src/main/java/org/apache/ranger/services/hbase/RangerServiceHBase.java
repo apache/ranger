@@ -53,48 +53,48 @@ public class RangerServiceHBase extends RangerBaseService {
 
     @Override
     public Map<String, Object> validateConfig() throws Exception {
-        Map<String, Object> ret = new HashMap<String, Object>();
+        Map<String, Object> ret = new HashMap<>();
 
         String serviceName = getServiceName();
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceHBase.validateConfig() Service: (" + serviceName + " )");
+            LOG.debug("==> RangerServiceHBase.validateConfig() Service: ({} )", serviceName);
         }
         if (configs != null) {
             try {
                 ret = HBaseResourceMgr.connectionTest(serviceName, configs);
             } catch (HadoopException e) {
-                LOG.error("<== RangerServiceHBase.validateConfig() Error:" + e);
+                LOG.error("<== RangerServiceHBase.validateConfig() Error:{}", String.valueOf(e));
                 throw e;
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceHBase.validateConfig() Response : (" + ret + " )");
+            LOG.debug("<== RangerServiceHBase.validateConfig() Response : ({} )", ret);
         }
         return ret;
     }
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String>        ret         = new ArrayList<String>();
+        List<String>        ret         = new ArrayList<>();
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceHBase.lookupResource() Service : " + serviceName + " Context: (" + context + ")");
+            LOG.debug("==> RangerServiceHBase.lookupResource() Service : {} Context: ({})", serviceName, context);
         }
 
         if (context != null) {
             try {
                 ret = HBaseResourceMgr.getHBaseResource(serviceName, serviceType, configs, context);
             } catch (Exception e) {
-                LOG.error("<==RangerServiceHBase.lookupResource() Error : " + e);
+                LOG.error("<==RangerServiceHBase.lookupResource() Error : {}", String.valueOf(e));
                 throw e;
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceHBase.lookupResource() Response: (" + ret + ")");
+            LOG.debug("<== RangerServiceHBase.lookupResource() Response: ({})", ret);
         }
         return ret;
     }
@@ -108,7 +108,7 @@ public class RangerServiceHBase extends RangerBaseService {
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-                List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+                List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
                 accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
                 accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
                 RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();

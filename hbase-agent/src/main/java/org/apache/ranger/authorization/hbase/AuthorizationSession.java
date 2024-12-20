@@ -179,18 +179,18 @@ public class AuthorizationSession {
         zapAuthorizationState();
         request = createRangerRequest();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Built request: " + request.toString());
+            LOG.debug("Built request: {}", request.toString());
         }
         return this;
     }
 
     AuthorizationSession authorize() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AuthorizationSession.authorize: " + getRequestMessage());
+            LOG.debug("==> AuthorizationSession.authorize: {}", getRequestMessage());
         }
 
         if (request == null) {
-            String message = String.format("Invalid state transition: buildRequest() must be called before authorize().  This request would ultimately get denied.!");
+            String message = "Invalid state transition: buildRequest() must be called before authorize().  This request would ultimately get denied.!";
             throw new IllegalStateException(message);
         } else {
             // ok to pass potentially null handler to policy engine.  Null handler effectively suppresses the audit.
@@ -206,7 +206,7 @@ public class AuthorizationSession {
         if (LOG.isDebugEnabled()) {
             boolean allowed = isAuthorized();
             String  reason  = getDenialReason();
-            LOG.debug("<== AuthorizationSession.authorize: " + getLogMessage(allowed, reason));
+            LOG.debug("<== AuthorizationSession.authorize: {}", getLogMessage(allowed, reason));
         }
         return this;
     }
@@ -254,7 +254,7 @@ public class AuthorizationSession {
             String reason  = getDenialReason();
             String message = getLogMessage(false, reason);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<== AuthorizationSession.publishResults: throwing exception: " + message);
+                LOG.debug("<== AuthorizationSession.publishResults: throwing exception: {}", message);
             }
             throw new AccessDeniedException("Insufficient permissions for user '" + user.getName() + "' (action=" + access + ")");
         }
@@ -278,14 +278,14 @@ public class AuthorizationSession {
     boolean isAuthorized() {
         boolean allowed = false;
         if (result == null) {
-            String message = String.format("Internal error: _result was null! Returning false.");
+            String message = "Internal error: _result was null! Returning false.";
             LOG.error(message);
         } else {
             allowed = result.getIsAllowed();
         }
         if (!allowed && superUser) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("User [" + user + "] is a superUser!  Overriding policy engine's decision.  Request is deemed authorized!");
+                LOG.debug("User [{}] is a superUser!  Overriding policy engine's decision.  Request is deemed authorized!", user);
             }
             allowed = true;
         }
@@ -295,7 +295,7 @@ public class AuthorizationSession {
     String getDenialReason() {
         String reason = "";
         if (result == null) {
-            String message = String.format("Internal error: _result was null!  Returning empty reason.");
+            String message = "Internal error: _result was null!  Returning empty reason.";
             LOG.error(message);
         } else {
             boolean allowed = result.getIsAllowed();
@@ -307,13 +307,18 @@ public class AuthorizationSession {
     }
 
     String requestToString() {
+        return toString();
+    }
+
+    @Override
+    public String toString() {
         return MoreObjects.toStringHelper(request.getClass())
                 .add("operation", operation)
                 .add("otherInformation", otherInformation)
                 .add("access", access)
-                .add("user", user == null ? null : user.getName())
+                .add("user", user != null ? user.getName() : null)
                 .add("groups", groups)
-                .add("auditHandler", auditHandler == null ? null : auditHandler.getClass().getSimpleName())
+                .add("auditHandler", auditHandler != null ? auditHandler.getClass().getSimpleName() : null)
                 .add(RangerHBaseResource.KEY_TABLE, table)
                 .add(RangerHBaseResource.KEY_COLUMN, column)
                 .add(RangerHBaseResource.KEY_COLUMN_FAMILY, columnFamily)
@@ -333,22 +338,17 @@ public class AuthorizationSession {
     String getRequestMessage() {
         String format = "Access[%s] by user[%s] belonging to groups[%s] to table[%s] for column-family[%s], column[%s] triggered by operation[%s], otherInformation[%s]";
         String user   = userUtils.getUserAsString();
-        String message = String.format(format, getPrintableValue(access), getPrintableValue(user), groups, getPrintableValue(table),
+        return String.format(format, getPrintableValue(access), getPrintableValue(user), groups, getPrintableValue(table),
                 getPrintableValue(columnFamily), getPrintableValue(column), getPrintableValue(operation), getPrintableValue(otherInformation));
-        return message;
     }
 
     String getLogMessage(boolean allowed, String reason) {
         String format  = " %s: status[%s], reason[%s]";
-        String message = String.format(format, getRequestMessage(), allowed ? "allowed" : "denied", reason);
-        return message;
+        return String.format(format, getRequestMessage(), allowed ? "allowed" : "denied", reason);
     }
 
     /**
      * This method could potentially null out an earlier audit handler -- which effectively would suppress audits.
-     *
-     * @param anAuditHandler
-     * @return
      */
     AuthorizationSession auditHandler(HbaseAuditHandler anAuditHandler) {
         auditHandler = anAuditHandler;
