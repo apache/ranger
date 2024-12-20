@@ -17,33 +17,33 @@
 
 package org.apache.hadoop.crypto.key;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.entity.XXRangerKeyStore;
+import org.apache.ranger.kms.dao.DaoManager;
+
 import java.io.IOException;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.entity.XXRangerKeyStore;
-import org.apache.ranger.kms.dao.DaoManager;
-
 public class MigrateDBMKeyToGCP {
-	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
-	private static RangerGoogleCloudHSMProvider rangerGcpProvider;
-	private RangerKeyStore dbStore;
+    private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+    private static RangerGoogleCloudHSMProvider rangerGcpProvider;
+    private RangerKeyStore dbStore;
 
-	public static void main(String[] args) throws Exception {
-	    if (args == null || args.length != 5) {
-	        System.err.println("Invalid number of parameters found.");
-	        showUsage();
-	        System.exit(1);
-	    } else {
-	        Configuration conf = RangerKeyStoreProvider.getDBKSConf();
-	        final String gcpMasterKeyName     = args[0];
-	        final String gcpProjectId         = args[1];
-	        final String gcpKeyRingId         = args[2];
-	        final String gcpKeyRingLocationId = args[3];
-	        final String pathOfJsonCredFile   = args[4];
+    public static void main(String[] args) throws Exception {
+        if (args == null || args.length != 5) {
+            System.err.println("Invalid number of parameters found.");
+            showUsage();
+            System.exit(1);
+        } else {
+            Configuration conf = RangerKeyStoreProvider.getDBKSConf();
+            final String  gcpMasterKeyName     = args[0];
+            final String  gcpProjectId         = args[1];
+            final String  gcpKeyRingId         = args[2];
+            final String  gcpKeyRingLocationId = args[3];
+            final String  pathOfJsonCredFile   = args[4];
 
             if (conf != null) {
                 conf.set(RangerGoogleCloudHSMProvider.GCP_MASTER_KEY_NAME, gcpMasterKeyName);
@@ -66,53 +66,52 @@ public class MigrateDBMKeyToGCP {
                 System.out.println("Migration of Master Key from Ranger KMS DB to GCP failed, Error - Configuration is null.");
                 System.exit(1);
             }
-	    }
-	}
+        }
+    }
 
-	private boolean doExportMKToGcp(Configuration conf, final String masterKeyName) {
-		try {
-			String mKeyPass = conf.get(ENCRYPTION_KEY);
-			if (mKeyPass == null || mKeyPass.trim().equals("") || mKeyPass.trim().equals("_")
-					|| mKeyPass.trim().equals("crypted")) {
-				throw new IOException("Master Key Jceks does not exists");
-			}
+    private boolean doExportMKToGcp(Configuration conf, final String masterKeyName) {
+        try {
+            String mKeyPass = conf.get(ENCRYPTION_KEY);
+            if (mKeyPass == null || mKeyPass.trim().equals("") || mKeyPass.trim().equals("_") || mKeyPass.trim().equals("crypted")) {
+                throw new IOException("Master Key Jceks does not exists");
+            }
 
-			RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);
-			DaoManager daoManager = rangerkmsDb.getDaoManager();
+            RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);
+            DaoManager  daoManager  = rangerkmsDb.getDaoManager();
 
-			System.out.println("Creating masterkey with the name - " + masterKeyName);
-			boolean gcpMKSuccess = rangerGcpProvider.generateMasterKey(null);
-			if (gcpMKSuccess) {
-			    System.out.println("Masterkey with the name '" + masterKeyName +"' created successfully on Google Cloud KMS.");
-				dbStore = new RangerKeyStore(daoManager, false, rangerGcpProvider);
-				// Get Master Key from Ranger DB
-				RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
-				char[] mkey = rangerMasterKey.getMasterKey(mKeyPass).toCharArray();
-				List<XXRangerKeyStore> rangerKeyStoreList = new ArrayList<XXRangerKeyStore>();
-				dbStore.engineLoad(null, mkey);
-				Enumeration<String> e = dbStore.engineAliases();
-				Key key;
-				String alias = null;
-				while (e.hasMoreElements()) {
-					alias = e.nextElement();
-					key = dbStore.engineGetKey(alias, mkey);
-					XXRangerKeyStore xxRangerKeyStore = dbStore.convertKeysBetweenRangerKMSAndGCP(alias, key, rangerGcpProvider);
-					rangerKeyStoreList.add(xxRangerKeyStore);
-				}
-				if (rangerKeyStoreList != null && !rangerKeyStoreList.isEmpty()) {
-					for (XXRangerKeyStore rangerKeyStore : rangerKeyStoreList) {
-						dbStore.dbOperationStore(rangerKeyStore);
-					}
-				}
-				return true;
-			}
-			return false;
-		} catch (Throwable t) {
-			throw new RuntimeException("Unable to migrate Master key from Ranger KMS DB to GCP ", t);
-		}
-	}
+            System.out.println("Creating masterkey with the name - " + masterKeyName);
+            boolean gcpMKSuccess = rangerGcpProvider.generateMasterKey(null);
+            if (gcpMKSuccess) {
+                System.out.println("Masterkey with the name '" + masterKeyName + "' created successfully on Google Cloud KMS.");
+                dbStore = new RangerKeyStore(daoManager, false, rangerGcpProvider);
+                // Get Master Key from Ranger DB
+                RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+                char[] mkey = rangerMasterKey.getMasterKey(mKeyPass).toCharArray();
+                List<XXRangerKeyStore> rangerKeyStoreList = new ArrayList<XXRangerKeyStore>();
+                dbStore.engineLoad(null, mkey);
+                Enumeration<String> e = dbStore.engineAliases();
+                Key key;
+                String alias = null;
+                while (e.hasMoreElements()) {
+                    alias = e.nextElement();
+                    key   = dbStore.engineGetKey(alias, mkey);
+                    XXRangerKeyStore xxRangerKeyStore = dbStore.convertKeysBetweenRangerKMSAndGCP(alias, key, rangerGcpProvider);
+                    rangerKeyStoreList.add(xxRangerKeyStore);
+                }
+                if (rangerKeyStoreList != null && !rangerKeyStoreList.isEmpty()) {
+                    for (XXRangerKeyStore rangerKeyStore : rangerKeyStoreList) {
+                        dbStore.dbOperationStore(rangerKeyStore);
+                    }
+                }
+                return true;
+            }
+            return false;
+        } catch (Throwable t) {
+            throw new RuntimeException("Unable to migrate Master key from Ranger KMS DB to GCP ", t);
+        }
+    }
 
-	private static void showUsage() {
-	    System.err.println("USAGE: java " + MigrateDBMKeyToGCP.class.getName() + " <gcpMasterKeyName> <gcpProjectName> <gcpKeyRingName> <gcpKeyRingLocationName> <pathOfJsonCredFile> ");
-	}
+    private static void showUsage() {
+        System.err.println("USAGE: java " + MigrateDBMKeyToGCP.class.getName() + " <gcpMasterKeyName> <gcpProjectName> <gcpKeyRingName> <gcpKeyRingLocationName> <pathOfJsonCredFile> ");
+    }
 }

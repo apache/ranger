@@ -17,39 +17,38 @@
 
 package org.apache.ranger.kms.biz;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServlet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.RangerKeyStoreProvider;
 import org.apache.hadoop.crypto.key.RangerMasterKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServlet;
 
 @SuppressWarnings("serial")
 @Component
 public class RangerKMSStartUp extends HttpServlet {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerKMSStartUp.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKMSStartUp.class);
+    public static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 
-	public  static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+    @PostConstruct
+    public void initRangerMasterKey() {
+        LOG.info("Ranger KMSStartUp");
 
-	@PostConstruct
-	public void initRangerMasterKey() {
-		LOG.info("Ranger KMSStartUp");
+        RangerMasterKey rangerMasterKey = new RangerMasterKey();
 
-		RangerMasterKey rangerMasterKey = new RangerMasterKey();
+        try {
+            Configuration conf     = RangerKeyStoreProvider.getDBKSConf();
+            String        password = conf.get(ENCRYPTION_KEY);
+            boolean       check    = rangerMasterKey.generateMasterKey(password);
 
-		try {
-				Configuration conf     = RangerKeyStoreProvider.getDBKSConf();
-				String        password = conf.get(ENCRYPTION_KEY);
-				boolean       check    = rangerMasterKey.generateMasterKey(password);
-
-				if (check) {
-					LOG.info("MasterKey Generated..");
-				}
-		} catch (Throwable e) {
-			LOG.error("initRangerMasterKey() failed", e);
-		}
-	}	
+            if (check) {
+                LOG.info("MasterKey Generated..");
+            }
+        } catch (Throwable e) {
+            LOG.error("initRangerMasterKey() failed", e);
+        }
+    }
 }

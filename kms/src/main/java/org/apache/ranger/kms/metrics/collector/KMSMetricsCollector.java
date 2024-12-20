@@ -27,26 +27,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KMSMetricsCollector {
-
     static final Logger logger = LoggerFactory.getLogger(KMSMetricsCollector.class);
-
+    private static volatile KMSMetricsCollector kmsMetricsCollector;
     private boolean isCollectionThreadSafe;
-
     private Map<KMSMetrics.KMSMetric, Long> metrics = new HashMap<>();
-
-    private static volatile  KMSMetricsCollector kmsMetricsCollector;
 
     private KMSMetricsCollector(boolean isCollectionThreadSafe) {
         this.isCollectionThreadSafe = isCollectionThreadSafe;
     }
 
-    public static KMSMetricsCollector getInstance( boolean isCollectionThreadSafe)
-    {
-        if( null == kmsMetricsCollector)
-        {
-            synchronized(KMSMetricsCollector.class)
-            {
-                if(null == kmsMetricsCollector){
+    public static KMSMetricsCollector getInstance(boolean isCollectionThreadSafe) {
+        if (null == kmsMetricsCollector) {
+            synchronized (KMSMetricsCollector.class) {
+                if (null == kmsMetricsCollector) {
                     kmsMetricsCollector = new KMSMetricsCollector(isCollectionThreadSafe);
                 }
             }
@@ -55,41 +48,31 @@ public class KMSMetricsCollector {
         return kmsMetricsCollector;
     }
 
-    public boolean isCollectionThreadSafe()
-    {
+    public boolean isCollectionThreadSafe() {
         return this.isCollectionThreadSafe;
     }
 
-    public Map<KMSMetrics.KMSMetric, Long> getMetricsMap()
-    {
+    public Map<KMSMetrics.KMSMetric, Long> getMetricsMap() {
         return Collections.unmodifiableMap(this.metrics);
     }
 
     public void incrementCounter(KMSMetrics.KMSMetric metric) {
-
         if (isCollectionThreadSafe) {
             if (KMSMetrics.Type.COUNTER.equals(metric.getType())) {
                 metric.incrementCounter();
             } else {
-                logger.warn("Only Counter metric can be incremented. Current metric type is " + metric.getType());
+                logger.warn("Only Counter metric can be incremented. Current metric type is {}", metric.getType());
             }
         } else {
-
-            this.metrics.compute(metric, (k,v) -> null == v ? 1 : v+1);
+            this.metrics.compute(metric, (k, v) -> null == v ? 1 : v + 1);
         }
-
-
     }
 
     public void updateMetric(KMSMetrics.KMSMetric metric, long val) {
-
-        if(this.isCollectionThreadSafe)
-        {
+        if (this.isCollectionThreadSafe) {
             metric.updateValue(val);
-        }
-        else{
-            this.metrics.compute(metric, (k,v) -> null == v ? val : v + val);
+        } else {
+            this.metrics.compute(metric, (k, v) -> null == v ? val : v + val);
         }
     }
-
 }

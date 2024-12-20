@@ -17,17 +17,16 @@
 
 package org.apache.hadoop.crypto.key;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -41,20 +40,18 @@ import java.security.cert.CertificateException;
  * This Class is for HSM Keystore
  */
 public class RangerHSM implements RangerKMSMKI {
-
     static final Logger logger = LoggerFactory.getLogger(RangerHSM.class);
-
+    private static final String   MK_CIPHER          = "AES";
+    private static final int      MK_KeySize         = 128;
+    private static final String   PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
+    private static final String   PARTITION_NAME     = "ranger.ks.hsm.partition.name";
+    private static final String   HSM_TYPE           = "ranger.ks.hsm.type";
     // Configure these as required.
-    private String passwd = null;
-    private String alias = "RangerKMSKey";
-    private String partitionName = null;
-    private KeyStore myStore = null;
-    private String hsm_keystore = null;
-    private static final String MK_CIPHER = "AES";
-    private static final int MK_KeySize = 128;
-    private static final String PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
-    private static final String PARTITION_NAME = "ranger.ks.hsm.partition.name";
-    private static final String HSM_TYPE = "ranger.ks.hsm.type";
+    private String   passwd;
+    private String   alias = "RangerKMSKey";
+    private String   partitionName;
+    private KeyStore myStore;
+    private String   hsmKeystore;
 
     public RangerHSM() {
     }
@@ -64,19 +61,19 @@ public class RangerHSM implements RangerKMSMKI {
         /*
          * We will log in to the HSM
          */
-        passwd = conf.get(PARTITION_PASSWORD);
+        passwd        = conf.get(PARTITION_PASSWORD);
         partitionName = conf.get(PARTITION_NAME);
-        hsm_keystore = conf.get(HSM_TYPE);
+        hsmKeystore   = conf.get(HSM_TYPE);
         String errorMsg = StringUtils.EMPTY;
         try {
             ByteArrayInputStream is1 = new ByteArrayInputStream(("tokenlabel:" + partitionName).getBytes());
-            logger.debug("Loading HSM : Tokenlabel - '{}', Type - '{}' ", partitionName, hsm_keystore);
+            logger.debug("Loading HSM : Tokenlabel - '{}', Type - '{}' ", partitionName, hsmKeystore);
             myStore = KeyStore.getInstance("Luna");
             if (myStore == null) {
                 logger.error("Luna not found. Please verify the Ranger KMS HSM configuration setup.");
-			} else {
-				myStore.load(is1, passwd.toCharArray());
-			}
+            } else {
+                myStore.load(is1, passwd.toCharArray());
+            }
         } catch (KeyStoreException kse) {
             errorMsg = "Unable to create keystore object : " + kse.getMessage();
         } catch (NoSuchAlgorithmException nsae) {
@@ -98,10 +95,10 @@ public class RangerHSM implements RangerKMSMKI {
 
         if (!this.myStore.containsAlias(alias)) {
             KeyGenerator keyGen = null;
-            SecretKey aesKey = null;
+            SecretKey    aesKey = null;
             try {
-                logger.info("Generating AES Master Key for '{}' HSM Provider", hsm_keystore);
-                keyGen = KeyGenerator.getInstance(MK_CIPHER, hsm_keystore);
+                logger.info("Generating AES Master Key for '{}' HSM Provider", hsmKeystore);
+                keyGen = KeyGenerator.getInstance(MK_CIPHER, hsmKeystore);
                 keyGen.init(MK_KeySize);
                 aesKey = keyGen.generateKey();
                 myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
