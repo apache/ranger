@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public class RangerHBasePlugin extends RangerBasePlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerHBasePlugin.class);
+
     boolean isHBaseShuttingDown;
     private boolean isColumnAuthOptimizationEnabled;
 

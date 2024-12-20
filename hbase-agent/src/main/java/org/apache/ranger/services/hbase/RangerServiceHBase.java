@@ -38,9 +38,10 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceHBase extends RangerBaseService {
+    private static final Logger LOG                = LoggerFactory.getLogger(RangerServiceHBase.class);
+
     public static final  String ACCESS_TYPE_READ   = "read";
     public static final  String ACCESS_TYPE_CREATE = "create";
-    private static final Logger LOG                = LoggerFactory.getLogger(RangerServiceHBase.class);
 
     public RangerServiceHBase() {
         super();

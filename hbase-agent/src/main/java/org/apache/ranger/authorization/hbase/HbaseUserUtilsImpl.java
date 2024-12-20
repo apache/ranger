@@ -33,11 +33,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
+    private static final Logger               LOG          = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
+
     // only to detect problems with initialization order, not for thread-safety.
     static final AtomicBoolean                isInitialized = new AtomicBoolean(false);
     // should never be null
     static final AtomicReference<Set<String>> superUsers    = new AtomicReference<>(new HashSet<>());
-    private static final Logger               LOG          = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
     private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
     public static void initialize(Configuration conf) {

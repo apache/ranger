@@ -142,6 +142,7 @@ import java.util.Set;
 
 public class RangerAuthorizationCoprocessor implements AccessControlService.Interface, RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, Coprocessor {
     private static final Logger  LOG                               = LoggerFactory.getLogger(RangerAuthorizationCoprocessor.class.getName());
+
     private static final Logger  PERF_HBASEAUTH_REQUEST_LOG        = RangerPerfTracer.getPerfLogger("hbaseauth.request");
     private static final String  GROUP_PREFIX                      = "@";
     private static final String MASTER_COPROCESSOR_TYPE          = "master";

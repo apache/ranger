@@ -34,6 +34,7 @@ import java.util.Set;
 
 public class RangerAuthorizationFilter extends FilterBase {
     private static final Logger      LOG           = LoggerFactory.getLogger(RangerAuthorizationFilter.class.getName());
+
     final                Set<String> familiesAccessAllowed;
     final                Set<String> familiesAccessDenied;
     final                Set<String> familiesAccessIndeterminate;

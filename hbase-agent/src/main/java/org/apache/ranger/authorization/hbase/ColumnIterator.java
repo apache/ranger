@@ -32,8 +32,8 @@ import java.util.Set;
 
 public class ColumnIterator implements Iterator<String> {
     // TODO write tests for this class
-
     private static final Logger LOG = LoggerFactory.getLogger(ColumnIterator.class.getName());
+
     Iterator<byte[]> setIterator;
     Iterator<Cell>   listIterator;
 

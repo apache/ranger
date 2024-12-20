@@ -30,6 +30,7 @@ import java.util.List;
 
 public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements HbaseAuditHandler {
     private static final Logger                LOG           = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
+
     final                List<AuthzAuditEvent> allEventsList = new ArrayList<>();
     // we replace its contents anytime new audit events are generated.
     AuthzAuditEvent mostRecentEvent;
