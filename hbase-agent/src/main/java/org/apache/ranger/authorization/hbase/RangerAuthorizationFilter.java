@@ -34,33 +34,31 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerAuthorizationFilter extends FilterBase {
-
-    private static final Logger                   LOG           = LoggerFactory.getLogger(RangerAuthorizationFilter.class.getName());
-    final                Set<String>              _familiesAccessAllowed;
-    final                Set<String>              _familiesAccessDenied;
-    final                Set<String>              _familiesAccessIndeterminate;
-    final                Map<String, Set<String>> _columnsAccessAllowed;
-    final                Set<String>              _familiesFullyAuthorized;
-    final                AuthorizationSession     _session;
-    final                HbaseAuditHandler        _auditHandler = HbaseFactory.getInstance().getAuditHandler();
+    private static final Logger      LOG           = LoggerFactory.getLogger(RangerAuthorizationFilter.class.getName());
+    final                Set<String> familiesAccessAllowed;
+    final                Set<String> familiesAccessDenied;
+    final                Set<String> familiesAccessIndeterminate;
+    final                Map<String, Set<String>> columnsAccessAllowed;
+    final                Set<String>              familiesFullyAuthorized;
+    final                AuthorizationSession     session;
+    final                HbaseAuditHandler    auditHandler = HbaseFactory.getInstance().getAuditHandler();
 
     public RangerAuthorizationFilter(AuthorizationSession session, Set<String> familiesAccessAllowed, Set<String> familiesAccessDenied, Set<String> familiesAccessIndeterminate,
             Map<String, Set<String>> columnsAccessAllowed, Set<String> familiesFullyAuthorized) {
         // the class assumes that all of these can be empty but none of these can be null
-        _familiesAccessAllowed       = familiesAccessAllowed;
-        _familiesAccessDenied        = familiesAccessDenied;
-        _familiesAccessIndeterminate = familiesAccessIndeterminate;
-        _columnsAccessAllowed        = columnsAccessAllowed;
-        _familiesFullyAuthorized     = familiesFullyAuthorized;
+        this.familiesAccessAllowed = familiesAccessAllowed;
+        this.familiesAccessDenied  = familiesAccessDenied;
+        this.familiesAccessIndeterminate = familiesAccessIndeterminate;
+        this.columnsAccessAllowed        = columnsAccessAllowed;
+        this.familiesFullyAuthorized = familiesFullyAuthorized;
         // this session should have everything set on it except family and column which would be altered based on need
-        _session = session;
+        this.session = session;
         // we don't want to audit denial, so we need to make sure the hander is what we need it to be.
-        _session.auditHandler(_auditHandler);
+        this.session.auditHandler(auditHandler);
     }
 
     @Override
     public ReturnCode filterKeyValue(Cell kv) throws IOException {
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> filterKeyValue");
         }
@@ -88,23 +86,23 @@ public class RangerAuthorizationFilter extends FilterBase {
         boolean    authCheckNeeded = false;
         if (family == null) {
             LOG.warn("filterKeyValue: Unexpected - null/empty family! Access denied!");
-        } else if (_familiesAccessDenied.contains(family)) {
+        } else if (familiesAccessDenied.contains(family)) {
             LOG.debug("filterKeyValue: family found in access denied families cache.  Access denied.");
-        } else if (_session.getPropertyIsColumnAuthOptimizationEnabled() && _familiesFullyAuthorized.contains(family)) {
+        } else if (session.getPropertyIsColumnAuthOptimizationEnabled() && familiesFullyAuthorized.contains(family)) {
             LOG.debug("filterKeyValue: ColumnAuthOptimizationEnabled and family found in fully authorized families cache.  Column authorization is not required");
             result = ReturnCode.INCLUDE;
-        } else if (_columnsAccessAllowed.containsKey(family)) {
+        } else if (columnsAccessAllowed.containsKey(family)) {
             LOG.debug("filterKeyValue: family found in column level access results cache.");
-            if (_columnsAccessAllowed.get(family).contains(column)) {
+            if (columnsAccessAllowed.get(family).contains(column)) {
                 LOG.debug("filterKeyValue: family/column found in column level access results cache. Access allowed.");
                 result = ReturnCode.INCLUDE;
             } else {
                 LOG.debug("filterKeyValue: family/column not in column level access results cache. Access denied.");
             }
-        } else if (_familiesAccessAllowed.contains(family)) {
+        } else if (familiesAccessAllowed.contains(family)) {
             LOG.debug("filterKeyValue: family found in access allowed families cache.  Must re-authorize for correct audit generation.");
             authCheckNeeded = true;
-        } else if (_familiesAccessIndeterminate.contains(family)) {
+        } else if (familiesAccessIndeterminate.contains(family)) {
             LOG.debug("filterKeyValue: family found in indeterminate families cache.  Evaluating access...");
             authCheckNeeded = true;
         } else {
@@ -113,18 +111,18 @@ public class RangerAuthorizationFilter extends FilterBase {
 
         if (authCheckNeeded) {
             LOG.debug("filterKeyValue: Checking authorization...");
-            _session.columnFamily(family)
+            session.columnFamily(family)
                     .column(column)
                     .buildRequest()
                     .authorize();
             // must always purge the captured audit event out of the audit handler to avoid messing up the next check
-            AuthzAuditEvent auditEvent = _auditHandler.getAndDiscardMostRecentEvent();
-            if (_session.isAuthorized()) {
+            AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
+            if (session.isAuthorized()) {
                 LOG.debug("filterKeyValue: Access granted.");
                 result = ReturnCode.INCLUDE;
                 if (auditEvent != null) {
                     LOG.debug("filterKeyValue: access is audited.");
-                    _auditHandler.logAuthzAudits(Collections.singletonList(auditEvent));
+                    auditHandler.logAuthzAudits(Collections.singletonList(auditEvent));
                 } else {
                     LOG.debug("filterKeyValue: no audit event returned.  Access not audited.");
                 }
@@ -141,10 +139,10 @@ public class RangerAuthorizationFilter extends FilterBase {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(getClass())
-                .add("familiesAccessAllowed", _familiesAccessAllowed)
-                .add("familiesAccessDenied", _familiesAccessDenied)
-                .add("familiesAccessUnknown", _familiesAccessIndeterminate)
-                .add("columnsAccessAllowed", _columnsAccessAllowed)
+                .add("familiesAccessAllowed", familiesAccessAllowed)
+                .add("familiesAccessDenied", familiesAccessDenied)
+                .add("familiesAccessUnknown", familiesAccessIndeterminate)
+                .add("columnsAccessAllowed", columnsAccessAllowed)
                 .toString();
     }
 }

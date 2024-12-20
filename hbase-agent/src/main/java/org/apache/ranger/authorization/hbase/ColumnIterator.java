@@ -34,16 +34,16 @@ public class ColumnIterator implements Iterator<String> {
     // TODO write tests for this class
 
     private static final Logger LOG = LoggerFactory.getLogger(ColumnIterator.class.getName());
-    Iterator<byte[]> _setIterator;
-    Iterator<Cell>   _listIterator;
+    Iterator<byte[]> setIterator;
+    Iterator<Cell>   listIterator;
 
     @SuppressWarnings("unchecked")
     public ColumnIterator(Collection<?> columnCollection) {
         if (columnCollection != null) {
             if (columnCollection instanceof Set) {
-                _setIterator = ((Set<byte[]>) columnCollection).iterator();
+                setIterator = ((Set<byte[]>) columnCollection).iterator();
             } else if (columnCollection instanceof List) {
-                _listIterator = ((List<Cell>) columnCollection).iterator();
+                listIterator = ((List<Cell>) columnCollection).iterator();
             } else { // unexpected
                 // TODO make message better
                 LOG.error("Unexpected type " + columnCollection.getClass().getName() + " passed as value in column family collection");
@@ -53,10 +53,10 @@ public class ColumnIterator implements Iterator<String> {
 
     @Override
     public boolean hasNext() {
-        if (_setIterator != null) {
-            return _setIterator.hasNext();
-        } else if (_listIterator != null) {
-            return _listIterator.hasNext();
+        if (setIterator != null) {
+            return setIterator.hasNext();
+        } else if (listIterator != null) {
+            return listIterator.hasNext();
         } else {
             return false;
         }
@@ -68,13 +68,13 @@ public class ColumnIterator implements Iterator<String> {
     @Override
     public String next() {
         String value = "";
-        if (_setIterator != null) {
-            byte[] valueBytes = _setIterator.next();
+        if (setIterator != null) {
+            byte[] valueBytes = setIterator.next();
             if (valueBytes != null) {
                 value = Bytes.toString(valueBytes);
             }
-        } else if (_listIterator != null) {
-            Cell   cell = _listIterator.next();
+        } else if (listIterator != null) {
+            Cell   cell = listIterator.next();
             byte[] v    = CellUtil.cloneQualifier(cell);
             if (v != null) {
                 value = Bytes.toString(v);

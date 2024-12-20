@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceHBase extends RangerBaseService {
-
     public static final  String ACCESS_TYPE_READ   = "read";
     public static final  String ACCESS_TYPE_CREATE = "create";
     private static final Logger LOG                = LoggerFactory.getLogger(RangerServiceHBase.class);
@@ -77,7 +76,6 @@ public class RangerServiceHBase extends RangerBaseService {
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-
         List<String>        ret         = new ArrayList<String>();
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
@@ -127,4 +125,3 @@ public class RangerServiceHBase extends RangerBaseService {
         return ret;
     }
 }
-

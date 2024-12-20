@@ -84,7 +84,6 @@ import java.util.List;
  */
 @org.junit.Ignore
 public class HBaseRangerAuthorizationTest {
-
     private static final Logger LOG = LoggerFactory.getLogger(HBaseRangerAuthorizationTest.class.getName());
 
     private static int                 port;
@@ -1032,13 +1031,10 @@ public class HBaseRangerAuthorizationTest {
         String               user = "IT";
         UserGroupInformation ugi  = UserGroupInformation.createUserForTesting(user, new String[] {"IT"});
         if (!utility.getHBaseCluster().isDistributedCluster()) {
-            RangerAuthorizationCoprocessor authorizationCoprocessor =
-                    utility.getHBaseCluster().getMaster().getMasterCoprocessorHost().
-                            findCoprocessor(RangerAuthorizationCoprocessor.class);
+            RangerAuthorizationCoprocessor authorizationCoprocessor = utility.getHBaseCluster().getMaster().getMasterCoprocessorHost().findCoprocessor(RangerAuthorizationCoprocessor.class);
             RpcController rpcController = new RpcController() {
                 @Override
                 public void reset() {
-
                 }
 
                 @Override
@@ -1053,12 +1049,10 @@ public class HBaseRangerAuthorizationTest {
 
                 @Override
                 public void startCancel() {
-
                 }
 
                 @Override
                 public void setFailed(String reason) {
-
                 }
 
                 @Override
@@ -1068,7 +1062,6 @@ public class HBaseRangerAuthorizationTest {
 
                 @Override
                 public void notifyOnCancel(RpcCallback<Object> callback) {
-
                 }
             };
             ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -1115,8 +1108,7 @@ public class HBaseRangerAuthorizationTest {
             final List<UserPermission>                    userPermissions   = new ArrayList<>();
             AccessControlProtos.GetUserPermissionsRequest requestTablePerms = getTableUserPermissions("temp5");
             getUserPermissions(userPermissions, requestTablePerms, authorizationCoprocessor, rpcController);
-            Permission p = Permission.newBuilder(TableName.valueOf("temp5")).
-                    withActions(Permission.Action.READ, Permission.Action.WRITE, Permission.Action.EXEC).build();
+            Permission p = Permission.newBuilder(TableName.valueOf("temp5")).withActions(Permission.Action.READ, Permission.Action.WRITE, Permission.Action.EXEC).build();
             UserPermission userPermission = new UserPermission("@IT", p);
             Assert.assertTrue("@IT permission should be there", userPermissions.contains(userPermission));
         }
@@ -1408,9 +1400,7 @@ public class HBaseRangerAuthorizationTest {
     }
 
     private static void enableColumnAuthOptimization(boolean enable) {
-        RangerAuthorizationCoprocessor authorizationCoprocessor =
-                utility.getHBaseCluster().getMaster().getMasterCoprocessorHost().
-                        findCoprocessor(RangerAuthorizationCoprocessor.class);
+        RangerAuthorizationCoprocessor authorizationCoprocessor = utility.getHBaseCluster().getMaster().getMasterCoprocessorHost().findCoprocessor(RangerAuthorizationCoprocessor.class);
         try {
             authorizationCoprocessor.setColumnAuthOptimizationEnabled(enable);
         } catch (Exception e) {

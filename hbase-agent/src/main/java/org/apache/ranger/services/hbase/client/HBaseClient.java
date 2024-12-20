@@ -49,15 +49,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class HBaseClient extends BaseClient {
-
     private static final Logger LOG = LoggerFactory.getLogger(HBaseClient.class);
 
-    private static Subject subj = null;
+    private static Subject subj;
 
     private Configuration conf;
 
     public HBaseClient(String serivceName, Map<String, String> connectionProp) {
-
         super(serivceName, addDefaultHBaseProp(connectionProp));
         conf = HBaseConfiguration.create();
 
@@ -71,9 +69,7 @@ public class HBaseClient extends BaseClient {
         }
     }
 
-    public static Map<String, Object> connectionTest(String dataSource,
-            Map<String, String> configs) throws Exception {
-
+    public static Map<String, Object> connectionTest(String dataSource, Map<String, String> configs) throws Exception {
         Map<String, Object> responseData = new HashMap<String, Object>();
         final String errMsg = " You can still save the repository and start creating "
                 + "policies, but you would not be able to use autocomplete for "
@@ -110,7 +106,6 @@ public class HBaseClient extends BaseClient {
                 + "resource names. Check ranger_admin.log for more info.";
         if (subj != null) {
             try {
-
                 hbaseStatus = Subject.doAs(subj, new PrivilegedAction<Boolean>() {
                     @Override
                     public Boolean run() {
@@ -194,10 +189,8 @@ public class HBaseClient extends BaseClient {
 
         if (subj != null) {
             ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
-
                 @Override
                 public List<String> run() {
-
                     List<String> tableList = new ArrayList<String>();
                     Admin        admin     = null;
                     try {
@@ -290,9 +283,8 @@ public class HBaseClient extends BaseClient {
         subj = getLoginSubject();
         if (subj != null) {
             try {
-
                 ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
-                    String tblName = null;
+                    String tblName;
 
                     @Override
                     public List<String> run() {
@@ -433,4 +425,3 @@ public class HBaseClient extends BaseClient {
         }
     }
 }
-

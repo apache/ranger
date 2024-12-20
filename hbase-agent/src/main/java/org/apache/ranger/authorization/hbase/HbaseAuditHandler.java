@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 
 public interface HbaseAuditHandler extends RangerAccessResultProcessor {
-
     List<AuthzAuditEvent> getCapturedEvents();
 
     void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents);

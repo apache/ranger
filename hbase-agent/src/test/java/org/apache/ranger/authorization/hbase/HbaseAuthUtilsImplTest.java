@@ -23,7 +23,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class HbaseAuthUtilsImplTest {
-
     @Test
     public void testIsReadAccess() {
         HbaseAuthUtilsImpl authUtils = new HbaseAuthUtilsImpl();

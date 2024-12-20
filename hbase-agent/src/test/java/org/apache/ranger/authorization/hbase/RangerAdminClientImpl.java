@@ -30,11 +30,10 @@ import java.util.List;
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
-    private final static String cacheFilename = "hbase-policies.json";
-    private final static String tagFilename   = "hbase-policies-tag.json";
+    private static final String cacheFilename = "hbase-policies.json";
+    private static final String tagFilename   = "hbase-policies-tag.json";
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();

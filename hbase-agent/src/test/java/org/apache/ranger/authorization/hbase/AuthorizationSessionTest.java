@@ -26,45 +26,44 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class AuthorizationSessionTest {
-
     @Test
     public void testAuthorizationSession() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testOperation() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testOtherInformation() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testAccess() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testUser() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testTable() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testColumnFamily() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testColumn() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
@@ -118,7 +117,7 @@ public class AuthorizationSessionTest {
 
     @Test
     public void testZapAuthorizationState() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
@@ -132,7 +131,7 @@ public class AuthorizationSessionTest {
 
     @Test
     public void testBuildRequest() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
@@ -152,66 +151,66 @@ public class AuthorizationSessionTest {
 
     @Test
     public void testPublishResults() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testIsAuthorized() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testGetDenialReason() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testGetResourceType() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testRequestToString() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testAudit() {
-//		Assert.fail("Not yet implemented");
+        //Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testGetPrintableValue() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testBuildAccessDeniedMessage() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testBuildAccessDeniedMessageString() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testKnownPatternAllowedNotAudited() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testKnownPatternDisallowedNotAudited() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testAuditHandler() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 
     @Test
     public void testBuildResult() {
-//		Assert.fail("Not yet implemented");
+        // Assert.fail("Not yet implemented");
     }
 }

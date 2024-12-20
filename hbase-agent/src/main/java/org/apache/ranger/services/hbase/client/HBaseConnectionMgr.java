@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public class HBaseConnectionMgr {
-
     private static final Logger LOG = LoggerFactory.getLogger(HBaseConnectionMgr.class);
 
     protected ConcurrentMap<String, HBaseClient> hbaseConnectionCache;
@@ -44,7 +43,6 @@ public class HBaseConnectionMgr {
     }
 
     public HBaseClient getHBaseConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
-
         HBaseClient client = null;
         if (serviceType != null) {
             // get it from the cache
@@ -74,7 +72,6 @@ public class HBaseConnectionMgr {
                         LOG.error("Error connecting HBase repository : " + serviceName);
                     }
                 } else {
-
                     final Callable<HBaseClient> connectHBase = new Callable<HBaseClient>() {
                         @Override
                         public HBaseClient call() throws Exception {
@@ -108,7 +105,6 @@ public class HBaseConnectionMgr {
                     }
                 }
             } else {
-
                 List<String> testConnect = client.getTableList(".\\*", null);
 
                 if (testConnect == null) {

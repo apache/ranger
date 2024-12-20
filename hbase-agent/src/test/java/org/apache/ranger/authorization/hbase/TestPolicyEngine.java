@@ -56,8 +56,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestPolicyEngine {
-    static RangerBasePlugin plugin      = null;
-    static Gson             gsonBuilder = null;
+    static RangerBasePlugin plugin;
+    static Gson             gsonBuilder;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -164,4 +164,3 @@ public class TestPolicyEngine {
         }
     }
 }
-

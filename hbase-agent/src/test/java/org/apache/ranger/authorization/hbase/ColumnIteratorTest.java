@@ -34,7 +34,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ColumnIteratorTest {
-
     @Test
     public void test_firewalling() {
         // passing null collection
@@ -53,8 +52,7 @@ public class ColumnIteratorTest {
         final String[] values = new String[] {"a", "b", "c"};
         when(iterator.next()).thenAnswer(new Answer<byte[]>() {
             // return all the items of the values array in order as byte[].  After which return null.
-            int index = 0;
-
+            int index;
             @Override
             public byte[] answer(InvocationOnMock invocation) throws Throwable {
                 if (index < values.length) {
@@ -67,8 +65,7 @@ public class ColumnIteratorTest {
 
         // We want hasNext() to return false after as many times as values were stuffed into it.
         when(iterator.hasNext()).thenAnswer(new Answer<Boolean>() {
-            int i = 0;
-
+            int i;
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
                 return i++ < values.length; // we want post increment
@@ -103,8 +100,7 @@ public class ColumnIteratorTest {
         Iterator<Cell> iterator   = mock(Iterator.class);
         // Have the iterator return true as many times as the size of keys array
         when(iterator.hasNext()).thenAnswer(new Answer<Boolean>() {
-            int i = 0;
-
+            int i;
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
                 return i++ < qualifiers.length;
@@ -112,8 +108,7 @@ public class ColumnIteratorTest {
         });
         // have the iterator return a Cell composed of the key and value arrays
         when(iterator.next()).thenAnswer(new Answer<Cell>() {
-            int i = 0;
-
+            int i;
             @Override
             public Cell answer(InvocationOnMock invocation)
                     throws Throwable {

@@ -108,20 +108,16 @@ import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.AccessResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.ServicePolicies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,16 +147,16 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     private static final String  GROUP_PREFIX                      = "@";
     private static final String MASTER_COPROCESSOR_TYPE          = "master";
     private static final String REGIONAL_COPROCESSOR_TYPE        = "regional";
-    private static final String REGIONAL_SERVER_COPROCESSOR_TYPE = "regionalServer";
-    private static       boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
-    private static volatile RangerHBasePlugin hbasePlugin = null;
+    private static final String               REGIONAL_SERVER_COPROCESSOR_TYPE  = "regionalServer";
+    private static       boolean              updateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
+    private static volatile RangerHBasePlugin hbasePlugin;
     /*
      * These are package level only for testability and aren't meant to be exposed outside via getters/setters or made available to derived classes.
      */
-    final                   HbaseFactory      _factory    = HbaseFactory.getInstance();
-    final                   HbaseUserUtils    _userUtils  = _factory.getUserUtils();
-    final                   HbaseAuthUtils    _authUtils  = _factory.getAuthUtils();
-    private UserProvider                 userProvider;
+    final                   HbaseFactory      factory     = HbaseFactory.getInstance();
+    final                   HbaseUserUtils    userUtils   = factory.getUserUtils();
+    final                   HbaseAuthUtils    authUtils   = factory.getAuthUtils();
+    private UserProvider                      userProvider;
     private RegionCoprocessorEnvironment regionEnv;
     private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
     /**
@@ -188,26 +184,26 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         return Optional.<EndpointObserver>of(this);
     }
 
-	/*
-	private User getActiveUser() {
-		User user = null;
-		try {
-			user = RpcServer.getRequestUser().get();
-		} catch (NoSuchElementException e) {
-			LOG.info("Unable to get request user");
-		}
+/*
+private User getActiveUser() {
+    User user = null;
+    try {
+        user = RpcServer.getRequestUser().get();
+    } catch (NoSuchElementException e) {
+        LOG.info("Unable to get request user");
+    }
 
-		if (user == null) {
-			// for non-rpc handling, fallback to system user
-			try {
-				user = User.getCurrent();
-			} catch (IOException e) {
-				LOG.error("Unable to find the current user");
-				user = null;
-			}
-		}
-		return user;
-	}*/
+    if (user == null) {
+        // for non-rpc handling, fallback to system user
+        try {
+            user = User.getCurrent();
+        } catch (IOException e) {
+            LOG.error("Unable to find the current user");
+            user = null;
+        }
+    }
+    return user;
+}*/
 
     @Override
     public Optional<BulkLoadObserver> getBulkLoadObserver() {
@@ -258,23 +254,23 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void postGetProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
-		/*if(!procInfoList.isEmpty()) {
-			Iterator<Procedure<?>> itr = procInfoList.iterator();
-			User user = this.getActiveUser();
+        //if(!procInfoList.isEmpty()) {
+        //    Iterator<Procedure<?>> itr = procInfoList.iterator();
+        //    User user = this.getActiveUser();
+        //
+        //    while(itr.hasNext()) {
+        //        Procedure procInfo = itr.next();
+        //        try {
+        //            String owner = procInfo.getOwner();
+        //            if (owner == null || !owner.equals(user.getShortName())) {
+        //                requirePermission("getProcedures", Action.ADMIN);
+        //            }
+        //        } catch (AccessDeniedException var7) {
+        //            itr.remove();
+        //        }
+        //    }
+        //}
 
-			while(itr.hasNext()) {
-				Procedure procInfo = itr.next();
-				try {
-					String owner = procInfo.getOwner();
-					if (owner == null || !owner.equals(user.getShortName())) {
-						requirePermission("getProcedures", Action.ADMIN);
-					}
-				} catch (AccessDeniedException var7) {
-					itr.remove();
-				}
-			}
-
-		}*/
         requirePermission(observerContext, "getProcedures", Action.ADMIN);
     }
 
@@ -322,7 +318,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void postStartMaster(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
-        if (UpdateRangerPoliciesOnGrantRevoke) {
+        if (updateRangerPoliciesOnGrantRevoke) {
             LOG.debug("Calling create ACL table ...");
             Admin     admin = (ctx.getEnvironment()).getConnection().getAdmin();
             Throwable var3  = null;
@@ -377,7 +373,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                     descriptors == null ? 0 : descriptors.size(), regex));
         }
 
-        checkGetTableInfoAccess(ctx, "getTableDescriptors", descriptors, regex, _authUtils.getAccess(Action.CREATE));
+        checkGetTableInfoAccess(ctx, "getTableDescriptors", descriptors, regex, authUtils.getAccess(Action.CREATE));
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
@@ -681,7 +677,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
                     plugin.init();
 
-                    UpdateRangerPoliciesOnGrantRevoke = plugin.getConfig().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+                    updateRangerPoliciesOnGrantRevoke = plugin.getConfig().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
                     hbasePlugin = plugin;
                 }
@@ -728,7 +724,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     public void grant(RpcController controller, AccessControlProtos.GrantRequest request, RpcCallback<AccessControlProtos.GrantResponse> done) {
         boolean isSuccess = false;
 
-        if (UpdateRangerPoliciesOnGrantRevoke) {
+        if (updateRangerPoliciesOnGrantRevoke) {
             GrantRevokeRequest grData = null;
 
             try {
@@ -737,7 +733,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 RangerHBasePlugin plugin = hbasePlugin;
 
                 if (plugin != null) {
-
                     RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 
                     plugin.grantAccess(grData, auditHandler);
@@ -768,7 +763,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     public void revoke(RpcController controller, AccessControlProtos.RevokeRequest request, RpcCallback<AccessControlProtos.RevokeResponse> done) {
         boolean isSuccess = false;
 
-        if (UpdateRangerPoliciesOnGrantRevoke) {
+        if (updateRangerPoliciesOnGrantRevoke) {
             GrantRevokeRequest grData = null;
 
             try {
@@ -777,7 +772,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 RangerHBasePlugin plugin = hbasePlugin;
 
                 if (plugin != null) {
-
                     RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 
                     plugin.revokeAccess(grData, auditHandler);
@@ -812,7 +806,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             String                         operation = "userPermissions";
             final RangerAccessResourceImpl resource  = new RangerAccessResourceImpl();
             User                           user      = getActiveUser(null);
-            Set<String>                    groups    = _userUtils.getUserGroups(user);
+            Set<String>                    groups    = userUtils.getUserGroups(user);
             if (groups.isEmpty() && user.getUGI() != null) {
                 String[] groupArray = user.getUGI().getGroupNames();
                 if (groupArray != null) {
@@ -820,7 +814,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 }
             }
             RangerAccessRequestImpl rangerAccessrequest = new RangerAccessRequestImpl(resource, null,
-                    _userUtils.getUserAsString(user), groups, null);
+                    userUtils.getUserAsString(user), groups, null);
             rangerAccessrequest.setAction(operation);
             rangerAccessrequest.setClientIPAddress(getRemoteAddress());
             rangerAccessrequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
@@ -860,8 +854,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                                 false);
                     }
                 });
-                if (_userUtils.isSuperUser(user)) {
-                    perms.add(new UserPermission(_userUtils.getUserAsString(user),
+                if (userUtils.isSuperUser(user)) {
+                    perms.add(new UserPermission(userUtils.getUserAsString(user),
                             Permission.newBuilder(PermissionStorage.ACL_TABLE_NAME).withActions(Action.values()).build()));
                 }
             }
@@ -903,7 +897,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         }
         String systemUser = user.getShortName();
         User   activeUser = getActiveUser(ctx);
-        if (!Objects.equals(systemUser, activeUser.getShortName()) && !_userUtils.isSuperUser(activeUser)) {
+        if (!Objects.equals(systemUser, activeUser.getShortName()) && !userUtils.isSuperUser(activeUser)) {
             throw new AccessDeniedException("User '" + user.getShortName() + "is not system or super user.");
         }
     }
@@ -953,7 +947,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     protected void requirePermission(ObserverContext<?> ctx, String request, byte[] aTableName, byte[] aColumnFamily, byte[] aQualifier, Permission.Action action) throws AccessDeniedException {
-
         String table        = Bytes.toString(aTableName);
         String columnFamily = Bytes.toString(aColumnFamily);
         String column       = Bytes.toString(aQualifier);
@@ -1026,9 +1019,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled=" + hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled());
         }
 
-        String                         access   = _authUtils.getAccess(action);
+        String                         access   = authUtils.getAccess(action);
         User                           user     = getActiveUser(ctx);
-        String                         userName = _userUtils.getUserAsString(user);
+        String                         userName = userUtils.getUserAsString(user);
         final Map<String, Set<String>> colFamiliesForDebugLoggingOnly;
 
         if (LOG.isDebugEnabled()) {
@@ -1060,7 +1053,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         }
 
         // let's create a session that would be reused.  Set things on it that won't change.
-        HbaseAuditHandler auditHandler = _factory.getAuditHandler();
+        HbaseAuditHandler auditHandler = factory.getAuditHandler();
         AuthorizationSession session = new AuthorizationSession(hbasePlugin)
                 .operation(operation)
                 .otherInformation(commandStr)
@@ -1214,7 +1207,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                                 isColumnAuthOptimizationEnabled, session.isAuthorized());
                     }
                     if (session.isAuthorized()) {
-
                         //check if column family fully authorized i.e. no deny for columns
                         session.column(null)
                                 .resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
@@ -1296,7 +1288,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     Filter authorizeAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env, final Map<byte[], NavigableSet<byte[]>> familyMap, String commandStr) throws AccessDeniedException {
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> authorizeAccess");
         }
@@ -1307,21 +1298,21 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
             ColumnFamilyAccessResult  accessResult = evaluateAccess(ctx, operation, action, env, familyMap, commandStr);
             RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
-            if (accessResult._everythingIsAccessible) {
-                auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
-                auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
+            if (accessResult.everythingIsAccessible) {
+                auditHandler.logAuthzAudits(accessResult.accessAllowedEvents);
+                auditHandler.logAuthzAudits(accessResult.familyLevelAccessEvents);
                 LOG.debug("authorizeAccess: exiting: No filter returned since all access was allowed");
                 return null; // no filter needed since we are good to go.
-            } else if (accessResult._somethingIsAccessible) {
+            } else if (accessResult.somethingIsAccessible) {
                 // NOTE: audit logging is split beween logging here (in scope of preOp/preGet) and logging in the filter component for those that couldn't be determined
-                auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
+                auditHandler.logAuthzAudits(accessResult.accessAllowedEvents);
                 LOG.debug("authorizeAccess: exiting: Filter returned since some access was allowed");
-                return accessResult._filter;
+                return accessResult.filter;
             } else {
                 // If we are here then it means nothing was accessible!  So let's log one denial (in our case, the last denial) and throw an exception
-                auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
+                auditHandler.logAuthzAudit(accessResult.accessDeniedEvent);
                 LOG.debug("authorizeAccess: exiting: Throwing exception since nothing was accessible");
-                throw new AccessDeniedException(accessResult._denialReason);
+                throw new AccessDeniedException(accessResult.denialReason);
             }
         } finally {
             RangerPerfTracer.log(perf);
@@ -1339,9 +1330,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         return combinedFilter;
     }
 
-    void requirePermission(final ObserverContext<?> ctx, final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap)
-            throws AccessDeniedException {
-
+    void requirePermission(final ObserverContext<?> ctx, final String operation, final Action action, final RegionCoprocessorEnvironment regionServerEnv, final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
         RangerPerfTracer perf = null;
 
         try {
@@ -1350,15 +1339,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             }
             ColumnFamilyAccessResult  accessResult = evaluateAccess(ctx, operation, action, regionServerEnv, familyMap, null);
             RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
-            if (accessResult._everythingIsAccessible) {
-                auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
-                auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
+            if (accessResult.everythingIsAccessible) {
+                auditHandler.logAuthzAudits(accessResult.accessAllowedEvents);
+                auditHandler.logAuthzAudits(accessResult.familyLevelAccessEvents);
                 LOG.debug("requirePermission: exiting: all access was allowed");
                 return;
             } else {
-                auditHandler.logAuthzAudit(accessResult._accessDeniedEvent);
+                auditHandler.logAuthzAudit(accessResult.accessDeniedEvent);
                 LOG.debug("requirePermission: exiting: throwing exception as everything wasn't accessible");
-                throw new AccessDeniedException(accessResult._denialReason);
+                throw new AccessDeniedException(accessResult.denialReason);
             }
         } finally {
             RangerPerfTracer.log(perf);
@@ -1378,7 +1367,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
      */
     void authorizeAccess(ObserverContext<?> ctx, String operation, String otherInformation, Action action, String table, String columnFamily, String column) throws AccessDeniedException {
         User   user   = getActiveUser(ctx);
-        String access = _authUtils.getAccess(action);
+        String access = authUtils.getAccess(action);
         if (LOG.isDebugEnabled()) {
             final String format  = "authorizeAccess: %s: Operation[%s], Info[%s], access[%s], table[%s], columnFamily[%s], column[%s]";
             String       message = String.format(format, "Entering", operation, otherInformation, access, table, columnFamily, column);
@@ -1394,7 +1383,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             return;
         }
 
-        HbaseAuditHandler auditHandler = _factory.getAuditHandler();
+        HbaseAuditHandler auditHandler = factory.getAuditHandler();
         AuthorizationSession session = new AuthorizationSession(hbasePlugin)
                 .operation(operation)
                 .otherInformation(otherInformation)
@@ -1418,9 +1407,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         session.publishResults();
     }
 
-    boolean canSkipAccessCheck(User user, final String operation, String access, final String table)
-            throws AccessDeniedException {
-
+    boolean canSkipAccessCheck(User user, final String operation, String access, final String table) throws AccessDeniedException {
         boolean result = false;
         if (user == null) {
             String message = "Unexpeceted: User is null: access denied, not audited!";
@@ -1437,15 +1424,14 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     boolean canSkipAccessCheck(User user, final String operation, String access, final RegionCoprocessorEnvironment regionServerEnv) throws AccessDeniedException {
-
         // read access to metadata tables is always allowed and isn't audited.
-        if (isAccessForMetaTables(regionServerEnv) && _authUtils.isReadAccess(access)) {
+        if (isAccessForMetaTables(regionServerEnv) && authUtils.isReadAccess(access)) {
             LOG.debug("isKnownAccessPattern: exiting: Read access for metadata tables allowed, not audited!");
             return true;
         }
         // if write access is desired to metatables then global create access is sufficient
-        if (_authUtils.isWriteAccess(access) && isAccessForMetaTables(regionServerEnv)) {
-            String createAccess = _authUtils.getAccess(Action.CREATE);
+        if (authUtils.isWriteAccess(access) && isAccessForMetaTables(regionServerEnv)) {
+            String createAccess = authUtils.getAccess(Action.CREATE);
             AuthorizationSession session = new AuthorizationSession(hbasePlugin)
                     .operation(operation)
                     .remoteAddress(getRemoteAddress())
@@ -1465,7 +1451,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     /* ---- EndpointObserver implementation ---- */
 
     boolean isAccessForMetadataRead(String access, String table) {
-        if (_authUtils.isReadAccess(access) && isSpecialTable(table)) {
+        if (authUtils.isReadAccess(access) && isSpecialTable(table)) {
             LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed!");
             return true;
         }
@@ -1564,7 +1550,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             String       user               = !isGroup ? userAcls.getKey() : AuthUtil.toGroupEntry(userAcls.getKey());
             List<Action> allowedPermissions = new ArrayList<Action>();
             for (Entry<String, AccessResult> permissionAccess : userAcls.getValue().entrySet()) {
-                String permission = _authUtils.getActionName(permissionAccess.getKey());
+                String permission = authUtils.getActionName(permissionAccess.getKey());
                 if (hbaseActionsList.contains(permission)
                         && permissionAccess.getValue().getResult() == RangerPolicyEvaluator.ACCESS_ALLOWED) {
                     allowedPermissions.add(Action.valueOf(permission));
@@ -1610,7 +1596,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
         switch (perm.getType()) {
             case Global:
-                tableName = colFamily = qualifier = RangerHBaseResource.WILDCARD;
+                qualifier = RangerHBaseResource.WILDCARD;
+                colFamily = RangerHBaseResource.WILDCARD;
+                tableName = RangerHBaseResource.WILDCARD;
                 break;
 
             case Table:
@@ -1662,7 +1650,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         ret.setReplaceExistingPermissions(Boolean.TRUE);
         ret.setResource(mapResource);
         ret.setClientIPAddress(getRemoteAddress());
-        ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
+        ret.setForwardedAddresses(null); //TODO: Need to check with Knox proxy how they handle forwarded add.
         ret.setRemoteIPAddress(getRemoteAddress());
         ret.setRequestData(up.toString());
 
@@ -1722,7 +1710,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
         switch (perm.getType()) {
             case Global:
-                tableName = colFamily = qualifier = RangerHBaseResource.WILDCARD;
+                qualifier = RangerHBaseResource.WILDCARD;
+                colFamily = RangerHBaseResource.WILDCARD;
+                tableName = RangerHBaseResource.WILDCARD;
                 break;
 
             case Table:
@@ -1774,7 +1764,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         ret.setReplaceExistingPermissions(Boolean.TRUE);
         ret.setResource(mapResource);
         ret.setClientIPAddress(getRemoteAddress());
-        ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
+        ret.setForwardedAddresses(null); //TODO: Need to check with Knox proxy how they handle forwarded add.
         ret.setRemoteIPAddress(getRemoteAddress());
         ret.setRequestData(up.toString());
 
@@ -1913,12 +1903,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     private void checkGetTableInfoAccess(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<TableDescriptor> descriptors, String regex, String accessPermission) {
-
         if (CollectionUtils.isNotEmpty(descriptors)) {
             // Retains only those which passes authorization checks
             User              user         = getActiveUser(ctx);
             String            access       = accessPermission;
-            HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+            HbaseAuditHandler auditHandler = factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
             AuthorizationSession session = new AuthorizationSession(hbasePlugin)
                     .operation(operation)
                     .otherInformation("regex=" + regex)
@@ -1949,12 +1938,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     private void checkAccessForNamespaceDescriptor(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<NamespaceDescriptor> descriptors) {
-
         if (CollectionUtils.isNotEmpty(descriptors)) {
             // Retains only those which passes authorization checks
             User              user         = getActiveUser(ctx);
-            String            access       = _authUtils.getAccess(Action.ADMIN);
-            HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+            String            access       = authUtils.getAccess(Action.ADMIN);
+            HbaseAuditHandler auditHandler = factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
             AuthorizationSession session = new AuthorizationSession(hbasePlugin)
                     .operation(operation)
                     .remoteAddress(getRemoteAddress())
@@ -1983,90 +1971,42 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         }
     }
 
-    enum PredicateType {STARTROW, STOPROW, FILTER, COLUMNS, ROW}
+    enum PredicateType { STARTROW, STOPROW, FILTER, COLUMNS, ROW }
 
     static class ColumnFamilyAccessResult {
-        final boolean                   _everythingIsAccessible;
-        final boolean                   _somethingIsAccessible;
-        final List<AuthzAuditEvent>     _accessAllowedEvents;
-        final List<AuthzAuditEvent>     _familyLevelAccessEvents;
-        final AuthzAuditEvent           _accessDeniedEvent;
-        final String                    _denialReason;
-        final RangerAuthorizationFilter _filter;
-        ;
+        final boolean               everythingIsAccessible;
+        final boolean               somethingIsAccessible;
+        final List<AuthzAuditEvent> accessAllowedEvents;
+        final List<AuthzAuditEvent> familyLevelAccessEvents;
+        final AuthzAuditEvent           accessDeniedEvent;
+        final String                    denialReason;
+        final RangerAuthorizationFilter filter;
 
         ColumnFamilyAccessResult(boolean everythingIsAccessible, boolean somethingIsAccessible,
                 List<AuthzAuditEvent> accessAllowedEvents, List<AuthzAuditEvent> familyLevelAccessEvents, AuthzAuditEvent accessDeniedEvent, String denialReason,
                 RangerAuthorizationFilter filter) {
-            _everythingIsAccessible = everythingIsAccessible;
-            _somethingIsAccessible  = somethingIsAccessible;
+            this.everythingIsAccessible = everythingIsAccessible;
+            this.somethingIsAccessible  = somethingIsAccessible;
             // WARNING: we are just holding on to reference of the collection.  Potentially risky optimization
-            _accessAllowedEvents     = accessAllowedEvents;
-            _familyLevelAccessEvents = familyLevelAccessEvents;
-            _accessDeniedEvent       = accessDeniedEvent;
-            _denialReason            = denialReason;
+            this.accessAllowedEvents     = accessAllowedEvents;
+            this.familyLevelAccessEvents = familyLevelAccessEvents;
+            this.accessDeniedEvent = accessDeniedEvent;
+            this.denialReason      = denialReason;
             // cached values of access results
-            _filter = filter;
+            this.filter = filter;
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(getClass())
-                    .add("everythingIsAccessible", _everythingIsAccessible)
-                    .add("somethingIsAccessible", _somethingIsAccessible)
-                    .add("accessAllowedEvents", _accessAllowedEvents)
-                    .add("familyLevelAccessEvents", _familyLevelAccessEvents)
-                    .add("accessDeniedEvent", _accessDeniedEvent)
-                    .add("denialReason", _denialReason)
-                    .add("filter", _filter)
+                    .add("everythingIsAccessible", everythingIsAccessible)
+                    .add("somethingIsAccessible", somethingIsAccessible)
+                    .add("accessAllowedEvents", accessAllowedEvents)
+                    .add("familyLevelAccessEvents", familyLevelAccessEvents)
+                    .add("accessDeniedEvent", accessDeniedEvent)
+                    .add("denialReason", denialReason)
+                    .add("filter", filter)
                     .toString();
         }
     }
-
-    ;
 }
-
-class RangerHBasePlugin extends RangerBasePlugin {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerHBasePlugin.class);
-    boolean isHBaseShuttingDown = false;
-    private boolean isColumnAuthOptimizationEnabled = false;
-
-    public RangerHBasePlugin(String appType) {
-        super("hbase", appType);
-    }
-
-    public void setHBaseShuttingDown(boolean hbaseShuttingDown) {
-        isHBaseShuttingDown = hbaseShuttingDown;
-    }
-
-    @Override
-    public void setPolicies(ServicePolicies policies) {
-        super.setPolicies(policies);
-        this.isColumnAuthOptimizationEnabled = Boolean.parseBoolean(this.getServiceConfigs().get(RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION));
-        LOG.info("isColumnAuthOptimizationEnabled=" + this.isColumnAuthOptimizationEnabled);
-    }
-
-    @Override
-    public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        RangerAccessResult ret = null;
-        if (isHBaseShuttingDown) {
-            ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, this.getServiceName(), this.getServiceDef(), request);
-            ret.setIsAllowed(true);
-            ret.setIsAudited(false);
-            LOG.warn("Auth request came after HBase shutdown....");
-        } else {
-            ret = super.isAccessAllowed(request, resultProcessor);
-        }
-        return ret;
-    }
-
-    public boolean getPropertyIsColumnAuthOptimizationEnabled() {
-        return this.isColumnAuthOptimizationEnabled;
-    }
-
-    public void setColumnAuthOptimizationEnabled(boolean enable) {
-        this.isColumnAuthOptimizationEnabled = enable;
-    }
-}
-
-

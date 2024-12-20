@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
-
     // only to detect problems with initialization order, not for thread-safety.
     static final AtomicBoolean                _Initialized = new AtomicBoolean(false);
     // should never be null
@@ -42,7 +41,6 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
     private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
     public static void initiailize(Configuration conf) {
-
         if (_Initialized.get()) {
             LOG.warn("HbaseUserUtilsImpl.initialize: Unexpected: initialization called more than once!");
         } else {

@@ -31,11 +31,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class HBaseResourceMgr {
-
     private static final Logger LOG = LoggerFactory.getLogger(HBaseResourceMgr.class);
 
     private static final String TABLE        = "table";
     private static final String COLUMNFAMILY = "column-family";
+
+    private HBaseResourceMgr() {}
 
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
         Map<String, Object> ret = null;
@@ -56,7 +57,6 @@ public class HBaseResourceMgr {
     }
 
     public static List<String> getHBaseResource(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context) throws Exception {
-
         String                    userInput        = context.getUserInput();
         String                    resource         = context.getResourceName();
         Map<String, List<String>> resourceMap      = context.getResources();

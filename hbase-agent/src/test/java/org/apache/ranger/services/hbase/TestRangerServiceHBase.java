@@ -33,12 +33,12 @@ import java.util.Map;
 public class TestRangerServiceHBase {
     static final String sdName      = "svcDef-HBase";
     static final String serviceName = "HBaseDef";
-    HashMap<String, Object> responseData  = null;
-    Map<String, String>     configs       = null;
-    RangerServiceHBase      svcHBase      = null;
-    RangerServiceDef        sd            = null;
-    RangerService           svc           = null;
-    ResourceLookupContext   lookupContext = null;
+    HashMap<String, Object> responseData;
+    Map<String, String>     configs;
+    RangerServiceHBase      svcHBase;
+    RangerServiceDef        sd;
+    RangerService           svc;
+    ResourceLookupContext   lookupContext;
 
     @Before
     public void setup() {
@@ -56,55 +56,50 @@ public class TestRangerServiceHBase {
 
     @Test
     public void testValidateConfig() {
+        /*
+        TODO: does this test require a live HBase environment?
+        HashMap<String,Object> ret = null;
+        String errorMessage = null;
 
-		/* TODO: does this test require a live HBase environment?
-		 *
-		HashMap<String,Object> ret = null;
-		String errorMessage = null;
-		
-		try {
-			ret = svcHBase.validateConfig();
-		}catch (Exception e) {
-			errorMessage = e.getMessage();
-			if ( e instanceof HadoopException) {
-				errorMessage = "HadoopException";
-			}
-		}
-		
-		if ( errorMessage != null) {
-			assertTrue(errorMessage.contains("HadoopException"));
-		} else {
-			assertNotNull(ret);
-		}
-		*
-		*/
+        try {
+            ret = svcHBase.validateConfig();
+        }catch (Exception e) {
+            errorMessage = e.getMessage();
+            if ( e instanceof HadoopException) {
+                errorMessage = "HadoopException";
+            }
+        }
+
+        if ( errorMessage != null) {
+            assertTrue(errorMessage.contains("HadoopException"));
+        } else {
+            assertNotNull(ret);
+        }
+        */
     }
 
     @Test
     public void testLookUpResource() {
-		/* TODO: does this test require a live HBase environment?
-		 *
-		List<String> ret 	= new ArrayList<String>();
-		List<String> mockresult = new ArrayList<String>(){{add("iemployee");add("idepartment");}};
-		String errorMessage = null;
-		HBaseClient hbaseClient = new HBaseClient("hbasedev", configs);
-		try {
-			Mockito.when(hbaseClient.getTableList("iem", null)).thenReturn(mockresult);
-			ret = svcHBase.lookupResource(lookupContext);
-		}catch (Throwable e) {
-			errorMessage = e.getMessage();
-			if ( e instanceof HadoopException) {
-				errorMessage = "HadoopException";
-			}
-		}
-		
-		if ( errorMessage != null) {
-			assertTrue(errorMessage.contains("HadoopException"));
-		} else {
-			assertNotNull(ret);
-		}
-		*
-		*/
+//        TODO: does this test require a live HBase environment?
+//        List<String> ret = new ArrayList<String>();
+//        List<String> mockresult = new ArrayList<String>(){{add("iemployee");add("idepartment");}};
+//        String errorMessage = null;
+//        HBaseClient hbaseClient = new HBaseClient("hbasedev", configs);
+//        try {
+//            Mockito.when(hbaseClient.getTableList("iem", null)).thenReturn(mockresult);
+//            ret = svcHBase.lookupResource(lookupContext);
+//        }catch (Throwable e) {
+//            errorMessage = e.getMessage();
+//            if ( e instanceof HadoopException) {
+//                errorMessage = "HadoopException";
+//            }
+//        }
+//
+//        if ( errorMessage != null) {
+//            assertTrue(errorMessage.contains("HadoopException"));
+//        } else {
+//            assertNotNull(ret);
+//        }
     }
 
     public void buildHbaseConnectionConfig() {

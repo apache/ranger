@@ -22,10 +22,9 @@ import org.apache.hadoop.conf.Configuration;
 
 // TODO remove this in favor of Guice DI
 public class HbaseFactory {
-
-    static final HbaseUserUtils _UserUtils = new HbaseUserUtilsImpl();
-    static final HbaseAuthUtils _AuthUtils = new HbaseAuthUtilsImpl();
-    static final HbaseFactory   _Factory   = new HbaseFactory();
+    static final HbaseUserUtils userUtils = new HbaseUserUtilsImpl();
+    static final HbaseAuthUtils authUtils = new HbaseAuthUtilsImpl();
+    static final HbaseFactory   factory   = new HbaseFactory();
 
     /**
      * This is a singleton
@@ -35,7 +34,7 @@ public class HbaseFactory {
     }
 
     static HbaseFactory getInstance() {
-        return _Factory;
+        return factory;
     }
 
     static void initialize(Configuration conf) {
@@ -43,11 +42,11 @@ public class HbaseFactory {
     }
 
     HbaseAuthUtils getAuthUtils() {
-        return _AuthUtils;
+        return authUtils;
     }
 
     HbaseUserUtils getUserUtils() {
-        return _UserUtils;
+        return userUtils;
     }
 
     HbaseAuditHandler getAuditHandler() {

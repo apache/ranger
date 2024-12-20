@@ -35,10 +35,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RangerAuthorizationFilterTest {
-
     @Test
     public void testFilterKeyValueCell_happyPath() throws IOException {
-
         // null/empty column collection in cache for a family implies family level access
         String[]    allowedFamilies             = new String[] {"family1", "family2"};
         String[]    deniedFamilies              = new String[] {"family3", "family4"};
@@ -109,7 +107,7 @@ public class RangerAuthorizationFilterTest {
         when(session.isAuthorized()).thenReturn(false); // by default the mock fails all auth requests
 
         HbaseAuditHandler auditHandler = mock(HbaseAuditHandler.class);
-        session._auditHandler = auditHandler;
+        session.auditHandler = auditHandler;
 
         return session;
     }
