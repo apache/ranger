@@ -268,13 +268,13 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     @Override
     public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
         requirePermission(c, "shutdown", Permission.Action.ADMIN);
-        cleanUp_HBaseRangerPlugin();
+        cleanUpHBaseRangerPlugin();
     }
 
     @Override
     public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
         requirePermission(c, "stopMaster", Permission.Action.ADMIN);
-        cleanUp_HBaseRangerPlugin();
+        cleanUpHBaseRangerPlugin();
     }
 
     @Override
@@ -369,15 +369,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<NamespaceDescriptor> descriptors) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
-        }
+        LOG.debug("==> RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
 
         checkAccessForNamespaceDescriptor(ctx, "getNameSpaceDescriptors", descriptors);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
-        }
+        LOG.debug("<== RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
     }
 
     @Override
@@ -449,9 +445,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void preGetOp(final ObserverContext<RegionCoprocessorEnvironment> rEnv, final Get get, final List<Cell> result) throws IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> preGetOp");
-        }
+        LOG.debug("==> preGetOp");
+
         String commandStr = null;
         try {
             RegionCoprocessorEnvironment      e         = rEnv.getEnvironment();
@@ -463,21 +458,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             commandStr = getCommandString(HbaseConstants.GET, tableNameStr, get.toMap());
             Filter filter = authorizeAccess(rEnv, operation, Action.READ, e, familyMap, commandStr);
             if (filter == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("preGetOp: all access allowed, no filter returned");
-                }
+                LOG.debug("preGetOp: all access allowed, no filter returned");
             } else {
                 Filter existingFilter = get.getFilter();
                 Filter combinedFilter = combineFilters(filter, existingFilter);
                 get.setFilter(combinedFilter);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("preGetOp: partial access, new filter added");
-                }
+                LOG.debug("preGetOp: partial access, new filter added");
             }
         } finally {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== preGetOp: commandStr: {}", commandStr);
-            }
+            LOG.debug("<== preGetOp: commandStr: {}", commandStr);
         }
     }
 
@@ -528,9 +517,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void preScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan) throws IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> preScannerOpen");
-        }
+        LOG.debug("==> preScannerOpen");
+
         String commandStr = null;
         try {
             RegionCoprocessorEnvironment e = c.getEnvironment();
@@ -542,21 +530,16 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             commandStr = getCommandString(HbaseConstants.SCAN, tableNameStr, scan.toMap());
             Filter filter = authorizeAccess(c, operation, Action.READ, e, familyMap, commandStr);
             if (filter == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("preScannerOpen: Access allowed for all families/column.  No filter added");
-                }
+                LOG.debug("preScannerOpen: Access allowed for all families/column.  No filter added");
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("preScannerOpen: Access allowed for some of the families/column. New filter added.");
-                }
+                LOG.debug("preScannerOpen: Access allowed for some of the families/column. New filter added.");
+
                 Filter existingFilter = scan.getFilter();
                 Filter combinedFilter = combineFilters(filter, existingFilter);
                 scan.setFilter(combinedFilter);
             }
         } finally {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== preScannerOpen: commandStr: {}", commandStr);
-            }
+            LOG.debug("<== preScannerOpen: commandStr: {}", commandStr);
         }
     }
 
@@ -597,7 +580,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     @Override
     public void preStopRegionServer(ObserverContext<RegionServerCoprocessorEnvironment> env) throws IOException {
         requirePermission(env, "stop", Permission.Action.ADMIN);
-        cleanUp_HBaseRangerPlugin();
+        cleanUpHBaseRangerPlugin();
     }
 
     @Override
@@ -643,9 +626,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Start of Coprocessor: [{}]", coprocessorType);
-        }
+        LOG.debug("Start of Coprocessor: [{}]", coprocessorType);
     }
 
     @Override
@@ -923,15 +904,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 if (CollectionUtils.isEmpty(columnCollection)) {
                     // family points to null map, OK.
                     // if column auth disabled, then also empty set is fine
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns are empty. " +
-                                "Setting columns to emptySet in familyMap");
-                    }
+                    LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns are empty. Setting columns to emptySet in familyMap");
                     result.put(family, Collections.emptySet());
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns exist");
-                    }
+                    LOG.debug("RangerAuthorizationCoprocessor getColumnFamilies: columns exist");
                     Iterator<String> columnIterator = new ColumnIterator(columnCollection);
                     Set<String>      columns        = new HashSet<>();
                     try {
@@ -999,9 +975,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 .user(user)
                 .access(access)
                 .table(table);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("evaluateAccess: families to process: {}", colFamiliesForDebugLoggingOnly);
-        }
+
+        LOG.debug("evaluateAccess: families to process: {}", colFamiliesForDebugLoggingOnly);
+
         if (familyMap == null || familyMap.isEmpty()) {
             LOG.debug("evaluateAccess: Null or empty families collection, ok.  Table level access is desired");
             session.buildRequest()
@@ -1009,9 +985,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             boolean authorized = session.isAuthorized();
             String  reason     = "";
             if (authorized) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("evaluateAccess: table level access granted [{}]", table);
-                }
+                LOG.debug("evaluateAccess: table level access granted [{}]", table);
             } else {
                 reason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, no column families found.", user.getName(), operation, table);
             }
@@ -1049,9 +1023,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         for (Map.Entry<byte[], ? extends Collection<?>> anEntry : familyMap.entrySet()) {
             String family = Bytes.toString(anEntry.getKey());
             session.columnFamily(family);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("evaluateAccess: Processing family: {}", family);
-            }
+
+            LOG.debug("evaluateAccess: Processing family: {}", family);
+
             Collection<?> columns = anEntry.getValue();
             if (columns == null || columns.isEmpty()) {
                 LOG.debug("evaluateAccess: columns collection null or empty, ok.  Family level access is desired.");
@@ -1073,9 +1047,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                         }
                     }
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("evaluateAccess: family level access for [{}] is evaluated to {}. Checking if [{}] descendants have access.", family, isColumnFamilyAuthorized, family);
-                }
+
+                LOG.debug("evaluateAccess: family level access for [{}] is evaluated to {}. Checking if [{}] descendants have access.", family, isColumnFamilyAuthorized, family);
+
                 // buildRequest again since resourceMatchingScope changed
                 // reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
                 session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS)
@@ -1084,9 +1058,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                         .authorize();
                 auditEvent = auditHandler.getAndDiscardMostRecentEvent(); // capture it only for failure
                 if (session.isAuthorized()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("evaluateAccess: [{}] descendants have access", family);
-                    }
+                    LOG.debug("evaluateAccess: [{}] descendants have access", family);
                     somethingIsAccessible = true;
                     if (isColumnFamilyAuthorized) {
                         familesAccessAllowed.add(family);
@@ -1096,9 +1068,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                         }
                     } else {
                         familesAccessIndeterminate.add(family);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
-                        }
+                        LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
                         everythingIsAccessible = false;
                         if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
                             LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
@@ -1110,17 +1080,13 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                     if (isColumnFamilyAuthorized) {
                         somethingIsAccessible = true;
                         familesAccessIndeterminate.add(family);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
-                        }
+                        LOG.debug("evaluateAccess: has partial access (of some type) in family [{}]", family);
                         if (auditEvent != null && deniedEvent == null) { // we need to capture just one denial event
                             LOG.debug("evaluateAccess: Setting denied access audit event with last auth failure audit event.");
                             deniedEvent = auditEvent;
                         }
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has no access of [{}] type in family [{}]", access, family);
-                        }
+                        LOG.debug("evaluateAccess: has no access of [{}] type in family [{}]", access, family);
                         familesAccessDenied.add(family);
                         denialReason = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s.", user.getName(), operation, table, family);
                     }
@@ -1130,18 +1096,13 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 session.ignoreDescendantDeny(true);
             } else {
                 boolean isColumnAuthOptimizationEnabled = hbasePlugin.getPropertyIsColumnAuthOptimizationEnabled();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("evaluateAccess: columns collection not empty." +
-                            " Skipping Family level check, will do finer level access check for columns.");
-                }
+                LOG.debug("evaluateAccess: columns collection not empty. Skipping Family level check, will do finer level access check for columns.");
                 if (isColumnAuthOptimizationEnabled) {
                     session.column(null)
                             .buildRequest()
                             .authorize();
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug(
-                                "evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAuthorized={}",
-                                isColumnAuthOptimizationEnabled, session.isAuthorized());
+                        LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAuthorized={}", isColumnAuthOptimizationEnabled, session.isAuthorized());
                     }
                     if (session.isAuthorized()) {
                         //check if column family fully authorized i.e. no deny for columns
@@ -1156,17 +1117,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                         // reset ResourceMatchingScope to SELF, ignoreDescendantDeny to true
                         session.resourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF)
                                 .ignoreDescendantDeny(true);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug(
-                                    "evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAndDescendantsAuthorized={}",
+                        LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled={}, isColumnFamilyAndDescendantsAuthorized={}",
                                     isColumnAuthOptimizationEnabled, isColumnFamilyAndDescendantsAuthorized);
-                        }
                         if (isColumnFamilyAndDescendantsAuthorized) {
                             familiesFullyAuthorized.add(family);
                             if (auditEvent != null) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled ={}, adding family {} to familiesFullyAuthorized", isColumnAuthOptimizationEnabled, family);
-                                }
+                                LOG.debug("evaluateAccess: isColumnAuthOptimizationEnabled ={}, adding family {} to familiesFullyAuthorized", isColumnAuthOptimizationEnabled, family);
                                 familyLevelAccessEvents.add(auditEvent);
                             }
                             continue;
@@ -1177,18 +1133,14 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 Iterator<String> columnIterator    = new ColumnIterator(columns);
                 while (columnIterator.hasNext()) {
                     String column = columnIterator.next();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("evaluateAccess: Processing column: {}", column);
-                    }
+                    LOG.debug("evaluateAccess: Processing column: {}", column);
                     //buildRequest required again since now column is being set
                     session.column(column)
                             .buildRequest()
                             .authorize();
                     AuthzAuditEvent auditEvent = auditHandler.getAndDiscardMostRecentEvent();
                     if (session.isAuthorized()) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: has column level access [{}, {}]", family, column);
-                        }
+                        LOG.debug("evaluateAccess: has column level access [{}, {}]", family, column);
                         // we need to do 3 things: housekeeping, capturing audit events, building the results cache for filter
                         somethingIsAccessible = true;
                         accessibleColumns.add(column);
@@ -1197,9 +1149,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                             authorizedEvents.add(auditEvent);
                         }
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("evaluateAccess: no column level access [{}, {}]", family, column);
-                        }
+                        LOG.debug("evaluateAccess: no column level access [{}, {}]", family, column);
+
                         somethingIsAccessible  = false;
                         everythingIsAccessible = false;
                         denialReason           = String.format("Insufficient permissions for user ‘%s',action: %s, tableName:%s, family:%s, column: %s", user.getName(), operation, table, family, column);
@@ -1225,9 +1176,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     }
 
     Filter authorizeAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env, final Map<byte[], NavigableSet<byte[]>> familyMap, String commandStr) throws AccessDeniedException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> authorizeAccess");
-        }
+        LOG.debug("==> authorizeAccess");
         RangerPerfTracer perf = null;
 
         try {
@@ -1253,9 +1202,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             }
         } finally {
             RangerPerfTracer.log(perf);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== authorizeAccess");
-            }
+            LOG.debug("<== authorizeAccess");
         }
     }
 
@@ -1293,11 +1240,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     void authorizeAccess(ObserverContext<?> ctx, String operation, String otherInformation, Action action, String table, String columnFamily, String column) throws AccessDeniedException {
         User   user   = getActiveUser(ctx);
         String access = authUtils.getAccess(action);
-        if (LOG.isDebugEnabled()) {
-            final String format  = "authorizeAccess: %s: Operation[%s], Info[%s], access[%s], table[%s], columnFamily[%s], column[%s]";
-            String       message = String.format(format, "Entering", operation, otherInformation, access, table, columnFamily, column);
-            LOG.debug(message);
-        }
+        LOG.debug("authorizeAccess: Entering : Operation[{}], Info[{}], access[{}], table[{}], columnFamily[{}], column[{}]",
+                operation, otherInformation, access, table, columnFamily, column);
 
         final String format = "authorizeAccess: %s: Operation[%s], Info[%s], access[%s], table[%s], columnFamily[%s], column[%s], allowed[%s], reason[%s]";
         if (canSkipAccessCheck(user, operation, access, table)) {
@@ -1707,10 +1651,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         return ret;
     }
 
-    private void cleanUp_HBaseRangerPlugin() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin()");
-        }
+    private void cleanUpHBaseRangerPlugin() {
+        LOG.debug("==> RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin()");
+
         if (hbasePlugin != null) {
             hbasePlugin.setHBaseShuttingDown(true);
             hbasePlugin.cleanup();
@@ -1719,9 +1662,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
                 auditProviderFactory.shutdown();
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin() completed!");
-        }
+
+        LOG.debug("<== RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin() completed!");
     }
 
     private String getCommandString(String operationName, String tableNameStr, Map<String, Object> opMetaData) {

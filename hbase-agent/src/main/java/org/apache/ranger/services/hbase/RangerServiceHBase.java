@@ -57,9 +57,7 @@ public class RangerServiceHBase extends RangerBaseService {
 
         String serviceName = getServiceName();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceHBase.validateConfig() Service: ({} )", serviceName);
-        }
+        LOG.debug("==> RangerServiceHBase.validateConfig() Service: ({} )", serviceName);
         if (configs != null) {
             try {
                 ret = HBaseResourceMgr.connectionTest(serviceName, configs);
@@ -68,9 +66,8 @@ public class RangerServiceHBase extends RangerBaseService {
                 throw e;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceHBase.validateConfig() Response : ({} )", ret);
-        }
+        LOG.debug("<== RangerServiceHBase.validateConfig() Response : ({} )", ret);
+
         return ret;
     }
 
@@ -81,9 +78,7 @@ public class RangerServiceHBase extends RangerBaseService {
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceHBase.lookupResource() Service : {} Context: ({})", serviceName, context);
-        }
+        LOG.debug("==> RangerServiceHBase.lookupResource() Service : {} Context: ({})", serviceName, context);
 
         if (context != null) {
             try {
@@ -93,17 +88,14 @@ public class RangerServiceHBase extends RangerBaseService {
                 throw e;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceHBase.lookupResource() Response: ({})", ret);
-        }
+        LOG.debug("<== RangerServiceHBase.lookupResource() Response: ({})", ret);
+
         return ret;
     }
 
     @Override
     public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceHbase.getDefaultRangerPolicies()");
-        }
+        LOG.debug("==> RangerServiceHbase.getDefaultRangerPolicies()");
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
         for (RangerPolicy defaultPolicy : ret) {
@@ -119,9 +111,8 @@ public class RangerServiceHBase extends RangerBaseService {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceHbase.getDefaultRangerPolicies()");
-        }
+        LOG.debug("<== RangerServiceHbase.getDefaultRangerPolicies()");
+
         return ret;
     }
 }

@@ -117,9 +117,8 @@ public class HBaseConnectionMgr {
             LOG.error("Service Name not found with name " + serviceName,
                     new Throwable());
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HBaseConnectionMgr.getHBaseConnection() HbaseClient : " + client);
-        }
+        LOG.debug("<== HBaseConnectionMgr.getHBaseConnection() HbaseClient : {}", client);
+
         return client;
     }
 }

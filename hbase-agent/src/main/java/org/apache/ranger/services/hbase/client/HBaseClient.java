@@ -176,9 +176,7 @@ public class HBaseClient extends BaseClient {
     }
 
     public List<String> getTableList(final String tableNameMatching, final List<String> existingTableList) throws HadoopException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> HbaseClient.getTableList()  tableNameMatching " + tableNameMatching + " ExisitingTableList " + existingTableList);
-        }
+        LOG.debug("==> HbaseClient.getTableList()  tableNameMatching {} ExisitingTableList {}", tableNameMatching, existingTableList);
 
         List<String> ret = null;
         final String errMsg = " You can still save the repository and start creating "
@@ -264,16 +262,12 @@ public class HBaseClient extends BaseClient {
                 }
             });
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HbaseClient.getTableList() " + ret);
-        }
+        LOG.debug("<== HbaseClient.getTableList() {}", ret);
         return ret;
     }
 
     public List<String> getColumnFamilyList(final String columnFamilyMatching, final List<String> tableList, final List<String> existingColumnFamilies) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> HbaseClient.getColumnFamilyList()  columnFamilyMatching " + columnFamilyMatching + " ExisitingTableList " + tableList + "existingColumnFamilies " + existingColumnFamilies);
-        }
+        LOG.debug("==> HbaseClient.getColumnFamilyList()  columnFamilyMatching {} ExisitingTableList {}existingColumnFamilies {}", columnFamilyMatching, tableList, existingColumnFamilies);
 
         List<String> ret = null;
         final String errMsg = " You can still save the repository and start creating "
@@ -384,9 +378,7 @@ public class HBaseClient extends BaseClient {
                 throw hdpException;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HbaseClient.getColumnFamilyList() " + ret);
-        }
+        LOG.debug("<== HbaseClient.getColumnFamilyList() {}", ret);
         return ret;
     }
 

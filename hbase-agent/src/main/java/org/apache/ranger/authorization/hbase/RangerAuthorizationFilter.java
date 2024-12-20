@@ -58,25 +58,19 @@ public class RangerAuthorizationFilter extends FilterBase {
 
     @Override
     public ReturnCode filterKeyValue(Cell kv) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> filterKeyValue");
-        }
+        LOG.debug("==> filterKeyValue");
 
         String family      = null;
         byte[] familyBytes = CellUtil.cloneFamily(kv);
         if (familyBytes.length > 0) {
             family = Bytes.toString(familyBytes);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("filterKeyValue: evaluating family[{}].", family);
-            }
+            LOG.debug("filterKeyValue: evaluating family[{}].", family);
         }
         String column    = null;
         byte[] qualifier = CellUtil.cloneQualifier(kv);
         if (qualifier.length > 0) {
             column = Bytes.toString(qualifier);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("filterKeyValue: evaluating column[{}].", column);
-            }
+            LOG.debug("filterKeyValue: evaluating column[{}].", column);
         } else {
             LOG.warn("filterKeyValue: empty/null column set! Unexpected!");
         }
@@ -129,9 +123,7 @@ public class RangerAuthorizationFilter extends FilterBase {
                 LOG.debug("filterKeyValue: Access denied.  Denial not audited.");
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("filterKeyValue: {}", result);
-        }
+        LOG.debug("filterKeyValue: {}", result);
         return result;
     }
 

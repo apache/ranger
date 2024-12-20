@@ -34,14 +34,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
     // only to detect problems with initialization order, not for thread-safety.
-    static final AtomicBoolean                _Initialized = new AtomicBoolean(false);
+    static final AtomicBoolean                isInitialized = new AtomicBoolean(false);
     // should never be null
-    static final AtomicReference<Set<String>> _SuperUsers  = new AtomicReference<>(new HashSet<>());
-    private static final Logger LOG                   = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
+    static final AtomicReference<Set<String>> superUsers    = new AtomicReference<>(new HashSet<>());
+    private static final Logger               LOG          = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
     private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
     public static void initialize(Configuration conf) {
-        if (_Initialized.get()) {
+        if (isInitialized.get()) {
             LOG.warn("HbaseUserUtilsImpl.initialize: Unexpected: initialization called more than once!");
         } else {
             if (conf == null) {
@@ -55,10 +55,10 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
                         LOG.info("HbaseUserUtilsImpl.initialize: Adding Super User({})", user);
                         superUsers.add(user);
                     }
-                    _SuperUsers.set(superUsers);
+                    HbaseUserUtilsImpl.superUsers.set(superUsers);
                 }
             }
-            _Initialized.set(true);
+            isInitialized.set(true);
         }
     }
 
@@ -116,14 +116,14 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
      */
     @Override
     public boolean isSuperUser(User user) {
-        if (!_Initialized.get()) {
+        if (!isInitialized.get()) {
             LOG.error("HbaseUserUtilsImpl.isSuperUser: Internal error: called before initialization was complete!");
         }
-        Set<String> superUsers = _SuperUsers.get(); // can never be null
+        Set<String> superUsers = HbaseUserUtilsImpl.superUsers.get(); // can never be null
         boolean     isSuper    = superUsers.contains(user.getShortName());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("IsSuperCheck on [{}] returns [{}]", user.getShortName(), isSuper);
-        }
+
+        LOG.debug("IsSuperCheck on [{}] returns [{}]", user.getShortName(), isSuper);
+
         return isSuper;
     }
 }

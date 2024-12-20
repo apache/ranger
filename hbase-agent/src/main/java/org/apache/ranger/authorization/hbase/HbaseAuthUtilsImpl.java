@@ -84,10 +84,9 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
         RegionInfo hri          = regionServerEnv.getRegion().getRegionInfo();
         byte[]     tableName    = hri.getTable().getName();
         String     tableNameStr = Bytes.toString(tableName);
-        if (LOG.isDebugEnabled()) {
-            String message = String.format("getTable: Returning tableName[%s]", tableNameStr);
-            LOG.debug(message);
-        }
+
+        LOG.debug("getTable: Returning tableName[{}]", tableNameStr);
+
         return tableNameStr;
     }
 }

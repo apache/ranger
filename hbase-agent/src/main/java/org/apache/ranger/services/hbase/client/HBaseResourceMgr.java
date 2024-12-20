@@ -40,9 +40,7 @@ public class HBaseResourceMgr {
 
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
         Map<String, Object> ret = null;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: " + serviceName + "Configs" + configs);
-        }
+        LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: {} Configs{}", serviceName, configs);
 
         try {
             ret = HBaseClient.connectionTest(serviceName, configs);
@@ -50,9 +48,7 @@ public class HBaseResourceMgr {
             LOG.error("<== HBaseResourceMgr.connectionTest() Error: " + e);
             throw e;
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HBaseResourceMgr.connectionTest() Result: " + ret);
-        }
+        LOG.debug("<== HBaseResourceMgr.connectionTest() Result: {}", ret);
         return ret;
     }
 
@@ -66,9 +62,7 @@ public class HBaseResourceMgr {
         List<String>              tableList        = null;
         List<String>              columnFamilyList = null;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
-        }
+        LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
 
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
@@ -92,9 +86,8 @@ public class HBaseResourceMgr {
             final List<String> finalcolumnFamilyList = columnFamilyList;
 
             try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"" + userInput + "\" configs: " + configs + " context: " + context);
-                }
+                LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"{}\" configs: {} context: {}", userInput, configs, context);
+
                 final HBaseClient      hBaseClient = new HBaseConnectionMgr().getHBaseConnection(serviceName, serviceType, configs);
                 Callable<List<String>> callableObj = null;
 
@@ -148,9 +141,7 @@ public class HBaseResourceMgr {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HBaseResourceMgr.getHBaseResource() Result :" + resultList);
-        }
+        LOG.debug("<== HBaseResourceMgr.getHBaseResource() Result :{}", resultList);
 
         return resultList;
     }

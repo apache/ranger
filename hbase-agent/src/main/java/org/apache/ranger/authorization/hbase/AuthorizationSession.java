@@ -178,9 +178,7 @@ public class AuthorizationSession {
         // session can be reused so reset its state
         zapAuthorizationState();
         request = createRangerRequest();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Built request: {}", request.toString());
-        }
+        LOG.debug("Built request: {}", request);
         return this;
     }
 
@@ -195,9 +193,8 @@ public class AuthorizationSession {
         } else {
             // ok to pass potentially null handler to policy engine.  Null handler effectively suppresses the audit.
             if (auditHandler != null && superUser) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Setting super-user override on audit handler");
-                }
+                LOG.debug("Setting super-user override on audit handler");
+
                 auditHandler.setSuperUserOverride(superUser);
             }
             result = authorizer.isAccessAllowed(request, auditHandler);
@@ -219,9 +216,7 @@ public class AuthorizationSession {
     }
 
     void publishResults() throws AccessDeniedException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AuthorizationSession.publishResults()");
-        }
+        LOG.debug("==> AuthorizationSession.publishResults()");
 
         boolean authorized = isAuthorized();
         if (auditHandler != null && isAudited()) {
@@ -253,15 +248,12 @@ public class AuthorizationSession {
             // and throw and exception... callers expect this behavior
             String reason  = getDenialReason();
             String message = getLogMessage(false, reason);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== AuthorizationSession.publishResults: throwing exception: {}", message);
-            }
+            LOG.debug("<== AuthorizationSession.publishResults: throwing exception: {}", message);
+
             throw new AccessDeniedException("Insufficient permissions for user '" + user.getName() + "' (action=" + access + ")");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AuthorizationSession.publishResults()");
-        }
+        LOG.debug("<== AuthorizationSession.publishResults()");
     }
 
     boolean isAudited() {
@@ -284,9 +276,7 @@ public class AuthorizationSession {
             allowed = result.getIsAllowed();
         }
         if (!allowed && superUser) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("User [{}] is a superUser!  Overriding policy engine's decision.  Request is deemed authorized!", user);
-            }
+            LOG.debug("User [{}] is a superUser!  Overriding policy engine's decision.  Request is deemed authorized!", user);
             allowed = true;
         }
         return allowed;
