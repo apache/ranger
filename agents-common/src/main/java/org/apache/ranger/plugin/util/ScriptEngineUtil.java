@@ -31,8 +31,20 @@ import javax.script.ScriptEngine;
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
+    private static final String   SCRIPT_ENGINE_CREATOR_NASHHORN = "org.apache.ranger.plugin.util.NashornScriptEngineCreator";
+    private static final String   SCRIPT_ENGINE_CREATOR_GRAAL    = "org.apache.ranger.plugin.util.GraalScriptEngineCreator";
+    private static final String   SCRIPT_ENGINE_CREATOR_JS       = "org.apache.ranger.plugin.util.JavaScriptEngineCreator";
+    private static final String[] SCRIPT_ENGINE_CREATORS         = new String[] {SCRIPT_ENGINE_CREATOR_NASHHORN, SCRIPT_ENGINE_CREATOR_GRAAL, SCRIPT_ENGINE_CREATOR_JS};
+    private static final int      JVM_MAJOR_CLASS_VERSION_JDK8   = 52;
+    private static final int      JVM_MAJOR_CLASS_VERSION_JDK15  = 59;
+    private static final int      JVM_MAJOR_CLASS_VERSION        = getJVMMajorClassVersion();
+
     private static volatile ScriptEngineCreator SCRIPT_ENGINE_CREATOR             = null;
     private static volatile boolean             SCRIPT_ENGINE_CREATOR_INITIALIZED = false;
+
+    private ScriptEngineUtil() {
+        // to block instantiation
+    }
 
     // for backward compatibility with any plugin that might use this API
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
@@ -95,12 +107,7 @@ public class ScriptEngineUtil {
     }
 
     private static void initScriptEngineCreator(String serviceType) {
-        String[] engineCreators = new String[] { "org.apache.ranger.plugin.util.NashornScriptEngineCreator",
-                                                 "org.apache.ranger.plugin.util.GraalScriptEngineCreator",
-                                                 "org.apache.ranger.plugin.util.JavaScriptEngineCreator"
-                                               };
-
-        for (String creatorClsName : engineCreators) {
+        for (String creatorClsName : SCRIPT_ENGINE_CREATORS) {
             ScriptEngineCreator creator = null;
 
             try {
@@ -108,7 +115,19 @@ public class ScriptEngineUtil {
 
                 creator = creatorClass.newInstance();
             } catch (Throwable t) {
-                LOG.warn("initScriptEngineCreator(): failed to instantiate engine creator {}", creatorClsName, t);
+                boolean logWarn;
+
+                if (creatorClsName.equals(SCRIPT_ENGINE_CREATOR_NASHHORN)) { // not available JDK15 onwards
+                    logWarn = JVM_MAJOR_CLASS_VERSION < JVM_MAJOR_CLASS_VERSION_JDK15;
+                } else if (creatorClsName.equals(SCRIPT_ENGINE_CREATOR_GRAAL)) { // available only after JDK15 onwards
+                    logWarn = JVM_MAJOR_CLASS_VERSION >= JVM_MAJOR_CLASS_VERSION_JDK15;
+                } else {
+                    logWarn = true;
+                }
+
+                if (logWarn) {
+                    LOG.warn("initScriptEngineCreator(): failed to instantiate engine creator {}", creatorClsName, t);
+                }
             }
 
             if (creator == null) {
@@ -137,6 +156,21 @@ public class ScriptEngineUtil {
                 break;
             }
         }
+    }
+
+    private static int getJVMMajorClassVersion() {
+        int ret = JVM_MAJOR_CLASS_VERSION_JDK8;
+
+        try {
+            String   javaClassVersion = System.getProperty("java.class.version");
+            String[] versionElements  = javaClassVersion != null ? javaClassVersion.split("\\.") : new String[0];
+
+            ret = versionElements.length > 0 ? Integer.parseInt(versionElements[0]) : JVM_MAJOR_CLASS_VERSION_JDK8;
+        } catch (Throwable t) {
+            // ignore
+        }
+
+        return ret;
     }
 
     private static ClassLoader getPrevActiveClassLoader(String serviceType) {
