@@ -36,7 +36,6 @@ public class ScriptEngineUtil {
     private static final int      JVM_MAJOR_CLASS_VERSION_JDK15  = 59;
     private static final int      JVM_MAJOR_CLASS_VERSION        = getJVMMajorClassVersion();
 
-
     private static volatile ScriptEngineCreator scriptEngineCreator;
     private static volatile boolean             scriptEngineCreatorInitialized;
 
