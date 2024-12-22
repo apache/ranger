@@ -18,6 +18,7 @@
 
 package org.apache.ranger.authorization.knox;
 
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public class RangerPDPKnoxFilter implements Filter {
     private static final String RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME = "org.apache.ranger.authorization.knox.RangerPDPKnoxFilter";
 
     private Filter                  rangerPDPKnoxFilteImpl;
-    private RangerPluginClassLoader rangerPluginClassLoader;
+    private RangerPluginClassLoader pluginClassLoader;
 
     public RangerPDPKnoxFilter() {
         LOG.debug("==> RangerPDPKnoxFilter.RangerPDPKnoxFilter()");
@@ -50,21 +51,21 @@ public class RangerPDPKnoxFilter implements Filter {
 
     @Override
     public void init(FilterConfig fiterConfig) throws ServletException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
             rangerPDPKnoxFilteImpl.init(fiterConfig);
         }
     }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("doFilter")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "doFilter")) {
             rangerPDPKnoxFilteImpl.doFilter(servletRequest, servletResponse, filterChain);
         }
     }
 
     @Override
     public void destroy() {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("destroy")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "destroy")) {
             rangerPDPKnoxFilteImpl.destroy();
         }
     }
@@ -73,12 +74,12 @@ public class RangerPDPKnoxFilter implements Filter {
         LOG.debug("==> RangerPDPKnoxFilter.init0()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
-            Class<Filter> cls = (Class<Filter>) Class.forName(RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<Filter> cls = (Class<Filter>) Class.forName(RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init0")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init0")) {
                 rangerPDPKnoxFilteImpl = cls.newInstance();
             }
         } catch (Exception e) {
@@ -86,28 +87,5 @@ public class RangerPDPKnoxFilter implements Filter {
         }
 
         LOG.debug("<== RangerPDPKnoxFilter.init0()");
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerPDPKnoxFilter.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerPDPKnoxFilter.{}()", methodName);
-        }
     }
 }

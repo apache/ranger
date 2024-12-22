@@ -86,6 +86,7 @@ import org.apache.hadoop.hbase.regionserver.querymatcher.DeleteTracker;
 import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,8 +104,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     private static final String RANGER_PLUGIN_TYPE                     = "hbase";
     private static final String RANGER_HBASE_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor";
 
-    private RangerPluginClassLoader                            rangerPluginClassLoader;
-    private Object                                             impl;
+    private RangerPluginClassLoader                            pluginClassLoader;
     private MasterObserver                                     implMasterObserver;
     private RegionObserver                                     implRegionObserver;
     private RegionServerObserver                               implRegionServerObserver;
@@ -150,7 +150,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 
     @Override
     public void start(CoprocessorEnvironment env) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("start")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "start")) {
             if (env instanceof MasterCoprocessorEnvironment) {
                 implMasterCoprocessor.start(env);
             } else if (env instanceof RegionServerCoprocessorEnvironment) {
@@ -168,266 +168,266 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 
     @Override
     public void preCreateTable(ObserverContext<MasterCoprocessorEnvironment> c, TableDescriptor desc, RegionInfo[] regions) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCreateTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCreateTable")) {
             implMasterObserver.preCreateTable(c, desc, regions);
         }
     }
 
     @Override
     public void postCreateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableDescriptor desc, RegionInfo[] regions) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCreateTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCreateTable")) {
             implMasterObserver.postCreateTable(ctx, desc, regions);
         }
     }
 
     @Override
     public void preCreateTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableDescriptor desc, RegionInfo[] regions) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCreateTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCreateTableAction")) {
             implMasterObserver.preCreateTableAction(ctx, desc, regions);
         }
     }
 
     @Override
     public void postCompletedCreateTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableDescriptor desc, RegionInfo[] regions) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedCreateTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedCreateTableAction")) {
             implMasterObserver.postCompletedCreateTableAction(ctx, desc, regions);
         }
     }
 
     @Override
     public void preDeleteTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDeleteTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDeleteTable")) {
             implMasterObserver.preDeleteTable(c, tableName);
         }
     }
 
     @Override
     public void postDeleteTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postDeleteTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postDeleteTable")) {
             implMasterObserver.postDeleteTable(ctx, tableName);
         }
     }
 
     @Override
     public void preDeleteTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDeleteTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDeleteTableAction")) {
             implMasterObserver.preDeleteTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void postCompletedDeleteTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedDeleteTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedDeleteTableAction")) {
             implMasterObserver.postCompletedDeleteTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void preTruncateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preTruncateTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preTruncateTable")) {
             implMasterObserver.preTruncateTable(ctx, tableName);
         }
     }
 
     @Override
     public void postTruncateTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postTruncateTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postTruncateTable")) {
             implMasterObserver.postTruncateTable(ctx, tableName);
         }
     }
 
     @Override
     public void preTruncateTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preTruncateTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preTruncateTableAction")) {
             implMasterObserver.preTruncateTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void postCompletedTruncateTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedTruncateTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedTruncateTableAction")) {
             implMasterObserver.postCompletedTruncateTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void preModifyTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName, TableDescriptor htd) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preModifyTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preModifyTable")) {
             implMasterObserver.preModifyTable(c, tableName, htd);
         }
     }
 
     @Override
     public void postModifyTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName, TableDescriptor htd) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postModifyTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postModifyTable")) {
             implMasterObserver.postModifyTable(ctx, tableName, htd);
         }
     }
 
     @Override
     public void preModifyTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName, TableDescriptor htd) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preModifyTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preModifyTableAction")) {
             implMasterObserver.preModifyTableAction(ctx, tableName, htd);
         }
     }
 
     @Override
     public void postCompletedModifyTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName, TableDescriptor htd) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedModifyTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedModifyTableAction")) {
             implMasterObserver.postCompletedModifyTableAction(ctx, tableName, htd);
         }
     }
 
     @Override
     public void preEnableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preEnableTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preEnableTable")) {
             implMasterObserver.preEnableTable(c, tableName);
         }
     }
 
     @Override
     public void postEnableTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postEnableTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postEnableTable")) {
             implMasterObserver.postEnableTable(ctx, tableName);
         }
     }
 
     @Override
     public void preEnableTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preEnableTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preEnableTableAction")) {
             implMasterObserver.preEnableTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void postCompletedEnableTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedEnableTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedEnableTableAction")) {
             implMasterObserver.postCompletedEnableTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void preDisableTable(ObserverContext<MasterCoprocessorEnvironment> c, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDisableTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDisableTable")) {
             implMasterObserver.preDisableTable(c, tableName);
         }
     }
 
     @Override
     public void postDisableTable(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postDisableTable")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postDisableTable")) {
             implMasterObserver.postDisableTable(ctx, tableName);
         }
     }
 
     @Override
     public void preDisableTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDisableTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDisableTableAction")) {
             implMasterObserver.preDisableTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void postCompletedDisableTableAction(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompletedDisableTableAction")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompletedDisableTableAction")) {
             implMasterObserver.postCompletedDisableTableAction(ctx, tableName);
         }
     }
 
     @Override
     public void preAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext, long procId) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preAbortProcedure")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preAbortProcedure")) {
             implMasterObserver.preAbortProcedure(observerContext, procId);
         }
     }
 
     @Override
     public void postAbortProcedure(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postAbortProcedure")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postAbortProcedure")) {
             implMasterObserver.postAbortProcedure(observerContext);
         }
     }
 
     @Override
     public void preGetProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preGetProcedures")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preGetProcedures")) {
             implMasterObserver.preGetProcedures(observerContext);
         }
     }
 
     @Override
     public void postGetProcedures(ObserverContext<MasterCoprocessorEnvironment> observerContext) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postGetProcedures")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postGetProcedures")) {
             implMasterObserver.postGetProcedures(observerContext);
         }
     }
 
     @Override
     public void preMove(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo region, ServerName srcServer, ServerName destServer) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preMove")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preMove")) {
             implMasterObserver.preMove(c, region, srcServer, destServer);
         }
     }
 
     @Override
     public void postMove(ObserverContext<MasterCoprocessorEnvironment> ctx, RegionInfo region, ServerName srcServer, ServerName destServer) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postMove")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postMove")) {
             implMasterObserver.postMove(ctx, region, srcServer, destServer);
         }
     }
 
     @Override
     public void preAssign(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preAssign")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preAssign")) {
             implMasterObserver.preAssign(c, regionInfo);
         }
     }
 
     @Override
     public void postAssign(ObserverContext<MasterCoprocessorEnvironment> ctx, RegionInfo regionInfo) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postAssign")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postAssign")) {
             implMasterObserver.postAssign(ctx, regionInfo);
         }
     }
 
     @Override
     public void preUnassign(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo, boolean force) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preUnassign")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preUnassign")) {
             implMasterObserver.preUnassign(c, regionInfo, force);
         }
     }
 
     @Override
     public void postUnassign(ObserverContext<MasterCoprocessorEnvironment> ctx, RegionInfo regionInfo, boolean force) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postUnassign")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postUnassign")) {
             implMasterObserver.postUnassign(ctx, regionInfo, force);
         }
     }
 
     @Override
     public void preRegionOffline(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preRegionOffline")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preRegionOffline")) {
             implMasterObserver.preRegionOffline(c, regionInfo);
         }
     }
 
     @Override
     public void postRegionOffline(ObserverContext<MasterCoprocessorEnvironment> ctx, RegionInfo regionInfo) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postRegionOffline")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postRegionOffline")) {
             implMasterObserver.postRegionOffline(ctx, regionInfo);
         }
     }
 
     @Override
     public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c, BalanceRequest request) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preBalance")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preBalance")) {
             implMasterObserver.preBalance(c, request);
         }
     }
 
     @Override
     public void postBalance(ObserverContext<MasterCoprocessorEnvironment> ctx, BalanceRequest request, List<RegionPlan> plans) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postBalance")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postBalance")) {
             implMasterObserver.postBalance(ctx, request, plans);
         }
     }
@@ -442,294 +442,294 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 
     @Override
     public void preBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> c, boolean newValue) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preBalanceSwitch")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preBalanceSwitch")) {
             implMasterObserver.preBalanceSwitch(c, newValue);
         }
     }
 
     @Override
     public void postBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> ctx, boolean oldValue, boolean newValue) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postBalanceSwitch")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postBalanceSwitch")) {
             implMasterObserver.postBalanceSwitch(ctx, oldValue, newValue);
         }
     }
 
     @Override
     public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preShutdown")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preShutdown")) {
             implMasterObserver.preShutdown(c);
         }
     }
 
     @Override
     public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preStopMaster")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preStopMaster")) {
             implMasterObserver.preStopMaster(c);
         }
     }
 
     @Override
     public void postStartMaster(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postStartMaster")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postStartMaster")) {
             implMasterObserver.postStartMaster(ctx);
         }
     }
 
     @Override
     public void preMasterInitialization(ObserverContext<MasterCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preMasterInitialization")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preMasterInitialization")) {
             implMasterObserver.preMasterInitialization(ctx);
         }
     }
 
     @Override
     public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSnapshot")) {
             implMasterObserver.preSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void postSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSnapshot")) {
             implMasterObserver.postSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void preListSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preListSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preListSnapshot")) {
             implMasterObserver.preListSnapshot(ctx, snapshot);
         }
     }
 
     @Override
     public void postListSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postListSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postListSnapshot")) {
             implMasterObserver.postListSnapshot(ctx, snapshot);
         }
     }
 
     @Override
     public void preCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCloneSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCloneSnapshot")) {
             implMasterObserver.preCloneSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void postCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCloneSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCloneSnapshot")) {
             implMasterObserver.postCloneSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void preRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preRestoreSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preRestoreSnapshot")) {
             implMasterObserver.preRestoreSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void postRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postRestoreSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postRestoreSnapshot")) {
             implMasterObserver.postRestoreSnapshot(ctx, snapshot, hTableDescriptor);
         }
     }
 
     @Override
     public void preDeleteSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDeleteSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDeleteSnapshot")) {
             implMasterObserver.preDeleteSnapshot(ctx, snapshot);
         }
     }
 
     @Override
     public void postDeleteSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postDeleteSnapshot")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postDeleteSnapshot")) {
             implMasterObserver.postDeleteSnapshot(ctx, snapshot);
         }
     }
 
     @Override
     public void preGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preGetTableDescriptors")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preGetTableDescriptors")) {
             implMasterObserver.preGetTableDescriptors(ctx, tableNamesList, descriptors, regex);
         }
     }
 
     @Override
     public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postGetTableDescriptors")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postGetTableDescriptors")) {
             implMasterObserver.postGetTableDescriptors(ctx, tableNamesList, descriptors, regex);
         }
     }
 
     @Override
     public void preGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preGetTableNames")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preGetTableNames")) {
             implMasterObserver.preGetTableNames(ctx, descriptors, regex);
         }
     }
 
     @Override
     public void postGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postGetTableNames")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postGetTableNames")) {
             implMasterObserver.postGetTableNames(ctx, descriptors, regex);
         }
     }
 
     @Override
     public void preCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCreateNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCreateNamespace")) {
             implMasterObserver.preCreateNamespace(ctx, ns);
         }
     }
 
     @Override
     public void postCreateNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCreateNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCreateNamespace")) {
             implMasterObserver.postCreateNamespace(ctx, ns);
         }
     }
 
     @Override
     public void preDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDeleteNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDeleteNamespace")) {
             implMasterObserver.preDeleteNamespace(ctx, namespace);
         }
     }
 
     @Override
     public void postDeleteNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postDeleteNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postDeleteNamespace")) {
             implMasterObserver.postDeleteNamespace(ctx, namespace);
         }
     }
 
     @Override
     public void preModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preModifyNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preModifyNamespace")) {
             implMasterObserver.preModifyNamespace(ctx, ns);
         }
     }
 
     @Override
     public void postModifyNamespace(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postModifyNamespace")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postModifyNamespace")) {
             implMasterObserver.postModifyNamespace(ctx, ns);
         }
     }
 
     @Override
     public void preGetNamespaceDescriptor(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preGetNamespaceDescriptor")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preGetNamespaceDescriptor")) {
             implMasterObserver.preGetNamespaceDescriptor(ctx, namespace);
         }
     }
 
     @Override
     public void postGetNamespaceDescriptor(ObserverContext<MasterCoprocessorEnvironment> ctx, NamespaceDescriptor ns) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postGetNamespaceDescriptor")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postGetNamespaceDescriptor")) {
             implMasterObserver.postGetNamespaceDescriptor(ctx, ns);
         }
     }
 
     @Override
     public void preListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<NamespaceDescriptor> descriptors) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preListNamespaceDescriptors")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preListNamespaceDescriptors")) {
             implMasterObserver.preListNamespaceDescriptors(ctx, descriptors);
         }
     }
 
     @Override
     public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<NamespaceDescriptor> descriptors) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postListNamespaceDescriptors")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postListNamespaceDescriptors")) {
             implMasterObserver.postListNamespaceDescriptors(ctx, descriptors);
         }
     }
 
     @Override
     public void preTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preTableFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preTableFlush")) {
             implMasterObserver.preTableFlush(ctx, tableName);
         }
     }
 
     @Override
     public void postTableFlush(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postTableFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postTableFlush")) {
             implMasterObserver.postTableFlush(ctx, tableName);
         }
     }
 
     @Override
     public void preSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSetUserQuota")) {
             implMasterObserver.preSetUserQuota(ctx, userName, quotas);
         }
     }
 
     @Override
     public void postSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSetUserQuota")) {
             implMasterObserver.postSetUserQuota(ctx, userName, quotas);
         }
     }
 
     @Override
     public void preSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, TableName tableName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSetUserQuota")) {
             implMasterObserver.preSetUserQuota(ctx, userName, tableName, quotas);
         }
     }
 
     @Override
     public void postSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, TableName tableName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSetUserQuota")) {
             implMasterObserver.postSetUserQuota(ctx, userName, tableName, quotas);
         }
     }
 
     @Override
     public void preSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, String namespace, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSetUserQuota")) {
             implMasterObserver.preSetUserQuota(ctx, userName, namespace, quotas);
         }
     }
 
     @Override
     public void postSetUserQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String userName, String namespace, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSetUserQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSetUserQuota")) {
             implMasterObserver.postSetUserQuota(ctx, userName, quotas);
         }
     }
 
     @Override
     public void preSetTableQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSetTableQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSetTableQuota")) {
             implMasterObserver.preSetTableQuota(ctx, tableName, quotas);
         }
     }
 
     @Override
     public void postSetTableQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, TableName tableName, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSetTableQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSetTableQuota")) {
             implMasterObserver.postSetTableQuota(ctx, tableName, quotas);
         }
     }
 
     @Override
     public void preSetNamespaceQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preSetNamespaceQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preSetNamespaceQuota")) {
             implMasterObserver.preSetNamespaceQuota(ctx, namespace, quotas);
         }
     }
 
     @Override
     public void postSetNamespaceQuota(ObserverContext<MasterCoprocessorEnvironment> ctx, String namespace, GlobalQuotaSettings quotas) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postSetNamespaceQuota")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postSetNamespaceQuota")) {
             implMasterObserver.postSetNamespaceQuota(ctx, namespace, quotas);
         }
     }
@@ -752,56 +752,56 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 
     @Override
     public void preOpen(ObserverContext<RegionCoprocessorEnvironment> e) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preOpen")) {
             implRegionObserver.preOpen(e);
         }
     }
 
     @Override
     public void postOpen(ObserverContext<RegionCoprocessorEnvironment> c) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postOpen")) {
             implRegionObserver.postOpen(c);
         }
     }
 
     @Override
     public void preFlush(ObserverContext<RegionCoprocessorEnvironment> e, FlushLifeCycleTracker tracker) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preFlush")) {
             implRegionObserver.preFlush(e, tracker);
         }
     }
 
     @Override
     public InternalScanner preFlush(ObserverContext<RegionCoprocessorEnvironment> c, Store store, InternalScanner scanner, FlushLifeCycleTracker tracker) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preFlush")) {
             return implRegionObserver.preFlush(c, store, scanner, tracker);
         }
     }
 
     @Override
     public void postFlush(ObserverContext<RegionCoprocessorEnvironment> c, FlushLifeCycleTracker tracker) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postFlush")) {
             implRegionObserver.postFlush(c, tracker);
         }
     }
 
     @Override
     public void postFlush(ObserverContext<RegionCoprocessorEnvironment> c, Store store, StoreFile resultFile, FlushLifeCycleTracker tracker) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postFlush")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postFlush")) {
             implRegionObserver.postFlush(c, store, resultFile, tracker);
         }
     }
 
     @Override
     public void preCompactSelection(ObserverContext<RegionCoprocessorEnvironment> c, Store store, List<? extends StoreFile> candidates, CompactionLifeCycleTracker request) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCompactSelection")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCompactSelection")) {
             implRegionObserver.preCompactSelection(c, store, candidates, request);
         }
     }
 
     @Override
     public void postCompactSelection(ObserverContext<RegionCoprocessorEnvironment> c, Store store, List<? extends StoreFile> selected, CompactionLifeCycleTracker tracker, CompactionRequest request) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompactSelection")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompactSelection")) {
             implRegionObserver.postCompactSelection(c, store, selected, tracker, request);
         }
     }
@@ -809,7 +809,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public InternalScanner preCompact(ObserverContext<RegionCoprocessorEnvironment> c, Store store, InternalScanner scanner,
             ScanType scanType, CompactionLifeCycleTracker tracker, CompactionRequest request) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCompact")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCompact")) {
             return implRegionObserver.preCompact(c, store, scanner, scanType, tracker, request);
         }
     }
@@ -817,126 +817,126 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public void postCompact(ObserverContext<RegionCoprocessorEnvironment> c, Store store, StoreFile resultFile,
             CompactionLifeCycleTracker tracker, CompactionRequest request) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCompact")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCompact")) {
             implRegionObserver.postCompact(c, store, resultFile, tracker, request);
         }
     }
 
     @Override
     public void preClose(ObserverContext<RegionCoprocessorEnvironment> e, boolean abortRequested) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preClose")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preClose")) {
             implRegionObserver.preClose(e, abortRequested);
         }
     }
 
     @Override
     public void postClose(ObserverContext<RegionCoprocessorEnvironment> c, boolean abortRequested) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postClose")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postClose")) {
             implRegionObserver.postClose(c, abortRequested);
         }
     }
 
     @Override
     public void preGetOp(ObserverContext<RegionCoprocessorEnvironment> rEnv, Get get, List<Cell> result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preGetOp")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preGetOp")) {
             implRegionObserver.preGetOp(rEnv, get, result);
         }
     }
 
     @Override
     public void postGetOp(ObserverContext<RegionCoprocessorEnvironment> c, Get get, List<Cell> result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postGetOp")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postGetOp")) {
             implRegionObserver.postGetOp(c, get, result);
         }
     }
 
     @Override
     public boolean preExists(ObserverContext<RegionCoprocessorEnvironment> c, Get get, boolean exists) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preExists")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preExists")) {
             return implRegionObserver.preExists(c, get, exists);
         }
     }
 
     @Override
     public boolean postExists(ObserverContext<RegionCoprocessorEnvironment> c, Get get, boolean exists) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postExists")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postExists")) {
             return implRegionObserver.postExists(c, get, exists);
         }
     }
 
     @Override
     public void prePut(ObserverContext<RegionCoprocessorEnvironment> c, Put put, WALEdit edit, Durability durability) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("prePut")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "prePut")) {
             implRegionObserver.prePut(c, put, edit, durability);
         }
     }
 
     @Override
     public void postPut(ObserverContext<RegionCoprocessorEnvironment> c, Put put, WALEdit edit, Durability durability) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postPut")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postPut")) {
             implRegionObserver.postPut(c, put, edit, durability);
         }
     }
 
     @Override
     public void preDelete(ObserverContext<RegionCoprocessorEnvironment> c, Delete delete, WALEdit edit, Durability durability) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preDelete")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preDelete")) {
             implRegionObserver.preDelete(c, delete, edit, durability);
         }
     }
 
     @Override
     public void prePrepareTimeStampForDeleteVersion(ObserverContext<RegionCoprocessorEnvironment> c, Mutation mutation, Cell cell, byte[] byteNow, Get get) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("prePrepareTimeStampForDeleteVersion")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "prePrepareTimeStampForDeleteVersion")) {
             implRegionObserver.prePrepareTimeStampForDeleteVersion(c, mutation, cell, byteNow, get);
         }
     }
 
     @Override
     public void postDelete(ObserverContext<RegionCoprocessorEnvironment> c, Delete delete, WALEdit edit, Durability durability) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postDelete")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postDelete")) {
             implRegionObserver.postDelete(c, delete, edit, durability);
         }
     }
 
     @Override
     public void preBatchMutate(ObserverContext<RegionCoprocessorEnvironment> c, MiniBatchOperationInProgress<Mutation> miniBatchOp) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preBatchMutate")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preBatchMutate")) {
             implRegionObserver.preBatchMutate(c, miniBatchOp);
         }
     }
 
     @Override
     public void postBatchMutate(ObserverContext<RegionCoprocessorEnvironment> c, MiniBatchOperationInProgress<Mutation> miniBatchOp) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postBatchMutate")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postBatchMutate")) {
             implRegionObserver.postBatchMutate(c, miniBatchOp);
         }
     }
 
     @Override
     public void postStartRegionOperation(ObserverContext<RegionCoprocessorEnvironment> ctx, Operation operation) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postStartRegionOperation")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postStartRegionOperation")) {
             implRegionObserver.postStartRegionOperation(ctx, operation);
         }
     }
 
     @Override
     public void postCloseRegionOperation(ObserverContext<RegionCoprocessorEnvironment> ctx, Operation operation) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCloseRegionOperation")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCloseRegionOperation")) {
             implRegionObserver.postCloseRegionOperation(ctx, operation);
         }
     }
 
     @Override
     public void postBatchMutateIndispensably(ObserverContext<RegionCoprocessorEnvironment> ctx, MiniBatchOperationInProgress<Mutation> miniBatchOp, boolean success) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postBatchMutateIndispensably")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postBatchMutateIndispensably")) {
             implRegionObserver.postBatchMutateIndispensably(ctx, miniBatchOp, success);
         }
     }
 
     @Override
     public boolean preCheckAndPut(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp, ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCheckAndPut")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCheckAndPut")) {
             return implRegionObserver.preCheckAndPut(c, row, family, qualifier, compareOp, comparator, put, result);
         }
     }
@@ -944,7 +944,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public boolean preCheckAndPutAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp,
             ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCheckAndPutAfterRowLock")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCheckAndPutAfterRowLock")) {
             return implRegionObserver.preCheckAndPutAfterRowLock(c, row, family, qualifier, compareOp, comparator, put, result);
         }
     }
@@ -952,14 +952,14 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public boolean postCheckAndPut(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp,
             ByteArrayComparable comparator, Put put, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCheckAndPut")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCheckAndPut")) {
             return implRegionObserver.postCheckAndPut(c, row, family, qualifier, compareOp, comparator, put, result);
         }
     }
 
     @Override
     public boolean preCheckAndDelete(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp, ByteArrayComparable comparator, Delete delete, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCheckAndDelete")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCheckAndDelete")) {
             return implRegionObserver.preCheckAndDelete(c, row, family, qualifier, compareOp, comparator, delete, result);
         }
     }
@@ -967,7 +967,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public boolean preCheckAndDeleteAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp,
             ByteArrayComparable comparator, Delete delete, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCheckAndDeleteAfterRowLock")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCheckAndDeleteAfterRowLock")) {
             return implRegionObserver.preCheckAndDeleteAfterRowLock(c, row, family, qualifier, compareOp, comparator, delete, result);
         }
     }
@@ -975,112 +975,112 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public boolean postCheckAndDelete(ObserverContext<RegionCoprocessorEnvironment> c, byte[] row, byte[] family, byte[] qualifier, CompareOperator compareOp,
             ByteArrayComparable comparator, Delete delete, boolean result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCheckAndDelete")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCheckAndDelete")) {
             return implRegionObserver.postCheckAndDelete(c, row, family, qualifier, compareOp, comparator, delete, result);
         }
     }
 
     @Override
     public Result preAppend(ObserverContext<RegionCoprocessorEnvironment> c, Append append) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preAppend")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preAppend")) {
             return implRegionObserver.preAppend(c, append);
         }
     }
 
     @Override
     public Result preAppendAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, Append append) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preAppendAfterRowLock")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preAppendAfterRowLock")) {
             return implRegionObserver.preAppendAfterRowLock(c, append);
         }
     }
 
     @Override
     public Result postAppend(ObserverContext<RegionCoprocessorEnvironment> c, Append append, Result result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postAppend")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postAppend")) {
             return implRegionObserver.postAppend(c, append, result);
         }
     }
 
     @Override
     public Result preIncrement(ObserverContext<RegionCoprocessorEnvironment> c, Increment increment) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preIncrement")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preIncrement")) {
             return implRegionObserver.preIncrement(c, increment);
         }
     }
 
     @Override
     public Result preIncrementAfterRowLock(ObserverContext<RegionCoprocessorEnvironment> c, Increment increment) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preIncrementAfterRowLock")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preIncrementAfterRowLock")) {
             return implRegionObserver.preIncrementAfterRowLock(c, increment);
         }
     }
 
     @Override
     public Result postIncrement(ObserverContext<RegionCoprocessorEnvironment> c, Increment increment, Result result) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postIncrement")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postIncrement")) {
             return implRegionObserver.postIncrement(c, increment, result);
         }
     }
 
     @Override
     public void preScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preScannerOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preScannerOpen")) {
             implRegionObserver.preScannerOpen(c, scan);
         }
     }
 
     @Override
     public RegionScanner postScannerOpen(ObserverContext<RegionCoprocessorEnvironment> c, Scan scan, RegionScanner s) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postScannerOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postScannerOpen")) {
             return implRegionObserver.postScannerOpen(c, scan, s);
         }
     }
 
     @Override
     public boolean preScannerNext(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s, List<Result> result, int limit, boolean hasNext) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preScannerNext")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preScannerNext")) {
             return implRegionObserver.preScannerNext(c, s, result, limit, hasNext);
         }
     }
 
     @Override
     public boolean postScannerNext(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s, List<Result> result, int limit, boolean hasNext) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postScannerNext")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postScannerNext")) {
             return implRegionObserver.postScannerNext(c, s, result, limit, hasNext);
         }
     }
 
     @Override
     public boolean postScannerFilterRow(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s, Cell currentCell, boolean hasMore) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postScannerFilterRow")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postScannerFilterRow")) {
             return implRegionObserver.postScannerFilterRow(c, s, currentCell, hasMore);
         }
     }
 
     @Override
     public void preScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preScannerClose")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preScannerClose")) {
             implRegionObserver.preScannerClose(c, s);
         }
     }
 
     @Override
     public void postScannerClose(ObserverContext<RegionCoprocessorEnvironment> c, InternalScanner s) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postScannerClose")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postScannerClose")) {
             implRegionObserver.postScannerClose(c, s);
         }
     }
 
     @Override
     public void preBulkLoadHFile(ObserverContext<RegionCoprocessorEnvironment> ctx, List<Pair<byte[], String>> familyPaths) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preBulkLoadHFile")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preBulkLoadHFile")) {
             implRegionObserver.preBulkLoadHFile(ctx, familyPaths);
         }
     }
 
     @Override
     public void postBulkLoadHFile(ObserverContext<RegionCoprocessorEnvironment> ctx, List<Pair<byte[], String>> familyPaths, Map<byte[], List<Path>> finalPaths) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postBulkLoadHFile")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postBulkLoadHFile")) {
             implRegionObserver.postBulkLoadHFile(ctx, familyPaths, finalPaths);
         }
     }
@@ -1088,7 +1088,7 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public StoreFileReader preStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs, Path p, FSDataInputStreamWrapper in, long size,
             CacheConfig cacheConf, Reference r, StoreFileReader reader) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preStoreFileReaderOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preStoreFileReaderOpen")) {
             return implRegionObserver.preStoreFileReaderOpen(ctx, fs, p, in, size, cacheConf, r, reader);
         }
     }
@@ -1096,49 +1096,49 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
     @Override
     public StoreFileReader postStoreFileReaderOpen(ObserverContext<RegionCoprocessorEnvironment> ctx, FileSystem fs, Path p, FSDataInputStreamWrapper in, long size,
             CacheConfig cacheConf, Reference r, StoreFileReader reader) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postStoreFileReaderOpen")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postStoreFileReaderOpen")) {
             return implRegionObserver.postStoreFileReaderOpen(ctx, fs, p, in, size, cacheConf, r, reader);
         }
     }
 
     @Override
     public Cell postMutationBeforeWAL(ObserverContext<RegionCoprocessorEnvironment> ctx, MutationType opType, Mutation mutation, Cell oldCell, Cell newCell) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postMutationBeforeWAL")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postMutationBeforeWAL")) {
             return implRegionObserver.postMutationBeforeWAL(ctx, opType, mutation, oldCell, newCell);
         }
     }
 
     @Override
     public DeleteTracker postInstantiateDeleteTracker(ObserverContext<RegionCoprocessorEnvironment> ctx, DeleteTracker delTracker) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postInstantiateDeleteTracker")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postInstantiateDeleteTracker")) {
             return implRegionObserver.postInstantiateDeleteTracker(ctx, delTracker);
         }
     }
 
     @Override
     public void preStopRegionServer(ObserverContext<RegionServerCoprocessorEnvironment> env) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preStopRegionServer")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preStopRegionServer")) {
             implRegionServerObserver.preStopRegionServer(env);
         }
     }
 
     @Override
     public void preRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preRollWALWriterRequest")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preRollWALWriterRequest")) {
             implRegionServerObserver.preRollWALWriterRequest(ctx);
         }
     }
 
     @Override
     public void postRollWALWriterRequest(ObserverContext<RegionServerCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postRollWALWriterRequest")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postRollWALWriterRequest")) {
             implRegionServerObserver.postRollWALWriterRequest(ctx);
         }
     }
 
     @Override
     public ReplicationEndpoint postCreateReplicationEndPoint(ObserverContext<RegionServerCoprocessorEnvironment> ctx, ReplicationEndpoint endpoint) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("postCreateReplicationEndPoint")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "postCreateReplicationEndPoint")) {
             return implRegionServerObserver.postCreateReplicationEndPoint(ctx, endpoint);
         }
     }
@@ -1147,49 +1147,49 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 
     @Override
     public void prePrepareBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("prePrepareBulkLoad")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "prePrepareBulkLoad")) {
             implBulkLoadObserver.prePrepareBulkLoad(ctx);
         }
     }
 
     @Override
     public void preCleanupBulkLoad(ObserverContext<RegionCoprocessorEnvironment> ctx) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("preCleanupBulkLoad")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "preCleanupBulkLoad")) {
             implBulkLoadObserver.preCleanupBulkLoad(ctx);
         }
     }
 
     @Override
     public void grant(RpcController controller, GrantRequest request, RpcCallback<GrantResponse> done) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("grant")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "grant")) {
             implAccessControlService.grant(controller, request, done);
         }
     }
 
     @Override
     public void revoke(RpcController controller, RevokeRequest request, RpcCallback<RevokeResponse> done) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("revoke")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "revoke")) {
             implAccessControlService.revoke(controller, request, done);
         }
     }
 
     @Override
     public void getUserPermissions(RpcController controller, GetUserPermissionsRequest request, RpcCallback<GetUserPermissionsResponse> done) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("getUserPermissions")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "getUserPermissions")) {
             implAccessControlService.getUserPermissions(controller, request, done);
         }
     }
 
     @Override
     public void checkPermissions(RpcController controller, CheckPermissionsRequest request, RpcCallback<CheckPermissionsResponse> done) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("checkPermissions")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "checkPermissions")) {
             implAccessControlService.checkPermissions(controller, request, done);
         }
     }
 
     @Override
     public void hasPermission(RpcController controller, AccessControlProtos.HasPermissionRequest request, RpcCallback<AccessControlProtos.HasPermissionResponse> done) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("hasPermission")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "hasPermission")) {
             implAccessControlService.hasPermission(controller, request, done);
         }
     }
@@ -1212,13 +1212,14 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
         LOG.debug("==> RangerAuthorizationCoprocessor.init()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
-            Class<?> cls = Class.forName(RANGER_HBASE_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<?> cls = Class.forName(RANGER_HBASE_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
-                impl                        = cls.newInstance();
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
+                Object impl = cls.newInstance();
+
                 implAccessControlService    = (AccessControlProtos.AccessControlService.Interface) impl;
                 implMasterCoprocessor       = (MasterCoprocessor) impl;
                 implRegionCoprocessor       = (RegionCoprocessor) impl;
@@ -1235,28 +1236,5 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
         }
 
         LOG.debug("<== RangerAuthorizationCoprocessor.init()");
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerAuthorizationCoprocessor.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerAuthorizationCoprocessor.{}()", methodName);
-        }
     }
 }

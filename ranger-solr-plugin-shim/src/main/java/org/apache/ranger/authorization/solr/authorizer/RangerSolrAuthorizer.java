@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.authorization.solr.authorizer;
 
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.solr.common.StringUtils;
 import org.apache.solr.common.util.NamedList;
@@ -40,7 +41,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     private AuthorizationPlugin     rangerSolrAuthorizerImpl;
     private SearchComponent         rangerSearchComponentImpl;
-    private RangerPluginClassLoader rangerPluginClassLoader;
+    private RangerPluginClassLoader pluginClassLoader;
 
     public RangerSolrAuthorizer() {
         LOG.debug("==> RangerSolrAuthorizer.RangerSolrAuthorizer()");
@@ -58,7 +59,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         boolean isAuthorizer = StringUtils.equals(super.getName(), RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME);
 
         if (isAuthorizer) {
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("close")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "close")) {
                 rangerSolrAuthorizerImpl.close();
             }
         } else {
@@ -68,42 +69,42 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
     @Override
     public AuthorizationResponse authorize(AuthorizationContext context) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("authorize")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "authorize")) {
             return rangerSolrAuthorizerImpl.authorize(context);
         }
     }
 
     @Override
     public void init(Map<String, Object> initInfo) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
             rangerSolrAuthorizerImpl.init(initInfo);
         }
     }
 
     @Override
     public void prepare(ResponseBuilder responseBuilder) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("prepare")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "prepare")) {
             rangerSearchComponentImpl.prepare(responseBuilder);
         }
     }
 
     @Override
     public void process(ResponseBuilder responseBuilder) throws IOException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("process")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "process")) {
             rangerSearchComponentImpl.process(responseBuilder);
         }
     }
 
     @Override
     public void init(NamedList args) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
             rangerSearchComponentImpl.init(args);
         }
     }
 
     @Override
     public String getDescription() {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("getDescription")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "getDescription")) {
             return rangerSearchComponentImpl.getDescription();
         }
     }
@@ -112,12 +113,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         LOG.debug("==> RangerSolrAuthorizer.init0()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
-            Class<AuthorizationPlugin> cls = (Class<AuthorizationPlugin>) Class.forName(RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<AuthorizationPlugin> cls = (Class<AuthorizationPlugin>) Class.forName(RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init0")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init0")) {
                 AuthorizationPlugin impl = cls.newInstance();
 
                 rangerSolrAuthorizerImpl  = impl;
@@ -129,28 +130,5 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         }
 
         LOG.debug("<== RangerSolrAuthorizer.init0()");
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerSolrAuthorizer.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerSolrAuthorizer.{}()", methodName);
-        }
     }
 }

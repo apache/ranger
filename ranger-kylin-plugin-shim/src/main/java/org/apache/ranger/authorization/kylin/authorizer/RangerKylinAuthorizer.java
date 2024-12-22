@@ -22,6 +22,7 @@ package org.apache.ranger.authorization.kylin.authorizer;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.ExternalAclProvider;
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
     private static final String RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer";
 
     private ExternalAclProvider     externalAclProvider;
-    private RangerPluginClassLoader rangerPluginClassLoader;
+    private RangerPluginClassLoader pluginClassLoader;
 
     public RangerKylinAuthorizer() {
         LOG.debug("==> RangerKylinAuthorizer.RangerKylinAuthorizer()");
@@ -49,12 +50,12 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
         LOG.debug("==> RangerKylinAuthorizer.init()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
-            Class<ExternalAclProvider> cls = (Class<ExternalAclProvider>) Class.forName(RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<ExternalAclProvider> cls = (Class<ExternalAclProvider>) Class.forName(RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
                 externalAclProvider = cls.newInstance();
 
                 externalAclProvider.init();
@@ -68,7 +69,7 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
 
     @Override
     public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid, Permission permission) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("checkPermission")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "checkPermission")) {
             return externalAclProvider.checkPermission(user, groups, entityType, entityUuid, permission);
         }
     }
@@ -77,28 +78,5 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
     public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid) {
         // No need to implement
         return null;
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerPDPKnoxFilter.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerPDPKnoxFilter.{}()", methodName);
-        }
     }
 }

@@ -26,6 +26,7 @@ import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.yarn.security.AccessRequest;
 import org.apache.hadoop.yarn.security.Permission;
 import org.apache.hadoop.yarn.security.YarnAuthorizationProvider;
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
     private static final String RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer";
 
     private YarnAuthorizationProvider yarnAuthorizationProviderImpl;
-    private RangerPluginClassLoader   rangerPluginClassLoader;
+    private RangerPluginClassLoader   pluginClassLoader;
 
     public RangerYarnAuthorizer() {
         LOG.debug("==> RangerYarnAuthorizer.RangerYarnAuthorizer()");
@@ -51,35 +52,35 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 
     @Override
     public void init(Configuration conf) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
             yarnAuthorizationProviderImpl.init(conf);
         }
     }
 
     @Override
     public boolean checkPermission(AccessRequest accessRequest) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("checkPermission")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "checkPermission")) {
             return yarnAuthorizationProviderImpl.checkPermission(accessRequest);
         }
     }
 
     @Override
     public void setPermission(List<Permission> permissions, UserGroupInformation ugi) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("setPermission")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "setPermission")) {
             yarnAuthorizationProviderImpl.setPermission(permissions, ugi);
         }
     }
 
     @Override
     public void setAdmins(AccessControlList acls, UserGroupInformation ugi) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("setAdmins")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "setAdmins")) {
             yarnAuthorizationProviderImpl.setAdmins(acls, ugi);
         }
     }
 
     @Override
     public boolean isAdmin(UserGroupInformation ugi) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("isAdmin")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "isAdmin")) {
             return yarnAuthorizationProviderImpl.isAdmin(ugi);
         }
     }
@@ -88,12 +89,12 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
         LOG.debug("==> RangerYarnAuthorizer.init()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
-            Class<YarnAuthorizationProvider> cls = (Class<YarnAuthorizationProvider>) Class.forName(RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<YarnAuthorizationProvider> cls = (Class<YarnAuthorizationProvider>) Class.forName(RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
                 yarnAuthorizationProviderImpl = cls.newInstance();
             }
         } catch (Exception e) {
@@ -102,28 +103,5 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
         }
 
         LOG.debug("<== RangerYarnAuthorizer.init()");
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerYarnAuthorizer.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerYarnAuthorizer.{}()", methodName);
-        }
     }
 }

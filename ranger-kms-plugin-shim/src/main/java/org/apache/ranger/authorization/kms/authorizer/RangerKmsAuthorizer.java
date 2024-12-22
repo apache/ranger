@@ -25,6 +25,7 @@ import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyAC
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyOpType;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
     private Runnable                implRunnable;
     private KeyACLs                 implKeyACLs;
-    private RangerPluginClassLoader rangerPluginClassLoader;
+    private RangerPluginClassLoader pluginClassLoader;
 
     public RangerKmsAuthorizer() {
         LOG.debug("==> RangerKmsAuthorizer.RangerKmsAuthorizer()");
@@ -49,49 +50,49 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
     @Override
     public boolean hasAccessToKey(String keyName, UserGroupInformation ugi, KeyOpType opType) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("hasAccessToKey")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "hasAccessToKey")) {
             return implKeyACLs.hasAccessToKey(keyName, ugi, opType);
         }
     }
 
     @Override
     public boolean isACLPresent(String aclName, KeyOpType opType) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("isACLPresent")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "isACLPresent")) {
             return implKeyACLs.isACLPresent(aclName, opType);
         }
     }
 
     @Override
     public void startReloader() {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("startReloader")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "startReloader")) {
             implKeyACLs.startReloader();
         }
     }
 
     @Override
     public void stopReloader() {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("stopReloader")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "stopReloader")) {
             implKeyACLs.stopReloader();
         }
     }
 
     @Override
     public boolean hasAccess(Type aclType, UserGroupInformation ugi, String clientIp) {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("hasAccess")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "hasAccess")) {
             return implKeyACLs.hasAccess(aclType, ugi, clientIp);
         }
     }
 
     @Override
     public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp) throws AccessControlException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("assertAccess")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "assertAccess")) {
             implKeyACLs.assertAccess(aclType, ugi, operation, key, clientIp);
         }
     }
 
     @Override
     public void run() {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("run")) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "run")) {
             implRunnable.run();
         }
     }
@@ -100,11 +101,11 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
         LOG.debug("==> RangerKmsAuthorizer.init()");
 
         try {
-            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-            Class<?> cls = Class.forName(RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            Class<?> cls = Class.forName(RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
 
-            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
                 Object impl = cls.newInstance();
 
                 implRunnable = (Runnable) impl;
@@ -116,28 +117,5 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
         }
 
         LOG.debug("<== RangerKmsAuthorizer.init()");
-    }
-
-    private class PluginClassLoaderActivator implements AutoCloseable {
-        private final String methodName;
-
-        PluginClassLoaderActivator(String methodName) {
-            LOG.debug("==> RangerKmsAuthorizer.{}()", methodName);
-
-            this.methodName = methodName;
-
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.activate();
-            }
-        }
-
-        @Override
-        public void close() {
-            if (rangerPluginClassLoader != null) {
-                rangerPluginClassLoader.deactivate();
-            }
-
-            LOG.debug("<== RangerKmsAuthorizer.{}()", methodName);
-        }
     }
 }
