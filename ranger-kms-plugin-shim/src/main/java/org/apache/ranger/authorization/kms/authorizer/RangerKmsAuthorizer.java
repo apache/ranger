@@ -30,214 +30,114 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerKmsAuthorizer implements Runnable, KeyACLs {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizer.class);
 
-	private static final Logger LOG  = LoggerFactory.getLogger(RangerKmsAuthorizer.class);
+    private static final String RANGER_PLUGIN_TYPE                   = "kms";
+    private static final String RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer";
 
-	private static final String   RANGER_PLUGIN_TYPE                      = "kms";
-	private static final String   RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer";
+    private Runnable                implRunnable;
+    private KeyACLs                 implKeyACLs;
+    private RangerPluginClassLoader rangerPluginClassLoader;
 
-	private Object                  impl                    = null;
-	private Runnable                implRunnable            = null;
-	private KeyACLs                 implKeyACLs             = null;
-	private RangerPluginClassLoader rangerPluginClassLoader = null;
+    public RangerKmsAuthorizer() {
+        LOG.debug("==> RangerKmsAuthorizer.RangerKmsAuthorizer()");
 
+        this.init();
 
-	public RangerKmsAuthorizer() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.RangerKmsAuthorizer()");
-		}
+        LOG.debug("<== RangerKmsAuthorizer.RangerKmsAuthorizer()");
+    }
 
-		this.init();
+    @Override
+    public boolean hasAccessToKey(String keyName, UserGroupInformation ugi, KeyOpType opType) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("hasAccessToKey")) {
+            return implKeyACLs.hasAccessToKey(keyName, ugi, opType);
+        }
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.RangerKmsAuthorizer()");
-		}
-	}
+    @Override
+    public boolean isACLPresent(String aclName, KeyOpType opType) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("isACLPresent")) {
+            return implKeyACLs.isACLPresent(aclName, opType);
+        }
+    }
 
-	private void init(){
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.init()");
-		}
+    @Override
+    public void startReloader() {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("startReloader")) {
+            implKeyACLs.startReloader();
+        }
+    }
 
-		try {
+    @Override
+    public void stopReloader() {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("stopReloader")) {
+            implKeyACLs.stopReloader();
+        }
+    }
 
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+    @Override
+    public boolean hasAccess(Type aclType, UserGroupInformation ugi, String clientIp) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("hasAccess")) {
+            return implKeyACLs.hasAccess(aclType, ugi, clientIp);
+        }
+    }
 
-			Class<?> cls = Class.forName(RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+    @Override
+    public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp) throws AccessControlException {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("assertAccess")) {
+            implKeyACLs.assertAccess(aclType, ugi, operation, key, clientIp);
+        }
+    }
 
-			activatePluginClassLoader();
+    @Override
+    public void run() {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("run")) {
+            implRunnable.run();
+        }
+    }
 
-			impl 			   = cls.newInstance();
-			implRunnable       = (Runnable)impl;
-			implKeyACLs 	   = (KeyACLs)impl;
-		} catch (Exception e) {
-			// check what need to be done
-			LOG.error("Error Enabling RangerKMSPlugin", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+    private void init() {
+        LOG.debug("==> RangerKmsAuthorizer.init()");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.init()");
-		}
-	}
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-	@Override
-	public boolean hasAccessToKey(String keyName, UserGroupInformation ugi, KeyOpType opType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
-		}
+            Class<?> cls = Class.forName(RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-		boolean ret = false;
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+                Object impl = cls.newInstance();
 
-		try {
-			activatePluginClassLoader();
+                implRunnable = (Runnable) impl;
+                implKeyACLs  = (KeyACLs) impl;
+            }
+        } catch (Exception e) {
+            // check what need to be done
+            LOG.error("Error Enabling RangerKMSPlugin", e);
+        }
 
-			ret = implKeyACLs.hasAccessToKey(keyName,ugi,opType);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        LOG.debug("<== RangerKmsAuthorizer.init()");
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
-		}
+    private class PluginClassLoaderActivator implements AutoCloseable {
+        private final String methodName;
 
-		return ret;
-	}
+        PluginClassLoaderActivator(String methodName) {
+            LOG.debug("==> RangerKmsAuthorizer.{}()", methodName);
 
-	@Override
-	public boolean isACLPresent(String aclName, KeyOpType opType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.isACLPresent(" + aclName + ", " + opType + ")");
-		}
+            this.methodName = methodName;
 
-		boolean ret = false;
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.activate();
+            }
+        }
 
-		try {
-			activatePluginClassLoader();
+        @Override
+        public void close() {
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.deactivate();
+            }
 
-			ret = implKeyACLs.isACLPresent(aclName,opType);
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.isACLPresent(" + aclName + ", " + opType + ")");
-		}
-
-		return ret;
-	}
-
-
-	@Override
-	public boolean hasAccess(Type aclType, UserGroupInformation ugi, String clientIp) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + aclType + ", " + ugi + ")");
-		}
-
-		boolean ret = false;
-
-		try {
-			activatePluginClassLoader();
-
-			ret = implKeyACLs.hasAccess(aclType,ugi,clientIp);
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.hasAccess(" + aclType + ", " + ugi + ")");
-		}
-
-		return ret;
-	}
-
-	@Override
-	public void assertAccess(Type aclType, UserGroupInformation ugi,KMSOp operation, String key, String clientIp) throws AccessControlException {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.assertAccess(" + key + ", " + ugi +", " + aclType + ")");
-		}
-
-		try {
-			activatePluginClassLoader();
-
-			implKeyACLs.assertAccess(aclType,ugi,operation,key,clientIp);
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.assertAccess(" + key + ", " + ugi +", " + aclType + ")");
-		}
-
-	}
-
-	@Override
-	public void startReloader() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.startReloader()");
-		}
-
-		try {
-			activatePluginClassLoader();
-
-			implKeyACLs.startReloader();
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.startReloader()");
-		}
-	}
-
-	@Override
-	public void stopReloader() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.stopReloader()");
-		}
-
-		try {
-			activatePluginClassLoader();
-
-			implKeyACLs.stopReloader();
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.stopReloader()");
-		}
-	}
-
-	@Override
-	public void run() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKmsAuthorizer.run()");
-		}
-
-		try {
-			activatePluginClassLoader();
-			implRunnable.run();
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKmsAuthorizer.run()");
-		}
-
-	}
-
-	private void activatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
-
-	private void deactivatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
+            LOG.debug("<== RangerKmsAuthorizer.{}()", methodName);
+        }
+    }
 }
