@@ -19,8 +19,6 @@
 
 package org.apache.ranger.authorization.kylin.authorizer;
 
-import java.util.List;
-
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.ExternalAclProvider;
@@ -29,93 +27,78 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.acls.model.Permission;
 
+import java.util.List;
+
 public class RangerKylinAuthorizer extends ExternalAclProvider {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerKylinAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKylinAuthorizer.class);
 
-	private static final String RANGER_PLUGIN_TYPE = "kylin";
-	private static final String RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                     = "kylin";
+    private static final String RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer";
 
-	private ExternalAclProvider     externalAclProvider     = null;
-	private RangerPluginClassLoader rangerPluginClassLoader = null;
+    private ExternalAclProvider     externalAclProvider;
+    private RangerPluginClassLoader rangerPluginClassLoader;
 
-	public RangerKylinAuthorizer() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKylinAuthorizer.RangerKylinAuthorizer()");
-		}
+    public RangerKylinAuthorizer() {
+        LOG.debug("==> RangerKylinAuthorizer.RangerKylinAuthorizer()");
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKylinAuthorizer.RangerKylinAuthorizer()");
-		}
-	}
+        LOG.debug("<== RangerKylinAuthorizer.RangerKylinAuthorizer()");
+    }
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKylinAuthorizer.init()");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerKylinAuthorizer.init()");
 
-		try {
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            @SuppressWarnings("unchecked")
+            Class<ExternalAclProvider> cls = (Class<ExternalAclProvider>) Class.forName(RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-			@SuppressWarnings("unchecked")
-			Class<ExternalAclProvider> cls = (Class<ExternalAclProvider>) Class.forName(
-					RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+                externalAclProvider = cls.newInstance();
 
-			activatePluginClassLoader();
+                externalAclProvider.init();
+            }
+        } catch (Exception e) {
+            LOG.error("Error Enabling RangerKylinPlugin", e);
+        }
 
-			externalAclProvider = cls.newInstance();
-			externalAclProvider.init();
-		} catch (Exception e) {
-			LOG.error("Error Enabling RangerKylinPlugin", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        LOG.debug("<== RangerKylinAuthorizer.init()");
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKylinAuthorizer.init()");
-		}
-	}
+    @Override
+    public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid, Permission permission) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("checkPermission")) {
+            return externalAclProvider.checkPermission(user, groups, entityType, entityUuid, permission);
+        }
+    }
 
-	@Override
-	public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid,
-			Permission permission) {
-		boolean ret = false;
+    @Override
+    public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid) {
+        // No need to implement
+        return null;
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerKylinAuthorizer.checkPermission()");
-		}
+    private class PluginClassLoaderActivator implements AutoCloseable {
+        private final String methodName;
 
-		try {
-			activatePluginClassLoader();
+        PluginClassLoaderActivator(String methodName) {
+            LOG.debug("==> RangerPDPKnoxFilter.{}()", methodName);
 
-			ret = externalAclProvider.checkPermission(user, groups, entityType, entityUuid, permission);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+            this.methodName = methodName;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerKylinAuthorizer.checkPermission()");
-		}
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.activate();
+            }
+        }
 
-		return ret;
-	}
+        @Override
+        public void close() {
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.deactivate();
+            }
 
-	private void activatePluginClassLoader() {
-		if (rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
-
-	private void deactivatePluginClassLoader() {
-		if (rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
-
-	@Override
-	public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid) {
-		// No need to implement
-		return null;
-	}
+            LOG.debug("<== RangerPDPKnoxFilter.{}()", methodName);
+        }
+    }
 }
