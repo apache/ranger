@@ -20,8 +20,6 @@
 
 package org.apache.ranger.authorization.yarn.authorizer;
 
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
@@ -32,173 +30,100 @@ import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import java.util.List;
 
 public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
-	private static final Logger LOG  = LoggerFactory.getLogger(RangerYarnAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerYarnAuthorizer.class);
 
-	private static final String   RANGER_PLUGIN_TYPE                      = "yarn";
-	private static final String   RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                    = "yarn";
+    private static final String RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer";
 
-	private YarnAuthorizationProvider yarnAuthorizationProviderImpl = null;
-	private RangerPluginClassLoader   rangerPluginClassLoader       = null;
-	
-	public RangerYarnAuthorizer() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.RangerYarnAuthorizer()");
-		}
+    private YarnAuthorizationProvider yarnAuthorizationProviderImpl;
+    private RangerPluginClassLoader   rangerPluginClassLoader;
 
-		this.init();
+    public RangerYarnAuthorizer() {
+        LOG.debug("==> RangerYarnAuthorizer.RangerYarnAuthorizer()");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.RangerYarnAuthorizer()");
-		}
-	}
+        this.init();
 
-	private void init(){
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.init()");
-		}
+        LOG.debug("<== RangerYarnAuthorizer.RangerYarnAuthorizer()");
+    }
 
-		try {
-			
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
-			
-			@SuppressWarnings("unchecked")
-			Class<YarnAuthorizationProvider> cls = (Class<YarnAuthorizationProvider>) Class.forName(RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+    @Override
+    public void init(Configuration conf) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+            yarnAuthorizationProviderImpl.init(conf);
+        }
+    }
 
-			activatePluginClassLoader();
+    @Override
+    public boolean checkPermission(AccessRequest accessRequest) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("checkPermission")) {
+            return yarnAuthorizationProviderImpl.checkPermission(accessRequest);
+        }
+    }
 
-			yarnAuthorizationProviderImpl = cls.newInstance();
-		} catch (Exception e) {
-			// check what need to be done
-			LOG.error("Error Enabling RangerYarnPlugin", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+    @Override
+    public void setPermission(List<Permission> permissions, UserGroupInformation ugi) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("setPermission")) {
+            yarnAuthorizationProviderImpl.setPermission(permissions, ugi);
+        }
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.init()");
-		}
-	}
+    @Override
+    public void setAdmins(AccessControlList acls, UserGroupInformation ugi) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("setAdmins")) {
+            yarnAuthorizationProviderImpl.setAdmins(acls, ugi);
+        }
+    }
 
-	@Override
-	public void init(Configuration conf) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.init()");
-		}
+    @Override
+    public boolean isAdmin(UserGroupInformation ugi) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("isAdmin")) {
+            return yarnAuthorizationProviderImpl.isAdmin(ugi);
+        }
+    }
 
-		try {
-			activatePluginClassLoader();
+    private void init() {
+        LOG.debug("==> RangerYarnAuthorizer.init()");
 
-			yarnAuthorizationProviderImpl.init(conf);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.start()");
-		}
-	}
+            @SuppressWarnings("unchecked")
+            Class<YarnAuthorizationProvider> cls = (Class<YarnAuthorizationProvider>) Class.forName(RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-	@Override
-	public boolean checkPermission(AccessRequest accessRequest) {
-		
-		boolean ret = false;
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.checkPermission()");
-		}
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator("init")) {
+                yarnAuthorizationProviderImpl = cls.newInstance();
+            }
+        } catch (Exception e) {
+            // check what need to be done
+            LOG.error("Error Enabling RangerYarnPlugin", e);
+        }
 
-		try {
-			activatePluginClassLoader();
+        LOG.debug("<== RangerYarnAuthorizer.init()");
+    }
 
-			ret = yarnAuthorizationProviderImpl.checkPermission(accessRequest);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+    private class PluginClassLoaderActivator implements AutoCloseable {
+        private final String methodName;
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.checkPermission()");
-		}
-		
-		return ret;
-	}
+        PluginClassLoaderActivator(String methodName) {
+            LOG.debug("==> RangerYarnAuthorizer.{}()", methodName);
 
-	@Override
-	public void setPermission(List<Permission> permissions, UserGroupInformation ugi) {
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.setPermission()");
-		}
+            this.methodName = methodName;
 
-		try {
-			activatePluginClassLoader();
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.activate();
+            }
+        }
 
-			yarnAuthorizationProviderImpl.setPermission(permissions, ugi);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        @Override
+        public void close() {
+            if (rangerPluginClassLoader != null) {
+                rangerPluginClassLoader.deactivate();
+            }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.setPermission()");
-		}
-	}
-
-	@Override
-	public void setAdmins(AccessControlList acls, UserGroupInformation ugi) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.setAdmins()");
-		}
-
-		try {
-			activatePluginClassLoader();
-
-			yarnAuthorizationProviderImpl.setAdmins(acls, ugi);
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.setAdmins()");
-		}
-	}
-
-	@Override
-	public boolean isAdmin(UserGroupInformation ugi) {
-		
-		boolean ret = false;
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerYarnAuthorizer.setAdmins()");
-		}
-
-		try {
-			activatePluginClassLoader();
-
-			ret = yarnAuthorizationProviderImpl.isAdmin(ugi);
-		} finally {
-			deactivatePluginClassLoader();
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerYarnAuthorizer.setAdmins()");
-		}
-		
-		return ret;
-	}
-	
-	private void activatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
-
-	private void deactivatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
-
-	
+            LOG.debug("<== RangerYarnAuthorizer.{}()", methodName);
+        }
+    }
 }
