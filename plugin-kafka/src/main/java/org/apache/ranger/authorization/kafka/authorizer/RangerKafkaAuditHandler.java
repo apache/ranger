@@ -91,14 +91,17 @@ public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
             }
         }
 
-        LOG.trace("RangerKafkaAuditHandler: isAuditingNeeded()");
-        LOG.trace("request: {}", request);
-        LOG.trace("resource: {}", resource);
-        LOG.trace("resourceName: {}", resourceName);
-        LOG.trace("request.getAccessType(): {}", request.getAccessType());
-        LOG.trace("isAllowed: {}", isAllowed);
-        LOG.trace("ret = {}", ret);
-        LOG.trace("<== RangerKafkaAuditHandler.isAuditingNeeded() = {} for result = {}", ret, result);
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("RangerKafkaAuditHandler: isAuditingNeeded()");
+            LOG.trace("request: {}", request);
+            LOG.trace("resource: {}", resource);
+            LOG.trace("resourceName: {}", resourceName);
+            LOG.trace("request.getAccessType(): {}", request.getAccessType());
+            LOG.trace("isAllowed: {}", isAllowed);
+            LOG.trace("ret = {}", ret);
+            LOG.trace("<== RangerKafkaAuditHandler.isAuditingNeeded() = {} for result = {}", ret, result);
+        }
+
         return ret;
     }
 }
