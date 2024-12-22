@@ -52,24 +52,23 @@ public class UserGroupSync implements Runnable {
                         LOG.info("initializing source: {}", ugSource.getClass().getName());
                         ugSource.init();
 
-                        LOG.info("Begin: initial load of user/group from source==>sink");
+                        LOG.info("Begin: initial load of user/group from source ==> sink");
                         syncUserGroup();
-                        LOG.info("End: initial load of user/group from source==>sink");
+                        LOG.info("End: initial load of user/group from source ==> sink");
 
                         initPending = false;
                         LOG.info("Done initializing user/group source and sink");
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Sleeping for [{}] milliSeconds as this server is running in passive mode", initSleepTimeBetweenCycleInMillis);
-                        }
+                        LOG.debug("Sleeping for [{}] milliSeconds as this server is running in passive mode", initSleepTimeBetweenCycleInMillis);
+
                         Thread.sleep(initSleepTimeBetweenCycleInMillis);
                     }
                 } catch (Throwable t) {
                     LOG.error("Failed to initialize UserGroup source/sink. Will retry after {} milliseconds. Error details: ", sleepTimeBetweenCycleInMillis, t);
+
                     try {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
-                        }
+                        LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
+
                         Thread.sleep(sleepTimeBetweenCycleInMillis);
                     } catch (Exception e) {
                         LOG.error("Failed to wait for [{}] milliseconds before attempting to initialize UserGroup source/sink", sleepTimeBetweenCycleInMillis, e);
@@ -79,9 +78,8 @@ public class UserGroupSync implements Runnable {
 
             while (true) {
                 try {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Sleeping for {} milliSeconds", sleepTimeBetweenCycleInMillis);
-                    }
+                    LOG.debug("Sleeping for {} milliSeconds", sleepTimeBetweenCycleInMillis);
+
                     Thread.sleep(sleepTimeBetweenCycleInMillis);
                 } catch (InterruptedException e) {
                     LOG.error("Failed to wait for [{}] milliseconds before attempting to synchronize UserGroup information", sleepTimeBetweenCycleInMillis, e);
@@ -89,9 +87,11 @@ public class UserGroupSync implements Runnable {
 
                 try {
                     if (UserGroupSyncConfig.isUgsyncServiceActive()) {
-                        LOG.info("Begin: update user/group from source==>sink");
+                        LOG.info("Begin: update user/group from source ==> sink");
+
                         syncUserGroup();
-                        LOG.info("End: update user/group from source==>sink");
+
+                        LOG.info("End: update user/group from source ==> sink");
                     } else {
                         LOG.info("Sleeping for [{}] milliSeconds as this server is running in passive mode", sleepTimeBetweenCycleInMillis);
                     }
@@ -100,7 +100,7 @@ public class UserGroupSync implements Runnable {
                 }
             }
         } catch (Throwable t) {
-            LOG.error("UserGroupSync thread got an error", t);
+            LOG.error("UserGroupSync thread got an error ", t);
         } finally {
             LOG.info("Shutting down the UserGroupSync thread");
         }
