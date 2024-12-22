@@ -132,17 +132,16 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
                     ExecutorService service = null;
 
                     try {
-                        service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
-                                .setNameFormat("kms-azure-akc_acquireToken_thread")
-                                .build());
-                                AuthenticationContext   context = new AuthenticationContext(authorization, false, service);
-                                AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential.create(authClientID, privateKey, certificateKey.getCertificate());
-                                AuthenticationResult result = context.acquireToken(resource, asymmetricKeyCredential, null).get();
-                                String ret = result.getAccessToken();
+                        service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kms-azure-akc_acquireToken_thread").build());
 
-                                logger.debug("<== getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
+                        AuthenticationContext   context                 = new AuthenticationContext(authorization, false, service);
+                        AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential.create(authClientID, privateKey, certificateKey.getCertificate());
+                        AuthenticationResult    result                  = context.acquireToken(resource, asymmetricKeyCredential, null).get();
+                        String                  ret                     = result.getAccessToken();
 
-                                return ret;
+                        logger.debug("<== getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
+
+                        return ret;
                     } catch (Exception e) {
                         throw new RuntimeException("Error while getting authenticated access token from azure key vault with certificate : " + e);
                     } finally {
@@ -166,13 +165,11 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
         ExecutorService      service = null;
 
         try {
-            service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
-                    .setNameFormat("kms-azure-cc_acquireToken-thread")
-                    .build());
+            service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kms-azure-cc_acquireToken-thread").build());
 
-            AuthenticationContext context = new AuthenticationContext(authorization, false, service);
-            ClientCredential credentials = new ClientCredential(clientId, clientKey);
-            Future<AuthenticationResult> future = context.acquireToken(resource, credentials, null);
+            AuthenticationContext        context     = new AuthenticationContext(authorization, false, service);
+            ClientCredential             credentials = new ClientCredential(clientId, clientKey);
+            Future<AuthenticationResult> future      = context.acquireToken(resource, credentials, null);
 
             result = future.get();
         } catch (Exception e) {
@@ -196,11 +193,13 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
         logger.debug("==> readPem({})", path);
 
         Security.addProvider(new BouncyCastleProvider());
+
         KeyCert keycert = null;
+
         try (PEMParser pemParser = new PEMParser(new FileReader(path))) {
-            PrivateKey privateKey = null;
-            X509Certificate cert = null;
-            Object object = pemParser.readObject();
+            PrivateKey      privateKey = null;
+            X509Certificate cert       = null;
+            Object          object     = pemParser.readObject();
 
             while (object != null) {
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
@@ -208,9 +207,9 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
                 if (object instanceof X509CertificateHolder) {
                     cert = new JcaX509CertificateConverter().getCertificate((X509CertificateHolder) object);
                 } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
-                    PKCS8EncryptedPrivateKeyInfo pinfo = (PKCS8EncryptedPrivateKeyInfo) object;
-                    InputDecryptorProvider provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                    PrivateKeyInfo info = pinfo.decryptPrivateKeyInfo(provider);
+                    PKCS8EncryptedPrivateKeyInfo pinfo    = (PKCS8EncryptedPrivateKeyInfo) object;
+                    InputDecryptorProvider       provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
+                    PrivateKeyInfo               info     = pinfo.decryptPrivateKeyInfo(provider);
 
                     privateKey = converter.getPrivateKey(info);
                 } else if (object instanceof PrivateKeyInfo) {
@@ -222,6 +221,7 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
 
             keycert = new KeyCert(cert, privateKey);
         }
+
         logger.debug("<== readPem({})", path);
 
         return keycert;
@@ -233,13 +233,13 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
         try (FileInputStream stream = new FileInputStream(path)) {
             KeyCert  keyCert               = null;
             boolean  isAliasWithPrivateKey = false;
-            KeyStore store = KeyStore.getInstance("pkcs12", "SunJSSE");
+            KeyStore store                 = KeyStore.getInstance("pkcs12", "SunJSSE");
 
             store.load(stream, password.toCharArray());
 
             // Iterate over all aliases to find the private key
             Enumeration<String> aliases = store.aliases();
-            String alias   = "";
+            String              alias   = "";
 
             while (aliases.hasMoreElements()) {
                 alias = aliases.nextElement();
@@ -254,7 +254,7 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
             if (isAliasWithPrivateKey) {
                 // Retrieves the certificate from the Java keystore
                 X509Certificate certificate = (X509Certificate) store.getCertificate(alias);
-                PrivateKey key = (PrivateKey) store.getKey(alias, password.toCharArray());
+                PrivateKey      key         = (PrivateKey) store.getKey(alias, password.toCharArray());
 
                 keyCert = new KeyCert(certificate, key);
             }
@@ -267,11 +267,11 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
 
     private static class KeyCert {
         private final X509Certificate certificate;
-        private final PrivateKey key;
+        private final PrivateKey      key;
 
         public KeyCert(X509Certificate certificate, PrivateKey key) {
             this.certificate = certificate;
-            this.key = key;
+            this.key         = key;
         }
 
         public X509Certificate getCertificate() {
