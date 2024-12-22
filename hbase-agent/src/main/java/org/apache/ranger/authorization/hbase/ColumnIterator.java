@@ -31,7 +31,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class ColumnIterator implements Iterator<String> {
-    // TODO write tests for this class
     private static final Logger LOG = LoggerFactory.getLogger(ColumnIterator.class.getName());
 
     Iterator<byte[]> setIterator;
@@ -67,20 +66,22 @@ public class ColumnIterator implements Iterator<String> {
      */
     @Override
     public String next() {
-        String value = "";
+        final String value;
+
         if (setIterator != null) {
             byte[] valueBytes = setIterator.next();
-            if (valueBytes != null) {
-                value = Bytes.toString(valueBytes);
-            }
+
+            value = (valueBytes != null) ? Bytes.toString(valueBytes) : "";
         } else if (listIterator != null) {
             Cell   cell = listIterator.next();
             byte[] v    = CellUtil.cloneQualifier(cell);
+
             value = Bytes.toString(v);
         } else {
             // TODO make the error message better
             throw new NoSuchElementException("Empty values passed in!");
         }
+
         return value;
     }
 
