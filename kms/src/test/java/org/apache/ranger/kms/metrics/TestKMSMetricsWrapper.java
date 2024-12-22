@@ -26,14 +26,15 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 
 public class TestKMSMetricsWrapper {
-    private static final boolean isMetricCollectionThreadsafe = false;
-    private static KMSMetricWrapper kmsMetricWrapper;
-    private static KMSMetricsCollector kmsMetricsCollector;
+    private final KMSMetricWrapper    kmsMetricWrapper;
+    private final KMSMetricsCollector kmsMetricsCollector;
 
     public TestKMSMetricsWrapper() {
         // Initialize hadoop-metric2 system & create KMSMetricWrapper
 
         System.setProperty("hadoop.home.dir", "./");
+
+        boolean isMetricCollectionThreadsafe = false;
 
         kmsMetricWrapper    = KMSMetricWrapper.getInstance(isMetricCollectionThreadsafe);
         kmsMetricsCollector = kmsMetricWrapper.getKmsMetricsCollector();
@@ -75,6 +76,7 @@ public class TestKMSMetricsWrapper {
 
     private void setKmsMetricsCollectorThreadSafelyFlag(boolean isMetricCollectionThreadsafe) throws IllegalAccessException, NoSuchFieldException {
         Field isCollectionThreadSafeField = kmsMetricsCollector.getClass().getDeclaredField("isCollectionThreadSafe");
+
         isCollectionThreadSafeField.setAccessible(true);
         isCollectionThreadSafeField.setBoolean(kmsMetricsCollector, isMetricCollectionThreadsafe);
     }
