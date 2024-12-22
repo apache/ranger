@@ -91,7 +91,7 @@ public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
             }
         }
 
-        if(LOG.isTraceEnabled()) {
+        if (LOG.isTraceEnabled()) {
             LOG.trace("RangerKafkaAuditHandler: isAuditingNeeded()");
             LOG.trace("request: {}", request);
             LOG.trace("resource: {}", resource);
