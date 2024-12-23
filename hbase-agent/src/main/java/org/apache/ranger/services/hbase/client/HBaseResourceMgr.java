@@ -39,16 +39,20 @@ public class HBaseResourceMgr {
     private HBaseResourceMgr() {}
 
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
+        LOG.debug("==> HBaseResourceMgr.connectionTest() ServiceName: {} Configs{}", serviceName, configs);
+
         Map<String, Object> ret = null;
-        LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: {} Configs{}", serviceName, configs);
 
         try {
             ret = HBaseClient.connectionTest(serviceName, configs);
         } catch (HadoopException e) {
             LOG.error("<== HBaseResourceMgr.connectionTest() Error: " + e);
+
             throw e;
         }
+
         LOG.debug("<== HBaseResourceMgr.connectionTest() Result: {}", ret);
+
         return ret;
     }
 
@@ -62,13 +66,14 @@ public class HBaseResourceMgr {
         List<String>              tableList        = null;
         List<String>              columnFamilyList = null;
 
-        LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
+        LOG.debug("==> HBaseResourceMgr.getHBaseResource UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
 
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
                 tableList        = resourceMap.get(TABLE);
                 columnFamilyList = resourceMap.get(COLUMNFAMILY);
             }
+
             switch (resource.trim().toLowerCase()) {
                 case TABLE:
                     tableName = userInput;
@@ -86,14 +91,13 @@ public class HBaseResourceMgr {
             final List<String> finalcolumnFamilyList = columnFamilyList;
 
             try {
-                LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \"{}\" configs: {} context: {}", userInput, configs, context);
-
                 final HBaseClient      hBaseClient = new HBaseConnectionMgr().getHBaseConnection(serviceName, serviceType, configs);
                 Callable<List<String>> callableObj = null;
 
                 if (hBaseClient != null) {
                     if (tableName != null && !tableName.isEmpty()) {
                         final String finalTableName;
+
                         //get tableList
                         if (!tableName.endsWith("*")) {
                             tableName += "*";
@@ -111,13 +115,13 @@ public class HBaseResourceMgr {
                     } else {
                         //get columfamilyList
                         final String finalColFamilies;
+
                         if (columnFamilies != null && !columnFamilies.isEmpty()) {
                             if (!columnFamilies.endsWith("*")) {
                                 columnFamilies += "*";
                             }
 
-                            columnFamilies   = columnFamilies.replaceAll("\\*",
-                                    ".\\*");
+                            columnFamilies   = columnFamilies.replaceAll("\\*", ".\\*");
                             finalColFamilies = columnFamilies;
 
                             callableObj = new Callable<List<String>>() {
@@ -128,15 +132,16 @@ public class HBaseResourceMgr {
                             };
                         }
                     }
+
                     if (callableObj != null) {
                         synchronized (hBaseClient) {
-                            resultList = TimedEventUtil.timedTask(callableObj, 5,
-                                    TimeUnit.SECONDS);
+                            resultList = TimedEventUtil.timedTask(callableObj, 5, TimeUnit.SECONDS);
                         }
                     }
                 }
             } catch (Exception e) {
                 LOG.error("Unable to get hbase resources.", e);
+
                 throw e;
             }
         }
