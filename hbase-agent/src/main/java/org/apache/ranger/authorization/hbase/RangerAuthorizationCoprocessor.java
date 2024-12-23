@@ -150,7 +150,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     private static final String   REGIONAL_SERVER_COPROCESSOR_TYPE = "regionalServer";
     private static final String[] SPECIAL_TABLES                   = new String[] {"hbase:meta", "-ROOT-", ".META.", "hbase:acl", "hbase:namespace"};
 
-
     private static boolean updateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 
     private static volatile RangerHBasePlugin hbasePlugin;
