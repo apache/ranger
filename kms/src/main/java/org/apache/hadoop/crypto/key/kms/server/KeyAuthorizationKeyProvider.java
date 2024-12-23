@@ -51,8 +51,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * The read operations (getCurrentKeyVersion / getMetadata) etc are not checked.
  */
 public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
-    public static final  String KEY_ACL      = "key.acl.";
+    public  static final  String KEY_ACL     = "key.acl.";
     private static final String KEY_ACL_NAME = KEY_ACL + "name";
+
     private final KeyProviderCryptoExtension provider;
     private final KeyACLs                    acls;
     private final ReentrantReadWriteLock     lock;
@@ -68,8 +69,8 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
         super(keyProvider, null);
 
         this.provider = keyProvider;
-        this.acls = acls;
-        this.lock = new ReentrantReadWriteLock(true);
+        this.acls     = acls;
+        this.lock     = new ReentrantReadWriteLock(true);
     }
 
     @Override
