@@ -38,15 +38,16 @@ import java.util.concurrent.ExecutionException;
  */
 @InterfaceAudience.Private
 public class EagerKeyGeneratorKeyProviderCryptoExtension extends KeyProviderCryptoExtension {
-    public static final int    KMS_KEY_CACHE_SIZE_DEFAULT = 100;
-    public static final float  KMS_KEY_CACHE_LOW_WATERMARK_DEFAULT = 0.30f;
-    public static final int    KMS_KEY_CACHE_EXPIRY_DEFAULT = 43200000;
-    public static final int    KMS_KEY_CACHE_NUM_REFILL_THREADS_DEFAULT = 2;
     private static final String KEY_CACHE_PREFIX = "hadoop.security.kms.encrypted.key.cache.";
-    public static final String KMS_KEY_CACHE_SIZE = KEY_CACHE_PREFIX + "size";
-    public static final String KMS_KEY_CACHE_LOW_WATERMARK = KEY_CACHE_PREFIX + "low.watermark";
-    public static final String KMS_KEY_CACHE_EXPIRY_MS = KEY_CACHE_PREFIX + "expiry";
-    public static final String KMS_KEY_CACHE_NUM_REFILL_THREADS = KEY_CACHE_PREFIX + "num.fill.threads";
+
+    public static final int    KMS_KEY_CACHE_SIZE_DEFAULT               = 100;
+    public static final float  KMS_KEY_CACHE_LOW_WATERMARK_DEFAULT      = 0.30f;
+    public static final int    KMS_KEY_CACHE_EXPIRY_DEFAULT             = 43200000;
+    public static final int    KMS_KEY_CACHE_NUM_REFILL_THREADS_DEFAULT = 2;
+    public static final String KMS_KEY_CACHE_SIZE                       = KEY_CACHE_PREFIX + "size";
+    public static final String KMS_KEY_CACHE_LOW_WATERMARK              = KEY_CACHE_PREFIX + "low.watermark";
+    public static final String KMS_KEY_CACHE_EXPIRY_MS                  = KEY_CACHE_PREFIX + "expiry";
+    public static final String KMS_KEY_CACHE_NUM_REFILL_THREADS         = KEY_CACHE_PREFIX + "num.fill.threads";
 
     /**
      * This class is a proxy for a <code>KeyProviderCryptoExtension</code> that
@@ -74,37 +75,39 @@ public class EagerKeyGeneratorKeyProviderCryptoExtension extends KeyProviderCryp
     @Override
     public KeyVersion rollNewVersion(String name) throws NoSuchAlgorithmException, IOException {
         KeyVersion keyVersion = super.rollNewVersion(name);
+
         getExtension().drain(name);
+
         return keyVersion;
     }
 
     @Override
     public KeyVersion rollNewVersion(String name, byte[] material) throws IOException {
         KeyVersion keyVersion = super.rollNewVersion(name, material);
+
         getExtension().drain(name);
+
         return keyVersion;
     }
 
     @Override
     public void invalidateCache(String name) throws IOException {
         super.invalidateCache(name);
+
         getExtension().drain(name);
     }
 
     private static class CryptoExtension implements KeyProviderCryptoExtension.CryptoExtension {
         private final ValueQueue<EncryptedKeyVersion> encKeyVersionQueue;
-        private       KeyProviderCryptoExtension      keyProviderCryptoExtension;
+        private final KeyProviderCryptoExtension      keyProviderCryptoExtension;
 
         public CryptoExtension(Configuration conf, KeyProviderCryptoExtension keyProviderCryptoExtension) {
             this.keyProviderCryptoExtension = keyProviderCryptoExtension;
-            encKeyVersionQueue = new ValueQueue<>(conf.getInt(KMS_KEY_CACHE_SIZE,
-                                    KMS_KEY_CACHE_SIZE_DEFAULT),
-                            conf.getFloat(KMS_KEY_CACHE_LOW_WATERMARK,
-                                    KMS_KEY_CACHE_LOW_WATERMARK_DEFAULT),
-                            conf.getInt(KMS_KEY_CACHE_EXPIRY_MS,
-                                    KMS_KEY_CACHE_EXPIRY_DEFAULT),
-                            conf.getInt(KMS_KEY_CACHE_NUM_REFILL_THREADS,
-                                    KMS_KEY_CACHE_NUM_REFILL_THREADS_DEFAULT),
+
+            encKeyVersionQueue = new ValueQueue<>(conf.getInt(KMS_KEY_CACHE_SIZE, KMS_KEY_CACHE_SIZE_DEFAULT),
+                            conf.getFloat(KMS_KEY_CACHE_LOW_WATERMARK, KMS_KEY_CACHE_LOW_WATERMARK_DEFAULT),
+                            conf.getInt(KMS_KEY_CACHE_EXPIRY_MS, KMS_KEY_CACHE_EXPIRY_DEFAULT),
+                            conf.getInt(KMS_KEY_CACHE_NUM_REFILL_THREADS, KMS_KEY_CACHE_NUM_REFILL_THREADS_DEFAULT),
                             SyncGenerationPolicy.LOW_WATERMARK, new EncryptedQueueRefiller());
         }
 
@@ -123,8 +126,7 @@ public class EagerKeyGeneratorKeyProviderCryptoExtension extends KeyProviderCryp
         }
 
         @Override
-        public EncryptedKeyVersion generateEncryptedKey(String encryptionKeyName)
-                throws IOException, GeneralSecurityException {
+        public EncryptedKeyVersion generateEncryptedKey(String encryptionKeyName) throws IOException, GeneralSecurityException {
             try {
                 return encKeyVersionQueue.getNext(encryptionKeyName);
             } catch (ExecutionException e) {
@@ -150,7 +152,8 @@ public class EagerKeyGeneratorKeyProviderCryptoExtension extends KeyProviderCryp
         private class EncryptedQueueRefiller implements ValueQueue.QueueRefiller<EncryptedKeyVersion> {
             @Override
             public void fillQueueForKey(String keyName, Queue<EncryptedKeyVersion> keyQueue, int numKeys) throws IOException {
-                List<EncryptedKeyVersion> retEdeks = new LinkedList<EncryptedKeyVersion>();
+                List<EncryptedKeyVersion> retEdeks = new LinkedList<>();
+
                 for (int i = 0; i < numKeys; i++) {
                     try {
                         retEdeks.add(keyProviderCryptoExtension.generateEncryptedKey(keyName));
@@ -158,6 +161,7 @@ public class EagerKeyGeneratorKeyProviderCryptoExtension extends KeyProviderCryp
                         throw new IOException(e);
                     }
                 }
+
                 keyQueue.addAll(retEdeks);
             }
         }
