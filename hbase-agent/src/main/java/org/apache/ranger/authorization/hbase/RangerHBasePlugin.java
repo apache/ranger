@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class RangerHBasePlugin extends RangerBasePlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerHBasePlugin.class);
 
-    boolean isHBaseShuttingDown;
+    private boolean isHBaseShuttingDown;
     private boolean isColumnAuthOptimizationEnabled;
 
     public RangerHBasePlugin(String appType) {
@@ -45,21 +45,27 @@ public class RangerHBasePlugin extends RangerBasePlugin {
     @Override
     public void setPolicies(ServicePolicies policies) {
         super.setPolicies(policies);
+
         this.isColumnAuthOptimizationEnabled = Boolean.parseBoolean(this.getServiceConfigs().get(RangerHadoopConstants.HBASE_COLUMN_AUTH_OPTIMIZATION));
+
         LOG.info("isColumnAuthOptimizationEnabled={}", this.isColumnAuthOptimizationEnabled);
     }
 
     @Override
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
         RangerAccessResult ret;
+
         if (isHBaseShuttingDown) {
             ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, this.getServiceName(), this.getServiceDef(), request);
+
             ret.setIsAllowed(true);
             ret.setIsAudited(false);
+
             LOG.warn("Auth request came after HBase shutdown....");
         } else {
             ret = super.isAccessAllowed(request, resultProcessor);
         }
+
         return ret;
     }
 
