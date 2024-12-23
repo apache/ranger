@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,13 +54,15 @@ import static org.apache.hadoop.crypto.key.kms.server.KMSAuditLogger.OpStatus;
  */
 public class KMSAudit {
     private static final Logger LOG = LoggerFactory.getLogger(KMSAudit.class);
+
     public static final String KMS_LOGGER_NAME = "kms-audit";
+
     @VisibleForTesting
-    static final Set<KMS.KMSOp> AGGREGATE_OPS_WHITELIST = Sets.newHashSet(KMS.KMSOp.GET_KEY_VERSION, KMS.KMSOp.GET_CURRENT_KEY,
-            KMS.KMSOp.DECRYPT_EEK, KMS.KMSOp.GENERATE_EEK, KMS.KMSOp.REENCRYPT_EEK);
-    private final List<KMSAuditLogger> auditLoggers = new LinkedList<>();
-    private Cache<String, AuditEvent> cache;
-    private ScheduledExecutorService executor;
+    static final Set<KMS.KMSOp> AGGREGATE_OPS_WHITELIST = Sets.newHashSet(KMS.KMSOp.GET_KEY_VERSION, KMS.KMSOp.GET_CURRENT_KEY, KMS.KMSOp.DECRYPT_EEK, KMS.KMSOp.GENERATE_EEK, KMS.KMSOp.REENCRYPT_EEK);
+
+    private final List<KMSAuditLogger>      auditLoggers = new LinkedList<>();
+    private final Cache<String, AuditEvent> cache;
+    private final ScheduledExecutorService  executor;
 
     /**
      * Create a new KMSAudit.
@@ -74,6 +75,7 @@ public class KMSAudit {
         // events is printed at the end of the window, along with a
         // count of the number of aggregated events.
         long windowMs = conf.getLong(KMSConfiguration.KMS_AUDIT_AGGREGATION_WINDOW, KMSConfiguration.KMS_AUDIT_AGGREGATION_WINDOW_DEFAULT);
+
         cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(windowMs, TimeUnit.MILLISECONDS)
                 .removalListener(new RemovalListener<String, AuditEvent>() {
@@ -87,13 +89,11 @@ public class KMSAudit {
                         }
                     }
                 }).build();
+
         executor = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(KMS_LOGGER_NAME + "_thread").build());
-        executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                cache.cleanUp();
-            }
-        }, windowMs / 10, windowMs / 10, TimeUnit.MILLISECONDS);
+
+        executor.scheduleAtFixedRate(cache::cleanUp, windowMs / 10, windowMs / 10, TimeUnit.MILLISECONDS);
+
         initializeAuditLoggers(conf);
     }
 
@@ -118,12 +118,12 @@ public class KMSAudit {
     }
 
     public void unauthenticated(String remoteHost, String method, String url, String extraMsg) {
-        op(OpStatus.UNAUTHENTICATED, null, null, null, remoteHost, "RemoteHost:"
-                + remoteHost + " Method:" + method + " URL:" + url + " ErrorMsg:'" + extraMsg + "'");
+        op(OpStatus.UNAUTHENTICATED, null, null, null, remoteHost, "RemoteHost:" + remoteHost + " Method:" + method + " URL:" + url + " ErrorMsg:'" + extraMsg + "'");
     }
 
     public void shutdown() {
         executor.shutdownNow();
+
         for (KMSAuditLogger logger : auditLoggers) {
             try {
                 logger.cleanup();
@@ -146,23 +146,27 @@ public class KMSAudit {
      * @return Collection of KMSAudigLogger classes.
      */
     private Set<Class<? extends KMSAuditLogger>> getAuditLoggerClasses(final Configuration conf) {
-        Set<Class<? extends KMSAuditLogger>> result = new HashSet<>();
-        // getTrimmedStringCollection will remove duplicates.
-        Collection<String> classes = conf.getTrimmedStringCollection(KMSConfiguration.KMS_AUDIT_LOGGER_KEY);
+        Set<Class<? extends KMSAuditLogger>> result  = new HashSet<>();
+        Collection<String>                   classes = conf.getTrimmedStringCollection(KMSConfiguration.KMS_AUDIT_LOGGER_KEY); // getTrimmedStringCollection will remove duplicates.
+
         if (classes.isEmpty()) {
             LOG.info("No audit logger configured, using default.");
+
             result.add(SimpleKMSAuditLogger.class);
+
             return result;
         }
 
         for (String c : classes) {
             try {
                 Class<?> cls = conf.getClassByName(c);
+
                 result.add(cls.asSubclass(KMSAuditLogger.class));
             } catch (ClassNotFoundException cnfe) {
                 throw new RuntimeException("Failed to load " + c + ", please check " + "configuration " + KMSConfiguration.KMS_AUDIT_LOGGER_KEY, cnfe);
             }
         }
+
         return result;
     }
 
@@ -173,14 +177,19 @@ public class KMSAudit {
      */
     private void initializeAuditLoggers(Configuration conf) {
         Set<Class<? extends KMSAuditLogger>> classes = getAuditLoggerClasses(conf);
+
         Preconditions.checkState(!classes.isEmpty(), "Should have at least 1 audit logger.");
+
         for (Class<? extends KMSAuditLogger> c : classes) {
             final KMSAuditLogger logger = ReflectionUtils.newInstance(c, conf);
+
             auditLoggers.add(logger);
         }
+
         for (KMSAuditLogger logger : auditLoggers) {
             try {
                 LOG.info("Initializing audit logger {}", logger.getClass());
+
                 logger.initialize(conf);
             } catch (Exception ex) {
                 throw new RuntimeException("Failed to initialize " + logger.getClass().getName(), ex);
@@ -190,6 +199,7 @@ public class KMSAudit {
 
     private void logEvent(final OpStatus status, AuditEvent event) {
         event.setEndTime(Time.now());
+
         for (KMSAuditLogger logger : auditLoggers) {
             logger.logAuditEvent(status, event);
         }
@@ -215,23 +225,22 @@ public class KMSAudit {
      */
     private void op(final OpStatus opStatus, final Object op, final UserGroupInformation ugi, final String key, final String remoteHost, final String extraMsg) {
         final String user = ugi == null ? null : ugi.getUserName();
+
         if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(key) && (op != null) && AGGREGATE_OPS_WHITELIST.contains(op)) {
             String cacheKey = createCacheKey(user, key, op);
+
             if (opStatus == OpStatus.UNAUTHORIZED) {
                 cache.invalidate(cacheKey);
+
                 logEvent(opStatus, new AuditEvent(op, ugi, key, remoteHost, extraMsg));
             } else {
                 try {
-                    AuditEvent event = cache.get(cacheKey, new Callable<AuditEvent>() {
-                        @Override
-                        public AuditEvent call() throws Exception {
-                            return new AuditEvent(op, ugi, key, remoteHost, extraMsg);
-                        }
-                    });
-                    // Log first access (initialized as -1 so
-                    // incrementAndGet() == 0 implies first access)
+                    AuditEvent event = cache.get(cacheKey, () -> new AuditEvent(op, ugi, key, remoteHost, extraMsg));
+
+                    // Log first access (initialized as -1 so incrementAndGet() == 0 implies first access)
                     if (event.getAccessCount().incrementAndGet() == 0) {
                         event.getAccessCount().incrementAndGet();
+
                         logEvent(opStatus, event);
                     }
                 } catch (ExecutionException ex) {
