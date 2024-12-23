@@ -23,11 +23,11 @@ public class KMSACLsType {
         SET_KEY_MATERIAL, GENERATE_EEK, DECRYPT_EEK;
 
         public String getAclConfigKey() {
-            return KMSConfiguration.CONFIG_PREFIX + "acl." + this.toString();
+            return KMSConfiguration.CONFIG_PREFIX + "acl." + this;
         }
 
         public String getBlacklistConfigKey() {
-            return KMSConfiguration.CONFIG_PREFIX + "blacklist." + this.toString();
+            return KMSConfiguration.CONFIG_PREFIX + "blacklist." + this;
         }
     }
 }
