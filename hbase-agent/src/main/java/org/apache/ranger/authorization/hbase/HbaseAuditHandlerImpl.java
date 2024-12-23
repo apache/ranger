@@ -29,9 +29,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements HbaseAuditHandler {
-    private static final Logger                LOG           = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
 
-    final                List<AuthzAuditEvent> allEventsList = new ArrayList<>();
+    final List<AuthzAuditEvent> allEventsList = new ArrayList<>();
+
     // we replace its contents anytime new audit events are generated.
     AuthzAuditEvent mostRecentEvent;
     boolean         superUserOverride;
@@ -41,14 +42,18 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
         LOG.debug("==> HbaseAuditHandlerImpl.getAuthzEvents({})", result);
 
         resetResourceForAudit(result.getAccessRequest());
+
         AuthzAuditEvent event = super.getAuthzEvents(result);
+
         // first accumulate last set of events and then capture these as the most recent ones
         if (mostRecentEvent != null) {
             LOG.debug("getAuthzEvents: got one event from default audit handler");
+
             allEventsList.add(mostRecentEvent);
         } else {
             LOG.debug("getAuthzEvents: no event produced by default audit handler");
         }
+
         mostRecentEvent = event;
 
         LOG.debug("==> getAuthzEvents: mostRecentEvent:{}", mostRecentEvent);
@@ -65,9 +70,11 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 
         // construct a new collection since we don't want to lose track of which were the most recent events;
         List<AuthzAuditEvent> result = new ArrayList<>(allEventsList);
+
         if (mostRecentEvent != null) {
             result.add(mostRecentEvent);
         }
+
         applySuperUserOverride(result);
 
         LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents(): count[{}] :result : {}", result.size(), result);
@@ -80,7 +87,9 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
         LOG.debug("==> HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent():");
 
         AuthzAuditEvent result = mostRecentEvent;
+
         applySuperUserOverride(result);
+
         mostRecentEvent = null;
 
         LOG.debug("<== HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent(): {}", result);
@@ -123,6 +132,7 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
             event.setAccessResult((short) 1);
             event.setPolicyId(-1);
         }
+
         LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
     }
 
@@ -131,6 +141,7 @@ public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements 
 
         if (request != null && request.getResource() instanceof RangerHBaseResource) {
             RangerHBaseResource hbaseResource = (RangerHBaseResource) request.getResource();
+
             hbaseResource.resetValue(RangerHBaseResource.KEY_TABLE);
         }
 
