@@ -33,12 +33,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
-    private static final Logger               LOG          = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
 
     // only to detect problems with initialization order, not for thread-safety.
     static final AtomicBoolean                isInitialized = new AtomicBoolean(false);
     // should never be null
     static final AtomicReference<Set<String>> superUsers    = new AtomicReference<>(new HashSet<>());
+
     private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
     public static void initialize(Configuration conf) {
@@ -49,16 +50,22 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
                 LOG.error("HbaseUserUtilsImpl.initialize: Internal error: called with null conf value!");
             } else {
                 String[] users = conf.getStrings(SUPERUSER_CONFIG_PROP);
+
                 if (users != null && users.length > 0) {
                     Set<String> superUsers = new HashSet<>(users.length);
+
                     for (String user : users) {
                         user = user.trim();
+
                         LOG.info("HbaseUserUtilsImpl.initialize: Adding Super User({})", user);
+
                         superUsers.add(user);
                     }
+
                     HbaseUserUtilsImpl.superUsers.set(superUsers);
                 }
             }
+
             isInitialized.set(true);
         }
     }
@@ -78,6 +85,7 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
             throw new IllegalArgumentException("User is null!");
         } else {
             String[] groupsArray = user.getGroupNames();
+
             return new HashSet<>(Arrays.asList(groupsArray));
         }
     }
@@ -86,11 +94,13 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
     public User getUser() {
         // current implementation does not use the request object!
         User user = null;
+
         try {
             user = RpcServer.getRequestUser().get();
         } catch (NoSuchElementException e) {
             LOG.info("Unable to get request user");
         }
+
         if (user == null) {
             try {
                 user = User.getCurrent();
@@ -98,12 +108,14 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
                 LOG.error("Unable to get current user: User.getCurrent() threw IOException");
             }
         }
+
         return user;
     }
 
     @Override
     public String getUserAsString() {
         User user = getUser();
+
         if (user == null) {
             return "";
         } else {
@@ -120,6 +132,7 @@ public class HbaseUserUtilsImpl implements HbaseUserUtils {
         if (!isInitialized.get()) {
             LOG.error("HbaseUserUtilsImpl.isSuperUser: Internal error: called before initialization was complete!");
         }
+
         Set<String> superUsers = HbaseUserUtilsImpl.superUsers.get(); // can never be null
         boolean     isSuper    = superUsers.contains(user.getShortName());
 
