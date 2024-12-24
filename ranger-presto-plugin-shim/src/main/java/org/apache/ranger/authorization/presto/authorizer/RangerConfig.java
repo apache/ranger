@@ -22,48 +22,60 @@ import io.airlift.configuration.Config;
 import io.airlift.configuration.ConfigDescription;
 
 public class RangerConfig {
-  private String keytab;
-  private String principal;
-  private boolean useUgi = false;
-  private String hadoopConfigPath;
+    private String  keytab;
+    private String  principal;
+    private boolean useUgi;
+    private String  hadoopConfigPath;
 
-  public String getKeytab() { return keytab; }
+    public String getKeytab() {
+        return keytab;
+    }
 
-  @Config("ranger.keytab")
-  @ConfigDescription("Keytab for authentication against Ranger")
-  @SuppressWarnings("unused")
-  public RangerConfig setKeytab(String keytab) {
-    this.keytab = keytab;
-    return this;
-  }
+    @Config("ranger.keytab")
+    @ConfigDescription("Keytab for authentication against Ranger")
+    @SuppressWarnings("unused")
+    public RangerConfig setKeytab(String keytab) {
+        this.keytab = keytab;
 
-  public String getPrincipal() { return principal; }
+        return this;
+    }
 
-  @Config("ranger.principal")
-  @ConfigDescription("Principal for authentication against Ranger with keytab")
-  @SuppressWarnings("unused")
-  public RangerConfig setPrincipal(String principal) {
-    this.principal = principal;
-    return this;
-  }
+    public String getPrincipal() {
+        return principal;
+    }
 
-  public boolean isUseUgi() { return useUgi; }
+    @Config("ranger.principal")
+    @ConfigDescription("Principal for authentication against Ranger with keytab")
+    @SuppressWarnings("unused")
+    public RangerConfig setPrincipal(String principal) {
+        this.principal = principal;
 
-  @Config("ranger.use_ugi")
-  @ConfigDescription("Use Hadoop User Group Information instead of Presto groups")
-  @SuppressWarnings("unused")
-  public RangerConfig setUseUgi(boolean useUgi) {
-    this.useUgi = useUgi;
-    return this;
-  }
+        return this;
+    }
 
-  @Config("ranger.hadoop_config")
-  @ConfigDescription("Path to hadoop configuration. Defaults to presto-ranger-site.xml in classpath")
-  @SuppressWarnings("unused")
-  public RangerConfig setHadoopConfigPath(String hadoopConfigPath) {
-    this.hadoopConfigPath = hadoopConfigPath;
-    return this;
-  }
+    public boolean isUseUgi() {
+        return useUgi;
+    }
 
-  public String getHadoopConfigPath() { return hadoopConfigPath; }
+    @Config("ranger.use_ugi")
+    @ConfigDescription("Use Hadoop User Group Information instead of Presto groups")
+    @SuppressWarnings("unused")
+    public RangerConfig setUseUgi(boolean useUgi) {
+        this.useUgi = useUgi;
+
+        return this;
+    }
+
+    public String getHadoopConfigPath() {
+        return hadoopConfigPath;
+    }
+
+    @Config("ranger.hadoop_config")
+    @ConfigDescription("Path to hadoop configuration. Defaults to presto-ranger-site.xml in classpath")
+    @SuppressWarnings("unused")
+    public RangerConfig setHadoopConfigPath(String hadoopConfigPath) {
+        this.hadoopConfigPath = hadoopConfigPath;
+
+        return this;
+    }
 }
