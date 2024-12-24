@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 
 public abstract class DaoManagerBase {
     static final Logger logger = LoggerFactory.getLogger(DaoManagerBase.class);
+
     private RangerMasterKeyDao rangerMasterKeyDao;
     private RangerKMSDao       rangerKmsDao;
 
@@ -44,6 +45,7 @@ public abstract class DaoManagerBase {
         if (rangerKmsDao == null) {
             rangerKmsDao = new RangerKMSDao(this);
         }
+
         return rangerKmsDao;
     }
 }
