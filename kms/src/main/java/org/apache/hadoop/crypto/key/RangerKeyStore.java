@@ -17,7 +17,29 @@
 
 package org.apache.hadoop.crypto.key;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.keyvault.KeyVaultClient;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.key.KeyProvider.Metadata;
+import org.apache.hadoop.crypto.key.RangerKeyStoreProvider.KeyMetadata;
+import org.apache.ranger.entity.XXRangerKeyStore;
+import org.apache.ranger.kms.dao.DaoManager;
+import org.apache.ranger.kms.dao.RangerKMSDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SealedObject;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -59,27 +81,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SealedObject;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.crypto.key.KeyProvider.Metadata;
-import org.apache.hadoop.crypto.key.RangerKeyStoreProvider.KeyMetadata;
-import org.apache.ranger.entity.XXRangerKeyStore;
-import org.apache.ranger.kms.dao.DaoManager;
-import org.apache.ranger.kms.dao.RangerKMSDao;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class provides the Database store implementation.
@@ -99,9 +100,8 @@ public class RangerKeyStore extends KeyStoreSpi {
     private final    RangerKMSDao        kmsDao;
     private final    RangerKMSMKI        masterKeyProvider;
     private final    boolean             keyVaultEnabled;
-    private volatile Map<String, Object> keyEntries   = new ConcurrentHashMap<>();
     private final    Map<String, Object> deltaEntries = new ConcurrentHashMap<>();
-
+    private volatile Map<String, Object> keyEntries   = new ConcurrentHashMap<>();
 
     public RangerKeyStore(DaoManager daoManager) {
         this(daoManager, false, null);
@@ -121,9 +121,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
     @Override
     public Key engineGetKey(String alias, char[] password) throws NoSuchAlgorithmException, UnrecoverableKeyException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineGetKey({})", alias);
-        }
+        logger.debug("==> engineGetKey({})", alias);
 
         alias = convertAlias(alias);
 
@@ -139,119 +137,24 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineGetKey({}): ret={}", alias, ret);
-        }
+        logger.debug("<== engineGetKey({}): ret={}", alias, ret);
 
         return ret;
     }
 
-    public byte[] engineGetDecryptedZoneKeyByte(String alias) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineGetDecryptedZoneKeyByte({})", alias);
-        }
-
-        alias = convertAlias(alias);
-
-        Object entry = keyEntries.get(alias);
-
-        byte[] ret = null;
-
-        try {
-            if (entry instanceof SecretKeyByteEntry) {
-                SecretKeyByteEntry key = (SecretKeyByteEntry) entry;
-
-                ret = masterKeyProvider.decryptZoneKey(key.key);
-            }
-        } catch (Exception ex) {
-            throw new Exception("Error while decrypting zone key. Name : " + alias + " Error : " + ex);
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineGetDecryptedZoneKeyByte({}): ret={}", alias, ret);
-        }
-
-        return ret;
+    @Override
+    public Certificate[] engineGetCertificateChain(String alias) {
+        return null;
     }
 
-    public Key engineGetDecryptedZoneKey(String alias) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineGetDecryptedZoneKey({})", alias);
-        }
-
-        byte[]   decryptKeyByte = engineGetDecryptedZoneKeyByte(alias);
-        Metadata metadata       = engineGetKeyMetadata(alias);
-        Key      ret            = new KeyByteMetadata(metadata, decryptKeyByte);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineGetDecryptedZoneKey({}): ret={}", alias, ret);
-        }
-
-        return ret;
-    }
-
-    public Metadata engineGetKeyMetadata(String alias) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineGetKeyMetadata({})", alias);
-        }
-
-        alias = convertAlias(alias);
-
-        Object entry = keyEntries.get(alias);
-
-        Metadata ret = null;
-
-        if (entry instanceof SecretKeyByteEntry) {
-            SecretKeyByteEntry  key           = (SecretKeyByteEntry) entry;
-            ObjectMapper        mapper        = new ObjectMapper();
-            Map<String, String> attributesMap = null;
-
-            try {
-                attributesMap = mapper.readValue(key.attributes, new TypeReference<Map<String, String>>() {});
-            } catch (IOException e) {
-                logger.error("engineGetKeyMetadata({}): invalid attribute string data", alias, e);
-            }
-
-            ret = new Metadata(key.cipher_field, key.bit_length, key.description, attributesMap, key.date, key.version);
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineGetKeyMetadata({}): ret={}", alias, ret);
-        }
-
-        return ret;
-    }
-
-    public void addSecureKeyByteEntry(String alias, Key key, String cipher, int bitLength, String description, int version, String attributes) throws KeyStoreException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> addSecureKeyByteEntry({})", alias);
-        }
-
-        SecretKeyByteEntry entry;
-
-        try {
-            entry = new SecretKeyByteEntry(masterKeyProvider.encryptZoneKey(key), cipher, bitLength, description, version, attributes);
-        } catch (Exception e) {
-            logger.error("addSecureKeyByteEntry({})", alias, e);
-
-            throw new KeyStoreException(e.getMessage());
-        }
-
-        alias = convertAlias(alias);
-
-        deltaEntries.put(alias, entry);
-        keyEntries.put(alias, entry);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== addSecureKeyByteEntry({})", alias);
-        }
+    @Override
+    public Certificate engineGetCertificate(String alias) {
+        return null;
     }
 
     @Override
     public Date engineGetCreationDate(String alias) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineGetCreationDate({})", alias);
-        }
+        logger.debug("==> engineGetCreationDate({})", alias);
 
         alias = convertAlias(alias);
 
@@ -266,43 +169,26 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineGetCreationDate({}): ret={}", alias, ret);
-        }
+        logger.debug("<== engineGetCreationDate({}): ret={}", alias, ret);
 
         return ret;
     }
 
-    public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes) throws KeyStoreException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> addKeyEntry({})", alias);
-        }
+    @Override
+    public void engineSetKeyEntry(String alias, Key key, char[] password, Certificate[] chain) {
+    }
 
-        SecretKeyEntry entry;
+    @Override
+    public void engineSetKeyEntry(String arg0, byte[] arg1, Certificate[] arg2) {
+    }
 
-        try {
-            entry = new SecretKeyEntry(sealKey(key, password), cipher, bitLength, description, version, attributes);
-        } catch (Exception e) {
-            logger.error("addKeyEntry({}) error", alias, e);
-
-            throw new KeyStoreException(e.getMessage());
-        }
-
-        alias = convertAlias(alias);
-
-        deltaEntries.put(alias, entry);
-        keyEntries.put(alias, entry);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== addKeyEntry({})", alias);
-        }
+    @Override
+    public void engineSetCertificateEntry(String alias, Certificate cert) {
     }
 
     @Override
     public void engineDeleteEntry(String alias) throws KeyStoreException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineDeleteEntry({})", alias);
-        }
+        logger.debug("==> engineDeleteEntry({})", alias);
 
         alias = convertAlias(alias);
 
@@ -311,9 +197,7 @@ public class RangerKeyStore extends KeyStoreSpi {
         keyEntries.remove(alias);
         deltaEntries.remove(alias);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineDeleteEntry({})", alias);
-        }
+        logger.debug("<== engineDeleteEntry({})", alias);
     }
 
     @Override
@@ -327,9 +211,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         boolean ret = keyEntries.containsKey(alias);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineContainsAlias({}): ret={}", alias, ret);
-        }
+        logger.debug("<== engineContainsAlias({}): ret={}", alias, ret);
 
         return ret;
     }
@@ -338,27 +220,38 @@ public class RangerKeyStore extends KeyStoreSpi {
     public int engineSize() {
         int ret = keyEntries.size();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineSize(): ret={}", ret);
-        }
+        logger.debug("<== engineSize(): ret={}", ret);
 
         return ret;
     }
 
     @Override
+    public boolean engineIsKeyEntry(String alias) {
+        return false;
+    }
+
+    @Override
+    public boolean engineIsCertificateEntry(String alias) {
+        return false;
+    }
+
+    @Override
+    public String engineGetCertificateAlias(Certificate cert) {
+        return null;
+    }
+
+    @Override
     public void engineStore(OutputStream stream, char[] password) throws IOException, NoSuchAlgorithmException, CertificateException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineStore()");
-        }
+        logger.debug("==> engineStore()");
 
         if (keyVaultEnabled) {
             for (Entry<String, Object> entry : deltaEntries.entrySet()) {
                 Long               creationDate     = ((SecretKeyByteEntry) entry.getValue()).date.getTime();
                 SecretKeyByteEntry secretSecureKey  = (SecretKeyByteEntry) entry.getValue();
                 XXRangerKeyStore   xxRangerKeyStore = mapObjectToEntity(entry.getKey(), creationDate, secretSecureKey.key,
-                                                                        secretSecureKey.cipher_field, secretSecureKey.bit_length,
-                                                                        secretSecureKey.description, secretSecureKey.version,
-                                                                        secretSecureKey.attributes);
+                        secretSecureKey.cipherField, secretSecureKey.bitLength, secretSecureKey.description, secretSecureKey.version,
+                        secretSecureKey.attributes);
+
                 dbOperationStore(xxRangerKeyStore);
             }
         } else {
@@ -367,14 +260,14 @@ public class RangerKeyStore extends KeyStoreSpi {
                 throw new IllegalArgumentException("Ranger Master Key can't be null");
             }
 
-            MessageDigest md       = getKeyedMessageDigest(password);
-            byte          digest[] = md.digest();
+            MessageDigest md    = getKeyedMessageDigest(password);
+            byte[]       digest = md.digest();
 
             for (Entry<String, Object> entry : deltaEntries.entrySet()) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-                try (DataOutputStream   dos = new DataOutputStream(new DigestOutputStream(baos, md));
-                     ObjectOutputStream oos = new ObjectOutputStream(dos)) {
+                try (DataOutputStream dos = new DataOutputStream(new DigestOutputStream(baos, md));
+                        ObjectOutputStream oos = new ObjectOutputStream(dos)) {
                     oos.writeObject(((SecretKeyEntry) entry.getValue()).sealedKey);
 
                     dos.write(digest);
@@ -383,9 +276,10 @@ public class RangerKeyStore extends KeyStoreSpi {
                     Long             creationDate     = ((SecretKeyEntry) entry.getValue()).date.getTime();
                     SecretKeyEntry   secretKey        = (SecretKeyEntry) entry.getValue();
                     XXRangerKeyStore xxRangerKeyStore = mapObjectToEntity(entry.getKey(), creationDate, baos.toByteArray(),
-                                                                          secretKey.cipher_field, secretKey.bit_length,
-                                                                          secretKey.description, secretKey.version,
-                                                                          secretKey.attributes);
+                            secretKey.cipherField, secretKey.bitLength,
+                            secretKey.description, secretKey.version,
+                            secretKey.attributes);
+
                     dbOperationStore(xxRangerKeyStore);
                 }
             }
@@ -393,55 +287,17 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         deltaEntries.clear();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineStore()");
-        }
-    }
-
-    public void dbOperationStore(XXRangerKeyStore rangerKeyStore) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> dbOperationStore({})", rangerKeyStore.getAlias());
-        }
-
-        try {
-            if (kmsDao != null) {
-                XXRangerKeyStore xxRangerKeyStore = kmsDao.findByAlias(rangerKeyStore.getAlias());
-                boolean          keyStoreExists   = true;
-
-                if (xxRangerKeyStore == null) {
-                    xxRangerKeyStore = new XXRangerKeyStore();
-                    keyStoreExists   = false;
-                }
-
-                xxRangerKeyStore = mapToEntityBean(rangerKeyStore, xxRangerKeyStore);
-
-                if (keyStoreExists) {
-                    kmsDao.update(xxRangerKeyStore);
-                } else {
-                    kmsDao.create(xxRangerKeyStore);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("dbOperationStore({}) error", rangerKeyStore.getAlias(), e);
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== dbOperationStore({})", rangerKeyStore.getAlias());
-        }
+        logger.debug("<== engineStore()");
     }
 
     @Override
     public void engineLoad(InputStream stream, char[] password) throws IOException, NoSuchAlgorithmException, CertificateException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineLoad()");
-        }
+        logger.debug("==> engineLoad()");
 
         List<XXRangerKeyStore> rangerKeyDetails = dbOperationLoad();
 
         if (rangerKeyDetails == null || rangerKeyDetails.size() < 1) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("RangerKeyStore might be null or key is not present in the database.");
-            }
+            logger.debug("RangerKeyStore might be null or key is not present in the database.");
 
             return;
         }
@@ -450,13 +306,14 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         if (keyVaultEnabled) {
             for (XXRangerKeyStore rangerKey : rangerKeyDetails) {
-                String             encodedStr  = rangerKey.getEncoded();
-                byte[]             encodedByte = DatatypeConverter.parseBase64Binary(encodedStr);
-                String             alias       = rangerKey.getAlias();
-                SecretKeyByteEntry entry       = new SecretKeyByteEntry(new Date(rangerKey.getCreatedDate()), encodedByte,
-                                                                        rangerKey.getCipher(), rangerKey.getBitLength(),
-                                                                        rangerKey.getDescription(), rangerKey.getVersion(),
-                                                                        rangerKey.getAttributes());
+                String encodedStr  = rangerKey.getEncoded();
+                byte[] encodedByte = DatatypeConverter.parseBase64Binary(encodedStr);
+                String alias       = rangerKey.getAlias();
+
+                SecretKeyByteEntry entry = new SecretKeyByteEntry(new Date(rangerKey.getCreatedDate()), encodedByte,
+                        rangerKey.getCipher(), rangerKey.getBitLength(),
+                        rangerKey.getDescription(), rangerKey.getVersion(),
+                        rangerKey.getAttributes());
 
                 logger.debug("engineLoad(): loaded key {}", rangerKey.getAlias());
 
@@ -469,7 +326,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                 md = getKeyedMessageDigest(password);
             }
 
-            byte computed[] = {};
+            byte[] computed = {};
 
             if (md != null) {
                 computed = md.digest();
@@ -506,15 +363,15 @@ public class RangerKeyStore extends KeyStoreSpi {
                 // read the (entry creation) date
                 // read the sealed key
                 try (DataInputStream dis = password != null ? new DataInputStream(new DigestInputStream(stream, md)) : new DataInputStream(stream);
-                     ObjectInputStream ois = new ObjectInputStream(dis)) {
+                        ObjectInputStream ois = new ObjectInputStream(dis)) {
                     sealedKey = (SealedObject) ois.readObject();
                 } catch (ClassNotFoundException cnfe) {
                     throw new IOException(cnfe.getMessage());
                 }
 
                 SecretKeyEntry entry = new SecretKeyEntry(new Date(rangerKey.getCreatedDate()), sealedKey, rangerKey.getCipher(),
-                                                          rangerKey.getBitLength(), rangerKey.getDescription(), rangerKey.getVersion(),
-                                                          rangerKey.getAttributes());
+                        rangerKey.getBitLength(), rangerKey.getDescription(), rangerKey.getVersion(),
+                        rangerKey.getAttributes());
 
                 logger.debug("engineLoad(): loaded key {}", rangerKey.getAlias());
 
@@ -523,61 +380,150 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("engineLoad(): loaded {} keys", keyEntries.size());
-        }
+        logger.debug("engineLoad(): loaded {} keys", keyEntries.size());
 
         this.keyEntries = keyEntries;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("engineLoad(): keyEntries switched with {} keys", keyEntries.size());
+        logger.debug("engineLoad(): keyEntries switched with {} keys", keyEntries.size());
+    }
+
+    public byte[] engineGetDecryptedZoneKeyByte(String alias) throws Exception {
+        logger.debug("==> engineGetDecryptedZoneKeyByte({})", alias);
+
+        alias = convertAlias(alias);
+
+        Object entry = keyEntries.get(alias);
+        byte[] ret   = null;
+
+        try {
+            if (entry instanceof SecretKeyByteEntry) {
+                SecretKeyByteEntry key = (SecretKeyByteEntry) entry;
+
+                ret = masterKeyProvider.decryptZoneKey(key.key);
+            }
+        } catch (Exception ex) {
+            throw new Exception("Error while decrypting zone key. Name : " + alias + " Error : " + ex);
         }
+
+        logger.debug("<== engineGetDecryptedZoneKeyByte({}): ret={}", alias, ret);
+
+        return ret;
     }
 
-    @Override
-    public void engineSetKeyEntry(String arg0, byte[] arg1, Certificate[] arg2) {
+    public Key engineGetDecryptedZoneKey(String alias) throws Exception {
+        logger.debug("==> engineGetDecryptedZoneKey({})", alias);
+
+        byte[]   decryptKeyByte = engineGetDecryptedZoneKeyByte(alias);
+        Metadata metadata       = engineGetKeyMetadata(alias);
+        Key      ret            = new KeyByteMetadata(metadata, decryptKeyByte);
+
+        logger.debug("<== engineGetDecryptedZoneKey({}): ret={}", alias, ret);
+
+        return ret;
     }
 
-    @Override
-    public Certificate engineGetCertificate(String alias) {
-        return null;
+    public Metadata engineGetKeyMetadata(String alias) {
+        logger.debug("==> engineGetKeyMetadata({})", alias);
+
+        alias = convertAlias(alias);
+
+        Object   entry = keyEntries.get(alias);
+        Metadata ret   = null;
+
+        if (entry instanceof SecretKeyByteEntry) {
+            SecretKeyByteEntry  key           = (SecretKeyByteEntry) entry;
+            ObjectMapper        mapper        = new ObjectMapper();
+            Map<String, String> attributesMap = null;
+
+            try {
+                attributesMap = mapper.readValue(key.attributes, new TypeReference<Map<String, String>>() {});
+            } catch (IOException e) {
+                logger.error("engineGetKeyMetadata({}): invalid attribute string data", alias, e);
+            }
+
+            ret = new Metadata(key.cipherField, key.bitLength, key.description, attributesMap, key.date, key.version);
+        }
+
+        logger.debug("<== engineGetKeyMetadata({}): ret={}", alias, ret);
+
+        return ret;
     }
 
-    @Override
-    public String engineGetCertificateAlias(Certificate cert) {
-        return null;
+    public void addSecureKeyByteEntry(String alias, Key key, String cipher, int bitLength, String description, int version, String attributes) throws KeyStoreException {
+        logger.debug("==> addSecureKeyByteEntry({})", alias);
+
+        SecretKeyByteEntry entry;
+
+        try {
+            entry = new SecretKeyByteEntry(masterKeyProvider.encryptZoneKey(key), cipher, bitLength, description, version, attributes);
+        } catch (Exception e) {
+            logger.error("addSecureKeyByteEntry({})", alias, e);
+
+            throw new KeyStoreException(e.getMessage());
+        }
+
+        alias = convertAlias(alias);
+
+        deltaEntries.put(alias, entry);
+        keyEntries.put(alias, entry);
+
+        logger.debug("<== addSecureKeyByteEntry({})", alias);
     }
 
-    @Override
-    public Certificate[] engineGetCertificateChain(String alias) {
-        return null;
+    public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes) throws KeyStoreException {
+        logger.debug("==> addKeyEntry({})", alias);
+
+        SecretKeyEntry entry;
+
+        try {
+            entry = new SecretKeyEntry(sealKey(key, password), cipher, bitLength, description, version, attributes);
+        } catch (Exception e) {
+            logger.error("addKeyEntry({}) error", alias, e);
+
+            throw new KeyStoreException(e.getMessage());
+        }
+
+        alias = convertAlias(alias);
+
+        deltaEntries.put(alias, entry);
+        keyEntries.put(alias, entry);
+
+        logger.debug("<== addKeyEntry({})", alias);
     }
 
-    @Override
-    public boolean engineIsCertificateEntry(String alias) {
-        return false;
-    }
+    public void dbOperationStore(XXRangerKeyStore rangerKeyStore) {
+        logger.debug("==> dbOperationStore({})", rangerKeyStore.getAlias());
 
-    @Override
-    public boolean engineIsKeyEntry(String alias) {
-        return false;
-    }
+        try {
+            if (kmsDao != null) {
+                XXRangerKeyStore xxRangerKeyStore = kmsDao.findByAlias(rangerKeyStore.getAlias());
+                boolean          keyStoreExists   = true;
 
-    @Override
-    public void engineSetCertificateEntry(String alias, Certificate cert) {
-    }
+                if (xxRangerKeyStore == null) {
+                    xxRangerKeyStore = new XXRangerKeyStore();
+                    keyStoreExists   = false;
+                }
 
-    @Override
-    public void engineSetKeyEntry(String alias, Key key, char[] password, Certificate[] chain) {
+                xxRangerKeyStore = mapToEntityBean(rangerKeyStore, xxRangerKeyStore);
+
+                if (keyStoreExists) {
+                    kmsDao.update(xxRangerKeyStore);
+                } else {
+                    kmsDao.create(xxRangerKeyStore);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("dbOperationStore({}) error", rangerKeyStore.getAlias(), e);
+        }
+
+        logger.debug("<== dbOperationStore({})", rangerKeyStore.getAlias());
     }
 
     //
     // The method is created to support JKS migration (from hadoop-common KMS keystore to RangerKMS keystore)
     //
     public void engineLoadKeyStoreFile(InputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineLoadKeyStoreFile()");
-        }
+        logger.debug("==> engineLoadKeyStoreFile()");
 
         if (keyVaultEnabled) {
             try {
@@ -587,27 +533,27 @@ public class RangerKeyStore extends KeyStoreSpi {
 
                 deltaEntries.clear();
 
-                for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();) {
+                for (Enumeration<String> name = ks.aliases(); name.hasMoreElements(); ) {
                     final String    alias       = name.nextElement();
                     final String[]  aliasSplits = alias.split("@");
                     Key             k           = ks.getKey(alias, keyPass);
-                    final String    cipher_field;
-                    final int       bit_length;
+                    final String    cipherField;
+                    final int       bitLength;
                     final int       version;
                     final SecretKey secretKey;
 
-
                     if (k instanceof JavaKeyStoreProvider.KeyMetadata) {
                         JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata) k;
-                        Field                            f           = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME);
+
+                        Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME);
 
                         f.setAccessible(true);
 
                         Metadata metadata = (Metadata) f.get(keyMetadata);
 
-                        bit_length   = metadata.getBitLength();
-                        cipher_field = metadata.getAlgorithm();
-                        version      = metadata.getVersions();
+                        bitLength   = metadata.getBitLength();
+                        cipherField = metadata.getAlgorithm();
+                        version     = metadata.getVersions();
 
                         Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class.getDeclaredConstructor(Metadata.class);
 
@@ -619,9 +565,9 @@ public class RangerKeyStore extends KeyStoreSpi {
                     } else if (k instanceof KeyByteMetadata) {
                         Metadata metadata = ((KeyByteMetadata) k).metadata;
 
-                        cipher_field = metadata.getCipher();
-                        version      = metadata.getVersions();
-                        bit_length   = metadata.getBitLength();
+                        cipherField = metadata.getCipher();
+                        version     = metadata.getVersions();
+                        bitLength   = metadata.getBitLength();
 
                         if (k.getEncoded() != null && k.getEncoded().length > 0) {
                             secretKey = new SecretKeySpec(k.getEncoded(), getAlgorithm(metadata.getAlgorithm()));
@@ -637,9 +583,9 @@ public class RangerKeyStore extends KeyStoreSpi {
                     } else if (k instanceof KeyMetadata) {
                         Metadata metadata = ((KeyMetadata) k).metadata;
 
-                        bit_length   = metadata.getBitLength();
-                        cipher_field = metadata.getCipher();
-                        version      = metadata.getVersions();
+                        bitLength   = metadata.getBitLength();
+                        cipherField = metadata.getCipher();
+                        version     = metadata.getVersions();
 
                         if (k.getEncoded() != null && k.getEncoded().length > 0) {
                             secretKey = new SecretKeySpec(k.getEncoded(), getAlgorithm(metadata.getAlgorithm()));
@@ -653,8 +599,8 @@ public class RangerKeyStore extends KeyStoreSpi {
                             secretKey = new SecretKeySpec(keyByte, getAlgorithm(metadata.getCipher()));
                         }
                     } else {
-                        bit_length   = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
-                        cipher_field = k.getAlgorithm();
+                        bitLength   = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
+                        cipherField = k.getAlgorithm();
 
                         if (aliasSplits.length == 2) {
                             version = Integer.parseInt(aliasSplits[1]) + 1;
@@ -677,7 +623,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     byte[]             key         = masterKeyProvider.encryptZoneKey(secretKey);
                     Date               date        = ks.getCreationDate(alias);
                     String             description = k.getFormat() + " - " + ks.getType();
-                    SecretKeyByteEntry entry       = new SecretKeyByteEntry(date, key, cipher_field, bit_length, description, version, attributes);
+                    SecretKeyByteEntry entry       = new SecretKeyByteEntry(date, key, cipherField, bitLength, description, version, attributes);
 
                     deltaEntries.put(alias, entry);
                 }
@@ -694,25 +640,26 @@ public class RangerKeyStore extends KeyStoreSpi {
 
                 deltaEntries.clear();
 
-                for (Enumeration<String> name = ks.aliases(); name.hasMoreElements();) {
-                    String          alias       = name.nextElement();
-                    final String[]  aliasSplits = alias.split("@");
-                    Key             k           = ks.getKey(alias, keyPass);
-                    final String    cipher_field;
-                    final int       bit_length;
-                    final int       version;
+                for (Enumeration<String> name = ks.aliases(); name.hasMoreElements(); ) {
+                    String         alias       = name.nextElement();
+                    final String[] aliasSplits = alias.split("@");
+                    Key            k           = ks.getKey(alias, keyPass);
+                    final String   cipherField;
+                    final int      bitLength;
+                    final int      version;
 
                     if (k instanceof JavaKeyStoreProvider.KeyMetadata) {
                         JavaKeyStoreProvider.KeyMetadata keyMetadata = (JavaKeyStoreProvider.KeyMetadata) k;
-                        Field                            f           = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME);
+
+                        Field f = JavaKeyStoreProvider.KeyMetadata.class.getDeclaredField(METADATA_FIELDNAME);
 
                         f.setAccessible(true);
 
                         Metadata metadata = (Metadata) f.get(keyMetadata);
 
-                        bit_length   = metadata.getBitLength();
-                        cipher_field = metadata.getAlgorithm();
-                        version      = metadata.getVersions();
+                        bitLength   = metadata.getBitLength();
+                        cipherField = metadata.getAlgorithm();
+                        version     = metadata.getVersions();
 
                         Constructor<RangerKeyStoreProvider.KeyMetadata> constructor = RangerKeyStoreProvider.KeyMetadata.class.getDeclaredConstructor(Metadata.class);
 
@@ -722,13 +669,13 @@ public class RangerKeyStore extends KeyStoreSpi {
                     } else if (k instanceof KeyMetadata) {
                         Metadata metadata = ((KeyMetadata) k).metadata;
 
-                        bit_length   = metadata.getBitLength();
-                        cipher_field = metadata.getCipher();
-                        version      = metadata.getVersions();
+                        bitLength   = metadata.getBitLength();
+                        cipherField = metadata.getCipher();
+                        version     = metadata.getVersions();
                     } else {
-                        bit_length   = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
-                        cipher_field = k.getAlgorithm();
-                        version      = (aliasSplits.length == 2) ? (Integer.parseInt(aliasSplits[1]) + 1) : 1;
+                        bitLength   = (k.getEncoded().length * NUMBER_OF_BITS_PER_BYTE);
+                        cipherField = k.getAlgorithm();
+                        version     = (aliasSplits.length == 2) ? (Integer.parseInt(aliasSplits[1]) + 1) : 1;
                     }
 
                     String keyName = aliasSplits[0];
@@ -738,7 +685,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     SealedObject sealedKey;
 
                     try {
-                        Class<?>       c           = Class.forName("com.sun.crypto.provider.KeyProtector");
+                        Class<?>  c = Class.forName("com.sun.crypto.provider.KeyProtector");
                         Constructor<?> constructor = c.getDeclaredConstructor(char[].class);
 
                         constructor.setAccessible(true);
@@ -761,7 +708,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     String attributes  = "{\"key.acl.name\":\"" + keyName + "\"}";
                     String description = k.getFormat() + " - " + ks.getType();
 
-                    SecretKeyEntry entry = new SecretKeyEntry(ks.getCreationDate(alias), sealedKey, cipher_field, bit_length, description, version, attributes);
+                    SecretKeyEntry entry = new SecretKeyEntry(ks.getCreationDate(alias), sealedKey, cipherField, bitLength, description, version, attributes);
 
                     deltaEntries.put(alias, entry);
                 }
@@ -771,15 +718,11 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== engineLoadKeyStoreFile()");
-        }
+        logger.debug("<== engineLoadKeyStoreFile()");
     }
 
     public void engineLoadToKeyStoreFile(OutputStream stream, char[] storePass, char[] keyPass, char[] masterKey, String fileFormat) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> engineLoadToKeyStoreFile()");
-        }
+        logger.debug("==> engineLoadToKeyStoreFile()");
 
         try {
             KeyStore ks = KeyStore.getInstance(fileFormat);
@@ -793,7 +736,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     String alias = e.nextElement();
                     Key    key;
 
-                    if(keyVaultEnabled){
+                    if (keyVaultEnabled) {
                         key = engineGetDecryptedZoneKey(alias);
                     } else {
                         key = engineGetKey(alias, masterKey);
@@ -866,8 +809,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                 Long   creationDate = new Date().getTime();
                 String attributes   = secretKey.attributes;
 
-                xxRangerKeyStore = mapObjectToEntity(alias, creationDate, encryptedKey, meta.getCipher(),
-                                                     meta.getBitLength(), meta.getDescription(), meta.getVersions(), attributes);
+                xxRangerKeyStore = mapObjectToEntity(alias, creationDate, encryptedKey, meta.getCipher(), meta.getBitLength(), meta.getDescription(), meta.getVersions(), attributes);
             } else {
                 byte[]   encryptedKey = rangerMKeyProvider.encryptZoneKey(key);
                 Long     creationDate = secretKey.date.getTime();
@@ -878,8 +820,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     version++;
                 }
 
-                xxRangerKeyStore = mapObjectToEntity(alias, creationDate, encryptedKey, secretKey.cipher_field,
-                                                     secretKey.bit_length, secretKey.description, version, secretKey.attributes);
+                xxRangerKeyStore = mapObjectToEntity(alias, creationDate, encryptedKey, secretKey.cipherField, secretKey.bitLength, secretKey.description, version, secretKey.attributes);
             }
 
             return xxRangerKeyStore;
@@ -888,14 +829,14 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
     }
 
-    private XXRangerKeyStore mapObjectToEntity(String alias, Long creationDate, byte[] byteArray, String cipher_field, int bit_length, String description, int version, String attributes) {
+    private XXRangerKeyStore mapObjectToEntity(String alias, Long creationDate, byte[] byteArray, String cipherField, int bitLength, String description, int version, String attributes) {
         XXRangerKeyStore xxRangerKeyStore = new XXRangerKeyStore();
 
         xxRangerKeyStore.setAlias(alias);
         xxRangerKeyStore.setCreatedDate(creationDate);
         xxRangerKeyStore.setEncoded(DatatypeConverter.printBase64Binary(byteArray));
-        xxRangerKeyStore.setCipher(cipher_field);
-        xxRangerKeyStore.setBitLength(bit_length);
+        xxRangerKeyStore.setCipher(cipherField);
+        xxRangerKeyStore.setBitLength(bitLength);
         xxRangerKeyStore.setDescription(description);
         xxRangerKeyStore.setVersion(version);
         xxRangerKeyStore.setAttributes(attributes);
@@ -904,9 +845,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     }
 
     private void dbOperationDelete(String alias) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> dbOperationDelete({})", alias);
-        }
+        logger.debug("==> dbOperationDelete({})", alias);
 
         try {
             if (kmsDao != null) {
@@ -916,9 +855,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             logger.error("dbOperationDelete({}) error", alias, e);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== dbOperationDelete({})", alias);
-        }
+        logger.debug("<== dbOperationDelete({})", alias);
     }
 
     private XXRangerKeyStore mapToEntityBean(XXRangerKeyStore rangerKMSKeyStore, XXRangerKeyStore xxRangerKeyStore) {
@@ -935,9 +872,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     }
 
     private List<XXRangerKeyStore> dbOperationLoad() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> dbOperationLoad()");
-        }
+        logger.debug("==> dbOperationLoad()");
 
         List<XXRangerKeyStore> ret = null;
 
@@ -949,9 +884,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             logger.error("dbOperationLoad() error", e);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== dbOperationLoad(): count={}", (ret != null ? ret.size() : 0));
-        }
+        logger.debug("<== dbOperationLoad(): count={}", (ret != null ? ret.size() : 0));
 
         return ret;
     }
@@ -983,9 +916,7 @@ public class RangerKeyStore extends KeyStoreSpi {
     }
 
     private SealedObject sealKey(Key key, char[] password) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> sealKey()");
-        }
+        logger.debug("==> sealKey()");
 
         // Create SecretKey
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
@@ -1007,17 +938,13 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         RangerSealedObject ret = new RangerSealedObject(key, cipher);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== sealKey(): ret={}", ret);
-        }
+        logger.debug("<== sealKey(): ret={}", ret);
 
         return ret;
     }
 
     private Key unsealKey(SealedObject sealedKey, char[] password) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> unsealKey()");
-        }
+        logger.debug("==> unsealKey()");
 
         // Create SecretKey
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
@@ -1042,9 +969,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         Key ret = (Key) sealedKey.getObject(cipher);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== unsealKey(): ret={}", ret);
-        }
+        logger.debug("<== unsealKey(): ret={}", ret);
 
         return ret;
     }
@@ -1058,8 +983,8 @@ public class RangerKeyStore extends KeyStoreSpi {
     private static final class SecretKeyEntry {
         final Date         date; // the creation date of this entry
         final SealedObject sealedKey;
-        final String       cipher_field;
-        final int          bit_length;
+        final String       cipherField;
+        final int          bitLength;
         final String       description;
         final String       attributes;
         final int          version;
@@ -1069,21 +994,21 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
 
         SecretKeyEntry(Date date, SealedObject sealedKey, String cipher, int bitLength, String description, int version, String attributes) {
-            this.date         = date;
-            this.sealedKey    = sealedKey;
-            this.cipher_field = cipher;
-            this.bit_length   = bitLength;
-            this.description  = description;
-            this.version      = version;
-            this.attributes   = attributes;
+            this.date        = date;
+            this.sealedKey   = sealedKey;
+            this.cipherField = cipher;
+            this.bitLength   = bitLength;
+            this.description = description;
+            this.version     = version;
+            this.attributes  = attributes;
         }
     }
 
     private static final class SecretKeyByteEntry {
         final Date   date;
         final byte[] key;
-        final String cipher_field;
-        final int    bit_length;
+        final String cipherField;
+        final int    bitLength;
         final String description;
         final String attributes;
         final int    version;
@@ -1093,14 +1018,13 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
 
         SecretKeyByteEntry(Date date, byte[] key, String ciper, int bitLength, String description, int version, String attributes) {
-            this.date         = date;
-            this.key          = key;
-            this.cipher_field = ciper;
-            this.bit_length   = bitLength;
-            this.description  = description;
-            this.version      = version;
-            this.attributes   = attributes;
-
+            this.date        = date;
+            this.key         = key;
+            this.cipherField = ciper;
+            this.bitLength   = bitLength;
+            this.description = description;
+            this.version     = version;
+            this.attributes  = attributes;
         }
     }
 
@@ -1128,14 +1052,13 @@ public class RangerKeyStore extends KeyStoreSpi {
 
             return algorithmParameters;
         }
-
     }
 
     public static class KeyByteMetadata implements Key, Serializable {
+        private static final long serialVersionUID = 8405872419967874451L;
+
         private Metadata metadata;
         private byte[]   keyByte;
-
-        private final static long serialVersionUID = 8405872419967874451L;
 
         private KeyByteMetadata(Metadata meta, byte[] encoded) {
             this.metadata = meta;
@@ -1167,16 +1090,16 @@ public class RangerKeyStore extends KeyStoreSpi {
         }
 
         private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-              byte[] metadataBuf = new byte[in.readInt()];
+            byte[] metadataBuf = new byte[in.readInt()];
 
-              in.readFully(metadataBuf);
+            in.readFully(metadataBuf);
 
-              byte[] keybyteBuf = new byte[in.readInt()];
+            byte[] keybyteBuf = new byte[in.readInt()];
 
-              in.readFully(keybyteBuf);
+            in.readFully(keybyteBuf);
 
-              metadata = new Metadata(metadataBuf);
-            keyByte = keybyteBuf;
+            metadata = new Metadata(metadataBuf);
+            keyByte  = keybyteBuf;
         }
     }
 }

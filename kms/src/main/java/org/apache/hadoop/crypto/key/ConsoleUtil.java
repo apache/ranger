@@ -23,27 +23,26 @@ import java.io.InputStream;
 
 /**
  * Utility class for reading passwords from the console.
- *
  */
-class ConsoleUtil {
-
+interface ConsoleUtil {
     /**
      * Ask a password from console, and return as a char array.
+     *
      * @param prompt the question which is prompted
      * @return the password.
      */
 
     static char[] getPasswordFromConsole(String prompt) throws IOException {
-        char pwd[]=null;
-        Console c = System.console();
+        char[] pwd = null;
+        Console c     = System.console();
         if (c == null) {
             System.out.print(prompt + " ");
-            InputStream in = System.in;
-            int max = 50;
-            byte[] b = new byte[max];
-            int l = in.read(b);
+            InputStream in  = System.in;
+            int         max = 50;
+            byte[]      b   = new byte[max];
+            int         l   = in.read(b);
             l--; // last character is \n
-            pwd=new char[l];
+            pwd = new char[l];
             if (l > 0) {
                 byte[] e = new byte[l];
                 System.arraycopy(b, 0, e, 0, l);
@@ -59,5 +58,4 @@ class ConsoleUtil {
         }
         return pwd;
     }
-
 }

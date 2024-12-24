@@ -28,54 +28,51 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
 import java.util.Map;
 
 @Path("metrics")
 @InterfaceAudience.Private
 public class MetricREST {
-
     private static final Logger LOG = LoggerFactory.getLogger(MetricREST.class);
 
-    private KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(KMSWebApp.isMetricCollectionThreadSafe());
+    private final KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(KMSWebApp.isMetricCollectionThreadSafe());
 
     @GET
     @Path("/prometheus")
     @Produces(MediaType.TEXT_PLAIN)
     public String getMetricsPrometheus() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsPrometheus() ===>>");
-        }
+        LOG.debug("MetricsREST.getMetricsPrometheus() ===>>");
+
         String ret = "";
+
         try {
             ret = kmsMetricWrapper.getRangerMetricsInPrometheusFormat();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsPrometheus(): Exception occured while getting metric.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsPrometheus() <<=== {}" + ret);
-        }
+        LOG.debug("MetricsREST.getMetricsPrometheus() <<=== {}", ret);
+
         return ret;
     }
 
     @GET
     @Path("/json")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({"application/json", "application/xml"})
     public Map<String, Map<String, Object>> getMetricsJson() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsJson() ===>>");
-        }
+        LOG.debug("MetricsREST.getMetricsJson() ===>>");
 
         Map<String, Map<String, Object>> ret = null;
+
         try {
             ret = kmsMetricWrapper.getRangerMetricsInJsonFormat();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsJson(): Exception occurred while getting metric.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsJson() <<=== {}" + ret);
-        }
+        LOG.debug("MetricsREST.getMetricsJson() <<=== {}", ret);
+
         return ret;
     }
 }
