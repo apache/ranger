@@ -26,55 +26,53 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="ranger_masterkey")
+@Table(name = "ranger_masterkey")
 public class XXRangerMasterKey extends XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	@Id
-	@SequenceGenerator(name="RANGER_MASTERKEY_SEQ",sequenceName="RANGER_MASTERKEY_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="RANGER_MASTERKEY_SEQ")
-	@Column(name="ID")
-	protected Long id;
-	@Override
-	public void setId(Long id) {
-		this.id=id;
-	}
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	public Long getId() {
-		return id;
-	}
-	
-	@Column(name="cipher")
-	protected String cipher;
+    @Id
+    @SequenceGenerator(name = "RANGER_MASTERKEY_SEQ", sequenceName = "RANGER_MASTERKEY_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "RANGER_MASTERKEY_SEQ")
+    @Column(name = "ID")
+    protected Long id;
+    @Column(name = "cipher")
+    protected String cipher;
+    @Column(name = "bitlength")
+    protected int bitLength;
+    @Column(name = "masterkey")
+    protected String masterKey;
 
-	public String getCipher() {
-		return cipher;
-	}
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	public void setCipher(String cipher) {
-		this.cipher = cipher;
-	}
-	
-	@Column(name="bitlength")
-	protected int bitLength;
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public int getBitLength() {
-		return bitLength;
-	}
+    public String getCipher() {
+        return cipher;
+    }
 
-	public void setBitLength(int bitLength) {
-		this.bitLength = bitLength;
-	}
-		
-	@Column(name="masterkey")
-	protected String masterKey;
+    public void setCipher(String cipher) {
+        this.cipher = cipher;
+    }
 
-	public String getMasterKey() {
-		return masterKey;
-	}
+    public int getBitLength() {
+        return bitLength;
+    }
 
-	public void setMasterKey(String masterKey) {
-		this.masterKey = masterKey;
-	}		
+    public void setBitLength(int bitLength) {
+        this.bitLength = bitLength;
+    }
+
+    public String getMasterKey() {
+        return masterKey;
+    }
+
+    public void setMasterKey(String masterKey) {
+        this.masterKey = masterKey;
+    }
 }

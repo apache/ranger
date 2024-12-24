@@ -17,53 +17,61 @@
 
 package org.apache.hadoop.crypto.key;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
 
+import java.io.IOException;
+
 public class VerifyIsDBMasterkeyCorrect {
-        RangerMasterKey rangerMasterKey;
-        RangerKeyStore dbStore;
-        DaoManager daoManager;
+    RangerMasterKey rangerMasterKey;
+    RangerKeyStore  dbStore;
+    DaoManager      daoManager;
 
-        public VerifyIsDBMasterkeyCorrect() throws Throwable {
-                Configuration conf = RangerKeyStoreProvider.getDBKSConf();
-                RangerKMSDB rangerKMSDB = new RangerKMSDB(conf);
-                daoManager = rangerKMSDB.getDaoManager();
-                dbStore = new RangerKeyStore(daoManager);
+    public VerifyIsDBMasterkeyCorrect() throws Throwable {
+        Configuration conf        = RangerKeyStoreProvider.getDBKSConf();
+        RangerKMSDB   rangerKMSDB = new RangerKMSDB(conf);
+
+        daoManager = rangerKMSDB.getDaoManager();
+        dbStore    = new RangerKeyStore(daoManager);
+    }
+
+    public static void main(String[] args) throws Throwable {
+        if (args.length == 0) {
+            System.err.println("Invalid number of parameters found.");
+            System.exit(1);
         }
 
-        public static void main(String[] args) throws Throwable {
-                if (args.length == 0) {
-                        System.err.println("Invalid number of parameters found.");
-                        System.exit(1);
-                }
-                try {
-                        String password = args[0];
-                        if (password == null || password.trim().isEmpty()) {
-                                System.err.println("KMS Masterkey Password not provided.");
-                                System.exit(1);
-                        }
-                        new VerifyIsDBMasterkeyCorrect().verifyMasterkey(password);
-                } catch (Exception e) {
-                        e.printStackTrace();
-                }
-        }
+        try {
+            String password = args[0];
 
-        public void verifyMasterkey(String pass) {
-                try {
-                        // Get Master Key from DB
-                        rangerMasterKey = new RangerMasterKey(daoManager);
-                        String masterKey = rangerMasterKey.getMasterKey(pass);
-                        if(masterKey == null){
-                                // Master Key does not exists
-                        throw new IOException("Ranger MasterKey does not exists");
-                        }
-                        dbStore.engineLoad(null, masterKey.toCharArray());
-                        System.out.println("KMS keystore engine loaded successfully.");
-                } catch (Throwable e) {
-                        throw new RuntimeException("Unable to load keystore engine with given password or Masterkey was tampered.", e);
-                }
+            if (password == null || password.trim().isEmpty()) {
+                System.err.println("KMS Masterkey Password not provided.");
+                System.exit(1);
+            }
+
+            new VerifyIsDBMasterkeyCorrect().verifyMasterkey(password);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    public void verifyMasterkey(String pass) {
+        try {
+            // Get Master Key from DB
+            rangerMasterKey = new RangerMasterKey(daoManager);
+
+            String masterKey = rangerMasterKey.getMasterKey(pass);
+
+            if (masterKey == null) {
+                // Master Key does not exists
+                throw new IOException("Ranger MasterKey does not exists");
+            }
+
+            dbStore.engineLoad(null, masterKey.toCharArray());
+
+            System.out.println("KMS keystore engine loaded successfully.");
+        } catch (Throwable e) {
+            throw new RuntimeException("Unable to load keystore engine with given password or Masterkey was tampered.", e);
+        }
+    }
 }

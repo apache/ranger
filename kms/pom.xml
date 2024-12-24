@@ -26,6 +26,10 @@
     <packaging>jar</packaging>
     <name>Key Management Service</name>
     <description>Key Management Service</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>asm</groupId>

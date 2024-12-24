@@ -17,15 +17,15 @@
 
 package org.apache.ranger.kms.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
     private static final Logger logger = LoggerFactory.getLogger(RangerKMSDao.class);
@@ -36,11 +36,11 @@ public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
         super(daoManager);
     }
 
-    public XXRangerKeyStore findByAlias(String alias){
+    public XXRangerKeyStore findByAlias(String alias) {
         return super.findByAlias("XXRangerKeyStore.findByAlias", alias);
     }
 
-    public int deleteByAlias(String alias){
+    public int deleteByAlias(String alias) {
         return super.deleteByAlias("XXRangerKeyStore.deleteByAlias", alias);
     }
 
@@ -52,8 +52,8 @@ public class RangerKMSDao extends BaseDao<XXRangerKeyStore> {
             em = getEntityManager();
 
             List<Object[]> rows = (List<Object[]>) em.createNamedQuery(GET_ALL_KEYS_QUERY_NAME)
-                                                     .setHint("eclipselink.refresh", "true")
-                                                     .getResultList();
+                    .setHint("eclipselink.refresh", "true")
+                    .getResultList();
 
             if (rows != null) {
                 ret = new ArrayList<>(rows.size());
