@@ -34,14 +34,14 @@ public class KMSResourceMgr {
     private KMSResourceMgr(){}
 
     public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-        Map<String, Object> ret = null;
+        Map<String, Object> ret;
 
         LOG.debug("==> KMSResourceMgr.validateConfig ServiceName: {} Configs {}", serviceName, configs);
 
         try {
             ret = KMSClient.testConnection(serviceName, configs);
         } catch (Exception e) {
-            LOG.error("<== KMSResourceMgr.validateConfig Error: {}", e);
+            LOG.error("<== KMSResourceMgr.validateConfig Error: {}", String.valueOf(e));
 
             throw e;
         }
@@ -56,7 +56,7 @@ public class KMSResourceMgr {
         Map<String, List<String>> resourceMap = context.getResources();
         List<String>              resultList  = null;
         List<String>              kmsKeyList  = null;
-        String                    kmsKeyName  = null;
+        String                    kmsKeyName;
 
         if (resourceMap != null && !resourceMap.isEmpty() && resourceMap.get(KMSKEY) != null) {
             kmsKeyName = userInput;
