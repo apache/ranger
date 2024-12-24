@@ -42,6 +42,7 @@ public class KeySecureToRangerDBMKUtil {
             System.exit(1);
         } else {
             String kmsMKPassword = args[0];
+
             if (kmsMKPassword == null || kmsMKPassword.trim().isEmpty()) {
                 System.err.println("KMS master key password not provided");
                 showUsage();
@@ -49,6 +50,7 @@ public class KeySecureToRangerDBMKUtil {
             }
 
             new KeySecureToRangerDBMKUtil().doImportMKFromKeySecure(kmsMKPassword);
+
             System.out.println("Master Key from Key Secure has been successfully imported into Ranger KMS DB.");
         }
     }
@@ -56,22 +58,22 @@ public class KeySecureToRangerDBMKUtil {
     private void doImportMKFromKeySecure(String kmsMKPassword) {
         try {
             Configuration conf = RangerKeyStoreProvider.getDBKSConf();
+
             conf.set(ENCRYPTION_KEY, kmsMKPassword);
             getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
+
             String keySecureLoginCred = conf.get(KEYSECURE_USERNAME).trim() + ":" + conf.get(KEYSECURE_PASSWORD);
+
             conf.set(KEYSECURE_LOGIN, keySecureLoginCred);
 
-            RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);
-            DaoManager  daoManager  = rangerkmsDb.getDaoManager();
-            String      password    = conf.get(ENCRYPTION_KEY);
-
+            RangerKMSDB            rangerkmsDb            = new RangerKMSDB(conf);
+            DaoManager             daoManager             = rangerkmsDb.getDaoManager();
+            String                 password               = conf.get(ENCRYPTION_KEY);
             RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
-            String mKey = rangerSafenetKeySecure.getMasterKey(password);
+            String                 mKey                   = rangerSafenetKeySecure.getMasterKey(password);
+            byte[]                 key                    = Base64.decode(mKey);
+            RangerMasterKey        rangerMasterKey        = new RangerMasterKey(daoManager); // Put Master Key in Ranger DB
 
-            byte[] key = Base64.decode(mKey);
-
-            // Put Master Key in Ranger DB
-            RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
             rangerMasterKey.generateMKFromKeySecureMK(password, key);
         } catch (Throwable t) {
             throw new RuntimeException("Unable to migrate Master key from KeySecure to Ranger DB", t);
@@ -83,8 +85,10 @@ public class KeySecureToRangerDBMKUtil {
         if (conf != null) {
             String pathValue  = conf.get(path);
             String aliasValue = conf.get(alias);
+
             if (pathValue != null && aliasValue != null) {
                 String xaDBPassword = CredentialReader.getDecryptedString(pathValue.trim(), aliasValue.trim(), KeyStore.getDefaultType());
+
                 if (xaDBPassword != null && !xaDBPassword.trim().isEmpty() && !xaDBPassword.trim().equalsIgnoreCase("none")) {
                     conf.set(key, xaDBPassword);
                 }
