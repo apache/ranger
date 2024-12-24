@@ -23,10 +23,10 @@ import org.apache.ranger.kms.dao.DaoManager;
 import java.util.Arrays;
 
 public class HSM2DBMKUtil {
-    private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+    private static final String ENCRYPTION_KEY     = "ranger.db.encrypt.key.password";
     private static final String PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
-    private static final String PARTITION_NAME = "ranger.ks.hsm.partition.name";
-    private static final String HSM_TYPE = "ranger.ks.hsm.type";
+    private static final String PARTITION_NAME     = "ranger.ks.hsm.partition.name";
+    private static final String HSM_TYPE           = "ranger.ks.hsm.type";
 
     public static void showUsage() {
         System.err.println("USAGE: java " + HSM2DBMKUtil.class.getName() + " <HSMType> <partitionName>");
@@ -39,6 +39,7 @@ public class HSM2DBMKUtil {
             System.exit(1);
         } else {
             String hsmType = args[0];
+
             if (hsmType == null || hsmType.trim().isEmpty()) {
                 System.err.println("HSM Type does not exists.");
                 showUsage();
@@ -46,6 +47,7 @@ public class HSM2DBMKUtil {
             }
 
             String partitionName = args[1];
+
             if (partitionName == null || partitionName.trim().isEmpty()) {
                 System.err.println("Partition name does not exists.");
                 showUsage();
@@ -62,9 +64,12 @@ public class HSM2DBMKUtil {
 
     private void doImportMKFromHSM(String hsmType, String partitionName) {
         char[] partitionPassword = null;
+
         try {
             partitionPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the Partition " + partitionName + " : ");
+
             Configuration conf = RangerKeyStoreProvider.getDBKSConf();
+
             conf.set(HSM_TYPE, hsmType);
             conf.set(PARTITION_NAME, partitionName);
             conf.set(PARTITION_PASSWORD, String.valueOf(partitionPassword));
@@ -75,11 +80,12 @@ public class HSM2DBMKUtil {
 
             // Get Master Key from HSM
             RangerHSM rangerHSM = new RangerHSM(conf);
-            String mKey = rangerHSM.getMasterKey(password);
-            byte[] key = Base64.decode(mKey);
+            String    mKey      = rangerHSM.getMasterKey(password);
+            byte[]    key       = Base64.decode(mKey);
 
             // Put Master Key in Ranger DB
             RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+
             rangerMasterKey.generateMKFromHSMMK(password, key);
         } catch (Throwable t) {
             throw new RuntimeException("Unable to import Master key from HSM to Ranger DB", t);
