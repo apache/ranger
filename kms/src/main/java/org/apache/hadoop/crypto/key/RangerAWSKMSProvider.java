@@ -41,13 +41,14 @@ import java.security.Key;
 
 public class RangerAWSKMSProvider implements RangerKMSMKI {
     private static final Logger logger = LoggerFactory.getLogger(RangerAWSKMSProvider.class);
+
     static final String AWSKMS_MASTER_KEY_ID = "ranger.kms.awskms.masterkey.id";
     static final String AWS_CLIENT_ACCESSKEY = "ranger.kms.aws.client.accesskey";
     static final String AWS_CLIENT_SECRETKEY = "ranger.kms.aws.client.secretkey";
     static final String AWS_CLIENT_REGION    = "ranger.kms.aws.client.region";
-    private String      masterKeyId;
-    private KeyMetadata masterKeyMetadata;
-    private AWSKMS      keyVaultClient;
+
+    private final String masterKeyId;
+    private final AWSKMS keyVaultClient;
 
     protected RangerAWSKMSProvider(Configuration conf, AWSKMS client) {
         this.masterKeyId    = conf.get(AWSKMS_MASTER_KEY_ID);
@@ -98,11 +99,11 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
             listAliasesRequest.setKeyId(desckeyResp.getKeyMetadata().getKeyId());
 
             ListAliasesResult listAliasesResult = keyVaultClient.listAliases(listAliasesRequest);
-            boolean aliasMatched  = false;
+            boolean           aliasMatched      = false;
 
             if (listAliasesResult != null) {
                 for (AliasListEntry e : listAliasesResult.getAliases()) {
-                    logger.info("keyalias: " + e);
+                    logger.info("keyalias: {}", e);
 
                     if (e.getAliasName().equals(masterKeyId) && e.getTargetKeyId().equals(desckeyResp.getKeyMetadata().getKeyId())) {
                         aliasMatched = true;
@@ -117,13 +118,12 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
             }
         }
 
-        masterKeyMetadata = desckeyResp.getKeyMetadata();
+        KeyMetadata masterKeyMetadata = desckeyResp.getKeyMetadata();
 
         if (masterKeyMetadata == null) {
             throw new NoSuchMethodException("generateMasterKey is not implemented for AWS KMS");
         } else {
-            logger.info("AWS Master key exist with KeyId: " + masterKeyId + " with Arn: " + masterKeyMetadata.getArn()
-                    + " with Description : " + masterKeyMetadata.getDescription());
+            logger.info("AWS Master key exist with KeyId: {} with Arn: {} with Description : {}", masterKeyId, masterKeyMetadata.getArn(), masterKeyMetadata.getDescription());
 
             return true;
         }
