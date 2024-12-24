@@ -33,18 +33,22 @@ public class VerifyIsHSMMasterkeyCorrect {
             System.err.println("Invalid number of parameters found.");
             System.exit(1);
         }
+
         try {
             String hsmType = args[0];
+
             if (hsmType == null || hsmType.trim().isEmpty()) {
                 System.err.println("HSM Type does not exists.");
                 System.exit(1);
             }
 
             String partitionName = args[1];
+
             if (partitionName == null || partitionName.trim().isEmpty()) {
                 System.err.println("Partition name does not exists.");
                 System.exit(1);
             }
+
             new VerifyIsHSMMasterkeyCorrect().getHSMMasterkey(hsmType, partitionName);
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,13 +57,16 @@ public class VerifyIsHSMMasterkeyCorrect {
 
     public void getHSMMasterkey(String hsmType, String partitionName) {
         char[] partitionPassword = null;
+
         try {
             partitionPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the Partition " + partitionName + " : ");
 
             Configuration conf = RangerKeyStoreProvider.getDBKSConf();
+
             conf.set(HSM_TYPE, hsmType);
             conf.set(PARTITION_NAME, partitionName);
             conf.set(PARTITION_PASSWORD, String.valueOf(partitionPassword));
+
             String password = conf.get(ENCRYPTION_KEY);
 
             RangerKMSDB    rangerkmsDb = new RangerKMSDB(conf);
@@ -69,12 +76,14 @@ public class VerifyIsHSMMasterkeyCorrect {
             // Get Master Key from HSM
             RangerHSM rangerHSM    = new RangerHSM(conf);
             String    hsmMasterKey = rangerHSM.getMasterKey(password);
+
             if (hsmMasterKey == null) {
                 // Master Key does not exists
                 throw new IOException("Ranger MasterKey does not exists in HSM!!!");
             }
 
             dbStore.engineLoad(null, hsmMasterKey.toCharArray());
+
             System.out.println("KMS keystore engine loaded successfully.");
         } catch (Throwable t) {
             throw new RuntimeException("Unable to load keystore engine with given password or Masterkey was tampered.", t);
