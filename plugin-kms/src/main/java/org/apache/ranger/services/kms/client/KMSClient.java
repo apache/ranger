@@ -105,7 +105,7 @@ public class KMSClient {
         LOG.debug("Getting KmsClient for datasource: {}", serviceName);
         LOG.debug("configMap: {}", configs);
 
-        KMSClient kmsClient = null;
+        KMSClient kmsClient;
 
         if (configs == null || configs.isEmpty()) {
             String msgDesc = "Could not connect as Connection ConfigMap is empty.";
@@ -158,8 +158,6 @@ public class KMSClient {
                 }
             }
         } catch (HadoopException he) {
-            resultList = null;
-
             throw he;
         } catch (Exception e) {
             String msgDesc = "Unable to get a valid response from the provider : " + e.getMessage();
@@ -170,8 +168,6 @@ public class KMSClient {
 
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
 
-            resultList = null;
-
             throw hdpException;
         }
 
@@ -179,7 +175,7 @@ public class KMSClient {
     }
 
     public List<String> getKeyList(final String keyNameMatching, final List<String> existingKeyList) {
-        String[] providers = null;
+        String[] providers;
 
         try {
             providers = createProvider(provider);
@@ -210,7 +206,7 @@ public class KMSClient {
                     isKerberos = true;
                 }
 
-                Subject sub = new Subject();
+                Subject sub;
 
                 if (!isKerberos) {
                     uri = uri.concat("?user.name=" + username);
@@ -249,12 +245,7 @@ public class KMSClient {
 
                 final WebResource webResource = client.resource(uri);
 
-                response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
-                    @Override
-                    public ClientResponse run() {
-                        return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-                    }
-                });
+                response = Subject.doAs(sub, (PrivilegedAction<ClientResponse>) () -> webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class));
 
                 LOG.debug("getKeyList():calling {}", uri);
 
