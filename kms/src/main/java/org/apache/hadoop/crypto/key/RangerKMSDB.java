@@ -36,23 +36,25 @@ import java.util.Map;
 
 public class RangerKMSDB {
     private static final Logger logger = LoggerFactory.getLogger(RangerKMSDB.class);
+
     public static final int DB_FLAVOR_UNKNOWN     = 0;
     public static final int DB_FLAVOR_MYSQL       = 1;
     public static final int DB_FLAVOR_ORACLE      = 2;
     public static final int DB_FLAVOR_POSTGRES    = 3;
     public static final int DB_FLAVOR_SQLSERVER   = 4;
     public static final int DB_FLAVOR_SQLANYWHERE = 5;
-    private static final String PROPERTY_PREFIX = "ranger.ks.";
-    private static final String DB_DIALECT      = "jpa.jdbc.dialect";
-    private static final String DB_DRIVER       = "jpa.jdbc.driver";
-    private static final String DB_URL          = "jpa.jdbc.url";
-    private static final String DB_USER         = "jpa.jdbc.user";
-    private static final String DB_PASSWORD     = "jpa.jdbc.password";
-    private static final String JPA_DB_DIALECT  = "javax.persistence.jdbc.dialect";
-    private static final String JPA_DB_DRIVER   = "javax.persistence.jdbc.driver";
-    private static final String JPA_DB_URL      = "javax.persistence.jdbc.url";
-    private static final String JPA_DB_USER     = "javax.persistence.jdbc.user";
-    private static final String JPA_DB_PASSWORD = "javax.persistence.jdbc.password";
+
+    private static final String PROPERTY_PREFIX                = "ranger.ks.";
+    private static final String DB_DIALECT                     = "jpa.jdbc.dialect";
+    private static final String DB_DRIVER                      = "jpa.jdbc.driver";
+    private static final String DB_URL                         = "jpa.jdbc.url";
+    private static final String DB_USER                        = "jpa.jdbc.user";
+    private static final String DB_PASSWORD                    = "jpa.jdbc.password";
+    private static final String JPA_DB_DIALECT                 = "javax.persistence.jdbc.dialect";
+    private static final String JPA_DB_DRIVER                  = "javax.persistence.jdbc.driver";
+    private static final String JPA_DB_URL                     = "javax.persistence.jdbc.url";
+    private static final String JPA_DB_USER                    = "javax.persistence.jdbc.user";
+    private static final String JPA_DB_PASSWORD                = "javax.persistence.jdbc.password";
     private static final String DB_SSL_ENABLED                 = "db.ssl.enabled";
     private static final String DB_SSL_REQUIRED                = "db.ssl.required";
     private static final String DB_SSL_VerifyServerCertificate = "db.ssl.verifyServerCertificate";
@@ -62,6 +64,7 @@ public class RangerKMSDB {
     private static final String DB_SSL_TRUSTSTORE              = "truststore.file";
     private static final String DB_SSL_TRUSTSTORE_PASSWORD     = "truststore.password";
     private static final String DB_SSL_CERTIFICATE_FILE        = "db.ssl.certificateFile";
+
     private final Configuration       conf;
     private final Map<String, String> jpaProperties = new HashMap<>();
     private final DaoManager          daoManager;
@@ -90,7 +93,7 @@ public class RangerKMSDB {
 
             daoManager.getEntityManager(); // this forces the connection to be made to DB
 
-            logger.info("Connected to DB : " + isDbConnected());
+            logger.info("Connected to DB : {}", isDbConnected());
         } catch (Exception excp) {
             logger.error("initDBConnectivity() failed", excp);
         } finally {
@@ -161,9 +164,9 @@ public class RangerKMSDB {
             final String dbSslEnabled = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED));
 
             if ("true".equalsIgnoreCase(dbSslEnabled)) {
-                final String dbSslRequired = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_REQUIRED));
+                final String dbSslRequired                = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_REQUIRED));
                 final String dbSslVerifyServerCertificate = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate));
-                final String dbSslAuthType = conf.get(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, "2-way");
+                final String dbSslAuthType                = conf.get(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, "2-way");
 
                 conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, dbSslEnabled);
                 conf.set(PROPERTY_PREFIX + DB_SSL_REQUIRED, dbSslRequired);
