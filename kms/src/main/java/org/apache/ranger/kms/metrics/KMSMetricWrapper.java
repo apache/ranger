@@ -31,36 +31,48 @@ import java.util.List;
 import java.util.Map;
 
 public class KMSMetricWrapper {
-    private static final Logger LOG = LoggerFactory.getLogger(KMSMetricWrapper.class);
+    private static final Logger LOG                = LoggerFactory.getLogger(KMSMetricWrapper.class);
     private static final Logger KMS_METRICS_LOGGER = LoggerFactory.getLogger("kms-metrics");
+
     private static volatile KMSMetricWrapper instance;
+
     private final RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
-    private final KMSMetricsCollector kmsMetricsCollector;
-    private KMSMetricSource kmsMetricSource;
+    private final KMSMetricsCollector        kmsMetricsCollector;
+    private final KMSMetricSource            kmsMetricSource;
 
     private KMSMetricWrapper(boolean isMetricCollectionThreadSafe) {
         LOG.info("Creating KMSMetricWrapper with thread-safe value={}", isMetricCollectionThreadSafe);
+
         this.rangerMetricsSystemWrapper = new RangerMetricsSystemWrapper();
         this.kmsMetricsCollector        = KMSMetricsCollector.getInstance(isMetricCollectionThreadSafe);
         this.kmsMetricSource            = new KMSMetricSource(KMSMetrics.KMS_METRICS_CONTEXT, KMSMetrics.KMS_METRIC_RECORD, kmsMetricsCollector);
+
         init();
     }
 
     public static KMSMetricWrapper getInstance(boolean isMetricCollectionThreadSafe) {
-        if (null == instance) {
+        KMSMetricWrapper me = instance;
+
+        if (me == null) {
             synchronized (KMSMetricWrapper.class) {
-                if (null == instance) {
-                    instance = new KMSMetricWrapper(isMetricCollectionThreadSafe);
+                me = instance;
+
+                if (me == null) {
+                    me       = new KMSMetricWrapper(isMetricCollectionThreadSafe);
+                    instance = me;
                 }
             }
         }
-        return instance;
+
+        return me;
     }
 
     public void init() {
         LOG.debug("===>> KMSMetricWrapper.init()");
+
         // Source
         List<RangerMetricsSourceWrapper> sourceWrappers = new ArrayList<>();
+
         sourceWrappers.add(new RangerMetricsSourceWrapper("KMSMetricSource", "KMS metrics", KMSMetrics.KMS_METRICS_CONTEXT, kmsMetricSource));
 
         rangerMetricsSystemWrapper.init(KMSMetrics.KMS_METRICS_CONTEXT, sourceWrappers, null);
@@ -82,6 +94,7 @@ public class KMSMetricWrapper {
 
     public void writeJsonMetricsToFile() {
         LOG.debug("===>> KMSMetricWrapper.writeJsonMetricsToFile()");
+
         try {
             KMS_METRICS_LOGGER.info(JsonUtilsV2.mapToJson(this.getRangerMetricsInJsonFormat()));
         } catch (Exception e) {
