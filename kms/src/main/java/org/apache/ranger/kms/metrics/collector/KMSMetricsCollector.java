@@ -28,24 +28,31 @@ import java.util.Map;
 
 public class KMSMetricsCollector {
     static final Logger logger = LoggerFactory.getLogger(KMSMetricsCollector.class);
+
     private static volatile KMSMetricsCollector kmsMetricsCollector;
-    private boolean isCollectionThreadSafe;
-    private Map<KMSMetrics.KMSMetric, Long> metrics = new HashMap<>();
+
+    private final boolean                         isCollectionThreadSafe;
+    private final Map<KMSMetrics.KMSMetric, Long> metrics = new HashMap<>();
 
     private KMSMetricsCollector(boolean isCollectionThreadSafe) {
         this.isCollectionThreadSafe = isCollectionThreadSafe;
     }
 
     public static KMSMetricsCollector getInstance(boolean isCollectionThreadSafe) {
-        if (null == kmsMetricsCollector) {
+        KMSMetricsCollector me = kmsMetricsCollector;
+
+        if (me == null) {
             synchronized (KMSMetricsCollector.class) {
-                if (null == kmsMetricsCollector) {
-                    kmsMetricsCollector = new KMSMetricsCollector(isCollectionThreadSafe);
+                me = kmsMetricsCollector;
+
+                if (me == null) {
+                    me                  = new KMSMetricsCollector(isCollectionThreadSafe);
+                    kmsMetricsCollector = me;
                 }
             }
         }
 
-        return kmsMetricsCollector;
+        return me;
     }
 
     public boolean isCollectionThreadSafe() {
