@@ -33,7 +33,7 @@ import java.util.TimeZone;
 
 @MappedSuperclass
 public abstract class XXDBBase implements java.io.Serializable {
-    public static final  int      CLASS_TYPE_NONE  = 0;
+    public  static final int      CLASS_TYPE_NONE  = 0;
     private static final long     serialVersionUID = 1L;
     private static final TimeZone gmtTimeZone      = TimeZone.getTimeZone("GMT+0");
 
@@ -180,19 +180,32 @@ public abstract class XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
+            return false;
+        }
+
         XXDBBase other = (XXDBBase) obj;
+
         if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
             return false;
         }
+
         if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
             return false;
         }
+
         if ((this.addedByUserId == null && other.addedByUserId != null) || (this.addedByUserId != null && !this.addedByUserId.equals(other.addedByUserId))) {
             return false;
         }
+
         if ((this.updatedByUserId == null && other.updatedByUserId != null) || (this.updatedByUserId != null && !this.updatedByUserId.equals(other.updatedByUserId))) {
             return false;
         }
+
         return true;
     }
 
@@ -213,6 +226,7 @@ public abstract class XXDBBase implements java.io.Serializable {
         str += "addedByUserId={" + addedByUserId + "} ";
         str += "updatedByUserId={" + updatedByUserId + "} ";
         str += "}";
+
         return str;
     }
 
@@ -221,8 +235,10 @@ public abstract class XXDBBase implements java.io.Serializable {
             Calendar          local  = Calendar.getInstance();
             int               offset = local.getTimeZone().getOffset(local.getTimeInMillis());
             GregorianCalendar utc    = new GregorianCalendar(gmtTimeZone);
+
             utc.setTimeInMillis(local.getTimeInMillis());
             utc.add(Calendar.MILLISECOND, -offset);
+
             return utc.getTime();
         } catch (Exception ex) {
             return null;
