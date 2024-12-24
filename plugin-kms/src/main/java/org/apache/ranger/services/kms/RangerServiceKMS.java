@@ -55,7 +55,7 @@ public class RangerServiceKMS extends RangerBaseService {
 
     @Override
     public Map<String, Object> validateConfig() throws Exception {
-        Map<String, Object> ret         = new HashMap<String, Object>();
+        Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
 
         LOG.debug("==> RangerServiceKMS.validateConfig Service: ({})", serviceName);
@@ -64,7 +64,7 @@ public class RangerServiceKMS extends RangerBaseService {
             try {
                 ret = KMSResourceMgr.validateConfig(serviceName, configs);
             } catch (Exception e) {
-                LOG.error("<== RangerServiceKMS.validateConfig Error:{}", e);
+                LOG.error("<== RangerServiceKMS.validateConfig Error:{}", String.valueOf(e));
 
                 throw e;
             }
@@ -76,8 +76,8 @@ public class RangerServiceKMS extends RangerBaseService {
     }
 
     @Override
-    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String>        ret         = new ArrayList<String>();
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
         String              serviceName = getServiceName();
         Map<String, String> configs     = getConfigs();
 
@@ -87,7 +87,7 @@ public class RangerServiceKMS extends RangerBaseService {
             try {
                 ret = KMSResourceMgr.getKMSResources(serviceName, configs, context);
             } catch (Exception e) {
-                LOG.error("<==RangerServiceKMS.lookupResource Error : {}", e);
+                LOG.error("<==RangerServiceKMS.lookupResource Error : {}", String.valueOf(e));
 
                 throw e;
             }
@@ -110,10 +110,10 @@ public class RangerServiceKMS extends RangerBaseService {
         String adminUser      = getLookupUser(authType, adminPrincipal, adminKeytab);
 
         // Add default policies for HDFS, HIVE, HABSE & OM users.
-        List<RangerAccessTypeDef> hdfsAccessTypeDefs  = new ArrayList<RangerAccessTypeDef>();
-        List<RangerAccessTypeDef> omAccessTypeDefs    = new ArrayList<RangerAccessTypeDef>();
-        List<RangerAccessTypeDef> hiveAccessTypeDefs  = new ArrayList<RangerAccessTypeDef>();
-        List<RangerAccessTypeDef> hbaseAccessTypeDefs = new ArrayList<RangerAccessTypeDef>();
+        List<RangerAccessTypeDef> hdfsAccessTypeDefs  = new ArrayList<>();
+        List<RangerAccessTypeDef> omAccessTypeDefs    = new ArrayList<>();
+        List<RangerAccessTypeDef> hiveAccessTypeDefs  = new ArrayList<>();
+        List<RangerAccessTypeDef> hbaseAccessTypeDefs = new ArrayList<>();
 
         for (RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
             if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
@@ -151,7 +151,7 @@ public class RangerServiceKMS extends RangerBaseService {
             if (hdfsUser != null && !hdfsUser.isEmpty()) {
                 LOG.info("Creating default KMS policy item for {}", hdfsUser);
 
-                List<String> users = new ArrayList<String>();
+                List<String> users = new ArrayList<>();
 
                 users.add(hdfsUser);
 
@@ -165,7 +165,7 @@ public class RangerServiceKMS extends RangerBaseService {
             if (StringUtils.isNotEmpty(omUser)) {
                 LOG.info("Creating default KMS policy item for {}", omUser);
 
-                List<String> users = new ArrayList<String>();
+                List<String> users = new ArrayList<>();
 
                 users.add(omUser);
 
@@ -179,7 +179,7 @@ public class RangerServiceKMS extends RangerBaseService {
             if (hiveUser != null && !hiveUser.isEmpty()) {
                 LOG.info("Creating default KMS policy item for {}", hiveUser);
 
-                List<String> users = new ArrayList<String>();
+                List<String> users = new ArrayList<>();
 
                 users.add(hiveUser);
 
@@ -193,7 +193,7 @@ public class RangerServiceKMS extends RangerBaseService {
             if (hbaseUser != null && !hbaseUser.isEmpty()) {
                 LOG.info("Creating default KMS policy item for {}", hbaseUser);
 
-                List<String> users = new ArrayList<String>();
+                List<String> users = new ArrayList<>();
 
                 users.add(hbaseUser);
 
@@ -208,14 +208,14 @@ public class RangerServiceKMS extends RangerBaseService {
         return ret;
     }
 
-    private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(List<RangerAccessTypeDef> accessTypeDefs, List<String> users) throws Exception {
+    private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(List<RangerAccessTypeDef> accessTypeDefs, List<String> users) {
         LOG.debug("==> RangerServiceTag.createDefaultPolicyItem()");
 
         RangerPolicyItem policyItem = new RangerPolicyItem();
 
         policyItem.setUsers(users);
 
-        List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 
         for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
             RangerPolicyItemAccess access = new RangerPolicyItemAccess();
