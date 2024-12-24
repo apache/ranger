@@ -62,7 +62,7 @@ interface KMSAuditLogger {
     void logAuditEvent(OpStatus status, AuditEvent event);
 
     enum OpStatus {
-        OK, UNAUTHORIZED, UNAUTHENTICATED, ERROR;
+        OK, UNAUTHORIZED, UNAUTHENTICATED, ERROR
     }
 
     /**
@@ -90,11 +90,13 @@ interface KMSAuditLogger {
          */
         AuditEvent(Object op, UserGroupInformation ugi, String keyName, String remoteHost, String msg) {
             this.keyName = keyName;
+
             if (ugi == null) {
-                this.user = null;
+                this.user         = null;
                 this.impersonator = null;
             } else {
                 this.user = ugi.getUserName();
+
                 if (ugi.getAuthenticationMethod() == UserGroupInformation.AuthenticationMethod.PROXY) {
                     this.impersonator = ugi.getRealUser().getUserName();
                 } else {
@@ -152,10 +154,14 @@ interface KMSAuditLogger {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("op=" + op).append(", keyName=" + keyName)
-                    .append(", user=" + user).append(", impersonator=" + impersonator)
-                    .append(", remoteHost=" + remoteHost)
-                    .append(", extraMsg=" + extraMsg);
+
+            sb.append("op=").append(op)
+                    .append(", keyName=").append(keyName)
+                    .append(", user=").append(user)
+                    .append(", impersonator=").append(impersonator)
+                    .append(", remoteHost=").append(remoteHost)
+                    .append(", extraMsg=").append(extraMsg);
+
             return sb.toString();
         }
     }
