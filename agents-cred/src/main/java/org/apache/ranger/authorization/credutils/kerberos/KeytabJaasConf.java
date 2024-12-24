@@ -34,5 +34,4 @@ public class KeytabJaasConf extends AbstractJaasConf {
         options.put("keyTab", keytabFilePath);
         options.put("doNotPrompt", Boolean.TRUE.toString());
     }
-
 }
