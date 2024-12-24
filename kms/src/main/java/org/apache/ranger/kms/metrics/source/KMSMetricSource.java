@@ -34,8 +34,9 @@ import java.util.Objects;
 
 public class KMSMetricSource extends RangerMetricsSource {
     private static final Logger LOG = LoggerFactory.getLogger(KMSMetricSource.class);
-    private final String context;
-    private final String record;
+
+    private final String              context;
+    private final String              record;
     private final KMSMetricsCollector kmsMetricsCollector;
 
     public KMSMetricSource(String context, String record, KMSMetricsCollector kmsMetricsCollector) {
@@ -51,8 +52,7 @@ public class KMSMetricSource extends RangerMetricsSource {
 
     @Override
     protected void update(MetricsCollector collector, boolean all) {
-        MetricsRecordBuilder builder = collector.addRecord(this.record).setContext(this.context);
-
+        MetricsRecordBuilder            builder                = collector.addRecord(this.record).setContext(this.context);
         boolean                         isCollectionThreadSafe = this.kmsMetricsCollector.isCollectionThreadSafe();
         Map<KMSMetrics.KMSMetric, Long> collectorMetricsMap    = null;
 
@@ -61,11 +61,10 @@ public class KMSMetricSource extends RangerMetricsSource {
         }
 
         for (KMSMetrics.KMSMetric metric : KMSMetrics.KMSMetric.values()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("KMSMetricSource: key={} , value={} , type={}", metric.getKey(), metric.getValue(), metric.getType());
-            }
+            LOG.debug("KMSMetricSource: key={} , value={} , type={}", metric.getKey(), metric.getValue(), metric.getType());
 
             Long metricVal = isCollectionThreadSafe ? metric.getValue() : Objects.isNull(collectorMetricsMap.get(metric)) ? 0L : collectorMetricsMap.get(metric);
+
             switch (metric.getType()) {
                 case COUNTER:
                     builder.addCounter(new RangerMetricsInfo(metric.getKey(), ""), Objects.isNull(metricVal) ? 0L : metricVal);
@@ -86,6 +85,7 @@ public class KMSMetricSource extends RangerMetricsSource {
 
         if (null != meter) {
             Long metricVal = KMSWebApp.getUnauthenticatedCallsMeter().getCount();
+
             builder.addCounter(new RangerMetricsInfo(KMSMetrics.KMSMetric.UNAUTHENTICATED_CALLS_COUNT.getKey(), ""), Objects.isNull(metricVal) ? 0L : metricVal);
         }
 
@@ -93,6 +93,7 @@ public class KMSMetricSource extends RangerMetricsSource {
 
         if (null != meter) {
             Long metricVal = KMSWebApp.getUnauthorizedCallsMeter().getCount();
+
             builder.addCounter(new RangerMetricsInfo(KMSMetrics.KMSMetric.UNAUTHORIZED_CALLS_COUNT.getKey(), ""), Objects.isNull(metricVal) ? 0L : metricVal);
         }
     }
