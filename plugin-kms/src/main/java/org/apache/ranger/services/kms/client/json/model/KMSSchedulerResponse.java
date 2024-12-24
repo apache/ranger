@@ -38,7 +38,7 @@ public class KMSSchedulerResponse implements java.io.Serializable {
     }
 
     public List<String> getQueueNames() {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         if (scheduler != null) {
             scheduler.collectQueueNames(ret);
