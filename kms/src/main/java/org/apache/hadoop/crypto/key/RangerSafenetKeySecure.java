@@ -41,20 +41,22 @@ import java.security.cert.CertificateException;
  */
 public class RangerSafenetKeySecure implements RangerKMSMKI {
     static final Logger logger = LoggerFactory.getLogger(RangerSafenetKeySecure.class);
-    private static final String   MK_ALGO             = "AES";
-    private static final int      MK_KEY_SIZE_DEFAULT = 256;
-    private static final String   CFGFILEPATH         = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
-    private static final String   MK_KEYSIZE          = "ranger.kms.keysecure.masterkey.size";
-    private static final String   ALIAS_KEY           = "ranger.kms.keysecure.masterkey.name";
-    private static final String   PROVIDER_KEY        = "ranger.kms.keysecure.provider.type";
-    private static final String   KEYSECURE_LOGIN     = "ranger.kms.keysecure.login";
-    private final        String   alias;
-    private final        String   providerType;
-    private final        String   adp;
-    private final        int      mkSize;
-    private              KeyStore myStore;
-    private              Provider provider;
-    private              String   pkcs11CfgFilePath;
+
+    private static final String MK_ALGO             = "AES";
+    private static final int    MK_KEY_SIZE_DEFAULT = 256;
+    private static final String CFGFILEPATH         = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
+    private static final String MK_KEYSIZE          = "ranger.kms.keysecure.masterkey.size";
+    private static final String ALIAS_KEY           = "ranger.kms.keysecure.masterkey.name";
+    private static final String PROVIDER_KEY        = "ranger.kms.keysecure.provider.type";
+    private static final String KEYSECURE_LOGIN     = "ranger.kms.keysecure.login";
+
+    private final String   alias;
+    private final String   providerType;
+    private final String   adp;
+    private final int      mkSize;
+    private       KeyStore myStore;
+    private       Provider provider;
+    private final String   pkcs11CfgFilePath;
 
     public RangerSafenetKeySecure(Configuration conf) throws Exception {
         mkSize            = conf.getInt(MK_KEYSIZE, MK_KEY_SIZE_DEFAULT);
@@ -62,6 +64,7 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         providerType      = conf.get(PROVIDER_KEY, "SunPKCS11");
         adp               = conf.get(KEYSECURE_LOGIN);
         pkcs11CfgFilePath = conf.get(CFGFILEPATH);
+
         /*
          * Method sun.security.pkcs11.SunPKCS11 is supported till Java 8.
          * Provider.configure() method is available from Java 9 onwards and does not have Backward compatibility.
@@ -69,15 +72,19 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
          * */
         try {
             int javaVersion = getJavaVersion();
+
             /*Minimum java requirement for Ranger KMS is Java 8 and Maximum java supported by Ranger KMS is Java 11*/
             if (javaVersion <= 8) {
                 Class<?>       providerClass = Class.forName("sun.security.pkcs11.SunPKCS11");
                 Constructor<?> constructor   = providerClass.getConstructor(String.class);
+
                 provider = (Provider) constructor.newInstance(pkcs11CfgFilePath);
             } else if (javaVersion > 8) {
                 Class<Provider> cls             = Provider.class;
                 Method          configureMethod = cls.getDeclaredMethod("configure", String.class);
+
                 provider = Security.getProvider(providerType);
+
                 if (provider != null) {
                     provider = (Provider) configureMethod.invoke(provider, pkcs11CfgFilePath);
                 }
@@ -85,10 +92,12 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
 
             if (provider != null) {
                 Security.addProvider(provider);
+
                 myStore = KeyStore.getInstance("PKCS11", provider);
             } else {
                 logger.error("Provider was not initialize for Ranger Safenet Key Secure.");
             }
+
             if (myStore != null) {
                 myStore.load(null, adp.toCharArray());
             } else {
@@ -110,21 +119,25 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         if (myStore != null) {
             KeyGenerator keyGen = null;
             SecretKey    aesKey = null;
+
             try {
                 boolean result = myStore.containsAlias(alias);
 
                 if (!result) {
                     keyGen = KeyGenerator.getInstance(MK_ALGO, provider);
+
                     keyGen.init(mkSize);
+
                     aesKey = keyGen.generateKey();
-                    myStore.setKeyEntry(alias, aesKey, password.toCharArray(),
-                            (java.security.cert.Certificate[]) null);
+
+                    myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
+
                     return true;
                 } else {
                     return true;
                 }
             } catch (Exception e) {
-                logger.error("generateMasterKey : Exception during Ranger Master Key Generation - " + e);
+                logger.error("generateMasterKey : Exception during Ranger Master Key Generation - {}", e);
                 return false;
             }
         }
@@ -136,17 +149,19 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         if (myStore != null) {
             try {
                 boolean result = myStore.containsAlias(alias);
+
                 if (result) {
-                    SecretKey key = (SecretKey) myStore.getKey(alias,
-                            password.toCharArray());
+                    SecretKey key = (SecretKey) myStore.getKey(alias, password.toCharArray());
+
                     if (key != null) {
                         return Base64.encode(key.getEncoded());
                     }
                 }
             } catch (Exception e) {
-                logger.error("getMasterKey : Exception searching for Ranger Master Key - " + e.getMessage());
+                logger.error("getMasterKey : Exception searching for Ranger Master Key - {}", e.getMessage());
             }
         }
+
         return null;
     }
 
@@ -154,12 +169,15 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         if (myStore != null) {
             try {
                 Key aesKey = new SecretKeySpec(key, MK_ALGO);
+
                 myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
+
                 return true;
             } catch (Exception e) {
-                logger.error("setMasterKey : Exception while setting Master Key - " + e.getMessage());
+                logger.error("setMasterKey : Exception while setting Master Key - {}", e.getMessage());
             }
         }
+
         return false;
     }
 
@@ -169,14 +187,17 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         Java 9 or higher: 9.0.1, 11.0.4
         */
         String version = System.getProperty("java.version");
+
         if (version.startsWith("1.")) {
             version = version.substring(2, 3);
         } else {
             int dot = version.indexOf(".");
+
             if (dot != -1) {
                 version = version.substring(0, dot);
             }
         }
+
         return Integer.parseInt(version);
     }
 }
