@@ -30,6 +30,7 @@ public class VerifyIsDBMasterkeyCorrect {
     public VerifyIsDBMasterkeyCorrect() throws Throwable {
         Configuration conf        = RangerKeyStoreProvider.getDBKSConf();
         RangerKMSDB   rangerKMSDB = new RangerKMSDB(conf);
+
         daoManager = rangerKMSDB.getDaoManager();
         dbStore    = new RangerKeyStore(daoManager);
     }
@@ -39,12 +40,15 @@ public class VerifyIsDBMasterkeyCorrect {
             System.err.println("Invalid number of parameters found.");
             System.exit(1);
         }
+
         try {
             String password = args[0];
+
             if (password == null || password.trim().isEmpty()) {
                 System.err.println("KMS Masterkey Password not provided.");
                 System.exit(1);
             }
+
             new VerifyIsDBMasterkeyCorrect().verifyMasterkey(password);
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,12 +59,16 @@ public class VerifyIsDBMasterkeyCorrect {
         try {
             // Get Master Key from DB
             rangerMasterKey = new RangerMasterKey(daoManager);
+
             String masterKey = rangerMasterKey.getMasterKey(pass);
+
             if (masterKey == null) {
                 // Master Key does not exists
                 throw new IOException("Ranger MasterKey does not exists");
             }
+
             dbStore.engineLoad(null, masterKey.toCharArray());
+
             System.out.println("KMS keystore engine loaded successfully.");
         } catch (Throwable e) {
             throw new RuntimeException("Unable to load keystore engine with given password or Masterkey was tampered.", e);
