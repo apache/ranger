@@ -39,7 +39,8 @@ import java.io.IOException;
 @InterfaceAudience.Private
 public class KMSMDCFilter implements Filter {
     static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
-    private static final ThreadLocal<Data> DATA_TL = new ThreadLocal<Data>();
+
+    private static final ThreadLocal<Data> DATA_TL = new ThreadLocal<>();
 
     public static UserGroupInformation getUgi() {
         return DATA_TL.get().ugi;
@@ -60,22 +61,27 @@ public class KMSMDCFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
-            String path = ((HttpServletRequest) request).getRequestURI();
+            String              path = ((HttpServletRequest) request).getRequestURI();
             HttpServletResponse resp = (HttpServletResponse) response;
+
             resp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
             if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
                 chain.doFilter(request, resp);
             } else {
                 DATA_TL.remove();
-                UserGroupInformation ugi = HttpUserGroupInformation.get();
-                String method = ((HttpServletRequest) request).getMethod();
-                StringBuffer requestURL  = ((HttpServletRequest) request).getRequestURL();
-                String queryString = ((HttpServletRequest) request).getQueryString();
+
+                UserGroupInformation ugi         = HttpUserGroupInformation.get();
+                String               method      = ((HttpServletRequest) request).getMethod();
+                StringBuffer         requestURL  = ((HttpServletRequest) request).getRequestURL();
+                String               queryString = ((HttpServletRequest) request).getQueryString();
+
                 if (queryString != null) {
                     requestURL.append("?").append(queryString);
                 }
+
                 DATA_TL.set(new Data(ugi, method, requestURL.toString()));
+
                 chain.doFilter(request, resp);
             }
         } finally {
@@ -88,9 +94,9 @@ public class KMSMDCFilter implements Filter {
     }
 
     private static class Data {
-        private UserGroupInformation ugi;
-        private String method;
-        private String url;
+        private final UserGroupInformation ugi;
+        private final String               method;
+        private final String               url;
 
         private Data(UserGroupInformation ugi, String method, String url) {
             this.ugi    = ugi;
