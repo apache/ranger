@@ -33,7 +33,7 @@ int main(int ac, char **av, char **ev)
 	char line[512] ;
 	char format[20];
 	struct passwd *pwp;
-	struct spwd *spwd ; 
+	struct spwd *spwd ;
 
 	fgets(line,512,stdin) ;
 	sprintf(format, "LOGIN:%%%ds %%%ds", STRLEN-1, STRLEN-1);
@@ -45,7 +45,7 @@ int main(int ac, char **av, char **ev)
 		fprintf(stdout, "FAILED: [%s] does not exists.\n", username) ;
 		exit(1) ;
 	}
-	
+
 	spwd = getspnam(pwp->pw_name) ;
 
 	if (spwd == (struct spwd *)NULL) {
