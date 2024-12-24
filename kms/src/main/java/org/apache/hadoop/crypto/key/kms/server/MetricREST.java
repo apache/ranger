@@ -35,21 +35,25 @@ import java.util.Map;
 @InterfaceAudience.Private
 public class MetricREST {
     private static final Logger LOG = LoggerFactory.getLogger(MetricREST.class);
-    private KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(KMSWebApp.isMetricCollectionThreadSafe());
+
+    private final KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(KMSWebApp.isMetricCollectionThreadSafe());
 
     @GET
     @Path("/prometheus")
     @Produces(MediaType.TEXT_PLAIN)
     public String getMetricsPrometheus() {
         LOG.debug("MetricsREST.getMetricsPrometheus() ===>>");
+
         String ret = "";
+
         try {
             ret = kmsMetricWrapper.getRangerMetricsInPrometheusFormat();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsPrometheus(): Exception occured while getting metric.", e);
         }
 
-        LOG.debug("MetricsREST.getMetricsPrometheus() <<=== {}" + ret);
+        LOG.debug("MetricsREST.getMetricsPrometheus() <<=== {}", ret);
+
         return ret;
     }
 
@@ -60,13 +64,15 @@ public class MetricREST {
         LOG.debug("MetricsREST.getMetricsJson() ===>>");
 
         Map<String, Map<String, Object>> ret = null;
+
         try {
             ret = kmsMetricWrapper.getRangerMetricsInJsonFormat();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsJson(): Exception occurred while getting metric.", e);
         }
 
-        LOG.debug("MetricsREST.getMetricsJson() <<=== {}" + ret);
+        LOG.debug("MetricsREST.getMetricsJson() <<=== {}", ret);
+
         return ret;
     }
 }
