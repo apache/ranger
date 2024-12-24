@@ -50,16 +50,19 @@ import java.util.Properties;
 @InterfaceAudience.Private
 public class KMSAuthenticationFilter extends DelegationTokenAuthenticationFilter {
     public static final String CONFIG_PREFIX = KMSConfiguration.CONFIG_PREFIX + "authentication.";
+
     static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         KMSResponse kmsResponse = new KMSResponse(response);
-        String path = ((HttpServletRequest) request).getRequestURI();
+        String      path        = ((HttpServletRequest) request).getRequestURI();
+
         if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
             filterChain.doFilter(request, response);
         } else {
             KMSWebApp.getKmsMetricsCollector().incrementCounter(KMSMetrics.KMSMetric.TOTAL_CALL_COUNT);
+
             super.doFilter(request, kmsResponse, filterChain);
 
             if (kmsResponse.statusCode != HttpServletResponse.SC_OK
@@ -72,9 +75,11 @@ public class KMSAuthenticationFilter extends DelegationTokenAuthenticationFilter
             // belong to an authenticated user.
             if (kmsResponse.statusCode == HttpServletResponse.SC_UNAUTHORIZED) {
                 KMSWebApp.getUnauthenticatedCallsMeter().mark();
-                String method = ((HttpServletRequest) request).getMethod();
+
+                String       method      = ((HttpServletRequest) request).getMethod();
                 StringBuffer requestURL  = ((HttpServletRequest) request).getRequestURL();
-                String queryString = ((HttpServletRequest) request).getQueryString();
+                String       queryString = ((HttpServletRequest) request).getQueryString();
+
                 if (queryString != null) {
                     requestURL.append("?").append(queryString);
                 }
@@ -92,21 +97,24 @@ public class KMSAuthenticationFilter extends DelegationTokenAuthenticationFilter
     @Override
     protected Properties getConfiguration(String configPrefix, FilterConfig filterConfig) {
         Configuration conf = KMSWebApp.getConfiguration();
+
         return this.getKMSConfiguration(conf);
     }
 
     protected Configuration getProxyuserConfiguration(FilterConfig filterConfig) {
         Map<String, String> proxyuserConf = KMSWebApp.getConfiguration().getValByRegex("hadoop\\.kms\\.proxyuser\\.");
-        Configuration conf = new Configuration(false);
+        Configuration       conf          = new Configuration(false);
+
         for (Map.Entry<String, String> entry : proxyuserConf.entrySet()) {
             conf.set(entry.getKey().substring("hadoop.kms.".length()), entry.getValue());
         }
+
         return conf;
     }
 
     @VisibleForTesting
     Properties getKMSConfiguration(Configuration conf) {
-        Properties props = new Properties();
+        Properties          props              = new Properties();
         Map<String, String> propsWithPrefixMap = conf.getPropsWithPrefix(CONFIG_PREFIX);
 
         for (Map.Entry<String, String> entry : propsWithPrefixMap.entrySet()) {
@@ -114,12 +122,15 @@ public class KMSAuthenticationFilter extends DelegationTokenAuthenticationFilter
         }
 
         String authType = props.getProperty(AUTH_TYPE, "simple");
+
         if (authType.equals(PseudoAuthenticationHandler.TYPE)) {
             props.setProperty(AUTH_TYPE, PseudoDelegationTokenAuthenticationHandler.class.getName());
         } else if (authType.equals(KerberosAuthenticationHandler.TYPE)) {
             props.setProperty(AUTH_TYPE, KerberosDelegationTokenAuthenticationHandler.class.getName());
         }
+
         props.setProperty(DelegationTokenAuthenticationHandler.TOKEN_KIND, KMSDelegationToken.TOKEN_KIND.toString());
+
         return props;
     }
 
@@ -133,8 +144,9 @@ public class KMSAuthenticationFilter extends DelegationTokenAuthenticationFilter
 
         @Override
         public void sendError(int sc, String msg) throws IOException {
-            statusCode = sc;
-            this.msg   = msg;
+            this.statusCode = sc;
+            this.msg        = msg;
+
             super.sendError(sc, HtmlQuoting.quoteHtmlChars(msg));
         }
 
