@@ -25,7 +25,7 @@ public interface KMSMetrics {
     String KMS_METRIC_RECORD   = "KMS";
 
     enum Type {
-        COUNTER, GAUGE;
+        COUNTER, GAUGE
     }
 
     enum KMSMetric {
@@ -59,10 +59,9 @@ public interface KMSMetrics {
 
         TOTAL_CALL_COUNT("TOTAL_CALL_COUNT", Type.COUNTER);
 
-        private String key;
-        private Type   type;
-
-        private AtomicLong value;
+        private final String     key;
+        private final Type       type;
+        private final AtomicLong value;
 
         KMSMetric(String key, Type type) {
             this.key   = key;
