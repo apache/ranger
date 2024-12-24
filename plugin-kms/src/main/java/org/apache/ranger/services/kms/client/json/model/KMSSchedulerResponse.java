@@ -30,6 +30,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KMSSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     private KMSScheduler scheduler;
 
     public KMSScheduler getScheduler() {
