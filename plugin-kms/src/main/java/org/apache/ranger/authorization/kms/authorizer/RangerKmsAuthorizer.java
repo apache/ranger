@@ -190,7 +190,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
         String            rangerAccessType = getRangerAccessType(type);
         AccessControlList blacklist        = blacklistedAcls.get(type);
         boolean           ret              = (blacklist == null) || !blacklist.isUserInList(ugi);
- 
+
         if (!ret) {
             LOG.debug("Operation {} blocked in the blacklist for user {}", rangerAccessType, ugi.getUserName());
         }
