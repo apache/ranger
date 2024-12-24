@@ -60,14 +60,18 @@ public class Ranger2JKSUtil {
             System.exit(1);
         } else {
             String keyStoreFileName = args[0];
-            File   f = new File(keyStoreFileName);
+            File   f                = new File(keyStoreFileName);
+
             if (!f.exists()) {
                 boolean ret = f.createNewFile();
+
                 if (!ret) {
                     System.err.println("Error creating new keystore file. fileName=" + args[0]);
                 }
             }
+
             String keyStoreType = (args.length == 2 ? args[1] : DEFAULT_KEYSTORE_TYPE);
+
             try {
                 KeyStore.getInstance(keyStoreType);
             } catch (KeyStoreException e) {
@@ -75,7 +79,9 @@ public class Ranger2JKSUtil {
                 showUsage();
                 System.exit(1);
             }
+
             new Ranger2JKSUtil().doExportKeysFromJKS(keyStoreFileName, keyStoreType);
+
             System.out.println("Keys from Ranger KMS Database has been successfully exported into " + keyStoreFileName);
             System.exit(0);
         }
@@ -84,50 +90,62 @@ public class Ranger2JKSUtil {
     private void doExportKeysFromJKS(String keyStoreFileName, String keyStoreType) {
         char[] keyStorePassword = null;
         char[] keyPassword      = null;
+
         try {
             keyStorePassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the keystore FILE :");
-            keyPassword = ConsoleUtil.getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
-            Configuration  conf  = RangerKeyStoreProvider.getDBKSConf();
+            keyPassword      = ConsoleUtil.getPasswordFromConsole("Enter Password for the KEY(s) stored in the keystore:");
+
+            Configuration  conf        = RangerKeyStoreProvider.getDBKSConf();
             RangerKMSDB    rangerkmsDb = new RangerKMSDB(conf);
             DaoManager     daoManager  = rangerkmsDb.getDaoManager();
             RangerKeyStore dbStore;
-            char[]  masterKey   = null;
-            String   password = conf.get(ENCRYPTION_KEY);
-            if (conf != null && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED))
-                    && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
+            char[]         masterKey   = null;
+            String         password    = conf.get(ENCRYPTION_KEY);
+
+            if (conf != null && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED)) && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
                 getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
+
                 String keySecureLoginCred = conf.get(KEYSECURE_USERNAME).trim() + ":" + conf.get(KEYSECURE_PASSWORD);
+
                 conf.set(KEYSECURE_LOGIN, keySecureLoginCred);
 
                 RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
+
                 masterKey = rangerSafenetKeySecure.getMasterKey(password).toCharArray();
                 dbStore   = new RangerKeyStore(daoManager);
-            } else if (conf != null && StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_ENABLED))
-                    && conf.get(AZURE_KEYVAULT_ENABLED).equalsIgnoreCase("true")) {
+            } else if (conf != null && StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_ENABLED)) && conf.get(AZURE_KEYVAULT_ENABLED).equalsIgnoreCase("true")) {
                 getFromJceks(conf, CREDENTIAL_PATH, AZURE_CLIENT_SECRET_ALIAS, AZURE_CLIENT_SECRET);
+
                 String azureClientId = conf.get(AZURE_CLIENT_ID);
+
                 if (StringUtils.isEmpty(azureClientId)) {
                     throw new Exception("Azure Key Vault is enabled and client id is not configured");
                 }
+
                 String azureClientSecret = conf.get(AZURE_CLIENT_SECRET);
+
                 dbStore = new RangerKeyStore(daoManager);
+
                 AzureKeyVaultClientAuthenticator azureKVClientAuthenticator;
-                KeyVaultClient kvClient = null;
-                if (conf != null && StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_SSL_ENABLED))
-                        && conf.get(AZURE_KEYVAULT_SSL_ENABLED).equalsIgnoreCase("false")) {
+                KeyVaultClient                   kvClient = null;
+
+                if (conf != null && StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_SSL_ENABLED)) && conf.get(AZURE_KEYVAULT_SSL_ENABLED).equalsIgnoreCase("false")) {
                     try {
                         azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(azureClientId, azureClientSecret);
-                        kvClient = new KeyVaultClient(azureKVClientAuthenticator);
+                        kvClient                   = new KeyVaultClient(azureKVClientAuthenticator);
                     } catch (Exception ex) {
                         throw new Exception("Error while getting key vault client object with client id and client secret : " + ex);
                     }
                 } else {
                     try {
                         azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(azureClientId);
+
                         String keyVaultCertPath = conf.get(AZURE_KEYVAULT_CERTIFICATE_PATH);
+
                         if (StringUtils.isEmpty(keyVaultCertPath)) {
                             throw new Exception("Azure Key Vault is enabled. Please provide client secret or certificate path for authentication.");
                         }
+
                         String keyVaultCertPassword = conf.get(AZURE_KEYVAULT_CERTIFICATE_PASSWORD);
 
                         kvClient = !StringUtils.isEmpty(keyVaultCertPassword) ? azureKVClientAuthenticator.getAuthentication(keyVaultCertPath, keyVaultCertPassword)
@@ -136,15 +154,18 @@ public class Ranger2JKSUtil {
                         throw new Exception("Error while getting key vault client object with client id and certificate. Error :  : " + ex);
                     }
                 }
+
                 if (kvClient != null) {
                     masterKey = null;
                     dbStore   = new RangerKeyStore(daoManager, conf, kvClient);
                 }
             } else {
                 RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+
                 masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
                 dbStore   = new RangerKeyStore(daoManager);
             }
+
             try (OutputStream out = new FileOutputStream(new File(keyStoreFileName))) {
                 dbStore.engineLoadToKeyStoreFile(out, keyStorePassword, keyPassword, masterKey, keyStoreType);
             }
@@ -156,14 +177,15 @@ public class Ranger2JKSUtil {
         }
     }
 
-    private static void getFromJceks(Configuration conf, String path,
-            String alias, String key) {
+    private static void getFromJceks(Configuration conf, String path, String alias, String key) {
         // update credential from keystore
         if (conf != null) {
             String pathValue  = conf.get(path);
             String aliasValue = conf.get(alias);
+
             if (pathValue != null && aliasValue != null) {
                 String xaDBPassword = CredentialReader.getDecryptedString(pathValue.trim(), aliasValue.trim(), KeyStore.getDefaultType());
+
                 if (xaDBPassword != null && !xaDBPassword.trim().isEmpty() && !xaDBPassword.trim().equalsIgnoreCase("none")) {
                     conf.set(key, xaDBPassword);
                 }
