@@ -57,10 +57,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @InterfaceAudience.Private
 public class RangerKeyStoreProvider extends KeyProvider {
     private static final Logger logger = LoggerFactory.getLogger(RangerKeyStoreProvider.class);
-    public static final  String SCHEME_NAME                  = "dbks";
-    public static final  String KMS_CONFIG_DIR               = "kms.config.dir";
-    public static final  String DBKS_SITE_XML                = "dbks-site.xml";
-    public static final  String ENCRYPTION_KEY               = "ranger.db.encrypt.key.password";
+
+    public  static final String SCHEME_NAME                  = "dbks";
+    public  static final String KMS_CONFIG_DIR               = "kms.config.dir";
+    public  static final String DBKS_SITE_XML                = "dbks-site.xml";
+    public  static final String ENCRYPTION_KEY               = "ranger.db.encrypt.key.password";
     private static final String KEY_METADATA                 = "KeyMetadata";
     private static final String CREDENTIAL_PATH              = "ranger.ks.jpa.jdbc.credential.provider.path";
     private static final String MK_CREDENTIAL_ALIAS          = "ranger.ks.masterkey.credential.alias";
@@ -215,9 +216,8 @@ public class RangerKeyStoreProvider extends KeyProvider {
             logger.info("Ranger KMS Database is enabled for storing master key.");
 
             masterKeyProvider = new RangerMasterKey(daoManager);
-
-            dbStore   = new RangerKeyStore(daoManager);
-            masterKey = this.generateAndGetMasterKey(masterKeyProvider, password);
+            dbStore           = new RangerKeyStore(daoManager);
+            masterKey         = this.generateAndGetMasterKey(masterKeyProvider, password);
         }
 
         reloadKeys();
@@ -338,7 +338,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 
                 for (int i = 0; i < latestVersion; i++) {
                     String     versionName = buildVersionName(name, i);
-                    KeyVersion v = getKeyVersion(versionName);
+                    KeyVersion v           = getKeyVersion(versionName);
 
                     if (v != null) {
                         ret.add(v);
@@ -707,7 +707,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 if (SCHEME_NAME.equals(providerName.getScheme())) {
                     ret = new RangerKeyStoreProvider(conf);
                 } else {
-                    logger.warn(providerName.getScheme() + ": unrecognized schema");
+                    logger.warn("{}: unrecognized schema", providerName.getScheme());
                 }
             } catch (Throwable e) {
                 logger.error("createProvider() error", e);
