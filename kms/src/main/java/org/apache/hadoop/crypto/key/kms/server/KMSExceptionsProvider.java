@@ -39,9 +39,10 @@ import java.io.IOException;
 @Provider
 @InterfaceAudience.Private
 public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
-    private static  Logger log = LoggerFactory.getLogger(KMSExceptionsProvider.class);
+    private static final Logger log           = LoggerFactory.getLogger(KMSExceptionsProvider.class);
     private static final Logger EXCEPTION_LOG = KMS.LOG;
-    private static final String ENTER = System.getProperty("line.separator");
+
+    private static final String ENTER = System.lineSeparator();
 
     /**
      * Maps different exceptions thrown by KMS to HTTP status codes.
@@ -51,23 +52,28 @@ public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
         Response.Status status;
         boolean         doAudit   = true;
         Throwable       throwable = exception;
+
         if (exception instanceof ContainerException) {
             throwable = exception.getCause();
         }
+
         if (throwable instanceof SecurityException) {
             status = Response.Status.FORBIDDEN;
         } else if (throwable instanceof AuthenticationException) {
             status = Response.Status.FORBIDDEN;
+
             // we don't audit here because we did it already when checking access
             doAudit = false;
         } else if (throwable instanceof AuthorizationException) {
             status = Response.Status.FORBIDDEN;
+
             // we don't audit here because we did it already when checking access
             doAudit = false;
         } else if (throwable instanceof AccessControlException) {
             status = Response.Status.FORBIDDEN;
         } else if (exception instanceof IOException) {
             status = Response.Status.INTERNAL_SERVER_ERROR;
+
             log(status, throwable);
         } else if (exception instanceof UnsupportedOperationException) {
             status = Response.Status.BAD_REQUEST;
@@ -75,15 +81,16 @@ public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
             status = Response.Status.BAD_REQUEST;
         } else {
             status = Response.Status.INTERNAL_SERVER_ERROR;
+
             log(status, throwable);
         }
+
         if (doAudit) {
-            KMSWebApp.getKMSAudit().error(KMSMDCFilter.getUgi(),
-                    KMSMDCFilter.getMethod(),
-                    KMSMDCFilter.getURL(), getOneLineMessage(exception));
+            KMSWebApp.getKMSAudit().error(KMSMDCFilter.getUgi(), KMSMDCFilter.getMethod(), KMSMDCFilter.getURL(), getOneLineMessage(exception));
         }
-        EXCEPTION_LOG.warn("User {} request {} {} caused exception.", KMSMDCFilter.getUgi(), KMSMDCFilter.getMethod(),
-                KMSMDCFilter.getURL(), exception);
+
+        EXCEPTION_LOG.warn("User {} request {} {} caused exception.", KMSMDCFilter.getUgi(), KMSMDCFilter.getMethod(), KMSMDCFilter.getURL(), exception);
+
         return createResponse(status, throwable);
     }
 
@@ -93,20 +100,24 @@ public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
 
     protected String getOneLineMessage(Throwable exception) {
         String message = exception.getMessage();
+
         if (message != null) {
             int i = message.indexOf(ENTER);
+
             if (i > -1) {
                 message = message.substring(0, i);
             }
         }
+
         return message;
     }
 
     protected void log(Response.Status status, Throwable ex) {
         UserGroupInformation ugi    = KMSMDCFilter.getUgi();
-        String method = KMSMDCFilter.getMethod();
-        String url = KMSMDCFilter.getURL();
-        String msg = getOneLineMessage(ex);
+        String               method = KMSMDCFilter.getMethod();
+        String               url    = KMSMDCFilter.getURL();
+        String               msg    = getOneLineMessage(ex);
+
         log.warn("User:'{}' Method:{} URL:{} Response:{}-{}", ugi, method, url, status, msg, ex);
     }
 }
