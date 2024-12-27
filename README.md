@@ -54,6 +54,14 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
 ## Regular Build Process
 
+0. Prerequisites of latest version:
+   - JDK 1.8+
+   - Apache Maven 3.6.3+
+   - Hadoop 3.3.0+
+   
+   Prerequisites depending on plugins:
+   - Hive 3.0.0+
+
 1. Check out the code from GIT repository
 
 2. On the root folder, please execute the following Maven command:
