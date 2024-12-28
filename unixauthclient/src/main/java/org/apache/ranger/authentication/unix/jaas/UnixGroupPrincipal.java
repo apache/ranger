@@ -17,24 +17,22 @@
  * under the License.
  */
 
- package org.apache.ranger.authentication.unix.jaas;
+package org.apache.ranger.authentication.unix.jaas;
 
 import java.io.Serializable;
 import java.security.Principal;
 
 public class UnixGroupPrincipal implements Principal, Serializable {
+    private static final long   serialVersionUID = 8137147441841439754L;
 
-	private static final long serialVersionUID = 8137147441841439754L;
+    private final String groupName;
 
-	private String groupName;
-	
-	public UnixGroupPrincipal(String groupName) {
-		this.groupName = groupName;
-	}
+    public UnixGroupPrincipal(String groupName) {
+        this.groupName = groupName;
+    }
 
-	@Override
-	public String getName() {
-		return groupName;
-	}
-
+    @Override
+    public String getName() {
+        return groupName;
+    }
 }
