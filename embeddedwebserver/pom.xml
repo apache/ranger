@@ -27,6 +27,11 @@
     <packaging>jar</packaging>
     <name>Embedded Web Server Invoker</name>
     <description>Embedded Web Server Invoker</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>
