@@ -18,29 +18,26 @@
  */
 package org.apache.util.outputformatter;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
-
 /**
  * This is the default formatter for Jisql.  It outputs data in a &quot;normal&quot;
  * format that is similar to most other database command line formatters.
- *
  */
 public class DefaultFormatter implements JisqlFormatter {
-    private boolean trimColumns = false;
-    private int columnWidth = 2048;		// can be overridden with the -w switch
-    private char spacer = ' ';
-    private boolean printNull = true;
-    private boolean leftJustify = false;
+    private boolean trimColumns;
+    private int     columnWidth = 2048;        // can be overridden with the -w switch
+    private char    spacer      = ' ';
+    private boolean printNull   = true;
+    private boolean leftJustify;
     private boolean printHeader = true;
-    private boolean debug = false;
-	private String delimiter = " | ";
-
+    private boolean debug;
+    private String  delimiter   = " | ";
 
     /**
      * Sets a the option list for this formatter.  This formatter accepts the
@@ -64,73 +61,72 @@ public class DefaultFormatter implements JisqlFormatter {
      * </ul>
      *
      * @param parser the OptionParser to use.
-     *
      */
-    public void setSupportedOptions( OptionParser parser ) {
-        parser.accepts( "trim" );
-        parser.accepts( "w" ).withRequiredArg().ofType( Integer.class );
-        parser.accepts( "spacer" ).withRequiredArg().ofType( String.class );
-        parser.accepts( "left" );
-        parser.accepts( "nonull" );
-        parser.accepts( "noheader" );
-        parser.accepts( "debug" );
-        parser.accepts( "delimiter" ).withRequiredArg().ofType( String.class );
+    public void setSupportedOptions(OptionParser parser) {
+        parser.accepts("trim");
+        parser.accepts("w").withRequiredArg().ofType(Integer.class);
+        parser.accepts("spacer").withRequiredArg().ofType(String.class);
+        parser.accepts("left");
+        parser.accepts("nonull");
+        parser.accepts("noheader");
+        parser.accepts("debug");
+        parser.accepts("delimiter").withRequiredArg().ofType(String.class);
     }
 
     /**
      * Consumes any options that were specified on the command line.
      *
      * @param options the OptionSet that the main driver is using.
-     *
-     * @throws Exception if there is a problem parsing the command line arguments.
-     *
      */
-    public void consumeOptions( OptionSet options ) throws Exception {
-
-        if( options.has( "trim" ) )
+    public void consumeOptions(OptionSet options) {
+        if (options.has("trim")) {
             trimColumns = true;
+        }
 
-        if( options.has( "w" ) )
-            columnWidth = (Integer)options.valueOf( "w" );
+        if (options.has("w")) {
+            columnWidth = (Integer) options.valueOf("w");
+        }
 
-        if( options.has( "spacer" ) )
-            spacer = ((String)(options.valueOf( "spacer" ))).charAt( 0 );
+        if (options.has("spacer")) {
+            spacer = ((String) (options.valueOf("spacer"))).charAt(0);
+        }
 
-        if( options.has( "left" ) )
+        if (options.has("left")) {
             leftJustify = true;
+        }
 
-        if( options.has( "nonull" ) )
+        if (options.has("nonull")) {
             printNull = false;
+        }
 
-        if( options.has( "noheader" ) )
+        if (options.has("noheader")) {
             printHeader = false;
+        }
 
-        if( options.has( "debug" ) )
+        if (options.has("debug")) {
             debug = true;
+        }
 
-        if( options.hasArgument( "delimiter" ) )
-            delimiter = (String)options.valueOf( "delimiter" );
+        if (options.hasArgument("delimiter")) {
+            delimiter = (String) options.valueOf("delimiter");
+        }
     }
-
-
 
     /**
      * Called to output a usage message to the command line window.  This
      * message should contain information on how to call the formatter.
      *
      * @param out the stream to print the output on
-     *
      */
-    public void usage( PrintStream out ) {
+    public void usage(PrintStream out) {
         out.println("\t-w specifies the maximum field width for a column.  The default is to output the full width of the column");
         out.println("\t-spacer changes the spacer between columns from a single space to the first character of the argument");
         out.println("\t-noheader do not print any header columns");
         out.println("\t-left left justify the output");
         out.println("\t-trim trim the data output.  This is useful when specifying a delimiter.");
         out.println("\t-nonull print the empty string instead of the word \"NULL\" for null values.");
-        out.println("\t-debug shows extra information about the output." );
-        out.println("\t-delimiter specifies the delimiter.  The default is \"" + delimiter + "\"." );
-
+        out.println("\t-debug shows extra information about the output.");
+        out.println("\t-delimiter specifies the delimiter.  The default is \"" + delimiter + "\".");
     }
 
     /**
@@ -139,25 +135,22 @@ public class DefaultFormatter implements JisqlFormatter {
      *
      * @param out - a PrintStream to send any output to.
      * @param metaData - the ResultSetMetaData for the output.
-     *
      */
-    public void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception {
-        if( printHeader ) {
+    public void formatHeader(PrintStream out, ResultSetMetaData metaData) throws Exception {
+        if (printHeader) {
             int numColumns = metaData.getColumnCount();
 
-            if( debug ) {
-            	for (int i = 1; i <= numColumns; i++) {
-                    out.print( formatLabel( metaData.getColumnTypeName(i),
-                                            metaData.getColumnDisplaySize(i)));
+            if (debug) {
+                for (int i = 1; i <= numColumns; i++) {
+                    out.print(formatLabel(metaData.getColumnTypeName(i), metaData.getColumnDisplaySize(i)));
                     out.print(delimiter);
-            	}
+                }
             }
             //
             // output the column names
             //
             for (int i = 1; i <= numColumns; i++) {
-                out.print( formatLabel( metaData.getColumnName(i),
-                                        metaData.getColumnDisplaySize(i)));
+                out.print(formatLabel(metaData.getColumnName(i), metaData.getColumnDisplaySize(i)));
                 out.print(delimiter);
             }
 
@@ -167,19 +160,18 @@ public class DefaultFormatter implements JisqlFormatter {
             // output pretty dividers
             //
             for (int i = 1; i <= numColumns; i++) {
-                out.print( formatSeparator( metaData.getColumnName(i),
-                                            metaData.getColumnDisplaySize(i)));
+                out.print(formatSeparator(metaData.getColumnName(i), metaData.getColumnDisplaySize(i)));
 
-                if (i == numColumns)
+                if (i == numColumns) {
                     out.print("-|");
-                else
+                } else {
                     out.print("-+-");
+                }
             }
 
             out.println();
         }
     }
-
 
     /**
      * Called to output the data.
@@ -187,25 +179,19 @@ public class DefaultFormatter implements JisqlFormatter {
      * @param out the PrintStream to output data to.
      * @param resultSet the ResultSet for the row.
      * @param metaData the ResultSetMetaData for the row.
-     *
-     *
      */
-    public void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception {
-
-        while( resultSet.next() ) {
+    public void formatData(PrintStream out, ResultSet resultSet, ResultSetMetaData metaData) throws Exception {
+        while (resultSet.next()) {
             int numColumns = metaData.getColumnCount();
 
             for (int i = 1; i <= numColumns; i++) {
-                out.print( formatValue( metaData.getColumnName(i),
-                                        resultSet.getString(i),
-                                        metaData.getColumnDisplaySize(i)));
-                out.print( delimiter );
+                out.print(formatValue(metaData.getColumnName(i), resultSet.getString(i), metaData.getColumnDisplaySize(i)));
+                out.print(delimiter);
             }
 
             out.println();
         }
     }
-
 
     /**
      * Outputs a footer for a query.  This is called after all data has been
@@ -213,141 +199,150 @@ public class DefaultFormatter implements JisqlFormatter {
      *
      * @param out the PrintStream to output data to.
      * @param metaData the ResultSetMetaData for the output.
-     *
      */
-    public void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception {
-    }
-
-
+    public void formatFooter(PrintStream out, ResultSetMetaData metaData) {}
 
     /**
      * Formats a label for output.
      *
      * @param s - the label to format
      * @param width - the width of the field
-     *
      * @return the formated label
-     *
      */
-	private String formatLabel(String s, int width) {
-		if (s == null)
-			s = "NULL";
+    private String formatLabel(String s, int width) {
+        if (s == null) {
+            s = "NULL";
+        }
 
-		if (columnWidth != 0) {
-			if (width > columnWidth)
-				width = columnWidth;
-		}
+        if (columnWidth != 0) {
+            if (width > columnWidth) {
+                width = columnWidth;
+            }
+        }
 
-		if (width < s.length())
-			width = s.length();
+        if (width < s.length()) {
+            width = s.length();
+        }
 
-		int len = s.length();
+        int len = s.length();
 
-		if (len >= width)
-			return s.substring(0, width);
+        if (len >= width) {
+            return s.substring(0, width);
+        }
 
-		int fillWidth = width - len;
-		StringBuilder fill = new StringBuilder(fillWidth);
-		for (int i = 0; i < fillWidth; ++i)
-			fill.append(spacer);
-		if (leftJustify)
-			return s + fill;
-		else if (s.startsWith("-"))
-			return "-" + fill + s.substring(1);
-		else
-			return fill + s;
-	}
+        int           fillWidth = width - len;
+        StringBuilder fill      = new StringBuilder(fillWidth);
 
-	/**
-	 * Formats a separator for display.
-	 *
-	 * @param s - the field for which the separator is being generated
-	 * @param width - the width of the field
-	 *
-	 * @return the formated separator
-	 *
-	 */
-	private String formatSeparator(String s, int width) {
-	    s = "NULL";
+        for (int i = 0; i < fillWidth; ++i) {
+            fill.append(spacer);
+        }
 
-		if (columnWidth != 0) {
-			if (width > columnWidth)
-				width = columnWidth;
-		}
+        if (leftJustify) {
+            return s + fill;
+        } else if (s.startsWith("-")) {
+            return "-" + fill + s.substring(1);
+        } else {
+            return fill + s;
+        }
+    }
 
-		if (width < s.length())
-			width = s.length();
+    /**
+     * Formats a separator for display.
+     *
+     * @param s - the field for which the separator is being generated
+     * @param width - the width of the field
+     * @return the formated separator
+     */
+    private String formatSeparator(String s, int width) {
+        s = "NULL";
 
-		int len = s.length();
+        if (columnWidth != 0) {
+            if (width > columnWidth) {
+                width = columnWidth;
+            }
+        }
 
-		if (len >= width)
-			width = len;
+        if (width < s.length()) {
+            width = s.length();
+        }
 
-		StringBuilder fill = new StringBuilder(width);
-		for (int i = 0; i < width; ++i)
-			fill.append('-');
+        int len = s.length();
 
-        if( trimColumns )
-		    return fill.toString().trim();
-        else
-		    return fill.toString();
-	}
+        if (len >= width) {
+            width = len;
+        }
 
-	/**
-	 * Formats a value for display.
-	 *
-	 * @param label the label associated with the value (for width purposes)
-	 * @param s - the value to format
-	 * @param width - the width of the field from the db.
-	 *
-	 * @return the formatted field.
-	 *
-	 */
-	private String formatValue(String label, String s, int width) {
-		if (s == null) {
-            if( printNull )
-			    s = "NULL";
-            else
+        StringBuilder fill = new StringBuilder(width);
+
+        for (int i = 0; i < width; ++i) {
+            fill.append('-');
+        }
+
+        if (trimColumns) {
+            return fill.toString().trim();
+        } else {
+            return fill.toString();
+        }
+    }
+
+    /**
+     * Formats a value for display.
+     *
+     * @param label the label associated with the value (for width purposes)
+     * @param s - the value to format
+     * @param width - the width of the field from the db.
+     * @return the formatted field.
+     */
+    private String formatValue(String label, String s, int width) {
+        if (s == null) {
+            if (printNull) {
+                s = "NULL";
+            } else {
                 s = "";
+            }
         }
 
-		if (columnWidth != 0) {
-			if (width > columnWidth)
-				width = columnWidth;
-		}
-
-		if (width < label.length())
-			width = label.length();
-
-		int len = s.length();
-
-		if (len >= width) {
-                if( trimColumns )
-			        return s.substring(0, width).trim();
-                else
-			        return s.substring(0, width);
+        if (columnWidth != 0) {
+            if (width > columnWidth) {
+                width = columnWidth;
+            }
         }
 
-		int fillWidth = width - len;
-		StringBuilder fill = new StringBuilder(fillWidth);
-		for (int i = 0; i < fillWidth; ++i)
-			fill.append(spacer);
+        if (width < label.length()) {
+            width = label.length();
+        }
+
+        int len = s.length();
+
+        if (len >= width) {
+            if (trimColumns) {
+                return s.substring(0, width).trim();
+            } else {
+                return s.substring(0, width);
+            }
+        }
+
+        int           fillWidth = width - len;
+        StringBuilder fill      = new StringBuilder(fillWidth);
+
+        for (int i = 0; i < fillWidth; ++i) {
+            fill.append(spacer);
+        }
 
         StringBuilder returnValue = new StringBuilder();
 
-		if (leftJustify)
-			returnValue.append( s + fill );
-		else if (s.startsWith("-"))
-			returnValue.append( "-" + fill + s.substring(1) );
-		else {
-		    returnValue.append( fill + s );
+        if (leftJustify) {
+            returnValue.append(s).append(fill);
+        } else if (s.startsWith("-")) {
+            returnValue.append("-").append(fill).append(s.substring(1));
+        } else {
+            returnValue.append(fill).append(s);
         }
 
-        if( trimColumns ) {
+        if (trimColumns) {
             return returnValue.toString().trim();
-        }
-        else {
+        } else {
             return returnValue.toString();
         }
-	}
+    }
 }
