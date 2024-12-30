@@ -23,70 +23,59 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class TrinoResourceManager
-{
+public class TrinoResourceManager {
     private static final Logger LOG = LoggerFactory.getLogger(TrinoResourceManager.class);
-    private static final String CATALOG = "catalog";
-    private static final String SCHEMA = "schema";
-    private static final String TABLE = "table";
-    private static final String COLUMN = "column";
 
-    private TrinoResourceManager()
-    {
+    private static final String CATALOG = "catalog";
+    private static final String SCHEMA  = "schema";
+    private static final String TABLE   = "table";
+    private static final String COLUMN  = "column";
+
+    private TrinoResourceManager() {
         // no instantiation
     }
 
-    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs)
-            throws Exception
-    {
-        Map<String, Object> ret = null;
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
+        Map<String, Object> ret;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> TrinoResourceManager.connectionTest() ServiceName: " + serviceName + " Configs: " + configs);
-        }
+        LOG.debug("==> TrinoResourceManager.connectionTest() ServiceName: {} Configs: {}", serviceName, configs);
 
         try {
             ret = TrinoClient.connectionTest(serviceName, configs);
-        }
-        catch (Exception e) {
-            LOG.error("<== TrinoResourceManager.connectionTest() Error: " + e);
+        } catch (Exception e) {
+            LOG.error("<== TrinoResourceManager.connectionTest() Error: {}", String.valueOf(e));
 
             throw e;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TrinoResourceManager.connectionTest() Result : " + ret);
-        }
+        LOG.debug("<== TrinoResourceManager.connectionTest() Result : {}", ret);
 
         return ret;
     }
 
     public static List<String> getTrinoResources(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context)
-            throws Exception
-    {
-        String userInput = context.getUserInput();
-        String resource = context.getResourceName();
+            throws Exception {
+        String                    userInput   = context.getUserInput();
+        String                    resource    = context.getResourceName();
         Map<String, List<String>> resourceMap = context.getResources();
-        List<String> resultList = null;
-        List<String> catalogList = null;
-        List<String> schemaList = null;
-        List<String> tableList = null;
-        List<String> columnList = null;
-        String catalogName = null;
-        String schemaName = null;
-        String tableName = null;
-        String columnName = null;
+        List<String>              resultList  = null;
+        List<String>              catalogList = null;
+        List<String>              schemaList  = null;
+        List<String>              tableList   = null;
+        List<String>              columnList  = null;
+        String                    catalogName = null;
+        String                    schemaName  = null;
+        String                    tableName   = null;
+        String                    columnName  = null;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== TrinoResourceMgr.getTrinoResources() UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
-        }
+        LOG.debug("<== TrinoResourceMgr.getTrinoResources() UserInput: \"{}\" resource : {} resourceMap: {}", userInput, resource, resourceMap);
 
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
                 catalogList = resourceMap.get(CATALOG);
-                schemaList = resourceMap.get(SCHEMA);
-                tableList = resourceMap.get(TABLE);
-                columnList = resourceMap.get(COLUMN);
+                schemaList  = resourceMap.get(SCHEMA);
+                tableList   = resourceMap.get(TABLE);
+                columnList  = resourceMap.get(COLUMN);
             }
 
             switch (resource.trim().toLowerCase()) {
@@ -95,6 +84,7 @@ public class TrinoResourceManager
                     break;
                 case SCHEMA:
                     schemaName = userInput;
+                    break;
                 case TABLE:
                     tableName = userInput;
                     break;
@@ -108,80 +98,45 @@ public class TrinoResourceManager
 
         if (serviceName != null && userInput != null) {
             try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("==> TrinoResourceManager.getTrinoResources() UserInput: \"" + userInput + "\" configs: " + configs + " catalogList: " + catalogList + " tableList: " + tableList + " columnList: " + columnList);
-                }
+                LOG.debug("==> TrinoResourceManager.getTrinoResources() UserInput: \"{}\" configs: {} catalogList: {} tableList: {} columnList: {}", userInput, configs, catalogList, tableList, columnList);
 
-                final TrinoClient trinoClient = new TrinoConnectionManager().getTrinoConnection(serviceName, serviceType, configs);
-                Callable<List<String>> callableObj = null;
-                final String finalCatalogName;
-                final String finalSchemaName;
-                final String finalTableName;
-                final String finalColumnName;
-                final List<String> finalCatalogList = catalogList;
-                final List<String> finalSchemaList = schemaList;
-                final List<String> finalTableList = tableList;
-                final List<String> finalColumnList = columnList;
+                final TrinoClient      trinoClient      = new TrinoConnectionManager().getTrinoConnection(serviceName, serviceType, configs);
+                Callable<List<String>> callableObj      = null;
+                final String           finalCatalogName;
+                final String           finalSchemaName;
+                final String           finalTableName;
+                final String           finalColumnName;
+                final List<String>     finalCatalogList = catalogList;
+                final List<String>     finalSchemaList  = schemaList;
+                final List<String>     finalTableList   = tableList;
+                final List<String>     finalColumnList  = columnList;
 
                 if (trinoClient != null) {
                     if (catalogName != null && !catalogName.isEmpty()) {
                         finalCatalogName = catalogName;
-                        callableObj = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call()
-                                    throws Exception
-                            {
-                                return trinoClient.getCatalogList(finalCatalogName, finalCatalogList);
-                            }
-                        };
-                    }
-                    else if (schemaName != null && !schemaName.isEmpty()) {
+                        callableObj      = () -> trinoClient.getCatalogList(finalCatalogName, finalCatalogList);
+                    } else if (schemaName != null && !schemaName.isEmpty()) {
                         finalSchemaName = schemaName;
-                        callableObj = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call()
-                                    throws Exception
-                            {
-                                return trinoClient.getSchemaList(finalSchemaName, finalCatalogList, finalSchemaList);
-                            }
-                        };
-                    }
-                    else if (tableName != null && !tableName.isEmpty()) {
+                        callableObj     = () -> trinoClient.getSchemaList(finalSchemaName, finalCatalogList, finalSchemaList);
+                    } else if (tableName != null && !tableName.isEmpty()) {
                         finalTableName = tableName;
-                        callableObj = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call()
-                                    throws Exception
-                            {
-                                return trinoClient.getTableList(finalTableName, finalCatalogList, finalSchemaList, finalTableList);
-                            }
-                        };
-                    }
-                    else if (columnName != null && !columnName.isEmpty()) {
+                        callableObj    = () -> trinoClient.getTableList(finalTableName, finalCatalogList, finalSchemaList, finalTableList);
+                    } else if (columnName != null && !columnName.isEmpty()) {
                         // Column names are matched by the wildcardmatcher
                         columnName += "*";
                         finalColumnName = columnName;
-                        callableObj = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call()
-                                    throws Exception
-                            {
-                                return trinoClient.getColumnList(finalColumnName, finalCatalogList, finalSchemaList, finalTableList, finalColumnList);
-                            }
-                        };
+                        callableObj     = () -> trinoClient.getColumnList(finalColumnName, finalCatalogList, finalSchemaList, finalTableList, finalColumnList);
                     }
 
                     if (callableObj != null) {
                         synchronized (trinoClient) {
                             resultList = TimedEventUtil.timedTask(callableObj, 5, TimeUnit.SECONDS);
                         }
-                    }
-                    else {
+                    } else {
                         LOG.error("Could not initiate a TrinoClient timedTask");
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LOG.error("Unable to get Trino resource", e);
 
                 throw e;
