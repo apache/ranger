@@ -26,6 +26,10 @@
 
     <artifactId>sample-client</artifactId>
     <packaging>jar</packaging>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>
