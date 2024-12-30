@@ -32,15 +32,77 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceTrino
-        extends RangerBaseService
-{
-    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTrino.class);
-    public static final String ACCESS_TYPE_SELECT = "select";
+        extends RangerBaseService {
+    public static final  String ACCESS_TYPE_SELECT = "select";
+    private static final Logger LOG                = LoggerFactory.getLogger(RangerServiceTrino.class);
+
+    @Override
+    public Map<String, Object> validateConfig()
+            throws Exception {
+        Map<String, Object> ret         = new HashMap<String, Object>();
+        String              serviceName = getServiceName();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RangerServiceTrino.validateConfig(): Service: " + serviceName);
+        }
+
+        if (configs != null) {
+            try {
+                if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+                    configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+                }
+
+                ret = TrinoResourceManager.connectionTest(serviceName, configs);
+            } catch (HadoopException he) {
+                LOG.error("<== RangerServiceTrino.validateConfig() Error:" + he);
+
+                throw he;
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RangerServiceTrino.validateConfig(): Response: " + ret);
+        }
+
+        return ret;
+    }
+
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context)
+            throws Exception {
+        List<String>        ret         = new ArrayList<String>();
+        String              serviceName = getServiceName();
+        String              serviceType = getServiceType();
+        Map<String, String> configs     = getConfigs();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerServiceTrino.lookupResource() Context: (" + context + ")");
+        }
+
+        if (context != null) {
+            try {
+                if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+                    configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+                }
+
+                ret = TrinoResourceManager.getTrinoResources(serviceName, serviceType, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceTrino.lookupResource() Error : " + e);
+
+                throw e;
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceTrino.lookupResource() Response: (" + ret + ")");
+        }
+
+        return ret;
+    }
 
     @Override
     public List<RangerPolicy> getDefaultRangerPolicies()
-            throws Exception
-    {
+            throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerServiceTrino.getDefaultRangerPolicies()");
         }
@@ -49,7 +111,7 @@ public class RangerServiceTrino
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
                 List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
-                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+                RangerPolicyItem             policyItemForLookupUser = new RangerPolicyItem();
 
                 accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
                 policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
@@ -70,74 +132,6 @@ public class RangerServiceTrino
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceTrino.getDefaultRangerPolicies()");
-        }
-
-        return ret;
-    }
-
-    @Override
-    public Map<String, Object> validateConfig()
-            throws Exception
-    {
-        Map<String, Object> ret = new HashMap<String, Object>();
-        String serviceName = getServiceName();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("RangerServiceTrino.validateConfig(): Service: " + serviceName);
-        }
-
-        if (configs != null) {
-            try {
-                if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
-                    configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
-                }
-
-                ret = TrinoResourceManager.connectionTest(serviceName, configs);
-            }
-            catch (HadoopException he) {
-                LOG.error("<== RangerServiceTrino.validateConfig() Error:" + he);
-
-                throw he;
-            }
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("RangerServiceTrino.validateConfig(): Response: " + ret);
-        }
-
-        return ret;
-    }
-
-    @Override
-    public List<String> lookupResource(ResourceLookupContext context)
-            throws Exception
-    {
-        List<String> ret = new ArrayList<String>();
-        String serviceName = getServiceName();
-        String serviceType = getServiceType();
-        Map<String, String> configs = getConfigs();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceTrino.lookupResource() Context: (" + context + ")");
-        }
-
-        if (context != null) {
-            try {
-                if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
-                    configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
-                }
-
-                ret = TrinoResourceManager.getTrinoResources(serviceName, serviceType, configs, context);
-            }
-            catch (Exception e) {
-                LOG.error("<==RangerServiceTrino.lookupResource() Error : " + e);
-
-                throw e;
-            }
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceTrino.lookupResource() Response: (" + ret + ")");
         }
 
         return ret;
