@@ -40,19 +40,19 @@ public class PrestoResourceManager {
         //To block instantiation
     }
 
-    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-        Map<String, Object> ret = null;
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
+        Map<String, Object> ret;
 
         LOG.debug("==> PrestoResourceManager.connectionTest() ServiceName: {} Configs: {}", serviceName, configs);
 
         try {
             ret = PrestoClient.connectionTest(serviceName, configs);
         } catch (Exception e) {
-            LOG.error("<== PrestoResourceManager.connectionTest() Error: " , e);
+            LOG.error("<== PrestoResourceManager.connectionTest() Error: ", e);
             throw e;
         }
 
-        LOG.debug("<== PrestoResourceManager.connectionTest() Result : {}" , ret);
+        LOG.debug("<== PrestoResourceManager.connectionTest() Result : {}", ret);
 
         return ret;
     }
@@ -71,7 +71,8 @@ public class PrestoResourceManager {
         String                    tableName   = null;
         String                    columnName  = null;
 
-        LOG.debug("<== PrestoResourceMgr.getPrestoResources() UserInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
+        LOG.debug("==> PrestoResourceMgr.getPrestoResources() UserInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
+
         if (userInput != null && resource != null) {
             if (resourceMap != null && !resourceMap.isEmpty()) {
                 catalogList = resourceMap.get(CATALOG);
@@ -79,6 +80,7 @@ public class PrestoResourceManager {
                 tableList   = resourceMap.get(TABLE);
                 columnList  = resourceMap.get(COLUMN);
             }
+
             switch (resource.trim().toLowerCase()) {
                 case CATALOG:
                     catalogName = userInput;
@@ -118,38 +120,18 @@ public class PrestoResourceManager {
                 if (prestoClient != null) {
                     if (catalogName != null && !catalogName.isEmpty()) {
                         finalCatalogName = catalogName;
-                        callableObj      = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() throws Exception {
-                                return prestoClient.getCatalogList(finalCatalogName, finalCatalogList);
-                            }
-                        };
+                        callableObj      = () -> prestoClient.getCatalogList(finalCatalogName, finalCatalogList);
                     } else if (schemaName != null && !schemaName.isEmpty()) {
                         finalSchemaName = schemaName;
-                        callableObj     = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() throws Exception {
-                                return prestoClient.getSchemaList(finalSchemaName, finalCatalogList, finalSchemaList);
-                            }
-                        };
+                        callableObj     = () -> prestoClient.getSchemaList(finalSchemaName, finalCatalogList, finalSchemaList);
                     } else if (tableName != null && !tableName.isEmpty()) {
                         finalTableName = tableName;
-                        callableObj    = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() throws Exception {
-                                return prestoClient.getTableList(finalTableName, finalCatalogList, finalSchemaList, finalTableList);
-                            }
-                        };
+                        callableObj    = () -> prestoClient.getTableList(finalTableName, finalCatalogList, finalSchemaList, finalTableList);
                     } else if (columnName != null && !columnName.isEmpty()) {
                         // Column names are matched by the wildcardmatcher
                         columnName += "*";
                         finalColumnName = columnName;
-                        callableObj     = new Callable<List<String>>() {
-                            @Override
-                            public List<String> call() throws Exception {
-                                return prestoClient.getColumnList(finalColumnName, finalCatalogList, finalSchemaList, finalTableList, finalColumnList);
-                            }
-                        };
+                        callableObj     = () -> prestoClient.getColumnList(finalColumnName, finalCatalogList, finalSchemaList, finalTableList, finalColumnList);
                     }
                     if (callableObj != null) {
                         synchronized (prestoClient) {
@@ -161,9 +143,11 @@ public class PrestoResourceManager {
                 }
             } catch (Exception e) {
                 LOG.error("Unable to get Presto resource", e);
+
                 throw e;
             }
         }
+
         return resultList;
     }
 }

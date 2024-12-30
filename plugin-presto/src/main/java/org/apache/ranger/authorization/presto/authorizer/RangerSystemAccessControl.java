@@ -36,8 +36,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
@@ -48,37 +46,34 @@ import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.util.Locale.ENGLISH;
-
-enum PrestoAccessType {
-    CREATE, DROP, SELECT, INSERT, DELETE, USE, ALTER, ALL, GRANT, REVOKE, SHOW, IMPERSONATE, EXECUTE
-}
-
 public class RangerSystemAccessControl implements SystemAccessControl {
-    public static final  String           RANGER_CONFIG_KEYTAB              = "ranger.keytab";
-    public static final  String           RANGER_CONFIG_PRINCIPAL           = "ranger.principal";
-    public static final  String           RANGER_CONFIG_USE_UGI             = "ranger.use_ugi";
-    public static final  String           RANGER_CONFIG_HADOOP_CONFIG       = "ranger.hadoop_config";
-    public static final  String           RANGER_PRESTO_DEFAULT_HADOOP_CONF = "presto-ranger-site.xml";
-    public static final  String           RANGER_PRESTO_SERVICETYPE         = "presto";
-    public static final  String           RANGER_PRESTO_APPID               = "presto";
-    private static final Logger           LOG                               = LoggerFactory.getLogger(RangerSystemAccessControl.class);
-    private final        RangerBasePlugin rangerPlugin;
-    private              boolean          useUgi;
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSystemAccessControl.class);
+
+    public static final String RANGER_CONFIG_KEYTAB              = "ranger.keytab";
+    public static final String RANGER_CONFIG_PRINCIPAL           = "ranger.principal";
+    public static final String RANGER_CONFIG_USE_UGI             = "ranger.use_ugi";
+    public static final String RANGER_CONFIG_HADOOP_CONFIG       = "ranger.hadoop_config";
+    public static final String RANGER_PRESTO_DEFAULT_HADOOP_CONF = "presto-ranger-site.xml";
+    public static final String RANGER_PRESTO_SERVICETYPE         = "presto";
+    public static final String RANGER_PRESTO_APPID               = "presto";
+
+    private final RangerBasePlugin rangerPlugin;
+    private       boolean          useUgi;
 
     public RangerSystemAccessControl(Map<String, String> config) {
         super();
 
         Configuration hadoopConf = new Configuration();
+
         if (config.get(RANGER_CONFIG_HADOOP_CONFIG) != null) {
             URL url = hadoopConf.getResource(config.get(RANGER_CONFIG_HADOOP_CONFIG));
+
             if (url == null) {
                 LOG.warn("Hadoop config {} not found", config.get(RANGER_CONFIG_HADOOP_CONFIG));
             } else {
@@ -86,23 +81,27 @@ public class RangerSystemAccessControl implements SystemAccessControl {
             }
         } else {
             URL url = hadoopConf.getResource(RANGER_PRESTO_DEFAULT_HADOOP_CONF);
+
             LOG.debug("Trying to load Hadoop config from {} (can be null)", url);
+
             if (url != null) {
                 hadoopConf.addResource(url);
             }
         }
+
         UserGroupInformation.setConfiguration(hadoopConf);
 
         if (config.get(RANGER_CONFIG_KEYTAB) != null && config.get(RANGER_CONFIG_PRINCIPAL) != null) {
             String keytab    = config.get(RANGER_CONFIG_KEYTAB);
             String principal = config.get(RANGER_CONFIG_PRINCIPAL);
 
-            LOG.info("Performing kerberos login with principal and keytab " , principal, keytab);
+            LOG.info("Performing kerberos login with principal {} and keytab {}", principal, keytab);
 
             try {
                 UserGroupInformation.loginUserFromKeytab(principal, keytab);
             } catch (IOException ioe) {
                 LOG.error("Kerberos login failed", ioe);
+
                 throw new RuntimeException(ioe);
             }
         }
@@ -112,6 +111,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
         }
 
         rangerPlugin = new RangerBasePlugin(RANGER_PRESTO_SERVICETYPE, RANGER_PRESTO_APPID);
+
         rangerPlugin.init();
         rangerPlugin.setResultProcessor(new RangerDefaultAuditHandler());
     }
@@ -185,12 +185,15 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public Set<String> filterCatalogs(SystemSecurityContext context, Set<String> catalogs) {
         LOG.debug("==> RangerSystemAccessControl.filterCatalogs{}", catalogs);
+
         Set<String> filteredCatalogs = new HashSet<>(catalogs.size());
+
         for (String catalog : catalogs) {
             if (hasPermission(createResource(catalog), context, PrestoAccessType.SELECT)) {
                 filteredCatalogs.add(catalog);
             }
         }
+
         return filteredCatalogs;
     }
 
@@ -254,12 +257,15 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public Set<String> filterSchemas(SystemSecurityContext context, String catalogName, Set<String> schemaNames) {
         LOG.debug("==> RangerSystemAccessControl.filterSchemas({}) denied", catalogName);
+
         Set<String> filteredSchemaNames = new HashSet<>(schemaNames.size());
+
         for (String schemaName : schemaNames) {
             if (hasPermission(createResource(catalogName, schemaName), context, PrestoAccessType.SELECT)) {
                 filteredSchemaNames.add(schemaName);
             }
         }
+
         return filteredSchemaNames;
     }
 
@@ -336,13 +342,17 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public Set<SchemaTableName> filterTables(SystemSecurityContext context, String catalogName, Set<SchemaTableName> tableNames) {
         LOG.debug("==> RangerSystemAccessControl.filterTables({})", catalogName);
+
         Set<SchemaTableName> filteredTableNames = new HashSet<>(tableNames.size());
+
         for (SchemaTableName tableName : tableNames) {
             RangerPrestoResource res = createResource(catalogName, tableName.getSchemaName(), tableName.getTableName());
+
             if (hasPermission(res, context, PrestoAccessType.SELECT)) {
                 filteredTableNames.add(tableName);
             }
         }
+
         return filteredTableNames;
     }
 
@@ -371,6 +381,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public void checkCanAddColumn(SystemSecurityContext context, CatalogSchemaTableName table) {
         RangerPrestoResource res = createResource(table);
+
         if (!hasPermission(res, context, PrestoAccessType.ALTER)) {
             AccessDeniedException.denyAddColumn(table.getSchemaTableName().getTableName());
         }
@@ -382,6 +393,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public void checkCanDropColumn(SystemSecurityContext context, CatalogSchemaTableName table) {
         RangerPrestoResource res = createResource(table);
+
         if (!hasPermission(res, context, PrestoAccessType.DROP)) {
             LOG.debug("RangerSystemAccessControl.checkCanDropColumn({}) denied", table.getSchemaTableName().getTableName());
             AccessDeniedException.denyDropColumn(table.getSchemaTableName().getTableName());
@@ -394,6 +406,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public void checkCanRenameColumn(SystemSecurityContext context, CatalogSchemaTableName table) {
         RangerPrestoResource res = createResource(table);
+
         if (!hasPermission(res, context, PrestoAccessType.ALTER)) {
             LOG.debug("RangerSystemAccessControl.checkCanRenameColumn({}) denied", table.getSchemaTableName().getTableName());
             AccessDeniedException.denyRenameColumn(table.getSchemaTableName().getTableName());
@@ -413,6 +426,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public void checkCanInsertIntoTable(SystemSecurityContext context, CatalogSchemaTableName table) {
         RangerPrestoResource res = createResource(table);
+
         if (!hasPermission(res, context, PrestoAccessType.INSERT)) {
             LOG.debug("RangerSystemAccessControl.checkCanInsertIntoTable({}) denied", table.getSchemaTableName().getTableName());
             AccessDeniedException.denyInsertTable(table.getSchemaTableName().getTableName());
@@ -539,30 +553,32 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     @Override
     public void checkCanExecuteFunction(SystemSecurityContext context, String function) {
         if (!hasPermission(createFunctionResource(function), context, PrestoAccessType.EXECUTE)) {
-            LOG.debug("RangerSystemAccessControl.checkCanExecuteFunction() denied", function);
+            LOG.debug("RangerSystemAccessControl.checkCanExecuteFunction({}) denied", function);
             AccessDeniedException.denyExecuteFunction(function);
         }
     }
 
     @Override
     public Optional<ViewExpression> getRowFilter(SystemSecurityContext context, CatalogSchemaTableName tableName) {
-        RangerPrestoAccessRequest request = createAccessRequest(createResource(tableName), context, PrestoAccessType.SELECT);
-        RangerAccessResult        result  = getRowFilterResult(request);
+        RangerPrestoAccessRequest request        = createAccessRequest(createResource(tableName), context, PrestoAccessType.SELECT);
+        RangerAccessResult        result         = getRowFilterResult(request);
+        ViewExpression            viewExpression = null;
 
-        ViewExpression viewExpression = null;
         if (isRowFilterEnabled(result)) {
             String filter = result.getFilterExpr();
+
             viewExpression = new ViewExpression(context.getIdentity().getUser(), Optional.of(tableName.getCatalogName()), Optional.of(tableName.getSchemaTableName().getSchemaName()), filter);
         }
+
         return Optional.ofNullable(viewExpression);
     }
 
     @Override
     public Optional<ViewExpression> getColumnMask(SystemSecurityContext context, CatalogSchemaTableName tableName, String columnName, Type type) {
-        RangerPrestoAccessRequest request = createAccessRequest(createResource(tableName.getCatalogName(), tableName.getSchemaTableName().getSchemaName(), tableName.getSchemaTableName().getTableName(), Optional.of(columnName)), context, PrestoAccessType.SELECT);
-        RangerAccessResult        result  = getDataMaskResult(request);
+        RangerPrestoAccessRequest request        = createAccessRequest(createResource(tableName.getCatalogName(), tableName.getSchemaTableName().getSchemaName(), tableName.getSchemaTableName().getTableName(), Optional.of(columnName)), context, PrestoAccessType.SELECT);
+        RangerAccessResult        result         = getDataMaskResult(request);
+        ViewExpression            viewExpression = null;
 
-        ViewExpression viewExpression = null;
         if (isDataMaskEnabled(result)) {
             String                                 maskType    = result.getMaskType();
             RangerServiceDef.RangerDataMaskTypeDef maskTypeDef = result.getMaskTypeDef();
@@ -589,7 +605,8 @@ public class RangerSystemAccessControl implements SystemAccessControl {
             }
 
             viewExpression = new ViewExpression(context.getIdentity().getUser(), Optional.of(tableName.getCatalogName()), Optional.of(tableName.getSchemaTableName().getSchemaName()), transformer);
-            LOG.debug("getColumnMask: user: %s, catalog: %s, schema: %s, transformer: %s");
+
+            LOG.debug("getColumnMask: user: {}, catalog: {}, schema: {}, transformer: {}", context.getIdentity().getUser(), tableName.getCatalogName(), tableName.getSchemaTableName().getSchemaName(), transformer);
         }
 
         return Optional.ofNullable(viewExpression);
@@ -600,7 +617,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
      **/
 
     private RangerAccessResult getDataMaskResult(RangerPrestoAccessRequest request) {
-        LOG.debug("==> getDataMaskResult(request={})",request);
+        LOG.debug("==> getDataMaskResult(request={})", request);
 
         RangerAccessResult ret = rangerPlugin.evalDataMaskPolicies(request, null);
 
@@ -610,7 +627,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     }
 
     private RangerAccessResult getRowFilterResult(RangerPrestoAccessRequest request) {
-        LOG.debug("==> getRowFilterResult(request={})",request);
+        LOG.debug("==> getRowFilterResult(request={})", request);
 
         RangerAccessResult ret = rangerPlugin.evalRowFilterPolicies(request, null);
 
@@ -632,14 +649,15 @@ public class RangerSystemAccessControl implements SystemAccessControl {
      **/
 
     private RangerPrestoAccessRequest createAccessRequest(RangerPrestoResource resource, SystemSecurityContext context, PrestoAccessType accessType) {
-        String      userName   = null;
+        String      userName;
         Set<String> userGroups = null;
 
         if (useUgi) {
             UserGroupInformation ugi = UserGroupInformation.createRemoteUser(context.getIdentity().getUser());
 
             userName = ugi.getShortUserName();
-            String[] groups = ugi != null ? ugi.getGroupNames() : null;
+
+            String[] groups = ugi.getGroupNames();
 
             if (groups != null && groups.length > 0) {
                 userGroups = new HashSet<>(Arrays.asList(groups));
@@ -649,17 +667,14 @@ public class RangerSystemAccessControl implements SystemAccessControl {
             userGroups = context.getIdentity().getGroups();
         }
 
-        RangerPrestoAccessRequest request = new RangerPrestoAccessRequest(resource, userName, userGroups, accessType);
-
-        return request;
+        return new RangerPrestoAccessRequest(resource, userName, userGroups, accessType);
     }
 
     private boolean hasPermission(RangerPrestoResource resource, SystemSecurityContext context, PrestoAccessType accessType) {
-        boolean ret = false;
-
+        boolean                   ret     = false;
         RangerPrestoAccessRequest request = createAccessRequest(resource, context, accessType);
+        RangerAccessResult        result  = rangerPlugin.isAccessAllowed(request);
 
-        RangerAccessResult result = rangerPlugin.isAccessAllowed(request);
         if (result != null && result.getIsAllowed()) {
             ret = true;
         }
@@ -669,6 +684,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
 
     private static RangerPrestoResource createUserResource(String userName) {
         RangerPrestoResource res = new RangerPrestoResource();
+
         res.setValue(RangerPrestoResource.KEY_USER, userName);
 
         return res;
@@ -676,6 +692,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
 
     private static RangerPrestoResource createFunctionResource(String function) {
         RangerPrestoResource res = new RangerPrestoResource();
+
         res.setValue(RangerPrestoResource.KEY_FUNCTION, function);
 
         return res;
@@ -683,6 +700,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
 
     private static RangerPrestoResource createProcedureResource(CatalogSchemaRoutineName procedure) {
         RangerPrestoResource res = new RangerPrestoResource();
+
         res.setValue(RangerPrestoResource.KEY_CATALOG, procedure.getCatalogName());
         res.setValue(RangerPrestoResource.KEY_SCHEMA, procedure.getSchemaRoutineName().getSchemaName());
         res.setValue(RangerPrestoResource.KEY_PROCEDURE, procedure.getSchemaRoutineName().getRoutineName());
@@ -692,6 +710,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
 
     private static RangerPrestoResource createCatalogSessionResource(String catalogName, String propertyName) {
         RangerPrestoResource res = new RangerPrestoResource();
+
         res.setValue(RangerPrestoResource.KEY_CATALOG, catalogName);
         res.setValue(RangerPrestoResource.KEY_SESSION_PROPERTY, propertyName);
 
@@ -700,6 +719,7 @@ public class RangerSystemAccessControl implements SystemAccessControl {
 
     private static RangerPrestoResource createSystemPropertyResource(String property) {
         RangerPrestoResource res = new RangerPrestoResource();
+
         res.setValue(RangerPrestoResource.KEY_SYSTEM_PROPERTY, property);
 
         return res;
@@ -732,82 +752,16 @@ public class RangerSystemAccessControl implements SystemAccessControl {
     private static List<RangerPrestoResource> createResource(CatalogSchemaTableName table, Set<String> columns) {
         List<RangerPrestoResource> colRequests = new ArrayList<>();
 
-        if (columns.size() > 0) {
+        if (!columns.isEmpty()) {
             for (String column : columns) {
                 RangerPrestoResource rangerPrestoResource = createResource(table.getCatalogName(), table.getSchemaTableName().getSchemaName(), table.getSchemaTableName().getTableName(), Optional.of(column));
+
                 colRequests.add(rangerPrestoResource);
             }
         } else {
             colRequests.add(createResource(table.getCatalogName(), table.getSchemaTableName().getSchemaName(), table.getSchemaTableName().getTableName(), Optional.empty()));
         }
+
         return colRequests;
-    }
-}
-
-class RangerPrestoResource extends RangerAccessResourceImpl {
-    public static final String KEY_CATALOG          = "catalog";
-    public static final String KEY_SCHEMA           = "schema";
-    public static final String KEY_TABLE            = "table";
-    public static final String KEY_COLUMN           = "column";
-    public static final String KEY_USER             = "prestouser";
-    public static final String KEY_FUNCTION         = "function";
-    public static final String KEY_PROCEDURE        = "procedure";
-    public static final String KEY_SYSTEM_PROPERTY  = "systemproperty";
-    public static final String KEY_SESSION_PROPERTY = "sessionproperty";
-
-    public RangerPrestoResource() {}
-
-    public RangerPrestoResource(String catalogName, Optional<String> schema, Optional<String> table) {
-        setValue(KEY_CATALOG, catalogName);
-        if (schema.isPresent()) {
-            setValue(KEY_SCHEMA, schema.get());
-        }
-        if (table.isPresent()) {
-            setValue(KEY_TABLE, table.get());
-        }
-    }
-
-    public RangerPrestoResource(String catalogName, Optional<String> schema, Optional<String> table, Optional<String> column) {
-        setValue(KEY_CATALOG, catalogName);
-        if (schema.isPresent()) {
-            setValue(KEY_SCHEMA, schema.get());
-        }
-        if (table.isPresent()) {
-            setValue(KEY_TABLE, table.get());
-        }
-        if (column.isPresent()) {
-            setValue(KEY_COLUMN, column.get());
-        }
-    }
-
-    public String getCatalogName() {
-        return (String) getValue(KEY_CATALOG);
-    }
-
-    public String getTable() {
-        return (String) getValue(KEY_TABLE);
-    }
-
-    public String getCatalog() {
-        return (String) getValue(KEY_CATALOG);
-    }
-
-    public String getSchema() {
-        return (String) getValue(KEY_SCHEMA);
-    }
-
-    public Optional<SchemaTableName> getSchemaTable() {
-        final String schema = getSchema();
-        if (StringUtils.isNotEmpty(schema)) {
-            return Optional.of(new SchemaTableName(schema, Optional.ofNullable(getTable()).orElse("*")));
-        }
-        return Optional.empty();
-    }
-}
-
-class RangerPrestoAccessRequest extends RangerAccessRequestImpl {
-    public RangerPrestoAccessRequest(RangerPrestoResource resource, String user, Set<String> userGroups, PrestoAccessType prestoAccessType) {
-        super(resource, prestoAccessType.name().toLowerCase(ENGLISH), user, userGroups, null);
-        setAccessTime(new Date());
     }
 }

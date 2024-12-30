@@ -37,51 +37,61 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServicePresto extends RangerBaseService {
-    public static final String ACCESS_TYPE_SELECT = "select";
     private static final Logger LOG = LoggerFactory.getLogger(RangerServicePresto.class);
 
+    public static final String ACCESS_TYPE_SELECT = "select";
+
     @Override
-    public Map<String, Object> validateConfig() throws Exception {
-        Map<String, Object> ret         = new HashMap<String, Object>();
+    public Map<String, Object> validateConfig() {
+        Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
 
-        LOG.debug("RangerServicePresto.validateConfig(): Service: {}" , serviceName);
+        LOG.debug("RangerServicePresto.validateConfig(): Service: {}", serviceName);
 
         if (configs != null) {
             try {
                 if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
                     configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
                 }
+
                 ret = PrestoResourceManager.connectionTest(serviceName, configs);
             } catch (HadoopException he) {
-                LOG.error("<== RangerServicePresto.validateConfig() Error: {}" , he);
+                LOG.error("<== RangerServicePresto.validateConfig() Error: {}", String.valueOf(he));
+
                 throw he;
             }
         }
 
-        LOG.debug("RangerServicePresto.validateConfig(): Response: {}" , ret);
+        LOG.debug("RangerServicePresto.validateConfig(): Response: {}", ret);
+
         return ret;
     }
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String>        ret         = new ArrayList<String>();
+        List<String>        ret         = new ArrayList<>();
         String              serviceName = getServiceName();
         String              serviceType = getServiceType();
         Map<String, String> configs     = getConfigs();
-        LOG.debug("==> RangerServicePresto.lookupResource() Context: {}" , context);
+
+        LOG.debug("==> RangerServicePresto.lookupResource() Context: {}", context);
+
         if (context != null) {
             try {
                 if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
                     configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
                 }
+
                 ret = PrestoResourceManager.getPrestoResources(serviceName, serviceType, configs, context);
             } catch (Exception e) {
-                LOG.error("<==RangerServicePresto.lookupResource() Error : {}" , e);
+                LOG.error("<==RangerServicePresto.lookupResource() Error : {}", String.valueOf(e));
+
                 throw e;
             }
         }
-        LOG.debug("<== RangerServicePresto.lookupResource() Response: {}" , ret);
+
+        LOG.debug("<== RangerServicePresto.lookupResource() Response: {}", ret);
+
         return ret;
     }
 
@@ -90,19 +100,25 @@ public class RangerServicePresto extends RangerBaseService {
         LOG.debug("==> RangerServicePresto.getDefaultRangerPolicies()");
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-                List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
+                List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
+
                 accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
+
                 RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+
                 policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
                 policyItemForLookupUser.setAccesses(accessListForLookupUser);
                 policyItemForLookupUser.setDelegateAdmin(false);
+
                 defaultPolicy.addPolicyItem(policyItemForLookupUser);
             }
         }
 
         LOG.debug("<== RangerServicePresto.getDefaultRangerPolicies()");
+
         return ret;
     }
 }

@@ -46,6 +46,7 @@ import java.util.Properties;
 
 public class PrestoClient extends BaseClient implements Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(PrestoClient.class);
+
     public static final String PRESTO_USER_NAME_PROP = "user";
     public static final String PRESTO_PASSWORD_PROP  = "password";
 
@@ -53,42 +54,34 @@ public class PrestoClient extends BaseClient implements Closeable {
 
     private Connection con;
 
-    public PrestoClient(String serviceName) throws Exception {
+    public PrestoClient(String serviceName) {
         super(serviceName, null);
+
         init();
     }
 
-    public PrestoClient(String serviceName, Map<String, String> properties) throws Exception {
+    public PrestoClient(String serviceName, Map<String, String> properties) {
         super(serviceName, properties);
+
         init();
     }
 
-    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> connectionProperties) throws Exception {
-        PrestoClient        client = null;
-        Map<String, Object> resp   = new HashMap<String, Object>();
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> connectionProperties) {
+        Map<String, Object> resp   = new HashMap<>();
+        boolean             status = false;
+        List<String>        testResult;
 
-        boolean status = false;
+        try (PrestoClient client = new PrestoClient(serviceName, connectionProperties)) {
+            testResult = client.getCatalogList("*", null);
 
-        List<String> testResult = null;
-
-        try {
-            client = new PrestoClient(serviceName, connectionProperties);
-            if (client != null) {
-                testResult = client.getCatalogList("*", null);
-                if (testResult != null && testResult.size() != 0) {
-                    status = true;
-                }
+            if (testResult != null && !testResult.isEmpty()) {
+                status = true;
             }
 
             if (status) {
                 String msg = "Connection test successful";
+
                 generateResponseDataMap(status, msg, msg, null, null, resp);
-            }
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            if (client != null) {
-                client.close();
             }
         }
 
@@ -96,43 +89,39 @@ public class PrestoClient extends BaseClient implements Closeable {
     }
 
     public List<String> getCatalogList(String needle, final List<String> catalogs) throws HadoopException {
-        final String       ndl     = needle;
-        final List<String> catList = catalogs;
-        List<String> dbs = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
-            @Override
-            public List<String> run() {
-                List<String> ret = null;
-                try {
-                    ret = getCatalogs(ndl, catList);
-                } catch (HadoopException he) {
-                    LOG.error("<== PrestoClient.getCatalogList() :Unable to get the Database List", he);
-                    throw he;
-                }
-                return ret;
-            }
-        });
+        final String ndl = needle;
 
-        return dbs;
+        return Subject.doAs(getLoginSubject(), (PrivilegedAction<List<String>>) () -> {
+            List<String> ret;
+
+            try {
+                ret = getCatalogs(ndl, catalogs);
+            } catch (HadoopException he) {
+                LOG.error("<== PrestoClient.getCatalogList() :Unable to get the Database List", he);
+
+                throw he;
+            }
+
+            return ret;
+        });
     }
 
     public List<String> getSchemaList(String needle, List<String> catalogs, List<String> schemas) throws HadoopException {
         final String       ndl  = needle;
         final List<String> cats = catalogs;
         final List<String> shms = schemas;
-        List<String> schemaList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
-            @Override
-            public List<String> run() {
-                List<String> ret = null;
-                try {
-                    ret = getSchemas(ndl, cats, shms);
-                } catch (HadoopException he) {
-                    LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
-                }
-                return ret;
-            }
-        });
 
-        return schemaList;
+        return Subject.doAs(getLoginSubject(), (PrivilegedAction<List<String>>) () -> {
+            List<String> ret = null;
+
+            try {
+                ret = getSchemas(ndl, cats, shms);
+            } catch (HadoopException he) {
+                LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
+            }
+
+            return ret;
+        });
     }
 
     public List<String> getTableList(String needle, List<String> catalogs, List<String> schemas, List<String> tables) throws HadoopException {
@@ -140,21 +129,20 @@ public class PrestoClient extends BaseClient implements Closeable {
         final List<String> cats = catalogs;
         final List<String> shms = schemas;
         final List<String> tbls = tables;
-        List<String> tableList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
-            @Override
-            public List<String> run() {
-                List<String> ret = null;
-                try {
-                    ret = getTables(ndl, cats, shms, tbls);
-                } catch (HadoopException he) {
-                    LOG.error("<== PrestoClient.getTableList() :Unable to get the Column List", he);
-                    throw he;
-                }
-                return ret;
-            }
-        });
 
-        return tableList;
+        return Subject.doAs(getLoginSubject(), (PrivilegedAction<List<String>>) () -> {
+            List<String> ret;
+
+            try {
+                ret = getTables(ndl, cats, shms, tbls);
+            } catch (HadoopException he) {
+                LOG.error("<== PrestoClient.getTableList() :Unable to get the Column List", he);
+
+                throw he;
+            }
+
+            return ret;
+        });
     }
 
     public List<String> getColumnList(String needle, List<String> catalogs, List<String> schemas, List<String> tables, List<String> columns) throws HadoopException {
@@ -163,28 +151,27 @@ public class PrestoClient extends BaseClient implements Closeable {
         final List<String> shms = schemas;
         final List<String> tbls = tables;
         final List<String> cols = columns;
-        List<String> columnList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
-            @Override
-            public List<String> run() {
-                List<String> ret = null;
-                try {
-                    ret = getColumns(ndl, cats, shms, tbls, cols);
-                } catch (HadoopException he) {
-                    LOG.error("<== PrestoClient.getColumnList() :Unable to get the Column List", he);
-                    throw he;
-                }
-                return ret;
+
+        return Subject.doAs(getLoginSubject(), (PrivilegedAction<List<String>>) () -> {
+            List<String> ret;
+
+            try {
+                ret = getColumns(ndl, cats, shms, tbls, cols);
+            } catch (HadoopException he) {
+                LOG.error("<== PrestoClient.getColumnList() :Unable to get the Column List", he);
+
+                throw he;
             }
+
+            return ret;
         });
-        return columnList;
     }
 
     public void close() {
-        Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>() {
-            public Void run() {
-                close(con);
-                return null;
-            }
+        Subject.doAs(getLoginSubject(), (PrivilegedAction<Void>) () -> {
+            close(con);
+
+            return null;
         });
     }
 
@@ -208,12 +195,11 @@ public class PrestoClient extends BaseClient implements Closeable {
         }
     }
 
-    private void init() throws Exception {
-        Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>() {
-            public Void run() {
-                initConnection();
-                return null;
-            }
+    private void init() {
+        Subject.doAs(getLoginSubject(), (PrivilegedAction<Void>) () -> {
+            initConnection();
+
+            return null;
         });
     }
 
@@ -224,17 +210,19 @@ public class PrestoClient extends BaseClient implements Closeable {
 
         Properties prestoProperties = new Properties();
         String     decryptedPwd     = null;
+
         try {
             decryptedPwd = PasswordUtils.decryptPassword(getConfigHolder().getPassword());
         } catch (Exception ex) {
             LOG.info("Password decryption failed");
-            decryptedPwd = null;
         } finally {
             if (decryptedPwd == null) {
                 decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
             }
         }
+
         prestoProperties.put(PRESTO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
+
         if (prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD) != null) {
             prestoProperties.put(PRESTO_PASSWORD_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD));
         }
@@ -242,62 +230,75 @@ public class PrestoClient extends BaseClient implements Closeable {
         if (driverClassName != null) {
             try {
                 Driver driver = (Driver) Class.forName(driverClassName).newInstance();
+
                 DriverManager.registerDriver(driver);
             } catch (SQLException e) {
-                String msgDesc = "initConnection: Caught SQLException while registering" + " the Presto driver.";
+                String          msgDesc      = "initConnection: Caught SQLException while registering" + " the Presto driver.";
                 HadoopException hdpException = new HadoopException(msgDesc, e);
+
                 hdpException.generateResponseDataMap(false, getMessage(e), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             } catch (IllegalAccessException ilae) {
                 String          msgDesc      = "initConnection: Class or its nullary constructor might not accessible.";
                 HadoopException hdpException = new HadoopException(msgDesc, ilae);
+
                 hdpException.generateResponseDataMap(false, getMessage(ilae), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             } catch (InstantiationException ie) {
-                String msgDesc = "initConnection: Class may not have its nullary constructor or " + "may be the instantiation fails for some other reason.";
+                String          msgDesc      = "initConnection: Class may not have its nullary constructor or " + "may be the instantiation fails for some other reason.";
                 HadoopException hdpException = new HadoopException(msgDesc, ie);
+
                 hdpException.generateResponseDataMap(false, getMessage(ie), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             } catch (ExceptionInInitializerError eie) {
-                String msgDesc = "initConnection: Got ExceptionInInitializerError, " + "The initialization provoked by this method fails.";
+                String          msgDesc      = "initConnection: Got ExceptionInInitializerError, " + "The initialization provoked by this method fails.";
                 HadoopException hdpException = new HadoopException(msgDesc, eie);
+
                 hdpException.generateResponseDataMap(false, getMessage(eie), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             } catch (SecurityException se) {
-                String msgDesc = "initConnection: unable to initiate connection to Presto instance, The caller's class loader is not the same as or an ancestor of the class loader for the current class and invocation of s.checkPackageAccess() denies access to the package of this class.";
+                String          msgDesc      = "initConnection: unable to initiate connection to Presto instance, The caller's class loader is not the same as or an ancestor of the class loader for the current class and invocation of s.checkPackageAccess() denies access to the package of this class.";
                 HadoopException hdpException = new HadoopException(msgDesc, se);
+
                 hdpException.generateResponseDataMap(false, getMessage(se), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             } catch (Throwable t) {
-                String msgDesc = "initConnection: Unable to connect to Presto instance, please provide valid value of field : {jdbc.driverClassName}.";
+                String          msgDesc      = "initConnection: Unable to connect to Presto instance, please provide valid value of field : {jdbc.driverClassName}.";
                 HadoopException hdpException = new HadoopException(msgDesc, t);
+
                 hdpException.generateResponseDataMap(false, getMessage(t), msgDesc + ERR_MSG, null, null);
+
                 throw hdpException;
             }
         }
 
         try {
             con = DriverManager.getConnection(url, prestoProperties);
-        } catch (SQLException e) {
+        } catch (SQLException | SecurityException e) {
             String          msgDesc      = "Unable to connect to Presto instance.";
             HadoopException hdpException = new HadoopException(msgDesc, e);
+
             hdpException.generateResponseDataMap(false, getMessage(e), msgDesc + ERR_MSG, null, null);
-            throw hdpException;
-        } catch (SecurityException se) {
-            String          msgDesc      = "Unable to connect to Presto instance.";
-            HadoopException hdpException = new HadoopException(msgDesc, se);
-            hdpException.generateResponseDataMap(false, getMessage(se), msgDesc + ERR_MSG, null, null);
+
             throw hdpException;
         } catch (Throwable t) {
             String          msgDesc      = "initConnection: Unable to connect to Presto instance, ";
             HadoopException hdpException = new HadoopException(msgDesc, t);
+
             hdpException.generateResponseDataMap(false, getMessage(t), msgDesc + ERR_MSG, null, null);
+
             throw hdpException;
         }
     }
 
     private List<String> getCatalogs(String needle, List<String> catalogs) throws HadoopException {
         List<String> ret = new ArrayList<>();
+
         if (con != null) {
             Statement stat = null;
             ResultSet rs   = null;
@@ -308,34 +309,43 @@ public class PrestoClient extends BaseClient implements Closeable {
                     // Cannot use a prepared statement for this as presto does not support that
                     sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
                 }
+
                 stat = con.createStatement();
                 rs   = stat.executeQuery(sql);
+
                 while (rs.next()) {
                     String catalogName = rs.getString(1);
+
                     if (catalogs != null && catalogs.contains(catalogName)) {
                         continue;
                     }
+
                     ret.add(catalogName);
                 }
             } catch (SQLTimeoutException sqlt) {
-                String msgDesc = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
             } catch (SQLException se) {
                 String          msg = "Unable to execute SQL [" + sql + "]. ";
                 HadoopException he  = new HadoopException(msg, se);
+
                 he.generateResponseDataMap(false, getMessage(se), msg + ERR_MSG, null, null);
+
                 throw he;
             } finally {
                 close(rs);
                 close(stat);
             }
         }
+
         return ret;
     }
 
     private List<String> getSchemas(String needle, List<String> catalogs, List<String> schemas) throws HadoopException {
         List<String> ret = new ArrayList<>();
+
         if (con != null) {
             Statement stat = null;
             ResultSet rs   = null;
@@ -350,34 +360,45 @@ public class PrestoClient extends BaseClient implements Closeable {
                             if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
                                 sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
                             }
+
                             stat = con.createStatement();
                             rs   = stat.executeQuery(sql);
+
                             while (rs.next()) {
                                 String schema = rs.getString(1);
+
                                 if (schemas != null && schemas.contains(schema)) {
                                     continue;
                                 }
+
                                 ret.add(schema);
                             }
                         } finally {
                             close(rs);
                             close(stat);
+
                             rs   = null;
                             stat = null;
                         }
                     }
                 }
             } catch (SQLTimeoutException sqlt) {
-                String msgDesc = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
                 LOG.debug("<== PrestoClient.getSchemas() Error : ", sqlt);
+
                 throw hdpException;
             } catch (SQLException sqle) {
-                String msgDesc = "Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Unable to execute SQL [" + sql + "].";
                 HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
                 hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
                 LOG.debug("<== PrestoClient.getSchemas() Error : ", sqle);
+
                 throw hdpException;
             }
         }
@@ -387,6 +408,7 @@ public class PrestoClient extends BaseClient implements Closeable {
 
     private List<String> getTables(String needle, List<String> catalogs, List<String> schemas, List<String> tables) throws HadoopException {
         List<String> ret = new ArrayList<>();
+
         if (con != null) {
             Statement stat = null;
             ResultSet rs   = null;
@@ -397,47 +419,61 @@ public class PrestoClient extends BaseClient implements Closeable {
                     for (String catalog : catalogs) {
                         for (String schema : schemas) {
                             sql = "SHOW tables FROM \"" + StringEscapeUtils.escapeSql(catalog) + "\".\"" + StringEscapeUtils.escapeSql(schema) + "\"";
+
                             try {
                                 if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
                                     sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
                                 }
+
                                 stat = con.createStatement();
                                 rs   = stat.executeQuery(sql);
+
                                 while (rs.next()) {
                                     String table = rs.getString(1);
+
                                     if (tables != null && tables.contains(table)) {
                                         continue;
                                     }
+
                                     ret.add(table);
                                 }
                             } finally {
                                 close(rs);
                                 close(stat);
+
                                 rs   = null;
                                 stat = null;
                             }
                         }
                     }
                 } catch (SQLTimeoutException sqlt) {
-                    String msgDesc = "Time Out, Unable to execute SQL [" + sql + "].";
+                    String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
                     HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
                     hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
                     LOG.debug("<== PrestoClient.getTables() Error : ", sqlt);
+
                     throw hdpException;
                 } catch (SQLException sqle) {
-                    String msgDesc = "Unable to execute SQL [" + sql + "].";
+                    String          msgDesc      = "Unable to execute SQL [" + sql + "].";
                     HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
                     hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
                     LOG.debug("<== PrestoClient.getTables() Error : ", sqle);
+
                     throw hdpException;
                 }
             }
         }
+
         return ret;
     }
 
     private List<String> getColumns(String needle, List<String> catalogs, List<String> schemas, List<String> tables, List<String> columns) throws HadoopException {
         List<String> ret = new ArrayList<>();
+
         if (con != null) {
             String    regex = null;
             ResultSet rs    = null;
@@ -454,14 +490,18 @@ public class PrestoClient extends BaseClient implements Closeable {
                         for (String schema : schemas) {
                             for (String table : tables) {
                                 sql = "SHOW COLUMNS FROM \"" + StringEscapeUtils.escapeSql(catalog) + "\"." + "\"" + StringEscapeUtils.escapeSql(schema) + "\"." + "\"" + StringEscapeUtils.escapeSql(table) + "\"";
+
                                 try {
                                     stat = con.createStatement();
                                     rs   = stat.executeQuery(sql);
+
                                     while (rs.next()) {
                                         String column = rs.getString(1);
+
                                         if (columns != null && columns.contains(column)) {
                                             continue;
                                         }
+
                                         if (regex == null) {
                                             ret.add(column);
                                         } else if (FilenameUtils.wildcardMatch(column, regex)) {
@@ -471,6 +511,7 @@ public class PrestoClient extends BaseClient implements Closeable {
                                 } finally {
                                     close(rs);
                                     close(stat);
+
                                     stat = null;
                                     rs   = null;
                                 }
@@ -478,20 +519,27 @@ public class PrestoClient extends BaseClient implements Closeable {
                         }
                     }
                 } catch (SQLTimeoutException sqlt) {
-                    String msgDesc = "Time Out, Unable to execute SQL [" + sql + "].";
+                    String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
                     HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
                     hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
                     LOG.debug("<== PrestoClient.getColumns() Error : ", sqlt);
+
                     throw hdpException;
                 } catch (SQLException sqle) {
-                    String msgDesc = "Unable to execute SQL [" + sql + "].";
+                    String          msgDesc      = "Unable to execute SQL [" + sql + "].";
                     HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
                     hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
                     LOG.debug("<== PrestoClient.getColumns() Error : ", sqle);
+
                     throw hdpException;
                 }
             }
         }
+
         return ret;
     }
 
