@@ -19,12 +19,12 @@ package org.apache.ranger.services.elasticsearch.privilege;
 import java.util.List;
 
 public class IndexPrivilege {
-    private String privilege;
-
+    private String       privilege;
     private List<String> actions;
 
     public IndexPrivilege(String privilege, List<String> actions) {
         super();
+
         this.privilege = privilege;
         this.actions   = actions;
     }

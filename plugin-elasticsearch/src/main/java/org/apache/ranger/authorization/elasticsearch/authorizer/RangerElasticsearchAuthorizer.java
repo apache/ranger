@@ -36,50 +36,65 @@ import java.util.List;
 
 public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessControl {
     private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
+
     private static volatile RangerElasticsearchInnerPlugin elasticsearchPlugin;
 
     public RangerElasticsearchAuthorizer() {
         LOG.debug("==> RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
+
         this.init();
+
         LOG.debug("<== RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
     }
 
     public void init() {
         LOG.debug("==> RangerElasticsearchAuthorizer.init()");
+
         RangerElasticsearchInnerPlugin plugin = elasticsearchPlugin;
+
         if (plugin == null) {
             synchronized (RangerElasticsearchAuthorizer.class) {
                 plugin = elasticsearchPlugin;
+
                 if (plugin == null) {
                     plugin = new RangerElasticsearchInnerPlugin();
+
                     plugin.init();
+
                     elasticsearchPlugin = plugin;
                 }
             }
         }
+
         LOG.debug("<== RangerElasticsearchAuthorizer.init()");
     }
 
     @Override
     public boolean checkPermission(String user, List<String> groups, String index, String action, String clientIPAddress) {
-        LOG.debug("==> RangerElasticsearchAuthorizer.checkPermission( user=" + user + ", groups=" + groups + ", index=" + index + ", action=" + action + ", clientIPAddress=" + clientIPAddress + ")");
+        LOG.debug("==> RangerElasticsearchAuthorizer.checkPermission( user={}, groups={}, index={}, action={}, clientIPAddress={})", user, groups, index, action, clientIPAddress);
+
         boolean ret = false;
+
         if (elasticsearchPlugin != null) {
             if (null == groups) {
                 groups = new ArrayList<>(MiscUtil.getGroupsForRequestUser(user));
             }
-            String privilege = IndexPrivilegeUtils.getPrivilegeFromAction(action);
-            RangerElasticsearchAccessRequest request = new RangerElasticsearchAccessRequest(user, groups, index, privilege, clientIPAddress);
-            RangerAccessResult result = elasticsearchPlugin.isAccessAllowed(request);
+
+            String                           privilege = IndexPrivilegeUtils.getPrivilegeFromAction(action);
+            RangerElasticsearchAccessRequest request   = new RangerElasticsearchAccessRequest(user, groups, index, privilege, clientIPAddress);
+            RangerAccessResult               result    = elasticsearchPlugin.isAccessAllowed(request);
+
             if (result != null && result.getIsAllowed()) {
                 ret = true;
             }
         }
-        LOG.debug("<== RangerElasticsearchAuthorizer.checkPermission(): result=" + ret);
+
+        LOG.debug("<== RangerElasticsearchAuthorizer.checkPermission(): result={}", ret);
+
         return ret;
     }
 
-    class RangerElasticsearchInnerPlugin extends RangerBasePlugin {
+    static class RangerElasticsearchInnerPlugin extends RangerBasePlugin {
         public RangerElasticsearchInnerPlugin() {
             super("elasticsearch", "elasticsearch");
         }
@@ -87,26 +102,31 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
         @Override
         public void init() {
             super.init();
+
             RangerElasticsearchAuditHandler auditHandler = new RangerElasticsearchAuditHandler(getConfig());
+
             super.setResultProcessor(auditHandler);
         }
     }
 
-    class RangerElasticsearchResource extends RangerAccessResourceImpl {
+    static class RangerElasticsearchResource extends RangerAccessResourceImpl {
         public RangerElasticsearchResource(String index) {
             if (StringUtils.isEmpty(index)) {
                 index = "*";
             }
+
             setValue(ElasticsearchResourceMgr.INDEX, index);
         }
     }
 
-    class RangerElasticsearchAccessRequest extends RangerAccessRequestImpl {
+    static class RangerElasticsearchAccessRequest extends RangerAccessRequestImpl {
         public RangerElasticsearchAccessRequest(String user, List<String> groups, String index, String privilege, String clientIPAddress) {
             super.setUser(user);
+
             if (CollectionUtils.isNotEmpty(groups)) {
                 super.setUserGroups(Sets.newHashSet(groups));
             }
+
             super.setResource(new RangerElasticsearchResource(index));
             super.setAccessType(privilege);
             super.setAction(privilege);

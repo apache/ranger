@@ -42,6 +42,7 @@ public class IndexPrivilegeUtils {
     public static final String INDICES_SEARCH_SHARDS = "indices_search_shards";
     public static final String INDICES_BULK          = "indices_bulk";
     public static final String INDICES_INDEX         = "indices_index";
+
     // These privileges have priority, should be matched in order
     private static final List<IndexPrivilege> privileges = new LinkedList<>();
 
@@ -84,6 +85,7 @@ public class IndexPrivilegeUtils {
         if (StringUtils.isEmpty(action)) {
             return ALL;
         }
+
         for (IndexPrivilege privilege : privileges) {
             // Get the privilege of matched action rule in order
             for (String actionRule : privilege.getActions()) {
@@ -92,6 +94,7 @@ public class IndexPrivilegeUtils {
                 }
             }
         }
+
         return ALL;
     }
 }
