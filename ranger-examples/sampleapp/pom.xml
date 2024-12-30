@@ -26,6 +26,10 @@
     <packaging>jar</packaging>
     <name>Ranger Examples - SampleApp</name>
     <description>Ranger Examples - SampleApp</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

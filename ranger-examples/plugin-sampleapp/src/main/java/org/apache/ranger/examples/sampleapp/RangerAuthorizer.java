@@ -19,26 +19,25 @@
 
 package org.apache.ranger.examples.sampleapp;
 
-import java.util.Set;
-
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+
+import java.util.Set;
 
 public class RangerAuthorizer implements IAuthorizer {
-    private static volatile RangerBasePlugin plugin = null;
+    private static volatile RangerBasePlugin plugin;
 
     public RangerAuthorizer() {
-
     }
 
     public void init() {
-        if(plugin == null) {
+        if (plugin == null) {
             synchronized (RangerAuthorizer.class) {
-                if(plugin == null) {
+                if (plugin == null) {
                     plugin = new RangerBasePlugin("sampleapp", "sampleapp");
 
                     plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
