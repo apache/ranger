@@ -89,6 +89,11 @@ public class ActiveInstanceState {
 
             if (serverInfo == null) {
                 client.create().withMode(CreateMode.EPHEMERAL).withACL(acls).forPath(getZnodePath(zookeeperProperties));
+            } else {
+                long sessionId = client.getZookeeperClient().getZooKeeper().getSessionId();
+                if (sessionId != serverInfo.getEphemeralOwner()) {
+                    throw new Exception("Not a leader forces it to rejoin the election ");
+                }
             }
 
             client.setData().forPath(getZnodePath(zookeeperProperties), rangerServiceServerAddress.getBytes(StandardCharsets.UTF_8));
