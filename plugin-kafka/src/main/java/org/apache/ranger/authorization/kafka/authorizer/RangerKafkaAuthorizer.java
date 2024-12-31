@@ -30,6 +30,7 @@ import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.resource.ResourceType;
 import org.apache.kafka.common.security.JaasContext;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.utils.SecurityUtils;
 import org.apache.kafka.server.authorizer.AclCreateResult;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,6 +81,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
     public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
     public static final String ACCESS_TYPE_CLUSTER_ACTION   = "cluster_action";
     public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
+
+    private static final String KAFKA_SUPER_USERS_PROP = "super.users";
 
     private static volatile RangerBasePlugin rangerPlugin;
 
@@ -131,6 +135,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
                     logger.info("Calling plugin.init()");
 
                     me.init();
+
+                    Set<String> superUsersFromKafkaConfig = parseSuperUsersFromKafkaConfig(configs);
+
+                    me.getPluginContext().getConfig().addSuperUsers(superUsersFromKafkaConfig);
+
+                    logger.info("Super users added from Kafka config: {}", superUsersFromKafkaConfig);
 
                     auditHandler = new RangerKafkaAuditHandler();
 
@@ -364,5 +374,42 @@ public class RangerKafkaAuthorizer implements Authorizer {
         } finally {
             auditHandler.flushAudit();
         }
+    }
+
+    private Set<String> parseSuperUsersFromKafkaConfig(Map<String, ?> configs) {
+        if (configs == null) {
+            return Collections.emptySet();
+        }
+
+        Object kafkaSuperUsersConfig = configs.get(KAFKA_SUPER_USERS_PROP);
+
+        if (kafkaSuperUsersConfig == null) {
+            return Collections.emptySet();
+        }
+
+        if (!(kafkaSuperUsersConfig instanceof String)) {
+            logger.warn("super.users in Kafka config could not be parsed");
+
+            return Collections.emptySet();
+        }
+
+        String      kafkaSuperUsers = (String) kafkaSuperUsersConfig;
+        String[]    principals      = kafkaSuperUsers.split(";");
+        Set<String> superUserNames  = new HashSet<>();
+
+        for (String principal : principals) {
+            try {
+                KafkaPrincipal parsedPrincipal = SecurityUtils.parseKafkaPrincipal(principal.trim());
+                String         userName        = parsedPrincipal.getName();
+
+                if (KafkaPrincipal.USER_TYPE.equals(parsedPrincipal.getPrincipalType()) && StringUtils.isNotEmpty(userName)) {
+                    superUserNames.add(userName);
+                }
+            } catch (Exception e) {
+                logger.warn("Kafka principal: \"{}\" could not be parsed and will not be added to the authorized super users list", principal, e);
+            }
+        }
+
+        return Collections.unmodifiableSet(superUserNames);
     }
 }

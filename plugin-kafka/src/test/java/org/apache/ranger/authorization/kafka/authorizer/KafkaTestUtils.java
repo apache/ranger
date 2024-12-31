@@ -38,6 +38,7 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
@@ -49,21 +50,19 @@ public final class KafkaTestUtils {
     public static String createAndStoreKey(String subjectName, String issuerName, BigInteger serial, String keystorePassword, String keystoreAlias, String keyPassword, KeyStore trustStore) throws Exception {
         // Create KeyPair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048, new SecureRandom());
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-        Date currentDate = new Date();
-        Date expiryDate  = new Date(currentDate.getTime() + 365L * 24L * 60L * 60L * 1000L);
+        keyPairGenerator.initialize(2048, new SecureRandom());
+
+        KeyPair keyPair     = keyPairGenerator.generateKeyPair();
+        Date    currentDate = new Date();
+        Date    expiryDate  = new Date(currentDate.getTime() + 365L * 24L * 60L * 60L * 1000L);
 
         // Create X509Certificate
-        X509v3CertificateBuilder certBuilder =
-                new X509v3CertificateBuilder(new X500Name(RFC4519Style.INSTANCE, issuerName), serial, currentDate, expiryDate,
-                        new X500Name(RFC4519Style.INSTANCE, subjectName), SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
-        ContentSigner   contentSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
-        X509Certificate certificate   = new JcaX509CertificateConverter().getCertificate(certBuilder.build(contentSigner));
+        X509v3CertificateBuilder certBuilder   = new X509v3CertificateBuilder(new X500Name(RFC4519Style.INSTANCE, issuerName), serial, currentDate, expiryDate, new X500Name(RFC4519Style.INSTANCE, subjectName), SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
+        ContentSigner            contentSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
+        X509Certificate          certificate   = new JcaX509CertificateConverter().getCertificate(certBuilder.build(contentSigner));
+        KeyStore                 keystore      = KeyStore.getInstance(KeyStore.getDefaultType()); // Store Private Key + Certificate in Keystore
 
-        // Store Private Key + Certificate in Keystore
-        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
         keystore.load(null, keystorePassword.toCharArray());
         keystore.setKeyEntry(keystoreAlias, keyPair.getPrivate(), keyPassword.toCharArray(), new Certificate[] {certificate});
 
@@ -82,6 +81,12 @@ public final class KafkaTestUtils {
     static void createSomeTopics(Properties adminProps) {
         try (AdminClient adminClient = AdminClient.create(adminProps)) {
             adminClient.createTopics(Arrays.asList(new NewTopic("test", 1, (short) 1), new NewTopic("dev", 1, (short) 1)));
+        }
+    }
+
+    static void createTopic(Properties adminProps, String topic) {
+        try (AdminClient adminClient = AdminClient.create(adminProps)) {
+            adminClient.createTopics(Collections.singletonList(new NewTopic(topic, 1, (short) 1)));
         }
     }
 }
