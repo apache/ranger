@@ -1,0 +1,28 @@
+services:
+  ranger-db:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-sqlserver
+      args:
+        - SQLSERVER_VERSION=${SQLSERVER_VERSION}
+    image: ranger-sqlserver
+    container_name: ranger-sqlserver
+    hostname: ranger-db.example.com
+    networks:
+      - ranger
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q \"SELECT 1\" || exit 1"
+      ]
+      interval: 10s
+      timeout: 2s
+      retries: 30
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=rangerR0cks!
+      - SA_PASSWORD=rangerR0cks!
+
+networks:
+  ranger:
+    name: rangernw
