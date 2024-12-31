@@ -410,9 +410,9 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
 	@Override
 	public void prepare(ResponseBuilder rb) throws IOException {
-		if (!enabled) {
+		if (solrPlugin == null || !enabled) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("Solr Document level Authorization is not enabled!");
+				logger.debug("Solr Ranger Authorization or Solr Document level Authorization is not enabled!");
 			}
 			return;
 		}
