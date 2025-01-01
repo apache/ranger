@@ -29,24 +29,22 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerDataHistService {
+    @InjectMocks
+    RangerDataHistService rangerDataHistService;
 
-	@InjectMocks
-	RangerDataHistService rangerDataHistService;
+    @Mock
+    RangerBaseModelObject baseModelObj;
 
-	@Mock
-	RangerBaseModelObject baseModelObj;
+    @Mock
+    RangerDaoManager                   daoMgr;
+    @Mock
+    org.apache.ranger.db.XXDataHistDao xxDataHistDao;
 
-	@Mock
-	RangerDaoManager daoMgr;
-	@Mock
-	org.apache.ranger.db.XXDataHistDao XXDataHistDao;
-
-	@Test
-	public void test1CreateObjectDataHistory() {
-		String action = "create";
-		RangerBaseModelObject baseModelObj = new RangerBaseModelObject();
-		Mockito.when(daoMgr.getXXDataHist()).thenReturn(XXDataHistDao);
-		rangerDataHistService.createObjectDataHistory(baseModelObj, action);
-
-	}
+    @Test
+    public void test1CreateObjectDataHistory() {
+        String                action       = "create";
+        RangerBaseModelObject baseModelObj = new RangerBaseModelObject();
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xxDataHistDao);
+        rangerDataHistService.createObjectDataHistory(baseModelObj, action);
+    }
 }

@@ -20,10 +20,11 @@
 package org.apache.ranger.audit.destination;
 
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
@@ -31,18 +32,17 @@ import java.util.Properties;
 import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.CONFIG_PREFIX;
 
 public class AmazonCloudWatchAuditDestinationTest {
-
     @Test
     @Ignore // For manual execution only
     public void testWrite() {
         AmazonCloudWatchAuditDestination amazonCloudWatchAuditDestination = new AmazonCloudWatchAuditDestination();
-        Properties properties = new Properties();
+        Properties                       properties                       = new Properties();
         properties.put(CONFIG_PREFIX + "." + AmazonCloudWatchAuditDestination.PROP_LOG_GROUP_NAME, "test-log-group");
         properties.put(CONFIG_PREFIX + "." + AmazonCloudWatchAuditDestination.PROP_LOG_STREAM_PREFIX, "test-log-stream");
 
         amazonCloudWatchAuditDestination.init(properties, CONFIG_PREFIX);
 
-        assert amazonCloudWatchAuditDestination.log(Arrays.asList(getAuthzAuditEvent()));
+        Assert.assertTrue(amazonCloudWatchAuditDestination.log(Collections.singletonList(getAuthzAuditEvent())));
     }
 
     private AuthzAuditEvent getAuthzAuditEvent() {
@@ -63,7 +63,7 @@ public class AmazonCloudWatchAuditDestinationTest {
         event.setEventTime(new Date());
         event.setLogType("");
         event.setPolicyId(1);
-        event.setPolicyVersion(1l);
+        event.setPolicyVersion(1L);
         event.setRepositoryName("");
         event.setRequestData("");
         event.setRepositoryType(1);

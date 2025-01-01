@@ -27,22 +27,19 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerAuditFields {
+    @InjectMocks
+    RangerAuditFields rangerAuditFields;
 
-        @InjectMocks
-        RangerAuditFields rangerAuditFields;
+    @Mock
+    XXDBBase xxDBBase;
 
-        @Mock
-        XXDBBase XXDBBase;
+    @Test
+    public void test1PopulateAuditFields() {
+        rangerAuditFields.populateAuditFields(xxDBBase, xxDBBase);
+    }
 
-        @Test
-        public void test1PopulateAuditFields() {
-                rangerAuditFields.populateAuditFields(XXDBBase, XXDBBase);
-        }
-
-        @Test
-        public void test2PopulateAuditFieldsForCreate() {
-
-                rangerAuditFields.populateAuditFieldsForCreate(XXDBBase);
-        }
-
+    @Test
+    public void test2PopulateAuditFieldsForCreate() {
+        rangerAuditFields.populateAuditFieldsForCreate(xxDBBase);
+    }
 }
