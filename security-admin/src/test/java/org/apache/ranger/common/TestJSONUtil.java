@@ -43,9 +43,8 @@ public class TestJSONUtil {
 
     @Test
     public void testJsonToMapNull() {
-        String              jsonStr = null;
-        Map<String, String> dbMap   = jsonUtil.jsonToMap(jsonStr);
-        Assert.assertEquals(dbMap.get(jsonStr), jsonStr);
+        Map<String, String> dbMap   = jsonUtil.jsonToMap(null);
+        Assert.assertNull(dbMap.get(null));
     }
 
     @Test
@@ -65,7 +64,7 @@ public class TestJSONUtil {
 
     @Test
     public void testReadMapToString() {
-        Map<?, ?> map   = new HashMap<Object, Object>();
+        Map<?, ?> map   = new HashMap<>();
         String    value = jsonUtil.readMapToString(map);
         Assert.assertNotNull(value);
     }
@@ -73,7 +72,7 @@ public class TestJSONUtil {
     @Test
     public void testReadListToString() {
         String       expectedJsonString = "[\"hdfs\",\"hive\",\"knox\"]";
-        List<String> testList           = new ArrayList<String>();
+        List<String> testList           = new ArrayList<>();
 
         testList.add("hdfs");
         testList.add("hive");
@@ -98,7 +97,7 @@ public class TestJSONUtil {
     @Test
     public void testWriteJsonToJavaObject() {
         String      jsonString  = "[\"hdfs\",\"hive\",\"knox\"]";
-        Set<String> expectedSet = new HashSet<String>();
+        Set<String> expectedSet = new HashSet<>();
         expectedSet.add("hive");
         expectedSet.add("hdfs");
         expectedSet.add("knox");

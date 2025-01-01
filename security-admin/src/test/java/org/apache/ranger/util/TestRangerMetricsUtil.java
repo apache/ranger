@@ -30,7 +30,7 @@ public class TestRangerMetricsUtil {
     RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
 
     @Test
-    public void testGetRangerMetricsValues() throws Exception {
+    public void testGetRangerMetricsValues() {
         Map<String, Object> rangerMetricsMap = rangerMetricsUtil.getValues();
 
         Assert.assertNotNull(rangerMetricsMap);

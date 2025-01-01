@@ -96,7 +96,7 @@ public class TestServiceUtil {
 
     @Test
     public void testToRangerService() {
-        Map<String, String> map                   = new HashMap<String, String>();
+        Map<String, String> map                   = new HashMap<>();
         RangerService       expectedRangerService = new RangerService();
         expectedRangerService.setId(1L);
         expectedRangerService.setName("hive");
@@ -162,7 +162,7 @@ public class TestServiceUtil {
         Assert.assertEquals(actualVXAsset.getId(), expectedVXAssesst.getId());
         Assert.assertEquals(actualVXAsset.getName(), expectedVXAssesst.getName());
         Assert.assertEquals(actualVXAsset.getDescription(), expectedVXAssesst.getDescription());
-        Assert.assertEquals(actualVXAsset.getActiveStatus(), RangerCommonEnums.STATUS_ENABLED);
+        Assert.assertEquals(RangerCommonEnums.STATUS_ENABLED, actualVXAsset.getActiveStatus());
     }
 
     @Test
@@ -174,7 +174,7 @@ public class TestServiceUtil {
 
     @Test
     public void testToVXRepository() {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("config", "hiveConfig");
         VXRepository expectedVXRepository = new VXRepository();
         expectedVXRepository.setRepositoryType("hive");
@@ -1081,7 +1081,7 @@ public class TestServiceUtil {
     public void testToVXResourceForTopologyAndService() {
         GUIDUtil         guid       = new GUIDUtil();
         String           guidString = guid.genGUID();
-        List<VXAuditMap> auditList  = new ArrayList<VXAuditMap>();
+        List<VXAuditMap> auditList  = new ArrayList<>();
 
         VXAuditMap vxAuditMap = new VXAuditMap();
         vxAuditMap.setResourceId(1L);
@@ -1105,7 +1105,7 @@ public class TestServiceUtil {
         List<String>                      valuesListForTopology   = new ArrayList<>();
         valuesListForTopology.add("myTopology");
 
-        List<String> valuesListForService = new ArrayList<String>();
+        List<String> valuesListForService = new ArrayList<>();
         valuesListForService.add("myService");
 
         RangerPolicy policy = new RangerPolicy();
@@ -1166,7 +1166,7 @@ public class TestServiceUtil {
         vxAuditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
         auditList.add(vxAuditMap);
 
-        List<VXPermMap> vXPermMapList = new ArrayList<VXPermMap>();
+        List<VXPermMap> vXPermMapList = new ArrayList<>();
         VXPermMap       vXPermMap1    = new VXPermMap();
         vXPermMap1.setPermFor(1);
         vXPermMap1.setUserId(6L);
@@ -1198,7 +1198,7 @@ public class TestServiceUtil {
         expectedVXResource.setAuditList(auditList);
         expectedVXResource.setPermMapList(vXPermMapList);
 
-        Map<String, RangerPolicyResource> rangerPolicyResourceMap = new HashMap<String, RangerPolicyResource>();
+        Map<String, RangerPolicyResource> rangerPolicyResourceMap = new HashMap<>();
         List<String>                      valuesListForTopology   = new ArrayList<>();
         valuesListForTopology.add("myTopology");
 
@@ -1750,7 +1750,7 @@ public class TestServiceUtil {
         List<RangerPolicyItemCondition> rangerPolicyItemConditionList = new ArrayList<>();
         RangerPolicyItemCondition       rangerPolicyItemCondition     = new RangerPolicyItemCondition();
         rangerPolicyItemCondition.setType("ipaddress");
-        List<String> conditionValueList = new ArrayList<String>();
+        List<String> conditionValueList = new ArrayList<>();
         conditionValueList.add("10.129.35.86");
         rangerPolicyItemCondition.setValues(conditionValueList);
         rangerPolicyItemConditionList.add(rangerPolicyItemCondition);

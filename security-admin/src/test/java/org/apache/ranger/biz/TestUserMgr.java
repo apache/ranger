@@ -544,7 +544,6 @@ public class TestUserMgr {
         Assert.assertEquals(changeEmail.getLoginId(), dbVXPortalUser.getLoginId());
         Assert.assertEquals(changeEmail.getEmailAddress(), dbVXPortalUser.getEmailAddress());
         user.setUserSource(RangerCommonEnums.USER_APP);
-        dbVXPortalUser = userMgr.changeEmailAddress(user, changeEmail);
         user.setUserSource(RangerCommonEnums.USER_EXTERNAL);
         changeEmail.setEmailAddress("");
         dbVXPortalUser = userMgr.changeEmailAddress(user, changeEmail);
@@ -1288,7 +1287,8 @@ public class TestUserMgr {
         Mockito.when(xPortalUserDao.getById(userId)).thenReturn(null);
         Mockito.when(restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Logged-In user is not allowed to access requested user data", true)).thenThrow(new WebApplicationException());
         thrown.expect(WebApplicationException.class);
-        VXPortalUser dbVXPortalUser = userMgr.getUserProfile(userId);
+        userMgr.getUserProfile(userId);
+        VXPortalUser dbVXPortalUser;
         Mockito.when(xPortalUserDao.getById(userId)).thenReturn(xPortalUser);
         dbVXPortalUser = userMgr.getUserProfile(userId);
         Assert.assertNotNull(dbVXPortalUser);
@@ -1309,7 +1309,8 @@ public class TestUserMgr {
         user.setUserSource(userProfile.getUserSource());
         user.setPublicScreenName(userProfile.getPublicScreenName());
         user.setId(userProfile.getId());
-        VXPortalUser dbVXPortalUser = userMgr.getUserProfileByLoginId();
+        userMgr.getUserProfileByLoginId();
+        VXPortalUser dbVXPortalUser;
         Mockito.when(xPortalUserDao.findByLoginId(Mockito.anyString())).thenReturn(user);
         XXPortalUserRoleDao xPortalUserRoleDao = Mockito.mock(XXPortalUserRoleDao.class);
         Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(xPortalUserRoleDao);

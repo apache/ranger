@@ -90,7 +90,7 @@ public class TestRangerServiceWithAssignedIdService {
         xXServiceWithAssignedId.setUpdatedByUserId(1L);
         xXServiceWithAssignedId.setAddedByUserId(1L);
         xXServiceWithAssignedId.setType(1L);
-        List<XXServiceConfigMap> svcConfigMapList = new ArrayList<XXServiceConfigMap>();
+        List<XXServiceConfigMap> svcConfigMapList = new ArrayList<>();
         Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
         Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xXServiceDefDao);
         Mockito.when(xXServiceDefDao.getById(1L)).thenReturn(xXServiceDef);

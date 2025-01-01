@@ -58,7 +58,6 @@ import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataHist;
-import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
 import org.apache.ranger.entity.XXGroup;
@@ -302,7 +301,7 @@ public class TestServiceDBStore {
         resourceDef.setId(Id);
         resDefList.add(resourceDef);
 
-        List<XXAccessTypeDef> accessTypeDefList = new ArrayList<XXAccessTypeDef>();
+        List<XXAccessTypeDef> accessTypeDefList = new ArrayList<>();
         XXAccessTypeDef       accessTypeDefObj  = new XXAccessTypeDef();
         accessTypeDefObj.setAddedByUserId(Id);
         accessTypeDefObj.setCreateTime(new Date());
@@ -329,7 +328,7 @@ public class TestServiceDBStore {
         policyConditionDefObj.setUpdateTime(new Date());
         policyConditionDefList.add(policyConditionDefObj);
 
-        List<XXContextEnricherDef> contextEnricherDefList = new ArrayList<XXContextEnricherDef>();
+        List<XXContextEnricherDef> contextEnricherDefList = new ArrayList<>();
         XXContextEnricherDef       contextEnricherDefObj  = new XXContextEnricherDef();
         contextEnricherDefObj.setAddedByUserId(Id);
         contextEnricherDefObj.setCreateTime(new Date());
@@ -407,7 +406,7 @@ public class TestServiceDBStore {
         String           name             = "fdfdfds";
         Long             serviceDefId     = rangerServiceDef.getId();
 
-        List<XXService> xServiceList = new ArrayList<XXService>();
+        List<XXService> xServiceList = new ArrayList<>();
         XXService       xService     = new XXService();
         xService.setAddedByUserId(Id);
         xService.setCreateTime(new Date());
@@ -423,7 +422,7 @@ public class TestServiceDBStore {
         xService.setUpdateTime(new Date());
         xServiceList.add(xService);
 
-        List<XXAccessTypeDef> accessTypeDefList = new ArrayList<XXAccessTypeDef>();
+        List<XXAccessTypeDef> accessTypeDefList = new ArrayList<>();
         XXAccessTypeDef       accessTypeDefObj  = new XXAccessTypeDef();
         accessTypeDefObj.setAddedByUserId(Id);
         accessTypeDefObj.setCreateTime(new Date());
@@ -437,7 +436,7 @@ public class TestServiceDBStore {
         accessTypeDefObj.setUpdateTime(new Date());
         accessTypeDefList.add(accessTypeDefObj);
 
-        List<XXAccessTypeDefGrants> accessTypeDefGrantslist = new ArrayList<XXAccessTypeDefGrants>();
+        List<XXAccessTypeDefGrants> accessTypeDefGrantslist = new ArrayList<>();
         XXAccessTypeDefGrants       accessTypeDefGrantsObj  = new XXAccessTypeDefGrants();
         accessTypeDefGrantsObj.setAddedByUserId(Id);
         accessTypeDefGrantsObj.setAtdId(Id);
@@ -448,7 +447,7 @@ public class TestServiceDBStore {
         accessTypeDefGrantsObj.setImpliedGrant("read");
         accessTypeDefGrantslist.add(accessTypeDefGrantsObj);
 
-        List<XXPolicyItemAccess> policyItemAccessList = new ArrayList<XXPolicyItemAccess>();
+        List<XXPolicyItemAccess> policyItemAccessList = new ArrayList<>();
         XXPolicyItemAccess       policyItemAccess     = new XXPolicyItemAccess();
         policyItemAccess.setAddedByUserId(Id);
         policyItemAccess.setCreateTime(new Date());
@@ -459,22 +458,21 @@ public class TestServiceDBStore {
         policyItemAccess.setUpdateTime(new Date());
         policyItemAccessList.add(policyItemAccess);
 
-        List<XXContextEnricherDef> contextEnricherDefList = new ArrayList<XXContextEnricherDef>();
+        List<XXContextEnricherDef> contextEnricherDefList = new ArrayList<>();
         XXContextEnricherDef       contextEnricherDefObj  = new XXContextEnricherDef();
         contextEnricherDefObj.setAddedByUserId(Id);
         contextEnricherDefObj.setCreateTime(new Date());
         contextEnricherDefObj.setDefid(Id);
         contextEnricherDefObj.setId(Id);
         contextEnricherDefObj.setName("country-provider");
-        contextEnricherDefObj
-                .setEnricherOptions("contextName=COUNTRY;dataFile=/etc/ranger/data/userCountry.properties");
+        contextEnricherDefObj.setEnricherOptions("contextName=COUNTRY;dataFile=/etc/ranger/data/userCountry.properties");
         contextEnricherDefObj.setEnricher("RangerCountryProvider");
         contextEnricherDefObj.setOrder(null);
         contextEnricherDefObj.setUpdatedByUserId(Id);
         contextEnricherDefObj.setUpdateTime(new Date());
         contextEnricherDefList.add(contextEnricherDefObj);
 
-        List<XXEnumDef> enumDefList = new ArrayList<XXEnumDef>();
+        List<XXEnumDef> enumDefList = new ArrayList<>();
         XXEnumDef       enumDefObj  = new XXEnumDef();
         enumDefObj.setAddedByUserId(Id);
         enumDefObj.setCreateTime(new Date());
@@ -486,7 +484,7 @@ public class TestServiceDBStore {
         enumDefObj.setUpdateTime(new Date());
         enumDefList.add(enumDefObj);
 
-        List<XXEnumElementDef> xElementsList     = new ArrayList<XXEnumElementDef>();
+        List<XXEnumElementDef> xElementsList     = new ArrayList<>();
         XXEnumElementDef       enumElementDefObj = new XXEnumElementDef();
         enumElementDefObj.setAddedByUserId(Id);
         enumElementDefObj.setCreateTime(new Date());
@@ -500,19 +498,19 @@ public class TestServiceDBStore {
         enumElementDefObj.setOrder(0);
         xElementsList.add(enumElementDefObj);
 
-        List<XXPolicyConditionDef> xConditionDefList     = new ArrayList<XXPolicyConditionDef>();
+        List<XXPolicyConditionDef> xConditionDefList     = new ArrayList<>();
         XXPolicyConditionDef       policyConditionDefObj = new XXPolicyConditionDef();
         policyConditionDefObj.setAddedByUserId(Id);
         policyConditionDefObj.setCreateTime(new Date());
         policyConditionDefObj.setDefid(Id);
-        policyConditionDefObj.setDescription("policy conditio");
+        policyConditionDefObj.setDescription("policy condition");
         policyConditionDefObj.setId(Id);
         policyConditionDefObj.setName(name);
         policyConditionDefObj.setOrder(1);
         policyConditionDefObj.setLabel("label");
         xConditionDefList.add(policyConditionDefObj);
 
-        List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<XXPolicyItemCondition>();
+        List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<>();
         XXPolicyItemCondition       policyItemCondition     = new XXPolicyItemCondition();
         policyItemCondition.setAddedByUserId(Id);
         policyItemCondition.setCreateTime(new Date());
@@ -524,7 +522,7 @@ public class TestServiceDBStore {
         policyItemCondition.setUpdateTime(new Date());
         policyItemConditionList.add(policyItemCondition);
 
-        List<XXResourceDef> resDefList  = new ArrayList<XXResourceDef>();
+        List<XXResourceDef> resDefList  = new ArrayList<>();
         XXResourceDef       resourceDef = new XXResourceDef();
         resourceDef.setAddedByUserId(Id);
         resourceDef.setCreateTime(new Date());
@@ -533,7 +531,7 @@ public class TestServiceDBStore {
         resourceDef.setId(Id);
         resDefList.add(resourceDef);
 
-        List<XXPolicyResource> policyResourceList = new ArrayList<XXPolicyResource>();
+        List<XXPolicyResource> policyResourceList = new ArrayList<>();
         XXPolicyResource       policyResource     = new XXPolicyResource();
         policyResource.setId(Id);
         policyResource.setCreateTime(new Date());
@@ -546,7 +544,7 @@ public class TestServiceDBStore {
         policyResource.setUpdateTime(new Date());
         policyResourceList.add(policyResource);
 
-        List<XXPolicyResourceMap> policyResourceMapList = new ArrayList<XXPolicyResourceMap>();
+        List<XXPolicyResourceMap> policyResourceMapList = new ArrayList<>();
         XXPolicyResourceMap       policyResourceMap     = new XXPolicyResourceMap();
         policyResourceMap.setAddedByUserId(Id);
         policyResourceMap.setCreateTime(new Date());
@@ -558,7 +556,7 @@ public class TestServiceDBStore {
         policyResourceMap.setValue("1L");
         policyResourceMapList.add(policyResourceMap);
 
-        List<XXServiceConfigDef> serviceConfigDefList = new ArrayList<XXServiceConfigDef>();
+        List<XXServiceConfigDef> serviceConfigDefList = new ArrayList<>();
         XXServiceConfigDef       serviceConfigDefObj  = new XXServiceConfigDef();
         serviceConfigDefObj.setAddedByUserId(Id);
         serviceConfigDefObj.setCreateTime(new Date());
@@ -574,7 +572,7 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setType("password");
         serviceConfigDefList.add(serviceConfigDefObj);
 
-        List<XXPolicy> policiesList = new ArrayList<XXPolicy>();
+        List<XXPolicy> policiesList = new ArrayList<>();
         XXPolicy       policy       = new XXPolicy();
         policy.setAddedByUserId(Id);
         policy.setCreateTime(new Date());
@@ -586,7 +584,7 @@ public class TestServiceDBStore {
         policy.setService(rangerService.getId());
         policiesList.add(policy);
 
-        List<XXPolicyItem> policyItemList = new ArrayList<XXPolicyItem>();
+        List<XXPolicyItem> policyItemList = new ArrayList<>();
         XXPolicyItem       policyItem     = new XXPolicyItem();
         policyItem.setAddedByUserId(Id);
         policyItem.setCreateTime(new Date());
@@ -605,7 +603,7 @@ public class TestServiceDBStore {
         xConfMap.setCreateTime(new Date());
         xConfMap.setServiceId(Id);
 
-        List<XXPolicyItemGroupPerm> policyItemGroupPermlist = new ArrayList<XXPolicyItemGroupPerm>();
+        List<XXPolicyItemGroupPerm> policyItemGroupPermlist = new ArrayList<>();
         XXPolicyItemGroupPerm       policyItemGroupPermObj  = new XXPolicyItemGroupPerm();
         policyItemGroupPermObj.setAddedByUserId(Id);
         policyItemGroupPermObj.setCreateTime(new Date());
@@ -617,7 +615,7 @@ public class TestServiceDBStore {
         policyItemGroupPermObj.setUpdateTime(new Date());
         policyItemGroupPermlist.add(policyItemGroupPermObj);
 
-        List<XXPolicyItemUserPerm> policyItemUserPermList = new ArrayList<XXPolicyItemUserPerm>();
+        List<XXPolicyItemUserPerm> policyItemUserPermList = new ArrayList<>();
         XXPolicyItemUserPerm       policyItemUserPermObj  = new XXPolicyItemUserPerm();
         policyItemUserPermObj.setAddedByUserId(Id);
         policyItemUserPermObj.setCreateTime(new Date());
@@ -629,7 +627,7 @@ public class TestServiceDBStore {
         policyItemUserPermObj.setUserId(Id);
         policyItemUserPermList.add(policyItemUserPermObj);
 
-        List<XXPolicyRefAccessType> policyRefAccessTypeList = new ArrayList<XXPolicyRefAccessType>();
+        List<XXPolicyRefAccessType> policyRefAccessTypeList = new ArrayList<>();
         XXPolicyRefAccessType       policyRefAccessType     = new XXPolicyRefAccessType();
         policyRefAccessType.setId(Id);
         policyRefAccessType.setAccessTypeName("myAccessType");
@@ -640,7 +638,7 @@ public class TestServiceDBStore {
         policyRefAccessType.setUpdatedByUserId(Id);
         policyRefAccessTypeList.add(policyRefAccessType);
 
-        List<XXPolicyRefCondition> policyRefConditionsList = new ArrayList<XXPolicyRefCondition>();
+        List<XXPolicyRefCondition> policyRefConditionsList = new ArrayList<>();
         XXPolicyRefCondition       policyRefCondition      = new XXPolicyRefCondition();
         policyRefCondition.setId(Id);
         policyRefCondition.setAddedByUserId(Id);
@@ -652,7 +650,7 @@ public class TestServiceDBStore {
         policyRefCondition.setUpdateTime(new Date());
         policyRefConditionsList.add(policyRefCondition);
 
-        List<XXPolicyRefResource> policyRefResourcesList = new ArrayList<XXPolicyRefResource>();
+        List<XXPolicyRefResource> policyRefResourcesList = new ArrayList<>();
         XXPolicyRefResource       policyRefResource      = new XXPolicyRefResource();
         policyRefResource.setAddedByUserId(Id);
         policyRefResource.setCreateTime(new Date());
@@ -720,7 +718,7 @@ public class TestServiceDBStore {
         Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 
         Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
-        Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<XXDataMaskTypeDef>());
+        Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
 
         serviceDBStore.deleteServiceDef(Id, true);
         Mockito.verify(daoManager).getXXContextEnricherDef();
@@ -785,7 +783,7 @@ public class TestServiceDBStore {
         SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.POLICY_NAME, "policyName");
         filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
-        List<RangerServiceDef> serviceDefsList = new ArrayList<RangerServiceDef>();
+        List<RangerServiceDef> serviceDefsList = new ArrayList<>();
         RangerServiceDef       serviceDef      = rangerServiceDef();
         serviceDefsList.add(serviceDef);
         RangerServiceDefList serviceDefList = new RangerServiceDefList();
@@ -1016,7 +1014,7 @@ public class TestServiceDBStore {
         policyItemGroupPerm.setUpdateTime(new Date());
         policyItemGroupPermList.add(policyItemGroupPerm);
 
-        List<XXPolicyItemUserPerm> policyItemUserPermList = new ArrayList<XXPolicyItemUserPerm>();
+        List<XXPolicyItemUserPerm> policyItemUserPermList = new ArrayList<>();
         XXPolicyItemUserPerm       policyItemUserPerm     = new XXPolicyItemUserPerm();
         policyItemUserPerm.setAddedByUserId(Id);
         policyItemUserPerm.setCreateTime(new Date());
@@ -1027,7 +1025,7 @@ public class TestServiceDBStore {
         policyItemUserPerm.setUpdateTime(new Date());
         policyItemUserPermList.add(policyItemUserPerm);
 
-        List<XXPolicyItemAccess> policyItemAccessList = new ArrayList<XXPolicyItemAccess>();
+        List<XXPolicyItemAccess> policyItemAccessList = new ArrayList<>();
         XXPolicyItemAccess       policyItemAccess     = new XXPolicyItemAccess();
         policyItemAccess.setAddedByUserId(Id);
         policyItemAccess.setCreateTime(new Date());
@@ -1158,7 +1156,7 @@ public class TestServiceDBStore {
         filter.setParam(SearchFilter.POLICY_NAME, "policyName");
         filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-        List<RangerService> serviceList   = new ArrayList<RangerService>();
+        List<RangerService> serviceList   = new ArrayList<>();
         RangerService       rangerService = rangerService();
         serviceList.add(rangerService);
 
@@ -1184,7 +1182,7 @@ public class TestServiceDBStore {
         filter.setParam(SearchFilter.POLICY_NAME, "policyName");
         filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-        List<RangerService> serviceList   = new ArrayList<RangerService>();
+        List<RangerService> serviceList   = new ArrayList<>();
         RangerService       rangerService = rangerService();
         serviceList.add(rangerService);
 
@@ -1869,7 +1867,7 @@ public class TestServiceDBStore {
         Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
         Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
-        List<XXRole> xxRoles = new ArrayList<XXRole>();
+        List<XXRole> xxRoles = new ArrayList<>();
         Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
@@ -2014,7 +2012,7 @@ public class TestServiceDBStore {
     }
 
     @Test
-    public void test42getMetricByTypeaudits() throws Exception {
+    public void test42getMetricByTypeAudits() throws Exception {
         String type = "audits";
 
         Date date = new Date();
@@ -2053,7 +2051,7 @@ public class TestServiceDBStore {
     }
 
     @Test
-    public void test46getMetricByTypeContextenrichers() throws Exception {
+    public void test46getMetricByTypeContextEnrichers() throws Exception {
         String               type       = "contextenrichers";
         RangerServiceDefList svcDefList = new RangerServiceDefList();
         svcDefList.setTotalCount(10L);
@@ -2062,7 +2060,7 @@ public class TestServiceDBStore {
     }
 
     @Test
-    public void test47getMetricByTypeDenyconditions() throws Exception {
+    public void test47getMetricByTypeDenyConditions() throws Exception {
         String               type       = "denyconditions";
         RangerServiceDefList svcDefList = new RangerServiceDefList();
         svcDefList.setTotalCount(10L);
@@ -2383,7 +2381,7 @@ public class TestServiceDBStore {
     }
 
     private RangerServiceDef rangerServiceDef() {
-        List<RangerServiceConfigDef> configs             = new ArrayList<RangerServiceConfigDef>();
+        List<RangerServiceConfigDef> configs             = new ArrayList<>();
         RangerServiceConfigDef       serviceConfigDefObj = new RangerServiceConfigDef();
         serviceConfigDefObj.setDefaultValue("xyz");
         serviceConfigDefObj.setDescription("ServiceDef");

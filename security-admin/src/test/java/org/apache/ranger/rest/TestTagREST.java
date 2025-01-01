@@ -1050,9 +1050,9 @@ public class TestTagREST {
 
         List<RangerServiceResource> result = tagREST.getServiceResourcesByService(serviceName);
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.size(), 1);
-        Assert.assertEquals(result.get(0).getId(), id);
-        Assert.assertEquals(result.get(0).getServiceName(), serviceName);
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(id, result.get(0).getId());
+        Assert.assertEquals(serviceName, result.get(0).getServiceName());
 
         try {
             Mockito.verify(tagStore).getServiceResourcesByService(serviceName);
@@ -1159,8 +1159,8 @@ public class TestTagREST {
         Assert.assertNotNull(result.getResourceList().get(0).getId());
         Assert.assertEquals(result.getResourceList().get(0).getId(), serviceResourceList.get(0).getId());
         Assert.assertEquals(result.getResourceList().get(0).getServiceName(), serviceResourceList.get(0).getServiceName());
-        Assert.assertEquals(result.getResourceList().get(0).getAssociatedTags().size(), 1);
-        Assert.assertEquals(result.getResourceList().get(0).getAssociatedTags().get(0).getType(), name);
+        Assert.assertEquals(1, result.getResourceList().get(0).getAssociatedTags().size());
+        Assert.assertEquals(name, result.getResourceList().get(0).getAssociatedTags().get(0).getType());
 
         try {
             Mockito.verify(tagStore).getPaginatedServiceResourcesWithTags(Mockito.any());

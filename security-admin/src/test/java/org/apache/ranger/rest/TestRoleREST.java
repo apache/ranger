@@ -611,7 +611,6 @@ public class TestRoleREST {
         int          currentGroupsCount = rangerRole.getGroups().size();
         List<String> users              = new ArrayList<>(Arrays.asList("test-role2", "test-role3"));
         List<String> groups             = new ArrayList<>(Arrays.asList("test-group2", "test-group3"));
-        Boolean      isAdmin            = Boolean.TRUE;
         Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
         try {
             Mockito.when(roleStore.getRole(Mockito.anyLong())).thenReturn(rangerRole);
@@ -623,7 +622,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, true);
         Assert.assertNotNull(returnedRole);
         Assert.assertEquals(returnedRole.getGroups().size(), groups.size() + currentGroupsCount);
     }
@@ -633,8 +632,7 @@ public class TestRoleREST {
         RangerRole   rangerRole = createRole();
         List<String> users      = new ArrayList<>(Arrays.asList("{OWNER}", "test-role3"));
         List<String> groups     = new ArrayList<>(Arrays.asList("test-group2", "test-group3"));
-        Boolean      isAdmin    = Boolean.TRUE;
-        roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        roleRest.addUsersAndGroups(roleId, users, groups, true);
     }
 
     @Test(expected = Throwable.class)

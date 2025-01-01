@@ -235,10 +235,7 @@ public class TestRangerServiceDefServiceBase {
         serviceDefObj.setGuid("1427365526516_835_0");
         serviceDefObj.setId(Id);
 
-        Mockito.when(
-                (XXAccessTypeDef) rangerAuditFields.populateAuditFields(
-                        accessTypeDefObj, serviceDefObj)).thenReturn(
-                accessTypeDefObj);
+        Mockito.when((XXAccessTypeDef) rangerAuditFields.populateAuditFields(accessTypeDefObj, serviceDefObj)).thenReturn(accessTypeDefObj);
 
         XXAccessTypeDef dbAccessTypeDef = rangerServiceDefService.populateRangerAccessTypeDefToXX(rangerAccessTypeDefObj, accessTypeDefObj, serviceDefObj, 1);
         Assert.assertNotNull(dbAccessTypeDef);
@@ -257,11 +254,7 @@ public class TestRangerServiceDefServiceBase {
         RangerAccessTypeDef rangerAccessTypeDefObj = null;
         XXAccessTypeDef     accessTypeDefObj       = null;
         XXServiceDef        serviceDefObj          = null;
-        Mockito.when(
-                restErrorUtil.createRESTException(
-                        "RangerServiceDef cannot be null.",
-                        MessageEnums.DATA_NOT_FOUND)).thenThrow(
-                new WebApplicationException());
+        Mockito.when(restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND)).thenThrow(new WebApplicationException());
 
         thrown.expect(WebApplicationException.class);
         XXAccessTypeDef dbAccessTypeDef = rangerServiceDefService.populateRangerAccessTypeDefToXX(rangerAccessTypeDefObj, accessTypeDefObj, serviceDefObj, 1);

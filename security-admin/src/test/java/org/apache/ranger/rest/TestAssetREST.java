@@ -209,8 +209,7 @@ public class TestAssetREST {
         List<RangerService> services = Arrays.asList(rangerService1, rangerService2);
 
         SearchFilter searchFilter = new SearchFilter();
-        Mockito.when(searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, null))
-                .thenReturn(searchFilter);
+        Mockito.when(searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, null)).thenReturn(searchFilter);
         Mockito.when(serviceREST.getServices(searchFilter)).thenReturn(services);
         Mockito.when(serviceUtil.toVXAsset(rangerService1)).thenReturn(vXAsset1);
         Mockito.when(serviceUtil.toVXAsset(rangerService2)).thenReturn(vXAsset2);
@@ -237,8 +236,7 @@ public class TestAssetREST {
 
         List<RangerService> services     = Arrays.asList(rangerService1, rangerService2);
         SearchFilter        searchFilter = new SearchFilter();
-        Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, null))
-                .thenReturn(searchFilter);
+        Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, null)).thenReturn(searchFilter);
         Mockito.when(serviceREST.getServices(searchFilter)).thenReturn(services);
         Mockito.when(serviceUtil.toVXAsset(rangerService1)).thenReturn(vXAsset1);
         Mockito.when(serviceUtil.toVXAsset(rangerService2)).thenReturn(vXAsset2);
@@ -339,8 +337,8 @@ public class TestAssetREST {
 
     @Test
     public void testSearchXResource() {
-        List<RangerPolicy> rangerPolicyList = new ArrayList<RangerPolicy>();
-        List<VXResource>   vXResourcesList  = new ArrayList<VXResource>();
+        List<RangerPolicy> rangerPolicyList = new ArrayList<>();
+        List<VXResource>   vXResourcesList  = new ArrayList<>();
         RangerService      rangerService    = rangerService(Id);
         long               i;
         for (i = 1; i <= 2; i++) {
@@ -442,8 +440,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
         Mockito.when(assetMgr.searchXCredentialStores(searchCriteria)).thenReturn(vXCredentialStoreList);
         VXCredentialStoreList actualvxCredentialStoreList = assetREST.searchXCredentialStores(request);
-        Assert.assertEquals(vXCredentialStoreList.getVXCredentialStores(),
-                actualvxCredentialStoreList.getVXCredentialStores());
+        Assert.assertEquals(vXCredentialStoreList.getVXCredentialStores(), actualvxCredentialStoreList.getVXCredentialStores());
         Mockito.verify(assetMgr).searchXCredentialStores(searchCriteria);
     }
 
@@ -463,26 +460,19 @@ public class TestAssetREST {
     public void testSearchXPolicyExportAudits() {
         SearchCriteria            searchCriteria          = new SearchCriteria();
         List<SortField>           sortFields              = null;
-        List<VXPolicyExportAudit> vXPolicyExportAudits    = new ArrayList<VXPolicyExportAudit>();
+        List<VXPolicyExportAudit> vXPolicyExportAudits    = new ArrayList<>();
         VXPolicyExportAuditList   vXPolicyExportAuditList = new VXPolicyExportAuditList();
         vXPolicyExportAuditList.setVXPolicyExportAudits(vXPolicyExportAudits);
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
-        Mockito.when(searchUtil.extractString(Mockito.any(),
-                        Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
-                .thenReturn("test");
-        Mockito.when(searchUtil.extractInt(Mockito.any(),
-                        Mockito.any(), Mockito.anyString(), Mockito.anyString()))
-                .thenReturn(8);
+        Mockito.when(searchUtil.extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn("test");
+        Mockito.when(searchUtil.extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8);
         Mockito.when(assetMgr.searchXPolicyExportAudits(searchCriteria)).thenReturn(vXPolicyExportAuditList);
         VXPolicyExportAuditList expectedVXPolicyExportAuditList = assetREST.searchXPolicyExportAudits(request);
         Assert.assertEquals(vXPolicyExportAuditList, expectedVXPolicyExportAuditList);
         Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
-        Mockito.verify(searchUtil, Mockito.times(5)).extractString(Mockito.any(),
-                Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil).extractInt(Mockito.any(),
-                Mockito.any(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(),
-                Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.isNull());
+        Mockito.verify(searchUtil, Mockito.times(5)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.isNull());
         Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
         Mockito.verify(assetMgr).searchXPolicyExportAudits(searchCriteria);
     }
@@ -491,7 +481,7 @@ public class TestAssetREST {
     public void testGetReportLogs() {
         SearchCriteria  searchCriteria = new SearchCriteria();
         List<SortField> sortFields     = xTrxLogService.getSortFields();
-        List<VXTrxLog>  vXTrxLogs      = new ArrayList<VXTrxLog>();
+        List<VXTrxLog>  vXTrxLogs      = new ArrayList<>();
         VXTrxLogList    vXTrxLogList   = new VXTrxLogList();
         vXTrxLogList.setVXTrxLogs(vXTrxLogs);
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
@@ -510,7 +500,7 @@ public class TestAssetREST {
 
     @Test
     public void testGetTransactionReport() {
-        List<VXTrxLog> vXTrxLogs    = new ArrayList<VXTrxLog>();
+        List<VXTrxLog> vXTrxLogs    = new ArrayList<>();
         VXTrxLogList   vXTrxLogList = new VXTrxLogList();
         vXTrxLogList.setVXTrxLogs(vXTrxLogs);
         String transactionId = "123456";
@@ -524,7 +514,7 @@ public class TestAssetREST {
     public void testGetAccessLogs() {
         SearchCriteria      searchCriteria    = new SearchCriteria();
         List<SortField>     sortFields        = null;
-        List<VXAccessAudit> vXAccessAudits    = new ArrayList<VXAccessAudit>();
+        List<VXAccessAudit> vXAccessAudits    = new ArrayList<>();
         VXAccessAuditList   vXAccessAuditList = new VXAccessAuditList();
         vXAccessAuditList.setVXAccessAudits(vXAccessAudits);
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
@@ -735,7 +725,7 @@ public class TestAssetREST {
     @Test
     public void testGetReportLogsForAuditKeyAdmin() {
         SearchCriteria searchCriteria = new SearchCriteria();
-        List<VXTrxLog> vXTrxLogs      = new ArrayList<VXTrxLog>();
+        List<VXTrxLog> vXTrxLogs      = new ArrayList<>();
         VXTrxLogList   vXTrxLogList   = new VXTrxLogList();
         vXTrxLogList.setVXTrxLogs(vXTrxLogs);
         Mockito.when(searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields())).thenReturn(searchCriteria);
@@ -753,7 +743,7 @@ public class TestAssetREST {
     }
 
     public Map<String, String> getSampleConfig() {
-        Map<String, String> configs = new HashMap<String, String>();
+        Map<String, String> configs = new HashMap<>();
         configs.put("username", "servicemgr");
         configs.put("password", "servicemgr");
         configs.put("namenode", "servicemgr");
@@ -795,7 +785,7 @@ public class TestAssetREST {
     }
 
     private VXAsset vXAsset(Long id) {
-        Map<String, String> configs = new HashMap<String, String>();
+        Map<String, String> configs = new HashMap<>();
         configs.put("username", "servicemgr");
         configs.put("password", "servicemgr");
         configs.put("namenode", "servicemgr");

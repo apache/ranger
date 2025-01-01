@@ -73,7 +73,7 @@ public class TestRangerTagDefService {
         tagDef.setName(name);
         tagDef.setUpdateTime(new Date());
 
-        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<XXTagAttributeDef>();
+        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<>();
         XXTagAttributeDef       xxTagAttributeDef = new XXTagAttributeDef();
         xxTagAttributeDef.setId(id);
         xxTagAttributeDef.setName(name);
@@ -95,7 +95,7 @@ public class TestRangerTagDefService {
         Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
         Mockito.when(xXTagDefDao.findByGuid(guid)).thenReturn(xxTagDef);
 
-        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<XXTagAttributeDef>();
+        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<>();
         XXTagAttributeDef       xxTagAttributeDef = new XXTagAttributeDef();
         xxTagAttributeDef.setId(id);
         xxTagAttributeDef.setName(name);
@@ -138,7 +138,7 @@ public class TestRangerTagDefService {
         Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
         Mockito.when(xXTagDefDao.findByName(name)).thenReturn(xxTagDef);
 
-        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<XXTagAttributeDef>();
+        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<>();
         XXTagAttributeDef       xxTagAttributeDef = new XXTagAttributeDef();
         xxTagAttributeDef.setId(id);
         xxTagAttributeDef.setName(name);
@@ -169,7 +169,7 @@ public class TestRangerTagDefService {
 
     @Test
     public void test8getTagDefsByServiceId() {
-        List<XXTagDef> xxTagDefs = new ArrayList<XXTagDef>();
+        List<XXTagDef> xxTagDefs = new ArrayList<>();
         XXTagDef       xxTagDef  = new XXTagDef();
         xxTagDef.setId(id);
         xxTagDef.setName(name);
@@ -179,7 +179,7 @@ public class TestRangerTagDefService {
         Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
         Mockito.when(xXTagDefDao.findByServiceId(serviceId)).thenReturn(xxTagDefs);
 
-        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<XXTagAttributeDef>();
+        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<>();
         XXTagAttributeDef       xxTagAttributeDef = new XXTagAttributeDef();
         xxTagAttributeDef.setId(id);
         xxTagAttributeDef.setName(name);
@@ -195,7 +195,7 @@ public class TestRangerTagDefService {
 
     @Test
     public void test9getTagDefsByServiceId() {
-        List<XXTagDef> xxTagDefs = new ArrayList<XXTagDef>();
+        List<XXTagDef> xxTagDefs = new ArrayList<>();
 
         XXTagDefDao xXTagDefDao = Mockito.mock(XXTagDefDao.class);
         Mockito.when(daoMgr.getXXTagDef()).thenReturn(xXTagDefDao);
@@ -215,7 +215,7 @@ public class TestRangerTagDefService {
         xxTagDef.setName(name);
         xxTagDef.setUpdateTime(new Date());
 
-        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<XXTagAttributeDef>();
+        List<XXTagAttributeDef> tagAttrDefList    = new ArrayList<>();
         XXTagAttributeDef       xxTagAttributeDef = new XXTagAttributeDef();
         xxTagAttributeDef.setId(id);
         xxTagAttributeDef.setName(name);

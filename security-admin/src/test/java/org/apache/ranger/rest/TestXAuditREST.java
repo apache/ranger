@@ -124,7 +124,6 @@ public class TestXAuditREST {
         Mockito.verify(xAuditMgr).deleteXTrxLog(id, false);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test5searchXTrxLog() {
         VXTrxLogList       vxExpList = new VXTrxLogList();
@@ -143,7 +142,6 @@ public class TestXAuditREST {
         Mockito.verify(xAuditMgr).searchXTrxLogs(searchCriteria);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test6countXTrxLogs() {
         VXLong vxLongExp = new VXLong();
@@ -162,7 +160,6 @@ public class TestXAuditREST {
         Mockito.verify(xAuditMgr).getXTrxLogSearchCount(searchCriteria);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test7searchXAccessAudits() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -183,7 +180,6 @@ public class TestXAuditREST {
         Mockito.verify(xAuditMgr).searchXAccessAudits(searchCriteria);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test8countXAccessAudits() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);

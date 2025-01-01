@@ -36,9 +36,8 @@ public class TestStringUtil {
 
     @Test
     public void testNullValidatePassword() {
-        String   password      = null;
         String[] invalidValues = {"aa", "bb", "aa12345dd"};
-        boolean  value         = stringUtil.validatePassword(password, invalidValues);
+        boolean  value         = stringUtil.validatePassword(null, invalidValues);
         Assert.assertFalse(value);
     }
 
@@ -69,8 +68,7 @@ public class TestStringUtil {
 
     @Test
     public void testIsNullValue() {
-        String  str   = null;
-        boolean value = stringUtil.isEmpty(str);
+        boolean value = stringUtil.isEmpty((String) null);
         Assert.assertTrue(value);
     }
 
@@ -100,9 +98,7 @@ public class TestStringUtil {
 
     @Test
     public void testNormalizeEmailIdNull() {
-        String email     = null;
-        String lowercase = stringUtil.normalizeEmail(email);
-        Assert.assertEquals(email, lowercase);
+        String lowercase = stringUtil.normalizeEmail(null);
         Assert.assertNull(lowercase);
     }
 
@@ -136,8 +132,7 @@ public class TestStringUtil {
 
     @Test
     public void testNullEmailId() {
-        String  email = null;
-        boolean value = stringUtil.validateEmail(email);
+        boolean value = stringUtil.validateEmail(null);
         Assert.assertFalse(value);
     }
 
@@ -159,14 +154,14 @@ public class TestStringUtil {
 
     @Test
     public void testIsListEmpty() {
-        List<String> list      = new ArrayList<String>();
+        List<String> list      = new ArrayList<>();
         boolean      listValue = stringUtil.isEmpty(list);
         Assert.assertTrue(listValue);
     }
 
     @Test
     public void testIsListNotEmpty() {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         list.add("a");
         list.add("b");
         boolean listValue = stringUtil.isEmpty(list);
@@ -182,8 +177,7 @@ public class TestStringUtil {
 
     @Test
     public void testIsValidNameNull() {
-        String  name  = null;
-        boolean value = stringUtil.isValidName(name);
+        boolean value = stringUtil.isValidName(null);
         Assert.assertFalse(value);
     }
 }

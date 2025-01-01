@@ -33,8 +33,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import javax.persistence.EntityManager;
-
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestAuthSessionService {
@@ -77,8 +75,7 @@ public class TestAuthSessionService {
     @Test
     public void test4search() {
         SearchCriteria testSearchCriteria = createsearchCriteria();
-        EntityManager  em                 = null;
-        Mockito.when(authSessionService.getDao().getEntityManager()).thenReturn(em);
+        Mockito.when(authSessionService.getDao().getEntityManager()).thenReturn(null);
         authSessionService.search(testSearchCriteria);
     }
 

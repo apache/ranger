@@ -88,23 +88,23 @@ public class TestPropertiesUtil {
         long   defaultValue = 23L;
         Long   value        = PropertiesUtil.getLongProperty(key, defaultValue);
         Assert.assertNotNull(value);
-        Assert.assertEquals(value.intValue(), defaultValue);
+        Assert.assertEquals(defaultValue, value.intValue());
     }
 
     @Test
     public void testGetBooleanPropertyNull() {
         String  key          = null;
         boolean defaultValue = true;
-        boolean returnAvlue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
-        Assert.assertTrue(returnAvlue);
+        boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
+        Assert.assertTrue(returnValue);
     }
 
     @Test
     public void testGetBooleanProperty() {
         String  key          = "1";
         boolean defaultValue = true;
-        boolean returnAvlue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
-        Assert.assertTrue(returnAvlue);
+        boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
+        Assert.assertTrue(returnValue);
     }
 
     @Test
@@ -119,10 +119,10 @@ public class TestPropertiesUtil {
         String key = "ranger.users.roles.list";
 
         PropertiesUtil.getPropertiesMap().put("ranger.users.roles.list", "read,write,access");
-        String[] actualroles = PropertiesUtil.getPropertyStringList(key);
+        String[] actualRoles = PropertiesUtil.getPropertyStringList(key);
 
-        Assert.assertEquals("read", actualroles[0]);
-        Assert.assertEquals("write", actualroles[1]);
-        Assert.assertEquals("access", actualroles[2]);
+        Assert.assertEquals("read", actualRoles[0]);
+        Assert.assertEquals("write", actualRoles[1]);
+        Assert.assertEquals("access", actualRoles[2]);
     }
 }

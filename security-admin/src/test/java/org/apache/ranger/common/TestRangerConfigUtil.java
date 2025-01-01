@@ -26,8 +26,8 @@ public class TestRangerConfigUtil {
 
     @Test
     public void testGetDefaultMaxRows() {
-        int maxrow = xaConfigUtil.getDefaultMaxRows();
-        Assert.assertEquals(maxrow, xaConfigUtil.defaultMaxRows);
+        int maxRow = xaConfigUtil.getDefaultMaxRows();
+        Assert.assertEquals(maxRow, xaConfigUtil.defaultMaxRows);
     }
 
     @Test

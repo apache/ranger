@@ -192,7 +192,7 @@ public class TestSecurityZoneDBStore {
         filter.setParam(SearchFilter.ZONE_NAME, "sz1");
 
         List<RangerSecurityZone> ret             = new ArrayList<>();
-        List<XXSecurityZone>     xxSecurityZones = new ArrayList<XXSecurityZone>();
+        List<XXSecurityZone>     xxSecurityZones = new ArrayList<>();
         XXSecurityZone           xxSecurityZone  = new XXSecurityZone();
         xxSecurityZone.setId(2L);
         xxSecurityZone.setName("sz1");
@@ -221,7 +221,7 @@ public class TestSecurityZoneDBStore {
     @Test
     public void test7getSecurityZonesForService() {
         String                                                    serviceName = "hdfs_service";
-        Map<String, RangerSecurityZone.RangerSecurityZoneService> retMap      = null;
+        Map<String, RangerSecurityZone.RangerSecurityZoneService> retMap;
 
         SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.ZONE_NAME, "sz1");
@@ -265,8 +265,7 @@ public class TestSecurityZoneDBStore {
 
         Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xXSecurityZoneDao);
         Mockito.when(xXSecurityZoneDao.findByZoneName(securityZone.getName())).thenReturn(xxSecurityZone);
-        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class)))
-                .thenThrow(new WebApplicationException());
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class))).thenThrow(new WebApplicationException());
         thrown.expect(WebApplicationException.class);
 
         securityZoneDBStore.createSecurityZone(securityZone);

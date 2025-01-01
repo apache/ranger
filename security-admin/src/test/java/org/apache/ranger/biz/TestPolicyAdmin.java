@@ -49,14 +49,12 @@ public class TestPolicyAdmin {
     static Gson gsonBuilder;
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-                .setPrettyPrinting()
-                .create();
+    public static void setUpBeforeClass() {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
     }
 
     @AfterClass
-    public static void tearDownAfterClass() throws Exception {
+    public static void tearDownAfterClass() {
     }
 
     @Test
@@ -109,7 +107,6 @@ public class TestPolicyAdmin {
                 }
 
                 assertEquals("allowed-policy count mismatch! - " + test.name, test.allowedPolicies.size(), allowedPolicies.size());
-
                 assertEquals("allowed-policy list mismatch! - " + test.name, test.allowedPolicies, allowedPolicies);
             } else {
                 RangerPolicy     policy     = new RangerPolicy();

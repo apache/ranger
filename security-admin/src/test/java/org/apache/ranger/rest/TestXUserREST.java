@@ -314,7 +314,6 @@ public class TestXUserREST {
         Mockito.verify(request).getParameter("forceDelete");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test11searchXGroups() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -338,7 +337,6 @@ public class TestXUserREST {
         assertEquals(outputvXGroupList.getClass(), testvXGroupList.getClass());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test12countXGroups() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -485,7 +483,6 @@ public class TestXUserREST {
         Mockito.verify(request).getParameter("forceDelete");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test24searchXUsers() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -524,7 +521,6 @@ public class TestXUserREST {
         assertEquals(testVXUserList.getClass(), gotVXUserList.getClass());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test25countXUsers() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -592,7 +588,6 @@ public class TestXUserREST {
         Mockito.verify(xUserMgr).deleteXGroupUser(id, force);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test30searchXGroupUsers() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -616,7 +611,6 @@ public class TestXUserREST {
         assertEquals(outputvXGroupList.getResultSize(), testVXGroupUserList.getResultSize());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test31countXGroupUserst() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -769,7 +763,7 @@ public class TestXUserREST {
 
     @Test
     public void test47deleteXPermMap() {
-        Boolean forceDelete = false;
+        boolean forceDelete = false;
         Mockito.doNothing().when(xUserMgr).deleteXPermMap(id, forceDelete);
         xUserRest.deleteXPermMap(id, request);
         Mockito.verify(xUserMgr).deleteXPermMap(id, forceDelete);
@@ -800,7 +794,6 @@ public class TestXUserREST {
         assertEquals(outputvXGroupList.getTotalCount(), testvXGroupList.getTotalCount());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test49countXPermMaps() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -949,13 +942,12 @@ public class TestXUserREST {
 
     @Test
     public void test59deleteXAuditMap() {
-        Boolean forceDelete = false;
+        boolean forceDelete = false;
         Mockito.doNothing().when(xUserMgr).deleteXAuditMap(id, forceDelete);
         xUserRest.deleteXAuditMap(id, request);
         Mockito.verify(xUserMgr).deleteXAuditMap(id, forceDelete);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test60searchXAuditMaps() {
         VXAuditMap         testvXAuditMap     = createVXAuditMapObj();
@@ -978,7 +970,6 @@ public class TestXUserREST {
         assertEquals(outputVXAuditMapList.getResultSize(), testVXAuditMapList.getResultSize());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test61countXAuditMaps() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -1156,7 +1147,6 @@ public class TestXUserREST {
         Mockito.verify(xUserMgr).getXUserGroups(id);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test73getXGroupUsers() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -1336,7 +1326,6 @@ public class TestXUserREST {
         Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "groupName", "groupName", null);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test81countXModuleDef() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -1434,7 +1423,6 @@ public class TestXUserREST {
         Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "userPermissionList", "userId", StringUtil.VALIDATION_NAME);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test87countXUserPermission() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -1531,7 +1519,6 @@ public class TestXUserREST {
         Mockito.verify(searchUtil).extractString(request, testSearchCriteria, "groupPermissionList", "groupId", StringUtil.VALIDATION_NAME);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test93countXGroupPermission() {
         HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
@@ -1832,7 +1819,6 @@ public class TestXUserREST {
         Mockito.verify(request).getParameter("forceDelete");
     }
 
-    @SuppressWarnings({"unchecked", "static-access"})
     @Test
     public void test113ErrorWhenRoleUserIsTryingToFetchAnotherUserDetails() {
         destroySession();

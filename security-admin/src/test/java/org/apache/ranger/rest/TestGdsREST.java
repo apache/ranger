@@ -75,7 +75,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testUpdateDataSetGrants() throws Exception {
+    public void testUpdateDataSetGrants() {
         RangerGds.RangerDataset rangerDataset = createRangerDataSet();
         RangerPolicy            policy        = createPolicyForDataSet(rangerDataset);
 
@@ -87,8 +87,7 @@ public class TestGdsREST {
 
         List<RangerPolicy.RangerPolicyItem> hdfsPolicyItems = new ArrayList<>(gdsREST.filterPolicyItemsByRequest(policy, request));
 
-        RangerGrant grant3 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, "hdfs"),
-                Collections.singletonList("_READ"), Collections.emptyList());
+        RangerGrant grant3 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, "hdfs"), Collections.singletonList("_READ"), Collections.emptyList());
         policy = gdsREST.updatePolicyWithModifiedGrants(policy, Collections.singletonList(grant3));
 
         List<RangerPolicy.RangerPolicyItem> updatedHdfsPolicyItems = new ArrayList<>(gdsREST.filterPolicyItemsByRequest(policy, request));

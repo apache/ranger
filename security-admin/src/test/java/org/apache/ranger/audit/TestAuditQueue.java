@@ -88,26 +88,22 @@ public class TestAuditQueue {
         }
         queue.stop();
         queue.waitToComplete();
-        // Let's wait for second
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(1000);
         assertEquals(messageToSend, testConsumer.getCountTotal());
         assertEquals(messageToSend, testConsumer.getSumTotal());
-        assertNull("Event not in sequnce", testConsumer.isInSequence());
+        assertNull("Event not in sequence", testConsumer.isInSequence());
     }
 
     @Test
     public void testAuditSummaryQueue() {
         logger.debug("testAuditSummaryQueue()...");
+
         TestConsumer      testConsumer = new TestConsumer();
         AuditSummaryQueue queue        = new AuditSummaryQueue(testConsumer);
 
         Properties props = new Properties();
-        props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "."
-                + AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
+        props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + AuditSummaryQueue.PROP_SUMMARY_INTERVAL, "" + 300);
         queue.init(props, BaseAuditHandler.PROP_DEFAULT_PREFIX);
 
         queue.start();
@@ -123,8 +119,7 @@ public class TestAuditQueue {
         // Destination
         String propPrefix = AuditProviderFactory.AUDIT_DEST_BASE + ".test";
         props.put(propPrefix, "enable");
-        props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "summary" + "."
-                + "enabled", "true");
+        props.put(BaseAuditHandler.PROP_DEFAULT_PREFIX + "." + "summary" + "." + "enabled", "true");
         props.put(propPrefix + "." + BaseAuditHandler.PROP_NAME, "test");
         props.put(propPrefix + "." + AuditQueue.PROP_QUEUE, "none");
 
@@ -139,7 +134,7 @@ public class TestAuditQueue {
             AuditQueue cQueue = (AuditQueue) consumer;
             consumer = (BaseAuditHandler) cQueue.getConsumer();
         }
-        assertTrue("Consumer should be TestConsumer. class=" + consumer.getClass().getName(), consumer instanceof TestConsumer);
+        assertTrue("Consumer should be TestConsumer. class = " + consumer.getClass().getName(), consumer instanceof TestConsumer);
         TestConsumer testConsumer = (TestConsumer) consumer;
         commonTestSummary(testConsumer, queue);
     }
@@ -167,12 +162,8 @@ public class TestAuditQueue {
         }
         queue.stop();
         queue.waitToComplete();
-        // Let's wait for second
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(1000);
         for (int i = 0; i < destCount; i++) {
             assertEquals("consumer" + i, messageToSend, testConsumer[i].getCountTotal());
             assertEquals("consumer" + i, messageToSend, testConsumer[i].getSumTotal());
@@ -202,12 +193,8 @@ public class TestAuditQueue {
         for (int i = 0; i < messageToSend; i++) {
             queue.log(createEvent());
         }
-        // Let's wait for second
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(2000);
 
         queue.waitToComplete();
         queue.stop();
@@ -247,16 +234,11 @@ public class TestAuditQueue {
             queue.log(createEvent());
             try {
                 Thread.sleep(pauseMS);
-            } catch (InterruptedException e) {
-                // ignore
+            } catch (InterruptedException ignored) {
             }
         }
-        // Let's wait for second
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(2000);
         queue.waitToComplete();
         queue.stop();
         queue.waitToComplete();
@@ -297,11 +279,10 @@ public class TestAuditQueue {
         for (int i = 0; i < messageToSend; i++) {
             queue.log(createEvent());
         }
-        // Let's wait for second
+
         try {
             Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
+        } catch (InterruptedException ignored) {
         }
 
         queue.waitToComplete(5000);
@@ -319,16 +300,12 @@ public class TestAuditQueue {
         logger.debug("testAuditBatchQueueDestDownFlipFlop()...");
         int messageToSend = 10;
 
-        String basePropName = "testAuditBatchQueueDestDownFlipFlop_"
-                + MiscUtil.generateUniqueId();
+        String basePropName = "testAuditBatchQueueDestDownFlipFlop_" + MiscUtil.generateUniqueId();
         int        batchSize  = messageToSend / 3;
         int        queueSize  = messageToSend * 2;
         int        intervalMS = 5000; // Deliberately big interval
         Properties props      = new Properties();
-        props.put(
-                basePropName + "." + BaseAuditHandler.PROP_NAME,
-                "testAuditBatchQueueDestDownFlipFlop_"
-                        + MiscUtil.generateUniqueId());
+        props.put(basePropName + "." + BaseAuditHandler.PROP_NAME, "testAuditBatchQueueDestDownFlipFlop_" + MiscUtil.generateUniqueId());
 
         props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, "" + batchSize);
         props.put(basePropName + "." + AuditQueue.PROP_QUEUE_SIZE, "" + queueSize);
@@ -370,15 +347,10 @@ public class TestAuditQueue {
             Thread.sleep(1000);
             testConsumer.isDown = false;
             Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
+        } catch (InterruptedException ignored) {
         }
-        // Let's wait for second
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(2000);
 
         queue.waitToComplete(5000);
         queue.stop();
@@ -386,7 +358,7 @@ public class TestAuditQueue {
 
         assertEquals("Total count", messageToSend, testConsumer.getCountTotal());
         assertEquals("Total sum", messageToSend, testConsumer.getSumTotal());
-        assertNull("Event not in sequnce", testConsumer.isInSequence());
+        assertNull("Event not in sequence", testConsumer.isInSequence());
     }
 
     /**
@@ -395,10 +367,9 @@ public class TestAuditQueue {
     @Test
     public void testAuditBatchQueueDestDownRestart() {
         logger.debug("testAuditBatchQueueDestDownRestart()...");
-        int messageToSend = 10;
 
-        String basePropName = "testAuditBatchQueueDestDownRestart_"
-                + MiscUtil.generateUniqueId();
+        String basePropName         = "testAuditBatchQueueDestDownRestart_" + MiscUtil.generateUniqueId();
+        int        messageToSend    = 10;
         int        batchSize        = messageToSend / 3;
         int        queueSize        = messageToSend * 2;
         int        intervalMS       = 3000; // Deliberately big interval
@@ -427,12 +398,8 @@ public class TestAuditQueue {
         for (int i = 0; i < messageToSend; i++) {
             queue.log(createEvent());
         }
-        // Let's wait for second or two
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(2000);
 
         queue.waitToComplete(5000);
         queue.stop();
@@ -440,12 +407,7 @@ public class TestAuditQueue {
 
         testConsumer.isDown = true;
 
-        // Let's wait for second or two
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        sleep(5000);
 
         // Let's now recreate the objects
         testConsumer = new TestConsumer();
@@ -454,12 +416,7 @@ public class TestAuditQueue {
         queue.init(props, basePropName);
         queue.start();
 
-        // Let's wait for second
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        sleep(2000);
 
         queue.waitToComplete(5000);
         queue.stop();
@@ -467,7 +424,7 @@ public class TestAuditQueue {
 
         assertEquals("Total count", messageToSend, testConsumer.getCountTotal());
         assertEquals("Total sum", messageToSend, testConsumer.getSumTotal());
-        assertNull("Event not in sequnce", testConsumer.isInSequence());
+        assertNull("Event not in sequence", testConsumer.isInSequence());
     }
 
     @Test
@@ -514,12 +471,8 @@ public class TestAuditQueue {
         for (int i = 0; i < messageToSend; i++) {
             queue.log(createEvent());
         }
-        // Let's wait for second
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(1000);
 
         queue.waitToComplete();
         queue.stop();
@@ -677,7 +630,9 @@ public class TestAuditQueue {
         int      totalLogsOrc       = 0;
         File     appSubFolder       = new File(logFolder, appType);
         String[] datewiseSubfolders = appSubFolder.list();
-        logger.info("subfolder list=" + Arrays.toString(datewiseSubfolders));
+
+        logger.info("subfolder list={}", Arrays.toString(datewiseSubfolders));
+
         if (datewiseSubfolders != null) {
             for (String dateSubfolder : datewiseSubfolders) {
                 File   logSubfolder = new File(appSubFolder, dateSubfolder);
@@ -685,7 +640,7 @@ public class TestAuditQueue {
                 if (listOfFiles != null) {
                     for (File f : listOfFiles) {
                         if (f.getName().endsWith(".orc")) {
-                            logger.info("Reading orc file:" + f.getName());
+                            logger.info("Reading orc file: {}", f.getName());
                             totalLogsOrc += getOrcFileRowCount(f.getPath());
                         }
                     }
@@ -708,7 +663,7 @@ public class TestAuditQueue {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        logger.info("Number of logs in archive:" + totalLogsArchive);
+        logger.info("Number of logs in archive: {}", totalLogsArchive);
         assertEquals(totalLogsOrc, totalLogsArchive);
 
         long notYetConvertedToORCLogsCount = 0;
@@ -772,22 +727,14 @@ public class TestAuditQueue {
         } catch (InterruptedException e1) {
             logger.error("Sleep interrupted", e1);
         }
-        // Let's wait for second
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(1000);
 
         queue.waitToComplete();
         queue.stop();
         queue.waitToComplete();
-        // Let's wait for second
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+
+        sleep(1000);
         assertEquals(messageToSend, testConsumer.getSumTotal());
         assertEquals(countToCheck, testConsumer.getCountTotal());
     }
@@ -854,5 +801,12 @@ public class TestAuditQueue {
         }
         reader.close();
         return fileNames;
+    }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ignored) {
+        }
     }
 }

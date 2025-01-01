@@ -181,7 +181,7 @@ public class TestRangerServiceDefService {
         policyConditionDefObj.setAddedByUserId(Id);
         policyConditionDefObj.setCreateTime(new Date());
         policyConditionDefObj.setDefid(Id);
-        policyConditionDefObj.setDescription("policy conditio");
+        policyConditionDefObj.setDescription("policy condition");
         policyConditionDefObj.setId(Id);
         policyConditionDefObj.setName(name);
         policyConditionDefObj.setOrder(1);
@@ -375,7 +375,7 @@ public class TestRangerServiceDefService {
         policyConditionDefObj.setAddedByUserId(Id);
         policyConditionDefObj.setCreateTime(new Date());
         policyConditionDefObj.setDefid(Id);
-        policyConditionDefObj.setDescription("policy conditio");
+        policyConditionDefObj.setDescription("policy condition");
         policyConditionDefObj.setId(Id);
         policyConditionDefObj.setName(name);
         policyConditionDefObj.setOrder(1);
@@ -566,7 +566,7 @@ public class TestRangerServiceDefService {
         policyConditionDefObj.setAddedByUserId(Id);
         policyConditionDefObj.setCreateTime(new Date());
         policyConditionDefObj.setDefid(Id);
-        policyConditionDefObj.setDescription("policy conditio");
+        policyConditionDefObj.setDescription("policy condition");
         policyConditionDefObj.setId(Id);
         policyConditionDefObj.setName(name);
         policyConditionDefObj.setOrder(1);

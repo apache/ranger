@@ -140,8 +140,7 @@ public class TestRangerServiceServiceBase {
         searchFilter.setParam(SearchFilter.POLICY_NAME, "policyName");
         searchFilter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
 
-        RangerServiceList dbRangerServiceList = rangerServiceService
-                .searchRangerServices(searchFilter);
+        RangerServiceList dbRangerServiceList = rangerServiceService.searchRangerServices(searchFilter);
         Assert.assertNotNull(dbRangerServiceList);
     }
 

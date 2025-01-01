@@ -102,7 +102,7 @@ public class TestRangerEnumUtil {
     }
 
     @Test
-    public void testgetValueIsNull() {
+    public void testGetValueIsNull() {
         String enumName    = "CommonEnums.BooleanValue";
         String elementName = "BOOL_NONE";
         int    value       = xaEnumUtil.getValue(enumName, elementName);
@@ -110,7 +110,7 @@ public class TestRangerEnumUtil {
     }
 
     @Test
-    public void testgetValue() {
+    public void testGetValue() {
         testGetEnum();
         String enumName    = "CommonEnums.ActivationStatus";
         String elementName = "ACT_STATUS_DISABLED";
