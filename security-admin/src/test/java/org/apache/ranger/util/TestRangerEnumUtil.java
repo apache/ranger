@@ -16,9 +16,6 @@
  */
 package org.apache.ranger.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ranger.common.view.VEnum;
 import org.apache.ranger.common.view.VEnumElement;
 import org.junit.Assert;
@@ -27,99 +24,97 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TestRangerEnumUtil {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    @Autowired
+    RangerEnumUtil xaEnumUtil = new RangerEnumUtil();
 
-	@Autowired
-	RangerEnumUtil xaEnumUtil = new RangerEnumUtil();
+    @Test
+    public void testGetEnums() {
+        VEnumElement vEnumElement = new VEnumElement();
+        vEnumElement.setEnumName("test1");
+        vEnumElement.setElementName("test2");
+        vEnumElement.setElementLabel("test3");
+        vEnumElement.setElementValue(0);
+        vEnumElement.setRbKey("11");
+        List<VEnumElement> listVEnumElement = new ArrayList<>();
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+        VEnum vEnum = new VEnum();
+        vEnum.setEnumName("test");
+        vEnum.setElementList(listVEnumElement);
+        xaEnumUtil.enumList.add(vEnum);
+        List<VEnum> dbvEnum = xaEnumUtil.getEnums();
+        Assert.assertNotNull(dbvEnum);
+    }
 
-	@Test
-	public void testGetEnums() {
+    @Test
+    public void testGetEnumEmpty() {
+        String enumName = "";
+        xaEnumUtil.getEnum(enumName);
+        Assert.assertNotNull(xaEnumUtil.enumList.size() > 0);
+    }
 
-		VEnumElement VEnumElement = new VEnumElement();
-		VEnumElement.setEnumName("test1");
-		VEnumElement.setElementName("test2");
-		VEnumElement.setElementLabel("test3");
-		VEnumElement.setElementValue(0);
-		VEnumElement.setRbKey("11");
-		List<VEnumElement> listVEnumElement = new ArrayList<VEnumElement>();
+    @Test
+    public void testGetEnum() {
+        String enumName = "enumtest";
 
-		VEnum vEnum = new VEnum();
-		vEnum.setEnumName("test");
-		vEnum.setElementList(listVEnumElement);
-		             xaEnumUtil.enumList.add(vEnum);
-		 List<VEnum>  dbvEnum= xaEnumUtil.getEnums();
-	     Assert.assertNotNull(dbvEnum);
-	}
-	
-	@Test
-	public void testGetEnumEmpty() {
-		
-		String enumName = "";
-	        xaEnumUtil.getEnum(enumName);
-	    Assert.assertNotNull(xaEnumUtil.enumList.size() > 0);
-	}
+        VEnumElement vEnumElement1 = new VEnumElement();
+        vEnumElement1.setEnumName(enumName);
+        vEnumElement1.setElementName("test12");
+        vEnumElement1.setElementLabel("test13");
+        vEnumElement1.setElementValue(1);
+        vEnumElement1.setRbKey("11");
+        List<VEnumElement> vEnumElement = new ArrayList<>();
+        vEnumElement.add(vEnumElement1);
 
-	@Test
-	public void testGetEnum() {
+        VEnum vEnum = new VEnum();
+        vEnum.setEnumName(enumName);
+        vEnum.setElementList(vEnumElement);
 
-		String enumName = "enumtest";
+        xaEnumUtil.enumMap.put(enumName, vEnum);
 
-		VEnumElement vEnumElement1 = new VEnumElement();
-		vEnumElement1.setEnumName(enumName);
-		vEnumElement1.setElementName("test12");
-		vEnumElement1.setElementLabel("test13");
-		vEnumElement1.setElementValue(1);
-		vEnumElement1.setRbKey("11");
-		List<VEnumElement> VEnumElement = new ArrayList<VEnumElement>();
-		                   VEnumElement.add(vEnumElement1);
+        VEnum dbvEnum = xaEnumUtil.getEnum(enumName);
 
-		VEnum vEnum = new VEnum();
-		vEnum.setEnumName(enumName);
-		vEnum.setElementList(VEnumElement);
+        Assert.assertNotNull(dbvEnum);
+        Assert.assertEquals(enumName, dbvEnum.getEnumName());
+    }
 
-		xaEnumUtil.enumMap.put(enumName, vEnum);
+    @Test
+    public void testGetLabelIsNUll() {
+        String  enumName   = "CommonEnums.ActiveStatus";
+        int     enumValue  = 1;
+        String  value      = xaEnumUtil.getLabel(enumName, enumValue);
+        boolean checkValue = value.isEmpty();
+        Assert.assertFalse(checkValue);
+    }
 
-		VEnum dbvEnum = xaEnumUtil.getEnum(enumName);
+    @Test
+    public void testGetLabel() {
+        testGetEnum();
+        String enumName  = "CommonEnums.ActiveStatus";
+        int    enumValue = 1;
+        String value     = xaEnumUtil.getLabel(enumName, enumValue);
+        Assert.assertNotNull(value);
+    }
 
-		Assert.assertNotNull(dbvEnum);
-		Assert.assertEquals(enumName, dbvEnum.getEnumName());
-	}
+    @Test
+    public void testGetValueIsNull() {
+        String enumName    = "CommonEnums.BooleanValue";
+        String elementName = "BOOL_NONE";
+        int    value       = xaEnumUtil.getValue(enumName, elementName);
+        Assert.assertEquals(0, value);
+    }
 
-	@Test
-	public void testGetLabelIsNUll() {
-		String enumName = "CommonEnums.ActiveStatus";
-		int enumValue = 1;		
-		String value = xaEnumUtil.getLabel(enumName, enumValue);
-		boolean checkValue=value.isEmpty();
-		Assert.assertFalse(checkValue);
-	}
-
-	@Test
-	public void testGetLabel() {
-		testGetEnum();
-		String enumName = "CommonEnums.ActiveStatus";
-		int enumValue = 1;		
-		String value = xaEnumUtil.getLabel(enumName, enumValue);
-		Assert.assertNotNull(value);
-	}
-	
-	@Test
-	public void testgetValueIsNull() {
-		String enumName = "CommonEnums.BooleanValue";
-		String elementName = "BOOL_NONE";	
-		int value = xaEnumUtil.getValue(enumName, elementName);
-		Assert.assertEquals(0, value);
-	}
-	
-	@Test
-	public void testgetValue() {
-		testGetEnum();
-		String enumName = "CommonEnums.ActivationStatus";
-		String elementName = "ACT_STATUS_DISABLED";	
-		int value = xaEnumUtil.getValue(enumName, elementName);
-		Assert.assertEquals(0, value);
-	}
+    @Test
+    public void testGetValue() {
+        testGetEnum();
+        String enumName    = "CommonEnums.ActivationStatus";
+        String elementName = "ACT_STATUS_DISABLED";
+        int    value       = xaEnumUtil.getValue(enumName, elementName);
+        Assert.assertEquals(0, value);
+    }
 }
