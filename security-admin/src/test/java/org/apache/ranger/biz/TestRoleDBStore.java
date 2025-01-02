@@ -17,13 +17,6 @@
 
 package org.apache.ranger.biz;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -63,6 +56,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import javax.ws.rs.WebApplicationException;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRoleDBStore {
@@ -72,42 +72,30 @@ public class TestRoleDBStore {
     private static final String keyAdminLoginID = "keyadmin";
     private static final String userLoginID     = "testuser";
     private static final String roleName        = "test-role";
-
-    @InjectMocks
-    RoleDBStore roleDBStore = new RoleDBStore();
-
-    @Mock
-    GdsDBStore gdsStore;
-
-    @Mock
-    RangerBizUtil bizUtil;
-
-    @Mock
-    RangerDaoManager daoMgr;
-
-    @Mock
-    RESTErrorUtil restErrorUtil;
-
-    @Mock
-    RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
-
-    @Mock
-    ServiceDBStore svcStore;
-
-    @Mock
-    RangerAdminConfig config;
-
-    @Mock
-    RangerRoleService roleService;
-
-    @Mock
-    XUserService xUserService;
-
-    @Mock
-    RoleRefUpdater roleRefUpdater;
-
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+    @InjectMocks
+    RoleDBStore roleDBStore = new RoleDBStore();
+    @Mock
+    GdsDBStore gdsStore;
+    @Mock
+    RangerBizUtil bizUtil;
+    @Mock
+    RangerDaoManager daoMgr;
+    @Mock
+    RESTErrorUtil restErrorUtil;
+    @Mock
+    RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+    @Mock
+    ServiceDBStore svcStore;
+    @Mock
+    RangerAdminConfig config;
+    @Mock
+    RangerRoleService roleService;
+    @Mock
+    XUserService xUserService;
+    @Mock
+    RoleRefUpdater roleRefUpdater;
 
     @Test
     public void testRoleExistsByRoleName() throws Exception {
@@ -145,7 +133,6 @@ public class TestRoleDBStore {
         Assert.assertEquals(rangerRole.getId(), rangerRoleInDB.getId());
     }
 
-
     @Test
     public void testGetRolesBySearchFilter() throws Exception {
         RangerRole     rangerRole     = getRangerRole();
@@ -154,7 +141,7 @@ public class TestRoleDBStore {
         List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
         SearchFilter   searchFilter   = new SearchFilter();
 
-        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields , rangerRoleList)).thenReturn(xxRoles);
+        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields, rangerRoleList)).thenReturn(xxRoles);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
 
         RangerRoleList rangerRoleListInDB = roleDBStore.getRoles(searchFilter, rangerRoleList);
@@ -171,7 +158,7 @@ public class TestRoleDBStore {
         List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
         SearchFilter   searchFilter   = new SearchFilter();
 
-        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields , rangerRoleList)).thenReturn(xxRoles);
+        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields, rangerRoleList)).thenReturn(xxRoles);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
 
         RangerContextHolder.setSecurityContext(null);
@@ -188,8 +175,13 @@ public class TestRoleDBStore {
         RangerRoleList rangerRoleList = new RangerRoleList(Collections.singletonList(rangerRole));
         XXRole         xxRole         = getTestRole();
         List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
-        XXPortalUser   userKeyAdmin   = new XXPortalUser() {{ setId(getUserProfile().getId()); setLoginId(keyAdminLoginID); }};
-        VXUser         vxUserKeyAdmin = new VXUser() {{ setId(userKeyAdmin.getId()); }};
+        XXPortalUser   userKeyAdmin   = new XXPortalUser() {{
+                setId(getUserProfile().getId());
+                setLoginId(keyAdminLoginID);
+            }};
+        VXUser         vxUserKeyAdmin = new VXUser() {{
+                setId(userKeyAdmin.getId());
+            }};
         SearchFilter   searchFilter   = new SearchFilter();
         XXRoleDao      xxRoleDao      = Mockito.mock(XXRoleDao.class);
 
@@ -198,7 +190,9 @@ public class TestRoleDBStore {
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByUserId(userKeyAdmin.getId())).thenReturn(xxRoles);
 
-        RangerSecurityContext context = new RangerSecurityContext() {{ setUserSession(new UserSessionBase());}};
+        RangerSecurityContext context = new RangerSecurityContext() {{
+                setUserSession(new UserSessionBase());
+            }};
 
         RangerContextHolder.setSecurityContext(context);
 
@@ -307,7 +301,7 @@ public class TestRoleDBStore {
         Mockito.when(xxRoleDao.getAll()).thenReturn(xxRoles);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
 
-        List<RangerRole>  rangerRolesInDB = roleDBStore.getRoles(searchFilter);
+        List<RangerRole> rangerRolesInDB = roleDBStore.getRoles(searchFilter);
 
         Assert.assertNotNull(rangerRolesInDB);
     }
@@ -320,7 +314,7 @@ public class TestRoleDBStore {
         Mockito.when(daoMgr.getXXGlobalState()).thenReturn(xxGlobalStateDao);
         Mockito.when(xxGlobalStateDao.getAppDataVersion("RangerRole")).thenReturn(1L);
 
-        Long  roleVersion = roleDBStore.getRoleVersion(xxService.getName());
+        Long roleVersion = roleDBStore.getRoleVersion(xxService.getName());
 
         Assert.assertNotNull(roleVersion);
     }
@@ -379,7 +373,7 @@ public class TestRoleDBStore {
         Mockito.when(roleRefUpdater.cleanupRefTables(Mockito.any())).thenReturn(true);
         Mockito.doNothing().when(svcStore).updateServiceAuditConfig(Mockito.anyString(), Mockito.any());
         Mockito.when(roleService.delete(Mockito.any())).thenReturn(true);
-        Mockito.doNothing().when(roleService).createTransactionLog( Mockito.any(),  Mockito.any(), Mockito.anyInt());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
         roleDBStore.deleteRole(roleName);
     }
@@ -410,7 +404,7 @@ public class TestRoleDBStore {
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
         Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
         Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean());
-        Mockito.doNothing().when(roleService).createTransactionLog( Mockito.any(), Mockito.any(), Mockito.anyInt());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
         roleDBStore.createRole(rangerRole, true);
     }
@@ -440,7 +434,7 @@ public class TestRoleDBStore {
         Mockito.when(roleService.update(rangerRole)).thenReturn(rangerRole);
         Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean());
         Mockito.doNothing().when(roleService).updatePolicyVersions(rangerRole.getId());
-        Mockito.doNothing().when(roleService).createTransactionLog( Mockito.any(),  Mockito.any(), Mockito.anyInt());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
         roleDBStore.updateRole(rangerRole, true);
     }
@@ -465,7 +459,7 @@ public class TestRoleDBStore {
         Mockito.when(roleRefUpdater.cleanupRefTables(Mockito.any())).thenReturn(true);
         Mockito.doNothing().when(svcStore).updateServiceAuditConfig(Mockito.anyString(), Mockito.any());
         Mockito.when(roleService.delete(Mockito.any())).thenReturn(true);
-        Mockito.doNothing().when(roleService).createTransactionLog( Mockito.any(),  Mockito.any(), Mockito.anyInt());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
         roleDBStore.deleteRole(rangerRole.getId());
     }
@@ -508,53 +502,53 @@ public class TestRoleDBStore {
 
     private XXRole getTestRole() {
         return new XXRole() {{
-            setId(TestRoleDBStore.roleId);
-            setCreateTime(new Date());
-            setName(TestRoleDBStore.roleName);
-            setDescription(TestRoleDBStore.roleName);
-        }};
+                setId(TestRoleDBStore.roleId);
+                setCreateTime(new Date());
+                setName(TestRoleDBStore.roleName);
+                setDescription(TestRoleDBStore.roleName);
+            }};
     }
 
     private VXPortalUser getUserProfile() {
         return new VXPortalUser() {{
-            setEmailAddress("test@test.com");
-            setFirstName("user12");
-            setLastName("test12");
-            setLoginId(TestRoleDBStore.userLoginID);
-            setPassword("Usertest123");
-            setUserSource(1);
-            setPublicScreenName("testuser");
-            setId(TestRoleDBStore.userId);
-        }};
+                setEmailAddress("test@test.com");
+                setFirstName("user12");
+                setLastName("test12");
+                setLoginId(TestRoleDBStore.userLoginID);
+                setPassword("Usertest123");
+                setUserSource(1);
+                setPublicScreenName("testuser");
+                setId(TestRoleDBStore.userId);
+            }};
     }
 
-    private RangerRole getRangerRole(){
-        String           name       = "test-role";
-        String           name2      = "admin";
-        RoleMember       rm1        = new RoleMember(name, true);
-        RoleMember       rm2        = new RoleMember(name2, true);
-        List<RoleMember> usersList  = Arrays.asList(rm1,rm2);
+    private RangerRole getRangerRole() {
+        String           name      = "test-role";
+        String           name2     = "admin";
+        RoleMember       rm1       = new RoleMember(name, true);
+        RoleMember       rm2       = new RoleMember(name2, true);
+        List<RoleMember> usersList = Arrays.asList(rm1, rm2);
 
         return new RangerRole(name, name, null, usersList, null) {{
-            setCreatedByUser(name);
-            setId(TestRoleDBStore.roleId);
-        }};
+                setCreatedByUser(name);
+                setId(TestRoleDBStore.roleId);
+            }};
     }
 
     private XXService getXXService() {
         return new XXService() {{
-            setAddedByUserId(TestRoleDBStore.id);
-            setCreateTime(new Date());
-            setDescription("Hdfs service");
-            setGuid("serviceguid");
-            setId(TestRoleDBStore.id);
-            setIsEnabled(true);
-            setName("Hdfs");
-            setPolicyUpdateTime(new Date());
-            setPolicyVersion(1L);
-            setType(1L);
-            setUpdatedByUserId(TestRoleDBStore.id);
-            setUpdateTime(new Date());
-        }};
+                setAddedByUserId(TestRoleDBStore.id);
+                setCreateTime(new Date());
+                setDescription("Hdfs service");
+                setGuid("serviceguid");
+                setId(TestRoleDBStore.id);
+                setIsEnabled(true);
+                setName("Hdfs");
+                setPolicyUpdateTime(new Date());
+                setPolicyVersion(1L);
+                setType(1L);
+                setUpdatedByUserId(TestRoleDBStore.id);
+                setUpdateTime(new Date());
+            }};
     }
 }

@@ -33,41 +33,38 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerTagDefServiceBase {
-	Long id = 1L;
-	String guid = "989898_01_1";
-	String name = "test";
-	Long version = 5L;
-	String type = "typo";
-	Long totalCount = 50L;
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    Long   id         = 1L;
+    String guid       = "989898_01_1";
+    String name       = "test";
+    Long   version    = 5L;
+    String type       = "typo";
+    Long   totalCount = 50L;
+    @InjectMocks
+    RangerTagDefService rangerTagDefService = new RangerTagDefService();
+    @Mock
+    RangerDaoManager daoMgr;
 
-	@InjectMocks
-	RangerTagDefService rangerTagDefService = new RangerTagDefService();
-	
-	@Mock
-	RangerDaoManager daoMgr;
-	
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-	
-	@Test
-	public void test1mapViewToEntityBean() {
-		RangerTagDef rangerTagDef = new RangerTagDef();
-		rangerTagDef.setId(id);
-		rangerTagDef.setGuid(guid);
-		
-		XXTagDef xxTagDef = new XXTagDef();
-		xxTagDef.setId(id);
-		xxTagDef.setGuid(guid);
-		xxTagDef.setName(name);
-		xxTagDef.setVersion(version);
-		int operationContext = 1;
+    @Test
+    public void test1mapViewToEntityBean() {
+        RangerTagDef rangerTagDef = new RangerTagDef();
+        rangerTagDef.setId(id);
+        rangerTagDef.setGuid(guid);
 
-		XXTagDef result = rangerTagDefService.mapViewToEntityBean(rangerTagDef,xxTagDef,operationContext);
-		Assert.assertNotNull(result);
-		Assert.assertEquals(result, xxTagDef);
-		Assert.assertEquals(result.getGuid(), xxTagDef.getGuid());
-		Assert.assertEquals(result.getName(), xxTagDef.getName());
-		Assert.assertEquals(result.getId(), xxTagDef.getId());
-		Assert.assertEquals(result.getVersion(), xxTagDef.getVersion());
-	}
-} 
+        XXTagDef xxTagDef = new XXTagDef();
+        xxTagDef.setId(id);
+        xxTagDef.setGuid(guid);
+        xxTagDef.setName(name);
+        xxTagDef.setVersion(version);
+        int operationContext = 1;
+
+        XXTagDef result = rangerTagDefService.mapViewToEntityBean(rangerTagDef, xxTagDef, operationContext);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result, xxTagDef);
+        Assert.assertEquals(result.getGuid(), xxTagDef.getGuid());
+        Assert.assertEquals(result.getName(), xxTagDef.getName());
+        Assert.assertEquals(result.getId(), xxTagDef.getId());
+        Assert.assertEquals(result.getVersion(), xxTagDef.getVersion());
+    }
+}
