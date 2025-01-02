@@ -19,109 +19,115 @@
 
 package org.apache.ranger.audit.destination;
 
-import java.util.Collection;
-import java.util.Properties;
-
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Properties;
+
 public class Log4JAuditDestination extends AuditDestination {
-	private static final Logger logger = LoggerFactory
-			.getLogger(Log4JAuditDestination.class);
+    private static final Logger logger = LoggerFactory.getLogger(Log4JAuditDestination.class);
+    private static       Logger auditLogger;
 
-	private static Logger auditLogger = null;
+    public static final String PROP_LOG4J_LOGGER     = "logger";
+    public static final String DEFAULT_LOGGER_PREFIX = "ranger.audit";
 
-	public static final String PROP_LOG4J_LOGGER = "logger";
-	public static final String DEFAULT_LOGGER_PREFIX = "ranger.audit";
-	private String loggerName = null;
+    public Log4JAuditDestination() {
+        logger.info("Log4JAuditDestination() called.");
+    }
 
-	public Log4JAuditDestination() {
-		logger.info("Log4JAuditDestination() called.");
+    @Override
+    public void init(Properties prop, String propPrefix) {
+        super.init(prop, propPrefix);
 
-	}
+        String loggerName = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_LOG4J_LOGGER);
 
-	@Override
-	public void init(Properties prop, String propPrefix) {
-		super.init(prop, propPrefix);
-		loggerName = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ PROP_LOG4J_LOGGER);
-		if (loggerName == null || loggerName.isEmpty()) {
-			loggerName = DEFAULT_LOGGER_PREFIX + "." + getName();
-			logger.info("Logger property " + propPrefix + "."
-					+ PROP_LOG4J_LOGGER + " was not set. Constructing default="
-					+ loggerName);
-		}
-		logger.info("Logger name for " + getName() + " is " + loggerName);
-		auditLogger = LoggerFactory.getLogger(loggerName);
-		logger.info("Done initializing logger for audit. name=" + getName()
-				+ ", loggerName=" + loggerName);
-	}
+        if (loggerName == null || loggerName.isEmpty()) {
+            loggerName = DEFAULT_LOGGER_PREFIX + "." + getName();
 
-	
-	@Override
-	public void stop() {
-		super.stop();
-		logStatus();
-	}
+            logger.info("Logger property {}.{} was not set. Constructing default={}", propPrefix, PROP_LOG4J_LOGGER, loggerName);
+        }
 
-	@Override
-	public boolean log(AuditEventBase event) {
-		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired();
-			addTotalCount(1);
-			return true;
-		}
+        logger.info("Logger name for {} is {}", getName(), loggerName);
 
-		if (event != null) {
-			String eventStr = MiscUtil.stringify(event);
-			logJSON(eventStr);
-		}
-		return true;
-	}
+        auditLogger = LoggerFactory.getLogger(loggerName);
 
-	@Override
-	public boolean log(Collection<AuditEventBase> events) {
-		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired();
-			addTotalCount(events.size());
-			return true;
-		}
+        logger.info("Done initializing logger for audit. name={}, loggerName={}", getName(), loggerName);
+    }
 
-		for (AuditEventBase event : events) {
-			log(event);
-		}
-		return true;
-	}
+    @Override
+    public void stop() {
+        super.stop();
 
-	@Override
-	public boolean logJSON(String event) {
-		logStatusIfRequired();
-		addTotalCount(1);
-		if (!auditLogger.isInfoEnabled()) {
-			return true;
-		}
+        logStatus();
+    }
 
-		if (event != null) {
-			auditLogger.info(event);
-			addSuccessCount(1);
-		}
-		return true;
-	}
+    @Override
+    public boolean log(AuditEventBase event) {
+        if (!auditLogger.isInfoEnabled()) {
+            logStatusIfRequired();
+            addTotalCount(1);
 
-	@Override
-	public boolean logJSON(Collection<String> events) {
-		if (!auditLogger.isInfoEnabled()) {
-			logStatusIfRequired();
-			addTotalCount(events.size());
-			return true;
-		}
+            return true;
+        }
 
-		for (String event : events) {
-			logJSON(event);
-		}
-		return false;
-	}
+        if (event != null) {
+            String eventStr = MiscUtil.stringify(event);
 
+            logJSON(eventStr);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean logJSON(String event) {
+        logStatusIfRequired();
+        addTotalCount(1);
+
+        if (!auditLogger.isInfoEnabled()) {
+            return true;
+        }
+
+        if (event != null) {
+            auditLogger.info(event);
+            addSuccessCount(1);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean logJSON(Collection<String> events) {
+        if (!auditLogger.isInfoEnabled()) {
+            logStatusIfRequired();
+            addTotalCount(events.size());
+
+            return true;
+        }
+
+        for (String event : events) {
+            logJSON(event);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean log(Collection<AuditEventBase> events) {
+        if (!auditLogger.isInfoEnabled()) {
+            logStatusIfRequired();
+            addTotalCount(events.size());
+
+            return true;
+        }
+
+        for (AuditEventBase event : events) {
+            log(event);
+        }
+
+        return true;
+    }
 }

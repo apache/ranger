@@ -565,6 +565,7 @@ CREATE TABLE x_trx_log_v2 (
         parent_object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         parent_object_name VARCHAR(1024) DEFAULT NULL NULL ,
+        object_name VARCHAR(1024) DEFAULT NULL NULL ,
         change_info CLOB DEFAULT NULL NULL ,
         trx_id VARCHAR(1024) DEFAULT NULL NULL ,
         action VARCHAR(255) DEFAULT NULL NULL ,
@@ -675,6 +676,7 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20)  DEFAULT NULL NULL,
 name varchar(255) NOT NULL,
 jsonData CLOB DEFAULT NULL NULL,
+gz_jsondata BLOB DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_security_zone_UK_name UNIQUE(name),
@@ -879,6 +881,7 @@ item_id NUMBER(20) NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
+category NUMBER(6) DEFAULT NULL NULL,
 sort_order NUMBER(10) DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
@@ -1902,6 +1905,11 @@ last_known_version NUMBER(20) NOT NULL,
 PRIMARY KEY (id),
 CONSTRAINT x_rms_map_provider_UK_name UNIQUE(name)
 );
+
+CREATE VIEW vx_principal as
+        (SELECT u.user_name  AS principal_name, 0 AS principal_type, u.status AS status, u.is_visible AS is_visible, u.other_attributes AS other_attributes, u.create_time AS create_time, u.update_time AS update_time, u.added_by_id AS added_by_id, u.upd_by_id AS upd_by_id FROM x_user u)  UNION ALL
+        (SELECT g.group_name AS principal_name, 1 AS principal_type, g.status AS status, g.is_visible AS is_visible, g.other_attributes AS other_attributes, g.create_time AS create_time, g.update_time AS update_time, g.added_by_id AS added_by_id, g.upd_by_id AS upd_by_id FROM x_group g) UNION ALL
+        (SELECT r.name       AS principal_name, 2 AS principal_type, 1        AS status, 1            AS is_visible, null               AS other_attributes, r.create_time AS create_time, r.update_time AS update_time, r.added_by_id AS added_by_id, r.upd_by_id AS upd_by_id FROM x_role r);
 
 commit;
 

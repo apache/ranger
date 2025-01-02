@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -36,7 +37,6 @@ import java.util.List;
 import static org.mockito.Mockito.when;
 
 public class TestNiFiClient {
-
     private static final String RESOURCES_RESPONSE = "{\n" +
             "  \"revision\": {\n" +
             "    \"clientId\": \"0daac173-025c-4aa7-b644-97f7b10435d2\"\n" +
@@ -131,7 +131,7 @@ public class TestNiFiClient {
     }
 
     @Test
-    public void testGetResourcesErrorResponse() throws Exception {
+    public void testGetResourcesErrorResponse() {
         final String errorMsg = "unknown error";
         niFiClient = new MockNiFiClient(errorMsg, Response.Status.BAD_REQUEST.getStatusCode());
 
@@ -163,18 +163,16 @@ public class TestNiFiClient {
         Assert.assertEquals(NiFiClient.FAILURE_MSG, ret.get("message"));
     }
 
-
     /**
      * Extend NiFiClient to return mock responses.
      */
     private static final class MockNiFiClient extends NiFiClient {
-
-        private int statusCode;
-        private String responseEntity;
+        private final int    statusCode;
+        private final String responseEntity;
 
         public MockNiFiClient(String responseEntity, int statusCode) {
             super("http://localhost:8080/nifi-api/resources", null);
-            this.statusCode = statusCode;
+            this.statusCode     = statusCode;
             this.responseEntity = responseEntity;
         }
 
@@ -187,9 +185,7 @@ public class TestNiFiClient {
         protected ClientResponse getResponse(WebResource resource, String accept) {
             ClientResponse response = Mockito.mock(ClientResponse.class);
             when(response.getStatus()).thenReturn(statusCode);
-            when(response.getEntityInputStream()).thenReturn(new ByteArrayInputStream(
-                    responseEntity.getBytes(StandardCharsets.UTF_8)
-            ));
+            when(response.getEntityInputStream()).thenReturn(new ByteArrayInputStream(responseEntity.getBytes(StandardCharsets.UTF_8)));
             return response;
         }
     }

@@ -19,6 +19,14 @@
 
 package org.apache.ranger.metrics.sink;
 
+import org.apache.commons.configuration2.SubsetConfiguration;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.metrics2.AbstractMetric;
+import org.apache.hadoop.metrics2.MetricType;
+import org.apache.hadoop.metrics2.MetricsRecord;
+import org.apache.hadoop.metrics2.MetricsSink;
+import org.apache.hadoop.metrics2.MetricsTag;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -28,14 +36,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.apache.commons.configuration2.SubsetConfiguration;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.metrics2.AbstractMetric;
-import org.apache.hadoop.metrics2.MetricType;
-import org.apache.hadoop.metrics2.MetricsRecord;
-import org.apache.hadoop.metrics2.MetricsSink;
-import org.apache.hadoop.metrics2.MetricsTag;
-
 public class RangerMetricsPrometheusSink implements MetricsSink {
     private static final Pattern SPLIT_PATTERN = Pattern.compile("(?<!(^|[A-Z_]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
     private static final Pattern DELIMITERS    = Pattern.compile("[^a-zA-Z0-9]+");
@@ -44,7 +44,7 @@ public class RangerMetricsPrometheusSink implements MetricsSink {
      * Cached output lines for each metrics.
      */
     private final Map<String, String> metricLines = new ConcurrentHashMap<>();
-    private final Set<String> contexts;
+    private final Set<String>         contexts;
 
     public RangerMetricsPrometheusSink(Set<String> metricsContexts) {
         if (Objects.isNull(metricsContexts)) {
@@ -64,7 +64,6 @@ public class RangerMetricsPrometheusSink implements MetricsSink {
         if (contexts.contains(metricsRecord.context())) {
             for (AbstractMetric metrics : metricsRecord.metrics()) {
                 if (metrics.type() == MetricType.COUNTER || metrics.type() == MetricType.GAUGE) {
-
                     String key = prometheusName(metricsRecord.name(), metrics.name());
 
                     StringBuilder builder = new StringBuilder();
@@ -87,7 +86,7 @@ public class RangerMetricsPrometheusSink implements MetricsSink {
                     metricLines.put(key, builder.toString());
                 }
             }
-        } 
+        }
     }
 
     /**

@@ -27,6 +27,10 @@
     <packaging>jar</packaging>
     <name>Credential Builder</name>
     <description>Credential Builder for non-hadoop java codebase</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.woodstox</groupId>
@@ -47,6 +51,11 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>${commons.collections.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons.logging.version}</version>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>

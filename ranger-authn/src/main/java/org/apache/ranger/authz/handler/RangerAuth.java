@@ -21,21 +21,11 @@ package org.apache.ranger.authz.handler;
 import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 
 public class RangerAuth {
-    public static enum AUTH_TYPE {
-        JWT_JWKS("JWT-JWKS");
-
-        private final String authType;
-
-        private AUTH_TYPE(String authType) {
-            this.authType = authType;
-        }
-    }
-
     private String    userName;
-    private AUTH_TYPE type;
+    private AuthType  type;
     private boolean   isAuthenticated;
 
-    public RangerAuth(final AuthenticationToken authenticationToken, AUTH_TYPE type) {
+    public RangerAuth(final AuthenticationToken authenticationToken, AuthType type) {
         this.userName        = authenticationToken.getName();
         this.isAuthenticated = true;
         this.type            = type;
@@ -49,11 +39,11 @@ public class RangerAuth {
         this.userName = userName;
     }
 
-    public AUTH_TYPE getType() {
+    public AuthType getType() {
         return type;
     }
 
-    public void setType(AUTH_TYPE type) {
+    public void setType(AuthType type) {
         this.type = type;
     }
 
@@ -63,5 +53,15 @@ public class RangerAuth {
 
     public void setAuthenticated(boolean isAuthenticated) {
         this.isAuthenticated = isAuthenticated;
+    }
+
+    public enum AuthType {
+        JWT_JWKS("JWT-JWKS");
+
+        private final String authType;
+
+        AuthType(String authType) {
+            this.authType = authType;
+        }
     }
 }

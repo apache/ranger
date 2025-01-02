@@ -20,14 +20,17 @@ package org.apache.hadoop.crypto.key;
 import java.security.Key;
 
 public interface RangerKMSMKI {
+    boolean generateMasterKey(String password) throws Throwable;
 
-	boolean generateMasterKey(String password) throws Throwable;
-	
-	String getMasterKey(String password) throws Throwable;
+    String getMasterKey(String password) throws Throwable;
 
-	default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {return null;}
+    default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
+        return null;
+    }
 
-	default byte[] encryptZoneKey(Key zoneKey) throws Exception {return null;}
+    default byte[] encryptZoneKey(Key zoneKey) throws Exception {
+        return null;
+    }
 
-	default void onInitialization() throws Exception {}
+    default void onInitialization() throws Exception                     {}
 }

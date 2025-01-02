@@ -18,17 +18,16 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 
-public class HbaseAuthUtilsImplTest {
+import static org.junit.Assert.assertTrue;
 
-	@Test
-	public void testIsReadAccess() {
-		HbaseAuthUtilsImpl authUtils = new HbaseAuthUtilsImpl();
-		assertTrue(authUtils.isReadAccess("read"));
-		assertTrue(authUtils.isWriteAccess("write"));
-		assertTrue(authUtils.isExecuteAccess("execute"));
-	}
+public class HbaseAuthUtilsImplTest {
+    @Test
+    public void testIsReadAccess() {
+        HbaseAuthUtilsImpl authUtils = new HbaseAuthUtilsImpl();
+        assertTrue(authUtils.isReadAccess("read"));
+        assertTrue(authUtils.isWriteAccess("write"));
+        assertTrue(authUtils.isExecuteAccess("execute"));
+    }
 }

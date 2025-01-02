@@ -22,20 +22,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class RangerAdminClientImpl
-        extends AbstractRangerAdminClient
-{
+        extends AbstractRangerAdminClient {
     private static final String cacheFilename = "trino-policies.json";
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis)
-            throws Exception
-    {
+            throws Exception {
         String basedir = System.getProperty("basedir");
 
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
-        Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
+        Path   cachePath  = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
         byte[] cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);

@@ -17,11 +17,6 @@
 
 package org.apache.ranger.services.sqoop;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -30,60 +25,61 @@ import org.apache.ranger.services.sqoop.client.SqoopResourceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RangerServiceSqoop extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSqoop.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSqoop.class);
+    public RangerServiceSqoop() {
+        super();
+    }
 
-	public RangerServiceSqoop() {
-		super();
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
-	@Override
-	public Map<String, Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String serviceName = getServiceName();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceSqoop.validateConfig Service: (" + serviceName + " )");
-		}
-		if (configs != null) {
-			try {
-				ret = SqoopResourceMgr.validateConfig(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceSqoop.validateConfig Error:" + e);
-				throw e;
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceSqoop.validateConfig Response : (" + ret + " )");
-		}
-		return ret;
-	}
+        LOG.debug("==> RangerServiceSqoop.validateConfig Service: ({} )", serviceName);
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        if (configs != null) {
+            try {
+                ret = SqoopResourceMgr.validateConfig(serviceName, configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceSqoop.validateConfig Error: {}", String.valueOf(e));
+                throw e;
+            }
+        }
+        LOG.debug("<== RangerServiceSqoop.validateConfig Response : ({})", ret);
+        return ret;
+    }
 
-		List<String> ret = new ArrayList<String>();
-		String serviceName = getServiceName();
-		Map<String, String> configs = getConfigs();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceSqoop.lookupResource Context: (" + context + ")");
-		}
-		if (context != null) {
-			try {
-				ret = SqoopResourceMgr.getSqoopResources(serviceName, configs, context);
-			} catch (Exception e) {
-				LOG.error("<==RangerServiceSqoop.lookupResource Error : " + e);
-				throw e;
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceSqoop.lookupResource Response: (" + ret + ")");
-		}
-		return ret;
-	}
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
+        String              serviceName = getServiceName();
+        Map<String, String> configs     = getConfigs();
+
+        LOG.debug("==> RangerServiceSqoop.lookupResource Context: ({})", context);
+
+        if (context != null) {
+            try {
+                ret = SqoopResourceMgr.getSqoopResources(serviceName, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceSqoop.lookupResource Error: {}", String.valueOf(e));
+                throw e;
+            }
+        }
+
+        LOG.debug("<== RangerServiceSqoop.lookupResource Response: ({})", ret);
+
+        return ret;
+    }
 }

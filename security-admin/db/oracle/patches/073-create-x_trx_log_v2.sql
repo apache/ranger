@@ -28,6 +28,7 @@ CREATE TABLE x_trx_log_v2 (
         parent_object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         parent_object_name VARCHAR(1024) DEFAULT NULL NULL ,
+        object_name varchar(1024) DEFAULT NULL NULL,
         change_info CLOB DEFAULT NULL NULL ,
         trx_id VARCHAR(1024) DEFAULT NULL NULL ,
         action VARCHAR(255) DEFAULT NULL NULL ,

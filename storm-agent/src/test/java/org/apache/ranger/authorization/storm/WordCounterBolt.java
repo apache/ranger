@@ -17,9 +17,6 @@
 
 package org.apache.ranger.authorization.storm;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -28,12 +25,20 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A Storm Bolt which reads in a word and counts it + outputs the word + current count
  */
 public class WordCounterBolt extends BaseRichBolt {
-    private OutputCollector outputCollector;
-    private Map<String, Integer> countMap = new HashMap<>();
+    private final Map<String, Integer> countMap = new HashMap<>();
+    private       OutputCollector      outputCollector;
+
+    @Override
+    public void prepare(Map arg0, TopologyContext arg1, OutputCollector outputCollector) {
+        this.outputCollector = outputCollector;
+    }
 
     @Override
     public void execute(Tuple tuple) {
@@ -49,18 +54,10 @@ public class WordCounterBolt extends BaseRichBolt {
 
         outputCollector.emit(new Values(word, count));
         outputCollector.ack(tuple);
-
-    }
-
-    @Override
-    public void prepare(Map arg0, TopologyContext arg1, OutputCollector outputCollector) {
-        this.outputCollector = outputCollector;
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields("word", "count"));
     }
-
-
 }

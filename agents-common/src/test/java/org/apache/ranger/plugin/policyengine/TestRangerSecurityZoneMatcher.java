@@ -19,16 +19,23 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.utils.TestStringUtil;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TestRangerSecurityZoneMatcher {
     final RangerPluginContext           pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "hive", "cl1", "on-prem", null));
@@ -76,10 +83,10 @@ public class TestRangerSecurityZoneMatcher {
     }
 
     private Map<String, SecurityZoneInfo> createSecurityZones() {
-        HashMap<String, List<String>> db1     = new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); }};
-        HashMap<String, List<String>> db2     = new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db2")); }};
-        HashMap<String, List<String>> db3Test = new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db3")); put("table", Arrays.asList("test_*")); }};
-        HashMap<String, List<String>> db4User = new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db3")); put("table", Arrays.asList("user_*")); }};
+        HashMap<String, List<String>> db1     = TestStringUtil.mapFromStringStringList("database", Collections.singletonList("db1"));
+        HashMap<String, List<String>> db2     = TestStringUtil.mapFromStringStringList("database", Collections.singletonList("db2"));
+        HashMap<String, List<String>> db3Test = TestStringUtil.mapFromStringStringList("database", Collections.singletonList("db3"), "table", Collections.singletonList("test_*"));
+        HashMap<String, List<String>> db4User = TestStringUtil.mapFromStringStringList("database", Collections.singletonList("db3"), "table", Collections.singletonList("user_*"));
 
         SecurityZoneInfo z1 = new SecurityZoneInfo();
         SecurityZoneInfo z2 = new SecurityZoneInfo();
@@ -87,16 +94,16 @@ public class TestRangerSecurityZoneMatcher {
         SecurityZoneInfo z4 = new SecurityZoneInfo();
 
         z1.setZoneName("z1");
-        z1.setResources(Arrays.asList(db1));
+        z1.setResources(Collections.singletonList(db1));
 
         z2.setZoneName("z2");
-        z2.setResources(Arrays.asList(db2));
+        z2.setResources(Collections.singletonList(db2));
 
         z3.setZoneName("z3");
-        z3.setResources(Arrays.asList(db3Test));
+        z3.setResources(Collections.singletonList(db3Test));
 
         z4.setZoneName("z4");
-        z4.setResources(Arrays.asList(db4User));
+        z4.setResources(Collections.singletonList(db4User));
 
         Map<String, SecurityZoneInfo> ret = new HashMap<>();
 
@@ -121,8 +128,8 @@ public class TestRangerSecurityZoneMatcher {
         List<RangerResourceDef> ret = new ArrayList<>();
 
         ret.add(createResourceDef("database", null));
-        ret.add(createResourceDef("table",    "database"));
-        ret.add(createResourceDef("column",   "table"));
+        ret.add(createResourceDef("table", "database"));
+        ret.add(createResourceDef("column", "table"));
 
         return ret;
     }
@@ -137,7 +144,7 @@ public class TestRangerSecurityZoneMatcher {
         return ret;
     }
 
-    private RangerAccessResource createResource(String...args) {
+    private RangerAccessResource createResource(String... args) {
         RangerAccessResourceImpl ret = new RangerAccessResourceImpl();
 
         for (int i = 1; i < args.length; i += 2) {
@@ -147,12 +154,10 @@ public class TestRangerSecurityZoneMatcher {
         return ret;
     }
 
-    private Set<String> createSet(String...args) {
+    private Set<String> createSet(String... args) {
         Set<String> ret = new HashSet<>();
 
-        for (String arg : args) {
-            ret.add(arg);
-        }
+        Collections.addAll(ret, args);
 
         return ret;
     }

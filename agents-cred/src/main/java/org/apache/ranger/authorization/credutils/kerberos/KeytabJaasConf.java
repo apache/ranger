@@ -26,6 +26,7 @@ public class KeytabJaasConf extends AbstractJaasConf {
 
     public KeytabJaasConf(final String userPrincipalName, final String keytabFilePath, final boolean enableDebugLogs) {
         super(userPrincipalName, enableDebugLogs);
+
         this.keytabFilePath = keytabFilePath;
     }
 
@@ -34,5 +35,4 @@ public class KeytabJaasConf extends AbstractJaasConf {
         options.put("keyTab", keytabFilePath);
         options.put("doNotPrompt", Boolean.TRUE.toString());
     }
-
 }

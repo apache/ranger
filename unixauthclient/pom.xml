@@ -27,6 +27,10 @@
     <packaging>jar</packaging>
     <name>Unix Authentication Client</name>
     <description>Unix authentication client</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.gson</groupId>

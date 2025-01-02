@@ -16,17 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.ranger.authorization.presto.authorizer;
 
-package org.apache.ranger.plugin.classloader.test.Impl;
-
-import org.apache.ranger.plugin.classloader.test.TestPlugin;
-
-public class TestPluginImpl implements TestPlugin {
-
-	@Override
-	public String print() {
-		String ret = new TestPrint().getString();
-		return ret;
-	}
-	
+enum PrestoAccessType {
+    CREATE, DROP, SELECT, INSERT, DELETE, USE, ALTER, ALL, GRANT, REVOKE, SHOW, IMPERSONATE, EXECUTE
 }

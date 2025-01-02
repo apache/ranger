@@ -26,6 +26,10 @@
     <packaging>jar</packaging>
     <name>Ranger Examples - Ranger Plugin for SampleApp</name>
     <description>Ranger Examples - SampleApp</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

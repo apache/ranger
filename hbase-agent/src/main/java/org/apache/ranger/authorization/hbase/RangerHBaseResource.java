@@ -19,7 +19,6 @@
 
 package org.apache.ranger.authorization.hbase;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
@@ -27,14 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 public class RangerHBaseResource extends RangerAccessResourceImpl {
-    public static final String KEY_TABLE              = "table";
-    public static final String KEY_COLUMN_FAMILY      = "column-family";
-    public static final String KEY_COLUMN             = "column";
-    public static final String WILDCARD               = "*";
-    public static final String NAMESPACE_SEPARATOR    = ":";
-    public static final String DEFAULT_NAMESPACE      = "default" + NAMESPACE_SEPARATOR;
+    public static final String KEY_TABLE           = "table";
+    public static final String KEY_COLUMN_FAMILY   = "column-family";
+    public static final String KEY_COLUMN          = "column";
+    public static final String WILDCARD            = "*";
+    public static final String NAMESPACE_SEPARATOR = ":";
+    public static final String DEFAULT_NAMESPACE   = "default" + NAMESPACE_SEPARATOR;
 
     public RangerHBaseResource() {
     }

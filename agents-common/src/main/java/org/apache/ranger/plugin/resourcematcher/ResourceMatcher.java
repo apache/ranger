@@ -39,13 +39,11 @@ import java.util.Map;
 import java.util.Stack;
 
 abstract class ResourceMatcher {
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceMatcher.class);
-
-    protected final String                    value;
-    protected final RangerRequestExprResolver exprResolver;
-    protected       StringTokenReplacer       tokenReplacer;
-
-    static final int DYNAMIC_EVALUATION_PENALTY = 8;
+    static final         int                       DYNAMIC_EVALUATION_PENALTY = 8;
+    private static final Logger                    LOG                        = LoggerFactory.getLogger(ResourceMatcher.class);
+    protected final      String                    value;
+    protected final      RangerRequestExprResolver exprResolver;
+    protected            StringTokenReplacer       tokenReplacer;
 
     ResourceMatcher(String value, Map<String, String> options) {
         this.value = value;
@@ -57,89 +55,10 @@ abstract class ResourceMatcher {
         }
     }
 
-    abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
-
-    abstract boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext);
-
-    abstract boolean isChildMatch(String resourceValue, Map<String, Object> evalContext);
-
-    final boolean isMatch(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-        final ResourceElementMatchType matchType = getMatchType(resourceValue, matchingScope, evalContext);
-
-        return isMatch(matchType, matchingScope);
-    }
-
-    final ResourceElementMatchType getMatchType(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-        ResourceElementMatchType ret = ResourceElementMatchType.NONE;
-
-        if (isMatch(resourceValue, evalContext)) {
-            ret = ResourceElementMatchType.SELF;
-        } else {
-            if (matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX) {
-                if (isPrefixMatch(resourceValue, evalContext)) {
-                    ret = ResourceElementMatchType.PREFIX;
-                }
-            } else if (matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD) {
-                if (isChildMatch(resourceValue, evalContext)) {
-                    ret = ResourceElementMatchType.CHILD;
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    abstract int getPriority();
-
-    boolean isMatchAny() { return value != null && value.length() == 0; }
-
-    boolean getNeedsDynamicEval() {
-        return exprResolver != null || tokenReplacer != null;
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getName() + "(" + this.value + ")";
-    }
-
-    void setDelimiters(char startDelimiterChar, char endDelimiterChar, char escapeChar, String tokenPrefix) {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> setDelimiters(value= " + value + ", startDelimiter=" + startDelimiterChar +
-                    ", endDelimiter=" + endDelimiterChar + ", escapeChar=" + escapeChar + ", prefix=" + tokenPrefix);
-        }
-
-        if(exprResolver != null || StringTokenReplacer.hasToken(value, startDelimiterChar, endDelimiterChar, escapeChar)) {
-            tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
-        }
-
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== setDelimiters(value= " + value + ", startDelimiter=" + startDelimiterChar +
-                    ", endDelimiter=" + endDelimiterChar + ", escapeChar=" + escapeChar + ", prefix=" + tokenPrefix);
-        }
-    }
-
-    String getExpandedValue(Map<String, Object> evalContext) {
-        String ret = value;
-
-        if (exprResolver != null) {
-            RangerAccessRequest accessRequest = RangerAccessRequestUtil.getRequestFromContext(evalContext);
-
-            if (accessRequest != null) {
-                ret = exprResolver.resolveExpressions(accessRequest);
-            }
-        }
-
-        if (tokenReplacer != null) {
-            ret = tokenReplacer.replaceTokens(ret, evalContext);
-        }
-
-        return ret;
-    }
-
     public static boolean startsWithAnyChar(String value, String startChars) {
         boolean ret = false;
 
-        if (value != null && value.length() > 0 && startChars != null) {
+        if (value != null && !value.isEmpty() && startChars != null) {
             ret = StringUtils.contains(startChars, value.charAt(0));
         }
 
@@ -194,7 +113,7 @@ abstract class ResourceMatcher {
         Stack<int[]> backtrack = new Stack<>();
 
         do {
-            if (backtrack.size() > 0) {
+            if (!backtrack.isEmpty()) {
                 int[] array = backtrack.pop();
 
                 wcsIdx   = array[0];
@@ -202,7 +121,7 @@ abstract class ResourceMatcher {
                 anyChars = true;
             }
 
-            for(; wcsIdx < wcsTokens.size(); ++wcsIdx) {
+            for (; wcsIdx < wcsTokens.size(); ++wcsIdx) {
                 String wcsToken = wcsTokens.get(wcsIdx);
 
                 if (wcsToken.equals("?")) {
@@ -235,7 +154,7 @@ abstract class ResourceMatcher {
                         int repeat = caseSensitivity.checkIndexOf(value, textIdx + 1, wcsToken);
 
                         if (repeat >= 0) {
-                            backtrack.push(new int[]{wcsIdx, repeat});
+                            backtrack.push(new int[] {wcsIdx, repeat});
                         }
                     } else if (!caseSensitivity.checkRegionMatches(value, textIdx, wcsToken)) {
                         break;
@@ -252,7 +171,8 @@ abstract class ResourceMatcher {
             if (wcsIdx == wcsTokens.size() || textIdx == value.length()) {
                 return true;
             }
-        } while (backtrack.size() > 0);
+        }
+        while (!backtrack.isEmpty());
 
         return anyChars;
     }
@@ -265,12 +185,8 @@ abstract class ResourceMatcher {
             List<String>  list     = new ArrayList<>(2);
             StringBuilder buffer   = new StringBuilder();
             char          prevChar = 0;
-            char[]        arr$     = array;
-            int           len$     = array.length;
 
-            for(int i$ = 0; i$ < len$; ++i$) {
-                char ch = arr$[i$];
-
+            for (char ch : array) {
                 if (ch != '?' && ch != '*') {
                     buffer.append(ch);
                 } else {
@@ -295,6 +211,81 @@ abstract class ResourceMatcher {
 
             return list;
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getName() + "(" + this.value + ")";
+    }
+
+    abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isChildMatch(String resourceValue, Map<String, Object> evalContext);
+
+    final boolean isMatch(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        final ResourceElementMatchType matchType = getMatchType(resourceValue, matchingScope, evalContext);
+
+        return isMatch(matchType, matchingScope);
+    }
+
+    final ResourceElementMatchType getMatchType(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        ResourceElementMatchType ret = ResourceElementMatchType.NONE;
+
+        if (isMatch(resourceValue, evalContext)) {
+            ret = ResourceElementMatchType.SELF;
+        } else {
+            if (matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX) {
+                if (isPrefixMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.PREFIX;
+                }
+            } else if (matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD) {
+                if (isChildMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.CHILD;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    abstract int getPriority();
+
+    boolean isMatchAny() {
+        return value != null && value.isEmpty();
+    }
+
+    boolean getNeedsDynamicEval() {
+        return exprResolver != null || tokenReplacer != null;
+    }
+
+    void setDelimiters(char startDelimiterChar, char endDelimiterChar, char escapeChar, String tokenPrefix) {
+        LOG.debug("==> setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+
+        if (exprResolver != null || StringTokenReplacer.hasToken(value, startDelimiterChar, endDelimiterChar, escapeChar)) {
+            tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+        }
+
+        LOG.debug("<== setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+    }
+
+    String getExpandedValue(Map<String, Object> evalContext) {
+        String ret = value;
+
+        if (exprResolver != null) {
+            RangerAccessRequest accessRequest = RangerAccessRequestUtil.getRequestFromContext(evalContext);
+
+            if (accessRequest != null) {
+                ret = exprResolver.resolveExpressions(accessRequest);
+            }
+        }
+
+        if (tokenReplacer != null) {
+            ret = tokenReplacer.replaceTokens(ret, evalContext);
+        }
+
+        return ret;
     }
 
     public static class PriorityComparator implements Comparator<ResourceMatcher>, Serializable {

@@ -20,18 +20,18 @@ package org.apache.ranger.services.sqoop.client.json.model;
 import java.util.List;
 
 public class SqoopLinksResponse {
-	private List<SqoopLinkResponse> links;
+    private List<SqoopLinkResponse> links;
 
-	public List<SqoopLinkResponse> getLinks() {
-		return links;
-	}
+    public List<SqoopLinkResponse> getLinks() {
+        return links;
+    }
 
-	public void setLinks(List<SqoopLinkResponse> links) {
-		this.links = links;
-	}
+    public void setLinks(List<SqoopLinkResponse> links) {
+        this.links = links;
+    }
 
-	@Override
-	public String toString() {
-		return "SqoopLinksResponse [links=" + links + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopLinksResponse [links=" + links + "]";
+    }
 }

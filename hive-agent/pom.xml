@@ -28,6 +28,8 @@
     <name>Hive Security Plugin</name>
     <description>Hive Security Plugins</description>
     <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>

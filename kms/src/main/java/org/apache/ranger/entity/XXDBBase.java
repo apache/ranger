@@ -19,213 +19,229 @@ package org.apache.ranger.entity;
 
 /**
  * Base JPA class with id, versionNumber and other common attributes
- *
  */
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
 @MappedSuperclass
 public abstract class XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	public static final int CLASS_TYPE_NONE = 0;
-	private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
-	
-	/**
-	 * Date/Time creation of this user.
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="CREATE_TIME"   )
-	protected Date createTime = getUTCDate();
+    public  static final int      CLASS_TYPE_NONE  = 0;
+    private static final long     serialVersionUID = 1L;
+    private static final TimeZone gmtTimeZone      = TimeZone.getTimeZone("GMT+0");
 
-	/**
-	 * Date value.
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="UPDATE_TIME"   )
-	protected Date updateTime = getUTCDate();
+    /**
+     * Date/Time creation of this user.
+     * <ul>
+     * </ul>
+     *
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "CREATE_TIME")
+    protected Date createTime = getUTCDate();
 
-	/**
-	 * Added by
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="ADDED_BY_ID"   )
-	protected Long addedByUserId;
+    /**
+     * Date value.
+     * <ul>
+     * </ul>
+     *
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "UPDATE_TIME")
+    protected Date updateTime = getUTCDate();
 
+    /**
+     * Added by
+     * <ul>
+     * </ul>
+     *
+     */
+    @Column(name = "ADDED_BY_ID")
+    protected Long addedByUserId;
 
-	/**
-	 * Last updated by
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="UPD_BY_ID"   )
-	protected Long updatedByUserId;
+    /**
+     * Last updated by
+     * <ul>
+     * </ul>
+     *
+     */
+    @Column(name = "UPD_BY_ID")
+    protected Long updatedByUserId;
 
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public XXDBBase() {
+    }
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public XXDBBase ( ) {
-	}
+    public static String getEnumName(String fieldName) {
+        return null;
+    }
 
-	public int getMyClassType( ) {
-	    return CLASS_TYPE_NONE;
-	}
+    public int getMyClassType() {
+        return CLASS_TYPE_NONE;
+    }
 
-	public String getMyDisplayValue() {
-		return null;
-	}
+    public String getMyDisplayValue() {
+        return null;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>id</b>.
-	 * You cannot set null to the attribute.
-	 * @param id Value to set member attribute <b>id</b>
-	 */
-	public abstract void setId( Long id );
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     * @return Long - value of member attribute <b>id</b>.
+     */
+    public abstract Long getId();
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 * @return Long - value of member attribute <b>id</b>.
-	 */
-	public abstract Long getId( );
+    /**
+     * This method sets the value to the member attribute <b>id</b>.
+     * You cannot set null to the attribute.
+     * @param id Value to set member attribute <b>id</b>
+     */
+    public abstract void setId(Long id);
 
-	/**
-	 * This method sets the value to the member attribute <b>createTime</b>.
-	 * You cannot set null to the attribute.
-	 * @param createTime Value to set member attribute <b>createTime</b>
-	 */
-	public void setCreateTime( Date createTime ) {
-		this.createTime = createTime;
-	}
+    /**
+     * Returns the value for the member attribute <b>createTime</b>
+     * @return Date - value of member attribute <b>createTime</b>.
+     */
+    public Date getCreateTime() {
+        return this.createTime;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>createTime</b>
-	 * @return Date - value of member attribute <b>createTime</b>.
-	 */
-	public Date getCreateTime( ) {
-		return this.createTime;
-	}
+    /**
+     * This method sets the value to the member attribute <b>createTime</b>.
+     * You cannot set null to the attribute.
+     * @param createTime Value to set member attribute <b>createTime</b>
+     */
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>updateTime</b>.
-	 * You cannot set null to the attribute.
-	 * @param updateTime Value to set member attribute <b>updateTime</b>
-	 */
-	public void setUpdateTime( Date updateTime ) {
-		this.updateTime = updateTime;
-	}
+    /**
+     * Returns the value for the member attribute <b>updateTime</b>
+     * @return Date - value of member attribute <b>updateTime</b>.
+     */
+    public Date getUpdateTime() {
+        return this.updateTime;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>updateTime</b>
-	 * @return Date - value of member attribute <b>updateTime</b>.
-	 */
-	public Date getUpdateTime( ) {
-		return this.updateTime;
-	}
+    /**
+     * This method sets the value to the member attribute <b>updateTime</b>.
+     * You cannot set null to the attribute.
+     * @param updateTime Value to set member attribute <b>updateTime</b>
+     */
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>addedByUserId</b>.
-	 * You cannot set null to the attribute.
-	 * @param addedByUserId Value to set member attribute <b>addedByUserId</b>
-	 */
-	public void setAddedByUserId( Long addedByUserId ) {
-		this.addedByUserId = addedByUserId;
-	}
+    /**
+     * Returns the value for the member attribute <b>addedByUserId</b>
+     * @return Long - value of member attribute <b>addedByUserId</b>.
+     */
+    public Long getAddedByUserId() {
+        return this.addedByUserId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>addedByUserId</b>
-	 * @return Long - value of member attribute <b>addedByUserId</b>.
-	 */
-	public Long getAddedByUserId( ) {
-		return this.addedByUserId;
-	}
+    /**
+     * This method sets the value to the member attribute <b>addedByUserId</b>.
+     * You cannot set null to the attribute.
+     * @param addedByUserId Value to set member attribute <b>addedByUserId</b>
+     */
+    public void setAddedByUserId(Long addedByUserId) {
+        this.addedByUserId = addedByUserId;
+    }
 
+    /**
+     * Returns the value for the member attribute <b>updatedByUserId</b>
+     * @return Long - value of member attribute <b>updatedByUserId</b>.
+     */
+    public Long getUpdatedByUserId() {
+        return this.updatedByUserId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>updatedByUserId</b>.
-	 * You cannot set null to the attribute.
-	 * @param updatedByUserId Value to set member attribute <b>updatedByUserId</b>
-	 */
-	public void setUpdatedByUserId( Long updatedByUserId ) {
-		this.updatedByUserId = updatedByUserId;
-	}
+    /**
+     * This method sets the value to the member attribute <b>updatedByUserId</b>.
+     * You cannot set null to the attribute.
+     * @param updatedByUserId Value to set member attribute <b>updatedByUserId</b>
+     */
+    public void setUpdatedByUserId(Long updatedByUserId) {
+        this.updatedByUserId = updatedByUserId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>updatedByUserId</b>
-	 * @return Long - value of member attribute <b>updatedByUserId</b>.
-	 */
-	public Long getUpdatedByUserId( ) {
-		return this.updatedByUserId;
-	}
+    /**
+     * Checks for all attributes except referenced db objects
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
+            return false;
+        }
 
+        XXDBBase other = (XXDBBase) obj;
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = "XXDBBase={";
-		//`str += "id={" + id + "} ";
-		str += "createTime={" + createTime + "} ";
-		str += "updateTime={" + updateTime + "} ";
-		str += "addedByUserId={" + addedByUserId + "} ";
-		str += "updatedByUserId={" + updatedByUserId + "} ";
-		str += "}";
-		return str;
-	}
+        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
+            return false;
+        }
 
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		XXDBBase other = (XXDBBase) obj;
-        	if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
-            		return false;
-        	}
-        	if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
-            		return false;
-        	}
-        	if ((this.addedByUserId == null && other.addedByUserId != null) || (this.addedByUserId != null && !this.addedByUserId.equals(other.addedByUserId))) {
-            		return false;
-        	}
-        	if ((this.updatedByUserId == null && other.updatedByUserId != null) || (this.updatedByUserId != null && !this.updatedByUserId.equals(other.updatedByUserId))) {
-            		return false;
-        	}
-		return true;
-	}
-	public static String getEnumName(String fieldName ) {
-		return null;
-	}
+        if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
+            return false;
+        }
 
-	private static Date getUTCDate(){
-		try{
-			Calendar local=Calendar.getInstance();
-		    int offset = local.getTimeZone().getOffset(local.getTimeInMillis());
-		    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
-		    utc.setTimeInMillis(local.getTimeInMillis());
-		    utc.add(Calendar.MILLISECOND, -offset);
-		    return utc.getTime();
-		}catch(Exception ex){
-			return null;
-		}
-	}
+        if ((this.addedByUserId == null && other.addedByUserId != null) || (this.addedByUserId != null && !this.addedByUserId.equals(other.addedByUserId))) {
+            return false;
+        }
+
+        if ((this.updatedByUserId == null && other.updatedByUserId != null) || (this.updatedByUserId != null && !this.updatedByUserId.equals(other.updatedByUserId))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXDBBase={";
+        //`str += "id={" + id + "} ";
+        str += "createTime={" + createTime + "} ";
+        str += "updateTime={" + updateTime + "} ";
+        str += "addedByUserId={" + addedByUserId + "} ";
+        str += "updatedByUserId={" + updatedByUserId + "} ";
+        str += "}";
+
+        return str;
+    }
+
+    private static Date getUTCDate() {
+        try {
+            Calendar          local  = Calendar.getInstance();
+            int               offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+            GregorianCalendar utc    = new GregorianCalendar(gmtTimeZone);
+
+            utc.setTimeInMillis(local.getTimeInMillis());
+            utc.add(Calendar.MILLISECOND, -offset);
+
+            return utc.getTime();
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 }
