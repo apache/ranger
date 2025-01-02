@@ -19,8 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.Date;
-
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -48,169 +46,168 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Date;
+
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXPermMapService {
+    @InjectMocks
+    XPermMapService xPermMapService;
 
-	@InjectMocks
-	XPermMapService xPermMapService;
+    @Mock
+    XXPermMap xXPermMap;
 
-	@Mock
-	XXPermMap xXPermMap;
+    @Mock
+    UserSessionBase currentUserSession;
 
-	@Mock
-	UserSessionBase currentUserSession;
+    @Mock
+    RangerDaoManager daoManager;
 
-	@Mock
-	RangerDaoManager daoManager;
+    @Mock
+    StringUtil stringUtil;
 
-	@Mock
-	StringUtil stringUtil;
+    @Mock
+    XXPortalUserDao xXPortalUserDao;
 
-	@Mock
-	XXPortalUserDao xXPortalUserDao;
+    @Mock
+    XXPortalUser tUser;
 
-	@Mock
-	XXPortalUser tUser;
+    @Mock
+    XGroupService xGroupService;
 
-	@Mock
-	XGroupService xGroupService;
+    @Mock
+    VXGroup vXGroup;
 
-	@Mock
-	VXGroup vXGroup;
+    @Mock
+    XUserService xUserService;
 
-	@Mock
-	XUserService xUserService;
+    @Mock
+    VXUser vXUser;
 
-	@Mock
-	VXUser vXUser;
+    @Mock
+    XXDBBase gjObj;
 
-	@Mock
-	XXDBBase gjObj;
+    @Mock
+    XXGroupDao xXGroupDao;
 
-	@Mock
-	XXGroupDao xXGroupDao;
+    @Mock
+    XXResourceDao xXResourceDao;
 
-	@Mock
-	XXResourceDao xXResourceDao;
+    @Mock
+    XXResource xXResource;
 
-	@Mock
-	XXResource xXResource;
+    @Mock
+    XXAssetDao xXAssetDao;
 
-	@Mock
-	XXAssetDao xXAssetDao;
+    @Mock
+    XXAsset xXAsset;
 
-	@Mock
-	XXAsset xXAsset;
+    @Mock
+    RangerEnumUtil xaEnumUtil;
 
-	@Mock
-	RangerEnumUtil xaEnumUtil;
+    @Mock
+    RangerBizUtil bizUtil;
 
-	@Mock
-	RangerBizUtil bizUtil;
+    @Mock
+    AbstractBaseResourceService abstractBaseResourceService;
 
-	@Mock
-	AbstractBaseResourceService abstractBaseResourceService;
+    @Test
+    public void test1GetGroupName() {
+        Mockito.when(xGroupService.readResource(1L)).thenReturn(vXGroup);
+        xPermMapService.getGroupName(1L);
+    }
 
-	@Test
-	public void test1GetGroupName() {
-		Mockito.when(xGroupService.readResource(1L)).thenReturn(vXGroup);
-		xPermMapService.getGroupName(1L);
+    @Test
+    public void test2GetUserName() {
+        Mockito.when(xUserService.readResource(1L)).thenReturn(vXUser);
+        xPermMapService.getUserName(1L);
+    }
 
-	}
+    @Test
+    public void test3GetTransactionLog() {
+        VXPermMap vXPermMap = createVXPermMap();
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        XXGroup xGroup = createXXGroup();
+        Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
+        xPermMapService.createTransactionLog(vXPermMap, null, OPERATION_CREATE_CONTEXT);
+    }
 
-	@Test
-	public void test2GetUserName() {
-		Mockito.when(xUserService.readResource(1L)).thenReturn(vXUser);
-		xPermMapService.getUserName(1L);
+    @Test
+    public void test4GetTransactionLog() {
+        VXPermMap vObj  = createVXPermMap();
+        VXPermMap vObj2 = createVXPermMap2();
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        XXGroup xGroup = createXXGroup();
+        Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
+        xPermMapService.createTransactionLog(vObj, vObj2, OPERATION_UPDATE_CONTEXT);
+    }
 
-	}
+    public XXGroup createXXGroup() {
+        XXGroup xGroup = new XXGroup();
+        xGroup.setAddedByUserId(1L);
+        Date date = new Date();
+        xGroup.setCreateTime(date);
+        xGroup.setCredStoreId(1L);
+        xGroup.setDescription("this is test xGroup");
+        xGroup.setGroupSource(1);
+        xGroup.setGroupType(1);
+        xGroup.setId(1L);
+        xGroup.setIsVisible(1);
+        xGroup.setName("testxGroup");
+        xGroup.setStatus(1);
+        xGroup.setUpdatedByUserId(1L);
+        xGroup.setUpdateTime(date);
+        return xGroup;
+    }
 
-	@Test
-	public void test3GetTransactionLog() {
-		VXPermMap vXPermMap = createVXPermMap();
-		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
-		XXGroup xGroup = createXXGroup();
-		Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
-		xPermMapService.createTransactionLog(vXPermMap, null, OPERATION_CREATE_CONTEXT);
-	}
+    private VXPermMap createVXPermMap() {
+        VXPermMap vXPermMap = new VXPermMap();
+        Date      date      = new Date();
+        vXPermMap.setCreateDate(date);
+        vXPermMap.setGrantOrRevoke(false);
+        vXPermMap.setGroupId(1L);
+        vXPermMap.setGroupName("testGroupName");
+        vXPermMap.setId(1L);
+        vXPermMap.setIpAddress("123.45.678.90");
+        vXPermMap.setIsRecursive(0);
+        vXPermMap.setIsWildCard(false);
+        vXPermMap.setMObj(gjObj);
+        vXPermMap.setOwner("admin");
+        vXPermMap.setPermFor(0);
+        vXPermMap.setPermGroup("");
+        vXPermMap.setPermType(0);
+        vXPermMap.setResourceId(1L);
+        vXPermMap.setUpdateDate(date);
+        vXPermMap.setUpdatedBy("admin");
+        vXPermMap.setUserId(1L);
+        vXPermMap.setUserName("testUser");
+        return vXPermMap;
+    }
 
-	@Test
-	public void test4GetTransactionLog() {
-		VXPermMap vObj = createVXPermMap();
-		VXPermMap vObj2 = createVXPermMap2();
-		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
-		XXGroup xGroup = createXXGroup();
-		Mockito.when(xXGroupDao.getById(1L)).thenReturn(xGroup);
-		xPermMapService.createTransactionLog(vObj, vObj2, OPERATION_UPDATE_CONTEXT);
-	}
-
-	private VXPermMap createVXPermMap() {
-		VXPermMap vXPermMap = new VXPermMap();
-		Date date = new Date();
-		vXPermMap.setCreateDate(date);
-		vXPermMap.setGrantOrRevoke(false);
-		vXPermMap.setGroupId(1L);
-		vXPermMap.setGroupName("testGroupName");
-		vXPermMap.setId(1L);
-		vXPermMap.setIpAddress("123.45.678.90");
-		vXPermMap.setIsRecursive(0);
-		vXPermMap.setIsWildCard(false);
-		vXPermMap.setMObj(gjObj);
-		vXPermMap.setOwner("admin");
-		vXPermMap.setPermFor(0);
-		vXPermMap.setPermGroup("");
-		vXPermMap.setPermType(0);
-		vXPermMap.setResourceId(1L);
-		vXPermMap.setUpdateDate(date);
-		vXPermMap.setUpdatedBy("admin");
-		vXPermMap.setUserId(1L);
-		vXPermMap.setUserName("testUser");
-		return vXPermMap;
-	}
-
-	private VXPermMap createVXPermMap2() {
-		VXPermMap vXPermMap = new VXPermMap();
-		Date date = new Date();
-		vXPermMap.setCreateDate(date);
-		vXPermMap.setGrantOrRevoke(false);
-		vXPermMap.setGroupId(1L);
-		vXPermMap.setGroupName("testGroupName1");
-		vXPermMap.setId(1L);
-		vXPermMap.setIpAddress("123.45.678.91");
-		vXPermMap.setIsRecursive(0);
-		vXPermMap.setIsWildCard(false);
-		vXPermMap.setMObj(gjObj);
-		vXPermMap.setOwner("admin");
-		vXPermMap.setPermFor(0);
-		vXPermMap.setPermGroup("");
-		vXPermMap.setPermType(0);
-		vXPermMap.setResourceId(1L);
-		vXPermMap.setUpdateDate(date);
-		vXPermMap.setUpdatedBy("admin");
-		vXPermMap.setUserId(1L);
-		vXPermMap.setUserName("testUser");
-		return vXPermMap;
-	}
-
-	public XXGroup createXXGroup() {
-		XXGroup xGroup = new XXGroup();
-		xGroup.setAddedByUserId(1L);
-		Date date = new Date();
-		xGroup.setCreateTime(date);
-		xGroup.setCredStoreId(1L);
-		xGroup.setDescription("this is test xGroup");
-		xGroup.setGroupSource(1);
-		xGroup.setGroupType(1);
-		xGroup.setId(1L);
-		xGroup.setIsVisible(1);
-		xGroup.setName("testxGroup");
-		xGroup.setStatus(1);
-		xGroup.setUpdatedByUserId(1L);
-		xGroup.setUpdateTime(date);
-		return xGroup;
-	}
+    private VXPermMap createVXPermMap2() {
+        VXPermMap vXPermMap = new VXPermMap();
+        Date      date      = new Date();
+        vXPermMap.setCreateDate(date);
+        vXPermMap.setGrantOrRevoke(false);
+        vXPermMap.setGroupId(1L);
+        vXPermMap.setGroupName("testGroupName1");
+        vXPermMap.setId(1L);
+        vXPermMap.setIpAddress("123.45.678.91");
+        vXPermMap.setIsRecursive(0);
+        vXPermMap.setIsWildCard(false);
+        vXPermMap.setMObj(gjObj);
+        vXPermMap.setOwner("admin");
+        vXPermMap.setPermFor(0);
+        vXPermMap.setPermGroup("");
+        vXPermMap.setPermType(0);
+        vXPermMap.setResourceId(1L);
+        vXPermMap.setUpdateDate(date);
+        vXPermMap.setUpdatedBy("admin");
+        vXPermMap.setUserId(1L);
+        vXPermMap.setUserName("testUser");
+        return vXPermMap;
+    }
 }

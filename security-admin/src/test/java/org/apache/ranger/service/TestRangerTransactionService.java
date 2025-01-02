@@ -18,8 +18,6 @@
  */
 package org.apache.ranger.service;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,34 +26,32 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerTransactionService {
+    @InjectMocks
+    RangerTransactionService rangerTransactionService;
 
-	@InjectMocks
-	RangerTransactionService rangerTransactionService;
+    @Mock
+    ScheduledExecutorService scheduler;
 
-	@Mock
-	ScheduledExecutorService scheduler;
+    @Mock
+    Runnable task;
 
-	@Mock
-	Runnable task;
+    @Test
+    public void test1Init() {
+        rangerTransactionService.init();
+    }
 
-	@Test
-	public void test1Init() {
-		rangerTransactionService.init();
+    @Test
+    public void test2Destroy() {
+        rangerTransactionService.destroy();
+    }
 
-	}
-
-	@Test
-	public void test2Destroy() {
-		rangerTransactionService.destroy();
-
-	}
-
-	@Test
-	public void test3ExecuteAfterTransactionComplete() {
-		rangerTransactionService.scheduleToExecuteInOwnTransaction(task, 1000L);
-
-	}
+    @Test
+    public void test3ExecuteAfterTransactionComplete() {
+        rangerTransactionService.scheduleToExecuteInOwnTransaction(task, 1000L);
+    }
 }

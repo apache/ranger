@@ -34,30 +34,29 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestUserService {
+    @InjectMocks
+    UserService userService;
 
-        @InjectMocks
-        UserService userService;
+    @Mock
+    XXPortalUser xXPortalUser;
 
-        @Mock
-        XXPortalUser xXPortalUser;
+    @Mock
+    VXPortalUser vXPortalUser;
 
-        @Mock
-        VXPortalUser vXPortalUser;
+    @Mock
+    RangerDaoManager daoManager;
 
-        @Mock
-        RangerDaoManager daoManager;
+    @Mock
+    XXPortalUserRoleDao xXPortalUserRoleDao;
 
-        @Mock
-        XXPortalUserRoleDao xXPortalUserRoleDao;
+    @Test
+    public void test1GetInstance() {
+        UserService.getInstance();
+    }
 
-        @Test
-        public void test1GetInstance() {
-                userService.getInstance();
-        }
-
-        @Test
-        public void test2GjUserToUserProfile() {
-                Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(xXPortalUserRoleDao);
-                userService.gjUserToUserProfile(xXPortalUser, vXPortalUser);
-        }
+    @Test
+    public void test2GjUserToUserProfile() {
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(xXPortalUserRoleDao);
+        userService.gjUserToUserProfile(xXPortalUser, vXPortalUser);
+    }
 }
