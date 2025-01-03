@@ -141,3 +141,7 @@ jobs:
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml up -d
 
+      - name: View sql server logs
+        run: |
+          docker logs ranger-sqlserver
+
