@@ -19,12 +19,12 @@
 
 package org.apache.ranger.entity;
 
-import java.util.Date;
-import java.util.Objects;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 
 import javax.persistence.Cacheable;
-import javax.persistence.Entity;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,222 +35,223 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.DateUtil;
+import java.util.Date;
+import java.util.Objects;
 
-@EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
+@EntityListeners(org.apache.ranger.common.db.JPABeanCallbacks.class)
 @Entity
 @Cacheable
 @Table(name = "x_service_version_info")
 public class XXServiceVersionInfo implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_SERVICE_VERSION_INFO_SEQ", sequenceName = "X_SERVICE_VERSION_INFO_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_VERSION_INFO_SEQ")
+    @Id
+    @SequenceGenerator(name = "X_SERVICE_VERSION_INFO_SEQ", sequenceName = "X_SERVICE_VERSION_INFO_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_VERSION_INFO_SEQ")
 
-	@Column(name = "id")
-	protected Long id;
+    @Column(name = "id")
+    protected Long id;
 
-	@Column(name = "service_id")
-	protected Long serviceId;
+    @Column(name = "service_id")
+    protected Long serviceId;
 
-	@Column(name = "policy_version")
-	protected Long policyVersion;
+    @Column(name = "policy_version")
+    protected Long policyVersion;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="policy_update_time"   )
-	protected Date policyUpdateTime = DateUtil.getUTCDate();
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "policy_update_time")
+    protected Date policyUpdateTime = DateUtil.getUTCDate();
 
-	@Column(name = "tag_version")
-	protected Long tagVersion;
+    @Column(name = "tag_version")
+    protected Long tagVersion;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="tag_update_time"   )
-	protected Date tagUpdateTime = DateUtil.getUTCDate();
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "tag_update_time")
+    protected Date tagUpdateTime = DateUtil.getUTCDate();
 
-	@Column(name = "role_version")
-	protected Long roleVersion;
+    @Column(name = "role_version")
+    protected Long roleVersion;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="role_update_time"   )
-	protected Date roleUpdateTime = DateUtil.getUTCDate();
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "role_update_time")
+    protected Date roleUpdateTime = DateUtil.getUTCDate();
 
-	@Column(name = "gds_version")
-	protected Long gdsVersion;
+    @Column(name = "gds_version")
+    protected Long gdsVersion;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="gds_update_time"   )
-	protected Date gdsUpdateTime = DateUtil.getUTCDate();
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "gds_update_time")
+    protected Date gdsUpdateTime = DateUtil.getUTCDate();
 
-	@Version
-	@Column(name = "version")
-	protected Long version;
+    @Version
+    @Column(name = "version")
+    protected Long version;
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public XXServiceVersionInfo ( ) {
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public XXServiceVersionInfo() {
+    }
 
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_NONE;
-	}
+    public static boolean equals(Object object1, Object object2) {
+        if (object1 == object2) {
+            return true;
+        }
+        if ((object1 == null) || (object2 == null)) {
+            return false;
+        }
+        return object1.equals(object2);
+    }
 
-	public String getMyDisplayValue() {
-		return null;
-	}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_NONE;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public String getMyDisplayValue() {
+        return null;
+    }
 
-	public void setVersion(Long version) {
-		this.version = version;
-	}
+    public Long getId() {
+        return this.id;
+    }
 
-	public Long getId() {
-		return this.id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public Long getVersion() {
-		return version;
-	}
+    public Long getVersion() {
+        return version;
+    }
 
-	public void setServiceId(Long serviceId) {
-		this.serviceId = serviceId;
-	}
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-	public Long getServiceId() {
-		return this.serviceId;
-	}
+    public Long getServiceId() {
+        return this.serviceId;
+    }
 
-	public void setPolicyVersion(Long policyVersion) {
-		this.policyVersion = policyVersion;
-	}
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
 
-	public Long getPolicyVersion() {
-		return this.policyVersion;
-	}
+    public Long getPolicyVersion() {
+        return this.policyVersion;
+    }
 
-	public void setPolicyUpdateTime( Date updateTime ) {
-		this.policyUpdateTime = updateTime;
-	}
+    public void setPolicyVersion(Long policyVersion) {
+        this.policyVersion = policyVersion;
+    }
 
-	public Date getPolicyUpdateTime( ) {
-		return this.policyUpdateTime;
-	}
+    public Date getPolicyUpdateTime() {
+        return this.policyUpdateTime;
+    }
 
-	public void setTagVersion(Long tagVersion) {
-		this.tagVersion = tagVersion;
-	}
+    public void setPolicyUpdateTime(Date updateTime) {
+        this.policyUpdateTime = updateTime;
+    }
 
-	public Long getTagVersion() {
-		return this.tagVersion;
-	}
+    public Long getTagVersion() {
+        return this.tagVersion;
+    }
 
-	public void setTagUpdateTime( Date updateTime ) {
-		this.tagUpdateTime = updateTime;
-	}
+    public void setTagVersion(Long tagVersion) {
+        this.tagVersion = tagVersion;
+    }
 
-	public Date getTagUpdateTime( ) {
-		return this.tagUpdateTime;
-	}
+    public Date getTagUpdateTime() {
+        return this.tagUpdateTime;
+    }
 
-	public void setRoleVersion(Long roleVersion) {
-		this.roleVersion = roleVersion;
-	}
+    public void setTagUpdateTime(Date updateTime) {
+        this.tagUpdateTime = updateTime;
+    }
 
-	public Long getRoleVersion() {
-		return this.roleVersion;
-	}
+    public Long getRoleVersion() {
+        return this.roleVersion;
+    }
 
-	public void setRoleUpdateTime( Date updateTime ) {
-		this.roleUpdateTime = updateTime;
-	}
+    public void setRoleVersion(Long roleVersion) {
+        this.roleVersion = roleVersion;
+    }
 
-	public Date getRoleUpdateTime( ) {
-		return this.roleUpdateTime;
-	}
+    public Date getRoleUpdateTime() {
+        return this.roleUpdateTime;
+    }
 
-	public void setGdsVersion(Long gdsVersion) {
-		this.gdsVersion = gdsVersion;
-	}
+    public void setRoleUpdateTime(Date updateTime) {
+        this.roleUpdateTime = updateTime;
+    }
 
-	public Long getGdsVersion() {
-		return this.gdsVersion;
-	}
+    public Long getGdsVersion() {
+        return this.gdsVersion;
+    }
 
-	public void setGdsUpdateTime( Date updateTime ) {
-		this.gdsUpdateTime = updateTime;
-	}
+    public void setGdsVersion(Long gdsVersion) {
+        this.gdsVersion = gdsVersion;
+    }
 
-	public Date getGdsUpdateTime( ) {
-		return this.gdsUpdateTime;
-	}
+    public Date getGdsUpdateTime() {
+        return this.gdsUpdateTime;
+    }
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = "XXServiceVersionInfo={";
-		str += "id={" + id + "} ";
-		str += "version={" + version + "} ";
-		str += "serviceId={" + serviceId + "} ";
-		str += "policyVersion={" + policyVersion + "} ";
-		str += "policyUpdateTime={" + policyUpdateTime + "} ";
-		str += "tagVersion={" + tagVersion + "} ";
-		str += "tagUpdateTime={" + tagUpdateTime + "} ";
-		str += "setRoleVersion={" + roleVersion + "}" ;
-		str += "setRoleUpdateTime={" + roleUpdateTime + "}" ;
-		str += "gdsVersion={" + gdsVersion + "} ";
-		str += "gdsUpdateTime={" + gdsUpdateTime + "} ";
-		str += "}";
-		return str;
-	}
+    public void setGdsUpdateTime(Date updateTime) {
+        this.gdsUpdateTime = updateTime;
+    }
 
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		final boolean ret;
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        final boolean ret;
 
-		if (this == obj) {
-			ret = true;
-		} else if (obj == null || getClass() != obj.getClass()) {
-			ret = false;
-		} else {
-			XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
+        if (this == obj) {
+            ret = true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            ret = false;
+        } else {
+            XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
 
-			ret = super.equals(obj) &&
-				  Objects.equals(id, other.id) &&
-				  Objects.equals(version, other.version) &&
-				  Objects.equals(serviceId, other.serviceId) &&
-				  Objects.equals(policyVersion, other.policyVersion) &&
-				  Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
-				  Objects.equals(tagVersion, other.tagVersion) &&
-				  Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
-				  Objects.equals(roleVersion, other.roleVersion) &&
-				  Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
-				  Objects.equals(gdsVersion, other.gdsVersion) &&
-				  Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
-		}
+            ret = super.equals(obj) &&
+                    Objects.equals(id, other.id) &&
+                    Objects.equals(version, other.version) &&
+                    Objects.equals(serviceId, other.serviceId) &&
+                    Objects.equals(policyVersion, other.policyVersion) &&
+                    Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
+                    Objects.equals(tagVersion, other.tagVersion) &&
+                    Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
+                    Objects.equals(roleVersion, other.roleVersion) &&
+                    Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
+                    Objects.equals(gdsVersion, other.gdsVersion) &&
+                    Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static boolean equals(Object object1, Object object2) {
-		if (object1 == object2) {
-			return true;
-		}
-		if ((object1 == null) || (object2 == null)) {
-			return false;
-		}
-		return object1.equals(object2);
-	}
-
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXServiceVersionInfo={";
+        str += "id={" + id + "} ";
+        str += "version={" + version + "} ";
+        str += "serviceId={" + serviceId + "} ";
+        str += "policyVersion={" + policyVersion + "} ";
+        str += "policyUpdateTime={" + policyUpdateTime + "} ";
+        str += "tagVersion={" + tagVersion + "} ";
+        str += "tagUpdateTime={" + tagUpdateTime + "} ";
+        str += "setRoleVersion={" + roleVersion + "}";
+        str += "setRoleUpdateTime={" + roleUpdateTime + "}";
+        str += "gdsVersion={" + gdsVersion + "} ";
+        str += "gdsUpdateTime={" + gdsUpdateTime + "} ";
+        str += "}";
+        return str;
+    }
 }

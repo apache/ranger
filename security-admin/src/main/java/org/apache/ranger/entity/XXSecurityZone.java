@@ -25,6 +25,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
@@ -36,12 +37,7 @@ public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serial
     @SequenceGenerator(name = "x_security_zone_SEQ", sequenceName = "x_security_zone_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_security_zone_SEQ")
     @Column(name = "id")
-    protected Long id;
-
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    protected            Long id;
 
     @Override
     public Long getId() {
@@ -49,13 +45,21 @@ public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serial
     }
 
     @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
+        }
 
         XXSecurityZone other = (XXSecurityZone) obj;
 

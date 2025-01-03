@@ -25,6 +25,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
@@ -36,39 +37,42 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_role_SEQ", sequenceName = "x_role_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_role_SEQ")
     @Column(name = "id")
-    protected Long id;
+    protected            Long id;
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        XXRole other = (XXRole) obj;
+
+        return Objects.equals(id, other.id);
+    }    @Override
     public void setId(Long id) {
         this.id = id;
     }
 
     @Override
-    public Long getId() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (getClass() != obj.getClass())
-            return false;
-        if (!super.equals(obj))
-            return false;
-
-        XXRole other = (XXRole) obj;
-
-        return Objects.equals(id, other.id);
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), id);
+    }    @Override
+    public Long getId() {
+        return id;
     }
 
     @Override
     public String toString() {
         return "Role [id=" + id + "]";
     }
+
+
+
+
 }

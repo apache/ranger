@@ -17,6 +17,9 @@
 
 package org.apache.ranger.entity;
 
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,134 +28,142 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.RangerCommonEnums;
-
 @Entity
-@Table(name="x_group_module_perm")
+@Table(name = "x_group_module_perm")
 public class XXGroupPermission extends XXDBBase implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name="X_GROUP_MODULE_PERM_SEQ",sequenceName="X_GROUP_MODULE_PERM_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_GROUP_MODULE_PERM_SEQ")
-	@Column(name="ID")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_GROUP_MODULE_PERM_SEQ", sequenceName = "X_GROUP_MODULE_PERM_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_GROUP_MODULE_PERM_SEQ")
+    @Column(name = "ID")
+    protected Long id;
 
-	@Column(name="GROUP_ID" , nullable=false)
-	protected Long groupId;
+    @Column(name = "GROUP_ID", nullable = false)
+    protected Long groupId;
 
-	@Column(name="MODULE_ID" , nullable=false)
-	protected Long moduleId;
+    @Column(name = "MODULE_ID", nullable = false)
+    protected Long moduleId;
 
-	@Column(name="IS_ALLOWED" , nullable=false)
-	protected Integer isAllowed;
+    @Column(name = "IS_ALLOWED", nullable = false)
+    protected Integer isAllowed;
 
-	public XXGroupPermission() {
-		isAllowed = RangerCommonEnums.STATUS_ENABLED;
-	}
+    public XXGroupPermission() {
+        isAllowed = RangerCommonEnums.STATUS_ENABLED;
+    }
 
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * @return the groupId
+     */
+    public Long getGroupId() {
+        return groupId;
+    }
 
-	/**
-	 * @return the groupId
-	 */
-	public Long getGroupId() {
-		return groupId;
-	}
-	/**
-	 * @param groupId the groupId to set
-	 */
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
-	}
+    /**
+     * @param groupId the groupId to set
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
 
-	/**
-	 * @return the moduleId
-	 */
-	public Long getModuleId() {
-		return moduleId;
-	}
-	/**
-	 * @param moduleId the moduleId to set
-	 */
-	public void setModuleId(Long moduleId) {
-		this.moduleId = moduleId;
-	}
+    /**
+     * @return the moduleId
+     */
+    public Long getModuleId() {
+        return moduleId;
+    }
 
-	/**
-	 * @return the isAllowed
-	 */
-	public Integer getIsAllowed() {
-		return isAllowed;
-	}
-	/**
-	 * @param isAllowed the isAllowed to set
-	 */
-	public void setIsAllowed(Integer isAllowed) {
-		this.isAllowed = isAllowed;
-	}
+    /**
+     * @param moduleId the moduleId to set
+     */
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
+    }
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_RANGER_GROUP_PERMISSION;
-	}
+    /**
+     * @return the isAllowed
+     */
+    public Integer getIsAllowed() {
+        return isAllowed;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXGroupPermission other = (XXGroupPermission) obj;
-		if (groupId == null) {
-			if (other.groupId != null)
-				return false;
-		} else if (!groupId.equals(other.groupId))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (isAllowed == null) {
-			if (other.isAllowed != null)
-				return false;
-		} else if (!isAllowed.equals(other.isAllowed))
-			return false;
-		if (moduleId == null) {
-			if (other.moduleId != null)
-				return false;
-		} else if (!moduleId.equals(other.moduleId))
-			return false;
-		return true;
-	}
+    /**
+     * @param isAllowed the isAllowed to set
+     */
+    public void setIsAllowed(Integer isAllowed) {
+        this.isAllowed = isAllowed;
+    }
 
-	@Override
-	public String toString() {
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_RANGER_GROUP_PERMISSION;
+    }
 
-		String str = "XXGroupPermission={";
-		str += super.toString();
-		str += "id={" + id + "} ";
-		str += "groupId={" + groupId + "} ";
-		str += "moduleId={" + moduleId + "} ";
-		str += "isAllowed={" + isAllowed + "} ";
-		str += "}";
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
 
-		return str;
-	}
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        XXGroupPermission other = (XXGroupPermission) obj;
+        if (groupId == null) {
+            if (other.groupId != null) {
+                return false;
+            }
+        } else if (!groupId.equals(other.groupId)) {
+            return false;
+        }
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        } else if (!id.equals(other.id)) {
+            return false;
+        }
+        if (isAllowed == null) {
+            if (other.isAllowed != null) {
+                return false;
+            }
+        } else if (!isAllowed.equals(other.isAllowed)) {
+            return false;
+        }
+        if (moduleId == null) {
+            return other.moduleId == null;
+        } else
+            return moduleId.equals(other.moduleId);
+    }
+
+    @Override
+    public String toString() {
+
+        String str = "XXGroupPermission={";
+        str += super.toString();
+        str += "id={" + id + "} ";
+        str += "groupId={" + groupId + "} ";
+        str += "moduleId={" + moduleId + "} ";
+        str += "isAllowed={" + isAllowed + "} ";
+        str += "}";
+
+        return str;
+    }
 }

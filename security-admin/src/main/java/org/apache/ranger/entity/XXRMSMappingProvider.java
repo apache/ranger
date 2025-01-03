@@ -21,9 +21,6 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,9 +32,12 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import java.io.Serializable;
+import java.util.Date;
+
 @Entity
 @Cacheable
-@Table(name="x_rms_mapping_provider")
+@Table(name = "x_rms_mapping_provider")
 public class XXRMSMappingProvider implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -47,18 +47,10 @@ public class XXRMSMappingProvider implements Serializable {
     @Column(name = "id")
     protected Long id;
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="change_timestamp")
+    @Column(name = "change_timestamp")
     protected Date changeTimestamp;
-    public Date getChangeTimestamp() {
-        return changeTimestamp;
-    }
-    public void setChangeTimestamp(Date changeTimestamp) {
-        this.changeTimestamp = changeTimestamp;
-    }
-
     @Column(name = "name")
     protected String name;
-
     @Column(name = "last_known_version")
     protected Long lastKnownVersion;
 
@@ -69,12 +61,20 @@ public class XXRMSMappingProvider implements Serializable {
         setLastKnownVersion(-1L);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Date getChangeTimestamp() {
+        return changeTimestamp;
+    }
+
+    public void setChangeTimestamp(Date changeTimestamp) {
+        this.changeTimestamp = changeTimestamp;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -85,8 +85,7 @@ public class XXRMSMappingProvider implements Serializable {
     }
 
     /**
-     * @param name
-     *            the serviceId to set
+     * @param name the serviceId to set
      */
     public void setName(String name) {
         this.name = name;
@@ -100,8 +99,7 @@ public class XXRMSMappingProvider implements Serializable {
     }
 
     /**
-     * @param lastKnownVersion
-     *            the lastKnownVersion to set
+     * @param lastKnownVersion the lastKnownVersion to set
      */
     public void setLastKnownVersion(Long lastKnownVersion) {
         this.lastKnownVersion = lastKnownVersion;
@@ -118,8 +116,8 @@ public class XXRMSMappingProvider implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
+        final int prime  = 31;
+        int       result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((lastKnownVersion == null) ? 0 : lastKnownVersion.hashCode());
@@ -133,29 +131,34 @@ public class XXRMSMappingProvider implements Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         XXRMSMappingProvider other = (XXRMSMappingProvider) obj;
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (id == null) {
-            if (other.id != null)
+            if (other.id != null) {
                 return false;
-        } else if (!id.equals(other.id))
+            }
+        } else if (!id.equals(other.id)) {
             return false;
+        }
         if (lastKnownVersion == null) {
-            if (other.lastKnownVersion != null)
-                return false;
-        } else if (!lastKnownVersion.equals(other.lastKnownVersion))
-            return false;
-        return true;
+            return other.lastKnownVersion == null;
+        } else
+            return lastKnownVersion.equals(other.lastKnownVersion);
     }
 
     /*
@@ -180,5 +183,4 @@ public class XXRMSMappingProvider implements Serializable {
 
         return sb;
     }
-
 }

@@ -18,230 +18,222 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_datamask")
 public class XXPolicyItemDataMaskInfo extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_item_datamask_SEQ", sequenceName = "x_policy_item_datamask_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_datamask_SEQ")
-	@Column(name = "id")
-	protected Long id;
+        java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * id of the XXPolicyItemDataMaskInfo
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_item_datamask_SEQ", sequenceName = "x_policy_item_datamask_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_datamask_SEQ")
+    @Column(name = "id")
+    protected            Long id;
 
-	/**
-	 * policyItemId of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_item_id")
-	protected Long policyItemId;
+    /**
+     * policyItemId of the XXPolicyItemDataMaskInfo
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_item_id")
+    protected Long policyItemId;
 
-	/**
-	 * type of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "type")
-	protected Long type;
+    /**
+     * type of the XXPolicyItemDataMaskInfo
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "type")
+    protected Long type;
 
-	/**
-	 * isAllowed of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "condition_expr")
-	protected String conditionExpr;
+    /**
+     * isAllowed of the XXPolicyItemDataMaskInfo
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "condition_expr")
+    protected String conditionExpr;
 
-	/**
-	 * order of the XXPolicyItemDataMaskInfo
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "value_expr")
-	protected String valueExpr;
+    /**
+     * order of the XXPolicyItemDataMaskInfo
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "value_expr")
+    protected String valueExpr;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyItemId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyItemId
-	 *            Value to set member attribute <b> policyItemId</b>
-	 */
-	public void setPolicyItemId(Long policyItemId) {
-		this.policyItemId = policyItemId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        XXPolicyItemDataMaskInfo other = (XXPolicyItemDataMaskInfo) obj;
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        } else if (!id.equals(other.id)) {
+            return false;
+        }
+        if (conditionExpr == null) {
+            if (other.conditionExpr != null) {
+                return false;
+            }
+        } else if (!conditionExpr.equals(other.conditionExpr)) {
+            return false;
+        }
+        if (valueExpr == null) {
+            if (other.valueExpr != null) {
+                return false;
+            }
+        } else if (!valueExpr.equals(other.valueExpr)) {
+            return false;
+        }
+        if (policyItemId == null) {
+            if (other.policyItemId != null) {
+                return false;
+            }
+        } else if (!policyItemId.equals(other.policyItemId)) {
+            return false;
+        }
+        if (type == null) {
+            return other.type == null;
+        } else
+            return type.equals(other.type);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyItemId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyItemId</b> .
-	 */
-	public Long getPolicyItemId() {
-		return this.policyItemId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyItemDataMaskInfo [" + super.toString() + " id=" + id
+                + ", policyItemId=" + policyItemId + ", type=" + type
+                + ", conditionExpr=" + conditionExpr + ", valueExpr=" + valueExpr + "]";
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> type</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param type
-	 *            Value to set member attribute <b> type</b>
-	 */
-	public void setType(Long type) {
-		this.type = type;
-	}
+    /**
+     * Returns the value for the member attribute <b>policyItemId</b>
+     *
+     * @return Date - value of member attribute <b>policyItemId</b> .
+     */
+    public Long getPolicyItemId() {
+        return this.policyItemId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>type</b>
-	 *
-	 * @return Date - value of member attribute <b>type</b> .
-	 */
-	public Long getType() {
-		return this.type;
-	}
+    /**
+     * This method sets the value to the member attribute <b> policyItemId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyItemId Value to set member attribute <b> policyItemId</b>
+     */
+    public void setPolicyItemId(Long policyItemId) {
+        this.policyItemId = policyItemId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> conditionExpr</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param conditionExpr
-	 *            Value to set member attribute <b> conditionExpr</b>
-	 */
-	public void setConditionExpr(String conditionExpr) {
-		this.conditionExpr = conditionExpr;
-	}
+    /**
+     * Returns the value for the member attribute <b>type</b>
+     *
+     * @return Date - value of member attribute <b>type</b> .
+     */
+    public Long getType() {
+        return this.type;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>valueExpr</b>
-	 *
-	 * @return String - value of member attribute <b>valueExpr</b> .
-	 */
-	public String getConditionExpr() {
-		return this.valueExpr;
-	}
+    /**
+     * This method sets the value to the member attribute <b> type</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param type Value to set member attribute <b> type</b>
+     */
+    public void setType(Long type) {
+        this.type = type;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> valueExpr</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param valueExpr
-	 *            Value to set member attribute <b> valueExpr</b>
-	 */
-	public void setValueExpr(String valueExpr) {
-		this.valueExpr = valueExpr;
-	}
+    /**
+     * Returns the value for the member attribute <b>valueExpr</b>
+     *
+     * @return String - value of member attribute <b>valueExpr</b> .
+     */
+    public String getConditionExpr() {
+        return this.valueExpr;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>valueExpr</b>
-	 *
-	 * @return String - value of member attribute <b>valueExpr</b> .
-	 */
-	public String getValueExpr() {
-		return this.valueExpr;
-	}
+    /**
+     * This method sets the value to the member attribute <b> conditionExpr</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param conditionExpr Value to set member attribute <b> conditionExpr</b>
+     */
+    public void setConditionExpr(String conditionExpr) {
+        this.conditionExpr = conditionExpr;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXPolicyItemDataMaskInfo other = (XXPolicyItemDataMaskInfo) obj;
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (conditionExpr == null) {
-			if (other.conditionExpr != null) {
-				return false;
-			}
-		} else if (!conditionExpr.equals(other.conditionExpr)) {
-			return false;
-		}
-		if (valueExpr == null) {
-			if (other.valueExpr != null) {
-				return false;
-			}
-		} else if (!valueExpr.equals(other.valueExpr)) {
-			return false;
-		}
-		if (policyItemId == null) {
-			if (other.policyItemId != null) {
-				return false;
-			}
-		} else if (!policyItemId.equals(other.policyItemId)) {
-			return false;
-		}
-		if (type == null) {
-			if (other.type != null) {
-				return false;
-			}
-		} else if (!type.equals(other.type)) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * Returns the value for the member attribute <b>valueExpr</b>
+     *
+     * @return String - value of member attribute <b>valueExpr</b> .
+     */
+    public String getValueExpr() {
+        return this.valueExpr;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyItemDataMaskInfo [" + super.toString() + " id=" + id
-				+ ", policyItemId=" + policyItemId + ", type=" + type
-				+ ", conditionExpr=" + conditionExpr + ", valueExpr=" + valueExpr + "]";
-	}
-
+    /**
+     * This method sets the value to the member attribute <b> valueExpr</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param valueExpr Value to set member attribute <b> valueExpr</b>
+     */
+    public void setValueExpr(String valueExpr) {
+        this.valueExpr = valueExpr;
+    }
 }
