@@ -52,8 +52,8 @@ import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestinati
 public class CloudWatchUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudWatchUtil.class);
 
-    String           dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    SimpleDateFormat dateFormat     = new SimpleDateFormat(dateFormateStr);
+    final String           dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    final SimpleDateFormat dateFormat     = new SimpleDateFormat(dateFormateStr);
 
     private final String logGroupName;
     private final String logStreamPrefix;
@@ -76,7 +76,7 @@ public class CloudWatchUtil {
     }
 
     public List<FilteredLogEvent> searchResources(AWSLogs client, SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFieldList) {
-        List<FilteredLogEvent> result = new ArrayList<FilteredLogEvent>();
+        List<FilteredLogEvent> result = new ArrayList<>();
 
         try {
             String                 nextToken              = null;
@@ -136,7 +136,7 @@ public class CloudWatchUtil {
         Date          toDate        = null;
 
         if (searchCriteria.getParamList() != null) {
-            List<String> filterExpr = new ArrayList<String>();
+            List<String> filterExpr = new ArrayList<>();
 
             for (SearchField searchField : searchFields) {
                 Object paramValue = searchCriteria.getParamValue(searchField.getClientFieldName());
@@ -208,7 +208,7 @@ public class CloudWatchUtil {
                 }
 
                 if (StringUtils.isNotBlank(strExpr)) {
-                    filterPattern.append("{" + strExpr + "}");
+                    filterPattern.append("{").append(strExpr).append("}");
                 }
             }
         }
