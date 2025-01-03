@@ -19,7 +19,11 @@
 
 package org.apache.ranger.elasticsearch;
 
-import org.apache.ranger.common.*;
+import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.StringUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -42,10 +46,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 @Component
 public class ElasticSearchUtil {
@@ -54,8 +59,8 @@ public class ElasticSearchUtil {
     @Autowired
     StringUtil stringUtil;
 
-    String dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormateStr);
+    String           dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    SimpleDateFormat dateFormat     = new SimpleDateFormat(dateFormateStr);
 
     public ElasticSearchUtil() {
         String timeZone = PropertiesUtil.getProperty("xa.elasticSearch.timezone");
@@ -95,11 +100,11 @@ public class ElasticSearchUtil {
     }
 
     public void setSortClause(SearchCriteria searchCriteria,
-                              List<SortField> sortFields,
-                              SearchSourceBuilder searchSourceBuilder) {
+            List<SortField> sortFields,
+            SearchSourceBuilder searchSourceBuilder) {
 
         // TODO: We are supporting single sort field only for now
-        String sortBy = searchCriteria.getSortBy();
+        String sortBy      = searchCriteria.getSortBy();
         String querySortBy = null;
         if (!stringUtil.isEmpty(sortBy)) {
             sortBy = sortBy.trim();
@@ -127,9 +132,9 @@ public class ElasticSearchUtil {
 
         if (querySortBy != null) {
             // Add sort type
-            String sortType = searchCriteria.getSortType();
-            SortOrder order = SortOrder.ASC;
-            if (sortType != null && "desc".equalsIgnoreCase(sortType)) {
+            String    sortType = searchCriteria.getSortType();
+            SortOrder order    = SortOrder.ASC;
+            if ("desc".equalsIgnoreCase(sortType)) {
                 order = SortOrder.DESC;
             }
             searchSourceBuilder.sort(querySortBy, order);
@@ -152,11 +157,6 @@ public class ElasticSearchUtil {
         }
     }
 
-
-    private String filterText(Object value) {
-        return ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase());
-    }
-
     public QueryBuilder setDateRange(String fieldName, Date fromDate, Date toDate) {
         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(fieldName).format(dateFormateStr);
         if (fromDate != null) {
@@ -169,7 +169,7 @@ public class ElasticSearchUtil {
     }
 
     public MultiGetItemResponse[] fetch(RestHighLevelClient client, String index, SearchHit... hits) throws IOException {
-        if(0 == hits.length) {
+        if (0 == hits.length) {
             return new MultiGetItemResponse[0];
         }
         MultiGetRequest multiGetRequest = new MultiGetRequest();
@@ -181,18 +181,22 @@ public class ElasticSearchUtil {
         return client.multiGet(multiGetRequest, RequestOptions.DEFAULT).getResponses();
     }
 
+    private String filterText(Object value) {
+        return ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase());
+    }
+
     private class QueryAccumulator {
         public final List<QueryBuilder> queries = new ArrayList<>();
-        public final SearchCriteria searchCriteria;
-        public Date fromDate;
-        public Date toDate;
-        public String dateFieldName;
+        public final SearchCriteria     searchCriteria;
+        public       Date               fromDate;
+        public       Date               toDate;
+        public       String             dateFieldName;
 
         private QueryAccumulator(SearchCriteria searchCriteria) {
             this.searchCriteria = searchCriteria;
-            this.fromDate = null;
-            this.toDate = null;
-            this.dateFieldName = null;
+            this.fromDate       = null;
+            this.toDate         = null;
+            this.dateFieldName  = null;
         }
 
         public QueryAccumulator addQuery(SearchField searchField) {
@@ -204,11 +208,11 @@ public class ElasticSearchUtil {
         }
 
         public QueryBuilder getQueryBuilder(SearchField searchField) {
-            String clientFieldName = searchField.getClientFieldName();
-            String fieldName = searchField.getFieldName();
-            SearchField.DATA_TYPE dataType = searchField.getDataType();
-            SearchField.SEARCH_TYPE searchType = searchField.getSearchType();
-            Object paramValue = searchCriteria.getParamValue(clientFieldName);
+            String                  clientFieldName = searchField.getClientFieldName();
+            String                  fieldName       = searchField.getFieldName();
+            SearchField.DATA_TYPE   dataType        = searchField.getDataType();
+            SearchField.SEARCH_TYPE searchType      = searchField.getSearchType();
+            Object                  paramValue      = searchCriteria.getParamValue(clientFieldName);
             return getQueryBuilder(dataType, searchType, fieldName, paramValue);
         }
 
@@ -236,16 +240,16 @@ public class ElasticSearchUtil {
                 if (dataType == SearchField.DATA_TYPE.DATE) {
                     if (!(paramValue instanceof Date)) {
                         logger.error(String.format(
-                            "Search value is not a Java Date Object: %s %s %s",
-                            fieldName, searchType, paramValue));
+                                "Search value is not a Java Date Object: %s %s %s",
+                                fieldName, searchType, paramValue));
                     } else {
                         if (searchType == SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN
                                 || searchType == SearchField.SEARCH_TYPE.GREATER_THAN) {
-                            fromDate = (Date) paramValue;
+                            fromDate      = (Date) paramValue;
                             dateFieldName = fieldName;
                         } else if (searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN
                                 || searchType == SearchField.SEARCH_TYPE.LESS_THAN) {
-                            toDate = (Date) paramValue;
+                            toDate        = (Date) paramValue;
                             dateFieldName = fieldName;
                         }
                     }
@@ -255,7 +259,7 @@ public class ElasticSearchUtil {
                         || searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN
                         || searchType == SearchField.SEARCH_TYPE.LESS_THAN) { //NOPMD
                     logger.warn(String.format("Range Queries Not Implemented: %s %s %s",
-                        fieldName, searchType, paramValue));
+                            fieldName, searchType, paramValue));
                     return null;
                 } else {
                     if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
@@ -274,6 +278,5 @@ public class ElasticSearchUtil {
                 }
             }
         }
-
     }
 }
