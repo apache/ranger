@@ -37,89 +37,88 @@ import java.util.List;
 
 @Component
 public class PatchForOzoneDefaultPoliciesUpdate_J10044 extends BaseLoader {
-	private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
-	public static final String ACCESS_TYPE_ALL  = "all";
+    private static final Logger logger          = LoggerFactory.getLogger(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
+    public static final  String ACCESS_TYPE_ALL = "all";
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-	@Autowired
-	ServiceDBStore svcDBStore;
+    public static void main(String[] args) {
+        logger.info("main()");
+        try {
+            PatchForOzoneDefaultPoliciesUpdate_J10044 loader = (PatchForOzoneDefaultPoliciesUpdate_J10044) CLIUtil.getBean(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
+            loader.init();
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
+            logger.info("Load complete. Exiting.");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+            System.exit(1);
+        }
+    }
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForOzoneDefaultPoliciesUpdate_J10044 loader = (PatchForOzoneDefaultPoliciesUpdate_J10044) CLIUtil.getBean(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting.");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-	@Override
-	public void printStats() {
-		logger.info("PatchForOzoneDefaultPoliciesUpdate data ");
-	}
+    @Override
+    public void printStats() {
+        logger.info("PatchForOzoneDefaultPoliciesUpdate data ");
+    }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForOzoneDefaultPoliciesUpdate.execLoad()");
-		try {
-			if (!updateOzoneDefaultPolicies()) {
-				logger.error("Failed to apply the patch.");
-				System.exit(1);
-			}
-		} catch (Exception e) {
-			logger.error("Error while updateOzoneDefaultPolicies()data.", e);
-			System.exit(1);
-		}
-		logger.info("<== PatchForOzoneDefaultPoliciesUpdate.execLoad()");
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForOzoneDefaultPoliciesUpdate.execLoad()");
+        try {
+            if (!updateOzoneDefaultPolicies()) {
+                logger.error("Failed to apply the patch.");
+                System.exit(1);
+            }
+        } catch (Exception e) {
+            logger.error("Error while updateOzoneDefaultPolicies()data.", e);
+            System.exit(1);
+        }
+        logger.info("<== PatchForOzoneDefaultPoliciesUpdate.execLoad()");
+    }
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+    private boolean updateOzoneDefaultPolicies() throws Exception {
+        RangerServiceDef embeddedOzoneServiceDef;
 
-	private boolean updateOzoneDefaultPolicies() throws Exception {
-		RangerServiceDef embeddedOzoneServiceDef;
+        embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
-		embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+        if (embeddedOzoneServiceDef != null) {
+            List<XXService> dbServices = daoMgr.getXXService().findByServiceDefId(embeddedOzoneServiceDef.getId());
+            if (CollectionUtils.isNotEmpty(dbServices)) {
+                for (XXService dbService : dbServices) {
+                    SearchFilter filter = new SearchFilter();
+                    filter.setParam(SearchFilter.SERVICE_NAME, dbService.getName());
+                    updateDefaultOzonePolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
+                }
+            }
+        } else {
+            logger.error("The embedded Ozone service-definition does not exist.");
+            return false;
+        }
+        return true;
+    }
 
-		if (embeddedOzoneServiceDef != null) {
-			List<XXService> dbServices = daoMgr.getXXService().findByServiceDefId(embeddedOzoneServiceDef.getId());
-			if (CollectionUtils.isNotEmpty(dbServices)) {
-				for(XXService dbService : dbServices) {
-					SearchFilter filter = new SearchFilter();
-					filter.setParam(SearchFilter.SERVICE_NAME, dbService.getName());
-					updateDefaultOzonePolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
-				}
-			}
-		} else {
-			logger.error("The embedded Ozone service-definition does not exist.");
-			return false;
-		}
-		return true;
-	}
-
-	private void updateDefaultOzonePolicies(List<RangerPolicy> policies) throws Exception{
-		if (CollectionUtils.isNotEmpty(policies)) {
-			for (RangerPolicy policy : policies) {
-				if (policy.getName().startsWith("all")) {
-					RangerPolicy.RangerPolicyItem policyItemOwner = new RangerPolicy.RangerPolicyItem();
-					policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
-					policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
-					policyItemOwner.setDelegateAdmin(true);
-					policy.addPolicyItem(policyItemOwner);
-				}
-				svcDBStore.updatePolicy(policy);
-			}
-		}
-	}
+    private void updateDefaultOzonePolicies(List<RangerPolicy> policies) throws Exception {
+        if (CollectionUtils.isNotEmpty(policies)) {
+            for (RangerPolicy policy : policies) {
+                if (policy.getName().startsWith("all")) {
+                    RangerPolicy.RangerPolicyItem policyItemOwner = new RangerPolicy.RangerPolicyItem();
+                    policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
+                    policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
+                    policyItemOwner.setDelegateAdmin(true);
+                    policy.addPolicyItem(policyItemOwner);
+                }
+                svcDBStore.updatePolicy(policy);
+            }
+        }
+    }
 }

@@ -19,12 +19,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.ListIterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Date;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -42,35 +36,36 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME;
 
 @Component
 public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
-
-
     private static final Logger logger = LoggerFactory.getLogger(PatchAtlasForClassificationResource_J10047.class);
 
+    private static final List<String> ATLAS_RESOURCES = new ArrayList<>(Collections.singletonList("classification"));
 
-    private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
-            Arrays.asList( "classification"));
+    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(Arrays.asList("entity-remove-classification", "entity-add-classification", "entity-update-classification"));
 
-    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(
-            Arrays.asList("entity-remove-classification", "entity-add-classification", "entity-update-classification"));
-
-    private static final List<String> ATLAS_RESOURCE_ENTITY = new ArrayList<>(
-            Arrays.asList("entity-type", "entity-classification", "entity"));
+    private static final List<String> ATLAS_RESOURCE_ENTITY = new ArrayList<>(Arrays.asList("entity-type", "entity-classification", "entity"));
 
     private static final String ENTITY_CLASSIFICATION = "entity-classification";
- 
+
     private static final String CLASSIFICATION = "classification";
 
     private static final String ENTITY = "entity";
 
-    private static final List<String> TYPES = new ArrayList<>(
-            Arrays.asList("type", "entity-type", "entity-classification", "relationship-type", "end-one-entity-type",
-                    "end-one-entity-classification","end-two-entity-type","end-two-entity-classification","entity-business-metadata"));
+    private static final List<String> TYPES = new ArrayList<>(Arrays.asList("type", "entity-type", "entity-classification", "relationship-type", "end-one-entity-type", "end-one-entity-classification", "end-two-entity-type", "end-two-entity-classification", "entity-business-metadata"));
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -84,12 +79,10 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
     @Autowired
     ServiceDBStore svcStore;
 
-
     public static void main(String[] args) {
         logger.info("main()");
         try {
-            PatchAtlasForClassificationResource_J10047 loader = (PatchAtlasForClassificationResource_J10047) org.apache.ranger.util.CLIUtil
-                    .getBean(PatchAtlasForClassificationResource_J10047.class);
+            PatchAtlasForClassificationResource_J10047 loader = (PatchAtlasForClassificationResource_J10047) org.apache.ranger.util.CLIUtil.getBean(PatchAtlasForClassificationResource_J10047.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -108,6 +101,11 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
     }
 
     @Override
+    public void printStats() {
+        logger.info("PatchAtlasForClassificationResource_J10047 Logs");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchAtlasForClassificationResource_J10047.execLoad()");
         try {
@@ -120,23 +118,17 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
         logger.info("<== PatchAtlasForClassificationResource_J10047.execLoad()");
     }
 
-    @Override
-    public void printStats() {
-        logger.info("PatchAtlasForClassificationResource_J10047 Logs");
-    }
-
     private void addResourceClassificationsInServiceDef() throws Exception {
-        RangerServiceDef ret = null;
+        RangerServiceDef ret                     = null;
         RangerServiceDef embeddedAtlasServiceDef = null;
-        XXServiceDef xXServiceDefObj = null;
-        RangerServiceDef dbAtlasServiceDef = null;
-
+        XXServiceDef     xXServiceDefObj         = null;
+        RangerServiceDef dbAtlasServiceDef       = null;
 
         embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EMBEDDED_SERVICEDEF_ATLAS_NAME);
         if (embeddedAtlasServiceDef != null) {
             xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EMBEDDED_SERVICEDEF_ATLAS_NAME);
             if (xXServiceDefObj == null) {
-                logger.info(" service-def for "+ EMBEDDED_SERVICEDEF_ATLAS_NAME+" not found. No patching is needed");
+                logger.info("service-def for {} not found. No patching is needed", EMBEDDED_SERVICEDEF_ATLAS_NAME);
                 return;
             }
 
@@ -150,7 +142,7 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
             validator.validate(dbAtlasServiceDef, RangerValidator.Action.UPDATE);
             ret = svcStore.updateServiceDef(dbAtlasServiceDef);
             if (ret == null) {
-                logger.error("Error while updating "+EMBEDDED_SERVICEDEF_ATLAS_NAME+"  service-def");
+                logger.error("Error while updating {}  service-def", EMBEDDED_SERVICEDEF_ATLAS_NAME);
                 throw new RuntimeException("Error while updating " + EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
             }
         }
@@ -158,9 +150,9 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
 
     private void updateResourceInServiceDef(RangerServiceDef embeddedAtlasServiceDef, RangerServiceDef dbAtlasServiceDef) {
         List<RangerServiceDef.RangerResourceDef> embeddedAtlasResourceDefs;
-        List<RangerAccessTypeDef> embeddedAtlasAccessTypes;
+        List<RangerAccessTypeDef>                embeddedAtlasAccessTypes;
         embeddedAtlasResourceDefs = embeddedAtlasServiceDef.getResources();
-        embeddedAtlasAccessTypes = embeddedAtlasServiceDef.getAccessTypes();
+        embeddedAtlasAccessTypes  = embeddedAtlasServiceDef.getAccessTypes();
 
         if (!checkResourcePresent(dbAtlasServiceDef.getResources()) && checkResourcePresent(embeddedAtlasResourceDefs)) {
             dbAtlasServiceDef.setResources(embeddedAtlasResourceDefs);
@@ -211,32 +203,29 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
     }
 
     private void createAdditionalPolicyWithClassificationForExistingEntityClassificationPolicy() throws Exception {
-
         XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
         if (xXServiceDefObj == null) {
-            logger.debug("ServiceDef not found with name :" + EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            logger.debug("ServiceDef not found with name :{}", EMBEDDED_SERVICEDEF_ATLAS_NAME);
             return;
         }
 
-        Long xServiceDefId = xXServiceDefObj.getId();
-        List<XXService> xxServices = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
+        Long            xServiceDefId = xXServiceDefObj.getId();
+        List<XXService> xxServices    = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
 
         for (XXService xxService : xxServices) {
-
             List<RangerPolicy> servicePolicies = svcStore.getServicePolicies(xxService.getId(), new SearchFilter());
 
             for (RangerPolicy policy : servicePolicies) {
-
-                if(!isEntityResource(policy.getResources())){
+                if (!isEntityResource(policy.getResources())) {
                     continue;
                 }
 
-                List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+                List<RangerPolicyItem> policyItems     = policy.getPolicyItems();
                 List<RangerPolicyItem> denypolicyItems = policy.getDenyPolicyItems();
 
-                boolean policyItemCheck = checkAndFilterNonClassificationAccessTypeFromPolicy(policyItems);
-                boolean denyPolicyItemCheck =  checkAndFilterNonClassificationAccessTypeFromPolicy(denypolicyItems);
+                boolean policyItemCheck     = checkAndFilterNonClassificationAccessTypeFromPolicy(policyItems);
+                boolean denyPolicyItemCheck = checkAndFilterNonClassificationAccessTypeFromPolicy(denypolicyItems);
 
                 if (policyItemCheck || denyPolicyItemCheck) {
                     policy.setName(policy.getName() + " - " + CLASSIFICATION);
@@ -265,14 +254,14 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
     private boolean isEntityResource(Map<String, RangerPolicyResource> xPolResMap) {
         boolean ret = true;
 
-        if (xPolResMap != null && xPolResMap.size() == ATLAS_RESOURCE_ENTITY.size()){
+        if (xPolResMap != null && xPolResMap.size() == ATLAS_RESOURCE_ENTITY.size()) {
             for (String resourceName : ATLAS_RESOURCE_ENTITY) {
                 if (xPolResMap.get(resourceName) == null) {
                     ret = false;
                     break;
                 }
             }
-        }else{
+        } else {
             ret = false;
         }
 
@@ -280,12 +269,11 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
     }
 
     private boolean checkAndFilterNonClassificationAccessTypeFromPolicy(List<RangerPolicyItem> policyItems) {
-
-        ListIterator<RangerPolicyItem> policyItemListIterator = policyItems.listIterator();
-        boolean isClassificationAccessTypeExist = false;
+        ListIterator<RangerPolicyItem> policyItemListIterator          = policyItems.listIterator();
+        boolean                        isClassificationAccessTypeExist = false;
 
         while (policyItemListIterator.hasNext()) {
-            RangerPolicyItem policyItem = policyItemListIterator.next();
+            RangerPolicyItem                     policyItem             = policyItemListIterator.next();
             ListIterator<RangerPolicyItemAccess> itemAccessListIterator = policyItem.getAccesses().listIterator();
 
             boolean accessPresent = false;
@@ -294,7 +282,7 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
                 if (!ATLAS_ACCESS_TYPES.contains(access.getType())) {
                     itemAccessListIterator.remove();
                 } else {
-                    accessPresent = true;
+                    accessPresent                   = true;
                     isClassificationAccessTypeExist = true;
                 }
             }
@@ -305,5 +293,4 @@ public class PatchAtlasForClassificationResource_J10047 extends BaseLoader {
 
         return isClassificationAccessTypeExist;
     }
-
 }

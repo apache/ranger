@@ -18,11 +18,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -53,24 +48,27 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Component
 public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034.class);
 
-    private static final String RESOURCE_DEF_ENTITY_LABEL = "all - entity-type, entity-classification, entity, entity-label";
+    private static final String RESOURCE_DEF_ENTITY_LABEL             = "all - entity-type, entity-classification, entity, entity-label";
     private static final String RESOURCE_DEF_ENTITY_BUSINESS_METADATA = "all - entity-type, entity-classification, entity, entity-business-metadata";
 
-    private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
-            Arrays.asList("entity-label", "entity-business-metadata"));
-    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(
-            Arrays.asList("admin-purge", "entity-add-label", "entity-remove-label", "entity-update-business-metadata"));
+    private static final List<String> ATLAS_RESOURCES    = new ArrayList<>(Arrays.asList("entity-label", "entity-business-metadata"));
+    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(Arrays.asList("admin-purge", "entity-add-label", "entity-remove-label", "entity-update-business-metadata"));
 
-    private static final List<String> ATLAS_RESOURCE_LABEL = new ArrayList<>(
-            Arrays.asList("entity-type", "entity-classification", "entity", "entity-label"));
-    private static final List<String> ATLAS_RESOURCE_BUSINESS_METADATA = new ArrayList<>(
-            Arrays.asList("entity-type", "entity-classification", "entity", "entity-business-metadata"));
-    private static final String LOGIN_ID_ADMIN = "admin";
-    private static final String GROUP_PUBLIC = "public";
+    private static final List<String> ATLAS_RESOURCE_LABEL             = new ArrayList<>(Arrays.asList("entity-type", "entity-classification", "entity", "entity-label"));
+    private static final List<String> ATLAS_RESOURCE_BUSINESS_METADATA = new ArrayList<>(Arrays.asList("entity-type", "entity-classification", "entity", "entity-business-metadata"));
+    private static final String       LOGIN_ID_ADMIN                   = "admin";
+    private static final String       GROUP_PUBLIC                     = "public";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -99,8 +97,7 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
     public static void main(String[] args) {
         logger.info("main()");
         try {
-            PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 loader = (PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034) CLIUtil
-                    .getBean(PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034.class);
+            PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 loader = (PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034) CLIUtil.getBean(PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -119,45 +116,42 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
     }
 
     @Override
+    public void printStats() {
+        logger.info("PatchForAtlasToAddEntityLabelAndBusinessMetadata Logs");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchForAtlasToAddEntityLabelAndBusinessMetadata.execLoad()");
         try {
             addResourceEntityLabelAndEntityBusinessMetadataInServiceDef();
             createDefaultPolicyForEntityLabelAndEntityBusinessMetadata();
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+            throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
         }
         logger.info("<== PatchForAtlasToAddEntityLabelAndBusinessMetadata.execLoad()");
     }
 
-    @Override
-    public void printStats() {
-        logger.info("PatchForAtlasToAddEntityLabelAndBusinessMetadata Logs");
-    }
-
     private void addResourceEntityLabelAndEntityBusinessMetadataInServiceDef() throws Exception {
-        RangerServiceDef ret = null;
-        RangerServiceDef embeddedAtlasServiceDef = null;
-        XXServiceDef xXServiceDefObj = null;
-        RangerServiceDef dbAtlasServiceDef = null;
-        List<RangerServiceDef.RangerResourceDef> embeddedAtlasResourceDefs = null;
-        List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes = null;
+        RangerServiceDef                           ret                       = null;
+        RangerServiceDef                           embeddedAtlasServiceDef   = null;
+        XXServiceDef                               xXServiceDefObj           = null;
+        RangerServiceDef                           dbAtlasServiceDef         = null;
+        List<RangerServiceDef.RangerResourceDef>   embeddedAtlasResourceDefs = null;
+        List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes  = null;
 
-        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance()
-                .getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
         if (embeddedAtlasServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef()
-                    .findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
             if (xXServiceDefObj == null) {
-                logger.info(xXServiceDefObj + ": service-def not found. No patching is needed");
+                logger.info("{} service-def not found. No patching is needed", xXServiceDefObj);
                 return;
             }
 
             dbAtlasServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
             embeddedAtlasResourceDefs = embeddedAtlasServiceDef.getResources();
-            embeddedAtlasAccessTypes = embeddedAtlasServiceDef.getAccessTypes();
+            embeddedAtlasAccessTypes  = embeddedAtlasServiceDef.getAccessTypes();
             if (checkResourcePresent(embeddedAtlasResourceDefs)) {
                 dbAtlasServiceDef.setResources(embeddedAtlasResourceDefs);
                 if (checkAccessPresent(embeddedAtlasAccessTypes)) {
@@ -169,10 +163,8 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
             validator.validate(dbAtlasServiceDef, Action.UPDATE);
             ret = svcStore.updateServiceDef(dbAtlasServiceDef);
             if (ret == null) {
-                logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME
-                        + " service-def");
-                throw new RuntimeException("Error while updating "
-                        + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+                logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+                throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
             }
         }
     }
@@ -201,18 +193,17 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
 
     private void createDefaultPolicyForEntityLabelAndEntityBusinessMetadata() throws Exception {
         logger.info("==> createDefaultPolicyForEntityLabelAndEntityBusinessMetadata ");
-        XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef()
-                .findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+        XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
         if (xXServiceDefObj == null) {
-            logger.debug("ServiceDef not found with name :" + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            logger.debug("ServiceDef not found with name :{}", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
             return;
         }
-        Long xServiceDefId = xXServiceDefObj.getId();
-        List<XXService> xxServices = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
+        Long            xServiceDefId = xXServiceDefObj.getId();
+        List<XXService> xxServices    = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
         for (XXService xxService : xxServices) {
-            List<XXPolicy> xxPolicies = daoMgr.getXXPolicy().findByServiceId(xxService.getId());
-            Boolean isEntityLabelPolicyPresent = false;
-            Boolean isEntityBusinessMetadataPolicyPresent = false;
+            List<XXPolicy> xxPolicies                            = daoMgr.getXXPolicy().findByServiceId(xxService.getId());
+            Boolean        isEntityLabelPolicyPresent            = false;
+            Boolean        isEntityBusinessMetadataPolicyPresent = false;
             for (XXPolicy xxPolicy : xxPolicies) {
                 if (xxPolicy.getName().equalsIgnoreCase(RESOURCE_DEF_ENTITY_LABEL)) {
                     isEntityLabelPolicyPresent = true;
@@ -226,44 +217,37 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
             }
 
             if (!isEntityLabelPolicyPresent) {
-                List<String> accessTypesLabel = Arrays.asList("entity-add-label", "entity-remove-label");
-                List<String> accessTypesReadEntity = Arrays.asList("entity-read");
-                createDefaultRangerPolicy(xServiceDefId, xxService, RESOURCE_DEF_ENTITY_LABEL, accessTypesLabel,
-                        accessTypesReadEntity, ATLAS_RESOURCE_LABEL);
+                List<String> accessTypesLabel      = Arrays.asList("entity-add-label", "entity-remove-label");
+                List<String> accessTypesReadEntity = Collections.singletonList("entity-read");
+                createDefaultRangerPolicy(xServiceDefId, xxService, RESOURCE_DEF_ENTITY_LABEL, accessTypesLabel, accessTypesReadEntity, ATLAS_RESOURCE_LABEL);
             }
 
             if (!isEntityBusinessMetadataPolicyPresent) {
-                List<String> accessTypesBusinessMetadata = Arrays.asList("entity-update-business-metadata");
-                List<String> accessTypesReadEntity = Arrays.asList("entity-read");
-                createDefaultRangerPolicy(xServiceDefId, xxService, RESOURCE_DEF_ENTITY_BUSINESS_METADATA, accessTypesBusinessMetadata,
-                        accessTypesReadEntity, ATLAS_RESOURCE_BUSINESS_METADATA);
+                List<String> accessTypesBusinessMetadata = Collections.singletonList("entity-update-business-metadata");
+                List<String> accessTypesReadEntity       = Collections.singletonList("entity-read");
+                createDefaultRangerPolicy(xServiceDefId, xxService, RESOURCE_DEF_ENTITY_BUSINESS_METADATA, accessTypesBusinessMetadata, accessTypesReadEntity, ATLAS_RESOURCE_BUSINESS_METADATA);
             }
-
         }
         logger.info("<== createDefaultPolicyForEntityLabelAndEntityBusinessMetadata ");
     }
 
-    private RangerPolicy createDefaultRangerPolicy(Long xServiceDefId, XXService xxService, String policyName,
-            List<String> accessTypesLableOrBusinessMetadata, List<String> accessTypesReadEntity, List<String> resources)
-            throws Exception {
+    private RangerPolicy createDefaultRangerPolicy(Long xServiceDefId, XXService xxService, String policyName, List<String> accessTypesLableOrBusinessMetadata, List<String> accessTypesReadEntity, List<String> resources) throws Exception {
         RangerPolicy rangerPolicy = getRangerPolicyObject(xxService.getName(), policyName);
 
         RangerPolicyItem rangerPolicyItemLabelOrBusinessMetadata = new RangerPolicyItem();
-        List<RangerPolicyItemAccess> accessesLabelOrBusinessMetadata = getRangerPolicyItemAccessList(
-                accessTypesLableOrBusinessMetadata, xxService, rangerPolicy.getName());
+        List<RangerPolicyItemAccess> accessesLabelOrBusinessMetadata = getRangerPolicyItemAccessList(accessTypesLableOrBusinessMetadata, xxService, rangerPolicy.getName());
         rangerPolicyItemLabelOrBusinessMetadata.setDelegateAdmin(Boolean.TRUE);
         rangerPolicyItemLabelOrBusinessMetadata.setAccesses(accessesLabelOrBusinessMetadata);
         List<String> usersOfPolicyItem1 = getDefaultPolicyUsers(xxService);
         rangerPolicyItemLabelOrBusinessMetadata.setUsers(usersOfPolicyItem1);
 
         RangerPolicyItem rangerPolicyItemReadEntity = new RangerPolicyItem();
-        List<RangerPolicyItemAccess> accessesReadEntity = getRangerPolicyItemAccessList(accessTypesReadEntity,
-                xxService, rangerPolicy.getName());
+        List<RangerPolicyItemAccess> accessesReadEntity = getRangerPolicyItemAccessList(accessTypesReadEntity, xxService, rangerPolicy.getName());
         rangerPolicyItemReadEntity.setDelegateAdmin(Boolean.FALSE);
         rangerPolicyItemReadEntity.setAccesses(accessesReadEntity);
         List<String> usersOfPolicyItem2 = new ArrayList<String>();
         usersOfPolicyItem2.add("rangertagsync");
-        List<String> groups = Arrays.asList(GROUP_PUBLIC);
+        List<String> groups = Collections.singletonList(GROUP_PUBLIC);
         rangerPolicyItemReadEntity.setGroups(groups);
         rangerPolicyItemReadEntity.setUsers(usersOfPolicyItem2);
 
@@ -271,19 +255,18 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
         rangerPolicyItems.add(rangerPolicyItemLabelOrBusinessMetadata);
         rangerPolicyItems.add(rangerPolicyItemReadEntity);
         rangerPolicy.setPolicyItems(rangerPolicyItems);
-        Map<String, RangerPolicyResource> xPolResMap = getRangerPolicyResourceMap(resources, xServiceDefId,
-                xxService.getName(), rangerPolicy.getName());
+        Map<String, RangerPolicyResource> xPolResMap = getRangerPolicyResourceMap(resources, xServiceDefId, xxService.getName(), rangerPolicy.getName());
         rangerPolicy.setResources(xPolResMap);
-        logger.info("Creating policy for service id : " + xxService.getId());
+        logger.info("Creating policy for service id : {}", xxService.getId());
         RangerPolicy createdRangerPolicy = svcDBStore.createPolicy(rangerPolicy);
         if (createdRangerPolicy != null) {
-            logger.info("Policy created : " + createdRangerPolicy.getName());
+            logger.info("Policy created : {}", createdRangerPolicy.getName());
         }
         return createdRangerPolicy;
     }
 
     private RangerPolicy getRangerPolicyObject(String serviceName, String policyName) {
-        RangerPolicy rangerPolicy = new RangerPolicy();
+        RangerPolicy                  rangerPolicy      = new RangerPolicy();
         RangerPolicyResourceSignature resourceSignature = new RangerPolicyResourceSignature(rangerPolicy);
 
         rangerPolicy.setName(policyName);
@@ -300,15 +283,12 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
         return rangerPolicy;
     }
 
-    private List<RangerPolicyItemAccess> getRangerPolicyItemAccessList(List<String> accessTypesLabel,
-            XXService xxService, String policyName) {
+    private List<RangerPolicyItemAccess> getRangerPolicyItemAccessList(List<String> accessTypesLabel, XXService xxService, String policyName) {
         List<RangerPolicyItemAccess> accessesLabel = new ArrayList<RangerPolicyItemAccess>();
         for (int i = 0; i < accessTypesLabel.size(); i++) {
-            XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessTypesLabel.get(i),
-                    xxService.getId());
+            XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessTypesLabel.get(i), xxService.getId());
             if (xAccTypeDef == null) {
-                throw new RuntimeException(accessTypesLabel.get(i) + ": is not a valid access-type. policy='"
-                        + policyName + "' service='" + xxService.getName() + "'");
+                throw new RuntimeException(accessTypesLabel.get(i) + ": is not a valid access-type. policy='" + policyName + "' service='" + xxService.getName() + "'");
             }
             RangerPolicyItemAccess xPolItemAcc = new RangerPolicyItemAccess();
             xPolItemAcc.setIsAllowed(Boolean.TRUE);
@@ -320,10 +300,9 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
 
     private List<String> getDefaultPolicyUsers(XXService xxService) {
         XXPortalUser xxServiceCreator = daoMgr.getXXPortalUser().getById(xxService.getAddedByUserId());
-        XXServiceConfigMap cfgMap = daoMgr.getXXServiceConfigMap().findByServiceNameAndConfigKey(xxService.getName(),
-                "username");
+        XXServiceConfigMap cfgMap = daoMgr.getXXServiceConfigMap().findByServiceNameAndConfigKey(xxService.getName(), "username");
         XXPortalUser xxServiceCfgUser = daoMgr.getXXPortalUser().findByLoginId(cfgMap.getConfigvalue());
-        List<String> users = new ArrayList<String>();
+        List<String> users            = new ArrayList<String>();
         if (xxServiceCreator != null) {
             users.add(xxServiceCreator.getLoginId());
         }
@@ -333,14 +312,12 @@ public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends Bas
         return users;
     }
 
-    private Map<String, RangerPolicyResource> getRangerPolicyResourceMap(List<String> resources, Long serviceDefId,
-            String serviceName, String policyName) {
+    private Map<String, RangerPolicyResource> getRangerPolicyResourceMap(List<String> resources, Long serviceDefId, String serviceName, String policyName) {
         Map<String, RangerPolicyResource> xPolResMap = new HashMap<String, RangerPolicyResource>();
         for (int i = 0; i < resources.size(); i++) {
             XXResourceDef xResDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resources.get(i), serviceDefId);
             if (xResDef == null) {
-                throw new RuntimeException(resources.get(i) + ": is not a valid resource-type. policy='" + policyName
-                        + "' service='" + serviceName + "'");
+                throw new RuntimeException(resources.get(i) + ": is not a valid resource-type. policy='" + policyName + "' service='" + serviceName + "'");
             }
             RangerPolicyResource xPolRes = new RangerPolicyResource();
 

@@ -48,38 +48,38 @@ import java.util.Map;
 
 @Component
 public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
-    public static final String LOGIN_ID_ADMIN = "admin";
-    public static final String WILDCARD_ASTERISK = "*";
-    public static final String POlICY_NAME_FOR_ALL_SYSINFO = "all - sysinfo";
-    public static final String POlICY_NAME_FOR_ALL_CATALOG_SCHEMA_FUNCTION = "all - catalog, schema, schemafunction";
-    public static final String POlICY_NAME_FOR_ALL_QUERY = "all - queryid";
-    public static final String POlICY_NAME_FOR_ALL_ROLE = "all - role";
-    public static final String RESOURCE_SYSINFO = "sysinfo";
-    public static final String RESOURCE_CATALOG = "catalog";
-    public static final String RESOURCE_SCHEMA = "schema";
-    public static final String RESOURCE_QUERYID = "queryid";
-    public static final String RESOURCE_ROLE = "role";
-    public static final String RESOURCE_SCHEMAFUNCTION = "schemafunction";
-    public static final String ACCESS_TYPE_READ_SYSINFO = "read_sysinfo";
-    public static final String ACCESS_TYPE_WRITE_SYSINFO = "write_sysinfo";
-    public static final String ACCESS_TYPE_CREATE = "create";
-    public static final String ACCESS_TYPE_DROP = "drop";
-    public static final String ACCESS_TYPE_SHOW = "show";
-    public static final String ACCESS_TYPE_GRANT = "grant";
-    public static final String ACCESS_TYPE_REVOKE = "revoke";
-    public static final String ACCESS_TYPE_EXECUTE = "execute";
-    public static final String ACCESS_TYPE_SELECT = "select";
-    private static final Logger logger = Logger.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
-    private static final String TRINO_SVC_DEF_NAME = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TRINO_NAME;
+    private static final Logger logger                                      = Logger.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
+    public static final  String LOGIN_ID_ADMIN                              = "admin";
+    public static final  String WILDCARD_ASTERISK                           = "*";
+    public static final  String POlICY_NAME_FOR_ALL_SYSINFO                 = "all - sysinfo";
+    public static final  String POlICY_NAME_FOR_ALL_CATALOG_SCHEMA_FUNCTION = "all - catalog, schema, schemafunction";
+    public static final  String POlICY_NAME_FOR_ALL_QUERY                   = "all - queryid";
+    public static final  String POlICY_NAME_FOR_ALL_ROLE                    = "all - role";
+    public static final  String RESOURCE_SYSINFO                            = "sysinfo";
+    public static final  String RESOURCE_CATALOG                            = "catalog";
+    public static final  String RESOURCE_SCHEMA                             = "schema";
+    public static final  String RESOURCE_QUERYID                            = "queryid";
+    public static final  String RESOURCE_ROLE                               = "role";
+    public static final  String RESOURCE_SCHEMAFUNCTION                     = "schemafunction";
+    public static final  String ACCESS_TYPE_READ_SYSINFO                    = "read_sysinfo";
+    public static final  String ACCESS_TYPE_WRITE_SYSINFO                   = "write_sysinfo";
+    public static final  String ACCESS_TYPE_CREATE                          = "create";
+    public static final  String ACCESS_TYPE_DROP                            = "drop";
+    public static final  String ACCESS_TYPE_SHOW                            = "show";
+    public static final  String ACCESS_TYPE_GRANT                           = "grant";
+    public static final  String ACCESS_TYPE_REVOKE                          = "revoke";
+    public static final  String ACCESS_TYPE_EXECUTE                         = "execute";
+    public static final  String ACCESS_TYPE_SELECT                          = "select";
+    private static final String TRINO_SVC_DEF_NAME                          = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TRINO_NAME;
     @Autowired
-    GUIDUtil guidUtil;
+    GUIDUtil                   guidUtil;
     @Autowired
-    ServiceDBStore svcDBStore;
+    ServiceDBStore             svcDBStore;
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
     @Autowired
-    private RangerDaoManager daoMgr;
+    private RangerDaoManager       daoMgr;
     @Autowired
     private RangerValidatorFactory validatorFactory;
 
@@ -119,12 +119,12 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
                 txTemplate.execute(new TransactionCallback<Object>() {
                     @Override
                     public Object doInTransaction(TransactionStatus status) {
-                        RangerServiceDef dbRangerServiceDef = null;
+                        RangerServiceDef dbRangerServiceDef      = null;
                         RangerServiceDef embeddedTrinoServiceDef = null;
                         try {
                             embeddedTrinoServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(TRINO_SVC_DEF_NAME);
                         } catch (Exception ex) {
-                            logger.error("Error while loading service-def: " + TRINO_SVC_DEF_NAME, ex);
+                            logger.error("Error while loading service-def:" + TRINO_SVC_DEF_NAME, ex);
                         }
                         if (embeddedTrinoServiceDef == null) {
                             logger.error("The embedded Trino service-definition does not exist.");
@@ -200,8 +200,8 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
         logger.info("===> addDefaultPolicies ServiceName : " + serviceName + " ZoneName : " + zoneName);
         List<String> resources = new ArrayList<>();
         resources.add(RESOURCE_SYSINFO);
-        RangerPolicy allSysInfoPolicy = getPolicy(serviceName, zoneName, POlICY_NAME_FOR_ALL_SYSINFO, resources);
-        List<RangerPolicy> policies = svcDBStore.getPoliciesByResourceSignature(serviceName, allSysInfoPolicy.getResourceSignature(), true);
+        RangerPolicy       allSysInfoPolicy = getPolicy(serviceName, zoneName, POlICY_NAME_FOR_ALL_SYSINFO, resources);
+        List<RangerPolicy> policies         = svcDBStore.getPoliciesByResourceSignature(serviceName, allSysInfoPolicy.getResourceSignature(), true);
         if (CollectionUtils.isEmpty(policies)) {
             logger.info("No policy found with resource sysinfo = * creating new policy");
             svcDBStore.createPolicy(allSysInfoPolicy);
@@ -243,7 +243,7 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
 
     private RangerPolicy getPolicy(String serviceName, String zoneName, String policyName, List<String> resources) {
         logger.info("===> getPolicy ");
-        RangerPolicy policy;
+        RangerPolicy                                   policy;
         Map<String, RangerPolicy.RangerPolicyResource> policyResources = new HashMap<>();
         for (String resource : resources) {
             policyResources.put(resource, new RangerPolicy.RangerPolicyResource(WILDCARD_ASTERISK));
@@ -263,19 +263,17 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
         policyItems.add(getPolicyItem("select", "rangerlookup", false));
         policy.setPolicyItems(policyItems);
         policy.setResourceSignature(new RangerPolicyResourceSignature(policy).getSignature());
-        if (logger.isDebugEnabled()) {
-            logger.debug("===> getPolicy policy ResourceSignature  " + policy.getResourceSignature());
-            logger.debug("===> getPolicy policy : " + policy);
-        }
+        logger.debug("===> getPolicy policy ResourceSignature  " + policy.getResourceSignature());
+        logger.debug("===> getPolicy policy : " + policy);
         logger.info("<=== getPolicy ");
         return policy;
     }
 
     private RangerPolicy.RangerPolicyItem getPolicyItem(String policyName, String user, boolean delegateAdmin) {
         RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
-        policyItem.setUsers(new ArrayList<String>() {{
-            add(user);
-        }});
+        List<String> users = new ArrayList<String>();
+        users.add(user);
+        policyItem.setUsers(users);
         policyItem.setAccesses(getAccessList(policyName));
         policyItem.setDelegateAdmin(delegateAdmin);
         return policyItem;
@@ -311,5 +309,4 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
         }
         return accessList;
     }
-
 }

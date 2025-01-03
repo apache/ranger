@@ -17,9 +17,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -35,14 +32,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Component
 public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasAdminAudits_J10043.class);
 
-    private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
-            Arrays.asList("atlas-service"));
-    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(
-            Arrays.asList("admin-audits"));
+    private static final List<String> ATLAS_RESOURCES    = new ArrayList<>(Collections.singletonList("atlas-service"));
+    private static final List<String> ATLAS_ACCESS_TYPES = new ArrayList<>(Collections.singletonList("admin-audits"));
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -59,8 +58,7 @@ public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
     public static void main(String[] args) {
         logger.info("main()");
         try {
-            PatchForAtlasAdminAudits_J10043 loader = (PatchForAtlasAdminAudits_J10043) CLIUtil
-                    .getBean(PatchForAtlasAdminAudits_J10043.class);
+            PatchForAtlasAdminAudits_J10043 loader = (PatchForAtlasAdminAudits_J10043) CLIUtil.getBean(PatchForAtlasAdminAudits_J10043.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -79,44 +77,41 @@ public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
     }
 
     @Override
+    public void printStats() {
+        logger.info("PatchForAtlasAdminAudits_J10043 Logs");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchForAtlasAdminAudits_J10043.execLoad()");
         try {
             addAdminAuditsPermissionInServiceDef();
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+            throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
         }
         logger.info("<== PatchForAtlasAdminAudits_J10043.execLoad()");
     }
 
-    @Override
-    public void printStats() {
-        logger.info("PatchForAtlasAdminAudits_J10043 Logs");
-    }
-
     private void addAdminAuditsPermissionInServiceDef() throws Exception {
-        RangerServiceDef ret = null;
-        RangerServiceDef embeddedAtlasServiceDef = null;
-        XXServiceDef xXServiceDefObj = null;
-        RangerServiceDef dbAtlasServiceDef = null;
-        List<RangerServiceDef.RangerResourceDef> embeddedAtlasResourceDefs = null;
-        List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes = null;
+        RangerServiceDef                           ret                       = null;
+        RangerServiceDef                           embeddedAtlasServiceDef   = null;
+        XXServiceDef                               xXServiceDefObj           = null;
+        RangerServiceDef                           dbAtlasServiceDef         = null;
+        List<RangerServiceDef.RangerResourceDef>   embeddedAtlasResourceDefs = null;
+        List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes  = null;
 
-        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance()
-                .getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
         if (embeddedAtlasServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef()
-                    .findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
             if (xXServiceDefObj == null) {
-                logger.info(xXServiceDefObj + ": service-def not found. No patching is needed");
+                logger.info("{}: service-def not found. No patching is needed", xXServiceDefObj);
                 return;
             }
 
             dbAtlasServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
             embeddedAtlasResourceDefs = embeddedAtlasServiceDef.getResources();
-            embeddedAtlasAccessTypes = embeddedAtlasServiceDef.getAccessTypes();
+            embeddedAtlasAccessTypes  = embeddedAtlasServiceDef.getAccessTypes();
 
             if (checkResourcePresent(embeddedAtlasResourceDefs)) {
                 dbAtlasServiceDef.setResources(embeddedAtlasResourceDefs);
@@ -129,10 +124,8 @@ public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
             validator.validate(dbAtlasServiceDef, Action.UPDATE);
             ret = svcStore.updateServiceDef(dbAtlasServiceDef);
             if (ret == null) {
-                logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME
-                        + " service-def");
-                throw new RuntimeException("Error while updating "
-                        + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+                logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+                throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
             }
         }
     }

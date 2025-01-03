@@ -18,7 +18,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
@@ -40,110 +39,110 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * Disables the Nifi plugin's exclude toggle in Ranger UI.
  * After running this patch user wont be able to add exclude resource policies in NIFI.
  */
 @Component
 public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
-        private static final Logger logger = LoggerFactory.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
-        @Autowired
-        RangerDaoManager daoMgr;
+    private static final Logger logger = LoggerFactory.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
+    @Autowired
+    RangerDaoManager daoMgr;
 
-        @Autowired
-        ServiceDBStore svcDBStore;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-        @Autowired
-        JSONUtil jsonUtil;
+    @Autowired
+    JSONUtil jsonUtil;
 
-        @Autowired
-        StringUtil stringUtil;
+    @Autowired
+    StringUtil stringUtil;
 
-        @Autowired
-        RangerValidatorFactory validatorFactory;
+    @Autowired
+    RangerValidatorFactory validatorFactory;
 
-        @Autowired
-        ServiceDBStore svcStore;
+    @Autowired
+    ServiceDBStore svcStore;
 
-        @Autowired
-        RangerPolicyService policyService;
+    @Autowired
+    RangerPolicyService policyService;
 
-        public static void main(String[] args) {
-                logger.info("main()");
-                try {
-                        PatchForNifiResourceUpdateExclude_J10011 loader = (PatchForNifiResourceUpdateExclude_J10011) CLIUtil.getBean(PatchForNifiResourceUpdateExclude_J10011.class);
-                        loader.init();
-                        while (loader.isMoreToProcess()) {
-                                loader.load();
+    public static void main(String[] args) {
+        logger.info("main()");
+        try {
+            PatchForNifiResourceUpdateExclude_J10011 loader = (PatchForNifiResourceUpdateExclude_J10011) CLIUtil.getBean(PatchForNifiResourceUpdateExclude_J10011.class);
+            loader.init();
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
+            logger.info("Load complete. Exiting!!!");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+            System.exit(1);
+        }
+    }
+
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
+
+    @Override
+    public void printStats() {
+        logger.info("updateNifiServiceDef data ");
+    }
+
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForNifiResourceUpdateExclude.execLoad()");
+        try {
+            updateNifiServiceDef();
+        } catch (Exception e) {
+            logger.error("Error whille updateNifiServiceDef()data.", e);
+        }
+        logger.info("<== PatchForNifiResourceUpdateExclude.execLoad()");
+    }
+
+    private void updateNifiServiceDef() {
+        RangerServiceDef ret              = null;
+        RangerServiceDef dbNifiServiceDef = null;
+        try {
+            dbNifiServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+            if (dbNifiServiceDef != null) {
+                List<RangerResourceDef> rRDefList = null;
+                rRDefList = dbNifiServiceDef.getResources();
+                if (CollectionUtils.isNotEmpty(rRDefList)) {
+                    for (RangerResourceDef rRDef : rRDefList) {
+                        if (rRDef.getExcludesSupported()) {
+                            rRDef.setExcludesSupported(false);
                         }
-                        logger.info("Load complete. Exiting!!!");
-                        System.exit(0);
-                } catch (Exception e) {
-                        logger.error("Error loading", e);
-                        System.exit(1);
-                }
-        }
 
-        @Override
-        public void init() throws Exception {
-                // Do Nothing
-        }
-
-        @Override
-        public void execLoad() {
-                logger.info("==> PatchForNifiResourceUpdateExclude.execLoad()");
-                try {
-                        updateNifiServiceDef();
-                } catch (Exception e) {
-                        logger.error("Error whille updateNifiServiceDef()data.", e);
-                }
-                logger.info("<== PatchForNifiResourceUpdateExclude.execLoad()");
-        }
-
-        @Override
-        public void printStats() {
-                logger.info("updateNifiServiceDef data ");
-        }
-
-        private void updateNifiServiceDef(){
-                RangerServiceDef ret = null;
-                RangerServiceDef dbNifiServiceDef = null;
-                try {
-                        dbNifiServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
-                        if (dbNifiServiceDef != null) {
-                                List<RangerResourceDef> rRDefList = null;
-                                rRDefList = dbNifiServiceDef.getResources();
-                                if (CollectionUtils.isNotEmpty(rRDefList)) {
-                                        for (RangerResourceDef rRDef : rRDefList) {
-
-                                                if (rRDef.getExcludesSupported()) {
-                                                        rRDef.setExcludesSupported(false);
-                                                }
-
-                                                XXResourceDef sdf=daoMgr.getXXResourceDef().findByNameAndServiceDefId(rRDef.getName(), dbNifiServiceDef.getId());
-                                                long ResourceDefId=sdf.getId();
-                                                List<XXPolicyResource> RangerPolicyResourceList=daoMgr.getXXPolicyResource().findByResDefId(ResourceDefId);
-                                                if (CollectionUtils.isNotEmpty(RangerPolicyResourceList)){
-                                                        for(XXPolicyResource RangerPolicyResource : RangerPolicyResourceList){
-                                                                if(RangerPolicyResource.getIsexcludes()){
-                                                                RangerPolicy rPolicy=svcDBStore.getPolicy(RangerPolicyResource.getPolicyid());
-                                                                rPolicy.setIsEnabled(false);
-                                                                svcStore.updatePolicy(rPolicy);
-                                                                }
-                                                        }
-                                                }
-                                        }
+                        XXResourceDef          sdf                      = daoMgr.getXXResourceDef().findByNameAndServiceDefId(rRDef.getName(), dbNifiServiceDef.getId());
+                        long                   resourceDefId            = sdf.getId();
+                        List<XXPolicyResource> rangerPolicyResourceList = daoMgr.getXXPolicyResource().findByResDefId(resourceDefId);
+                        if (CollectionUtils.isNotEmpty(rangerPolicyResourceList)) {
+                            for (XXPolicyResource rangerPolicyResource : rangerPolicyResourceList) {
+                                if (rangerPolicyResource.getIsexcludes()) {
+                                    RangerPolicy rPolicy = svcDBStore.getPolicy(rangerPolicyResource.getPolicyid());
+                                    rPolicy.setIsEnabled(false);
+                                    svcStore.updatePolicy(rPolicy);
                                 }
-                                RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
-                                validator.validate(dbNifiServiceDef, Action.UPDATE);
-                                ret = svcStore.updateServiceDef(dbNifiServiceDef);
+                            }
                         }
-                        if (ret == null) {
-                                logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME+ "service-def");
-                        }
-                } catch (Exception e) {
-                        logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME + "service-def", e);
+                    }
                 }
+                RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+                validator.validate(dbNifiServiceDef, Action.UPDATE);
+                ret = svcStore.updateServiceDef(dbNifiServiceDef);
+            }
+            if (ret == null) {
+                logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+            }
+        } catch (Exception e) {
+            logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME, e);
         }
-
+    }
 }

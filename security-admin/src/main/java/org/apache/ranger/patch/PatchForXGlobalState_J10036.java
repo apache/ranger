@@ -32,67 +32,63 @@ import java.util.Map;
 
 @Component
 public class PatchForXGlobalState_J10036 extends BaseLoader {
-	private static final Logger logger = LoggerFactory
-			.getLogger(PatchForXGlobalState_J10036.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForXGlobalState_J10036.class);
 
-	@Autowired
-	RangerDaoManager daoManager;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForXGlobalState_J10036 loader = (PatchForXGlobalState_J10036) CLIUtil
-					.getBean(PatchForXGlobalState_J10036.class);
+    public static void main(String[] args) {
+        logger.info("main()");
+        try {
+            PatchForXGlobalState_J10036 loader = (PatchForXGlobalState_J10036) CLIUtil.getBean(PatchForXGlobalState_J10036.class);
 
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting!!!");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+            loader.init();
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
+            logger.info("Load complete. Exiting!!!");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+            System.exit(1);
+        }
+    }
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> ServiceVersionInfoPatch.execLoad()");
-		updateRangerRoleVersionToVersion();
-		logger.info("<== ServiceVersionInfoPatch.execLoad()");
-	}
+    @Override
+    public void printStats() {
+    }
 
-	public void updateRangerRoleVersionToVersion() {
-		XXGlobalState globalState     = daoManager.getXXGlobalState().findByStateName("RangerRole");
-		if (globalState != null) {
-			logger.info("Updating globalstate with id = " + globalState.getId());
+    @Override
+    public void execLoad() {
+        logger.info("==> ServiceVersionInfoPatch.execLoad()");
+        updateRangerRoleVersionToVersion();
+        logger.info("<== ServiceVersionInfoPatch.execLoad()");
+    }
 
-			if(StringUtils.isNotEmpty(globalState.getAppData())) {
-				Map<String, String> appDataVersionJson = null;
-				appDataVersionJson = JsonUtils.jsonToObject(globalState.getAppData(), Map.class);
-				if (MapUtils.isNotEmpty(appDataVersionJson)) {
-					logger.info("Updating globalstate appdata version for = " + appDataVersionJson);
-					String roleVersion = appDataVersionJson.get("RangerRoleVersion");
-					if (StringUtils.isNotEmpty(roleVersion)) {
-						appDataVersionJson.put("Version", roleVersion);
-						appDataVersionJson.remove("RangerRoleVersion");
-						globalState.setAppData(JsonUtils.objectToJson(appDataVersionJson));
-						daoManager.getXXGlobalState().update(globalState);
-					}
-				}
-			}
+    public void updateRangerRoleVersionToVersion() {
+        XXGlobalState globalState = daoManager.getXXGlobalState().findByStateName("RangerRole");
+        if (globalState != null) {
+            logger.info("Updating globalstate with id = {}", globalState.getId());
 
-		}
-	}
-
-	@Override
-	public void printStats() {
-	}
-
+            if (StringUtils.isNotEmpty(globalState.getAppData())) {
+                Map<String, String> appDataVersionJson = null;
+                appDataVersionJson = JsonUtils.jsonToObject(globalState.getAppData(), Map.class);
+                if (MapUtils.isNotEmpty(appDataVersionJson)) {
+                    logger.info("Updating globalstate appdata version for = {}", appDataVersionJson);
+                    String roleVersion = appDataVersionJson.get("RangerRoleVersion");
+                    if (StringUtils.isNotEmpty(roleVersion)) {
+                        appDataVersionJson.put("Version", roleVersion);
+                        appDataVersionJson.remove("RangerRoleVersion");
+                        globalState.setAppData(JsonUtils.objectToJson(appDataVersionJson));
+                        daoManager.getXXGlobalState().update(globalState);
+                    }
+                }
+            }
+        }
+    }
 }
