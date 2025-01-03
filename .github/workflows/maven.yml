@@ -128,55 +128,16 @@ jobs:
           docker compose -f docker-compose.ranger-base.yml build
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
-          export RANGER_DB_TYPE=postgres
+          export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml \
-          -f docker-compose.ranger-hadoop.yml \
-          -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
-          -f docker-compose.ranger-hive.yml \
-          -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml build
+          -f docker-compose.ranger.yml build
 
       - name: Bring up containers
         run: |
           cd dev-support/ranger-docker
-          ./scripts/ozone-plugin-docker-setup.sh
-          export RANGER_DB_TYPE=postgres
+          export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml \
-          -f docker-compose.ranger-hadoop.yml \
-          -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
-          -f docker-compose.ranger-hive.yml \
-          -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
-      - name: Check status of containers and remove them
-        run: | 
-          sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
-          flag=true;
-          for container in "${containers[@]}"; do
-              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
-                  echo "Container $container is running!";
-              else
-                  flag=false;
-                  echo "Container $container is NOT running!";
-              fi
-          done
-          
-          if [[ $flag == true ]]; then
-              echo "All required containers are up and running";
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-          else
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-              exit 1;
-          fi
+          -f docker-compose.ranger.yml up -d
+

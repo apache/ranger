@@ -16,26 +16,13 @@
 
 ARG SQLSERVER_VERSION
 
-#FROM mcr.microsoft.com/mssql/server:${SQLSERVER_VERSION}
+FROM mcr.microsoft.com/mssql/server:${SQLSERVER_VERSION}
 
-FROM mcr.microsoft.com/azure-sql-edge:latest
+USER root
 
-USER 0
-
-RUN ACCEPT_EULA=Y apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl \
-        apt-transport-https \
-        gnupg \
-        unixodbc-dev
-
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list > /etc/apt/sources.list.d/mssql-tools.list
-
-RUN ACCEPT_EULA=Y apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y --no-install-recommends mssql-tools unixodbc-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN ACCEPT_EULA=Y apt-get update
+RUN ACCEPT_EULA=Y apt-get install -y --no-install-recommends curl gnupg unixodbc-dev mssql-tools
+RUN ACCEPT_EULA=Y apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN  mkdir -p /docker-entrypoint-initdb.d
 COPY config/init_mssql.sh /docker-entrypoint-initdb.d/
