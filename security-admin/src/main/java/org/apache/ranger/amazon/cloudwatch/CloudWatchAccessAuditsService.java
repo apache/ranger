@@ -69,7 +69,7 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
             throw restErrorUtil.createRESTException("Error connecting to cloudwatch", MessageEnums.ERROR_SYSTEM);
         }
 
-        List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
+        List<VXAccessAudit> xAccessAuditList = new ArrayList<>();
         Map<String, Object> paramList        = searchCriteria.getParamList();
 
         updateUserExclusion(paramList);
@@ -103,28 +103,25 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
                 }
 
                 VXAccessAudit vXAccessAudit = populateViewBean(auditEvent);
+                String        serviceType   = vXAccessAudit.getServiceType();
+                boolean       isHive        = "hive".equalsIgnoreCase(serviceType);
 
-                if (vXAccessAudit != null) {
-                    String  serviceType = vXAccessAudit.getServiceType();
-                    boolean isHive      = "hive".equalsIgnoreCase(serviceType);
+                if (!hiveQueryVisibility && isHive) {
+                    vXAccessAudit.setRequestData(null);
+                } else if (isHive) {
+                    String accessType = vXAccessAudit.getAccessType();
 
-                    if (!hiveQueryVisibility && isHive) {
-                        vXAccessAudit.setRequestData(null);
-                    } else if (isHive) {
-                        String accessType = vXAccessAudit.getAccessType();
+                    if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
+                        String requestData = vXAccessAudit.getRequestData();
 
-                        if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
-                            String requestData = vXAccessAudit.getRequestData();
-
-                            if (requestData != null) {
-                                try {
-                                    vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
-                                } catch (UnsupportedEncodingException e) {
-                                    LOGGER.warn("Error while encoding request data:{}", requestData, e);
-                                }
-                            } else {
-                                LOGGER.warn("Error in request data of audit from cloudwatch. AuditData:{} ", vXAccessAudit);
+                        if (requestData != null) {
+                            try {
+                                vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
+                            } catch (UnsupportedEncodingException e) {
+                                LOGGER.warn("Error while encoding request data:{}", requestData, e);
                             }
+                        } else {
+                            LOGGER.warn("Error in request data of audit from cloudwatch. AuditData:{} ", vXAccessAudit);
                         }
                     }
                 }
