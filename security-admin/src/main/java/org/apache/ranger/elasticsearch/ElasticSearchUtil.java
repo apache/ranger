@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.TimeZone;
 
 @Component
@@ -81,7 +82,7 @@ public class ElasticSearchUtil {
         QueryAccumulator queryAccumulator = new QueryAccumulator(searchCriteria);
 
         if (searchCriteria.getParamList() != null) {
-            searchFields.stream().forEach(queryAccumulator::addQuery);
+            searchFields.forEach(queryAccumulator::addQuery);
 
             // For now assuming there is only date field where range query will
             // be done. If we there are more than one, then we should create a
@@ -93,7 +94,7 @@ public class ElasticSearchUtil {
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-        queryAccumulator.queries.stream().filter(x -> x != null).forEach(boolQueryBuilder::must);
+        queryAccumulator.queries.stream().filter(Objects::nonNull).forEach(boolQueryBuilder::must);
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -161,16 +162,12 @@ public class ElasticSearchUtil {
             return null;
         }
 
-        if (valueList.isEmpty()) {
-            return null;
-        } else {
-            return QueryBuilders.queryStringQuery(valueList.stream()
-                    .map(this::filterText)
-                    .map(x -> "(" + x + ")")
-                    .reduce((a, b) -> a + " OR " + b)
-                    .get()
-            ).defaultField(fieldName);
-        }
+        return QueryBuilders.queryStringQuery(valueList.stream()
+                .map(this::filterText)
+                .map(x -> "(" + x + ")")
+                .reduce((a, b) -> a + " OR " + b)
+                .get()
+        ).defaultField(fieldName);
     }
 
     public QueryBuilder setDateRange(String fieldName, Date fromDate, Date toDate) {
@@ -288,13 +285,13 @@ public class ElasticSearchUtil {
                     return null;
                 } else {
                     if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
-                        if (paramValue.toString().trim().length() == 0) {
+                        if (paramValue.toString().trim().isEmpty()) {
                             return null;
                         } else {
                             return QueryBuilders.queryStringQuery("*" + filterText(paramValue) + "*").defaultField(fieldName);
                         }
                     } else {
-                        if (paramValue.toString().trim().length() > 0) {
+                        if (!paramValue.toString().trim().isEmpty()) {
                             return QueryBuilders.matchPhraseQuery(fieldName, filterText(paramValue));
                         } else {
                             return null;

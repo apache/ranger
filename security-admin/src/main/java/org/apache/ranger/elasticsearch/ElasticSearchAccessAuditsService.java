@@ -68,7 +68,7 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
             throw restErrorUtil.createRESTException("Error connecting to search engine", MessageEnums.ERROR_SYSTEM);
         }
 
-        List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
+        List<VXAccessAudit> xAccessAuditList = new ArrayList<>();
         Map<String, Object> paramList        = searchCriteria.getParamList();
 
         updateUserExclusion(paramList);
@@ -93,31 +93,27 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
             throw restErrorUtil.createRESTException("Error querying search engine", MessageEnums.ERROR_SYSTEM);
         }
 
-        for (int i = 0; i < docs.length; i++) { // NOPMD - This for loop can be replaced by a foreach loop
-            MultiGetItemResponse doc           = docs[i];
-            VXAccessAudit        vXAccessAudit = populateViewBean(doc.getResponse());
+        for (MultiGetItemResponse doc : docs) {
+            VXAccessAudit vXAccessAudit = populateViewBean(doc.getResponse());
+            String        serviceType   = vXAccessAudit.getServiceType();
+            boolean       isHive        = "hive".equalsIgnoreCase(serviceType);
 
-            if (vXAccessAudit != null) {
-                String  serviceType = vXAccessAudit.getServiceType();
-                boolean isHive      = "hive".equalsIgnoreCase(serviceType);
+            if (!hiveQueryVisibility && isHive) {
+                vXAccessAudit.setRequestData(null);
+            } else if (isHive) {
+                String accessType = vXAccessAudit.getAccessType();
 
-                if (!hiveQueryVisibility && isHive) {
-                    vXAccessAudit.setRequestData(null);
-                } else if (isHive) {
-                    String accessType = vXAccessAudit.getAccessType();
+                if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
+                    String requestData = vXAccessAudit.getRequestData();
 
-                    if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
-                        String requestData = vXAccessAudit.getRequestData();
-
-                        if (requestData != null) {
-                            try {
-                                vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
-                            } catch (UnsupportedEncodingException e) {
-                                LOGGER.warn("Error while encoding request data: {}", requestData, e);
-                            }
-                        } else {
-                            LOGGER.warn("Error in request data of audit from elasticSearch. AuditData: {}", vXAccessAudit);
+                    if (requestData != null) {
+                        try {
+                            vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
+                        } catch (UnsupportedEncodingException e) {
+                            LOGGER.warn("Error while encoding request data: {}", requestData, e);
                         }
+                    } else {
+                        LOGGER.warn("Error in request data of audit from elasticSearch. AuditData: {}", vXAccessAudit);
                     }
                 }
             }
