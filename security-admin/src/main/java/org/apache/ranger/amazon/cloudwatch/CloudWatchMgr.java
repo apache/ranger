@@ -41,35 +41,43 @@ public class CloudWatchMgr {
     private String  regionName;
 
     public AWSLogs getClient() {
-        if (client == null) {
-            synchronized (CloudWatchMgr.class) {
-                if (client == null) {
-                    connect();
-                }
-            }
+        AWSLogs me = client;
+
+        if (me == null) {
+            me = connect();
         }
-        return client;
+
+        return me;
     }
 
-    synchronized void connect() {
-        if (client == null) {
+    synchronized AWSLogs connect() {
+        AWSLogs me = client;
+
+        if (me == null) {
             synchronized (CloudWatchMgr.class) {
-                if (client == null) {
-                    regionName = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + PROP_REGION);
+                me = client;
+
+                if (me == null) {
                     try {
-                        client = newClient();
+                        me     = newClient();
+                        client = me;
                     } catch (Throwable t) {
                         LOGGER.error("Can't connect to CloudWatch region:{} ", regionName, t);
                     }
                 }
             }
         }
+
+        return me;
     }
 
     private AWSLogs newClient() {
+        regionName = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + PROP_REGION);
+
         if (StringUtils.isBlank(regionName)) {
             return AWSLogsClientBuilder.standard().build();
         }
+
         return AWSLogsClientBuilder.standard().withRegion(regionName).build();
     }
 }
