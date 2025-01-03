@@ -17,65 +17,62 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
-
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPolicy
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPolicyList extends VList {
-	private static final long serialVersionUID = 1L;
-	List<VXPolicy> vXPolicies = new ArrayList<VXPolicy>();
+    private static final long serialVersionUID = 1L;
+    List<VXPolicy> vXPolicies = new ArrayList<VXPolicy>();
 
-	public VXPolicyList() {
-		super();
-	}
+    public VXPolicyList() {
+        super();
+    }
 
-	public VXPolicyList(List<VXPolicy> objList) {
-		super(objList);
-		this.vXPolicies = objList;
-	}
+    public VXPolicyList(List<VXPolicy> objList) {
+        super(objList);
+        this.vXPolicies = objList;
+    }
 
-	/**
-	 * @return the vXPolicies
-	 */
-	@JsonProperty("vXPolicies")
-	public List<VXPolicy> getVXPolicies() {
-		return vXPolicies;
-	}
+    /**
+     * @return the vXPolicies
+     */
+    @JsonProperty("vXPolicies")
+    public List<VXPolicy> getVXPolicies() {
+        return vXPolicies;
+    }
 
-	/**
-	 * @param vXPolicies
-	 *            the vXPolicies to set
-	 */
-	@JsonProperty("vXPolicies")
-	public void setVXPolicies(List<VXPolicy> vXPolicies) {
-		this.vXPolicies = vXPolicies;
-	}
+    /**
+     * @param vXPolicies the vXPolicies to set
+     */
+    @JsonProperty("vXPolicies")
+    public void setVXPolicies(List<VXPolicy> vXPolicies) {
+        this.vXPolicies = vXPolicies;
+    }
 
-	@Override
-	public int getListSize() {
-		if (vXPolicies != null) {
-			return vXPolicies.size();
-		}
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        if (vXPolicies != null) {
+            return vXPolicies.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public List<VXPolicy> getList() {
-		return vXPolicies;
-	}
-
+    @Override
+    public List<VXPolicy> getList() {
+        return vXPolicies;
+    }
 }

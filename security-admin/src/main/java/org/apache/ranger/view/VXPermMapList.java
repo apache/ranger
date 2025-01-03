@@ -17,35 +17,34 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPermMap
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPermMapList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXPermMap> vXPermMaps = new ArrayList<VXPermMap>();
 
     public VXPermMapList() {
-	super();
+        super();
     }
 
     public VXPermMapList(List<VXPermMap> objList) {
-	super(objList);
-	this.vXPermMaps = objList;
+        super(objList);
+        this.vXPermMaps = objList;
     }
 
     /**
@@ -53,7 +52,7 @@ public class VXPermMapList extends VList {
      */
     @JsonProperty("vXPermMaps")
     public List<VXPermMap> getVXPermMaps() {
-	return vXPermMaps;
+        return vXPermMaps;
     }
 
     /**
@@ -62,20 +61,19 @@ public class VXPermMapList extends VList {
      */
     @JsonProperty("vXPermMaps")
     public void setVXPermMaps(List<VXPermMap> vXPermMaps) {
-	this.vXPermMaps = vXPermMaps;
+        this.vXPermMaps = vXPermMaps;
     }
 
     @Override
     public int getListSize() {
-	if (vXPermMaps != null) {
-	    return vXPermMaps.size();
-	}
-	return 0;
+        if (vXPermMaps != null) {
+            return vXPermMaps.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXPermMap> getList() {
-	return vXPermMaps;
+        return vXPermMaps;
     }
-
 }

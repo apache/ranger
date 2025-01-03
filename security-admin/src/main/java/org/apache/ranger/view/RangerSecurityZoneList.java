@@ -17,51 +17,49 @@
 
 package org.apache.ranger.view;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.view.VList;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RangerSecurityZoneList extends VList{
+public class RangerSecurityZoneList extends VList {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    List<RangerSecurityZone> securityZones = new ArrayList<RangerSecurityZone>();
 
-	List<RangerSecurityZone> securityZones = new ArrayList<RangerSecurityZone>();
+    public RangerSecurityZoneList() {
+        super();
+    }
 
-	public RangerSecurityZoneList() {
-		super();
-	}
+    public RangerSecurityZoneList(List<RangerSecurityZone> objList) {
+        super(objList);
+        this.securityZones = objList;
+    }
 
-	public RangerSecurityZoneList(List<RangerSecurityZone> objList) {
-		super(objList);
-		this.securityZones = objList;
-	}
+    public List<RangerSecurityZone> getSecurityZones() {
+        return securityZones;
+    }
 
-	public List<RangerSecurityZone> getSecurityZones() {
-		return securityZones;
-	}
+    public void setSecurityZoneList(List<RangerSecurityZone> securityZones) {
+        this.securityZones = securityZones;
+    }
 
-	public void setSecurityZoneList(List<RangerSecurityZone> securityZones) {
-		this.securityZones = securityZones;
-	}
+    @Override
+    public int getListSize() {
+        if (securityZones != null) {
+            return securityZones.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public int getListSize() {
-		if (securityZones != null) {
-			return securityZones.size();
-		}
-		return 0;
-	}
-
-	@Override
-	public List<?> getList() {
-		return securityZones;
-	}
-
+    @Override
+    public List<?> getList() {
+        return securityZones;
+    }
 }

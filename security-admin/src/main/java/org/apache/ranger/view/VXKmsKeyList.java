@@ -17,35 +17,34 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXKey
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXKmsKeyList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXKmsKey> vXKeys = new ArrayList<VXKmsKey>();
 
     public VXKmsKeyList() {
-	super();
+        super();
     }
 
     public VXKmsKeyList(List<VXKmsKey> objList) {
-	super(objList);
-	this.vXKeys = objList;
+        super(objList);
+        this.vXKeys = objList;
     }
 
     /**
@@ -53,7 +52,7 @@ public class VXKmsKeyList extends VList {
      */
     @JsonProperty("vXKeys")
     public List<VXKmsKey> getVXKeys() {
-	return vXKeys;
+        return vXKeys;
     }
 
     /**
@@ -62,20 +61,19 @@ public class VXKmsKeyList extends VList {
      */
     @JsonProperty("vXKeys")
     public void setVXKeys(List<VXKmsKey> vXKeys) {
-	this.vXKeys = vXKeys;
+        this.vXKeys = vXKeys;
     }
 
     @Override
     public int getListSize() {
-	if (vXKeys != null) {
-	    return vXKeys.size();
-	}
-	return 0;
+        if (vXKeys != null) {
+            return vXKeys.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXKmsKey> getList() {
-	return vXKeys;
+        return vXKeys;
     }
-
 }

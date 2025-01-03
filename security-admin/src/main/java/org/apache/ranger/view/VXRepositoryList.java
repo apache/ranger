@@ -17,65 +17,62 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
-
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXRepository
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXRepositoryList extends VList {
-	private static final long serialVersionUID = 1L;
-	List<VXRepository> vXRepositories = new ArrayList<VXRepository>();
+    private static final long serialVersionUID = 1L;
+    List<VXRepository> vXRepositories = new ArrayList<VXRepository>();
 
-	public VXRepositoryList() {
-		super();
-	}
+    public VXRepositoryList() {
+        super();
+    }
 
-	public VXRepositoryList(List<VXRepository> objList) {
-		super(objList);
-		this.vXRepositories = objList;
-	}
+    public VXRepositoryList(List<VXRepository> objList) {
+        super(objList);
+        this.vXRepositories = objList;
+    }
 
-	/**
-	 * @return the vXRepositories
-	 */
-	@JsonProperty("vXRepositories")
-	public List<VXRepository> getVXRepositories() {
-		return vXRepositories;
-	}
+    /**
+     * @return the vXRepositories
+     */
+    @JsonProperty("vXRepositories")
+    public List<VXRepository> getVXRepositories() {
+        return vXRepositories;
+    }
 
-	/**
-	 * @param vXRepositories
-	 *            the vXRepositories to set
-	 */
-	@JsonProperty("vXRepositories")
-	public void setVXRepositories(List<VXRepository> vXRepositories) {
-		this.vXRepositories = vXRepositories;
-	}
+    /**
+     * @param vXRepositories the vXRepositories to set
+     */
+    @JsonProperty("vXRepositories")
+    public void setVXRepositories(List<VXRepository> vXRepositories) {
+        this.vXRepositories = vXRepositories;
+    }
 
-	@Override
-	public int getListSize() {
-		if (vXRepositories != null) {
-			return vXRepositories.size();
-		}
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        if (vXRepositories != null) {
+            return vXRepositories.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public List<VXRepository> getList() {
-		return vXRepositories;
-	}
-
+    @Override
+    public List<VXRepository> getList() {
+        return vXRepositories;
+    }
 }
