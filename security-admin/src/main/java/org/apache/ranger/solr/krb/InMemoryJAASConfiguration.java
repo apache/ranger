@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,9 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,9 +39,6 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
 
 /**
  * InMemoryJAASConfiguration
@@ -55,7 +55,6 @@ import javax.security.auth.login.Configuration;
  * xasecure.audit.jaas.KafkaClient.option.serviceName = kafka
  * xasecure.audit.jaas.KafkaClient.option.keyTab = /etc/security/keytabs/kafka_client.keytab
  * xasecure.audit.jaas.KafkaClient.option.principal = kafka-client-1@EXAMPLE.COM
-
  * xasecure.audit.jaas.MyClient.0.loginModuleName = com.sun.security.auth.module.Krb5LoginModule
  * xasecure.audit.jaas.MyClient.0.loginModuleControlFlag = required
  * xasecure.audit.jaas.MyClient.0.option.useKeyTab = true
@@ -71,7 +70,6 @@ import javax.security.auth.login.Configuration;
  * xasecure.audit.jaas.MyClient.1.option.serviceName = kafka
  * xasecure.audit.jaas.MyClient.1.option.keyTab = /etc/security/keytabs/kafka_client.keytab
  * xasecure.audit.jaas.MyClient.1.option.principal = kafka-client-1@EXAMPLE.COM
-
  * This will set the JAAS configuration - equivalent to the jaas.conf file entries:
  *  KafkaClient {
  *      com.sun.security.auth.module.Krb5LoginModule required
@@ -116,22 +114,23 @@ import javax.security.auth.login.Configuration;
  */
 
 public final class InMemoryJAASConfiguration extends Configuration {
-
     private static final Logger LOG = LoggerFactory.getLogger(InMemoryJAASConfiguration.class);
-
     public static final String JAAS_CONFIG_PREFIX_PARAM                    = "xasecure.audit.jaas.";
     public static final String JAAS_CONFIG_LOGIN_MODULE_NAME_PARAM         = "loginModuleName";
     public static final String JAAS_CONFIG_LOGIN_MODULE_CONTROL_FLAG_PARAM = "loginModuleControlFlag";
     public static final String JAAS_CONFIG_LOGIN_OPTIONS_PREFIX            = "option";
     public static final String JAAS_PRINCIPAL_PROP                         = "principal";
-
     private final Configuration                            parent;
     private final Map<String, List<AppConfigurationEntry>> applicationConfigEntryMap = new HashMap<>();
 
+    private InMemoryJAASConfiguration(Properties prop) {
+        parent = Configuration.getConfiguration();
+
+        initialize(prop);
+    }
+
     public static InMemoryJAASConfiguration init(String propFile) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> InMemoryJAASConfiguration.init( {} ) ", propFile);
-        }
+        LOG.debug("==> InMemoryJAASConfiguration.init( {} ) ", propFile);
 
         InMemoryJAASConfiguration ret = null;
         InputStream               in  = null;
@@ -165,21 +164,17 @@ public final class InMemoryJAASConfiguration extends Configuration {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== InMemoryJAASConfiguration.init( {} ) ", propFile);
-        }
+        LOG.debug("<== InMemoryJAASConfiguration.init( {} ) ", propFile);
 
         return ret;
     }
 
     public static void init(org.apache.commons.configuration2.Configuration configuration) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> InMemoryJAASConfiguration.init()");
-        }
+        LOG.debug("==> InMemoryJAASConfiguration.init()");
 
         if (configuration != null && !configuration.isEmpty()) {
-            Properties properties = new Properties();
-            Iterator<String> iterator = configuration.getKeys();
+            Properties       properties = new Properties();
+            Iterator<String> iterator   = configuration.getKeys();
             while (iterator.hasNext()) {
                 String key = iterator.next();
                 properties.put(key, configuration.getProperty(key));
@@ -189,36 +184,26 @@ public final class InMemoryJAASConfiguration extends Configuration {
             throw new Exception("Failed to load JAAS application properties: configuration NULL or empty!");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== InMemoryJAASConfiguration.init()");
-        }
+        LOG.debug("<== InMemoryJAASConfiguration.init()");
     }
 
     public static InMemoryJAASConfiguration init(Properties properties) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> InMemoryJAASConfiguration.init()");
-        }
+        LOG.debug("==> InMemoryJAASConfiguration.init()");
 
         InMemoryJAASConfiguration ret = null;
 
-        if (properties != null && MapUtils.isNotEmpty(properties)) {
+        if (MapUtils.isNotEmpty(properties)) {
             ret = new InMemoryJAASConfiguration(properties);
         } else {
             throw new Exception("Failed to load JAAS application properties: properties NULL or empty!");
         }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== InMemoryJAASConfiguration.init()");
-        }
-
+        LOG.debug("<== InMemoryJAASConfiguration.init()");
         return ret;
     }
 
     @Override
     public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> InMemoryJAASConfiguration.getAppConfigurationEntry( {} )", name);
-        }
+        LOG.debug("==> InMemoryJAASConfiguration.getAppConfigurationEntry( {} )", name);
 
         AppConfigurationEntry[] ret = null;
 
@@ -233,29 +218,18 @@ public final class InMemoryJAASConfiguration extends Configuration {
                 ret = retList.toArray(new AppConfigurationEntry[retList.size()]);
             }
         }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== InMemoryJAASConfiguration.getAppConfigurationEntry( {} ) : {}", name, toString(ret));
-        }
+        LOG.debug("<== InMemoryJAASConfiguration.getAppConfigurationEntry( {} ) : {}", name, toString(ret));
 
         return ret;
     }
 
-    private InMemoryJAASConfiguration(Properties prop) {
-        parent = Configuration.getConfiguration();
-
-        initialize(prop);
-    }
-
     private void initialize(Properties properties) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> InMemoryJAASConfiguration.initialize()");
-        }
+        LOG.debug("==> InMemoryJAASConfiguration.initialize()");
 
         int                             prefixLen   = JAAS_CONFIG_PREFIX_PARAM.length();
         Map<String, SortedSet<Integer>> jaasClients = new HashMap<>();
 
-        for(String key : properties.stringPropertyNames()) {
+        for (String key : properties.stringPropertyNames()) {
             if (key.startsWith(JAAS_CONFIG_PREFIX_PARAM)) {
                 String          jaasKey    = key.substring(prefixLen);
                 StringTokenizer tokenizer  = new StringTokenizer(jaasKey, ".");
@@ -272,31 +246,27 @@ public final class InMemoryJAASConfiguration extends Configuration {
                     }
 
                     String  indexStr      = tokenizer.nextToken();
-                    int     indexId       = isNumeric(indexStr) ? Integer.parseInt(indexStr)  : -1;
+                    int     indexId       = isNumeric(indexStr) ? Integer.parseInt(indexStr) : -1;
                     Integer clientIdIndex = Integer.valueOf(indexId);
 
-                    if (!indexList.contains(clientIdIndex)) {
-                        indexList.add(clientIdIndex);
-                    }
+                    indexList.add(clientIdIndex);
                 }
             }
         }
 
-        for(String jaasClient : jaasClients.keySet()) {
-            for(Integer index :  jaasClients.get(jaasClient)) {
+        for (String jaasClient : jaasClients.keySet()) {
+            for (Integer index : jaasClients.get(jaasClient)) {
                 String keyPrefix = JAAS_CONFIG_PREFIX_PARAM + jaasClient + ".";
 
                 if (index > -1) {
-                    keyPrefix = keyPrefix  + String.valueOf(index) + ".";
+                    keyPrefix = keyPrefix + index + ".";
                 }
 
                 String keyParam        = keyPrefix + JAAS_CONFIG_LOGIN_MODULE_NAME_PARAM;
                 String loginModuleName = properties.getProperty(keyParam);
 
                 if (loginModuleName == null) {
-                    LOG.error("Unable to add JAAS configuration for "
-                            + "client [" + jaasClient + "] as it is missing param [" + keyParam + "]."
-                            + " Skipping JAAS config for [" + jaasClient + "]");
+                    LOG.error("Unable to add JAAS configuration for client [{}}] as it is missing param [{}]. Skipping JAAS config for [{}]", jaasClient, keyParam, jaasClient);
                     continue;
                 } else {
                     loginModuleName = loginModuleName.trim();
@@ -321,14 +291,11 @@ public final class InMemoryJAASConfiguration extends Configuration {
                         loginControlFlag = AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
                     } else {
                         String validValues = "optional|requisite|sufficient|required";
-                        LOG.warn("Unknown JAAS configuration value for (" + keyParam
-                                + ") = [" + controlFlag + "], valid value are [" + validValues
-                                + "] using the default value, REQUIRED");
+                        LOG.warn("Unknown JAAS configuration value for ({}) = [{}], valid value are [{}] using the default value, REQUIRED", keyParam, controlFlag, validValues);
                         loginControlFlag = AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
                     }
                 } else {
-                    LOG.warn("Unable to find JAAS configuration ("
-                            + keyParam + "); using the default value, REQUIRED");
+                    LOG.warn("Unable to find JAAS configuration ({}); using the default value, REQUIRED", keyParam);
                     loginControlFlag = AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
                 }
 
@@ -336,7 +303,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
                 String              optionPrefix    = keyPrefix + JAAS_CONFIG_LOGIN_OPTIONS_PREFIX + ".";
                 int                 optionPrefixLen = optionPrefix.length();
 
-                for(String key : properties.stringPropertyNames()) {
+                for (String key : properties.stringPropertyNames()) {
                     if (key.startsWith(optionPrefix)) {
                         String optionKey = key.substring(optionPrefixLen);
                         String optionVal = properties.getProperty(key);
@@ -349,8 +316,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
                                     optionVal = SecurityUtil.getServerPrincipal(optionVal, (String) null);
                                 }
                             } catch (IOException e) {
-                                LOG.warn("Failed to build serverPrincipal. Using provided value:["
-                                        + optionVal + "]");
+                                LOG.warn("Failed to build serverPrincipal. Using provided value:[{}]", optionVal);
                             }
                         }
 
@@ -376,7 +342,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
                     LOG.debug(sb.toString());
                 }
 
-                List<AppConfigurationEntry> retList =  applicationConfigEntryMap.get(jaasClient);
+                List<AppConfigurationEntry> retList = applicationConfigEntryMap.get(jaasClient);
 
                 if (retList == null) {
                     retList = new ArrayList<>();
@@ -388,9 +354,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== InMemoryJAASConfiguration.initialize()");
-        }
+        LOG.debug("<== InMemoryJAASConfiguration.initialize()");
     }
 
     private static boolean isNumeric(String str) {
@@ -403,10 +367,7 @@ public final class InMemoryJAASConfiguration extends Configuration {
         sb.append('[');
         if (entries != null) {
             for (AppConfigurationEntry entry : entries) {
-                sb.append("{ loginModuleName=").append(entry.getLoginModuleName())
-                        .append(", controlFlag=").append(entry.getControlFlag())
-                        .append(", options=").append(entry.getOptions())
-                        .append("}");
+                sb.append("{ loginModuleName=").append(entry.getLoginModuleName()).append(", controlFlag=").append(entry.getControlFlag()).append(", options=").append(entry.getOptions()).append("}");
             }
         }
         sb.append(']');
