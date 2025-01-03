@@ -62,46 +62,60 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
     public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
         final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
         AWSLogs       client              = cloudWatchMgr.getClient();
+
         if (client == null) {
             LOGGER.warn("CloudWatch client is null, so not running the query.");
+
             throw restErrorUtil.createRESTException("Error connecting to cloudwatch", MessageEnums.ERROR_SYSTEM);
         }
 
         List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
         Map<String, Object> paramList        = searchCriteria.getParamList();
+
         updateUserExclusion(paramList);
 
         List<FilteredLogEvent> result;
+
         try {
             result = cloudWatchUtil.searchResources(client, searchCriteria, searchFields, sortFields);
         } catch (Exception e) {
-            LOGGER.warn(String.format("CloudWatch query failed: %s", e.getMessage()));
+            LOGGER.warn("CloudWatch query failed: {}", e.getMessage());
+
             throw restErrorUtil.createRESTException("Error querying search engine", MessageEnums.ERROR_SYSTEM);
         }
 
         VXAccessAuditList returnList = new VXAccessAuditList();
+
         if (CollectionUtils.isNotEmpty(result)) {
             int recordCount = 0;
             int endIndex    = result.size() - 1;
+
             endIndex = endIndex - searchCriteria.getStartIndex() < 0 ? endIndex : endIndex - searchCriteria.getStartIndex();
+
             for (int index = endIndex; recordCount < searchCriteria.getMaxRows() && index >= 0; index--) {
                 FilteredLogEvent event      = result.get(index);
                 AuthzAuditEvent  auditEvent = null;
+
                 try {
                     auditEvent = MiscUtil.fromJson(event.getMessage(), AuthzAuditEvent.class);
                 } catch (Exception ex) {
                     LOGGER.error("Error while parsing json data", ex);
                 }
+
                 VXAccessAudit vXAccessAudit = populateViewBean(auditEvent);
+
                 if (vXAccessAudit != null) {
                     String  serviceType = vXAccessAudit.getServiceType();
                     boolean isHive      = "hive".equalsIgnoreCase(serviceType);
+
                     if (!hiveQueryVisibility && isHive) {
                         vXAccessAudit.setRequestData(null);
                     } else if (isHive) {
                         String accessType = vXAccessAudit.getAccessType();
+
                         if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
                             String requestData = vXAccessAudit.getRequestData();
+
                             if (requestData != null) {
                                 try {
                                     vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
@@ -114,9 +128,12 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
                         }
                     }
                 }
+
                 xAccessAuditList.add(vXAccessAudit);
+
                 recordCount++;
             }
+
             returnList.setResultSize(result.size());
             returnList.setTotalCount(result.size());
         }
@@ -124,6 +141,7 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
         returnList.setPageSize(searchCriteria.getMaxRows());
         returnList.setStartIndex(searchCriteria.getStartIndex());
         returnList.setVXAccessAudits(xAccessAuditList);
+
         return returnList;
     }
 
@@ -134,15 +152,17 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
     public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
         long   count  = 100;
         VXLong vXLong = new VXLong();
+
         vXLong.setValue(count);
+
         return vXLong;
     }
 
     private VXAccessAudit populateViewBean(AuthzAuditEvent auditEvent) {
-        VXAccessAudit accessAudit = new VXAccessAudit();
+        LOGGER.debug("doc= {}", auditEvent);
 
-        Object value = null;
-        LOGGER.debug("doc= {}", auditEvent.toString());
+        VXAccessAudit accessAudit = new VXAccessAudit();
+        Object        value;
 
         value = auditEvent.getEventId();
         if (value != null) {
@@ -188,6 +208,7 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
         value = auditEvent.getRepositoryName();
         if (value != null) {
             accessAudit.setRepoName(value.toString());
+
             XXService xxService = daoManager.getXXService().findByName(accessAudit.getRepoName());
 
             if (xxService != null) {
@@ -219,24 +240,15 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
             accessAudit.setClientIP(value.toString());
         }
 
-        value = auditEvent.getAccessResult();
-        if (value != null) {
-            accessAudit.setAccessResult(MiscUtil.toInt(value));
-        }
+        accessAudit.setAccessResult(auditEvent.getAccessResult());
+        accessAudit.setPolicyId(auditEvent.getPolicyId());
+        accessAudit.setRepoType(auditEvent.getRepositoryType());
 
-        value = auditEvent.getPolicyId();
-        if (value != null) {
-            accessAudit.setPolicyId(MiscUtil.toLong(value));
-        }
+        XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
 
-        value = auditEvent.getRepositoryType();
-        if (value != null) {
-            accessAudit.setRepoType(MiscUtil.toInt(value));
-            XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
-            if (xServiceDef != null) {
-                accessAudit.setServiceType(xServiceDef.getName());
-                accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
-            }
+        if (xServiceDef != null) {
+            accessAudit.setServiceType(xServiceDef.getName());
+            accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
         }
 
         value = auditEvent.getResourceType();
@@ -259,20 +271,9 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
             accessAudit.setEventTime(MiscUtil.toLocalDate(value));
         }
 
-        value = auditEvent.getSeqNum();
-        if (value != null) {
-            accessAudit.setSequenceNumber(MiscUtil.toLong(value));
-        }
-
-        value = auditEvent.getEventCount();
-        if (value != null) {
-            accessAudit.setEventCount(MiscUtil.toLong(value));
-        }
-
-        value = auditEvent.getEventDurationMS();
-        if (value != null) {
-            accessAudit.setEventDuration(MiscUtil.toLong(value));
-        }
+        accessAudit.setSequenceNumber(auditEvent.getSeqNum());
+        accessAudit.setEventCount(auditEvent.getEventCount());
+        accessAudit.setEventDuration(auditEvent.getEventDurationMS());
 
         value = auditEvent.getTags();
         if (value != null) {
