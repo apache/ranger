@@ -19,15 +19,10 @@
 
 package org.apache.ranger.common.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.ranger.service.RangerTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -42,21 +37,21 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.persistence.OptimisticLockException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class RangerTransactionSynchronizationAdapter extends TransactionSynchronizationAdapter {
 
-    @Autowired
-    @Qualifier(value = "transactionManager")
-    PlatformTransactionManager txManager;
-
-    @Autowired
-    RangerTransactionService transactionService;
-
     private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionSynchronizationAdapter.class);
-
     private static final ThreadLocal<List<Runnable>> RUNNABLES              = new ThreadLocal<>();
     private static final ThreadLocal<List<Runnable>> RUNNABLES_ASYNC        = new ThreadLocal<>();
     private static final ThreadLocal<List<Runnable>> RUNNABLES_AFTER_COMMIT = new ThreadLocal<>();
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
+    @Autowired
+    RangerTransactionService transactionService;
 
     public void executeOnTransactionCompletion(Runnable runnable) {
         if (LOG.isDebugEnabled()) {
@@ -215,7 +210,6 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                                 }
                             }
                         }
-
                     } catch (OptimisticLockException optimisticLockException) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to commit TransactionService transaction for runnable:[" + runnable + "]");
@@ -224,12 +218,13 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to commit TransactionService transaction, exception:[" + tse + "]");
                         }
-                    } catch (Throwable e){
+                    } catch (Throwable e) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to commit TransactionService transaction, throwable:[" + e + "]");
                         }
                     }
-                } while (isParentTransactionCommitted && !isThisTransactionCommitted);
+                }
+                while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }
         } else {
             if (LOG.isDebugEnabled()) {

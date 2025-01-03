@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
 
 import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
@@ -25,70 +25,69 @@ import org.apache.ranger.security.context.RangerSecurityContext;
 
 public class ContextUtil {
 
-	/**
-	 * Singleton class
-	 */
-        public ContextUtil() {
-	}
+    /**
+     * Singleton class
+     */
+    public ContextUtil() {
+    }
 
-	public static Long getCurrentUserId() {
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			UserSessionBase userSession = context.getUserSession();
-			if (userSession != null) {
-				return userSession.getUserId();
-			}
-		}
-		return null;
-	}
+    public static Long getCurrentUserId() {
+        RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+        if (context != null) {
+            UserSessionBase userSession = context.getUserSession();
+            if (userSession != null) {
+                return userSession.getUserId();
+            }
+        }
+        return null;
+    }
 
-	public static String getCurrentUserPublicName() {
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			UserSessionBase userSession = context.getUserSession();
-			if (userSession != null) {
-				return userSession.getXXPortalUser().getPublicScreenName();
-				// return userSession.getGjUser().getPublicScreenName();
-			}
-		}
-		return null;
-	}
+    public static String getCurrentUserPublicName() {
+        RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+        if (context != null) {
+            UserSessionBase userSession = context.getUserSession();
+            if (userSession != null) {
+                return userSession.getXXPortalUser().getPublicScreenName();
+                // return userSession.getGjUser().getPublicScreenName();
+            }
+        }
+        return null;
+    }
 
-	public static UserSessionBase getCurrentUserSession() {
-		UserSessionBase userSession = null;
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			userSession = context.getUserSession();
-		}
-		return userSession;
-	}
+    public static UserSessionBase getCurrentUserSession() {
+        UserSessionBase       userSession = null;
+        RangerSecurityContext context     = RangerContextHolder.getSecurityContext();
+        if (context != null) {
+            userSession = context.getUserSession();
+        }
+        return userSession;
+    }
 
-	public static RequestContext getCurrentRequestContext() {
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			return context.getRequestContext();
-		}
-		return null;
-	}
+    public static RequestContext getCurrentRequestContext() {
+        RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+        if (context != null) {
+            return context.getRequestContext();
+        }
+        return null;
+    }
 
-	public static String getCurrentUserLoginId() {
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			UserSessionBase userSession = context.getUserSession();
-			if (userSession != null) {
-				return userSession.getLoginId();
-			}
-		}
-		return null;
-	}
+    public static String getCurrentUserLoginId() {
+        RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+        if (context != null) {
+            UserSessionBase userSession = context.getUserSession();
+            if (userSession != null) {
+                return userSession.getLoginId();
+            }
+        }
+        return null;
+    }
 
-	public static boolean isBulkModeContext() {
-		RangerAdminOpContext context = RangerContextHolder.getOpContext();
-		boolean bulkMode = false;
-		if (context != null) {
-			bulkMode = context.isBulkModeContext();
-		}
-		return bulkMode;
-	}
-
+    public static boolean isBulkModeContext() {
+        RangerAdminOpContext context  = RangerContextHolder.getOpContext();
+        boolean              bulkMode = false;
+        if (context != null) {
+            bulkMode = context.isBulkModeContext();
+        }
+        return bulkMode;
+    }
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common.annotation;
@@ -25,8 +25,7 @@ package org.apache.ranger.common.annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RangerAnnotationClassName {
-    public Class class_name();
+    Class class_name();
 }

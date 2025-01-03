@@ -27,104 +27,106 @@ import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerUserStoreCache {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreCache.class);
 
-	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
+    private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-	public static volatile RangerUserStoreCache 	sInstance = null;
+    public static volatile RangerUserStoreCache sInstance = null;
 
-	private final int             waitTimeInSeconds;
-	private final boolean         dedupStrings;
-	private final ReentrantLock   lock = new ReentrantLock();
-	private       RangerUserStore rangerUserStore;
+    private final int             waitTimeInSeconds;
+    private final boolean         dedupStrings;
+    private final ReentrantLock   lock = new ReentrantLock();
+    private       RangerUserStore rangerUserStore;
 
-	public static RangerUserStoreCache getInstance() {
-		if (sInstance == null) {
-			synchronized (RangerUserStoreCache.class) {
-				if (sInstance == null) {
-					sInstance = new RangerUserStoreCache();
-				}
-			}
-		}
-		return sInstance;
-	}
+    private RangerUserStoreCache() {
+        RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-	private RangerUserStoreCache() {
-		RangerAdminConfig config = RangerAdminConfig.getInstance();
+        this.waitTimeInSeconds = config.getInt("ranger.admin.userstore.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+        this.dedupStrings      = config.getBoolean("ranger.admin.userstore.dedup.strings", Boolean.TRUE);
+        this.rangerUserStore   = new RangerUserStore();
+    }
 
-		this.waitTimeInSeconds = config.getInt("ranger.admin.userstore.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
-		this.dedupStrings      = config.getBoolean("ranger.admin.userstore.dedup.strings", Boolean.TRUE);
-		this.rangerUserStore   = new RangerUserStore();
-	}
+    public static RangerUserStoreCache getInstance() {
+        if (sInstance == null) {
+            synchronized (RangerUserStoreCache.class) {
+                if (sInstance == null) {
+                    sInstance = new RangerUserStoreCache();
+                }
+            }
+        }
+        return sInstance;
+    }
 
-	public RangerUserStore getRangerUserStore() {
-		return this.rangerUserStore;
-	}
+    public RangerUserStore getRangerUserStore() {
+        return this.rangerUserStore;
+    }
 
-	public RangerUserStore getLatestRangerUserStoreOrCached(XUserMgr xUserMgr) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerUserStoreCache.getLatestRangerUserStoreOrCached()");
-		}
+    public RangerUserStore getLatestRangerUserStoreOrCached(XUserMgr xUserMgr) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerUserStoreCache.getLatestRangerUserStoreOrCached()");
+        }
 
-		RangerUserStore ret        = null;
-		boolean         lockResult = false;
+        RangerUserStore ret        = null;
+        boolean         lockResult = false;
 
-		try {
-			lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
+        try {
+            lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
-			if (lockResult) {
-				Long cachedUserStoreVersion = rangerUserStore.getUserStoreVersion();
-				Long dbUserStoreVersion     = xUserMgr.getUserStoreVersion();
+            if (lockResult) {
+                Long cachedUserStoreVersion = rangerUserStore.getUserStoreVersion();
+                Long dbUserStoreVersion     = xUserMgr.getUserStoreVersion();
 
-				if (!Objects.equals(cachedUserStoreVersion, dbUserStoreVersion)) {
-					LOG.info("RangerUserStoreCache refreshing from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion);
-					final long                     startTimeMs      = System.currentTimeMillis();
-					final Set<UserInfo>            rangerUsersInDB  = xUserMgr.getUsers();
-					final Set<GroupInfo>           rangerGroupsInDB = xUserMgr.getGroups();
-					final Map<String, Set<String>> userGroups       = xUserMgr.getUserGroups();
-					final long                     dbLoadTime       = System.currentTimeMillis() - startTimeMs;
+                if (!Objects.equals(cachedUserStoreVersion, dbUserStoreVersion)) {
+                    LOG.info("RangerUserStoreCache refreshing from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion);
+                    final long                     startTimeMs      = System.currentTimeMillis();
+                    final Set<UserInfo>            rangerUsersInDB  = xUserMgr.getUsers();
+                    final Set<GroupInfo>           rangerGroupsInDB = xUserMgr.getGroups();
+                    final Map<String, Set<String>> userGroups       = xUserMgr.getUserGroups();
+                    final long                     dbLoadTime       = System.currentTimeMillis() - startTimeMs;
 
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
-						LOG.debug("No. of userGroupMappings = " + userGroups.size());
-						LOG.debug("loading Users from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
-					}
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
+                        LOG.debug("No. of userGroupMappings = " + userGroups.size());
+                        LOG.debug("loading Users from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
+                    }
 
-					RangerUserStore rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
+                    RangerUserStore rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
 
-					if (dedupStrings) {
-						rangerUserStore.dedupStrings();
-					}
+                    if (dedupStrings) {
+                        rangerUserStore.dedupStrings();
+                    }
 
-					this.rangerUserStore = rangerUserStore;
+                    this.rangerUserStore = rangerUserStore;
 
-					LOG.info("RangerUserStoreCache refreshed from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion + ": users=" + rangerUsersInDB.size() + ", groups=" + rangerGroupsInDB.size() + ", userGroupMappings=" + userGroups.size());
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached RangerUserStore");
-				}
-			}
-		} catch (InterruptedException exception) {
-			LOG.error("RangerUserStoreCache.getLatestRangerUserStoreOrCached:lock got interrupted..", exception);
-		} finally {
-			ret = rangerUserStore;
+                    LOG.info("RangerUserStoreCache refreshed from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion + ": users=" + rangerUsersInDB.size() + ", groups=" + rangerGroupsInDB.size() + ", userGroupMappings=" + userGroups.size());
+                }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached RangerUserStore");
+                }
+            }
+        } catch (InterruptedException exception) {
+            LOG.error("RangerUserStoreCache.getLatestRangerUserStoreOrCached:lock got interrupted..", exception);
+        } finally {
+            ret = rangerUserStore;
 
-			if (lockResult) {
-				lock.unlock();
-			}
-		}
+            if (lockResult) {
+                lock.unlock();
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerUserStoreCache.getLatestRangerUserStoreOrCached(): ret=" + ret);
-		}
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerUserStoreCache.getLatestRangerUserStoreOrCached(): ret=" + ret);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 }
 

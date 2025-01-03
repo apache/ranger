@@ -19,36 +19,33 @@
 
 package org.apache.ranger.common;
 
-import java.util.HashMap;
-
 import org.apache.ranger.plugin.util.XMLUtils;
 
+import java.util.HashMap;
+
 public class RangerProperties extends HashMap<Object, Object> {
-	
-	private static final long serialVersionUID = -4094378755892810987L;
 
-	private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
+    private static final long serialVersionUID = -4094378755892810987L;
 
-	private String xmlConfigFileNames = null;
+    private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
 
-	public RangerProperties(String xmlConfigFileNames) {
-		this.xmlConfigFileNames = xmlConfigFileNames;
-		initProperties();
-	}
+    private String xmlConfigFileNames = null;
 
-	private void initProperties() {
-		
-		if (xmlConfigFileNames == null || xmlConfigFileNames.isEmpty()) {
-			return;
-		}
+    public RangerProperties(String xmlConfigFileNames) {
+        this.xmlConfigFileNames = xmlConfigFileNames;
+        initProperties();
+    }
 
-		String[] fnList = xmlConfigFileNames.split(XMLCONFIG_FILENAME_DELIMITOR);
+    private void initProperties() {
 
-		for (String fn : fnList) {
-		    XMLUtils.loadConfig(fn, this);
-		}
+        if (xmlConfigFileNames == null || xmlConfigFileNames.isEmpty()) {
+            return;
+        }
 
-	}
+        String[] fnList = xmlConfigFileNames.split(XMLCONFIG_FILENAME_DELIMITOR);
 
-	
+        for (String fn : fnList) {
+            XMLUtils.loadConfig(fn, this);
+        }
+    }
 }

@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerFactory {
-	public RangerPolicyResourceSignature createPolicyResourceSignature(RangerPolicy policy) {
-		return new RangerPolicyResourceSignature(policy);
-	}
+    public RangerPolicyResourceSignature createPolicyResourceSignature(RangerPolicy policy) {
+        return new RangerPolicyResourceSignature(policy);
+    }
 }

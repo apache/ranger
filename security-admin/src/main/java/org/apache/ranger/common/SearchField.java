@@ -17,7 +17,7 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
@@ -26,206 +26,200 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SearchField {
-	public enum DATA_TYPE {
-		INTEGER, STRING, INT_LIST, STR_LIST, BOOLEAN, DATE
-	};
+    private final String clientFieldName;
 
-	public enum SEARCH_TYPE {
-		FULL, PARTIAL, LESS_THAN, LESS_EQUAL_THAN, GREATER_THAN, GREATER_EQUAL_THAN, NOT_EQUALS
-	};
+    private String       fieldName;
 
-	private String clientFieldName;
-	private String fieldName;
-	private DATA_TYPE dataType;
-	private SEARCH_TYPE searchType;
-	private String regEx;
-	private String enumName;
-	private int maxValue;
-	private List<String> joinTables;
-	private String joinCriteria;
-	private String customCondition;
+    private       DATA_TYPE   dataType;
+    private final SEARCH_TYPE searchType;
+    private       String      regEx;
+    private String       enumName;
+    private int          maxValue;
+    private List<String> joinTables;
+    private String       joinCriteria;
+    private String       customCondition;
+    /**
+     * default constructor
+     */
+    public SearchField(String clientFieldName, String fieldName,
+            DATA_TYPE dtype, SEARCH_TYPE stype, String joinTables,
+            String joinCriteria) {
+        this.clientFieldName = clientFieldName;
+        this.fieldName       = fieldName;
+        dataType             = dtype;
+        searchType           = stype;
 
-	/**
-	 * default constructor
-	 */
-	public SearchField(String clientFieldName, String fieldName,
-			DATA_TYPE dtype, SEARCH_TYPE stype, String joinTables,
-			String joinCriteria) {
-		this.clientFieldName = clientFieldName;
-		this.fieldName = fieldName;
-		dataType = dtype;
-		searchType = stype;
+        setJoinTables(joinTables);
+        this.joinCriteria = joinCriteria;
+    }
+    /**
+     * constructor
+     */
+    public SearchField(String clientFieldName, String fieldName,
+            DATA_TYPE dtype, SEARCH_TYPE stype) {
+        this.clientFieldName = clientFieldName;
+        this.fieldName       = fieldName;
+        dataType             = dtype;
+        searchType           = stype;
+    }
 
-		setJoinTables(joinTables);
-		this.joinCriteria = joinCriteria;
-	}
+    /**
+     * constructor
+     */
+    public SearchField(String clientFieldName, String fieldName) {
+        this.clientFieldName = clientFieldName;
+        this.fieldName       = fieldName;
+        dataType             = DATA_TYPE.STRING;
+        searchType           = SEARCH_TYPE.FULL;
+    }
 
-	/**
-	 * constructor
-	 */
-	public SearchField(String clientFieldName, String fieldName,
-			DATA_TYPE dtype, SEARCH_TYPE stype) {
-		this.clientFieldName = clientFieldName;
-		this.fieldName = fieldName;
-		dataType = dtype;
-		searchType = stype;
-	}
+    static public SearchField createString(String clientFieldName,
+            String fieldName, SEARCH_TYPE stype, String regEx) {
+        SearchField searchField = new SearchField(clientFieldName, fieldName,
+                DATA_TYPE.STRING, stype);
+        searchField.setRegEx(regEx);
+        return searchField;
+    }
 
-	/**
-	 * constructor
-	 */
-	public SearchField(String clientFieldName, String fieldName) {
-		this.clientFieldName = clientFieldName;
-		this.fieldName = fieldName;
-		dataType = DATA_TYPE.STRING;
-		searchType = SEARCH_TYPE.FULL;
-	}
+    static public SearchField createLong(String clientFieldName,
+            String fieldName) {
+        SearchField searchField = new SearchField(clientFieldName, fieldName,
+                DATA_TYPE.INTEGER, SEARCH_TYPE.FULL);
+        return searchField;
+    }
 
-	static public SearchField createString(String clientFieldName,
-			String fieldName, SEARCH_TYPE stype, String regEx) {
-		SearchField searchField = new SearchField(clientFieldName, fieldName,
-				DATA_TYPE.STRING, stype);
-		searchField.setRegEx(regEx);
-		return searchField;
-	}
+    static public SearchField createEnum(String clientFieldName,
+            String fieldName, String enumName, int maxValue) {
+        SearchField searchField = new SearchField(clientFieldName, fieldName,
+                DATA_TYPE.INT_LIST, SEARCH_TYPE.FULL);
+        searchField.setEnumName(enumName);
+        searchField.setMaxValue(maxValue);
+        return searchField;
+    }
 
-	static public SearchField createLong(String clientFieldName,
-			String fieldName) {
-		SearchField searchField = new SearchField(clientFieldName, fieldName,
-				DATA_TYPE.INTEGER, SEARCH_TYPE.FULL);
-		return searchField;
-	}
+    public String getClientFieldName() {
+        return clientFieldName;
+    }
 
-	static public SearchField createEnum(String clientFieldName,
-			String fieldName, String enumName, int maxValue) {
-		SearchField searchField = new SearchField(clientFieldName, fieldName,
-				DATA_TYPE.INT_LIST, SEARCH_TYPE.FULL);
-		searchField.setEnumName(enumName);
-		searchField.setMaxValue(maxValue);
-		return searchField;
-	}
+    public String getFieldName() {
+        return fieldName;
+    }
 
-	public String getClientFieldName() {
-		return clientFieldName;
-	}
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
 
-	public String getFieldName() {
-		return fieldName;
-	}
+    public DATA_TYPE getDataType() {
+        return dataType;
+    }
 
-	public void setFieldName(String fieldName) {
-		this.fieldName = fieldName;
-	}
+    public void setDataType(DATA_TYPE dataType) {
+        this.dataType = dataType;
+    }
 
-	public DATA_TYPE getDataType() {
-		return dataType;
-	}
-
-	public void setDataType(DATA_TYPE dataType) {
-		this.dataType = dataType;
-	}
-
-	public SEARCH_TYPE getSearchType() {
-		return searchType;
-	}
-
-	/**
-	 * @param regEx
-	 *            the regEx to set
-	 */
-	public void setRegEx(String regEx) {
-		this.regEx = regEx;
-	}
+    public SEARCH_TYPE getSearchType() {
+        return searchType;
+    }
 
     public String getRegEx() {
         return regEx;
     }
 
-	/**
-	 * @param enumName
-	 *            the enumName to set
-	 */
-	public void setEnumName(String enumName) {
-		this.enumName = enumName;
-	}
+    /**
+     * @param regEx the regEx to set
+     */
+    public void setRegEx(String regEx) {
+        this.regEx = regEx;
+    }
 
     public String getEnumName() {
         return enumName;
     }
 
-	/**
-	 * @param maxValue
-	 *            the maxValue to set
-	 */
-	public void setMaxValue(int maxValue) {
-		this.maxValue = maxValue;
-	}
+    /**
+     * @param enumName the enumName to set
+     */
+    public void setEnumName(String enumName) {
+        this.enumName = enumName;
+    }
 
     public int getMaxValue() {
         return maxValue;
     }
 
-	/**
-	 * @return the joinTables
-	 */
-	public List<String> getJoinTables() {
-		return joinTables;
-	}
+    /**
+     * @param maxValue the maxValue to set
+     */
+    public void setMaxValue(int maxValue) {
+        this.maxValue = maxValue;
+    }
 
-	/**
-	 * @param joinTables
-	 *            the joinTables to set
-	 */
-	public void setJoinTables(List<String> joinTables) {
-		this.joinTables = joinTables;
-	}
+    /**
+     * @return the joinTables
+     */
+    public List<String> getJoinTables() {
+        return joinTables;
+    }
 
-	/**
-	 * @param joinTables
-	 *            the joinTables to set (comma separated)
-	 */
-	public void setJoinTables(String joinTables) {
-		if (joinTables != null) {
-			if (this.joinTables == null) {
-				this.joinTables = new ArrayList<String>();
-			}
+    /**
+     * @param joinTables the joinTables to set
+     */
+    public void setJoinTables(List<String> joinTables) {
+        this.joinTables = joinTables;
+    }
 
-			for (String table : joinTables.split(",")) {
-				if (table == null) {
-					continue;
-				}
-				table = table.trim();
+    /**
+     * @param joinTables the joinTables to set (comma separated)
+     */
+    public void setJoinTables(String joinTables) {
+        if (joinTables != null) {
+            if (this.joinTables == null) {
+                this.joinTables = new ArrayList<String>();
+            }
 
-				if (!table.isEmpty() && !this.joinTables.contains(table)) {
-					this.joinTables.add(table);
-				}
-			}
+            for (String table : joinTables.split(",")) {
+                if (table == null) {
+                    continue;
+                }
+                table = table.trim();
 
-		}
-	}
+                if (!table.isEmpty() && !this.joinTables.contains(table)) {
+                    this.joinTables.add(table);
+                }
+            }
+        }
+    }
 
-	/**
-	 * @return the joinCriteria
-	 */
-	public String getJoinCriteria() {
-		return joinCriteria;
-	}
+    /**
+     * @return the joinCriteria
+     */
+    public String getJoinCriteria() {
+        return joinCriteria;
+    }
 
-	/**
-	 * @param joinCriteria
-	 *            the joinCriteria to set
-	 */
-	public void setJoinCriteria(String joinCriteria) {
-		this.joinCriteria = joinCriteria;
-	}
+    /**
+     * @param joinCriteria the joinCriteria to set
+     */
+    public void setJoinCriteria(String joinCriteria) {
+        this.joinCriteria = joinCriteria;
+    }
 
-	/**
-	 * @return the customCondition
-	 */
-	public String getCustomCondition() {
-		return customCondition;
-	}
-	public void setCustomCondition(String conditions) {
-		customCondition=conditions;
-	}
+    /**
+     * @return the customCondition
+     */
+    public String getCustomCondition() {
+        return customCondition;
+    }
+
+    public void setCustomCondition(String conditions) {
+        customCondition = conditions;
+    }
+
+    public enum DATA_TYPE {
+        INTEGER, STRING, INT_LIST, STR_LIST, BOOLEAN, DATE
+    }
+
+    public enum SEARCH_TYPE {
+        FULL, PARTIAL, LESS_THAN, LESS_EQUAL_THAN, GREATER_THAN, GREATER_EQUAL_THAN, NOT_EQUALS
+    }
 }

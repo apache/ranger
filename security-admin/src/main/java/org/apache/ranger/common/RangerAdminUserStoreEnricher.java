@@ -56,6 +56,11 @@ public class RangerAdminUserStoreEnricher extends RangerUserStoreEnricher {
         }
     }
 
+    @Override
+    public String toString() {
+        return "RangerAdminUserStoreEnricher={serviceName=" + serviceName + "}";
+    }
+
     private void refreshUserStoreIfNeeded() {
         RangerUserStore latestUserStore        = RangerUserStoreCache.getInstance().getRangerUserStore();
         Long            latestUserStoreVersion = latestUserStore != null ? latestUserStore.getUserStoreVersion() : null;
@@ -69,12 +74,5 @@ public class RangerAdminUserStoreEnricher extends RangerUserStoreEnricher {
                 }
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RangerAdminUserStoreEnricher={serviceName=").append(serviceName).append("}");
-        return sb.toString();
     }
 }
