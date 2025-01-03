@@ -18,172 +18,169 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_condition")
 public class XXPolicyRefCondition extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_condition_SEQ", sequenceName = "x_policy_ref_condition_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_condition_SEQ")
-	@Column(name = "id")
-	protected Long id;
+        java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * id of the XXPolicyRefCondition
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_condition_SEQ", sequenceName = "x_policy_ref_condition_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_condition_SEQ")
+    @Column(name = "id")
+    protected            Long id;
 
-	/**
-	 * policyId of the XXPolicyRefCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * policyId of the XXPolicyRefCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * conditionDefId of the XXPolicyRefCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "condition_def_id")
-	protected Long conditionDefId;
+    /**
+     * conditionDefId of the XXPolicyRefCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "condition_def_id")
+    protected Long conditionDefId;
 
-	/**
-	 * conditionName of the XXPolicyRefCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "condition_name")
-	protected String conditionName;
+    /**
+     * conditionName of the XXPolicyRefCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "condition_name")
+    protected String conditionName;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, conditionDefId, conditionName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> conditionDefId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param conditionDefId
-	 *            Value to set member attribute <b> conditionDefId</b>
-	 */
-	public void setConditionDefId(Long conditionDefId) {
-		this.conditionDefId = conditionDefId;
-	}
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>conditionDefId</b>
-	 *
-	 * @return Date - value of member attribute <b>conditionDefId</b> .
-	 */
-	public Long getConditionDefId() {
-		return conditionDefId;
-	}
+        XXPolicyRefCondition other = (XXPolicyRefCondition) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> conditionName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param conditionName
-	 *            Value to set member attribute <b> conditionName</b>
-	 */
-	public void setConditionName(String conditionName) {
-		this.conditionName = conditionName;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(conditionDefId, other.conditionDefId) &&
+                Objects.equals(conditionName, other.conditionName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>conditionName</b>
-	 *
-	 * @return Date - value of member attribute <b>conditionName</b> .
-	 */
-	public String getConditionName() {
-		return conditionName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefCondition [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", conditionDefId="
+                + conditionDefId + ", conditionName=" + conditionName + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, conditionDefId, conditionName);
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>conditionDefId</b>
+     *
+     * @return Date - value of member attribute <b>conditionDefId</b> .
+     */
+    public Long getConditionDefId() {
+        return conditionDefId;
+    }
 
-		XXPolicyRefCondition other = (XXPolicyRefCondition) obj;
+    /**
+     * This method sets the value to the member attribute <b> conditionDefId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param conditionDefId Value to set member attribute <b> conditionDefId</b>
+     */
+    public void setConditionDefId(Long conditionDefId) {
+        this.conditionDefId = conditionDefId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(conditionDefId, other.conditionDefId) &&
-			   Objects.equals(conditionName, other.conditionName);
-	}
+    /**
+     * Returns the value for the member attribute <b>conditionName</b>
+     *
+     * @return Date - value of member attribute <b>conditionName</b> .
+     */
+    public String getConditionName() {
+        return conditionName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefCondition [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", conditionDefId="
-				+ conditionDefId + ", conditionName=" + conditionName + "]";
-	}
-
-
-
+    /**
+     * This method sets the value to the member attribute <b> conditionName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param conditionName Value to set member attribute <b> conditionName</b>
+     */
+    public void setConditionName(String conditionName) {
+        this.conditionName = conditionName;
+    }
 }

@@ -17,6 +17,9 @@
 
 package org.apache.ranger.entity;
 
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerCommonEnums;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,142 +27,143 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.RangerCommonEnums;
 
 @Entity
 @Table(name = "x_user_module_perm")
 public class XXUserPermission extends XXDBBase implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_USER_MODULE_PERM_SEQ", sequenceName = "X_USER_MODULE_PERM_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_USER_MODULE_PERM_SEQ")
-	@Column(name = "ID")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_USER_MODULE_PERM_SEQ", sequenceName = "X_USER_MODULE_PERM_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_USER_MODULE_PERM_SEQ")
+    @Column(name = "ID")
+    protected Long id;
 
-	@Column(name = "USER_ID", nullable = false)
-	protected Long userId;
+    @Column(name = "USER_ID", nullable = false)
+    protected Long userId;
 
-	@Column(name = "MODULE_ID", nullable = false)
-	protected Long moduleId;
+    @Column(name = "MODULE_ID", nullable = false)
+    protected Long moduleId;
 
-	@Column(name = "IS_ALLOWED", nullable = false)
-	protected Integer isAllowed;
+    @Column(name = "IS_ALLOWED", nullable = false)
+    protected Integer isAllowed;
 
-	public XXUserPermission(){
-		isAllowed = RangerCommonEnums.IS_ALLOWED;
-	}
+    public XXUserPermission() {
+        isAllowed = RangerCommonEnums.IS_ALLOWED;
+    }
 
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
+    /**
+     * @return the userId
+     */
+    public Long getUserId() {
+        return userId;
+    }
 
-	/**
-	 * @param id
-	 *            the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * @param userId the userId to set
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-	/**
-	 * @return the userId
-	 */
-	public Long getUserId() {
-		return userId;
-	}
+    /**
+     * @return the moduleId
+     */
+    public Long getModuleId() {
+        return moduleId;
+    }
 
-	/**
-	 * @param userId
-	 *            the userId to set
-	 */
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+    /**
+     * @param moduleId the moduleId to set
+     */
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
+    }
 
-	/**
-	 * @return the moduleId
-	 */
-	public Long getModuleId() {
-		return moduleId;
-	}
+    /**
+     * @return the isAllowed
+     */
+    public Integer getIsAllowed() {
+        return isAllowed;
+    }
 
-	/**
-	 * @param moduleId
-	 *            the moduleId to set
-	 */
-	public void setModuleId(Long moduleId) {
-		this.moduleId = moduleId;
-	}
+    /**
+     * @param isAllowed the isAllowed to set
+     */
+    public void setIsAllowed(Integer isAllowed) {
+        this.isAllowed = isAllowed;
+    }
 
-	/**
-	 * @return the isAllowed
-	 */
-	public Integer getIsAllowed() {
-		return isAllowed;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_RANGER_USER_PERMISSION;
+    }
 
-	/**
-	 * @param isAllowed
-	 *            the isAllowed to set
-	 */
-	public void setIsAllowed(Integer isAllowed) {
-		this.isAllowed = isAllowed;
-	}
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXUserPermission other = (XXUserPermission) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (isAllowed == null) {
-			if (other.isAllowed != null)
-				return false;
-		} else if (!isAllowed.equals(other.isAllowed))
-			return false;
-		if (moduleId == null) {
-			if (other.moduleId != null)
-				return false;
-		} else if (!moduleId.equals(other.moduleId))
-			return false;
-		if (userId == null) {
-			if (other.userId != null)
-				return false;
-		} else if (!userId.equals(other.userId))
-			return false;
-		return true;
-	}
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_RANGER_USER_PERMISSION;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        XXUserPermission other = (XXUserPermission) obj;
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        } else if (!id.equals(other.id)) {
+            return false;
+        }
+        if (isAllowed == null) {
+            if (other.isAllowed != null) {
+                return false;
+            }
+        } else if (!isAllowed.equals(other.isAllowed)) {
+            return false;
+        }
+        if (moduleId == null) {
+            if (other.moduleId != null) {
+                return false;
+            }
+        } else if (!moduleId.equals(other.moduleId)) {
+            return false;
+        }
+        if (userId == null) {
+            return other.userId == null;
+        } else
+            return userId.equals(other.userId);
+    }
 
-	@Override
-	public String toString() {
+    @Override
+    public String toString() {
 
-		String str = "VXUserPermission={";
-		str += super.toString();
-		str += "id={" + id + "} ";
-		str += "userId={" + userId + "} ";
-		str += "moduleId={" + moduleId + "} ";
-		str += "isAllowed={" + isAllowed + "} ";
-		str += "}";
+        String str = "VXUserPermission={";
+        str += super.toString();
+        str += "id={" + id + "} ";
+        str += "userId={" + userId + "} ";
+        str += "moduleId={" + moduleId + "} ";
+        str += "isAllowed={" + isAllowed + "} ";
+        str += "}";
 
-		return str;
-	}
+        return str;
+    }
 }

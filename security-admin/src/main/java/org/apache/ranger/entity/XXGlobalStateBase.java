@@ -20,6 +20,7 @@ package org.apache.ranger.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
+
 import java.util.Objects;
 
 @MappedSuperclass
@@ -36,15 +37,22 @@ public abstract class XXGlobalStateBase extends XXDBBase {
     @Column(name = "app_data")
     protected String appData;
 
-    public Long getVersion() { return version; }
-    public String getStateName() { return stateName; }
+    public Long getVersion()     {return version;}
+
+    public String getStateName() {return stateName;}
 
     public void setStateName(String stateName) {
         this.stateName = stateName;
     }
 
+    public String getAppData()             {return appData;}
+
     public void setAppData(String appData) {this.appData = appData;}
-    public String getAppData() { return appData; }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), version, stateName);
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -63,11 +71,6 @@ public abstract class XXGlobalStateBase extends XXDBBase {
         return Objects.equals(version, other.version) &&
                 Objects.equals(stateName, other.stateName) &&
                 Objects.equals(appData, other.appData);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), version, stateName);
     }
 
     @Override
