@@ -59,17 +59,19 @@ public class ElasticSearchUtil {
     @Autowired
     StringUtil stringUtil;
 
-    String           dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    SimpleDateFormat dateFormat     = new SimpleDateFormat(dateFormateStr);
+    final String           dateFormateStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    final SimpleDateFormat dateFormat     = new SimpleDateFormat(dateFormateStr);
 
     public ElasticSearchUtil() {
         String timeZone = PropertiesUtil.getProperty("xa.elasticSearch.timezone");
+
         if (timeZone != null) {
-            logger.info("Setting timezone to " + timeZone);
+            logger.info("Setting timezone to {}", timeZone);
+
             try {
                 dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
             } catch (Throwable t) {
-                logger.error("Error setting timezone. TimeZone = " + timeZone);
+                logger.error("Error setting timezone. TimeZone = {}", timeZone);
             }
         }
     }
@@ -77,8 +79,10 @@ public class ElasticSearchUtil {
     public SearchResponse searchResources(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFields, RestHighLevelClient client, String index) throws IOException {
         // See Also: https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high-query-builders.html
         QueryAccumulator queryAccumulator = new QueryAccumulator(searchCriteria);
+
         if (searchCriteria.getParamList() != null) {
             searchFields.stream().forEach(queryAccumulator::addQuery);
+
             // For now assuming there is only date field where range query will
             // be done. If we there are more than one, then we should create a
             // hashmap for each field name
@@ -86,31 +90,39 @@ public class ElasticSearchUtil {
                 queryAccumulator.queries.add(setDateRange(queryAccumulator.dateFieldName, queryAccumulator.fromDate, queryAccumulator.toDate));
             }
         }
+
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
         queryAccumulator.queries.stream().filter(x -> x != null).forEach(boolQueryBuilder::must);
+
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
         setSortClause(searchCriteria, sortFields, searchSourceBuilder);
+
         searchSourceBuilder.from(searchCriteria.getStartIndex());
         searchSourceBuilder.size(searchCriteria.getMaxRows());
         searchSourceBuilder.fetchSource(true);
+
         SearchRequest query = new SearchRequest();
+
         query.indices(index);
         query.source(searchSourceBuilder.query(boolQueryBuilder));
+
         return client.search(query, RequestOptions.DEFAULT);
     }
 
-    public void setSortClause(SearchCriteria searchCriteria,
-            List<SortField> sortFields,
-            SearchSourceBuilder searchSourceBuilder) {
-
+    public void setSortClause(SearchCriteria searchCriteria, List<SortField> sortFields, SearchSourceBuilder searchSourceBuilder) {
         // TODO: We are supporting single sort field only for now
         String sortBy      = searchCriteria.getSortBy();
         String querySortBy = null;
+
         if (!stringUtil.isEmpty(sortBy)) {
             sortBy = sortBy.trim();
+
             for (SortField sortField : sortFields) {
                 if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the normalized value
                     searchCriteria.setSortBy(sortField.getParamName());
                     break;
@@ -122,6 +134,7 @@ public class ElasticSearchUtil {
             for (SortField sortField : sortFields) {
                 if (sortField.isDefault()) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the default value
                     searchCriteria.setSortBy(sortField.getParamName());
                     searchCriteria.setSortType(sortField.getDefaultOrder().name());
@@ -134,9 +147,11 @@ public class ElasticSearchUtil {
             // Add sort type
             String    sortType = searchCriteria.getSortType();
             SortOrder order    = SortOrder.ASC;
+
             if ("desc".equalsIgnoreCase(sortType)) {
                 order = SortOrder.DESC;
             }
+
             searchSourceBuilder.sort(querySortBy, order);
         }
     }
@@ -145,6 +160,7 @@ public class ElasticSearchUtil {
         if (valueList == null || valueList.isEmpty()) {
             return null;
         }
+
         if (valueList.isEmpty()) {
             return null;
         } else {
@@ -159,12 +175,15 @@ public class ElasticSearchUtil {
 
     public QueryBuilder setDateRange(String fieldName, Date fromDate, Date toDate) {
         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(fieldName).format(dateFormateStr);
+
         if (fromDate != null) {
             rangeQueryBuilder.from(dateFormat.format(fromDate));
         }
+
         if (toDate != null) {
             rangeQueryBuilder.to(dateFormat.format(toDate));
         }
+
         return rangeQueryBuilder;
     }
 
@@ -172,12 +191,17 @@ public class ElasticSearchUtil {
         if (0 == hits.length) {
             return new MultiGetItemResponse[0];
         }
+
         MultiGetRequest multiGetRequest = new MultiGetRequest();
+
         for (SearchHit hit : hits) {
             MultiGetRequest.Item item = new MultiGetRequest.Item(index, null, hit.getId());
+
             item.fetchSourceContext(FetchSourceContext.FETCH_SOURCE);
+
             multiGetRequest.add(item);
         }
+
         return client.multiGet(multiGetRequest, RequestOptions.DEFAULT).getResponses();
     }
 
@@ -201,9 +225,11 @@ public class ElasticSearchUtil {
 
         public QueryAccumulator addQuery(SearchField searchField) {
             QueryBuilder queryBuilder = getQueryBuilder(searchField);
+
             if (null != queryBuilder) {
                 queries.add(queryBuilder);
             }
+
             return this;
         }
 
@@ -213,6 +239,7 @@ public class ElasticSearchUtil {
             SearchField.DATA_TYPE   dataType        = searchField.getDataType();
             SearchField.SEARCH_TYPE searchType      = searchField.getSearchType();
             Object                  paramValue      = searchCriteria.getParamValue(clientFieldName);
+
             return getQueryBuilder(dataType, searchType, fieldName, paramValue);
         }
 
@@ -220,12 +247,15 @@ public class ElasticSearchUtil {
             if (paramValue == null || paramValue.toString().isEmpty()) {
                 return null;
             }
+
             if (fieldName.startsWith("-")) {
                 QueryBuilder negativeQuery = getQueryBuilder(dataType, searchType, fieldName.substring(1), paramValue);
                 return null == negativeQuery ? null : QueryBuilders.boolQuery().mustNot(negativeQuery);
             }
+
             if (paramValue instanceof Collection) {
                 Collection<?> valueList = (Collection<?>) paramValue;
+
                 if (valueList.isEmpty()) {
                     return null;
                 } else {
@@ -239,27 +269,22 @@ public class ElasticSearchUtil {
             } else {
                 if (dataType == SearchField.DATA_TYPE.DATE) {
                     if (!(paramValue instanceof Date)) {
-                        logger.error(String.format(
-                                "Search value is not a Java Date Object: %s %s %s",
-                                fieldName, searchType, paramValue));
+                        logger.error("Search value is not a Java Date Object: {} {} {}", fieldName, searchType, paramValue);
                     } else {
-                        if (searchType == SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN
-                                || searchType == SearchField.SEARCH_TYPE.GREATER_THAN) {
+                        if (searchType == SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN || searchType == SearchField.SEARCH_TYPE.GREATER_THAN) {
                             fromDate      = (Date) paramValue;
                             dateFieldName = fieldName;
-                        } else if (searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN
-                                || searchType == SearchField.SEARCH_TYPE.LESS_THAN) {
+                        } else if (searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN || searchType == SearchField.SEARCH_TYPE.LESS_THAN) {
                             toDate        = (Date) paramValue;
                             dateFieldName = fieldName;
                         }
                     }
+
                     return null;
-                } else if (searchType == SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN
-                        || searchType == SearchField.SEARCH_TYPE.GREATER_THAN
-                        || searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN
-                        || searchType == SearchField.SEARCH_TYPE.LESS_THAN) { //NOPMD
-                    logger.warn(String.format("Range Queries Not Implemented: %s %s %s",
-                            fieldName, searchType, paramValue));
+                } else if (searchType == SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN || searchType == SearchField.SEARCH_TYPE.GREATER_THAN
+                        || searchType == SearchField.SEARCH_TYPE.LESS_EQUAL_THAN || searchType == SearchField.SEARCH_TYPE.LESS_THAN) { //NOPMD
+                    logger.warn("Range Queries Not Implemented: {} {} {}", fieldName, searchType, paramValue);
+
                     return null;
                 } else {
                     if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
