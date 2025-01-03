@@ -17,23 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.common.db;
-
-
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.TypedQuery;
+package org.apache.ranger.common.db;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -44,341 +28,351 @@ import org.apache.ranger.db.RangerDaoManagerBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+import javax.persistence.Table;
+import javax.persistence.TypedQuery;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class BaseDao<T> {
-	private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
-	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
-	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
-	private static       int    BATCH_DELETE_BATCH_SIZE;
-	private static final String NOT_AVAILABLE = "Not Available";
-	private static final String GDS_TABLES = "x_gds_";
+    private static final Logger logger                          = LoggerFactory.getLogger(BaseDao.class);
+    private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
+    private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
+    private static final String NOT_AVAILABLE                   = "Not Available";
+    private static final String GDS_TABLES                      = "x_gds_";
+    private static       int    BATCH_DELETE_BATCH_SIZE;
+    protected RangerDaoManager daoManager;
+    protected Class<T> tClass;
+    EntityManager em;
 
-	static {
-		try {
-			BATCH_DELETE_BATCH_SIZE = RangerAdminConfig.getInstance().getInt(PROP_BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+    public BaseDao(RangerDaoManagerBase daoManager) {
+        this.daoManager = (RangerDaoManager) daoManager;
+        this.init(daoManager.getEntityManager());
+    }
 
-			if (BATCH_DELETE_BATCH_SIZE > DEFAULT_BATCH_DELETE_BATCH_SIZE) {
-				logger.warn("Configuration {}={}, which is larger than default value {}", PROP_BATCH_DELETE_BATCH_SIZE, BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
-			}
-		} catch(Exception e) {
-			// When we get the Number format exception due to the invalid value entered into the config file.
-			BATCH_DELETE_BATCH_SIZE = DEFAULT_BATCH_DELETE_BATCH_SIZE;
-		}
+    public BaseDao(RangerDaoManagerBase daoManager, String persistenceContextUnit) {
+        this.daoManager = (RangerDaoManager) daoManager;
 
-		logger.info(PROP_BATCH_DELETE_BATCH_SIZE + "=" + BATCH_DELETE_BATCH_SIZE);
-	}
+        EntityManager em = this.daoManager.getEntityManager(persistenceContextUnit);
 
-	protected RangerDaoManager daoManager;
+        this.init(em);
+    }
 
-	EntityManager em;
+    public EntityManager getEntityManager() {
+        return this.em;
+    }
 
-	protected Class<T> tClass;
+    public T create(T obj) {
+        T ret = null;
 
-	public BaseDao(RangerDaoManagerBase daoManager) {
-		this.daoManager = (RangerDaoManager) daoManager;
-		this.init(daoManager.getEntityManager());
-	}
+        em.persist(obj);
+        if (!RangerBizUtil.isBulkMode()) {
+            em.flush();
+        }
+        ret = obj;
+        return ret;
+    }
 
-	public BaseDao(RangerDaoManagerBase daoManager, String persistenceContextUnit) {
-		this.daoManager = (RangerDaoManager) daoManager;
+    public List<T> batchCreate(List<T> obj) {
+        List<T> ret = null;
 
-		EntityManager em = this.daoManager.getEntityManager(persistenceContextUnit);
+        for (int n = 0; n < obj.size(); ++n) {
+            em.persist(obj.get(n));
+            if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.BATCH_PERSIST_SIZE == 0)) {
+                em.flush();
+            }
+        }
+        if (!RangerBizUtil.isBulkMode()) {
+            em.flush();
+        }
 
-		this.init(em);
-	}
+        ret = obj;
+        return ret;
+    }
 
-	@SuppressWarnings("unchecked")
-	private void init(EntityManager em) {
-		this.em = em;
+    public void batchDeleteByIds(String namedQuery, List<Long> ids, String paramName) {
+        if (BATCH_DELETE_BATCH_SIZE <= 0) {
+            getEntityManager()
+                    .createNamedQuery(namedQuery, tClass)
+                    .setParameter(paramName, ids).executeUpdate();
+        } else {
+            for (int fromIndex = 0; fromIndex < ids.size(); fromIndex += BATCH_DELETE_BATCH_SIZE) {
+                int toIndex = fromIndex + BATCH_DELETE_BATCH_SIZE;
 
-		ParameterizedType genericSuperclass = (ParameterizedType) getClass()
-				.getGenericSuperclass();
+                if (toIndex > ids.size()) {
+                    toIndex = ids.size();
+                }
 
-		Type type = genericSuperclass.getActualTypeArguments()[0];
+                if (logger.isDebugEnabled()) {
+                    logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
+                }
 
-		if (type instanceof ParameterizedType) {
-			this.tClass = (Class<T>) ((ParameterizedType) type).getRawType();
-		} else {
-			this.tClass = (Class<T>) type;
-		}
-	}
+                List<Long> subList = ids.subList(fromIndex, toIndex);
 
-	public EntityManager getEntityManager() {
-		return this.em;
-	}
+                getEntityManager()
+                        .createNamedQuery(namedQuery, tClass)
+                        .setParameter(paramName, subList).executeUpdate();
+            }
+        }
+    }
 
-	public T create(T obj) {
-		T ret = null;
+    public T update(T obj) {
+        em.merge(obj);
+        if (!RangerBizUtil.isBulkMode()) {
+            em.flush();
+        }
+        return obj;
+    }
 
-		em.persist(obj);
-		if (!RangerBizUtil.isBulkMode()) {
-			em.flush();
-		}
-		ret = obj;
-		return ret;
-	}
+    public boolean remove(Long id) {
+        return remove(getById(id));
+    }
 
-	public List<T> batchCreate(List<T> obj) {
-		List<T> ret = null;
+    public boolean remove(T obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (!em.contains(obj)) {
+            obj = em.merge(obj);
+        }
+        em.remove(obj);
+        if (!RangerBizUtil.isBulkMode()) {
+            em.flush();
+        }
+        return true;
+    }
 
-		for (int n = 0; n < obj.size(); ++n) {
-			em.persist(obj.get(n));
-			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.BATCH_PERSIST_SIZE == 0)) {
-				em.flush();
-			}
-		}
-		if (!RangerBizUtil.isBulkMode()) {
-			em.flush();
-		}
+    public void flush() {
+        em.flush();
+    }
 
-		ret = obj;
-		return ret;
-	}
+    public void clear() {
+        em.clear();
+    }
 
-	public void batchDeleteByIds(String namedQuery, List<Long> ids, String paramName) {
-		if (BATCH_DELETE_BATCH_SIZE <= 0) {
-			getEntityManager()
-				.createNamedQuery(namedQuery, tClass)
-				.setParameter(paramName, ids).executeUpdate();
-		} else {
-			for (int fromIndex = 0; fromIndex < ids.size(); fromIndex += BATCH_DELETE_BATCH_SIZE) {
-				int toIndex = fromIndex + BATCH_DELETE_BATCH_SIZE;
+    public T create(T obj, boolean flush) {
+        T ret = null;
+        em.persist(obj);
+        if (flush) {
+            em.flush();
+        }
+        ret = obj;
+        return ret;
+    }
 
-				if (toIndex > ids.size()) {
-					toIndex = ids.size();
-				}
+    public T update(T obj, boolean flush) {
+        em.merge(obj);
+        if (flush) {
+            em.flush();
+        }
+        return obj;
+    }
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
-				}
+    public boolean remove(T obj, boolean flush) {
+        if (obj == null) {
+            return true;
+        }
+        em.remove(obj);
+        if (flush) {
+            em.flush();
+        }
+        return true;
+    }
 
-				List<Long> subList = ids.subList(fromIndex, toIndex);
+    public T getById(Long id) {
+        if (id == null) {
+            return null;
+        }
+        T ret = null;
+        try {
+            ret = em.find(tClass, id);
+        } catch (NoResultException e) {
+            return null;
+        }
+        return ret;
+    }
 
-				getEntityManager()
-						.createNamedQuery(namedQuery, tClass)
-						.setParameter(paramName, subList).executeUpdate();
-			}
-		}
-	}
+    public List<T> findByNamedQuery(String namedQuery, String paramName,
+            Object refId) {
+        List<T> ret = new ArrayList<T>();
 
-	public T update(T obj) {
-		em.merge(obj);
-		if (!RangerBizUtil.isBulkMode()) {
-			em.flush();
-		}
-		return obj;
-	}
+        if (namedQuery == null) {
+            return ret;
+        }
+        try {
+            TypedQuery<T> qry = em.createNamedQuery(namedQuery, tClass);
+            qry.setParameter(paramName, refId);
+            ret = qry.getResultList();
+        } catch (NoResultException e) {
+            // ignore
+        }
+        return ret;
+    }
 
-	public boolean remove(Long id) {
-		return remove(getById(id));
-	}
+    public List<T> findByParentId(Long parentId) {
+        String namedQuery = tClass.getSimpleName() + ".findByParentId";
+        return findByNamedQuery(namedQuery, "parentId", parentId);
+    }
 
-	public boolean remove(T obj) {
-		if (obj == null) {
-			return true;
-		}
-		if (!em.contains(obj)) {
-			obj = em.merge(obj);
-		}
-		em.remove(obj);
-		if (!RangerBizUtil.isBulkMode()) {
-			em.flush();
-		}
-		return true;
-	}
+    public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query) {
+        return executeQueryInSecurityContext(clazz, query, true);
+    }
 
-	public void flush() {
-		em.flush();
-	}
+    @SuppressWarnings("unchecked")
+    public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query,
+            boolean userPrefFilter) {
+        // boolean filterEnabled = false;
+        List<T> rtrnList = null;
+        // filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
 
-	public void clear() {
-		em.clear();
-	}
-	public T create(T obj, boolean flush) {
-		T ret = null;
-		em.persist(obj);
-		if(flush) {
-			em.flush();
-		}
-		ret = obj;
-		return ret;
-	}
+        rtrnList = query.getResultList();
 
-	public T update(T obj, boolean flush) {
-		em.merge(obj);
-		if(flush) {
-			em.flush();
-		}
-		return obj;
-	}
+        return rtrnList;
+    }
 
-	public boolean remove(T obj, boolean flush) {
-		if (obj == null) {
-			return true;
-		}
-		em.remove(obj);
-		if(flush) {
-			em.flush();
-		}
-		return true;
-	}
+    public List<Long> getIds(Query query) {
+        return (List<Long>) query.getResultList();
+    }
 
-	public T getById(Long id) {
-		if (id == null) {
-			return null;
-		}
-		T ret = null;
-		try {
-			ret = em.find(tClass, id);
-		} catch (NoResultException e) {
-			return null;
-		}
-		return ret;
-	}
+    public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) { //NOPMD
+        return (Long) query.getSingleResult();
+    }
 
-	public List<T> findByNamedQuery(String namedQuery, String paramName,
-			Object refId) {
-		List<T> ret = new ArrayList<T>();
+    public List<T> getAll() {
+        List<T> ret = null;
+        TypedQuery<T> qry = em.createQuery(
+                "SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
+        ret = qry.getResultList();
+        return ret;
+    }
 
-		if (namedQuery == null) {
-			return ret;
-		}
-		try {
-			TypedQuery<T> qry = em.createNamedQuery(namedQuery, tClass);
-			qry.setParameter(paramName, refId);
-			ret = qry.getResultList();
-		} catch (NoResultException e) {
-			// ignore
-		}
-		return ret;
-	}
+    public Long getAllCount() {
+        Long ret = null;
+        TypedQuery<Long> qry = em.createQuery(
+                "SELECT count(t) FROM " + tClass.getSimpleName() + " t",
+                Long.class);
+        ret = qry.getSingleResult();
+        return ret;
+    }
 
-	public List<T> findByParentId(Long parentId) {
-		String namedQuery = tClass.getSimpleName() + ".findByParentId";
-		return findByNamedQuery(namedQuery, "parentId", parentId);
-	}
+    public void updateSequence(String seqName, long nextValue) {
+        if (RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE) {
+            String[] queries = {
+                    "ALTER SEQUENCE " + seqName + " INCREMENT BY " + (nextValue - 1),
+                    "select " + seqName + ".nextval from dual",
+                    "ALTER SEQUENCE " + seqName + " INCREMENT BY 1 NOCACHE NOCYCLE"
+            };
 
-	
-	public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query) {
-		return executeQueryInSecurityContext(clazz, query, true);
-	}
+            for (String query : queries) {
+                getEntityManager().createNativeQuery(query).executeUpdate();
+            }
+        } else if (RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES) {
+            String query = "SELECT setval('" + seqName + "', " + nextValue + ")";
 
-	@SuppressWarnings("unchecked")
-	public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query,
-			boolean userPrefFilter) {
-		// boolean filterEnabled = false;
-		List<T> rtrnList = null;
-		// filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
+            getEntityManager().createNativeQuery(query).getSingleResult();
+        }
+    }
 
-		rtrnList = query.getResultList();
+    public void setIdentityInsert(boolean identityInsert) {
+        if (RangerBizUtil.getDBFlavor() != AppConstants.DB_FLAVOR_SQLSERVER) {
+            logger.debug("Ignoring BaseDao.setIdentityInsert(). This should be executed if DB flavor is sqlserver.");
+            return;
+        }
 
-		return rtrnList;
-	}
+        EntityManager entityMgr = getEntityManager();
 
-	public List<Long> getIds(Query query) {
-		return (List<Long>) query.getResultList();
-	}
+        String identityInsertStr;
+        if (identityInsert) {
+            identityInsertStr = "ON";
+        } else {
+            identityInsertStr = "OFF";
+        }
 
-	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) { //NOPMD
-		return (Long) query.getSingleResult();
-	}
-	
-	public List<T> getAll() {
-		List<T> ret = null;
-		TypedQuery<T> qry = em.createQuery(
-				"SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
-		ret = qry.getResultList();
-		return ret;
-	}
+        Table table = tClass.getAnnotation(Table.class);
 
-	public Long getAllCount() {
-		Long ret = null;
-		TypedQuery<Long> qry = em.createQuery(
-				"SELECT count(t) FROM " + tClass.getSimpleName() + " t",
-				Long.class);
-		ret = qry.getSingleResult();
-		return ret;
-	}
+        if (table == null) {
+            throw new NullPointerException("Required annotation `Table` not found");
+        }
 
-	public void updateSequence(String seqName, long nextValue) {
-		if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE) {
-			String[] queries = {
-					"ALTER SEQUENCE " + seqName + " INCREMENT BY " + (nextValue - 1),
-					"select " + seqName + ".nextval from dual",
-					"ALTER SEQUENCE " + seqName + " INCREMENT BY 1 NOCACHE NOCYCLE"
-			};
+        String tableName = table.name();
 
-			for(String query : queries) {
-				getEntityManager().createNativeQuery(query).executeUpdate();
-			}
-		} else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES) {
-			String query = "SELECT setval('" + seqName + "', " + nextValue + ")";
+        try (PreparedStatement st = entityMgr.unwrap(Connection.class).prepareStatement("SET IDENTITY_INSERT  ?   ?")) {
+            st.setString(1, tableName);
+            st.setString(2, identityInsertStr);
+            st.execute();
+        } catch (SQLException e) {
+            logger.error("Error while settion identity_insert " + identityInsertStr, e);
+        }
+    }
 
-			getEntityManager().createNativeQuery(query).getSingleResult();
-		}
+    public void updateUserIDReference(String paramName, long oldID) {
+        Table table = tClass.getAnnotation(Table.class);
+        if (table != null) {
+            String tableName    = table.name();
+            String updatedValue = tableName.contains(GDS_TABLES) ? "1" : "null";
+            String query        = "update " + tableName + " set " + paramName + "=" + updatedValue + " where " + paramName + "=" + oldID;
 
-	}
+            int count = getEntityManager().createNativeQuery(query).executeUpdate();
+            if (count > 0) {
+                logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=" + updatedValue + " where " + paramName + "=" + oldID);
+            }
+        } else {
+            logger.warn("Required annotation `Table` not found");
+        }
+    }
 
-	public void setIdentityInsert(boolean identityInsert) {
-		if (RangerBizUtil.getDBFlavor() != AppConstants.DB_FLAVOR_SQLSERVER) {
-			logger.debug("Ignoring BaseDao.setIdentityInsert(). This should be executed if DB flavor is sqlserver.");
-			return;
-		}
+    public String getDBVersion() {
+        String dbVersion = NOT_AVAILABLE;
+        int    dbFlavor  = RangerBizUtil.getDBFlavor();
+        String query     = RangerBizUtil.getDBVersionQuery(dbFlavor);
 
-		EntityManager entityMgr = getEntityManager();
+        if (StringUtils.isNotBlank(query)) {
+            try {
+                dbVersion = (String) getEntityManager().createNativeQuery(query).getSingleResult();
+            } catch (Exception ex) {
+                logger.error("Error occurred while fetching the DB version.", ex);
+            }
+        }
 
-		String identityInsertStr;
-		if (identityInsert) {
-			identityInsertStr = "ON";
-		} else {
-			identityInsertStr = "OFF";
-		}
+        return dbVersion;
+    }
 
-		Table table = tClass.getAnnotation(Table.class);
+    @SuppressWarnings("unchecked")
+    private void init(EntityManager em) {
+        this.em = em;
 
-		if(table == null) {
-			throw new NullPointerException("Required annotation `Table` not found");
-		}
+        ParameterizedType genericSuperclass = (ParameterizedType) getClass()
+                .getGenericSuperclass();
 
-		String tableName = table.name();
+        Type type = genericSuperclass.getActualTypeArguments()[0];
 
-		try (PreparedStatement st = entityMgr.unwrap(Connection.class).prepareStatement("SET IDENTITY_INSERT  ?   ?" )) {
-			st.setString(1, tableName);
-			st.setString(2, identityInsertStr);
-			st.execute();
-		} catch (SQLException e) {
-			logger.error("Error while settion identity_insert " + identityInsertStr, e);
-		}
-	}
+        if (type instanceof ParameterizedType) {
+            this.tClass = (Class<T>) ((ParameterizedType) type).getRawType();
+        } else {
+            this.tClass = (Class<T>) type;
+        }
+    }
 
-	public void updateUserIDReference(String paramName,long oldID) {
-		Table table = tClass.getAnnotation(Table.class);
-		if(table != null) {
-			String tableName = table.name();
-			String updatedValue = tableName.contains(GDS_TABLES) ? "1" : "null";
-			String query = "update " + tableName + " set " + paramName+"=" + updatedValue + " where " +paramName+"=" + oldID;
+    static {
+        try {
+            BATCH_DELETE_BATCH_SIZE = RangerAdminConfig.getInstance().getInt(PROP_BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
 
-			int count=getEntityManager().createNativeQuery(query).executeUpdate();
-			if(count>0){
-				logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "="+ updatedValue + " where " + paramName + "=" + oldID);
-			}
-		}else{
-			logger.warn("Required annotation `Table` not found");
-		}
-	}
+            if (BATCH_DELETE_BATCH_SIZE > DEFAULT_BATCH_DELETE_BATCH_SIZE) {
+                logger.warn("Configuration {}={}, which is larger than default value {}", PROP_BATCH_DELETE_BATCH_SIZE, BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+            }
+        } catch (Exception e) {
+            // When we get the Number format exception due to the invalid value entered into the config file.
+            BATCH_DELETE_BATCH_SIZE = DEFAULT_BATCH_DELETE_BATCH_SIZE;
+        }
 
-	public String getDBVersion() {
-		String dbVersion = NOT_AVAILABLE;
-		int    dbFlavor  = RangerBizUtil.getDBFlavor();
-		String query     = RangerBizUtil.getDBVersionQuery(dbFlavor);
-
-		if (StringUtils.isNotBlank(query)) {
-			try {
-				dbVersion = (String) getEntityManager().createNativeQuery(query).getSingleResult();
-			} catch (Exception ex) {
-				logger.error("Error occurred while fetching the DB version.", ex);
-			}
-		}
-
-		return dbVersion;
-	}
+        logger.info(PROP_BATCH_DELETE_BATCH_SIZE + "=" + BATCH_DELETE_BATCH_SIZE);
+    }
 }

@@ -19,23 +19,23 @@
 
 package org.apache.ranger.common;
 
-import java.io.Serializable;
-import java.util.UUID;
-
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import java.io.Serializable;
+import java.util.UUID;
 
 @Service
 @Scope("singleton")
 public class GUIDUtil implements Serializable {
-	
-	private static final long serialVersionUID = -7284237762948427019L;
 
-	public String genGUID() {
-		return UUID.randomUUID().toString();
-	}
+    private static final long serialVersionUID = -7284237762948427019L;
 
-	public long genLong() {
-		return UUID.randomUUID().getMostSignificantBits();
-	}
+    public String genGUID() {
+        return UUID.randomUUID().toString();
+    }
+
+    public long genLong() {
+        return UUID.randomUUID().getMostSignificantBits();
+    }
 }
