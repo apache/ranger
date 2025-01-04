@@ -17,9 +17,6 @@
  * under the License.
  */
 
-/**
- *
- */
 package org.apache.ranger.common;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -38,74 +35,57 @@ import java.util.Map;
 
 @Component
 public class JSONUtil {
-
     @Autowired
     RESTErrorUtil restErrorUtil;
 
-    public File writeJsonToFile(ViewBaseBean viewBean, String fileName)
-            throws IOException {
-
+    public File writeJsonToFile(ViewBaseBean viewBean, String fileName) throws IOException {
         if (fileName.length() < 3) {
             fileName = "file_" + fileName;
         }
 
         File file = File.createTempFile(fileName, ".json");
-        JsonUtilsV2.getMapper().writer(new DefaultPrettyPrinter()).writeValue(file, viewBean); //defaultPrettyPrintingWriter().writeValue(file, viewBean);
+        JsonUtilsV2.getMapper().writer(new DefaultPrettyPrinter()).writeValue(file, viewBean);
 
         return file;
     }
 
     public Map<String, String> jsonToMap(String jsonStr) {
-
         try {
             return JsonUtilsV2.jsonToMap(jsonStr);
         } catch (Exception e) {
-            throw restErrorUtil.createRESTException(
-                    "Invalid input data: " + e.getMessage(),
-                    MessageEnums.INVALID_INPUT_DATA);
+            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
         }
     }
 
     public String readMapToString(Map<?, ?> map) {
-
         try {
             return JsonUtilsV2.mapToJson(map);
         } catch (Exception e) {
-            throw restErrorUtil.createRESTException(
-                    "Invalid input data: " + e.getMessage(),
-                    MessageEnums.INVALID_INPUT_DATA);
+            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
         }
     }
 
     public String readListToString(List<?> list) {
-
         try {
             return JsonUtilsV2.listToJson(list);
         } catch (Exception e) {
-            throw restErrorUtil.createRESTException(
-                    "Invalid input data: " + e.getMessage(),
-                    MessageEnums.INVALID_INPUT_DATA);
+            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
         }
     }
 
     public String writeObjectAsString(Serializable obj) {
-
         try {
             return JsonUtilsV2.objToJson(obj);
         } catch (Exception e) {
-            throw restErrorUtil.createRESTException(
-                    "Invalid input data: " + e.getMessage(),
-                    MessageEnums.INVALID_INPUT_DATA);
+            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
         }
     }
 
     public <T> T writeJsonToJavaObject(String json, Class<T> tClass) {
-
         try {
             return JsonUtilsV2.jsonToObj(json, tClass);
         } catch (Exception e) {
-            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-                    MessageEnums.INVALID_INPUT_DATA);
+            throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
         }
     }
 }
