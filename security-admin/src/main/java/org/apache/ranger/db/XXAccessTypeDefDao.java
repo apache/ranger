@@ -35,14 +35,15 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
 
     public List<XXAccessTypeDef> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXAccessTypeDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXAccessTypeDef.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXAccessTypeDef>();
+            return new ArrayList<>();
         }
     }
 
@@ -50,6 +51,7 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
         if (name == null || serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXAccessTypeDef.findByNameAndServiceId", tClass)
