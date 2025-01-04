@@ -46,10 +46,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
             return null;
         }
         try {
-            return getEntityManager()
-                    .createNamedQuery("XXResource.findByResourceName", XXResource.class)
-                    .setParameter("name", name.trim())
-                    .getSingleResult();
+            return getEntityManager().createNamedQuery("XXResource.findByResourceName", XXResource.class).setParameter("name", name.trim()).getSingleResult();
         } catch (NoResultException e) {
             // ignore
         }
@@ -59,11 +56,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
     public List<XXResource> findUpdatedResourcesByAssetId(Long assetId, Date lastUpdated) {
         if (assetId != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery("XXResource.findUpdatedResourcesByAssetId", XXResource.class)
-                        .setParameter("assetId", assetId)
-                        .setParameter("lastUpdated", lastUpdated)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXResource.findUpdatedResourcesByAssetId", XXResource.class).setParameter("assetId", assetId).setParameter("lastUpdated", lastUpdated).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
@@ -78,12 +71,8 @@ public class XXResourceDao extends BaseDao<XXResource> {
         List<XXResource> xResourceList = null;
         if (assetId != null) {
             try {
-                xResourceList = getEntityManager()
-                        .createNamedQuery("XXResource.findByAssetId", XXResource.class)
-                        .setParameter("assetId", assetId)
-                        .getResultList();
+                xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetId", XXResource.class).setParameter("assetId", assetId).getResultList();
             } catch (NoResultException e) {
-                // ignore
                 logger.debug(e.getMessage());
             }
             if (xResourceList == null) {
@@ -100,12 +89,8 @@ public class XXResourceDao extends BaseDao<XXResource> {
         List<XXResource> xResourceList = null;
         if (assetType != null) {
             try {
-                xResourceList = getEntityManager()
-                        .createNamedQuery("XXResource.findByAssetType", XXResource.class)
-                        .setParameter("assetType", assetType)
-                        .getResultList();
+                xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetType", XXResource.class).setParameter("assetType", assetType).getResultList();
             } catch (NoResultException e) {
-                // ignore
                 logger.debug(e.getMessage());
             }
             if (xResourceList == null) {
@@ -123,10 +108,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
             return null;
         }
         try {
-            Date date = (Date) getEntityManager()
-                    .createNamedQuery("XXResource.getMaxUpdateTimeForAssetName")
-                    .setParameter("assetName", assetName)
-                    .getSingleResult();
+            Date date = (Date) getEntityManager().createNamedQuery("XXResource.getMaxUpdateTimeForAssetName").setParameter("assetName", assetName).getSingleResult();
             if (date != null) {
                 return new Timestamp(date.getTime());
             } else {
@@ -138,15 +120,10 @@ public class XXResourceDao extends BaseDao<XXResource> {
         return null;
     }
 
-    public List<XXResource> findUpdatedResourcesByAssetName(
-            String assetName, Date lastUpdated) {
+    public List<XXResource> findUpdatedResourcesByAssetName(String assetName, Date lastUpdated) {
         if (assetName != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery("XXResource.findUpdatedResourcesByAssetName", XXResource.class)
-                        .setParameter("assetName", assetName)
-                        .setParameter("lastUpdated", lastUpdated)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXResource.findUpdatedResourcesByAssetName", XXResource.class).setParameter("assetName", assetName).setParameter("lastUpdated", lastUpdated).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
@@ -157,8 +134,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
         return null;
     }
 
-    public List<XXResource> findByResourceNameAndAssetIdAndRecursiveFlag(
-            String name, Long assetId, int isRecursive) {
+    public List<XXResource> findByResourceNameAndAssetIdAndRecursiveFlag(String name, Long assetId, int isRecursive) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
             return null;
@@ -170,12 +146,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
         try {
             String resourceName = name.trim();
             resourceName = "%" + resourceName + "%";
-            return getEntityManager()
-                    .createNamedQuery("XXResource.findByResourceNameAndAssetIdAndRecursiveFlag", XXResource.class)
-                    .setParameter("name", resourceName)
-                    .setParameter("assetId", assetId)
-                    .setParameter("isRecursive", isRecursive)
-                    .getResultList();
+            return getEntityManager().createNamedQuery("XXResource.findByResourceNameAndAssetIdAndRecursiveFlag", XXResource.class).setParameter("name", resourceName).setParameter("assetId", assetId).setParameter("isRecursive", isRecursive).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
@@ -194,13 +165,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
         try {
             String resourceName = name.trim();
             resourceName = "%" + resourceName + "%";
-            return getEntityManager()
-                    .createNamedQuery(
-                            "XXResource.findByResourceNameAndAssetIdAndResourceType",
-                            XXResource.class).setParameter("name", resourceName)
-                    .setParameter("assetId", assetId)
-                    .setParameter("resourceType", resourceType)
-                    .getResultList();
+            return getEntityManager().createNamedQuery("XXResource.findByResourceNameAndAssetIdAndResourceType", XXResource.class).setParameter("name", resourceName).setParameter("assetId", assetId).setParameter("resourceType", resourceType).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
@@ -219,8 +184,7 @@ public class XXResourceDao extends BaseDao<XXResource> {
             if (!whereClause.trim().isEmpty()) {
                 query.append(" and ( " + whereClause + " )");
             }
-            return getEntityManager().createQuery(query.toString())
-                    .getResultList();
+            return getEntityManager().createQuery(query.toString()).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
@@ -231,13 +195,8 @@ public class XXResourceDao extends BaseDao<XXResource> {
         List<XXResource> xResourceList = null;
         if (assetId != null) {
             try {
-                xResourceList = getEntityManager()
-                        .createNamedQuery("XXResource.findByAssetIdAndResourceStatus", XXResource.class)
-                        .setParameter("assetId", assetId)
-                        .setParameter("resourceStatus", resourceStatus)
-                        .getResultList();
+                xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetIdAndResourceStatus", XXResource.class).setParameter("assetId", assetId).setParameter("resourceStatus", resourceStatus).getResultList();
             } catch (NoResultException e) {
-                // ignore
                 logger.debug(e.getMessage());
             }
             if (xResourceList == null) {
