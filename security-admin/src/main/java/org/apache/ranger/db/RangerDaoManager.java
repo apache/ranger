@@ -32,10 +32,13 @@ import javax.persistence.PersistenceContext;
 @Component
 public class RangerDaoManager extends RangerDaoManagerBase {
     private static final Logger logger = LoggerFactory.getLogger(RangerDaoManager.class);
+
     @Autowired
     StringUtil stringUtil;
+
     @Autowired
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
     @PersistenceContext(unitName = "defaultPU")
     private EntityManager em;
 
@@ -45,9 +48,7 @@ public class RangerDaoManager extends RangerDaoManagerBase {
     }
 
     public EntityManager getEntityManager(String persistenceContextUnit) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
-        }
+        logger.debug("RangerDaoManager.getEntityManager({})", persistenceContextUnit);
 
         return getEntityManager();
     }
