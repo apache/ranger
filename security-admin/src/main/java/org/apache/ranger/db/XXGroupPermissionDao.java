@@ -37,29 +37,18 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
         super(daoManager);
     }
 
-    public List<XXGroupPermission> findByModuleId(Long moduleId,
-            boolean isUpdate) {
+    public List<XXGroupPermission> findByModuleId(Long moduleId, boolean isUpdate) {
         if (moduleId != null) {
             try {
                 if (isUpdate) {
-                    return getEntityManager()
-                            .createNamedQuery(
-                                    "XXGroupPermissionUpdates.findByModuleId",
-                                    XXGroupPermission.class)
-                            .setParameter("moduleId", moduleId).getResultList();
+                    return getEntityManager().createNamedQuery("XXGroupPermissionUpdates.findByModuleId", XXGroupPermission.class).setParameter("moduleId", moduleId).getResultList();
                 }
-                return getEntityManager()
-                        .createNamedQuery(
-                                "XXGroupPermission.findByModuleId",
-                                XXGroupPermission.class)
-                        .setParameter("moduleId", moduleId)
-                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXGroupPermission.findByModuleId", XXGroupPermission.class).setParameter("moduleId", moduleId).setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         } else {
-            logger.debug("ResourcegropuIdId not provided.");
+            logger.debug("ResourcegroupId not provided.");
             return new ArrayList<XXGroupPermission>();
         }
         return null;
@@ -68,16 +57,12 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
     public List<XXGroupPermission> findByGroupId(Long groupId) {
         if (groupId != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery(
-                                "XXGroupPermission.findByGroupId",
-                                XXGroupPermission.class)
-                        .setParameter("groupId", groupId).getResultList();
+                return getEntityManager().createNamedQuery("XXGroupPermission.findByGroupId", XXGroupPermission.class).setParameter("groupId", groupId).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         } else {
-            logger.debug("ResourcegropuIdId not provided.");
+            logger.debug("ResourcegroupId not provided.");
             return new ArrayList<XXGroupPermission>();
         }
         return null;
@@ -86,18 +71,12 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
     public List<XXGroupPermission> findbyVXPortalUserId(Long userId) {
         if (userId != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery(
-                                "XXGroupPermission.findByVXPoratUserId",
-                                XXGroupPermission.class)
-                        .setParameter("userId", userId)
-                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXGroupPermission.findByVXPoratUserId", XXGroupPermission.class).setParameter("userId", userId).setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         } else {
-            logger.debug("ResourcegropuIdId not provided.");
+            logger.debug("ResourcegroupId not provided.");
             return new ArrayList<XXGroupPermission>();
         }
         return null;
@@ -106,8 +85,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
     public XXGroupPermission findByModuleIdAndGroupId(Long groupId, Long moduleId) {
         if (groupId != null && moduleId != null) {
             try {
-                return getEntityManager().createNamedQuery("XXGroupPermission.findByModuleIdAndGroupId", tClass).setParameter("groupId", groupId).setParameter("moduleId", moduleId)
-                        .getSingleResult();
+                return getEntityManager().createNamedQuery("XXGroupPermission.findByModuleIdAndGroupId", tClass).setParameter("groupId", groupId).setParameter("moduleId", moduleId).getSingleResult();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
@@ -120,10 +98,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
     public void deleteByModuleId(Long moduleId) {
         if (moduleId != null) {
             try {
-                getEntityManager()
-                        .createNamedQuery("XXGroupPermission.deleteByModuleId", XXGroupPermission.class)
-                        .setParameter("moduleId", moduleId)
-                        .executeUpdate();
+                getEntityManager().createNamedQuery("XXGroupPermission.deleteByModuleId", XXGroupPermission.class).setParameter("moduleId", moduleId).executeUpdate();
             } catch (Exception e) {
                 logger.debug(e.getMessage());
             }
@@ -135,10 +110,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
     public List<String> findModuleGroupsByModuleId(Long moduleId) {
         if (moduleId != null) {
             try {
-                return getEntityManager().createNamedQuery("XXGroupPermission.findModuleGroupsByModuleId", String.class)
-                        .setParameter("moduleId", moduleId)
-                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXGroupPermission.findModuleGroupsByModuleId", String.class).setParameter("moduleId", moduleId).setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED).getResultList();
             } catch (Exception e) {
                 logger.debug(e.getMessage());
             }
