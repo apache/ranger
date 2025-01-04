@@ -58,10 +58,7 @@ public class XXUserDao extends BaseDao<XXUser> {
             return null;
         }
         try {
-            return getEntityManager()
-                    .createNamedQuery("XXUser.findByUserName", XXUser.class)
-                    .setParameter("name", name.trim())
-                    .getSingleResult();
+            return getEntityManager().createNamedQuery("XXUser.findByUserName", XXUser.class).setParameter("name", name.trim()).getSingleResult();
         } catch (NoResultException e) {
             // ignore
         }
@@ -73,8 +70,7 @@ public class XXUserDao extends BaseDao<XXUser> {
             return null;
         }
         try {
-            return getEntityManager().createNamedQuery("XXUser.findByPortalUserId", tClass)
-                    .setParameter("portalUserId", portalUserId).getSingleResult();
+            return getEntityManager().createNamedQuery("XXUser.findByPortalUserId", tClass).setParameter("portalUserId", portalUserId).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
@@ -84,9 +80,7 @@ public class XXUserDao extends BaseDao<XXUser> {
         Map<String, Set<String>> userGroups = new HashMap<>();
 
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXUser.findGroupsByUserIds")
-                    .getResultList();
+            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.findGroupsByUserIds").getResultList();
             if (rows != null) {
                 for (Object[] row : rows) {
                     if (userGroups.containsKey((String) row[0])) {
@@ -114,9 +108,7 @@ public class XXUserDao extends BaseDao<XXUser> {
                 }
             }
         } catch (NoResultException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug(e.getMessage());
-            }
+            logger.debug(e.getMessage());
         }
         return users;
     }
@@ -126,9 +118,7 @@ public class XXUserDao extends BaseDao<XXUser> {
         try {
             users = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIdNames").getResultList();
         } catch (NoResultException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug(e.getMessage());
-            }
+            logger.debug(e.getMessage());
         }
         return users;
     }
@@ -137,10 +127,7 @@ public class XXUserDao extends BaseDao<XXUser> {
         List<RangerPrincipal> ret = new ArrayList<>();
 
         try {
-            List<Object[]> results = getEntityManager().createNamedQuery("VXXPrincipal.lookupByName", Object[].class)
-                    .setParameter("principalName", principalName + "%")
-                    .setFirstResult(startIndex)
-                    .setMaxResults(pageSize).getResultList();
+            List<Object[]> results = getEntityManager().createNamedQuery("VXXPrincipal.lookupByName", Object[].class).setParameter("principalName", principalName + "%").setFirstResult(startIndex).setMaxResults(pageSize).getResultList();
 
             if (results != null) {
                 for (Object[] result : results) {
@@ -178,9 +165,7 @@ public class XXUserDao extends BaseDao<XXUser> {
                 }
             }
         } catch (NoResultException excp) {
-            if (logger.isDebugEnabled()) {
-                logger.debug(excp.getMessage());
-            }
+            logger.debug(excp.getMessage());
         }
 
         return ret;
