@@ -17,36 +17,34 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXAccessAudit
- *
  */
 
-import org.apache.ranger.common.view.VList;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUgsyncAuditInfoList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
 
     public VXUgsyncAuditInfoList() {
-	super();
+        super();
     }
 
     public VXUgsyncAuditInfoList(List<VXUgsyncAuditInfo> objList) {
-	super(objList);
-	this.vxUgsyncAuditInfoList = objList;
+        super(objList);
+        this.vxUgsyncAuditInfoList = objList;
     }
 
     /**
@@ -54,7 +52,7 @@ public class VXUgsyncAuditInfoList extends VList {
      */
     @JsonProperty("vxUgsyncAuditInfoList")
     public List<VXUgsyncAuditInfo> getVxUgsyncAuditInfoList() {
-	return vxUgsyncAuditInfoList;
+        return vxUgsyncAuditInfoList;
     }
 
     /**
@@ -63,20 +61,19 @@ public class VXUgsyncAuditInfoList extends VList {
      */
     @JsonProperty("vxUgsyncAuditInfoList")
     public void setVxUgsyncAuditInfoList(List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList) {
-	this.vxUgsyncAuditInfoList = vxUgsyncAuditInfoList;
+        this.vxUgsyncAuditInfoList = vxUgsyncAuditInfoList;
     }
 
     @Override
     public int getListSize() {
-	if (vxUgsyncAuditInfoList != null) {
-	    return vxUgsyncAuditInfoList.size();
-	}
-	return 0;
+        if (vxUgsyncAuditInfoList != null) {
+            return vxUgsyncAuditInfoList.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXUgsyncAuditInfo> getList() {
-	return vxUgsyncAuditInfoList;
+        return vxUgsyncAuditInfoList;
     }
-
 }

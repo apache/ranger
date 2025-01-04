@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
+public class PatchSetAccessTypeCategory_J10061 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchSetAccessTypeCategory_J10061.class);
 
     @Autowired
@@ -72,6 +72,11 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
     }
 
     @Override
+    public void printStats() {
+        logger.info("PatchSetAccessTypeCategory_J10061");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchSetAccessTypeCategory_J10061.execLoad()");
 
@@ -84,11 +89,6 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
         logger.info("<== PatchSetAccessTypeCategory_J10061.execLoad()");
     }
 
-    @Override
-    public void printStats() {
-        logger.info("PatchSetAccessTypeCategory_J10061");
-    }
-
     private void updateAllServiceDef() throws Exception {
         logger.info("==> PatchSetAccessTypeCategory_J10061.updateAllServiceDef()");
 
@@ -96,8 +96,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
         Map<String, Map<String, AccessTypeCategory>> embeddedCategories = new HashMap<>();
 
         for (RangerServiceDef serviceDef : serviceDefs) {
-            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) ||
-                StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) || StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
                 continue;
             }
 

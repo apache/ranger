@@ -27,10 +27,10 @@ import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
 import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
-import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
-import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
@@ -47,17 +47,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @Component
 public class RangerGdsValidator {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerGdsValidator.class);
-
-    private final RangerGdsValidationDataProvider dataProvider;
-
     public static final Integer GDS_ENTITIES_NAME_MAX_LENGTH = 512;
-
+    private static final Logger LOG = LoggerFactory.getLogger(RangerGdsValidator.class);
+    private final RangerGdsValidationDataProvider dataProvider;
     @Autowired
     RESTErrorUtil restErrorUtil;
 
@@ -357,7 +357,7 @@ public class RangerGdsValidator {
                     }
 
                     if (result.isSuccess()) {
-                        Long existingSharedResourceNameId = dataProvider.getSharedResourceId(resource.getDataShareId(),new RangerPolicyResourceSignature(resource));
+                        Long existingSharedResourceNameId = dataProvider.getSharedResourceId(resource.getDataShareId(), new RangerPolicyResourceSignature(resource));
 
                         if (existingSharedResourceNameId != null && !existingSharedResourceNameId.equals(existing.getId())) {
                             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT, "resource", resource.getResource(), dataShare.getName()));
@@ -414,25 +414,24 @@ public class RangerGdsValidator {
         }
 
         if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {
-
             switch (dshid.getStatus()) {
                 case GRANTED:
                 case DENIED:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
-                break;
+                    break;
 
                 case ACTIVE:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataShare", dataShare.getName(), dataShare.getAcl(), result);
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
-                break;
+                    break;
 
                 case REQUESTED:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
-                break;
+                    break;
 
                 case NONE:
                 default:
-                break;
+                    break;
             }
         }
 
@@ -489,12 +488,9 @@ public class RangerGdsValidator {
                         validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
                     }
 
-                    if (!requireDataShareAdmin && !requireDatasetAdmin){ // must be either a dataShare admin or a dataset admin
-                        String  userName  = dataProvider.getCurrentUserLoginId();
-                        boolean isAllowed = isAdmin(userName, dataShare.getAcl()) ||
-                                            dataProvider.isServiceAdmin(dataShare.getService()) ||
-                                            dataProvider.isZoneAdmin(dataShare.getZone()) ||
-                                            isAdmin(userName, dataset.getAcl());
+                    if (!requireDataShareAdmin && !requireDatasetAdmin) { // must be either a dataShare admin or a dataset admin
+                        String userName = dataProvider.getCurrentUserLoginId();
+                        boolean isAllowed = isAdmin(userName, dataShare.getAcl()) || dataProvider.isServiceAdmin(dataShare.getService()) || dataProvider.isZoneAdmin(dataShare.getZone()) || isAdmin(userName, dataset.getAcl());
 
                         if (!isAllowed) {
                             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshid.getStatus()));
@@ -531,11 +527,8 @@ public class RangerGdsValidator {
             }
 
             if (dataShare != null && dataset != null && !dataProvider.isAdminUser()) {  // must be either a dataset admin or a dataShare admin
-                String  userName  = dataProvider.getCurrentUserLoginId();
-                boolean isAllowed = isAdmin(userName, dataShare.getAcl()) ||
-                                    dataProvider.isServiceAdmin(dataShare.getService()) ||
-                                    dataProvider.isZoneAdmin(dataShare.getZone()) ||
-                                    isAdmin(userName, dataset.getAcl());
+                String userName = dataProvider.getCurrentUserLoginId();
+                boolean isAllowed = isAdmin(userName, dataShare.getAcl()) || dataProvider.isServiceAdmin(dataShare.getService()) || dataProvider.isZoneAdmin(dataShare.getZone()) || isAdmin(userName, dataset.getAcl());
 
                 if (!isAllowed) {
                     result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_NOT_ADMIN, null, userName, "dataShareInDataset", "dataShare (name=" + dataShare.getName() + ") or dataset (name=" + dataset.getName() + ")"));
@@ -570,17 +563,17 @@ public class RangerGdsValidator {
                 case GRANTED:
                 case DENIED:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
-                break;
+                    break;
 
                 case ACTIVE:
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "dataset", dataset.getName(), dataset.getAcl(), result);
                     validateAdmin(dataProvider.getCurrentUserLoginId(), "project", project.getName(), project.getAcl(), result);
-                break;
+                    break;
 
                 case NONE:
                 case REQUESTED:
                 default:
-                break;
+                    break;
             }
         }
 
@@ -594,7 +587,7 @@ public class RangerGdsValidator {
     public void validateUpdate(RangerDatasetInProject dip, RangerDatasetInProject existing) {
         LOG.debug("==> validateUpdate(dip={}, existing={})", dip, existing);
 
-        ValidationResult result  = new ValidationResult();
+        ValidationResult result = new ValidationResult();
 
         if (existing == null) {
             result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND, "id", dip.getId()));
@@ -635,7 +628,7 @@ public class RangerGdsValidator {
                         validateAdmin(dataProvider.getCurrentUserLoginId(), "project", project.getName(), project.getAcl(), result);
                     }
 
-                    if (!requireDatasetAdmin && !requireProjectAdmin){ // must be either a dataset admin or a project admin
+                    if (!requireDatasetAdmin && !requireProjectAdmin) { // must be either a dataset admin or a project admin
                         String  userName  = dataProvider.getCurrentUserLoginId();
                         boolean isAllowed = isAdmin(userName, dataset.getAcl()) || isAdmin(userName, project.getAcl());
 
@@ -696,7 +689,7 @@ public class RangerGdsValidator {
             return;
         }
 
-        ValidationResult result   = new ValidationResult();
+        ValidationResult       result      = new ValidationResult();
         List<RangerPolicyItem> policyItems = policy.getPolicyItems();
 
         validatePolicyItems(policyItems, result);
@@ -756,7 +749,7 @@ public class RangerGdsValidator {
             if (!ret && acl.getGroups() != null) {
                 ret = isAllowed(acl.getGroups().get(RangerConstants.GROUP_PUBLIC), permission);
 
-                if(!ret) {
+                if (!ret) {
                     Set<String> userGroups = dataProvider.getGroupsForUser(userName);
 
                     for (String userGroup : userGroups) {
@@ -868,10 +861,10 @@ public class RangerGdsValidator {
                 continue;
             }
 
-            boolean hasNoPrincipals = CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles());
-            boolean hasInvalidUsers = policyItem.getUsers() != null && policyItem.getUsers().stream().anyMatch(StringUtils::isBlank);
+            boolean hasNoPrincipals  = CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles());
+            boolean hasInvalidUsers  = policyItem.getUsers() != null && policyItem.getUsers().stream().anyMatch(StringUtils::isBlank);
             boolean hasInvalidGroups = policyItem.getGroups() != null && policyItem.getGroups().stream().anyMatch(StringUtils::isBlank);
-            boolean hasInvalidRoles = policyItem.getRoles() != null && policyItem.getRoles().stream().anyMatch(StringUtils::isBlank);
+            boolean hasInvalidRoles  = policyItem.getRoles() != null && policyItem.getRoles().stream().anyMatch(StringUtils::isBlank);
 
             if (hasNoPrincipals || hasInvalidUsers || hasInvalidGroups || hasInvalidRoles) {
                 addValidationFailure(result, ValidationErrorCode.POLICY_VALIDATION_ERR_MISSING_USER_AND_GROUPS);
@@ -1032,7 +1025,7 @@ public class RangerGdsValidator {
             }
 
             if (!ret && MapUtils.isNotEmpty(acl.getRoles())) {
-                Set<String> userRoles  = dataProvider.getRolesForUser(userName);
+                Set<String> userRoles = dataProvider.getRolesForUser(userName);
 
                 if (userRoles != null) {
                     for (String userRole : userRoles) {
@@ -1055,46 +1048,35 @@ public class RangerGdsValidator {
         switch (accessPermission) {
             case ADMIN:
                 ret = hasPermission == GdsPermission.ADMIN;
-            break;
+                break;
 
             case POLICY_ADMIN:
-                ret = hasPermission == GdsPermission.POLICY_ADMIN ||
-                      hasPermission == GdsPermission.ADMIN;
-            break;
+                ret = hasPermission == GdsPermission.POLICY_ADMIN || hasPermission == GdsPermission.ADMIN;
+                break;
 
             case AUDIT:
-                ret = hasPermission == GdsPermission.AUDIT ||
-                      hasPermission == GdsPermission.POLICY_ADMIN ||
-                      hasPermission == GdsPermission.ADMIN;
-            break;
+                ret = hasPermission == GdsPermission.AUDIT || hasPermission == GdsPermission.POLICY_ADMIN || hasPermission == GdsPermission.ADMIN;
+                break;
 
             case VIEW:
-                ret = hasPermission == GdsPermission.VIEW ||
-                      hasPermission == GdsPermission.AUDIT ||
-                      hasPermission == GdsPermission.POLICY_ADMIN ||
-                      hasPermission == GdsPermission.ADMIN;
-            break;
+                ret = hasPermission == GdsPermission.VIEW || hasPermission == GdsPermission.AUDIT || hasPermission == GdsPermission.POLICY_ADMIN || hasPermission == GdsPermission.ADMIN;
+                break;
 
             case LIST:
-                ret = hasPermission == GdsPermission.LIST ||
-                      hasPermission == GdsPermission.VIEW ||
-                      hasPermission == GdsPermission.AUDIT ||
-                      hasPermission == GdsPermission.POLICY_ADMIN ||
-                      hasPermission == GdsPermission.ADMIN;
-            break;
+                ret = hasPermission == GdsPermission.LIST || hasPermission == GdsPermission.VIEW || hasPermission == GdsPermission.AUDIT || hasPermission == GdsPermission.POLICY_ADMIN || hasPermission == GdsPermission.ADMIN;
+                break;
 
             case NONE:
                 ret = false;
-            break;
+                break;
 
             default:
                 ret = false;
-            break;
+                break;
         }
 
         return ret;
     }
-
 
     private GdsPermission getHigherPrivilegePermission(GdsPermission permission1, GdsPermission permission2) {
         GdsPermission ret = permission1;
@@ -1116,10 +1098,7 @@ public class RangerGdsValidator {
             switch (existing) {
                 case NONE:
                 case REQUESTED:
-                    ret = (updated == GdsShareStatus.GRANTED) ||
-                            (updated == GdsShareStatus.DENIED) ||
-                            (updated == GdsShareStatus.ACTIVE); // implicit approval
-
+                    ret = (updated == GdsShareStatus.GRANTED) || (updated == GdsShareStatus.DENIED) || (updated == GdsShareStatus.ACTIVE); // implicit approval
                     break;
 
                 case GRANTED:
@@ -1127,16 +1106,13 @@ public class RangerGdsValidator {
                     break;
 
                 case DENIED:
-                    ret = (updated == GdsShareStatus.GRANTED) ||
-                            (updated == GdsShareStatus.ACTIVE); // implicit approval
+                    ret = (updated == GdsShareStatus.GRANTED) || (updated == GdsShareStatus.ACTIVE); // implicit approval
                     break;
 
                 case ACTIVE:
-                    ret = (updated == GdsShareStatus.GRANTED) ||
-                            (updated == GdsShareStatus.DENIED);
+                    ret = (updated == GdsShareStatus.GRANTED) || (updated == GdsShareStatus.DENIED);
                     break;
             }
-
         }
 
         return ret;
@@ -1151,28 +1127,22 @@ public class RangerGdsValidator {
         if (!Objects.equals(existing, updated)) {
             switch (existing) {
                 case NONE:
-                    ret = (updated == GdsShareStatus.REQUESTED) ||
-                          (updated == GdsShareStatus.ACTIVE);
-                break;
+                    ret = (updated == GdsShareStatus.REQUESTED) || (updated == GdsShareStatus.ACTIVE);
+                    break;
 
                 case REQUESTED:
-                    ret = (updated == GdsShareStatus.NONE) ||
-                          (updated == GdsShareStatus.ACTIVE);
-                break;
+                    ret = (updated == GdsShareStatus.NONE) || (updated == GdsShareStatus.ACTIVE);
+                    break;
 
                 case GRANTED:
                 case DENIED:
-                    ret = (updated == GdsShareStatus.NONE) ||
-                          (updated == GdsShareStatus.REQUESTED) ||
-                          (updated == GdsShareStatus.ACTIVE);
-                break;
+                    ret = (updated == GdsShareStatus.NONE) || (updated == GdsShareStatus.REQUESTED) || (updated == GdsShareStatus.ACTIVE);
+                    break;
 
                 case ACTIVE:
-                    ret = (updated == GdsShareStatus.NONE) ||
-                          (updated == GdsShareStatus.REQUESTED);
-                break;
+                    ret = (updated == GdsShareStatus.NONE) || (updated == GdsShareStatus.REQUESTED);
+                    break;
             }
-
         }
 
         return ret;
@@ -1184,13 +1154,17 @@ public class RangerGdsValidator {
         private ValidationResult() {
         }
 
-        public boolean isSuccess() { return validationFailures.isEmpty(); }
+        public boolean isSuccess() {
+            return validationFailures.isEmpty();
+        }
 
         public void addValidationFailure(ValidationFailureDetails validationFailure) {
             validationFailures.add(validationFailure);
         }
 
-        public List<ValidationFailureDetails> getValidationFailures() { return validationFailures; }
+        public List<ValidationFailureDetails> getValidationFailures() {
+            return validationFailures;
+        }
 
         public void throwRESTException() {
             throw restErrorUtil.createRESTException(validationFailures.toString(), MessageEnums.INVALID_INPUT_DATA);

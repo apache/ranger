@@ -17,35 +17,34 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXResource
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXResourceList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXResource> vXResources = new ArrayList<VXResource>();
 
     public VXResourceList() {
-	super();
+        super();
     }
 
     public VXResourceList(List<VXResource> objList) {
-	super(objList);
-	this.vXResources = objList;
+        super(objList);
+        this.vXResources = objList;
     }
 
     /**
@@ -53,7 +52,7 @@ public class VXResourceList extends VList {
      */
     @JsonProperty("vXResources")
     public List<VXResource> getVXResources() {
-	return vXResources;
+        return vXResources;
     }
 
     /**
@@ -62,20 +61,19 @@ public class VXResourceList extends VList {
      */
     @JsonProperty("vXResources")
     public void setVXResources(List<VXResource> vXResources) {
-	this.vXResources = vXResources;
+        this.vXResources = vXResources;
     }
 
     @Override
     public int getListSize() {
-	if (vXResources != null) {
-	    return vXResources.size();
-	}
-	return 0;
+        if (vXResources != null) {
+            return vXResources.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXResource> getList() {
-	return vXResources;
+        return vXResources;
     }
-
 }

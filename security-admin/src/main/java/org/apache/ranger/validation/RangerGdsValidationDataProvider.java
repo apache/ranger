@@ -17,11 +17,10 @@
 
 package org.apache.ranger.validation;
 
-
-import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 
 import java.util.Collection;
 import java.util.Set;

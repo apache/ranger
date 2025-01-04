@@ -17,65 +17,62 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
-
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPermObj
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPermObjList extends VList {
-	private static final long serialVersionUID = 1L;
-	List<VXPermObj> vXPermObjs = new ArrayList<VXPermObj>();
+    private static final long serialVersionUID = 1L;
+    List<VXPermObj> vXPermObjs = new ArrayList<VXPermObj>();
 
-	public VXPermObjList() {
-		super();
-	}
+    public VXPermObjList() {
+        super();
+    }
 
-	public VXPermObjList(List<VXPermObj> objList) {
-		super(objList);
-		this.vXPermObjs = objList;
-	}
+    public VXPermObjList(List<VXPermObj> objList) {
+        super(objList);
+        this.vXPermObjs = objList;
+    }
 
-	/**
-	 * @return the vXPermObjs
-	 */
-	@JsonProperty("vXPermObjs")
-	public List<VXPermObj> getVXPermObjs() {
-		return vXPermObjs;
-	}
+    /**
+     * @return the vXPermObjs
+     */
+    @JsonProperty("vXPermObjs")
+    public List<VXPermObj> getVXPermObjs() {
+        return vXPermObjs;
+    }
 
-	/**
-	 * @param vXPermObjs
-	 *            the vXPermObjs to set
-	 */
-	@JsonProperty("vXPermObjs")
-	public void setVXPermObjs(List<VXPermObj> vXPermObjs) {
-		this.vXPermObjs = vXPermObjs;
-	}
+    /**
+     * @param vXPermObjs the vXPermObjs to set
+     */
+    @JsonProperty("vXPermObjs")
+    public void setVXPermObjs(List<VXPermObj> vXPermObjs) {
+        this.vXPermObjs = vXPermObjs;
+    }
 
-	@Override
-	public int getListSize() {
-		if (vXPermObjs != null) {
-			return vXPermObjs.size();
-		}
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        if (vXPermObjs != null) {
+            return vXPermObjs.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public List<VXPermObj> getList() {
-		return vXPermObjs;
-	}
-
+    @Override
+    public List<VXPermObj> getList() {
+        return vXPermObjs;
+    }
 }
