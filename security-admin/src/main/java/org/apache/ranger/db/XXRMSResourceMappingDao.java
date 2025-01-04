@@ -29,12 +29,8 @@ import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- */
 @Service
 public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
-    //private static final Log LOG = LogFactory.getLog(XXRMSResourceMappingDao.class);
     public XXRMSResourceMappingDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
