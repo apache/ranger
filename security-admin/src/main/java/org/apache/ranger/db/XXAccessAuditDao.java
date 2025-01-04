@@ -41,11 +41,10 @@ public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
     }
 
     public Long getMaxIdOfXXAccessAudit() {
-        Long maxXXAccessAuditID = Long.valueOf(0L);
+        Long maxXXAccessAuditID = null;
+
         try {
-            maxXXAccessAuditID = getEntityManager()
-                    .createNamedQuery("XXAccessAudit.getMaxIdOfXXAccessAudit", Long.class)
-                    .getSingleResult();
+            maxXXAccessAuditID = getEntityManager().createNamedQuery("XXAccessAudit.getMaxIdOfXXAccessAudit", Long.class).getSingleResult();
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
         } finally {
@@ -53,13 +52,15 @@ public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
                 maxXXAccessAuditID = Long.valueOf(0L);
             }
         }
+
         return maxXXAccessAuditID;
     }
 
     @SuppressWarnings("unchecked")
     public List<String> getColumnNames(String dbFlavor) {
-        List<String> columnList = new ArrayList<String>();
+        List<String> columnList = null;
         String       sqlStr     = null;
+
         if ("MYSQL".equalsIgnoreCase(dbFlavor)) {
             sqlStr = "SELECT lower(column_name) FROM information_schema.columns WHERE table_schema=database() AND table_name = 'xa_access_audit'";
         } else if ("ORACLE".equalsIgnoreCase(dbFlavor)) {
@@ -70,56 +71,74 @@ public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
             sqlStr = "SELECT lower(column_name) FROM INFORMATION_SCHEMA.columns WHERE table_name = 'xa_access_audit'";
         } else if ("SQLA".equalsIgnoreCase(dbFlavor)) {
             sqlStr = "SELECT lower(cname) FROM SYS.SYSCOLUMNS WHERE tname = 'xa_access_audit'";
-        } else {
-            return columnList;
         }
+
         try {
-            columnList = getEntityManager().createNativeQuery(sqlStr).getResultList();
+            if (sqlStr != null) {
+                columnList = getEntityManager().createNativeQuery(sqlStr).getResultList();
+            }
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
+        } finally {
+            if (columnList == null) {
+                columnList = new ArrayList<>();
+            }
         }
+
         return columnList;
     }
 
     public List<XXAccessAuditV4> getByIdRangeV4(long idFrom, long idTo) {
-        //idFrom and idTo both exclusive
-        List<XXAccessAuditV4> xXAccessAuditList = new ArrayList<XXAccessAuditV4>();
+        List<XXAccessAuditV4> xXAccessAuditList = null;
+
         try {
+            //idFrom and idTo both exclusive
             xXAccessAuditList = getEntityManager().createNamedQuery("XXAccessAuditV4.getByIdRangeV4", XXAccessAuditV4.class)
-                    .setParameter("idFrom", idFrom)
-                    .setParameter("idTo", idTo)
-                    .getResultList();
+                    .setParameter("idFrom", idFrom).setParameter("idTo", idTo).getResultList();
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
+        } finally {
+            if (xXAccessAuditList == null) {
+                xXAccessAuditList = new ArrayList<>();
+            }
         }
+
         return xXAccessAuditList;
     }
 
     public List<XXAccessAuditV5> getByIdRangeV5(long idFrom, long idTo) {
-        //idFrom and idTo both exclusive
-        List<XXAccessAuditV5> xXAccessAuditList = new ArrayList<XXAccessAuditV5>();
+        List<XXAccessAuditV5> xXAccessAuditList = null;
+
         try {
+            //idFrom and idTo both exclusive
             xXAccessAuditList = getEntityManager().createNamedQuery("XXAccessAuditV5.getByIdRangeV5", XXAccessAuditV5.class)
-                    .setParameter("idFrom", idFrom)
-                    .setParameter("idTo", idTo)
-                    .getResultList();
+                    .setParameter("idFrom", idFrom).setParameter("idTo", idTo).getResultList();
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
+        } finally {
+            if (xXAccessAuditList == null) {
+                xXAccessAuditList = new ArrayList<>();
+            }
         }
+
         return xXAccessAuditList;
     }
 
     public List<XXAccessAudit> getByIdRangeV6(long idFrom, long idTo) {
-        //idFrom and idTo both exclusive
-        List<XXAccessAudit> xXAccessAuditList = new ArrayList<XXAccessAudit>();
+        List<XXAccessAudit> xXAccessAuditList = null;
+
         try {
+            //idFrom and idTo both exclusive
             xXAccessAuditList = getEntityManager().createNamedQuery("XXAccessAudit.getByIdRangeV6", XXAccessAudit.class)
-                    .setParameter("idFrom", idFrom)
-                    .setParameter("idTo", idTo)
-                    .getResultList();
+                    .setParameter("idFrom", idFrom).setParameter("idTo", idTo).getResultList();
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
+        } finally {
+            if (xXAccessAuditList == null) {
+                xXAccessAuditList = new ArrayList<>();
+            }
         }
+
         return xXAccessAuditList;
     }
 }
