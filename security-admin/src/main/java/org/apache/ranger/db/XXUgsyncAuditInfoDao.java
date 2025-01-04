@@ -28,14 +28,9 @@ import javax.persistence.NoResultException;
 
 import java.util.List;
 
-/**
- *
- */
-
 @Service
 public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
-    protected static final Logger logger = LoggerFactory
-            .getLogger(XXUgsyncAuditInfoDao.class);
+    protected static final Logger logger = LoggerFactory.getLogger(XXUgsyncAuditInfoDao.class);
 
     /**
      * Default Constructor
@@ -55,10 +50,7 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
             return null;
         }
         try {
-            return getEntityManager()
-                    .createNamedQuery("XXUgsyncAuditInfo.findBySessionId", tClass)
-                    .setParameter("sessionId", sessionId)
-                    .getSingleResult();
+            return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySessionId", tClass).setParameter("sessionId", sessionId).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
@@ -69,9 +61,7 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
             return null;
         }
         try {
-            return getEntityManager()
-                    .createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass)
-                    .setParameter("syncSource", syncSource).getResultList();
+            return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass).setParameter("syncSource", syncSource).getResultList();
         } catch (NoResultException e) {
             return null;
         }
