@@ -17,92 +17,88 @@
 
 package org.apache.ranger.db;
 
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.NoResultException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXAccessTypeDefGrants;
-import org.springframework.stereotype.Service;
-
 @Service
 public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
+    public XXAccessTypeDefGrantsDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXAccessTypeDefGrantsDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    @SuppressWarnings("unchecked")
+    public List<String> findImpliedGrantsByATDId(Long atdId) {
+        if (atdId == null) {
+            return new ArrayList<String>();
+        }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXAccessTypeDefGrants.findImpliedGrantsByATDId")
+                    .setParameter("atdId", atdId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<String>();
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<String> findImpliedGrantsByATDId(Long atdId) {
-		if(atdId == null) {
-			return new ArrayList<String>();
-		}
-		try {
-			List<String> returnList = getEntityManager()
-					.createNamedQuery("XXAccessTypeDefGrants.findImpliedGrantsByATDId")
-					.setParameter("atdId", atdId).getResultList();
-			
-			return returnList;
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
+    public Map<String, List<String>> findImpliedGrantsByServiceDefId(Long serviceDefId) {
+        final Map<String, List<String>> ret = new HashMap<>();
 
-	public Map<String, List<String>> findImpliedGrantsByServiceDefId(Long serviceDefId) {
-		final Map<String, List<String>> ret = new HashMap<>();
+        if (serviceDefId != null) {
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = (List<Object[]>) getEntityManager()
+                    .createNamedQuery("XXAccessTypeDefGrants.findByServiceDefId")
+                    .setParameter("serviceDefId", serviceDefId)
+                    .getResultList();
 
-		if (serviceDefId != null) {
-			@SuppressWarnings("unchecked")
-			List<Object[]> rows = (List<Object[]>) getEntityManager()
-					.createNamedQuery("XXAccessTypeDefGrants.findByServiceDefId")
-					.setParameter("serviceDefId", serviceDefId)
-					.getResultList();
+            if (rows != null) {
+                for (Object[] row : rows) {
+                    String       accessType    = (String) row[0];
+                    String       impliedGrant  = (String) row[1];
+                    List<String> impliedGrants = ret.get(accessType);
 
-			if (rows != null) {
-				for (Object[] row : rows) {
-					String       accessType    = (String) row[0];
-					String       impliedGrant  = (String) row[1];
-					List<String> impliedGrants = ret.get(accessType);
+                    if (impliedGrants == null) {
+                        impliedGrants = new ArrayList<>();
 
-					if (impliedGrants == null) {
-						impliedGrants = new ArrayList<>();
+                        ret.put(accessType, impliedGrants);
+                    }
 
-						ret.put(accessType, impliedGrants);
-					}
+                    impliedGrants.add(impliedGrant);
+                }
+            }
+        }
 
-					impliedGrants.add(impliedGrant);
-				}
-			}
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public XXAccessTypeDefGrants findByNameAndATDId(Long atdId, String name) {
+        if (atdId == null || name == null) {
+            return null;
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByNameAndATDId", tClass)
+                    .setParameter("atdId", atdId).setParameter("name", name).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public XXAccessTypeDefGrants findByNameAndATDId(Long atdId, String name) {
-		if (atdId == null || name == null) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByNameAndATDId", tClass)
-					.setParameter("atdId", atdId).setParameter("name", name).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-
-	public List<XXAccessTypeDefGrants> findByATDId(Long atdId) {
-		if (atdId == null) {
-			return new ArrayList<XXAccessTypeDefGrants>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByATDId", tClass)
-					.setParameter("atdId", atdId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXAccessTypeDefGrants>();
-		}
-	}
-
+    public List<XXAccessTypeDefGrants> findByATDId(Long atdId) {
+        if (atdId == null) {
+            return new ArrayList<XXAccessTypeDefGrants>();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByATDId", tClass)
+                    .setParameter("atdId", atdId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<XXAccessTypeDefGrants>();
+        }
+    }
 }

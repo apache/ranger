@@ -17,12 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -31,42 +26,40 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 @Component
 public class RangerDaoManager extends RangerDaoManagerBase {
-	private static final Logger logger = LoggerFactory.getLogger(RangerDaoManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerDaoManager.class);
+    @Autowired
+    StringUtil stringUtil;
+    @Autowired
+    RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+    @PersistenceContext(unitName = "defaultPU")
+    private EntityManager em;
 
-	@PersistenceContext(unitName = "defaultPU")
-	private EntityManager em;
+    @Override
+    public EntityManager getEntityManager() {
+        return em;
+    }
 
-	@Autowired
-	StringUtil stringUtil;
+    public EntityManager getEntityManager(String persistenceContextUnit) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
+        }
 
-	@Autowired
-	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+        return getEntityManager();
+    }
 
-	@Override
-	public EntityManager getEntityManager() {
-		return em;
-	}
+    /**
+     * @return the stringUtil
+     */
+    public StringUtil getStringUtil() {
+        return stringUtil;
+    }
 
-	public EntityManager getEntityManager(String persistenceContextUnit) {
-		if(logger.isDebugEnabled()) {
-			logger.debug("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
-		}
-
-		return getEntityManager();
-	}
-
-	
-	/**
-	 * @return the stringUtil
-	 */
-	public StringUtil getStringUtil() {
-		return stringUtil;
-	}
-
-	public RangerTransactionSynchronizationAdapter getRangerTransactionSynchronizationAdapter() {
-		return transactionSynchronizationAdapter;
-	}
-
+    public RangerTransactionSynchronizationAdapter getRangerTransactionSynchronizationAdapter() {
+        return transactionSynchronizationAdapter;
+    }
 }

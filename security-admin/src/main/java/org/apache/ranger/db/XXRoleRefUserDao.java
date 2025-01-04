@@ -19,25 +19,24 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefUser;
 import org.springframework.stereotype.Service;
 
-@Service
-public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser>{
+import javax.persistence.NoResultException;
 
-    public XXRoleRefUserDao(RangerDaoManagerBase daoManager)  {
+import java.util.Collections;
+import java.util.List;
+
+@Service
+public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
+    public XXRoleRefUserDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
     public List<XXRoleRefUser> findByRoleId(Long roleId) {
-        if(roleId == null) {
+        if (roleId == null) {
             return Collections.EMPTY_LIST;
         }
         try {
@@ -66,7 +65,7 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser>{
     }
 
     public List<XXRoleRefUser> findByUserId(Long userId) {
-        if(userId == null) {
+        if (userId == null) {
             return Collections.EMPTY_LIST;
         }
         try {

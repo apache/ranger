@@ -19,63 +19,63 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyRefCondition;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Service
-public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition>  {
+public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition> {
+    public XXPolicyRefConditionDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXPolicyRefConditionDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXPolicyRefCondition> findByPolicyId(Long polId) {
+        if (polId == null) {
+            return Collections.EMPTY_LIST;
+        }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyRefCondition.findByPolicyId", tClass)
+                    .setParameter("policyId", polId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
 
-	public List<XXPolicyRefCondition> findByPolicyId(Long polId) {
-		if(polId == null) {
-			return Collections.EMPTY_LIST;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyRefCondition.findByPolicyId", tClass)
-					.setParameter("policyId", polId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.EMPTY_LIST;
-		}
-	}
-	public List<XXPolicyRefCondition> findByConditionName(String conditionName) {
-		if (conditionName == null) {
-			return Collections.EMPTY_LIST;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionName", tClass)
-					.setParameter("conditionName", conditionName).getResultList();
-		} catch (NoResultException e) {
-			return Collections.EMPTY_LIST;
-		}
-	}
+    public List<XXPolicyRefCondition> findByConditionName(String conditionName) {
+        if (conditionName == null) {
+            return Collections.EMPTY_LIST;
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionName", tClass)
+                    .setParameter("conditionName", conditionName).getResultList();
+        } catch (NoResultException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
 
-	public List<XXPolicyRefCondition> findByConditionDefId(Long conditionDefId) {
-		if (conditionDefId == null) {
-			return Collections.EMPTY_LIST;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionDefId", tClass)
-					.setParameter("conditionDefId", conditionDefId)
-					.getResultList();
-		} catch (NoResultException e) {
-			return Collections.EMPTY_LIST;
-		}
-	}
+    public List<XXPolicyRefCondition> findByConditionDefId(Long conditionDefId) {
+        if (conditionDefId == null) {
+            return Collections.EMPTY_LIST;
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionDefId", tClass)
+                    .setParameter("conditionDefId", conditionDefId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedConditionNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
         if (policyId != null) {
@@ -85,15 +85,15 @@ public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition>  {
                     .getResultList();
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
         return ret;
     }
 
-	@SuppressWarnings("unchecked")
-	public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedConditionNamesByService(Long serviceId) {
+    @SuppressWarnings("unchecked")
+    public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedConditionNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
         if (serviceId != null) {
             List<Object[]> rows = (List<Object[]>) getEntityManager()
@@ -102,29 +102,29 @@ public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition>  {
                     .getResultList();
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
         return ret;
     }
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
+    public void deleteByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return;
+        }
 
-		// First select ids according to policyId, then delete records according to ids
-		// The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
-		List<Long> ids = getEntityManager()
-				.createNamedQuery("XXPolicyRefCondition.findIdsByPolicyId", Long.class)
-				.setParameter("policyId", policyId)
-				.getResultList();
+        // First select ids according to policyId, then delete records according to ids
+        // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
+        List<Long> ids = getEntityManager()
+                .createNamedQuery("XXPolicyRefCondition.findIdsByPolicyId", Long.class)
+                .setParameter("policyId", policyId)
+                .getResultList();
 
-		if (CollectionUtils.isEmpty(ids)) {
-			return;
-		}
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
 
-		batchDeleteByIds("XXPolicyRefCondition.deleteByIds", ids, "ids");
-	}
+        batchDeleteByIds("XXPolicyRefCondition.deleteByIds", ids, "ids");
+    }
 }

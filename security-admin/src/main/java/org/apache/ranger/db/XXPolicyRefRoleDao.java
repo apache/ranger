@@ -19,28 +19,26 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyRefRole;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Service
-public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
-
-
-    public XXPolicyRefRoleDao(RangerDaoManagerBase daoManager)  {
+public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
+    public XXPolicyRefRoleDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
     public List<XXPolicyRefRole> findByPolicyId(Long policyId) {
-        if(policyId == null) {
+        if (policyId == null) {
             return Collections.EMPTY_LIST;
         }
         try {
@@ -51,6 +49,7 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
             return Collections.EMPTY_LIST;
         }
     }
+
     public List<XXPolicyRefRole> findByRoleName(String roleName) {
         if (roleName == null) {
             return Collections.EMPTY_LIST;
@@ -73,7 +72,7 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
                     .getResultList();
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
@@ -90,29 +89,29 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
                     .getResultList();
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
         return ret;
     }
 
-	public Long findRoleRefPolicyCount(String roleName) {
-		Long ret = -1L;
+    public Long findRoleRefPolicyCount(String roleName) {
+        Long ret = -1L;
 
-		try {
-			ret = getEntityManager().createNamedQuery("XXPolicyRefRole.findRoleRefPolicyCount", Long.class)
-					.setParameter("roleName", roleName).getSingleResult();
-		} catch (Exception e) {
-		}
+        try {
+            ret = getEntityManager().createNamedQuery("XXPolicyRefRole.findRoleRefPolicyCount", Long.class)
+                    .setParameter("roleName", roleName).getSingleResult();
+        } catch (Exception e) {
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
+    public void deleteByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return;
+        }
 
         // First select ids according to policyId, then delete records according to ids
         // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
@@ -126,6 +125,5 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
         }
 
         batchDeleteByIds("XXPolicyRefRole.deleteByIds", ids, "ids");
-	}
+    }
 }
-

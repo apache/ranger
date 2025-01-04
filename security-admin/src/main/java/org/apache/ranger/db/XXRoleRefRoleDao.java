@@ -19,27 +19,26 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefRole;
 import org.springframework.stereotype.Service;
 
-@Service
-public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
+import javax.persistence.NoResultException;
 
-    public XXRoleRefRoleDao(RangerDaoManagerBase daoManager)  {
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Service
+public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole> {
+    public XXRoleRefRoleDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
     public List<XXRoleRefRole> findByRoleId(Long roleId) {
-        if(roleId == null) {
+        if (roleId == null) {
             return Collections.EMPTY_LIST;
         }
         try {
@@ -68,7 +67,7 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
     }
 
     public List<XXRoleRefRole> findBySubRoleId(Long subRoleId) {
-        if(subRoleId == null) {
+        if (subRoleId == null) {
             return Collections.EMPTY_LIST;
         }
         try {
@@ -92,17 +91,17 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
         }
     }
 
-	public Long findRoleRefRoleCount(String subRoleName) {
-		Long ret = -1L;
+    public Long findRoleRefRoleCount(String subRoleName) {
+        Long ret = -1L;
 
-		try {
-			ret = getEntityManager().createNamedQuery("XXRoleRefRole.findRoleRefRoleCount", Long.class)
-					.setParameter("subRoleName", subRoleName).getSingleResult();
-		} catch (Exception e) {
-		}
+        try {
+            ret = getEntityManager().createNamedQuery("XXRoleRefRole.findRoleRefRoleCount", Long.class)
+                    .setParameter("subRoleName", subRoleName).getSingleResult();
+        } catch (Exception e) {
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
     public Set<Long> getContainingRoles(Long subRoleId) {
         Set<Long> ret;

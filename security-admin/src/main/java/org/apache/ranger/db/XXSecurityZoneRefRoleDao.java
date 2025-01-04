@@ -23,16 +23,16 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefRole;
 
 import javax.persistence.NoResultException;
+
 import java.util.Collections;
 import java.util.List;
 
-public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole>{
+public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
+    public XXSecurityZoneRefRoleDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXSecurityZoneRefRoleDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
-
-	public List<XXSecurityZoneRefRole> findByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefRole> findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
@@ -47,17 +47,17 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole>{
         }
     }
 
-	public List<XXSecurityZoneRefRole> findByRoleId(Long roleId) {
-		if (roleId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZoneRefRole.findByRoleId", tClass)
-					.setParameter("roleId", roleId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<XXSecurityZoneRefRole> findByRoleId(Long roleId) {
+        if (roleId == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZoneRefRole.findByRoleId", tClass)
+                    .setParameter("roleId", roleId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
 
     public Long findRoleRefZoneCount(String roleName) {
         Long ret = -1L;
@@ -71,33 +71,31 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole>{
         return ret;
     }
 
-	public List<XXSecurityZoneRefRole> findAdminRoleByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefRole> findAdminRoleByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
         try {
-            List<XXSecurityZoneRefRole> xxZoneRefRole = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefRole.findRoleTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("roleType", "1")
                     .getResultList();
-            return xxZoneRefRole;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefRole> findAuditRoleByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefRole> findAuditRoleByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
         try {
-            List<XXSecurityZoneRefRole> xxZoneRefRole = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefRole.findRoleTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("roleType", "0")
                     .getResultList();
-            return xxZoneRefRole;
         } catch (NoResultException e) {
             return null;
         }

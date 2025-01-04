@@ -24,6 +24,7 @@ import org.apache.ranger.entity.XXRole;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
     public XXRoleDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
+
     public XXRole findByRoleId(Long roleId) {
         if (roleId == null) {
             return null;
@@ -49,6 +51,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
             return null;
         }
     }
+
     public XXRole findByRoleName(String roleName) {
         if (StringUtils.isBlank(roleName)) {
             return null;
@@ -63,6 +66,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
             return null;
         }
     }
+
     public List<XXRole> findByServiceId(Long serviceId) {
         List<XXRole> ret;
         try {
@@ -98,19 +102,19 @@ public class XXRoleDao extends BaseDao<XXRole> {
     }
 
     @SuppressWarnings("unchecked")
-	public List<XXRole> findByUserId(Long UserId) {
-		if (UserId == null) {
-			return null;
-		}
-		List<XXRole> ret;
-		try {
-			ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", UserId)
-					.getResultList();
-		} catch (NoResultException e) {
-			ret = ListUtils.EMPTY_LIST;
-		}
-		return ret;
-	}
+    public List<XXRole> findByUserId(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        List<XXRole> ret;
+        try {
+            ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", userId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            ret = ListUtils.EMPTY_LIST;
+        }
+        return ret;
+    }
 
     @SuppressWarnings("unchecked")
     public List<XXRole> findByGroupId(Long groupId) {
@@ -127,4 +131,3 @@ public class XXRoleDao extends BaseDao<XXRole> {
         return ret;
     }
 }
-

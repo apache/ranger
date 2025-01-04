@@ -23,6 +23,7 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.springframework.stereotype.Service;
+
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
     public XXSecurityZoneDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
+
     public XXSecurityZone findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
@@ -51,6 +53,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return null;
         }
     }
+
     public XXSecurityZone findByZoneName(String zoneName) {
         if (StringUtils.isBlank(zoneName)) {
             return null;
@@ -65,6 +68,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return null;
         }
     }
+
     public List<String> findZonesByServiceName(String serviceName) {
         if (serviceName == null) {
             return Collections.emptyList();
@@ -76,6 +80,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return Collections.emptyList();
         }
     }
+
     public List<String> findZonesByTagServiceName(String tagServiceName) {
         if (tagServiceName == null) {
             return Collections.emptyList();
@@ -87,29 +92,30 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
             return Collections.emptyList();
         }
     }
-	public List<String> findZoneNamesByUserId(Long userId) {
-		if (userId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByUserId", String.class)
-					.setParameter("userId", userId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
 
-	public List<String> findZoneNamesByGroupId(Long groupId) {
-		if (groupId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByGroupId", String.class)
-					.setParameter("groupId", groupId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<String> findZoneNamesByUserId(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByUserId", String.class)
+                    .setParameter("userId", userId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<String> findZoneNamesByGroupId(Long groupId) {
+        if (groupId == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByGroupId", String.class)
+                    .setParameter("groupId", groupId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
 
     public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfos() {
         @SuppressWarnings("unchecked")
@@ -124,18 +130,18 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
     }
 
     public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfosByServiceId(Long serviceId, Boolean isTagService) {
-        if(serviceId == null){
-            return  Collections.emptyList();
+        if (serviceId == null) {
+            return Collections.emptyList();
         }
         List<Object[]> results = null;
-        if(isTagService){
+        if (isTagService) {
             results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByTagServiceId")
-                                    .setParameter("tagServiceId", serviceId)
-                                    .getResultList();
-        }else{
+                    .setParameter("tagServiceId", serviceId)
+                    .getResultList();
+        } else {
             results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByServiceId")
-                                    .setParameter("serviceId", serviceId)
-                                    .getResultList();
+                    .setParameter("serviceId", serviceId)
+                    .getResultList();
         }
 
         List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<RangerSecurityZoneHeaderInfo>(results.size());

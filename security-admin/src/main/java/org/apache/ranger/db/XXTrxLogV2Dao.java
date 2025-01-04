@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTrxLogV2;
@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,11 +35,11 @@ import java.util.concurrent.TimeUnit;
 public class XXTrxLogV2Dao extends BaseDao<XXTrxLogV2> {
     private static final Logger logger = LoggerFactory.getLogger(XXTrxLogV2Dao.class);
 
-    public XXTrxLogV2Dao(RangerDaoManagerBase daoManager ) {
+    public XXTrxLogV2Dao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
-    public List<XXTrxLogV2> findByTransactionId(String transactionId){
+    public List<XXTrxLogV2> findByTransactionId(String transactionId) {
         List<XXTrxLogV2> ret = null;
 
         if (transactionId != null) {

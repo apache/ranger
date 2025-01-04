@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit;
 public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
     private static final Logger logger = LoggerFactory.getLogger(XXPolicyExportAuditDao.class);
 
-    public XXPolicyExportAuditDao( RangerDaoManagerBase daoManager ) {
-		super(daoManager);
+    public XXPolicyExportAuditDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
     }
 
     public long deleteOlderThan(int olderThanInDays) {
@@ -48,4 +48,3 @@ public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
         return ret;
     }
 }
-
