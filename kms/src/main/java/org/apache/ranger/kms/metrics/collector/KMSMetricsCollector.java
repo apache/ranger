@@ -104,12 +104,12 @@ public class KMSMetricsCollector {
     public class APIMetric implements AutoCloseable {
         private KMSMetrics.KMSMetric counter;
         private KMSMetrics.KMSMetric elapsedTime;
-        private Stopwatch            sw;
+        private final Stopwatch            sw;
 
         private APIMetric(KMSMetrics.KMSMetric counter, KMSMetrics.KMSMetric elapsedTime) {
+            this();
             this.counter     = counter;
             this.elapsedTime = elapsedTime;
-            this.sw          = Stopwatch.createStarted();
         }
 
         private APIMetric() {
@@ -126,9 +126,7 @@ public class KMSMetricsCollector {
             if (null != counter && null != elapsedTime) {
                 incrementCounter(counter);
                 updateMetric(elapsedTime, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-            }
-
-            if (null != sw && sw.isRunning()) {
+            } else {
                 long elapsedTime = sw.stop().elapsed(TimeUnit.MILLISECONDS);
                 logger.warn("API metric started to capture elapsed time but Elapsed metric was not set. Elapsed time(in MS) {}", elapsedTime);
             }
