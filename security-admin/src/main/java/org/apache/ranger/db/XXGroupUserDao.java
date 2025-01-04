@@ -44,19 +44,13 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
     }
 
     public void deleteByGroupIdAndUserId(Long groupId, Long userId) {
-        getEntityManager()
-                .createNamedQuery("XXGroupUser.deleteByGroupIdAndUserId")
-                .setParameter("userId", userId)
-                .setParameter("parentGroupId", groupId).executeUpdate();
+        getEntityManager().createNamedQuery("XXGroupUser.deleteByGroupIdAndUserId").setParameter("userId", userId).setParameter("parentGroupId", groupId).executeUpdate();
     }
 
     public List<XXGroupUser> findByUserId(Long userId) {
         if (userId != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery("XXGroupUser.findByUserId", XXGroupUser.class)
-                        .setParameter("userId", userId)
-                        .getResultList();
+                return getEntityManager().createNamedQuery("XXGroupUser.findByUserId", XXGroupUser.class).setParameter("userId", userId).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
@@ -120,11 +114,7 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
     public XXGroupUser findByGroupNameAndUserId(String groupName, Long userId) {
         if (StringUtils.isNotBlank(groupName) && userId != null) {
             try {
-                return getEntityManager()
-                        .createNamedQuery("XXGroupUser.findByGroupNameAndUserId", XXGroupUser.class)
-                        .setParameter("userId", userId)
-                        .setParameter("groupName", groupName)
-                        .getSingleResult();
+                return getEntityManager().createNamedQuery("XXGroupUser.findByGroupNameAndUserId", XXGroupUser.class).setParameter("userId", userId).setParameter("groupName", groupName).getSingleResult();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
@@ -139,9 +129,8 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
         Map<String, Set<String>> groupUsers = new HashMap<>();
 
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXGroupUser.findUsersByGroupIds")
-                    .getResultList();
+            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupIds").getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     if (groupUsers.containsKey((String) row[0])) {
@@ -164,19 +153,14 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 
         if (StringUtils.isNotBlank(groupName)) {
             try {
-                List<Object[]> rows = (List<Object[]>) getEntityManager()
-                        .createNamedQuery("XXGroupUser.findUsersByGroupName")
-                        .setParameter("groupName", groupName)
-                        .getResultList();
+                List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupName").setParameter("groupName", groupName).getResultList();
                 if (rows != null) {
                     for (Object[] row : rows) {
                         users.put((String) row[0], (XXGroupUser) row[1]);
                     }
                 }
             } catch (NoResultException e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(e.getMessage());
-                }
+                logger.debug(e.getMessage());
             }
         }
 
