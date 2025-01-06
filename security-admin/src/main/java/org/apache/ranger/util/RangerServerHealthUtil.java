@@ -19,20 +19,19 @@
 
 package org.apache.ranger.util;
 
-import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.*;
-
-import java.util.HashMap;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.plugin.model.RangerServerHealth;
-
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.DOWN;
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.UP;
 
 @Component
 public class RangerServerHealthUtil {
@@ -71,7 +70,7 @@ public class RangerServerHealthUtil {
 
         final RangerServerHealth ret;
 
-        if (Objects.equals(dbStatus.get(STATUS), UP) ){
+        if (Objects.equals(dbStatus.get(STATUS), UP)) {
             ret = RangerServerHealth.up().withDetail(COMPONENTS, components).build();
         } else {
             ret = RangerServerHealth.down().withDetail(COMPONENTS, components).build();
@@ -82,8 +81,8 @@ public class RangerServerHealthUtil {
 
     private Map<String, Object> getDbStatus(String dbVersion) {
         Map<String, Object> ret      = new LinkedHashMap<>();
-        int                 dbFlavor = RangerBizUtil.getDBFlavor();
         Map<String, Object> details  = new LinkedHashMap<>();
+        int                 dbFlavor = RangerBizUtil.getDBFlavor();
 
         details.put(DB_FLAVOR, RangerBizUtil.getDBFlavorType(dbFlavor));
         details.put(DB_VERSION, dbVersion);
@@ -91,7 +90,7 @@ public class RangerServerHealthUtil {
 
         ret.put(DETAILS, details);
 
-        if (dbFlavor == AppConstants.DB_FLAVOR_UNKNOWN || StringUtils.contains(dbVersion, NOT_AVAILABLE) ){
+        if (dbFlavor == AppConstants.DB_FLAVOR_UNKNOWN || StringUtils.contains(dbVersion, NOT_AVAILABLE)) {
             ret.put(STATUS, DOWN);
         } else {
             ret.put(STATUS, UP);

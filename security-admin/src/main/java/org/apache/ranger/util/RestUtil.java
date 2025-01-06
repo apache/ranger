@@ -19,14 +19,14 @@
 
 package org.apache.ranger.util;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -37,25 +37,28 @@ import java.util.Enumeration;
 
 @Component
 public class RestUtil {
-
 	private static final Logger LOG = LoggerFactory.getLogger(RestUtil.class);
-	public static final String timeOffsetCookieName = "clientTimeOffset";
-	public static final String TIMEOUT_ACTION = "timeout";
+
 	private static final String PROXY_RANGER_URL_PATH = "/ranger";
-	public static final String LOCAL_LOGIN_URL = "locallogin";
+
+	public static final String timeOffsetCookieName    = "clientTimeOffset";
+	public static final String TIMEOUT_ACTION          = "timeout";
+	public static final String LOCAL_LOGIN_URL         = "locallogin";
 	public static final String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
 
 	public static Integer getTimeOffset(HttpServletRequest request) {
 		Integer cookieVal = 0;
-		try{		
-			Cookie[] cookies = request.getCookies();
-			String timeOffset = null;
+
+		try {
+			Cookie[] cookies    = request.getCookies();
+			String   timeOffset = null;
 			
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
 					try {
 						if (timeOffsetCookieName.equals(cookie.getName())) {
 							timeOffset = cookie.getValue();
+
 							if (timeOffset != null) {
 								cookieVal = Integer.parseInt(timeOffset);
 							}
@@ -66,43 +69,50 @@ public class RestUtil {
 					}
 				}
 			}
-		}catch(Exception ex){
-			
+		} catch (Exception ex) {
+			// ignored
 		}
+
 		return cookieVal;
 	}
 	
-	public static int getClientTimeOffset(){
+	public static int getClientTimeOffset() {
 		int clientTimeOffsetInMinute = 0;
-		try{
-			clientTimeOffsetInMinute= RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
-		}catch(Exception ex){
-			
+
+		try {
+			clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
+		} catch (Exception ex) {
+			// ignored
 		}
-		if(clientTimeOffsetInMinute==0){
-			try{
-				clientTimeOffsetInMinute= RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
-			}catch(Exception ex){
-				
+
+		if (clientTimeOffsetInMinute == 0) {
+			try {
+				clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
+			} catch (Exception ex) {
+				// ignored
 			}
 		}
+
 		return clientTimeOffsetInMinute;
 	}
 
 	public static String constructForwardableURL(HttpServletRequest httpRequest) {
-		String xForwardedProto = "";
-		String xForwardedHost = "";
-		String xForwardedContext = "";
-		Enumeration<?> names = httpRequest.getHeaderNames();
+		String         xForwardedProto   = "";
+		String         xForwardedHost    = "";
+		String         xForwardedContext = "";
+		Enumeration<?> names             = httpRequest.getHeaderNames();
+
 		while (names.hasMoreElements()) {
-			String name = (String) names.nextElement();
+			String         name   = (String) names.nextElement();
 			Enumeration<?> values = httpRequest.getHeaders(name);
-			String value = "";
+			String         value  = "";
+
 			if (values != null) {
 				while (values.hasMoreElements()) {
 					value = (String) values.nextElement();
 				}
 			}
+
 			if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
 				if (name.equalsIgnoreCase("x-forwarded-proto")) {
 					xForwardedProto = value;
@@ -113,13 +123,15 @@ public class RestUtil {
 				}
 			}
 		}
+
 		if (xForwardedHost.contains(",")) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("xForwardedHost value is " + xForwardedHost + " it contains multiple hosts, selecting the first host.");
-			}
+			LOG.debug("xForwardedHost value is {}, it contains multiple hosts, selecting the first host.", xForwardedHost);
+
 			xForwardedHost = xForwardedHost.split(",")[0].trim();
 		}
+
 		String xForwardedURL = "";
+
 		if (StringUtils.trimToNull(xForwardedProto) != null) {
 			//if header contains x-forwarded-host and x-forwarded-context
 			if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
@@ -131,47 +143,41 @@ public class RestUtil {
 				//if header does not contains x-forwarded-host and x-forwarded-context
 				//preserve the x-forwarded-proto value coming from the request.
 				String requestURL = httpRequest.getRequestURL().toString();
+
 				if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
 					requestURL = requestURL.replaceFirst("http", xForwardedProto);
 				}
+
 				xForwardedURL = requestURL;
 			}
 		}
+
 		return xForwardedURL;
 	}
 
 	public static String constructRedirectURL(HttpServletRequest request, String redirectUrl, String xForwardedURL, String originalUrlQueryParam) {
 		String delimiter = "?";
+
 		if (redirectUrl.contains("?")) {
 			delimiter = "&";
 		}
+
 		String loginURL = redirectUrl + delimiter + originalUrlQueryParam + "=";
+
 		if (StringUtils.trimToNull(xForwardedURL) != null) {
 			loginURL += xForwardedURL + getOriginalQueryString(request);
 		} else {
 			loginURL += request.getRequestURL().append(getOriginalQueryString(request));
 		}
-		return loginURL;
-	}
 
-	private static String getOriginalQueryString(HttpServletRequest request) {
-		String originalQueryString = request.getQueryString();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("originalQueryString = " + originalQueryString);
-		}
-		if (originalQueryString == null || originalQueryString.contains("action")) {
-			return "";
-		} else {
-			return "?" + originalQueryString;
-		}
+		return loginURL;
 	}
 
 	public static String convertToTimeZone(Date date, String timeZone) {
 		try {
-			Instant utcInstant = date.toInstant();
-
+			Instant       utcInstant    = date.toInstant();
 			// Get the ZoneId from the request parameter
-			ZoneId zoneId = ZoneId.of(timeZone);
+			ZoneId        zoneId        = ZoneId.of(timeZone);
 			// Convert the UTC date to the specified timezone
 			ZonedDateTime zonedDateTime = utcInstant.atZone(zoneId);
 
@@ -179,6 +185,18 @@ public class RestUtil {
 		} catch (Exception e) {
 			LOG.info("Exception occurred while converting to timeZone", e);
 			return null;
+		}
+	}
+
+	private static String getOriginalQueryString(HttpServletRequest request) {
+		String originalQueryString = request.getQueryString();
+
+		LOG.debug("originalQueryString = {} ", originalQueryString);
+
+		if (originalQueryString == null || originalQueryString.contains("action")) {
+			return "";
+		} else {
+			return "?" + originalQueryString;
 		}
 	}
 }

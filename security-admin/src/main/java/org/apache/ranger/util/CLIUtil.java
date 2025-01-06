@@ -17,15 +17,7 @@
  * under the License.
  */
 
- /**
- *
- */
 package org.apache.ranger.util;
-
-import java.util.Locale;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
@@ -41,13 +33,15 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-/**
- *
- *
- */
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.Locale;
+
 @Component
 public class CLIUtil {
 	private static final Logger logger = LoggerFactory.getLogger(CLIUtil.class);
+
 	private static final String JAVA_PATCHES_CLASS_NAME_PREFIX = "Patch";
 
 	@Autowired
@@ -57,10 +51,7 @@ public class CLIUtil {
 
 	public static void init() {
 		if (context == null) {
-			context = new ClassPathXmlApplicationContext(
-					"applicationContext.xml",
-					"security-applicationContext.xml",
-					"asynctask-applicationContext.xml");
+			context = new ClassPathXmlApplicationContext("applicationContext.xml", "security-applicationContext.xml", "asynctask-applicationContext.xml");
 		}
 	}
 
@@ -70,35 +61,42 @@ public class CLIUtil {
 		return context.getBean(beanClass);
 	}
 
-	private static void checkIfJavaPatchesExecuting(Class<?> beanClass) {
-	    if (beanClass != null) {
-	        final String className = beanClass.getSimpleName();
-	        if (StringUtils.isNotEmpty(className)) {
-	            if (className.startsWith(JAVA_PATCHES_CLASS_NAME_PREFIX)) {
-	                UserSessionBase userSessBase = new UserSessionBase();
-	                userSessBase.setUserAdmin(true);
-	                userSessBase.setAuditUserAdmin(true);
-	                userSessBase.setKeyAdmin(true);
-	                userSessBase.setAuditKeyAdmin(true);
-	                RangerSecurityContext rangerSecCtx = new RangerSecurityContext();
-	                rangerSecCtx.setUserSession(userSessBase);
-	                RangerContextHolder.setSecurityContext(rangerSecCtx);
-	            }
-	        }
-	    }
-	}
-
 	public void authenticate() throws Exception {
 		String user = PropertiesUtil.getProperty("xa.cli.user");
-		String pwd = PropertiesUtil.getProperty("xa.cli.password");
-		logger.info("Authenticating user:" + user);
+		String pwd  = PropertiesUtil.getProperty("xa.cli.password");
+
+		logger.info("Authenticating user: {}", user);
+
 		securityHandler.login(user, pwd, context);
 	}
-	public static String getMessage(String messagekey,HttpServletRequest request){
-		ServletContext servletContext = request.getSession().getServletContext();
-		ApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(servletContext);
-		Object[] args = new Object[] {};
-		String messageValue=ctx.getMessage(messagekey, args, Locale.getDefault());
-		return messageValue;
+
+	public static String getMessage(String messagekey, HttpServletRequest request) {
+		ServletContext     servletContext = request.getSession().getServletContext();
+		ApplicationContext ctx            = WebApplicationContextUtils.getWebApplicationContext(servletContext);
+		Object[]           args           = new Object[] {};
+
+		return ctx.getMessage(messagekey, args, Locale.getDefault());
+	}
+
+	private static void checkIfJavaPatchesExecuting(Class<?> beanClass) {
+		if (beanClass != null) {
+			final String className = beanClass.getSimpleName();
+
+			if (StringUtils.isNotEmpty(className)) {
+				if (className.startsWith(JAVA_PATCHES_CLASS_NAME_PREFIX)) {
+					UserSessionBase userSessBase = new UserSessionBase();
+
+					userSessBase.setUserAdmin(true);
+					userSessBase.setAuditUserAdmin(true);
+					userSessBase.setKeyAdmin(true);
+					userSessBase.setAuditKeyAdmin(true);
+
+					RangerSecurityContext rangerSecCtx = new RangerSecurityContext();
+
+					rangerSecCtx.setUserSession(userSessBase);
+					RangerContextHolder.setSecurityContext(rangerSecCtx);
+				}
+			}
+		}
 	}
 }

@@ -17,12 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.util;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+package org.apache.ranger.util;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -36,6 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 @Component
 public class RangerRestUtil {
@@ -54,7 +54,7 @@ public class RangerRestUtil {
 		Collection<String> newCollection = new ArrayList<String>();
 		for (String role : collection) {
 			String[] roles = role.split(",");
-            newCollection.addAll(Arrays.asList(roles));
+			newCollection.addAll(Arrays.asList(roles));
 		}
 		collection.clear();
 		collection.addAll(newCollection);
@@ -66,11 +66,8 @@ public class RangerRestUtil {
 	 * @param userProfile
 	 * @return
 	 */
-	public void validateVUserProfileForUpdate(XXPortalUser gjUser,
-			VXPortalUser userProfile) {
-
+	public void validateVUserProfileForUpdate(XXPortalUser gjUser, VXPortalUser userProfile) {
 		List<VXMessage> messageList = new ArrayList<VXMessage>();
-
 		// Email Update is allowed.
 		// if (userProfile.getEmailAddress() != null
 		// && !userProfile.getEmailAddress().equalsIgnoreCase(
@@ -82,64 +79,41 @@ public class RangerRestUtil {
 		// }
 
 		// Login Id can't be changed
-		if (userProfile.getLoginId() != null
-				&& !gjUser.getLoginId().equalsIgnoreCase(
-						userProfile.getLoginId())) {
-			throw restErrorUtil.createRESTException(
-					"Username can't be updated",
-					MessageEnums.DATA_NOT_UPDATABLE, null, "loginId",
-					userProfile.getLoginId());
+		if (userProfile.getLoginId() != null && !gjUser.getLoginId().equalsIgnoreCase(userProfile.getLoginId())) {
+			throw restErrorUtil.createRESTException("Username can't be updated", MessageEnums.DATA_NOT_UPDATABLE, null, "loginId", userProfile.getLoginId());
 		}
-		// }
-		userProfile.setFirstName(restErrorUtil.validateStringForUpdate(
-				userProfile.getFirstName(), gjUser.getFirstName(),
-				StringUtil.VALIDATION_NAME, "Invalid first name",
-				MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
 
-		userProfile.setFirstName(restErrorUtil.validateStringForUpdate(
-				userProfile.getFirstName(), gjUser.getFirstName(),
-				StringUtil.VALIDATION_NAME, "Invalid first name",
-				MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
+		userProfile.setFirstName(restErrorUtil.validateStringForUpdate(userProfile.getFirstName(), gjUser.getFirstName(), StringUtil.VALIDATION_NAME, "Invalid first name", MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
 
-		
+		userProfile.setFirstName(restErrorUtil.validateStringForUpdate(userProfile.getFirstName(), gjUser.getFirstName(), StringUtil.VALIDATION_NAME, "Invalid first name", MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
+
 		// firstName
 		if (!stringUtil.isValidName(userProfile.getFirstName())) {
-			logger.info("Invalid first name." + userProfile);
-			messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null,
-					"firstName"));
+			logger.info("Invalid first name. {}", userProfile);
+			messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "firstName"));
 		}
 
-		
 		// create the public screen name
-		userProfile.setPublicScreenName(userProfile.getFirstName() + " "
-				+ userProfile.getLastName());
+		userProfile.setPublicScreenName(userProfile.getFirstName() + " " + userProfile.getLastName());
 
-		userProfile.setNotes(restErrorUtil.validateStringForUpdate(
-				userProfile.getNotes(), gjUser.getNotes(),
-				StringUtil.VALIDATION_NAME, "Invalid notes",
-				MessageEnums.INVALID_INPUT_DATA, null, "notes"));
+		userProfile.setNotes(restErrorUtil.validateStringForUpdate(userProfile.getNotes(), gjUser.getNotes(), StringUtil.VALIDATION_NAME, "Invalid notes", MessageEnums.INVALID_INPUT_DATA, null, "notes"));
 
 		// validate user roles
 		if (userProfile.getUserRoleList() != null) {
 			// First let's normalize it
 			splitUserRoleList(userProfile.getUserRoleList());
 			for (String userRole : userProfile.getUserRoleList()) {
-				restErrorUtil.validateStringList(userRole,
-						configUtil.getRoles(), "Invalid role", null,
-						"userRoleList");
+				restErrorUtil.validateStringList(userRole, configUtil.getRoles(), "Invalid role", null, "userRoleList");
 			}
-
 		}
+
 		if (!messageList.isEmpty()) {
 			VXResponse gjResponse = new VXResponse();
 			gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
 			gjResponse.setMsgDesc("Validation failure");
 			gjResponse.setMessageList(messageList);
-			logger.info("Validation Error in updateUser() userProfile="
-					+ userProfile + ", error=" + gjResponse);
+			logger.info("Validation Error in updateUser() userProfile={}, error={}", userProfile, gjResponse);
 			throw restErrorUtil.createRESTException(gjResponse);
 		}
-
 	}
-
 }
