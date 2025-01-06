@@ -37,6 +37,7 @@ public class RangerAdminMetricsSourceService extends RangerAdminMetricsSourceBas
     @Override
     protected void refresh() {
         Map<String, Long> serviceMetrics = rangerMetricsFetcher.getRangerServiceMetrics();
+
         addMetricEntries("ServiceCount", serviceMetrics);
     }
 }

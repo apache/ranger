@@ -39,10 +39,11 @@ import java.util.List;
 
 @Component
 public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
-    private static final Logger logger                         = LoggerFactory.getLogger(PatchForHBaseDefaultPolicyUpdate_J10045.class);
-    public static final  String SERVICE_CONFIG_USER_NAME_PARAM = "username";
-    public static final  String DEFAULT_HBASE_USER_NAME        = "hbase";
-    public static final  String DEFAULT_HBASE_POLICY_NAME      = "all - table, column-family, column";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForHBaseDefaultPolicyUpdate_J10045.class);
+
+    public static final String SERVICE_CONFIG_USER_NAME_PARAM = "username";
+    public static final String DEFAULT_HBASE_USER_NAME        = "hbase";
+    public static final String DEFAULT_HBASE_POLICY_NAME      = "all - table, column-family, column";
     @Autowired
     RangerDaoManager daoMgr;
 
@@ -51,16 +52,22 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForHBaseDefaultPolicyUpdate_J10045 loader = (PatchForHBaseDefaultPolicyUpdate_J10045) CLIUtil.getBean(PatchForHBaseDefaultPolicyUpdate_J10045.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting.");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -78,6 +85,7 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForHBaseDefaultPolicyUpdate.execLoad()");
+
         try {
             if (!updateHBaseDefaultPolicy()) {
                 logger.error("Failed to apply the patch.");
@@ -85,28 +93,32 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
             }
         } catch (Exception e) {
             logger.error("Error while updateHBaseDefaultPolicy()data.", e);
+
             System.exit(1);
         }
+
         logger.info("<== PatchForHBaseDefaultPolicyUpdate.execLoad()");
     }
 
     private boolean updateHBaseDefaultPolicy() throws Exception {
-        RangerServiceDef embeddedHBaseServiceDef;
-
-        embeddedHBaseServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME);
+        RangerServiceDef embeddedHBaseServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME);
 
         if (embeddedHBaseServiceDef != null) {
             List<XXService> dbServices = daoMgr.getXXService().findByServiceDefId(embeddedHBaseServiceDef.getId());
+
             if (CollectionUtils.isNotEmpty(dbServices)) {
                 SearchFilter filter = new SearchFilter();
 
                 for (XXService dbService : dbServices) {
                     RangerService service = svcDBStore.getServiceByName(dbService.getName());
+
                     if (service != null) {
                         String userName = service.getConfigs().get(SERVICE_CONFIG_USER_NAME_PARAM);
+
                         if (StringUtils.isEmpty(userName)) {
                             userName = DEFAULT_HBASE_USER_NAME;
                         }
+
                         updateDefaultHBasePolicy(svcDBStore.getServicePolicies(dbService.getId(), filter), userName);
                     } else {
                         logger.error("Cannot get RangerService with name:[{}]", dbService.getName());
@@ -115,8 +127,10 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
             }
         } else {
             logger.error("The embedded HBase service-definition does not exist.");
+
             return false;
         }
+
         return true;
     }
 
@@ -125,17 +139,24 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
             for (RangerPolicy policy : policies) {
                 if (policy.getName().equals(DEFAULT_HBASE_POLICY_NAME)) {
                     RangerPolicy.RangerPolicyItem policyItemForHBase = new RangerPolicy.RangerPolicyItem();
+
                     policyItemForHBase.setUsers(Collections.singletonList(userName));
+
                     List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<>();
+
                     accesses.add(new RangerPolicy.RangerPolicyItemAccess("read", true));
                     accesses.add(new RangerPolicy.RangerPolicyItemAccess("write", true));
                     accesses.add(new RangerPolicy.RangerPolicyItemAccess("create", true));
                     accesses.add(new RangerPolicy.RangerPolicyItemAccess("admin", true));
                     accesses.add(new RangerPolicy.RangerPolicyItemAccess("execute", true));
+
                     policyItemForHBase.setAccesses(accesses);
                     policyItemForHBase.setDelegateAdmin(true);
+
                     policy.addPolicyItem(policyItemForHBase);
+
                     svcDBStore.updatePolicy(policy);
+
                     break;
                 }
             }

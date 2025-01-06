@@ -38,6 +38,7 @@ public class RangerAdminMetricsSourcePolicyRowFiltering extends RangerAdminMetri
     @Override
     protected void refresh() {
         Map<String, Long> rowFilteringPolicyMetrics = rangerMetricsFetcher.getPolicyMetrics(RangerPolicy.POLICY_TYPE_ROWFILTER);
+
         addMetricEntries("RowFilteringCount", rowFilteringPolicyMetrics);
     }
 }

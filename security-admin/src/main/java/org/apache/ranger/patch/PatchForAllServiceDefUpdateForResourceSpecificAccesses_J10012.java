@@ -76,16 +76,22 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 loader = (PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012) CLIUtil.getBean(PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -103,17 +109,18 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
     @Override
     public void execLoad() {
         logger.info("==> PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012.execLoad()");
+
         try {
             updateAllServiceDef();
         } catch (Exception e) {
             logger.error("Error in PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012.execLoad()", e);
         }
+
         logger.info("<== PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012.execLoad()");
     }
 
     private void updateAllServiceDef() {
-        List<XXServiceDef> allXXServiceDefs;
-        allXXServiceDefs = daoMgr.getXXServiceDef().getAll();
+        List<XXServiceDef> allXXServiceDefs = daoMgr.getXXServiceDef().getAll();
 
         if (CollectionUtils.isNotEmpty(allXXServiceDefs)) {
             for (XXServiceDef xxServiceDef : allXXServiceDefs) {
@@ -123,13 +130,13 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
                     String              jsonStrPreUpdate           = xxServiceDef.getDefOptions();
                     Map<String, String> serviceDefOptionsPreUpdate = jsonUtil.jsonToMap(jsonStrPreUpdate);
                     String              valueBeforeUpdate          = serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-
-                    RangerServiceDef serviceDef = svcDBStore.getServiceDefByName(serviceDefName);
+                    RangerServiceDef    serviceDef                 = svcDBStore.getServiceDefByName(serviceDefName);
 
                     if (serviceDef != null) {
                         logger.info("Started patching service-def:[{}]", serviceDefName);
 
                         RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef, false);
+
                         defHelper.patchServiceDefWithDefaultValues();
 
                         svcStore.updateServiceDef(serviceDef);
@@ -147,10 +154,13 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
                                 } else {
                                     serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, valueBeforeUpdate);
                                 }
+
                                 dbServiceDef.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
                                 daoMgr.getXXServiceDef().update(dbServiceDef);
                             }
                         }
+
                         logger.info("Completed patching service-def:[{}]", serviceDefName);
                     }
                 } catch (Exception e) {
@@ -160,11 +170,13 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
         }
     }
 
-    private String mapToJsonString(Map<String, String> map) throws Exception {
+    private String mapToJsonString(Map<String, String> map) {
         String ret = null;
+
         if (map != null) {
             ret = jsonUtil.readMapToString(map);
         }
+
         return ret;
     }
 }

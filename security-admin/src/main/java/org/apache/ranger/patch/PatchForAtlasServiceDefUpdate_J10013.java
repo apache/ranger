@@ -49,8 +49,10 @@ import java.util.Set;
 
 @Component
 public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
-    private static final Logger LOG                             = LoggerFactory.getLogger(PatchForAtlasServiceDefUpdate_J10013.class);
-    private static final int    MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
+    private static final Logger LOG = LoggerFactory.getLogger(PatchForAtlasServiceDefUpdate_J10013.class);
+
+    private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
+
     @Autowired
     RangerDaoManager daoMgr;
 
@@ -65,16 +67,22 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
 
     public static void main(String[] args) {
         LOG.info("main()");
+
         try {
             PatchForAtlasServiceDefUpdate_J10013 loader = (PatchForAtlasServiceDefUpdate_J10013) CLIUtil.getBean(PatchForAtlasServiceDefUpdate_J10013.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             LOG.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             LOG.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -91,12 +99,15 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
     @Override
     public void execLoad() {
         LOG.info("==> PatchForAtlasServiceDefUpdate.execLoad()");
+
         try {
             updateAtlasServiceDef();
         } catch (Exception e) {
             LOG.error("Error whille updateAtlasServiceDef()data.", e);
+
             System.exit(1);
         }
+
         LOG.info("<== PatchForAtlasServiceDefUpdate.execLoad()");
     }
 
@@ -104,30 +115,40 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
         String          serviceDefName = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME;
         XXServiceDefDao serviceDefDao  = daoMgr.getXXServiceDef();
         XXServiceDef    serviceDef     = serviceDefDao.findByName(serviceDefName);
+
         // if service-def named 'atlas' does not exist then no need to process this patch further.
         if (serviceDef == null) {
             LOG.info("Service-def {} not found. No patching is needed", serviceDefName);
             return;
         }
+
         // if older atlas service-def doesn't exist then no need to process this patch further.
         if (!checkIfHasOlderServiceDef(serviceDef)) {
             LOG.info("Older version of {} service-def not found. No patching is needed", serviceDefName);
+
             return;
         }
-        String suffix = null;
+
+        String suffix;
+
         for (int i = 1; true; i++) {
             suffix = ".v" + i;
+
             if (serviceDefDao.findByName(serviceDefName + suffix) == null) {
                 break;
             }
         }
+
         String serviceDefNewName = serviceDefName + suffix;
+
         LOG.info("Renaming service-def {} as {}", serviceDefName, serviceDefNewName);
+
         RangerServiceDef dbAtlasServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
         if (EmbeddedServiceDefsUtil.instance().getTagServiceDefId() != -1) {
-            RangerServiceDef dbTagServiceDef;
             try {
-                dbTagServiceDef = svcDBStore.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
+                RangerServiceDef dbTagServiceDef = svcDBStore.getServiceDef(EmbeddedServiceDefsUtil.instance().getTagServiceDefId());
+
                 if (dbTagServiceDef != null) {
                     String prefix    = serviceDefName + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
                     String newPrefix = serviceDefNewName + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
@@ -135,8 +156,8 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
                     List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes = dbAtlasServiceDef.getAccessTypes();
                     List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes = dbTagServiceDef.getAccessTypes();
                     long                                       itemIdOffset      = serviceDef.getId() * (MAX_ACCESS_TYPES_IN_SERVICE_DEF + 1);
+                    boolean                                    updateNeeded      = updateTagAccessTypeDefs(svcDefAccessTypes, tagDefAccessTypes, itemIdOffset, prefix, newPrefix);
 
-                    boolean updateNeeded = updateTagAccessTypeDefs(svcDefAccessTypes, tagDefAccessTypes, itemIdOffset, prefix, newPrefix);
                     if (updateNeeded) {
                         svcDBStore.updateServiceDef(dbTagServiceDef);
                     }
@@ -145,24 +166,32 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
                 LOG.error("updateAtlasServiceDef:{}: could not find TAG ServiceDef.. ", serviceDef.getName(), e);
             }
         }
+
         serviceDef.setName(serviceDefNewName);
         serviceDef.setDisplayName(serviceDefNewName);
         serviceDefDao.update(serviceDef);
+
         LOG.info("Renamed service-def {} as {}", serviceDefName, serviceDefNewName);
+
         XXServiceDao    serviceDao = daoMgr.getXXService();
         List<XXService> services   = serviceDao.findByServiceDefId(serviceDef.getId());
+
         if (CollectionUtils.isNotEmpty(services)) {
             for (XXService service : services) {
                 String serviceName    = service.getName();
                 String serviceNewName = serviceName + suffix;
+
                 LOG.info("Renaming service {} as {}", serviceName, serviceNewName);
+
                 if (serviceDao.findIdByName(serviceNewName) != null) {
                     LOG.warn("Another service named {} already exists. Not renaming {}", serviceNewName, serviceName);
                     continue;
                 }
+
                 service.setName(serviceNewName);
                 service.setDisplayName(serviceNewName);
                 serviceDao.update(service);
+
                 LOG.info("Renamed service {} as {}", serviceName, serviceNewName);
             }
         }
@@ -179,16 +208,19 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
         Set<String>         atlasResources = new HashSet<>(Arrays.asList("entity", "type", "operation", "taxonomy", "term"));
         XXResourceDefDao    resourceDefDao = daoMgr.getXXResourceDef();
         List<XXResourceDef> xxResourceDefs = resourceDefDao.findByServiceDefId(serviceDef.getId());
+
         for (XXResourceDef xxResourceDef : xxResourceDefs) {
             if (!atlasResources.contains(xxResourceDef.getName())) {
                 result = false;
                 break;
             }
         }
+
         if (result) {
             Set<String>           atlasAccessTypes = new HashSet<>(Arrays.asList("read", "create", "update", "delete", "all"));
             XXAccessTypeDefDao    accessTypeDefDao = daoMgr.getXXAccessTypeDef();
             List<XXAccessTypeDef> xxAccessTypeDefs = accessTypeDefDao.findByServiceDefId(serviceDef.getId());
+
             for (XXAccessTypeDef xxAccessTypeDef : xxAccessTypeDefs) {
                 if (!atlasAccessTypes.contains(xxAccessTypeDef.getName())) {
                     result = false;
@@ -196,15 +228,18 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
                 }
             }
         }
+
         return result;
     }
 
     private boolean updateTagAccessTypeDefs(List<RangerServiceDef.RangerAccessTypeDef> svcDefAccessTypes, List<RangerServiceDef.RangerAccessTypeDef> tagDefAccessTypes, long itemIdOffset, String prefix, String newPrefix) {
         List<RangerServiceDef.RangerAccessTypeDef> toUpdate = new ArrayList<>();
+
         for (RangerServiceDef.RangerAccessTypeDef tagAccessType : tagDefAccessTypes) {
             if (tagAccessType.getName().startsWith(prefix)) {
                 long                                 svcAccessTypeItemId = tagAccessType.getItemId() - itemIdOffset;
                 RangerServiceDef.RangerAccessTypeDef svcAccessType       = findAccessTypeDef(svcAccessTypeItemId, svcDefAccessTypes);
+
                 if (svcAccessType != null) {
                     if (updateTagAccessTypeDef(tagAccessType, svcAccessType, newPrefix)) {
                         toUpdate.add(tagAccessType);
@@ -212,23 +247,26 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
                 }
             }
         }
-        boolean updateNeeded = CollectionUtils.isNotEmpty(toUpdate);
-        return updateNeeded;
+
+        return CollectionUtils.isNotEmpty(toUpdate);
     }
 
     private RangerServiceDef.RangerAccessTypeDef findAccessTypeDef(long itemId, List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs) {
         RangerServiceDef.RangerAccessTypeDef ret = null;
+
         for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
             if (itemId == accessTypeDef.getItemId()) {
                 ret = accessTypeDef;
                 break;
             }
         }
+
         return ret;
     }
 
     private boolean updateTagAccessTypeDef(RangerServiceDef.RangerAccessTypeDef tagAccessType, RangerServiceDef.RangerAccessTypeDef svcAccessType, String newPrefix) {
         boolean isUpdated = false;
+
         if (!Objects.equals(tagAccessType.getName().substring(newPrefix.length()), svcAccessType.getName())) {
             isUpdated = true;
         } else {
@@ -236,6 +274,7 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
             Collection<String> svcImpliedGrants    = svcAccessType.getImpliedGrants();
             int                tagImpliedGrantsLen = tagImpliedGrants == null ? 0 : tagImpliedGrants.size();
             int                svcImpliedGrantsLen = svcImpliedGrants == null ? 0 : svcImpliedGrants.size();
+
             if (tagImpliedGrantsLen != svcImpliedGrantsLen) {
                 isUpdated = true;
             } else if (tagImpliedGrantsLen > 0) {
@@ -247,17 +286,20 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
                 }
             }
         }
+
         if (isUpdated) {
             tagAccessType.setName(newPrefix + svcAccessType.getName());
             tagAccessType.setLabel(svcAccessType.getLabel());
             tagAccessType.setRbKeyLabel(svcAccessType.getRbKeyLabel());
-            tagAccessType.setImpliedGrants(new HashSet<String>());
+            tagAccessType.setImpliedGrants(new HashSet<>());
+
             if (CollectionUtils.isNotEmpty(svcAccessType.getImpliedGrants())) {
                 for (String svcImpliedGrant : svcAccessType.getImpliedGrants()) {
                     tagAccessType.getImpliedGrants().add(newPrefix + svcImpliedGrant);
                 }
             }
         }
+
         return isUpdated;
     }
 }

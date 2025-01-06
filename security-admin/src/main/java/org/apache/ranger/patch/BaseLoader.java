@@ -37,7 +37,9 @@ import java.text.DecimalFormat;
  */
 public abstract class BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(BaseLoader.class);
+
     protected final RangerAdminConfig config;
+
     long          startTime         = DateUtil.getUTCDate().getTime();
     long          lastTime          = startTime;
     int           countSoFar;
@@ -53,7 +55,9 @@ public abstract class BaseLoader {
 
     public void init(int batchSize) throws Exception {
         this.batchSize = batchSize;
+
         CLIUtil cliUtil = (CLIUtil) CLIUtil.getBean(CLIUtil.class);
+
         cliUtil.authenticate();
     }
 
@@ -87,25 +91,33 @@ public abstract class BaseLoader {
     public void load() {
         if (firstCall) {
             startTime = DateUtil.getUTCDate().getTime();
+
             startProgressMonitor();
+
             firstCall = false;
         }
         try {
             execLoad();
+
             if (batchSize < 0) {
                 moreToProcess = false;
             }
         } catch (Throwable t) {
             logger.error("Error while loading data.", t);
+
             moreToProcess = false;
         }
+
         if (!moreToProcess) {
             long endTime = DateUtil.getUTCDate().getTime();
 
             logger.info("###############################################");
+
             printStats();
+
             logger.info("Loading completed!!!. Time taken={} for {}", formatTimeTaken(endTime - startTime), countSoFar);
             logger.info("###############################################");
+
             synchronized (twoDForm) {
                 twoDForm.notifyAll();
             }
@@ -118,11 +130,13 @@ public abstract class BaseLoader {
             public void run() {
                 while (isMoreToProcess()) {
                     printStats();
+
                     try {
                         synchronized (twoDForm) {
                             if (!isMoreToProcess()) {
                                 break;
                             }
+
                             twoDForm.wait(30 * 1000);
                         }
                         // Thread.sleep(60 * 1000);
@@ -131,35 +145,42 @@ public abstract class BaseLoader {
                         e.printStackTrace();
                     }
                 }
+
                 logger.info("Monitor Thread exiting!!!");
             }
         };
+
         monitorThread.setDaemon(true);
         monitorThread.start();
     }
 
     public String timeTakenSoFar(int lineCount) {
         countSoFar = lineCount;
+
         long   currTime = DateUtil.getUTCDate().getTime();
         String retStr   = formatTimeTaken(currTime - startTime);
+
         if (currTime - startTime > 0 && countSoFar > 0) {
             double rateSoFar = (double) (countSoFar * 1000) / (currTime - startTime);
+
             retStr = retStr + " " + ". Rate so far for " + countSoFar + " is " + twoDForm.format(rateSoFar);
 
             if (currTime - lastTime > 0 && lineCount - countFromLastTime > 0) {
                 double rateFromLastCall = (lineCount - countFromLastTime) * 1000.0 / (currTime - lastTime);
+
                 retStr = retStr + ", Last " + formatTimeTaken(currTime - lastTime) + " for " + (lineCount - countFromLastTime) + " is " + twoDForm.format(rateFromLastCall);
             }
         }
 
         lastTime          = currTime;
         countFromLastTime = countSoFar;
+
         return retStr;
     }
 
     protected void print(int count, String message) {
         if (count > 0) {
-            logger.info("{] : {}", message.trim(), count);
+            logger.info("{} : {}", message.trim(), count);
         }
     }
 
@@ -167,22 +188,27 @@ public abstract class BaseLoader {
         if (totalTime <= 0) {
             return "0ms";
         }
+
         long   ms       = totalTime % 1000;
         String retValue = ms + "ms";
 
         totalTime = totalTime / 1000;
+
         if (totalTime > 0) {
             long secs = totalTime % 60;
-            retValue = secs + "secs, " + retValue;
 
+            retValue  = secs + "secs, " + retValue;
             totalTime = totalTime / 60;
+
             if (totalTime > 0) {
                 long mins = totalTime % 60;
-                retValue = mins + "mins, " + retValue;
 
+                retValue  = mins + "mins, " + retValue;
                 totalTime = totalTime / 60;
+
                 if (totalTime > 0) {
                     long hrs = totalTime % 60;
+
                     retValue = hrs + "hrs, " + retValue;
                 }
             }

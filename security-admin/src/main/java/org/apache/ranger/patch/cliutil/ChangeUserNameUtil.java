@@ -32,50 +32,67 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChangeUserNameUtil extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(ChangeUserNameUtil.class);
+
     public static String userLoginId;
     public static String currentPassword;
     public static String newUserName;
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     UserMgr userMgr;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             ChangeUserNameUtil loader = (ChangeUserNameUtil) CLIUtil.getBean(ChangeUserNameUtil.class);
+
             loader.init();
+
             if (args.length == 3) {
                 userLoginId     = args[0];
                 currentPassword = args[1];
                 newUserName     = args[2];
+
                 if (StringUtils.isEmpty(userLoginId)) {
                     System.out.println("Invalid login ID. Exiting!!!");
                     logger.info("Invalid login ID. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 if (StringUtils.isEmpty(currentPassword)) {
                     System.out.println("Invalid current password. Exiting!!!");
                     logger.info("Invalid current password. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 if (StringUtils.isEmpty(newUserName)) {
                     System.out.println("Invalid new user name. Exiting!!!");
                     logger.info("Invalid new user name. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 while (loader.isMoreToProcess()) {
                     loader.load();
                 }
+
                 logger.info("Load complete. Exiting!!!");
+
                 System.exit(0);
             } else {
                 System.out.println("ChangeUserNameUtil: Incorrect Arguments \n Usage: \n <loginId> <current-password> <new-username>");
                 logger.error("ChangeUserNameUtil: Incorrect Arguments \n Usage: \n <loginId> <current-password> <new-username>");
+
                 System.exit(1);
             }
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -91,7 +108,9 @@ public class ChangeUserNameUtil extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> ChangeUserNameUtil.execLoad()");
+
         updateUserName();
+
         logger.info("<== ChangeUserNameUtil.execLoad()");
     }
 
@@ -100,20 +119,27 @@ public class ChangeUserNameUtil extends BaseLoader {
         if (daoMgr.getXXPortalUser().findByLoginId(newUserName) != null) {
             System.out.println("New user name already exist in DB!");
             logger.error("New user name already exist in DB");
+
             System.exit(1);
         }
+
         XXPortalUser xPortalUser = daoMgr.getXXPortalUser().findByLoginId(userLoginId);
+
         if (xPortalUser != null) {
-            String dbPassword               = xPortalUser.getPassword();
-            String currentEncryptedPassword = null;
+            String currentEncryptedPassword;
+            String dbPassword = xPortalUser.getPassword();
+
             try {
                 currentEncryptedPassword = userMgr.encrypt(userLoginId, currentPassword);
+
                 if (currentEncryptedPassword.equals(dbPassword)) {
                     userMgr.updateOldUserName(userLoginId, newUserName, currentPassword);
-                    logger.info("User Name '" + userLoginId + "' updated to '" + newUserName + "' sucessfully.");
+
+                    logger.info("User Name '{}' updated to '{}' sucessfully.", userLoginId, newUserName);
                 } else {
                     System.out.println("Invalid user password");
                     logger.error("Invalid user password");
+
                     System.exit(1);
                 }
             } catch (Exception e) {
@@ -122,6 +148,7 @@ public class ChangeUserNameUtil extends BaseLoader {
         } else {
             System.out.println("User does not exist in DB!!");
             logger.error("User does not exist in DB");
+
             System.exit(1);
         }
     }

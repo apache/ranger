@@ -52,16 +52,22 @@ public class PatchForDefaultAuidtFilters_J10050 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForDefaultAuidtFilters_J10050 loader = (PatchForDefaultAuidtFilters_J10050) CLIUtil.getBean(PatchForDefaultAuidtFilters_J10050.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -84,39 +90,43 @@ public class PatchForDefaultAuidtFilters_J10050 extends BaseLoader {
             addDefaultAuditFilters();
         } catch (Exception e) {
             logger.error("Error while PatchForDefaultAuidtFilters", e);
+
             System.exit(1);
         }
+
         logger.info("<== PatchForDefaultAuidtFilters.execLoad()");
     }
 
     private void addDefaultAuditFilters() throws Exception {
         logger.debug("==> PatchForDefaultAuidtFilters_J10050.addDefaultAuditFilters()");
 
-        Map<String, String> defaultAuditFiltersMap = null;
-
         List<XXService> xxServiceList = daoMgr.getXXService().getAll();
 
         if (CollectionUtils.isNotEmpty(xxServiceList)) {
             logger.info("Found {} services", xxServiceList.size());
-            defaultAuditFiltersMap = new HashMap<String, String>();
+
+            Map<String, String> defaultAuditFiltersMap = new HashMap<>();
 
             for (XXService xservice : xxServiceList) {
                 RangerService rangerService = svcStore.getServiceByName(xservice.getName());
+
                 if (rangerService != null && !rangerService.getConfigs().containsKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
                     if (!defaultAuditFiltersMap.containsKey(rangerService.getType())) {
                         List<XXServiceConfigDef> svcConfDefList = daoMgr.getXXServiceConfigDef().findByServiceDefName(rangerService.getType());
+
                         for (XXServiceConfigDef svcConfDef : svcConfDefList) {
                             if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
                                 defaultAuditFiltersMap.put(rangerService.getType(), svcConfDef.getDefaultvalue());
-                                continue;
                             }
                         }
                     }
 
                     if (defaultAuditFiltersMap.get(rangerService.getType()) != null) {
                         Map<String, String> configs = rangerService.getConfigs();
+
                         if (!configs.containsKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
                             logger.info("adding default audit-filter to service {}", rangerService.getName());
+
                             addDefaultAuditFilterConfig(xservice, defaultAuditFiltersMap.get(rangerService.getType()));
                         }
                     } else {
@@ -131,18 +141,24 @@ public class PatchForDefaultAuidtFilters_J10050 extends BaseLoader {
 
     private void addDefaultAuditFilterConfig(XXService xservice, String defaultValue) {
         logger.debug("==> PatchForDefaultAuidtFilters_J10050.addDefaultAuditFilterConfig() for service (id={})", xservice.getId());
+
         try {
             XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
             XXServiceConfigMap    xConfMap    = new XXServiceConfigMap();
+
             xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xservice);
+
             xConfMap.setServiceId(xservice.getId());
             xConfMap.setConfigkey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS);
             xConfMap.setConfigvalue(defaultValue);
+
             xConfMapDao.create(xConfMap);
         } catch (Exception e) {
             logger.error("default audit filters addition for service (id={}) failed!!", xservice.getId());
+
             throw e;
         }
+
         logger.debug("<== PatchForDefaultAuidtFilters_J10050.addDefaultAuditFilterConfig()");
     }
 }

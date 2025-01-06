@@ -37,8 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AccessAuditsService {
-    protected List<SortField>   sortFields = new ArrayList<SortField>();
-    protected List<SearchField> searchFields;
+    protected List<SortField>   sortFields   = new ArrayList<>();
+    protected List<SearchField> searchFields = new ArrayList<>();
 
     @Autowired
     protected RESTErrorUtil    restErrorUtil;
@@ -47,7 +47,6 @@ public class AccessAuditsService {
     protected RangerDaoManager daoManager;
 
     public AccessAuditsService() {
-        searchFields = new ArrayList<SearchField>();
         searchFields.add(new SearchField("id", "id", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("accessType", "access", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("aclEnforcer", "enforcer", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
@@ -98,13 +97,16 @@ public class AccessAuditsService {
     protected void updateUserExclusion(Map<String, Object> paramList) {
         String val = (String) paramList.get("excludeServiceUser");
 
-        if (val != null && Boolean.valueOf(val.trim())) {
+        if (val != null && Boolean.parseBoolean(val.trim())) {
             // add param to negate requestUsers which will be added as filter query
             List<String> excludeUsersList = getExcludeUsersList();
+
             if (CollectionUtils.isNotEmpty(excludeUsersList)) {
                 Object oldUserExclusions = paramList.get("-requestUser");
+
                 if (oldUserExclusions instanceof Collection && (!((Collection<?>) oldUserExclusions).isEmpty())) {
                     excludeUsersList.addAll((Collection<String>) oldUserExclusions);
+
                     paramList.put("-requestUser", excludeUsersList);
                 } else {
                     paramList.put("-requestUser", excludeUsersList);
@@ -115,32 +117,38 @@ public class AccessAuditsService {
 
     private List<String> getExcludeUsersList() {
         //for excluding serviceUsers using existing property in ranger-admin-site
-        List<String> excludeUsersList = new ArrayList<String>(getServiceUserList());
+        List<String> excludeUsersList = new ArrayList<>(getServiceUserList());
 
         //for excluding additional users using new property in ranger-admin-site
         String       additionalExcludeUsers     = PropertiesUtil.getProperty("ranger.accesslogs.exclude.users.list");
-        List<String> additionalExcludeUsersList = null;
+        List<String> additionalExcludeUsersList;
+
         if (StringUtils.isNotBlank(additionalExcludeUsers)) {
             additionalExcludeUsersList = new ArrayList<>(Arrays.asList(StringUtils.split(additionalExcludeUsers, ",")));
+
             for (String serviceUser : additionalExcludeUsersList) {
                 if (StringUtils.isNotBlank(serviceUser) && !excludeUsersList.contains(serviceUser.trim())) {
                     excludeUsersList.add(serviceUser);
                 }
             }
         }
+
         return excludeUsersList;
     }
 
     private List<String> getServiceUserList() {
         String       components       = EmbeddedServiceDefsUtil.DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
-        List<String> serviceUsersList = new ArrayList<String>();
-        List<String> componentNames   = Arrays.asList(StringUtils.split(components, ","));
+        List<String> serviceUsersList = new ArrayList<>();
+        String[]     componentNames   = StringUtils.split(components, ",");
+
         for (String componentName : componentNames) {
             String serviceUser = PropertiesUtil.getProperty("ranger.plugins." + componentName + ".serviceuser");
+
             if (StringUtils.isNotBlank(serviceUser)) {
                 serviceUsersList.add(serviceUser);
             }
         }
+
         return serviceUsersList;
     }
 }

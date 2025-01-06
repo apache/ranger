@@ -35,69 +35,92 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChangePasswordUtil extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(ChangePasswordUtil.class);
+
     public static String   userLoginId;
     public static String   currentPassword;
     public static String   newPassword;
     public static boolean  defaultPwdChangeRequest;
     public static String[] userPwdArgs;
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     UserMgr userMgr;
+
     @Autowired
     RESTErrorUtil restErrorUtil;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             ChangePasswordUtil loader = (ChangePasswordUtil) CLIUtil.getBean(ChangePasswordUtil.class);
+
             loader.init();
+
             userPwdArgs = args;
+
             if (args.length > 4) {
                 if ("-default".equalsIgnoreCase(args[args.length - 1])) {
                     defaultPwdChangeRequest = true;
                 }
+
                 while (loader.isMoreToProcess()) {
                     loader.load();
                 }
+
                 logger.info("Load complete. Exiting!!!");
+
                 System.exit(0);
             } else if (args.length == 3 || args.length == 4) {
                 userLoginId     = args[0];
                 currentPassword = args[1];
                 newPassword     = args[2];
+
                 if (args.length == 4) {
                     if ("-default".equalsIgnoreCase(args[3])) {
                         defaultPwdChangeRequest = true;
                     }
                 }
+
                 if (StringUtils.isEmpty(userLoginId)) {
                     System.out.println("Invalid login ID. Exiting!!!");
                     logger.info("Invalid login ID. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 if (StringUtils.isEmpty(currentPassword)) {
                     System.out.println("Invalid current password. Exiting!!!");
                     logger.info("Invalid current password. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 if (StringUtils.isEmpty(newPassword)) {
                     System.out.println("Invalid new password. Exiting!!!");
                     logger.info("Invalid new password. Exiting!!!");
+
                     System.exit(1);
                 }
+
                 while (loader.isMoreToProcess()) {
                     loader.load();
                 }
+
                 logger.info("Load complete. Exiting!!!");
+
                 System.exit(0);
             } else {
                 System.out.println("ChangePasswordUtil: Incorrect Arguments \n Usage: \n <loginId> <current-password> <new-password>");
                 logger.error("ChangePasswordUtil: Incorrect Arguments \n Usage: \n <loginId> <current-password> <new-password>");
+
                 System.exit(1);
             }
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -113,69 +136,85 @@ public class ChangePasswordUtil extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> ChangePasswordUtil.execLoad()");
+
         if (userPwdArgs.length > 4) {
             updateMultiplePasswords();
         } else {
             updateAdminPassword();
         }
+
         logger.info("<== ChangePasswordUtil.execLoad()");
     }
 
     public void updateAdminPassword() {
         XXPortalUser xPortalUser = daoMgr.getXXPortalUser().findByLoginId(userLoginId);
+
         if (xPortalUser != null) {
-            String dbPassword               = xPortalUser.getPassword();
-            String currentEncryptedPassword = null;
-            String md5EncryptedPassword     = null;
+            String currentEncryptedPassword;
+            String md5EncryptedPassword;
+            String dbPassword = xPortalUser.getPassword();
+
             try {
                 if (config.isFipsEnabled()) {
                     if (defaultPwdChangeRequest) {
                         md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginId, currentPassword);
+
                         if (md5EncryptedPassword.equals(dbPassword)) {
                             validatePassword(newPassword);
                             userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
-                            logger.info("User '" + userLoginId + "' Password updated sucessfully.");
+
+                            logger.info("User '{}' Password updated sucessfully.", userLoginId);
                         } else {
                             System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
                             logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+
                             System.exit(2);
                         }
                     } else if (userMgr.isPasswordValid(userLoginId, dbPassword, currentPassword)) {
                         validatePassword(newPassword);
                         userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
-                        logger.info("User '" + userLoginId + "' Password updated sucessfully.");
+
+                        logger.info("User '{}' Password updated sucessfully.", userLoginId);
                     }
                 } else {
                     currentEncryptedPassword = userMgr.encrypt(userLoginId, currentPassword);
                     if (currentEncryptedPassword.equals(dbPassword)) {
                         validatePassword(newPassword);
                         userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
-                        logger.info("User '" + userLoginId + "' Password updated sucessfully.");
-                    } else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
+
+                        logger.info("User '{}' Password updated sucessfully.", userLoginId);
+                    } else if (defaultPwdChangeRequest) {
                         logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
+
                         md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginId, currentPassword);
+
                         if (md5EncryptedPassword.equals(dbPassword)) {
                             validatePassword(newPassword);
                             userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
-                            logger.info("User '" + userLoginId + "' Password updated sucessfully.");
+
+                            logger.info("User '{}' Password updated sucessfully.", userLoginId);
                         } else {
                             System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
                             logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+
                             System.exit(2);
                         }
                     } else {
                         System.out.println("Invalid user password");
                         logger.error("Invalid user password");
+
                         System.exit(1);
                     }
                 }
             } catch (Exception e) {
                 logger.error("Update Admin Password failure. Detail:  \n", e);
+
                 System.exit(1);
             }
         } else {
             System.out.println("User does not exist in DB!!");
             logger.error("User does not exist in DB");
+
             System.exit(1);
         }
     }
@@ -185,80 +224,102 @@ public class ChangePasswordUtil extends BaseLoader {
             if ("-default".equalsIgnoreCase(userPwdArgs[i])) {
                 continue;
             }
+
             String userLoginIdTemp     = userPwdArgs[i];
             String currentPasswordTemp = userPwdArgs[i + 1];
             String newPasswordTemp     = userPwdArgs[i + 2];
+
             if (StringUtils.isEmpty(userLoginIdTemp)) {
                 System.out.println("Invalid login ID. Exiting!!!");
                 logger.info("Invalid login ID. Exiting!!!");
+
                 System.exit(1);
             }
+
             if (StringUtils.isEmpty(currentPasswordTemp)) {
                 System.out.println("Invalid current password. Exiting!!!");
                 logger.info("Invalid current password. Exiting!!!");
+
                 System.exit(1);
             }
             if (StringUtils.isEmpty(newPasswordTemp)) {
                 System.out.println("Invalid new password. Exiting!!!");
                 logger.info("Invalid new password. Exiting!!!");
+
                 System.exit(1);
             }
+
             XXPortalUser xPortalUser = daoMgr.getXXPortalUser().findByLoginId(userLoginIdTemp);
+
             if (xPortalUser != null) {
-                String dbPassword               = xPortalUser.getPassword();
-                String currentEncryptedPassword = null;
-                String md5EncryptedPassword     = null;
+                String currentEncryptedPassword;
+                String md5EncryptedPassword;
+                String dbPassword = xPortalUser.getPassword();
+
                 try {
                     if (config.isFipsEnabled()) {
                         if (defaultPwdChangeRequest) {
                             currentEncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
+
                             if (currentEncryptedPassword.equals(dbPassword)) {
                                 validatePassword(newPasswordTemp);
                                 userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-                                logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+
+                                logger.info("User '{}' Password updated successfully.", userLoginIdTemp);
                             } else {
                                 System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
                                 logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+
                                 System.exit(2);
                             }
                         } else if (userMgr.isPasswordValid(userLoginIdTemp, dbPassword, currentPasswordTemp)) {
                             validatePassword(newPasswordTemp);
                             userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-                            logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+
+                            logger.info("User '{}' Password updated successfully.", userLoginIdTemp);
                         }
                     } else {
                         currentEncryptedPassword = userMgr.encrypt(userLoginIdTemp, currentPasswordTemp);
+
                         if (currentEncryptedPassword.equals(dbPassword)) {
                             validatePassword(newPasswordTemp);
                             userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-                            logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
-                        } else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
+
+                            logger.info("User '{}' Password updated successfully.", userLoginIdTemp);
+                        } else if (defaultPwdChangeRequest) {
                             logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
+
                             md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
+
                             if (md5EncryptedPassword.equals(dbPassword)) {
                                 validatePassword(newPasswordTemp);
                                 userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-                                logger.info("User '" + userLoginIdTemp + "' Password updated successfully.");
+
+                                logger.info("User '{}' Password updated successfully.", userLoginIdTemp);
                             } else {
                                 System.out.println("Skipping default password change request as provided password doesn't match with existing password.");
                                 logger.error("Skipping default password change request as provided password doesn't match with existing password.");
+
                                 System.exit(2);
                             }
                         } else {
                             System.out.println("Invalid user password");
                             logger.error("Invalid user password");
+
                             System.exit(1);
                             break;
                         }
                     }
                 } catch (Exception e) {
                     logger.error("Update Admin Password failure. Detail:  \n", e);
+
                     System.exit(1);
                     break;
                 }
             } else {
                 System.out.println("User does not exist in DB!!");
                 logger.error("User does not exist in DB");
+
                 System.exit(1);
                 break;
             }
@@ -266,18 +327,23 @@ public class ChangePasswordUtil extends BaseLoader {
     }
 
     private void validatePassword(String newPassword) {
-        boolean checkPassword = false;
+        boolean checkPassword;
+
         if (newPassword != null) {
             checkPassword = newPassword.trim().matches(StringUtil.VALIDATION_CRED);
+
             if (!checkPassword) {
                 String msg = "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.";
+
                 logger.error(msg);
                 System.out.println(msg);
+
                 throw restErrorUtil.createRESTException("serverMsg.changePasswordValidatePassword", MessageEnums.INVALID_PASSWORD, null, msg, null);
             }
         } else {
             logger.error("validatePassword(). Password cannot be blank/null.");
             System.out.println("validatePassword(). Password cannot be blank/null.");
+
             throw restErrorUtil.createRESTException("serverMsg.changePasswordValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
         }
     }

@@ -37,6 +37,7 @@ public class RangerAdminMetricsSourceDenyConditions extends RangerAdminMetricsSo
     @Override
     protected void refresh() {
         Map<String, Long> denyConditionsMetrics = rangerMetricsFetcher.getDenyConditionsMetrics();
+
         addMetricEntries("DenyConditionCount", denyConditionsMetrics);
     }
 }

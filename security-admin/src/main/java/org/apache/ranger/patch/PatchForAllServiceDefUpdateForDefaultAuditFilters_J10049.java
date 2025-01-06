@@ -89,7 +89,7 @@ public class PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 extends Ba
         logger.info("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()");
     }
 
-    private void updateAllServiceDef() throws Exception {
+    private void updateAllServiceDef() {
         logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.updateAllServiceDef()");
         List<XXServiceDef> allXXServiceDefs;
         allXXServiceDefs = daoMgr.getXXServiceDef().getAll();
@@ -141,11 +141,11 @@ public class PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 extends Ba
 
     private RangerServiceConfigDef getDefaultAuditFiltersByServiceDef(String serviceDefName) throws Exception {
         logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.getDefaultAuditFiltersByServiceDef() for serviceDefName:[{}]", serviceDefName);
-        RangerServiceConfigDef ret                     = null;
-        RangerServiceDef       embeddedAtlasServiceDef = null;
-        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDefName);
 
-        List<RangerServiceConfigDef> svcConfDefList = embeddedAtlasServiceDef.getConfigs();
+        RangerServiceConfigDef       ret                     = null;
+        RangerServiceDef             embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDefName);
+        List<RangerServiceConfigDef> svcConfDefList          = embeddedAtlasServiceDef.getConfigs();
+
         for (RangerServiceConfigDef svcConfDef : svcConfDefList) {
             if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
                 ret = svcConfDef;
@@ -160,11 +160,16 @@ public class PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 extends Ba
 
     private void addDefaultAuditFilterConfig(RangerServiceConfigDef config, XXServiceDef createdSvcDef, int sortOrder) {
         logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:[{}] sortOrder: {}", config, sortOrder);
+
         XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
         XXServiceConfigDef    xConfig            = new XXServiceConfigDef();
+
         xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
         xConfig.setOrder(sortOrder);
-        xConfig = xxServiceConfigDao.create(xConfig);
+
+        xxServiceConfigDao.create(xConfig);
+
         logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:[{}] sortOrder: {}", config, sortOrder);
     }
 }

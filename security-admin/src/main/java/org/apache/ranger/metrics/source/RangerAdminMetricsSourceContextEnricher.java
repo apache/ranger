@@ -37,6 +37,7 @@ public class RangerAdminMetricsSourceContextEnricher extends RangerAdminMetricsS
     @Override
     protected void refresh() {
         Map<String, Long> contextEnrichersMetrics = rangerMetricsFetcher.getContextEnrichersMetrics();
+
         addMetricEntries("ContextEnricherCount", contextEnrichersMetrics);
     }
 }

@@ -56,6 +56,7 @@ public class RangerMetricsFetcher {
     public Map<String, Long> getUserMetrics() {
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+
         for (Map.Entry<String, Long> entry : xUserMgr.getUserCountByRole().entrySet()) {
             String role = entry.getKey();
             switch (role) {
@@ -78,8 +79,10 @@ public class RangerMetricsFetcher {
                     LOG.warn("===>> RangerMetricsFetcher.getUserMetrics(): invalid role [{}] type.", role);
                     break;
             }
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
@@ -88,10 +91,13 @@ public class RangerMetricsFetcher {
     public Map<String, Long> getRangerServiceMetrics() {
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getServiceCountByType().entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
@@ -102,10 +108,13 @@ public class RangerMetricsFetcher {
 
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getPolicyCountByTypeAndServiceType(policyType).entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
@@ -114,10 +123,13 @@ public class RangerMetricsFetcher {
     public Map<String, Long> getDenyConditionsMetrics() {
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getPolicyCountByDenyConditionsAndServiceDef().entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
@@ -126,10 +138,13 @@ public class RangerMetricsFetcher {
     public Map<String, Long> getContextEnrichersMetrics() {
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+
         for (String serviceDef : svcStore.findAllServiceDefNamesHavingContextEnrichers()) {
             ret.put(serviceDef, 1L);
+
             total++;
         }
+
         ret.put("Total", total);
 
         return ret;

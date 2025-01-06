@@ -51,15 +51,18 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TrxLogV2MigrationUtil extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(TrxLogV2MigrationUtil.class);
 
-    private final Stats               stats;
+    private final Stats stats;
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
-    private       TransactionTemplate txTemplate;
-    private       Iterator<String>    trxIdIter       = Collections.emptyIterator();
-    private       int                 commitBatchSize = 25;
+
+    private TransactionTemplate txTemplate;
+    private Iterator<String>    trxIdIter       = Collections.emptyIterator();
+    private int                 commitBatchSize = 25;
 
     public TrxLogV2MigrationUtil() {
         this.stats = new Stats();

@@ -38,6 +38,7 @@ public class RangerAdminMetricsSourcePolicyMasking extends RangerAdminMetricsSou
     @Override
     protected void refresh() {
         Map<String, Long> maskingPolicyMetrics = rangerMetricsFetcher.getPolicyMetrics(RangerPolicy.POLICY_TYPE_DATAMASK);
+
         addMetricEntries("MaskingCount", maskingPolicyMetrics);
     }
 }

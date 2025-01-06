@@ -66,16 +66,22 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForAtlasToAddTypeRead_J10040 loader = (PatchForAtlasToAddTypeRead_J10040) CLIUtil.getBean(PatchForAtlasToAddTypeRead_J10040.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -93,85 +99,95 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
     @Override
     public void execLoad() {
         logger.info("==> PatchForAtlasToAddTypeRead_J10040.execLoad()");
+
         try {
             addTypeReadPermissionInServiceDef();
             updateDefaultPolicyForType();
         } catch (Exception e) {
             throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def", e);
         }
+
         logger.info("<== PatchForAtlasToAddTypeRead_J10040.execLoad()");
     }
 
     boolean checkIfTypeReadPermissionSet(RangerPolicyItem item) {
         boolean ret = false;
+
         for (RangerPolicyItemAccess itemAccess : item.getAccesses()) {
             if (ATLAS_ACCESS_TYPES.contains(itemAccess.getType())) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 
     private void addTypeReadPermissionInServiceDef() throws Exception {
         logger.debug("==>> addTypeReadPermissionInServiceDef");
-        RangerServiceDef                           ret                       = null;
-        RangerServiceDef                           embeddedAtlasServiceDef   = null;
-        XXServiceDef                               xXServiceDefObj           = null;
-        RangerServiceDef                           dbAtlasServiceDef         = null;
-        List<RangerServiceDef.RangerResourceDef>   embeddedAtlasResourceDefs = null;
-        List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes  = null;
 
-        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+        RangerServiceDef embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
         if (embeddedAtlasServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
             if (xXServiceDefObj == null) {
                 logger.info("{} service-def not found. No patching is needed", xXServiceDefObj);
+
                 return;
             }
 
-            dbAtlasServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
-
-            embeddedAtlasResourceDefs = embeddedAtlasServiceDef.getResources();
-            embeddedAtlasAccessTypes  = embeddedAtlasServiceDef.getAccessTypes();
+            RangerServiceDef                           dbAtlasServiceDef         = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            List<RangerServiceDef.RangerResourceDef>   embeddedAtlasResourceDefs = embeddedAtlasServiceDef.getResources();
+            List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes  = embeddedAtlasServiceDef.getAccessTypes();
 
             if (checkResourcePresent(embeddedAtlasResourceDefs)) {
                 dbAtlasServiceDef.setResources(embeddedAtlasResourceDefs);
+
                 if (checkAccessPresent(embeddedAtlasAccessTypes)) {
                     dbAtlasServiceDef.setAccessTypes(embeddedAtlasAccessTypes);
                 }
             }
 
             RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
             validator.validate(dbAtlasServiceDef, Action.UPDATE);
-            ret = svcStore.updateServiceDef(dbAtlasServiceDef);
+
+            RangerServiceDef ret = svcStore.updateServiceDef(dbAtlasServiceDef);
+
             if (ret == null) {
                 logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
                 throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
             }
         }
+
         logger.debug("<<== addTypeReadPermissionInServiceDef");
     }
 
     private boolean checkResourcePresent(List<RangerServiceDef.RangerResourceDef> resourceDefs) {
         boolean ret = false;
+
         for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
             if (ATLAS_RESOURCES.contains(resourceDef.getName())) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 
     private boolean checkAccessPresent(List<RangerAccessTypeDef> embeddedAtlasAccessTypes) {
         boolean ret = false;
+
         for (RangerServiceDef.RangerAccessTypeDef accessDef : embeddedAtlasAccessTypes) {
             if (ATLAS_ACCESS_TYPES.contains(accessDef.getName())) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 
@@ -179,10 +195,13 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
         logger.info("==> updateDefaultPolicyForType() ");
 
         XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
         if (xXServiceDefObj == null) {
             logger.debug("ServiceDef not found with name :{}", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+
             return;
         }
+
         Long            xServiceDefId = xXServiceDefObj.getId();
         List<XXService> xxServices    = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
 
@@ -196,12 +215,15 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
                     for (RangerPolicyItem item : rPolicy.getPolicyItems()) {
                         if (!checkIfTypeReadPermissionSet(item)) {
                             List<RangerPolicyItemAccess> itemAccesses = item.getAccesses();
+
                             itemAccesses.add(getTypeReadPolicyItemAccesses());
+
                             item.setAccesses(itemAccesses);
                         }
                     }
 
                     RangerPolicyItem rangerPolicyItemReadType = new RangerPolicyItem();
+
                     rangerPolicyItemReadType.setDelegateAdmin(Boolean.FALSE);
                     rangerPolicyItemReadType.setAccesses(Collections.singletonList(getTypeReadPolicyItemAccesses()));
                     rangerPolicyItemReadType.setGroups(Collections.singletonList(GROUP_PUBLIC));
@@ -212,14 +234,11 @@ public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.B
                 }
             }
         }
+
         logger.info("<== updateDefaultPolicyForType() ");
     }
 
     private RangerPolicyItemAccess getTypeReadPolicyItemAccesses() {
-        RangerPolicyItemAccess policyItemAccess = new RangerPolicyItemAccess();
-        policyItemAccess.setType(TYPE_READ);
-        policyItemAccess.setIsAllowed(true);
-
-        return policyItemAccess;
+        return new RangerPolicyItemAccess(TYPE_READ, true);
     }
 }
