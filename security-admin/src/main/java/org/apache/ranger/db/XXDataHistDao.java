@@ -17,83 +17,86 @@
 
 package org.apache.ranger.db;
 
+import org.apache.ranger.common.DateUtil;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXDataHist;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.NoResultException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXDataHist;
-import org.apache.ranger.common.DateUtil;
-import org.springframework.stereotype.Service;
-
 @Service
 public class XXDataHistDao extends BaseDao<XXDataHist> {
+    public XXDataHistDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXDataHistDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXDataHist findLatestByObjectClassTypeAndObjectId(Integer classType, Long objectId) {
+        if (classType == null || objectId == null) {
+            return null;
+        }
 
-	public XXDataHist findLatestByObjectClassTypeAndObjectId(Integer classType, Long objectId) {
-		if(classType == null || objectId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectId", tClass)
-					.setParameter("classType", classType)
-					.setParameter("objectId", objectId)
-					.setMaxResults(1).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-	
-	public XXDataHist findObjByEventTimeClassTypeAndId(String eventTime, int classType, Long objId) {
-		if (eventTime == null || objId == null) {
-			return null;
-		}
-		Date date=DateUtil.stringToDate(eventTime,"yyyy-MM-dd'T'HH:mm:ss'Z'");
-		if(date==null){
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime", tClass)
-					.setParameter("classType", classType)
-					.setParameter("objectId", objId)
-					.setParameter("createTime", date)
-					.setMaxResults(1).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectId", tClass)
+                    .setParameter("classType", classType)
+                    .setParameter("objectId", objectId)
+                    .setMaxResults(1).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<Integer> getVersionListOfObject(Long objId, int classType) {
-		if (objId == null) {
-			return new ArrayList<Integer>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXDataHist.getVersionListOfObject")
-					.setParameter("objId", objId).setParameter("classType", classType).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<Integer>();
-		}
-	}
+    public XXDataHist findObjByEventTimeClassTypeAndId(String eventTime, int classType, Long objId) {
+        if (eventTime == null || objId == null) {
+            return null;
+        }
 
-	public XXDataHist findObjectByVersionNumber(Long objId, int classType, int versionNo) {
-		if (objId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXDataHist.findObjectByVersionNumber", tClass)
-					.setParameter("objId", objId).setParameter("classType", classType)
-					.setParameter("version", versionNo).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        Date date = DateUtil.stringToDate(eventTime, "yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+        if (date == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime", tClass)
+                    .setParameter("classType", classType)
+                    .setParameter("objectId", objId)
+                    .setParameter("createTime", date)
+                    .setMaxResults(1).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<Integer> getVersionListOfObject(Long objId, int classType) {
+        if (objId == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXDataHist.getVersionListOfObject", Integer.class)
+                    .setParameter("objId", objId).setParameter("classType", classType).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public XXDataHist findObjectByVersionNumber(Long objId, int classType, int versionNo) {
+        if (objId == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXDataHist.findObjectByVersionNumber", tClass)
+                    .setParameter("objId", objId).setParameter("classType", classType)
+                    .setParameter("version", versionNo).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
