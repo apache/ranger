@@ -34,16 +34,16 @@ import java.util.Map;
 public class RangerEnumUtil {
     private static final Logger logger = LoggerFactory.getLogger(RangerEnumUtil.class);
 
-    public final static String ENUM_CommonEnums_ActiveStatus     	= "CommonEnums.ActiveStatus";
-    public final static String ENUM_CommonEnums_ActivationStatus 	= "CommonEnums.ActivationStatus";
-    public final static String ENUM_CommonEnums_BooleanValue     	= "CommonEnums.BooleanValue";
-    public final static String ENUM_CommonEnums_DataType        	= "CommonEnums.DataType";
-    public final static String ENUM_CommonEnums_DeviceType       	= "CommonEnums.DeviceType";
-    public final static String ENUM_CommonEnums_DiffLevel        	= "CommonEnums.DiffLevel";
-    public final static String ENUM_CommonEnums_FileType         	= "CommonEnums.FileType";
-    public final static String ENUM_CommonEnums_FreqType         	= "CommonEnums.FreqType";
-    public final static String ENUM_CommonEnums_MimeType         	= "CommonEnums.MimeType";
-    public final static String ENUM_CommonEnums_NumberFormat     	= "CommonEnums.NumberFormat";
+    public final static String ENUM_CommonEnums_ActiveStatus        = "CommonEnums.ActiveStatus";
+    public final static String ENUM_CommonEnums_ActivationStatus    = "CommonEnums.ActivationStatus";
+    public final static String ENUM_CommonEnums_BooleanValue        = "CommonEnums.BooleanValue";
+    public final static String ENUM_CommonEnums_DataType            = "CommonEnums.DataType";
+    public final static String ENUM_CommonEnums_DeviceType          = "CommonEnums.DeviceType";
+    public final static String ENUM_CommonEnums_DiffLevel           = "CommonEnums.DiffLevel";
+    public final static String ENUM_CommonEnums_FileType            = "CommonEnums.FileType";
+    public final static String ENUM_CommonEnums_FreqType            = "CommonEnums.FreqType";
+    public final static String ENUM_CommonEnums_MimeType            = "CommonEnums.MimeType";
+    public final static String ENUM_CommonEnums_NumberFormat        = "CommonEnums.NumberFormat";
     public final static String ENUM_CommonEnums_ObjectStatus        = "CommonEnums.ObjectStatus";
     public final static String ENUM_CommonEnums_PasswordResetStatus = "CommonEnums.PasswordResetStatus";
     public final static String ENUM_CommonEnums_PriorityType        = "CommonEnums.PriorityType";
@@ -54,17 +54,17 @@ public class RangerEnumUtil {
     public final static String ENUM_CommonEnums_AccessResult        = "CommonEnums.AccessResult";
     public final static String ENUM_CommonEnums_PolicyType          = "CommonEnums.PolicyType";
     public final static String ENUM_CommonEnums_XAAuditType         = "CommonEnums.XAAuditType";
-    public final static String ENUM_CommonEnums_ResourceType 		= "CommonEnums.ResourceType";
-    public final static String ENUM_CommonEnums_XAGroupType 		= "CommonEnums.XAGroupType";
-    public final static String ENUM_CommonEnums_XAPermForType 		= "CommonEnums.XAPermForType";
-    public final static String ENUM_CommonEnums_XAPermType 			= "CommonEnums.XAPermType";
-    public final static String ENUM_CommonEnums_ClassTypes 			= "CommonEnums.ClassTypes";
-    public final static String ENUM_XXAuthSession_AuthStatus 		= "XXAuthSession.AuthStatus";
-    public final static String ENUM_XXAuthSession_AuthType 			= "XXAuthSession.AuthType";
-    public final static String ENUM_XResponse_ResponseStatus 		= "XResponse.ResponseStatus";
+    public final static String ENUM_CommonEnums_ResourceType        = "CommonEnums.ResourceType";
+    public final static String ENUM_CommonEnums_XAGroupType         = "CommonEnums.XAGroupType";
+    public final static String ENUM_CommonEnums_XAPermForType       = "CommonEnums.XAPermForType";
+    public final static String ENUM_CommonEnums_XAPermType          = "CommonEnums.XAPermType";
+    public final static String ENUM_CommonEnums_ClassTypes          = "CommonEnums.ClassTypes";
+    public final static String ENUM_XXAuthSession_AuthStatus        = "XXAuthSession.AuthStatus";
+    public final static String ENUM_XXAuthSession_AuthType          = "XXAuthSession.AuthType";
+    public final static String ENUM_XResponse_ResponseStatus        = "XResponse.ResponseStatus";
 
     protected Map<String, VEnum> enumMap  = new HashMap<String, VEnum>();
-    protected List<VEnum> 		 enumList = new ArrayList<VEnum>();
+    protected List<VEnum>        enumList = new ArrayList<VEnum>();
 
     public List<VEnum> getEnums() {
 		if (enumList.isEmpty()) {
