@@ -17,7 +17,11 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -28,234 +32,242 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 @Component
 public class StringUtil implements Serializable {
-	private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
 
-	static final public String VALIDATION_CRED = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
+    private static final long serialVersionUID = -2102399594424760213L;
 
-	static final public String VALIDATION_NAME = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
-	static final public String VALIDATION_TEXT = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
-	static final public String VALIDATION_LOGINID = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
+    public static final String VALIDATION_CRED       = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
+    public static final String VALIDATION_NAME       = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
+    public static final String VALIDATION_TEXT       = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
+    public static final String VALIDATION_LOGINID    = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
+    public static final String VALIDATION_ALPHA      = "[a-z,A-Z]*";
+    public static final String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
+    public static final String WILDCARD_ASTERISK     = "*";
 
-	static final public String VALIDATION_ALPHA = "[a-z,A-Z]*";
-	static final public String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
-	static final public String WILDCARD_ASTERISK = "*";
-
-	static HashMap<String, Pattern> compiledRegEx = new HashMap<String, Pattern>();
-
-	String[] invalidNames = null;
-
-	/**
+    /**
      *
      */
-	private static final long serialVersionUID = -2102399594424760213L;
+    static HashMap<String, Pattern> compiledRegEx = new HashMap<>();
 
-	public StringUtil() {
-		// Default constructor
-		invalidNames = PropertiesUtil.getPropertyStringList("xa.names.invalid");
-	}
+    String[] invalidNames;
 
-	/**
-	 * Checks if the string is null or empty string.
-	 *
-	 * @param str
-	 * @return true if it is empty string or null
-	 */
-	public boolean isEmpty(String str) {
-		if (str == null || str.trim().length() == 0) {
-			return true;
-		}
-		return false;
-	}
+    public StringUtil() {
+        // Default constructor
+        invalidNames = PropertiesUtil.getPropertyStringList("xa.names.invalid");
+    }
 
-	public boolean isEmptyOrWildcardAsterisk(String str) {
-		return isEmpty(str) || WILDCARD_ASTERISK.equals(str);
-	}
+    public static String trim(String str) {
+        return str != null ? str.trim() : null;
+    }
 
-	public boolean equals(String str1, String str2) {
-		if (str1 == str2) {
-			return true;
-		}
+    public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
+        return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
+    }
 
-		if (str1 == null || str2 == null) {
-			return false;
-		}
+    /**
+     * Checks if the string is null or empty string.
+     *
+     * @param str
+     * @return true if it is empty string or null
+     */
+    public boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
 
-		return str1.equals(str2);
-	}
+    public boolean isEmptyOrWildcardAsterisk(String str) {
+        return isEmpty(str) || WILDCARD_ASTERISK.equals(str);
+    }
 
-	public String toCamelCaseAllWords(String str) {
-		if (str == null) {
-			return null;
-		}
-		str = str.trim().toLowerCase();
-		StringBuilder result = new StringBuilder(str.length());
-		boolean makeUpper = true;
-		boolean lastCharSpace = true;
-		for (int c = 0; c < str.length(); c++) {
-			char ch = str.charAt(c);
-			if (lastCharSpace && ch == ' ') {
-				continue;
-			}
+    public boolean equals(String str1, String str2) {
+        if (str1 == str2) {
+            return true;
+        }
 
-			if (makeUpper) {
-				result.append(str.substring(c, c + 1).toUpperCase());
-				makeUpper = false;
-			} else {
-				result.append(ch);
-			}
-			if (ch == ' ') {
-				lastCharSpace = true;
-				makeUpper = true;
-			} else {
-				lastCharSpace = false;
-			}
+        if (str1 == null || str2 == null) {
+            return false;
+        }
 
-		}
-		return result.toString();
-	}
+        return str1.equals(str2);
+    }
 
-	public boolean validatePassword(String password, String[] invalidValues) {
-		// For now let's make sure we have minimum 8 characters
-		if (password == null) {
-			return false;
-		}
-		password = password.trim();
-		boolean checkPassword = password.matches(VALIDATION_CRED);
-		if (!checkPassword) {
-			return false;
-		}
+    public String toCamelCaseAllWords(String str) {
+        if (str == null) {
+            return null;
+        }
 
-		for (int i = 0; invalidValues != null && i < invalidValues.length; i++) {
-			if (password.equalsIgnoreCase(invalidValues[i])) {
-				return false;
-			}
-		}
-		return true;
-	}
+        str = str.trim().toLowerCase();
 
-	public boolean validateEmail(String emailAddress) {
-		if (emailAddress == null || emailAddress.trim().length() > 128) {
-			return false;
-		}
-		emailAddress = emailAddress.trim();
-		String expression = "^[\\w]([\\-\\.\\w])+[\\w]+@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
-		return regExPatternMatch(expression, emailAddress);
+        StringBuilder result        = new StringBuilder(str.length());
+        boolean       makeUpper     = true;
+        boolean       lastCharSpace = true;
 
-	}
+        for (int c = 0; c < str.length(); c++) {
+            char ch = str.charAt(c);
 
-	public boolean regExPatternMatch(String expression, String inputStr) {
-		boolean ret = false;
+            if (lastCharSpace && ch == ' ') {
+                continue;
+            }
 
-		if (expression != null && inputStr != null) {
-			Pattern pattern = compiledRegEx.get(expression);
+            if (makeUpper) {
+                result.append(str.substring(c, c + 1).toUpperCase());
 
-			if (pattern == null) {
-				pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
-				compiledRegEx.put(expression, pattern);
-			}
+                makeUpper = false;
+            } else {
+                result.append(ch);
+            }
 
-			Matcher matcher = pattern.matcher(inputStr);
-			ret = matcher.matches();
-		}
+            if (ch == ' ') {
+                lastCharSpace = true;
+                makeUpper     = true;
+            } else {
+                lastCharSpace = false;
+            }
+        }
 
-		return ret;
-	}
+        return result.toString();
+    }
 
-	public boolean validateString(String regExStr, String str) {
-		try {
-			return regExPatternMatch(regExStr, str);
-		} catch (Throwable t) {
-			logger.info("Error validating string. str=" + str, t);
-			return false;
-		}
-	}
+    public boolean validatePassword(String password, String[] invalidValues) {
+        // For now let's make sure we have minimum 8 characters
+        if (password == null) {
+            return false;
+        }
 
-	public String normalizeEmail(String email) {
-		// Make email address as lower case
-		if (email != null) {
-			return email.trim().toLowerCase();
-		}
-		return null;
-	}
+        password = password.trim();
 
-	public String[] split(String value) {
-		return split(value, ",");
-	}
+        boolean checkPassword = password.matches(VALIDATION_CRED);
 
-	public String[] split(String value, String delimiter) {
-		if (value != null) {
-			value = value.startsWith(delimiter) ? value.substring(1) : value;
-			String[] splitValues = value.split(delimiter);
-			String[] returnValues = new String[splitValues.length];
-			int c = -1;
-			for (String splitValue : splitValues) {
-				String str = splitValue.trim();
-				if (str.length() > 0) {
-					c++;
-					returnValues[c] = str;
-				}
-			}
-			return returnValues;
-		} else {
-			return new String[0];
-		}
-	}
+        if (!checkPassword) {
+            return false;
+        }
 
-	public static String trim(String str) {
-		return str != null ? str.trim() : null;
-	}
+        for (int i = 0; invalidValues != null && i < invalidValues.length; i++) {
+            if (password.equalsIgnoreCase(invalidValues[i])) {
+                return false;
+            }
+        }
 
-	/**
-	 * @param name
-	 * @return
-	 */
-	public boolean isValidName(String name) {
-		if (name == null || name.trim().length() < 1) {
-			return false;
-		}
-		for (String invalidName : invalidNames) {
-			if (name.toUpperCase().trim()
-					.startsWith(invalidName.toUpperCase().trim())) {
-				return false;
-			}
-		}
-		return validateString(VALIDATION_NAME, name);
-	}
+        return true;
+    }
 
-	/**
-	 * Checks if the list is null or empty list.
-	 *
-	 * @param list
-	 * @return true if it is empty list or null
-	 */
-	public boolean isEmpty(List<?> list) {
-		if (list == null || list.isEmpty()) {
-			return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * Returns a valid user name from the passed string
-	 * @param str
-	 * @return
-	 */
-	public String getValidUserName(String str) {
-		return str.indexOf("/") >= 0 ?
-				 str.substring(0,str.indexOf("/"))
-				:	str.indexOf("@") >= 0 ?
-						str.substring(0,str.indexOf("@"))
-						: str;
-	}
+    public boolean validateEmail(String emailAddress) {
+        if (emailAddress == null || emailAddress.trim().length() > 128) {
+            return false;
+        }
 
-	public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
-		return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
-	}
+        emailAddress = emailAddress.trim();
 
+        String expression = "^[\\w]([\\-\\.\\w])+[\\w]+@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
+
+        return regExPatternMatch(expression, emailAddress);
+    }
+
+    public boolean regExPatternMatch(String expression, String inputStr) {
+        boolean ret = false;
+
+        if (expression != null && inputStr != null) {
+            Pattern pattern = compiledRegEx.get(expression);
+
+            if (pattern == null) {
+                pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+                compiledRegEx.put(expression, pattern);
+            }
+
+            Matcher matcher = pattern.matcher(inputStr);
+            ret = matcher.matches();
+        }
+
+        return ret;
+    }
+
+    public boolean validateString(String regExStr, String str) {
+        try {
+            return regExPatternMatch(regExStr, str);
+        } catch (Throwable t) {
+            logger.info("Error validating string. str={}", str, t);
+
+            return false;
+        }
+    }
+
+    public String normalizeEmail(String email) {
+        // Make email address as lower case
+        if (email != null) {
+            return email.trim().toLowerCase();
+        }
+
+        return null;
+    }
+
+    public String[] split(String value) {
+        return split(value, ",");
+    }
+
+    public String[] split(String value, String delimiter) {
+        if (value != null) {
+            value = value.startsWith(delimiter) ? value.substring(1) : value;
+
+            String[] splitValues  = value.split(delimiter);
+            String[] returnValues = new String[splitValues.length];
+            int      c            = -1;
+
+            for (String splitValue : splitValues) {
+                String str = splitValue.trim();
+
+                if (!str.isEmpty()) {
+                    c++;
+
+                    returnValues[c] = str;
+                }
+            }
+
+            return returnValues;
+        } else {
+            return new String[0];
+        }
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    public boolean isValidName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+
+        for (String invalidName : invalidNames) {
+            if (name.toUpperCase().trim().startsWith(invalidName.toUpperCase().trim())) {
+                return false;
+            }
+        }
+
+        return validateString(VALIDATION_NAME, name);
+    }
+
+    /**
+     * Checks if the list is null or empty list.
+     *
+     * @param list
+     * @return true if it is empty list or null
+     */
+    public boolean isEmpty(List<?> list) {
+        return list == null || list.isEmpty();
+    }
+
+    /**
+     * Returns a valid user name from the passed string
+     *
+     * @param str
+     * @return
+     */
+    public String getValidUserName(String str) {
+        return str.contains("/") ?
+                str.substring(0, str.indexOf("/"))
+                : str.contains("@") ?
+                str.substring(0, str.indexOf("@"))
+                : str;
+    }
 }
