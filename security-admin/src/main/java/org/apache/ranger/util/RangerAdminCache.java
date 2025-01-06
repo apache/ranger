@@ -51,20 +51,8 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
     }
 
     @Override
-    public V get(K key)  {
+    public V get(K key) {
         return super.get(key, RangerContextHolder.getSecurityContext());
-    }
-
-    private static int getLoaderThreadPoolSize(String cacheName) {
-        return RangerAdminConfig.getInstance().getInt(PROP_PREFIX + cacheName + PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT);
-    }
-
-    private static long getValueInitLoadTimeout(String cacheName) {
-        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_INIT_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS);
-    }
-
-    private static long getValueRefreshLoadTimeout(String cacheName) {
-        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_REFRESH_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS);
     }
 
     public abstract static class RangerDBValueLoader<K, V> extends ValueLoader<K, V> {
@@ -77,7 +65,7 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
         }
 
         @Override
-        final public RefreshableValue<V> load(K key, RefreshableValue<V> currentValue, Object context) throws Exception {
+        public final RefreshableValue<V> load(K key, RefreshableValue<V> currentValue, Object context) throws Exception {
             Exception[] ex = new Exception[1];
 
             RefreshableValue<V> ret = txTemplate.execute(status -> {
@@ -112,5 +100,17 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
         }
 
         protected abstract RefreshableValue<V> dbLoad(K key, RefreshableValue<V> currentValue) throws Exception;
+    }
+
+    private static int getLoaderThreadPoolSize(String cacheName) {
+        return RangerAdminConfig.getInstance().getInt(PROP_PREFIX + cacheName + PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT);
+    }
+
+    private static long getValueInitLoadTimeout(String cacheName) {
+        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_INIT_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS);
+    }
+
+    private static long getValueRefreshLoadTimeout(String cacheName) {
+        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_REFRESH_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS);
     }
 }
