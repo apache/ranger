@@ -37,7 +37,8 @@ import java.util.Enumeration;
 
 @Component
 public class RestUtil {
-	private static final Logger LOG 				  = LoggerFactory.getLogger(RestUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RestUtil.class);
+
 	private static final String PROXY_RANGER_URL_PATH = "/ranger";
 
 	public static final String timeOffsetCookieName    = "clientTimeOffset";
@@ -47,6 +48,7 @@ public class RestUtil {
 
 	public static Integer getTimeOffset(HttpServletRequest request) {
 		Integer cookieVal = 0;
+
 		try {
 			Cookie[] cookies    = request.getCookies();
 			String   timeOffset = null;
@@ -56,6 +58,7 @@ public class RestUtil {
 					try {
 						if (timeOffsetCookieName.equals(cookie.getName())) {
 							timeOffset = cookie.getValue();
+
 							if (timeOffset != null) {
 								cookieVal = Integer.parseInt(timeOffset);
 							}
@@ -67,25 +70,29 @@ public class RestUtil {
 				}
 			}
 		} catch (Exception ex) {
-			
+			// ignored
 		}
+
 		return cookieVal;
 	}
 	
 	public static int getClientTimeOffset() {
 		int clientTimeOffsetInMinute = 0;
+
 		try {
 			clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
 		} catch (Exception ex) {
-			
+			// ignored
 		}
+
 		if (clientTimeOffsetInMinute == 0) {
 			try {
 				clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
 			} catch (Exception ex) {
-				
+				// ignored
 			}
 		}
+
 		return clientTimeOffsetInMinute;
 	}
 
@@ -98,7 +105,8 @@ public class RestUtil {
 		while (names.hasMoreElements()) {
 			String         name   = (String) names.nextElement();
 			Enumeration<?> values = httpRequest.getHeaders(name);
-			String value = "";
+			String         value  = "";
+
 			if (values != null) {
 				while (values.hasMoreElements()) {
 					value = (String) values.nextElement();
@@ -118,10 +126,12 @@ public class RestUtil {
 
 		if (xForwardedHost.contains(",")) {
 			LOG.debug("xForwardedHost value is {}, it contains multiple hosts, selecting the first host.", xForwardedHost);
+
 			xForwardedHost = xForwardedHost.split(",")[0].trim();
 		}
 
 		String xForwardedURL = "";
+
 		if (StringUtils.trimToNull(xForwardedProto) != null) {
 			//if header contains x-forwarded-host and x-forwarded-context
 			if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
@@ -133,22 +143,27 @@ public class RestUtil {
 				//if header does not contains x-forwarded-host and x-forwarded-context
 				//preserve the x-forwarded-proto value coming from the request.
 				String requestURL = httpRequest.getRequestURL().toString();
+
 				if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
 					requestURL = requestURL.replaceFirst("http", xForwardedProto);
 				}
+
 				xForwardedURL = requestURL;
 			}
 		}
+
 		return xForwardedURL;
 	}
 
 	public static String constructRedirectURL(HttpServletRequest request, String redirectUrl, String xForwardedURL, String originalUrlQueryParam) {
 		String delimiter = "?";
+
 		if (redirectUrl.contains("?")) {
 			delimiter = "&";
 		}
 
 		String loginURL = redirectUrl + delimiter + originalUrlQueryParam + "=";
+
 		if (StringUtils.trimToNull(xForwardedURL) != null) {
 			loginURL += xForwardedURL + getOriginalQueryString(request);
 		} else {
