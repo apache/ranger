@@ -42,7 +42,7 @@
         <atlas.jackson.databind.version>2.11.3</atlas.jackson.databind.version>
         <atlas.jackson.version>2.11.3</atlas.jackson.version>
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
-        <atlas.version>2.2.0</atlas.version>
+        <atlas.version>2.4.0</atlas.version>
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
