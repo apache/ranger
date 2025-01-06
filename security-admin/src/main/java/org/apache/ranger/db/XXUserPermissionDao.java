@@ -17,11 +17,6 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUserPermission;
@@ -29,124 +24,132 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
-public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
+public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
+    private static final Logger logger = LoggerFactory.getLogger(XXUserPermissionDao.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(XXUserPermissionDao.class);
+    public XXUserPermissionDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXUserPermissionDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXUserPermission> findByModuleId(Long moduleId, boolean isUpdate) {
+        if (moduleId != null) {
+            try {
+                if (isUpdate) {
+                    return getEntityManager()
+                            .createNamedQuery("XXUserPermissionUpdates.findByModuleId", XXUserPermission.class)
+                            .setParameter("moduleId", moduleId)
+                            .getResultList();
+                }
+                return getEntityManager()
+                        .createNamedQuery("XXUserPermission.findByModuleId", XXUserPermission.class)
+                        .setParameter("moduleId", moduleId)
+                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
+                        .getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceUserId not provided.");
 
-	public List<XXUserPermission> findByModuleId(Long moduleId,boolean isUpdate) {
-		if (moduleId != null) {
-			try {
+            return new ArrayList<>();
+        }
 
-				if(isUpdate)
-				{
-					return getEntityManager()
-							.createNamedQuery("XXUserPermissionUpdates.findByModuleId", XXUserPermission.class)
-							.setParameter("moduleId", moduleId)
-							.getResultList();
-				}
-				return getEntityManager()
-						.createNamedQuery("XXUserPermission.findByModuleId", XXUserPermission.class)
-						.setParameter("moduleId", moduleId)
-						.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceUserId not provided.");
-			return new ArrayList<XXUserPermission>();
-		}
-		return null;
-	}
+        return null;
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<XXUserPermission> findByUserPermissionIdAndIsAllowed(Long userId) {
-		if (userId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXUserPermission.findByUserPermissionIdAndIsAllowed")
-						.setParameter("userId", userId)
-						.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceUserId not provided.");
-			return new ArrayList<XXUserPermission>();
-		}
-		return null;
-	}
+    public List<XXUserPermission> findByUserPermissionIdAndIsAllowed(Long userId) {
+        if (userId != null) {
+            try {
+                return getEntityManager()
+                        .createNamedQuery("XXUserPermission.findByUserPermissionIdAndIsAllowed", tClass)
+                        .setParameter("userId", userId)
+                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
+                        .getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceUserId not provided.");
 
+            return new ArrayList<>();
+        }
 
-	public List<XXUserPermission> findByUserPermissionId(Long userId) {
-		if (userId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXUserPermission.findByUserPermissionId", XXUserPermission.class)
-						.setParameter("userId", userId)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceUserId not provided.");
-			return new ArrayList<XXUserPermission>();
-		}
-		return null;
-	}
+        return null;
+    }
 
-	public XXUserPermission findByModuleIdAndPortalUserId(Long userId, Long moduleId) {
-		if (userId != null) {
-			try {
-				return getEntityManager().createNamedQuery("XXUserPermission.findByModuleIdAndPortalUserId", XXUserPermission.class)
-						.setParameter("userId", userId)
-						.setParameter("moduleId", moduleId)
-						.getSingleResult();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceUserId not provided.");
-			return null;
-		}
-		return null;
-	}
+    public List<XXUserPermission> findByUserPermissionId(Long userId) {
+        if (userId != null) {
+            try {
+                return getEntityManager()
+                        .createNamedQuery("XXUserPermission.findByUserPermissionId", XXUserPermission.class)
+                        .setParameter("userId", userId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceUserId not provided.");
 
-	public void deleteByModuleId(Long moduleId) {
-		if (moduleId != null) {
-			try {
-				getEntityManager()
-					.createNamedQuery("XXUserPermission.deleteByModuleId", XXUserPermission.class)
-					.setParameter("moduleId", moduleId)
-					.executeUpdate();
-			} catch (Exception e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ModuleId not provided.");
-		}
-	}
+            return new ArrayList<>();
+        }
 
-	@SuppressWarnings("unchecked")
-	public List<String> findModuleUsersByModuleId(Long moduleId) {
-		if (moduleId != null) {
-			try {
-				return getEntityManager().createNamedQuery("XXUserPermission.findModuleUsersByModuleId", String.class)
-				.setParameter("moduleId", moduleId)
-				.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
-				.getResultList();
-			} catch (Exception e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ModuleId not provided.");
-		}
-		return null;
-	}
+        return null;
+    }
+
+    public XXUserPermission findByModuleIdAndPortalUserId(Long userId, Long moduleId) {
+        if (userId != null) {
+            try {
+                return getEntityManager().createNamedQuery("XXUserPermission.findByModuleIdAndPortalUserId", XXUserPermission.class)
+                        .setParameter("userId", userId)
+                        .setParameter("moduleId", moduleId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceUserId not provided.");
+
+            return null;
+        }
+
+        return null;
+    }
+
+    public void deleteByModuleId(Long moduleId) {
+        if (moduleId != null) {
+            try {
+                getEntityManager()
+                        .createNamedQuery("XXUserPermission.deleteByModuleId", XXUserPermission.class)
+                        .setParameter("moduleId", moduleId)
+                        .executeUpdate();
+            } catch (Exception e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ModuleId not provided.");
+        }
+    }
+
+    public List<String> findModuleUsersByModuleId(Long moduleId) {
+        if (moduleId != null) {
+            try {
+                return getEntityManager().createNamedQuery("XXUserPermission.findModuleUsersByModuleId", String.class)
+                        .setParameter("moduleId", moduleId)
+                        .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
+                        .getResultList();
+            } catch (Exception e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ModuleId not provided.");
+        }
+
+        return null;
+    }
 }

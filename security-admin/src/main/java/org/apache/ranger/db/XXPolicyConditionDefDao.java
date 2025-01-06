@@ -17,49 +17,47 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
+    public XXPolicyConditionDefDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXPolicyConditionDefDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXPolicyConditionDef> findByServiceDefId(Long serviceDefId) {
+        if (serviceDefId == null) {
+            return new ArrayList<>();
+        }
 
-	public List<XXPolicyConditionDef> findByServiceDefId(Long serviceDefId) {
-		if (serviceDefId == null) {
-			return new ArrayList<XXPolicyConditionDef>();
-		}
-		try {
-			List<XXPolicyConditionDef> retList = getEntityManager()
-					.createNamedQuery("XXPolicyConditionDef.findByServiceDefId", tClass)
-					.setParameter("serviceDefId", serviceDefId).getResultList();
-			return retList;
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyConditionDef>();
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyConditionDef.findByServiceDefId", tClass)
+                    .setParameter("serviceDefId", serviceDefId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public XXPolicyConditionDef findByServiceDefIdAndName(Long serviceDefId, String name) {
-		if (serviceDefId == null) {
-			return null;
-		}
-		try {
-			XXPolicyConditionDef retList = getEntityManager()
-					.createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndName", tClass)
-					.setParameter("serviceDefId", serviceDefId)
-					.setParameter("name", name).getSingleResult();
-			return retList;
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-	
+    public XXPolicyConditionDef findByServiceDefIdAndName(Long serviceDefId, String name) {
+        if (serviceDefId == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndName", tClass)
+                    .setParameter("serviceDefId", serviceDefId)
+                    .setParameter("name", name).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
