@@ -57,14 +57,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ranger.kms.metrics.KMSMetricWrapper;
 import org.apache.ranger.kms.metrics.KMSMetrics;
 import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
+import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector.APIMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.hadoop.util.KMSUtil.checkNotEmpty;
@@ -107,14 +106,9 @@ public class KMS {
   @Produces(MediaType.APPLICATION_JSON)
   @SuppressWarnings("unchecked")
   public Response createKey(Map jsonKey, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> createKey()");
-    }
+    LOG.debug("==> createKey()");
 
-    Stopwatch sw = Stopwatch.createStarted();
-
-	try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.KEY_CREATE_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.KEY_CREATE_COUNT, KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       final UserGroupInformation user = HttpUserGroupInformation.get();
@@ -131,9 +125,7 @@ public class KMS {
       final int    length      = (jsonKey.containsKey(KMSRESTConstants.LENGTH_FIELD)) ? (Integer) jsonKey.get(KMSRESTConstants.LENGTH_FIELD) : 0;
       final String description = (String) jsonKey.get(KMSRESTConstants.DESCRIPTION_FIELD);
 
-      if (LOG.isDebugEnabled()) {
-	      LOG.debug("Creating key: name={}, cipher={}, keyLength={}, description={}", name, cipher, length, description);
-      }
+      LOG.debug("Creating key: name={}, cipher={}, keyLength={}, description={}", name, cipher, length, description);
 
       Map<String, String> attributes = (Map<String, String>) jsonKey.get(KMSRESTConstants.ATTRIBUTES_FIELD);
 
@@ -180,31 +172,21 @@ public class KMS {
 
       requestURL = requestURL.substring(0, idx);
 
-      return Response.created(getKeyURI(KMSRESTConstants.SERVICE_VERSION, name))
-                     .type(MediaType.APPLICATION_JSON)
-                     .header("Location", getKeyURI(requestURL, name)).entity(json).build();
+      return Response.created(getKeyURI(KMSRESTConstants.SERVICE_VERSION, name)).type(MediaType.APPLICATION_JSON).header("Location", getKeyURI(requestURL, name)).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in createKey.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
         LOG.debug("<== createKey()");
-      }
     }
   }
 
   @DELETE
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}")
   public Response deleteKey(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> deleteKey({})", name);
-    }
+    LOG.debug("==> deleteKey({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.DELETE_KEY_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.DELETE_KEY_COUNT, KMSMetrics.KMSMetric.DELETE_KEY_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       UserGroupInformation user = HttpUserGroupInformation.get();
@@ -226,13 +208,9 @@ public class KMS {
       return Response.ok().build();
     } catch (Exception e) {
       LOG.error("Exception in deleteKey.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.DELETE_KEY_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== deleteKey({})", name);
-      }
+      LOG.debug("<== deleteKey({})", name);
     }
   }
 
@@ -241,13 +219,9 @@ public class KMS {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response rolloverKey(@PathParam("name") final String name, Map jsonMaterial, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> rolloverKey({})", name);
-    }
+    LOG.debug("==> rolloverKey({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.ROLL_NEW_VERSION_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.ROLL_NEW_VERSION_COUNT, KMSMetrics.KMSMetric.ROLL_NEW_VERSION_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       UserGroupInformation user = HttpUserGroupInformation.get();
@@ -287,26 +261,18 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in rolloverKey.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.ROLL_NEW_VERSION_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== rolloverKey({})", name);
-      }
+      LOG.debug("<== rolloverKey({})", name);
     }
   }
 
   @POST
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.INVALIDATECACHE_RESOURCE)
   public Response invalidateCache(@PathParam("name") final String name) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> invalidateCache({})", name);
-    }
+    LOG.debug("==> invalidateCache({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.INVALIDATE_CACHE_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.INVALIDATE_CACHE_COUNT, KMSMetrics.KMSMetric.INVALIDATE_CACHE_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       checkNotEmpty(name, "name");
@@ -328,13 +294,9 @@ public class KMS {
       return Response.ok().build();
     } catch (Exception e) {
       LOG.error("Exception in invalidateCache for key name {}.", name, e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.INVALIDATE_CACHE_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== invalidateCache({})", name);
-      }
+      LOG.debug("<== invalidateCache({})", name);
     }
   }
 
@@ -342,13 +304,9 @@ public class KMS {
   @Path(KMSRESTConstants.KEYS_METADATA_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeysMetadata(@QueryParam(KMSRESTConstants.KEY) List<String> keyNamesList, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getKeysMetadata()");
-    }
+    LOG.debug("==> getKeysMetadata()");
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_KEYS_METADATA_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEYS_METADATA_COUNT, KMSMetrics.KMSMetric.GET_KEYS_METADATA_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       final UserGroupInformation user     = HttpUserGroupInformation.get();
@@ -364,14 +322,10 @@ public class KMS {
 
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
-      LOG.error("Exception in getKeysmetadata.", e);
-
+      LOG.error("Exception in getKeysMetadata.", e);
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_KEYS_METADATA_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getKeysMetadata()");
-      }
+      LOG.debug("<== getKeysMetadata()");
     }
   }
 
@@ -379,13 +333,9 @@ public class KMS {
   @Path(KMSRESTConstants.KEYS_NAMES_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeyNames(@Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getKeyNames()");
-    }
+    LOG.debug("==> getKeyNames()");
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_KEYS_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEYS_COUNT, KMSMetrics.KMSMetric.GET_KEYS_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       UserGroupInformation user = HttpUserGroupInformation.get();
@@ -399,22 +349,16 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in getkeyNames.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_KEYS_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getKeyNames()");
-      }
+      LOG.debug("<== getKeyNames()");
     }
   }
 
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}")
   public Response getKey(@PathParam("name") String name, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getKey({})", name);
-    }
+    LOG.debug("==> getKey({})", name);
 
     try {
       return getMetadata(name, request);
@@ -423,9 +367,7 @@ public class KMS {
 
       throw e;
     } finally {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getKey({})", name);
-      }
+      LOG.debug("<== getKey({})", name);
     }
   }
 
@@ -433,14 +375,9 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.METADATA_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getMetadata(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getMetadata({})", name);
-    }
+    LOG.debug("==> getMetadata({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_METADATA_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_METADATA_COUNT, KMSMetrics.KMSMetric.GET_METADATA_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
       UserGroupInformation user = HttpUserGroupInformation.get();
 
@@ -456,13 +393,9 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in getMetadata.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_METADATA_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getMetadata({})", name);
-      }
+      LOG.debug("<== getMetadata({})", name);
     }
   }
 
@@ -470,14 +403,9 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.CURRENT_VERSION_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getCurrentVersion(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getCurrentVersion({})", name);
-    }
+    LOG.debug("==> getCurrentVersion({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_CURRENT_KEY_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_CURRENT_KEY_COUNT, KMSMetrics.KMSMetric.GET_CURRENT_KEY_ELAPSED_TIME)) {
       KMSWebApp.getKeyCallsMeter().mark();
       UserGroupInformation user = HttpUserGroupInformation.get();
 
@@ -494,13 +422,9 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in getCurrentVersion.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_CURRENT_KEY_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getCurrentVersion({})", name);
-      }
+      LOG.debug("<== getCurrentVersion({})", name);
     }
   }
 
@@ -508,13 +432,9 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeyVersion(@PathParam("versionName") final String versionName, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getKeyVersion({})", versionName);
-    }
+    LOG.debug("==> getKeyVersion({})", versionName);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_KEY_VERSION_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEY_VERSION_COUNT, KMSMetrics.KMSMetric.GET_KEY_VERSION_ELAPSED_TIME)) {
       KMSWebApp.getKeyCallsMeter().mark();
       UserGroupInformation user = HttpUserGroupInformation.get();
 
@@ -533,51 +453,41 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in getKeyVersion.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_KEY_VERSION_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getKeyVersion({})", versionName);
-      }
+      LOG.debug("<== getKeyVersion({})", versionName);
     }
   }
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + GENERATE_DEK_PATH_CONST)
   @Produces(MediaType.APPLICATION_JSON)
   public Response generateDataKey(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception{
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> generateDataKey(name={}", name);
-    }
-
-    Stopwatch sw = Stopwatch.createStarted();
+    LOG.debug("==> generateDataKey(name={}", name);
 
     try {
       UserGroupInformation user = HttpUserGroupInformation.get();
       checkNotEmpty(name, "name");
 
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT);
-      assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name,request.getRemoteAddr());
+      EncryptedKeyVersion encryptedKeyVersion = null;
+      try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT, KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME)) {
+        assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
+        encryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> provider.generateEncryptedKey(name));
+        kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "generateDataKey execution");
+      }
 
-      EncryptedKeyVersion encryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> provider.generateEncryptedKey(name));
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "generateDataKey execution");
-      sw.reset();
-      sw.start();
+      KeyVersion retKeyVersion = null;
+      try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT, KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME)) {
+        assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, name, request.getRemoteAddr());
 
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT);
-      assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, name, request.getRemoteAddr());
+        EncryptedKeyVersion finalEncryptedKeyVersion = encryptedKeyVersion;
+        retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
+          KMSEncryptedKeyVersion ekv = new KMSEncryptedKeyVersion(finalEncryptedKeyVersion.getEncryptionKeyName(), finalEncryptedKeyVersion.getEncryptionKeyVersionName(),
+                  finalEncryptedKeyVersion.getEncryptedKeyIv(), KeyProviderCryptoExtension.EEK, finalEncryptedKeyVersion.getEncryptedKeyVersion().getMaterial());
 
-      KeyVersion retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
-        KMSEncryptedKeyVersion ekv = new KMSEncryptedKeyVersion(encryptedKeyVersion.getEncryptionKeyName(), encryptedKeyVersion.getEncryptionKeyVersionName(),
-            encryptedKeyVersion.getEncryptedKeyIv(), KeyProviderCryptoExtension.EEK, encryptedKeyVersion.getEncryptedKeyVersion().getMaterial());
-
-        return provider.decryptEncryptedKey(ekv);
-      });
-
-      kmsAudit.ok(user, KMSOp.DECRYPT_EEK, name, "generateDataKey execution");
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
+          return provider.decryptEncryptedKey(ekv);
+        });
+        kmsAudit.ok(user, KMSOp.DECRYPT_EEK, name, "generateDataKey execution");
+      }
 
       Map<String,Object> response = new HashMap<>();
       response.put("edek", KMSUtil.toJSON(encryptedKeyVersion));
@@ -588,9 +498,7 @@ public class KMS {
       LOG.error("Exception in generateDataKey:", e);
       throw new IOException(e);
     } finally {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== generateDataKey(name={}", name);
-      }
+      LOG.debug("<== generateDataKey(name={}", name);
     }
 
   }
@@ -603,12 +511,9 @@ public class KMS {
                                         @QueryParam(KMSRESTConstants.EEK_OP) String edekOp,
                                         @DefaultValue("1") @QueryParam(KMSRESTConstants.EEK_NUM_KEYS) final int numKeys,
                                         @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> generateEncryptedKeys(name={}, eekOp={}, numKeys={})", name, edekOp, numKeys);
-    }
+    LOG.debug("==> generateEncryptedKeys(name={}, eekOp={}, numKeys={})", name, edekOp, numKeys);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
+    try (APIMetric apiElapsedMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT, KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME)) {
       UserGroupInformation user = HttpUserGroupInformation.get();
 
       checkNotEmpty(name, "name");
@@ -618,12 +523,10 @@ public class KMS {
       Object retJSON;
 
       if (edekOp.equals(KMSRESTConstants.EEK_GENERATE)) {
-        this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT);
-        assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name,request.getRemoteAddr());
-
         final List<EncryptedKeyVersion> retEdeks = new LinkedList<>();
 
         try {
+          assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
           user.doAs((PrivilegedExceptionAction<Void>) () -> {
             for (int i = 0; i < numKeys; i++) {
               retEdeks.add(provider.generateEncryptedKey(name));
@@ -631,20 +534,16 @@ public class KMS {
 
             return null;
           });
+
+          kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "");
+          retJSON = new ArrayList();
+
+          for (EncryptedKeyVersion edek : retEdeks) {
+            ((ArrayList) retJSON).add(KMSUtil.toJSON(edek));
+          }
         } catch (Exception e) {
           LOG.error("Exception in generateEncryptedKeys:", e);
-
           throw new IOException(e);
-        }finally {
-          this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-        }
-
-        kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "");
-
-        retJSON = new ArrayList();
-
-        for (EncryptedKeyVersion edek : retEdeks) {
-          ((ArrayList) retJSON).add(KMSUtil.toJSON(edek));
         }
       } else {
         StringBuilder error = new StringBuilder("IllegalArgumentException Wrong ");
@@ -665,12 +564,9 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(retJSON).build();
     } catch (Exception e) {
       LOG.error("Exception in generateEncryptedKeys.", e);
-
       throw e;
     } finally {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== generateEncryptedKeys(name={}, eekOp={}, numKeys={})", name, edekOp, numKeys);
-      }
+      LOG.debug("<== generateEncryptedKeys(name={}, eekOp={}, numKeys={})", name, edekOp, numKeys);
     }
   }
 
@@ -680,14 +576,11 @@ public class KMS {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON )
   public Response reencryptEncryptedKeys(@PathParam("name") final String name, final List<Map> jsonPayload) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
-    }
+    LOG.debug("==> reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
 
     final Stopwatch sw = Stopwatch.createStarted();
 
-    try {
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.REENCRYPT_EEK_BATCH_COUNT);
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.REENCRYPT_EEK_BATCH_COUNT, KMSMetrics.KMSMetric.REENCRYPT_EEK_BATCH_ELAPSED_TIME)) {
       KMSWebApp.getReencryptEEKBatchCallsMeter().mark();
 
       checkNotEmpty(name, "name");
@@ -725,20 +618,14 @@ public class KMS {
 
       kmsAudit.ok(user, KMSOp.REENCRYPT_EEK_BATCH, name,"reencrypted " + ekvs.size() + " keys");
 
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("reencryptEncryptedKeys {} keys for key {} took {}", jsonPayload.size(), name, sw.stop());
-      }
+      LOG.debug("reencryptEncryptedKeys {} keys for key {} took {}", jsonPayload.size(), name, sw.stop());
 
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(retJSON).build();
     } catch (Exception e) {
       LOG.error("Exception in reencryptEncryptedKeys.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.REENCRYPT_EEK_BATCH_ELAPSED_TIME, sw.elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
-      }
+      LOG.debug("<== reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
     }
   }
 
@@ -749,13 +636,9 @@ public class KMS {
   public Response handleEncryptedKeyOp(@PathParam("versionName") final String versionName,
                                        @QueryParam(KMSRESTConstants.EEK_OP) String eekOp,
                                        Map jsonPayload, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> handleEncryptedKeyOp(versionName={}, eekOp={})", versionName, eekOp);
-    }
+    LOG.debug("==> handleEncryptedKeyOp(versionName={}, eekOp={})", versionName, eekOp);
 
-    Optional<KMSMetrics.KMSMetric> oprCode = Optional.empty();
-    final Stopwatch sw = Stopwatch.createStarted();
-    try {
+    try (APIMetric apiMetric = kmsMetricsCollector.captureElapsedTime()) {
       UserGroupInformation user = HttpUserGroupInformation.get();
 
       checkNotEmpty(versionName, "versionName");
@@ -776,10 +659,8 @@ public class KMS {
       Object retJSON;
 
       if (eekOp.equals(KMSRESTConstants.EEK_DECRYPT)) {
-        oprCode = Optional.of(KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME);
         KMSWebApp.getDecryptEEKCallsMeter().mark();
-        this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT);
-
+        apiMetric.setMetrics(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT, KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME);
         assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, keyName, request.getRemoteAddr());
 
         KeyVersion retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
@@ -792,10 +673,8 @@ public class KMS {
 
         kmsAudit.ok(user, KMSOp.DECRYPT_EEK, keyName, "");
       } else if (eekOp.equals(KMSRESTConstants.EEK_REENCRYPT)) {
-        oprCode = Optional.of(KMSMetrics.KMSMetric.EEK_REENCRYPT_ELAPSED_TIME);
         KMSWebApp.getReencryptEEKCallsMeter().mark();
-        this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.EEK_REENCRYPT_COUNT);
-
+        apiMetric.setMetrics(KMSMetrics.KMSMetric.EEK_REENCRYPT_COUNT, KMSMetrics.KMSMetric.EEK_REENCRYPT_ELAPSED_TIME);
         assertAccess(Type.GENERATE_EEK, user, KMSOp.REENCRYPT_EEK, keyName);
 
         EncryptedKeyVersion retEncryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> {
@@ -824,13 +703,9 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(retJSON).build();
     } catch (Exception e) {
       LOG.error("Exception in handleEncryptedKeyOp.", e);
-
       throw e;
     } finally {
-      oprCode.ifPresent( metric -> this.kmsMetricsCollector.updateMetric(metric, sw.stop().elapsed(TimeUnit.MILLISECONDS)));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== handleEncryptedKeyOp(versionName={}, eekOp={})", versionName, eekOp);
-      }
+      LOG.debug("<== handleEncryptedKeyOp(versionName={}, eekOp={})", versionName, eekOp);
     }
   }
 
@@ -838,15 +713,10 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.VERSIONS_SUB_RESOURCE)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeyVersions(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("==> getKeyVersions({})", name);
-    }
+    LOG.debug("==> getKeyVersions({})", name);
 
-    Stopwatch sw = Stopwatch.createStarted();
-    try {
-
+    try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEY_VERSIONS_COUNT, KMSMetrics.KMSMetric.GET_KEY_VERSIONS_ELAPSED_TIME)) {
       KMSWebApp.getKeyCallsMeter().mark();
-      this.kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.GET_KEY_VERSIONS_COUNT);
       UserGroupInformation user = HttpUserGroupInformation.get();
 
       checkNotEmpty(name, "name");
@@ -861,13 +731,9 @@ public class KMS {
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(json).build();
     } catch (Exception e) {
       LOG.error("Exception in getKeyVersions.", e);
-
       throw e;
     } finally {
-      this.kmsMetricsCollector.updateMetric(KMSMetrics.KMSMetric.GET_KEY_VERSIONS_ELAPSED_TIME, sw.stop().elapsed(TimeUnit.MILLISECONDS));
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("<== getKeyVersions({})", name);
-      }
+      LOG.debug("<== getKeyVersions({})", name);
     }
    }
 
@@ -884,7 +750,7 @@ public class KMS {
     Matcher matcher = pattern.matcher(name);
 
     if (!matcher.matches()) {
-      throw new IllegalArgumentException("Key Name : " + name + ", should start with alpha/numeric letters and can have special characters - (hypen) or _ (underscore)");
+      throw new IllegalArgumentException("Key Name : " + name + ", should start with alpha/numeric letters and can have special characters - (hyphen) or _ (underscore)");
     }
   }
 
