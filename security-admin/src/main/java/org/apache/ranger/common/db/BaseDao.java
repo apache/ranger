@@ -43,18 +43,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseDao<T> {
-    private static final Logger logger                          = LoggerFactory.getLogger(BaseDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
+
     private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
     private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
     private static final String NOT_AVAILABLE                   = "Not Available";
     private static final String GDS_TABLES                      = "x_gds_";
     private static       int    BATCH_DELETE_BATCH_SIZE;
+
     protected RangerDaoManager daoManager;
-    protected Class<T> tClass;
-    EntityManager em;
+    protected Class<T>         tClass;
+    EntityManager              em;
 
     public BaseDao(RangerDaoManagerBase daoManager) {
         this.daoManager = (RangerDaoManager) daoManager;
+
         this.init(daoManager.getEntityManager());
     }
 
@@ -71,38 +74,42 @@ public abstract class BaseDao<T> {
     }
 
     public T create(T obj) {
-        T ret = null;
+        T ret;
 
         em.persist(obj);
+
         if (!RangerBizUtil.isBulkMode()) {
             em.flush();
         }
+
         ret = obj;
+
         return ret;
     }
 
     public List<T> batchCreate(List<T> obj) {
-        List<T> ret = null;
+        List<T> ret;
 
         for (int n = 0; n < obj.size(); ++n) {
             em.persist(obj.get(n));
+
             if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.BATCH_PERSIST_SIZE == 0)) {
                 em.flush();
             }
         }
+
         if (!RangerBizUtil.isBulkMode()) {
             em.flush();
         }
 
         ret = obj;
+
         return ret;
     }
 
     public void batchDeleteByIds(String namedQuery, List<Long> ids, String paramName) {
         if (BATCH_DELETE_BATCH_SIZE <= 0) {
-            getEntityManager()
-                    .createNamedQuery(namedQuery, tClass)
-                    .setParameter(paramName, ids).executeUpdate();
+            getEntityManager().createNamedQuery(namedQuery, tClass).setParameter(paramName, ids).executeUpdate();
         } else {
             for (int fromIndex = 0; fromIndex < ids.size(); fromIndex += BATCH_DELETE_BATCH_SIZE) {
                 int toIndex = fromIndex + BATCH_DELETE_BATCH_SIZE;
@@ -111,24 +118,22 @@ public abstract class BaseDao<T> {
                     toIndex = ids.size();
                 }
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
-                }
+                logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
 
                 List<Long> subList = ids.subList(fromIndex, toIndex);
 
-                getEntityManager()
-                        .createNamedQuery(namedQuery, tClass)
-                        .setParameter(paramName, subList).executeUpdate();
+                getEntityManager().createNamedQuery(namedQuery, tClass).setParameter(paramName, subList).executeUpdate();
             }
         }
     }
 
     public T update(T obj) {
         em.merge(obj);
+
         if (!RangerBizUtil.isBulkMode()) {
             em.flush();
         }
+
         return obj;
     }
 
@@ -140,13 +145,17 @@ public abstract class BaseDao<T> {
         if (obj == null) {
             return true;
         }
+
         if (!em.contains(obj)) {
             obj = em.merge(obj);
         }
+
         em.remove(obj);
+
         if (!RangerBizUtil.isBulkMode()) {
             em.flush();
         }
+
         return true;
     }
 
@@ -159,20 +168,26 @@ public abstract class BaseDao<T> {
     }
 
     public T create(T obj, boolean flush) {
-        T ret = null;
+        T ret;
+
         em.persist(obj);
+
         if (flush) {
             em.flush();
         }
+
         ret = obj;
+
         return ret;
     }
 
     public T update(T obj, boolean flush) {
         em.merge(obj);
+
         if (flush) {
             em.flush();
         }
+
         return obj;
     }
 
@@ -180,10 +195,13 @@ public abstract class BaseDao<T> {
         if (obj == null) {
             return true;
         }
+
         em.remove(obj);
+
         if (flush) {
             em.flush();
         }
+
         return true;
     }
 
@@ -191,34 +209,41 @@ public abstract class BaseDao<T> {
         if (id == null) {
             return null;
         }
-        T ret = null;
+
+        T ret;
+
         try {
             ret = em.find(tClass, id);
         } catch (NoResultException e) {
             return null;
         }
+
         return ret;
     }
 
-    public List<T> findByNamedQuery(String namedQuery, String paramName,
-            Object refId) {
-        List<T> ret = new ArrayList<T>();
+    public List<T> findByNamedQuery(String namedQuery, String paramName, Object refId) {
+        List<T> ret = new ArrayList<>();
 
         if (namedQuery == null) {
             return ret;
         }
+
         try {
             TypedQuery<T> qry = em.createNamedQuery(namedQuery, tClass);
+
             qry.setParameter(paramName, refId);
+
             ret = qry.getResultList();
         } catch (NoResultException e) {
             // ignore
         }
+
         return ret;
     }
 
     public List<T> findByParentId(Long parentId) {
         String namedQuery = tClass.getSimpleName() + ".findByParentId";
+
         return findByNamedQuery(namedQuery, "parentId", parentId);
     }
 
@@ -227,15 +252,11 @@ public abstract class BaseDao<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query,
-            boolean userPrefFilter) {
+    public List<T> executeQueryInSecurityContext(Class<T> clazz, Query query, boolean userPrefFilter) {
         // boolean filterEnabled = false;
-        List<T> rtrnList = null;
         // filterEnabled = enableVisiblityFilters(clazz, userPrefFilter);
 
-        rtrnList = query.getResultList();
-
-        return rtrnList;
+        return (List<T>) query.getResultList();
     }
 
     public List<Long> getIds(Query query) {
@@ -247,20 +268,15 @@ public abstract class BaseDao<T> {
     }
 
     public List<T> getAll() {
-        List<T> ret = null;
-        TypedQuery<T> qry = em.createQuery(
-                "SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
-        ret = qry.getResultList();
-        return ret;
+        TypedQuery<T> qry = em.createQuery("SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
+
+        return qry.getResultList();
     }
 
     public Long getAllCount() {
-        Long ret = null;
-        TypedQuery<Long> qry = em.createQuery(
-                "SELECT count(t) FROM " + tClass.getSimpleName() + " t",
-                Long.class);
-        ret = qry.getSingleResult();
-        return ret;
+        TypedQuery<Long> qry = em.createQuery("SELECT count(t) FROM " + tClass.getSimpleName() + " t", Long.class);
+
+        return qry.getSingleResult();
     }
 
     public void updateSequence(String seqName, long nextValue) {
@@ -309,20 +325,21 @@ public abstract class BaseDao<T> {
             st.setString(2, identityInsertStr);
             st.execute();
         } catch (SQLException e) {
-            logger.error("Error while settion identity_insert " + identityInsertStr, e);
+            logger.error("Error while settion identity_insert {}", identityInsertStr, e);
         }
     }
 
     public void updateUserIDReference(String paramName, long oldID) {
         Table table = tClass.getAnnotation(Table.class);
+
         if (table != null) {
             String tableName    = table.name();
             String updatedValue = tableName.contains(GDS_TABLES) ? "1" : "null";
             String query        = "update " + tableName + " set " + paramName + "=" + updatedValue + " where " + paramName + "=" + oldID;
+            int    count        = getEntityManager().createNativeQuery(query).executeUpdate();
 
-            int count = getEntityManager().createNativeQuery(query).executeUpdate();
             if (count > 0) {
-                logger.warn(count + " records updated in table '" + tableName + "' with: set " + paramName + "=" + updatedValue + " where " + paramName + "=" + oldID);
+                logger.warn("{} records updated in table '{}' with: set {}={} where {}={}", count, tableName, paramName, updatedValue, paramName, oldID);
             }
         } else {
             logger.warn("Required annotation `Table` not found");
@@ -349,10 +366,8 @@ public abstract class BaseDao<T> {
     private void init(EntityManager em) {
         this.em = em;
 
-        ParameterizedType genericSuperclass = (ParameterizedType) getClass()
-                .getGenericSuperclass();
-
-        Type type = genericSuperclass.getActualTypeArguments()[0];
+        ParameterizedType genericSuperclass = (ParameterizedType) getClass().getGenericSuperclass();
+        Type              type              = genericSuperclass.getActualTypeArguments()[0];
 
         if (type instanceof ParameterizedType) {
             this.tClass = (Class<T>) ((ParameterizedType) type).getRawType();

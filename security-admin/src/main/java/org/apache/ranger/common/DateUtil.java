@@ -33,11 +33,11 @@ import java.util.TimeZone;
 
 @Component
 public class DateUtil {
-
     private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
     public static String dateToString(Date date, String dateFromat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFromat);
+
         return formatter.format(date);
     }
 
@@ -46,8 +46,10 @@ public class DateUtil {
             Calendar          local  = Calendar.getInstance();
             int               offset = local.getTimeZone().getOffset(local.getTimeInMillis());
             GregorianCalendar utc    = new GregorianCalendar(gmtTimeZone);
+
             utc.setTimeInMillis(local.getTimeInMillis());
             utc.add(Calendar.MILLISECOND, -offset);
+
             return utc.getTime();
         } catch (Exception ex) {
             return null;
@@ -58,12 +60,15 @@ public class DateUtil {
         if (epoh == 0) {
             return null;
         }
+
         try {
             Calendar          local  = Calendar.getInstance();
             int               offset = local.getTimeZone().getOffset(epoh);
             GregorianCalendar utc    = new GregorianCalendar(gmtTimeZone);
+
             utc.setTimeInMillis(epoh);
             utc.add(Calendar.MILLISECOND, -offset);
+
             return utc.getTime();
         } catch (Exception ex) {
             return null;
@@ -74,22 +79,26 @@ public class DateUtil {
         Calendar          local  = Calendar.getInstance();
         int               offset = local.getTimeZone().getOffset(local.getTimeInMillis());
         GregorianCalendar utc    = new GregorianCalendar();
+
         utc.setTimeInMillis(date.getTime());
         utc.add(Calendar.MILLISECOND, offset);
+
         return utc.getTime();
     }
 
     public static Date stringToDate(String dateString, String dateFromat) {
-        SimpleDateFormat simpleDateFormat = null;
-        Date             date             = null;
+        Date date = null;
+
         if (!StringUtils.isEmpty(dateString) && !StringUtils.isEmpty(dateFromat)) {
             try {
-                simpleDateFormat = new SimpleDateFormat(dateFromat);
-                date             = simpleDateFormat.parse(dateString);
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFromat);
+
+                date = simpleDateFormat.parse(dateString);
             } catch (Exception ex) {
                 return null;
             }
         }
+
         return date;
     }
 
@@ -99,19 +108,23 @@ public class DateUtil {
 
     public Date getDateFromNow(int days, int hours, int minutes) {
         Calendar cal = Calendar.getInstance();
+
         cal.add(Calendar.DATE, days);
         cal.add(Calendar.HOUR, hours);
         cal.add(Calendar.MINUTE, minutes);
+
         return cal.getTime();
     }
 
     public Date getDateFromGivenDate(Date date, int days, int hours, int minutes, int second) {
         Calendar cal = Calendar.getInstance();
+
         cal.setTime(date);
         cal.add(Calendar.DATE, days);
         cal.add(Calendar.HOUR, hours);
         cal.add(Calendar.MINUTE, minutes);
         cal.add(Calendar.SECOND, second);
+
         return cal.getTime();
     }
 
@@ -124,10 +137,11 @@ public class DateUtil {
      */
     public Date addTimeOffset(Date date, int mins) {
         if (date == null) {
-            return date;
+            return null;
         }
-        long t       = date.getTime();
-        Date newDate = new Date(t + (mins * 60000L));
-        return newDate;
+
+        long t = date.getTime();
+
+        return new Date(t + (mins * 60000L));
     }
 }

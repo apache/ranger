@@ -34,20 +34,24 @@ import java.util.regex.Pattern;
 
 @Component
 public class StringUtil implements Serializable {
-    static final public String VALIDATION_CRED = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
-    static final public String VALIDATION_NAME    = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
-    static final public String VALIDATION_TEXT    = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
-    static final public String VALIDATION_LOGINID = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
-    static final public String VALIDATION_ALPHA      = "[a-z,A-Z]*";
-    static final public String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
-    static final public String WILDCARD_ASTERISK     = "*";
     private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
+
+    private static final long serialVersionUID = -2102399594424760213L;
+
+    public static final String VALIDATION_CRED       = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
+    public static final String VALIDATION_NAME       = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
+    public static final String VALIDATION_TEXT       = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
+    public static final String VALIDATION_LOGINID    = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
+    public static final String VALIDATION_ALPHA      = "[a-z,A-Z]*";
+    public static final String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
+    public static final String WILDCARD_ASTERISK     = "*";
+
     /**
      *
      */
-    private static final long serialVersionUID = -2102399594424760213L;
-    static HashMap<String, Pattern> compiledRegEx = new HashMap<String, Pattern>();
-    String[] invalidNames = null;
+    static HashMap<String, Pattern> compiledRegEx = new HashMap<>();
+
+    String[] invalidNames;
 
     public StringUtil() {
         // Default constructor
@@ -69,7 +73,7 @@ public class StringUtil implements Serializable {
      * @return true if it is empty string or null
      */
     public boolean isEmpty(String str) {
-        return str == null || str.trim().length() == 0;
+        return str == null || str.trim().isEmpty();
     }
 
     public boolean isEmptyOrWildcardAsterisk(String str) {
@@ -92,22 +96,28 @@ public class StringUtil implements Serializable {
         if (str == null) {
             return null;
         }
+
         str = str.trim().toLowerCase();
+
         StringBuilder result        = new StringBuilder(str.length());
         boolean       makeUpper     = true;
         boolean       lastCharSpace = true;
+
         for (int c = 0; c < str.length(); c++) {
             char ch = str.charAt(c);
+
             if (lastCharSpace && ch == ' ') {
                 continue;
             }
 
             if (makeUpper) {
                 result.append(str.substring(c, c + 1).toUpperCase());
+
                 makeUpper = false;
             } else {
                 result.append(ch);
             }
+
             if (ch == ' ') {
                 lastCharSpace = true;
                 makeUpper     = true;
@@ -115,6 +125,7 @@ public class StringUtil implements Serializable {
                 lastCharSpace = false;
             }
         }
+
         return result.toString();
     }
 
@@ -123,8 +134,11 @@ public class StringUtil implements Serializable {
         if (password == null) {
             return false;
         }
+
         password = password.trim();
+
         boolean checkPassword = password.matches(VALIDATION_CRED);
+
         if (!checkPassword) {
             return false;
         }
@@ -134,6 +148,7 @@ public class StringUtil implements Serializable {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -141,8 +156,11 @@ public class StringUtil implements Serializable {
         if (emailAddress == null || emailAddress.trim().length() > 128) {
             return false;
         }
+
         emailAddress = emailAddress.trim();
+
         String expression = "^[\\w]([\\-\\.\\w])+[\\w]+@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
+
         return regExPatternMatch(expression, emailAddress);
     }
 
@@ -168,7 +186,8 @@ public class StringUtil implements Serializable {
         try {
             return regExPatternMatch(regExStr, str);
         } catch (Throwable t) {
-            logger.info("Error validating string. str=" + str, t);
+            logger.info("Error validating string. str={}", str, t);
+
             return false;
         }
     }
@@ -178,6 +197,7 @@ public class StringUtil implements Serializable {
         if (email != null) {
             return email.trim().toLowerCase();
         }
+
         return null;
     }
 
@@ -188,16 +208,21 @@ public class StringUtil implements Serializable {
     public String[] split(String value, String delimiter) {
         if (value != null) {
             value = value.startsWith(delimiter) ? value.substring(1) : value;
+
             String[] splitValues  = value.split(delimiter);
             String[] returnValues = new String[splitValues.length];
             int      c            = -1;
+
             for (String splitValue : splitValues) {
                 String str = splitValue.trim();
-                if (str.length() > 0) {
+
+                if (!str.isEmpty()) {
                     c++;
+
                     returnValues[c] = str;
                 }
             }
+
             return returnValues;
         } else {
             return new String[0];
@@ -209,15 +234,16 @@ public class StringUtil implements Serializable {
      * @return
      */
     public boolean isValidName(String name) {
-        if (name == null || name.trim().length() < 1) {
+        if (name == null || name.trim().isEmpty()) {
             return false;
         }
+
         for (String invalidName : invalidNames) {
-            if (name.toUpperCase().trim()
-                    .startsWith(invalidName.toUpperCase().trim())) {
+            if (name.toUpperCase().trim().startsWith(invalidName.toUpperCase().trim())) {
                 return false;
             }
         }
+
         return validateString(VALIDATION_NAME, name);
     }
 
@@ -238,9 +264,9 @@ public class StringUtil implements Serializable {
      * @return
      */
     public String getValidUserName(String str) {
-        return str.indexOf("/") >= 0 ?
+        return str.contains("/") ?
                 str.substring(0, str.indexOf("/"))
-                : str.indexOf("@") >= 0 ?
+                : str.contains("@") ?
                 str.substring(0, str.indexOf("@"))
                 : str;
     }

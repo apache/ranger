@@ -27,13 +27,13 @@ package org.apache.ranger.common;
  */
 public class SortField {
     String     paramName;
-
     String     fieldName;
-    boolean    isDefault    = false;
+    boolean    isDefault;
     SORT_ORDER defaultOrder = SORT_ORDER.ASC;
+
     /**
-     * @param string
-     * @param string2
+     * @param paramName
+     * @param fieldName
      */
     public SortField(String paramName, String fieldName) {
         this.paramName = paramName;
@@ -46,8 +46,7 @@ public class SortField {
      * @param fieldName
      * @param isDefault
      */
-    public SortField(String paramName, String fieldName, boolean isDefault,
-            SORT_ORDER defaultOrder) {
+    public SortField(String paramName, String fieldName, boolean isDefault, SORT_ORDER defaultOrder) {
         this.paramName    = paramName;
         this.fieldName    = fieldName;
         this.isDefault    = isDefault;

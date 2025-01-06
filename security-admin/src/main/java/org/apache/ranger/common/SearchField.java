@@ -26,37 +26,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SearchField {
-    private final String clientFieldName;
+    private final String      clientFieldName;
+    private final SEARCH_TYPE searchType;
 
     private String       fieldName;
-
-    private       DATA_TYPE   dataType;
-    private final SEARCH_TYPE searchType;
-    private       String      regEx;
+    private DATA_TYPE    dataType;
+    private String       regEx;
     private String       enumName;
     private int          maxValue;
     private List<String> joinTables;
     private String       joinCriteria;
     private String       customCondition;
+
     /**
      * default constructor
      */
-    public SearchField(String clientFieldName, String fieldName,
-            DATA_TYPE dtype, SEARCH_TYPE stype, String joinTables,
-            String joinCriteria) {
+    public SearchField(String clientFieldName, String fieldName, DATA_TYPE dtype, SEARCH_TYPE stype, String joinTables, String joinCriteria) {
         this.clientFieldName = clientFieldName;
         this.fieldName       = fieldName;
         dataType             = dtype;
         searchType           = stype;
 
         setJoinTables(joinTables);
+
         this.joinCriteria = joinCriteria;
     }
+
     /**
      * constructor
      */
-    public SearchField(String clientFieldName, String fieldName,
-            DATA_TYPE dtype, SEARCH_TYPE stype) {
+    public SearchField(String clientFieldName, String fieldName, DATA_TYPE dtype, SEARCH_TYPE stype) {
         this.clientFieldName = clientFieldName;
         this.fieldName       = fieldName;
         dataType             = dtype;
@@ -73,27 +72,24 @@ public class SearchField {
         searchType           = SEARCH_TYPE.FULL;
     }
 
-    static public SearchField createString(String clientFieldName,
-            String fieldName, SEARCH_TYPE stype, String regEx) {
-        SearchField searchField = new SearchField(clientFieldName, fieldName,
-                DATA_TYPE.STRING, stype);
+    public static SearchField createString(String clientFieldName, String fieldName, SEARCH_TYPE stype, String regEx) {
+        SearchField searchField = new SearchField(clientFieldName, fieldName, DATA_TYPE.STRING, stype);
+
         searchField.setRegEx(regEx);
+
         return searchField;
     }
 
-    static public SearchField createLong(String clientFieldName,
-            String fieldName) {
-        SearchField searchField = new SearchField(clientFieldName, fieldName,
-                DATA_TYPE.INTEGER, SEARCH_TYPE.FULL);
-        return searchField;
+    public static SearchField createLong(String clientFieldName, String fieldName) {
+        return new SearchField(clientFieldName, fieldName, DATA_TYPE.INTEGER, SEARCH_TYPE.FULL);
     }
 
-    static public SearchField createEnum(String clientFieldName,
-            String fieldName, String enumName, int maxValue) {
-        SearchField searchField = new SearchField(clientFieldName, fieldName,
-                DATA_TYPE.INT_LIST, SEARCH_TYPE.FULL);
+    public static SearchField createEnum(String clientFieldName, String fieldName, String enumName, int maxValue) {
+        SearchField searchField = new SearchField(clientFieldName, fieldName, DATA_TYPE.INT_LIST, SEARCH_TYPE.FULL);
+
         searchField.setEnumName(enumName);
         searchField.setMaxValue(maxValue);
+
         return searchField;
     }
 
@@ -174,13 +170,10 @@ public class SearchField {
     public void setJoinTables(String joinTables) {
         if (joinTables != null) {
             if (this.joinTables == null) {
-                this.joinTables = new ArrayList<String>();
+                this.joinTables = new ArrayList<>();
             }
 
             for (String table : joinTables.split(",")) {
-                if (table == null) {
-                    continue;
-                }
                 table = table.trim();
 
                 if (!table.isEmpty() && !this.joinTables.contains(table)) {

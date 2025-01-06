@@ -21,8 +21,7 @@ package org.apache.ranger.common.view;
 
 import java.util.List;
 
-public abstract class VList extends ViewBaseBean implements
-        java.io.Serializable {
+public abstract class VList extends ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -61,7 +60,7 @@ public abstract class VList extends ViewBaseBean implements
     /**
      * Initialize with existing list
      *
-     * @param size
+     * @param objectList
      */
     public VList(@SuppressWarnings("rawtypes") List objectList) {
         int size = 0;
@@ -77,11 +76,13 @@ public abstract class VList extends ViewBaseBean implements
         sortBy     = null;
     }
 
-    abstract public int getListSize();
+    public abstract int getListSize();
 
-    abstract public List<?> getList();
+    public abstract List<?> getList();
 
-    public int getStartIndex() {return startIndex;}
+    public int getStartIndex() {
+        return startIndex;
+    }
 
     /**
      * This method sets the value to the member attribute <b>startIndex</b>. You
@@ -93,7 +94,9 @@ public abstract class VList extends ViewBaseBean implements
         this.startIndex = startIndex;
     }
 
-    public int getPageSize() {return pageSize;}
+    public int getPageSize() {
+        return pageSize;
+    }
 
     /**
      * This method sets the value to the member attribute <b>pageSize</b>. You
@@ -105,7 +108,9 @@ public abstract class VList extends ViewBaseBean implements
         this.pageSize = pageSize;
     }
 
-    public long getTotalCount() {return totalCount;}
+    public long getTotalCount() {
+        return totalCount;
+    }
 
     /**
      * This method sets the value to the member attribute <b>totalCount</b>. You
@@ -136,7 +141,9 @@ public abstract class VList extends ViewBaseBean implements
         this.resultSize = resultSize;
     }
 
-    public String getSortType() {return sortType;}
+    public String getSortType() {
+        return sortType;
+    }
 
     /**
      * This method sets the value to the member attribute <b>sortType</b>. You
@@ -148,7 +155,9 @@ public abstract class VList extends ViewBaseBean implements
         this.sortType = sortType;
     }
 
-    public String getSortBy() {return sortBy;}
+    public String getSortBy() {
+        return sortBy;
+    }
 
     /**
      * This method sets the value to the member attribute <b>sortBy</b>. You

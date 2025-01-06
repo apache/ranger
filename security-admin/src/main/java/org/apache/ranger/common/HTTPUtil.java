@@ -28,13 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class HTTPUtil {
-
     public static final String USER_AGENT = "User-Agent";
-
-    public static final String IPHONE  = "iPhone";
-    public static final String IPAD    = "iPad";
-    public static final String IPOD    = "iPod";
-    public static final String ANDROID = "Android";
+    public static final String IPHONE     = "iPhone";
+    public static final String IPAD       = "iPad";
+    public static final String IPOD       = "iPod";
+    public static final String ANDROID    = "Android";
 
     public int getDeviceType(HttpServletRequest httpRequest) {
         return getDeviceType(httpRequest.getHeader(USER_AGENT));

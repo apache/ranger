@@ -38,12 +38,12 @@ public class RangerRoleCache {
 
     private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-    private static volatile RangerRoleCache sInstance = null;
+    private static volatile RangerRoleCache sInstance;
 
     private final int           waitTimeInSeconds;
     private final ReentrantLock lock = new ReentrantLock();
 
-    RangerRoleCacheWrapper roleCacheWrapper = null;
+    RangerRoleCacheWrapper roleCacheWrapper;
 
     private RangerRoleCache() {
         RangerAdminConfig config = RangerAdminConfig.getInstance();
@@ -52,14 +52,20 @@ public class RangerRoleCache {
     }
 
     public static RangerRoleCache getInstance() {
-        if (sInstance == null) {
+        RangerRoleCache me = sInstance;
+
+        if (me == null) {
             synchronized (RangerRoleCache.class) {
-                if (sInstance == null) {
-                    sInstance = new RangerRoleCache();
+                me = sInstance;
+
+                if (me == null) {
+                    me        = new RangerRoleCache();
+                    sInstance = me;
                 }
             }
         }
-        return sInstance;
+
+        return me;
     }
 
     public RangerRoles getLatestRangerRoleOrCached(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rangerRoleVersionInDB) throws Exception {
@@ -96,9 +102,7 @@ public class RangerRoleCache {
             RangerRoles ret        = null;
             boolean     lockResult = false;
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerRoleCache.getLatestRangerRoles(ServiceName= " + serviceName + " lastKnownRoleVersion= " + lastKnownRoleVersion + " rolesVersionInDB= " + rolesVersionInDB + ")");
-            }
+            LOG.debug("==> RangerRoleCache.getLatestRangerRoles(ServiceName= {} lastKnownRoleVersion= {} rolesVersionInDB= {})", serviceName, lastKnownRoleVersion, rolesVersionInDB);
 
             try {
                 lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
@@ -111,25 +115,21 @@ public class RangerRoleCache {
                     final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
                     Date                  updateTime   = new Date();
 
-                    if (rolesInDB != null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("loading Roles from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs) + " seconds");
-                        }
-                        ret = new RangerRoles();
-
-                        ret.setRangerRoles(rolesInDB);
-                        ret.setRoleUpdateTime(updateTime);
-                        ret.setRoleVersion(rolesVersionInDB);
-
-                        rolesVersion = rolesVersionInDB;
-                        roles        = ret;
-                    } else {
-                        LOG.error("Could not get Ranger Roles from database ...");
-                    }
-                } else {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached RangerRoles");
+                        LOG.debug("loading Roles from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs));
                     }
+
+                    ret = new RangerRoles();
+
+                    ret.setRangerRoles(rolesInDB);
+                    ret.setRoleUpdateTime(updateTime);
+                    ret.setRoleVersion(rolesVersionInDB);
+
+                    rolesVersion = rolesVersionInDB;
+                    roles        = ret;
+                } else {
+                    LOG.debug("Could not get lock in [{}] seconds, returning cached RangerRoles", waitTimeInSeconds);
+
                     ret = getRoles();
                 }
             } catch (InterruptedException exception) {
@@ -140,12 +140,9 @@ public class RangerRoleCache {
                 }
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerRoleCache.getLatestRangerRoles(ServiceName= " + serviceName + " lastKnownRoleVersion= " + lastKnownRoleVersion + " rolesVersionInDB= " + rolesVersionInDB + " RangerRoles= " + ret + ")");
-            }
+            LOG.debug("<== RangerRoleCache.getLatestRangerRoles(ServiceName= {} lastKnownRoleVersion= {} rolesVersionInDB= {} RangerRoles= {})", serviceName, lastKnownRoleVersion, rolesVersionInDB, ret);
 
             return ret;
         }
     }
 }
-

@@ -28,7 +28,10 @@ import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -68,12 +71,13 @@ import java.util.Map.Entry;
 
 @Component
 public class ServiceUtil {
-    static final         Logger LOG                     = LoggerFactory.getLogger(ServiceUtil.class);
+    static final Logger LOG = LoggerFactory.getLogger(ServiceUtil.class);
+
     private static final String REGEX_PREFIX_STR        = "regex:";
     private static final int    REGEX_PREFIX_STR_LENGTH = REGEX_PREFIX_STR.length();
 
-    static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<String, Integer>();
-    static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<String, Integer>();
+    static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<>();
+    static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<>();
     static String               version;
 
     @Autowired
@@ -92,7 +96,7 @@ public class ServiceUtil {
         String ret = null;
 
         for (Map.Entry<String, Integer> e : mapAccessTypeToPermType.entrySet()) {
-            if (e.getValue().intValue() == permType) {
+            if (e.getValue() == permType) {
                 ret = e.getKey();
 
                 break;
@@ -103,18 +107,16 @@ public class ServiceUtil {
     }
 
     public RangerService getServiceByName(@PathParam("name") String name) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceUtil.getServiceByName(" + name + ")");
-        }
+        LOG.debug("==> ServiceUtil.getServiceByName({})", name);
 
-        RangerService ret = null;
+        RangerService ret;
 
         try {
             ret = svcStore.getServiceByName(name);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
-            LOG.error("getServiceByName(" + name + ") failed", excp);
+            LOG.error("getServiceByName({}) failed", name, excp);
 
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
@@ -123,9 +125,7 @@ public class ServiceUtil {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(name), true);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== ServiceUtil.getServiceByName(" + name + "): " + ret);
-        }
+        LOG.debug("<== ServiceUtil.getServiceByName({}): {}", name, ret);
 
         return ret;
     }
@@ -219,18 +219,13 @@ public class ServiceUtil {
         toRangerResourceList(resource.getServices(), "service", Boolean.FALSE, Boolean.FALSE, ret);
         toRangerResourceList(resource.getHiveServices(), "hiveservice", Boolean.FALSE, Boolean.FALSE, ret);
 
-        HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<String, List<VXPermMap>>();
+        HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<>();
 
         // re-group the list with permGroup as the key
         if (resource.getPermMapList() != null) {
             for (VXPermMap permMap : resource.getPermMapList()) {
                 String          permGrp    = permMap.getPermGroup();
-                List<VXPermMap> sortedList = sortedPermMap.get(permGrp);
-
-                if (sortedList == null) {
-                    sortedList = new ArrayList<VXPermMap>();
-                    sortedPermMap.put(permGrp, sortedList);
-                }
+                List<VXPermMap> sortedList = sortedPermMap.computeIfAbsent(permGrp, k -> new ArrayList<>());
 
                 sortedList.add(permMap);
             }
@@ -239,12 +234,11 @@ public class ServiceUtil {
         Integer assetType = getAssetType(service, ret.getService());
 
         for (Entry<String, List<VXPermMap>> entry : sortedPermMap.entrySet()) {
-            List<String>                 userList   = new ArrayList<String>();
-            List<String>                 groupList  = new ArrayList<String>();
-            List<RangerPolicyItemAccess> accessList = new ArrayList<RangerPolicyItemAccess>();
+            List<String>                 userList   = new ArrayList<>();
+            List<String>                 groupList  = new ArrayList<>();
+            List<RangerPolicyItemAccess> accessList = new ArrayList<>();
             String                       ipAddress  = null;
-
-            RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+            RangerPolicyItem             policyItem = new RangerPolicyItem();
 
             for (VXPermMap permMap : entry.getValue()) {
                 if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
@@ -265,6 +259,7 @@ public class ServiceUtil {
 
                 if (StringUtils.equalsIgnoreCase(accessType, "Admin")) {
                     policyItem.setDelegateAdmin(Boolean.TRUE);
+
                     if (assetType != null && assetType == RangerCommonEnums.ASSET_HBASE) {
                         accessList.add(new RangerPolicyItemAccess(accessType));
                     }
@@ -280,7 +275,7 @@ public class ServiceUtil {
             policyItem.setAccesses(accessList);
 
             if (ipAddress != null && !ipAddress.isEmpty()) {
-                RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
+                RangerPolicyItemCondition ipCondition = new RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
 
                 policyItem.addCondition(ipCondition);
             }
@@ -309,21 +304,24 @@ public class ServiceUtil {
         ret.setResourceStatus(policy.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
 
         List<VXAuditMap> auditList = null;
+
         if (policy.getIsAuditEnabled()) {
             VXAuditMap auditMap = new VXAuditMap();
 
             auditMap.setResourceId(policy.getId());
             auditMap.setAuditType(AppConstants.XA_AUDIT_TYPE_ALL);
 
-            auditList = new ArrayList<VXAuditMap>();
+            auditList = new ArrayList<>();
+
             auditList.add(auditMap);
         }
+
         ret.setAuditList(auditList);
 
-        for (Map.Entry<String, RangerPolicy.RangerPolicyResource> e : policy.getResources().entrySet()) {
-            RangerPolicy.RangerPolicyResource res       = e.getValue();
-            String                            resType   = e.getKey();
-            String                            resString = getResourceString(res.getValues());
+        for (Map.Entry<String, RangerPolicyResource> e : policy.getResources().entrySet()) {
+            RangerPolicyResource res       = e.getValue();
+            String               resType   = e.getKey();
+            String               resString = getResourceString(res.getValues());
 
             if ("path".equalsIgnoreCase(resType)) {
                 ret.setName(resString);
@@ -348,6 +346,7 @@ public class ServiceUtil {
                 ret.setHiveServices(resString);
             }
         }
+
         updateResourceName(ret);
 
         List<VXPermMap> permMapList = getVXPermMapList(policy);
@@ -359,20 +358,23 @@ public class ServiceUtil {
 
     public VXAsset publicObjecttoVXAsset(VXRepository vXRepository) {
         VXAsset ret = new VXAsset();
+
         publicDataObjectTovXDataObject(vXRepository, ret);
 
         Integer assetType = toAssetType(vXRepository.getRepositoryType());
 
-        ret.setAssetType(assetType == null ? -1 : assetType.intValue());
+        ret.setAssetType(assetType == null ? -1 : assetType);
         ret.setName(vXRepository.getName());
         ret.setDescription(vXRepository.getDescription());
         ret.setActiveStatus(vXRepository.getIsActive() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
         ret.setConfig(vXRepository.getConfig());
+
         return ret;
     }
 
     public VXRepository vXAssetToPublicObject(VXAsset asset) {
         VXRepository ret = new VXRepository();
+
         vXDataObjectToPublicDataObject(ret, asset);
 
         ret.setRepositoryType(toServiceType(asset.getAssetType()));
@@ -385,38 +387,36 @@ public class ServiceUtil {
         return ret;
     }
 
-    public SearchCriteria getMappedSearchParams(HttpServletRequest request,
-            SearchCriteria searchCriteria) {
+    public SearchCriteria getMappedSearchParams(HttpServletRequest request, SearchCriteria searchCriteria) {
+        Object             typeObj    = searchCriteria.getParamValue("type");
+        Object             statusObj  = searchCriteria.getParamValue("status");
+        ArrayList<Integer> statusList = new ArrayList<>();
 
-        Object typeObj   = searchCriteria.getParamValue("type");
-        Object statusObj = searchCriteria.getParamValue("status");
-
-        ArrayList<Integer> statusList = new ArrayList<Integer>();
         if (statusObj == null) {
             statusList.add(RangerCommonEnums.STATUS_DISABLED);
             statusList.add(RangerCommonEnums.STATUS_ENABLED);
         } else {
-            Boolean status = restErrorUtil.parseBoolean(
-                    request.getParameter("status"), "Invalid value for "
-                            + "status", MessageEnums.INVALID_INPUT_DATA, null,
-                    "status");
-            int statusEnum = (status == null || !status) ? AppConstants.STATUS_DISABLED
-                    : AppConstants.STATUS_ENABLED;
+            Boolean status     = restErrorUtil.parseBoolean(request.getParameter("status"), "Invalid value for status", MessageEnums.INVALID_INPUT_DATA, null, "status");
+            int     statusEnum = (status == null || !status) ? AppConstants.STATUS_DISABLED : AppConstants.STATUS_ENABLED;
+
             statusList.add(statusEnum);
         }
+
         searchCriteria.addParam("status", statusList);
 
         if (typeObj != null) {
             String type     = typeObj.toString();
             int    typeEnum = AppConstants.getEnumFor_AssetType(type);
+
             searchCriteria.addParam("type", typeEnum);
         }
+
         return searchCriteria;
     }
 
     public VXRepositoryList rangerServiceListToPublicObjectList(List<RangerService> serviceList) {
+        List<VXRepository> repoList = new ArrayList<>();
 
-        List<VXRepository> repoList = new ArrayList<VXRepository>();
         for (RangerService service : serviceList) {
             VXRepository vXRepo = toVXRepository(service);
 
@@ -424,8 +424,8 @@ public class ServiceUtil {
                 repoList.add(vXRepo);
             }
         }
-        VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-        return vXRepositoryList;
+
+        return new VXRepositoryList(repoList);
     }
 
     public VXPolicy toVXPolicy(RangerPolicy policy, RangerService service) {
@@ -443,16 +443,17 @@ public class ServiceUtil {
         ret.setIsEnabled(policy.getIsEnabled());
         ret.setRepositoryType(service.getType());
         ret.setIsAuditEnabled(policy.getIsAuditEnabled());
+
         if (policy.getVersion() != null) {
             ret.setVersion(policy.getVersion().toString());
         } else {
             ret.setVersion(version);
         }
 
-        for (Map.Entry<String, RangerPolicy.RangerPolicyResource> e : policy.getResources().entrySet()) {
-            RangerPolicy.RangerPolicyResource res       = e.getValue();
-            String                            resType   = e.getKey();
-            String                            resString = getResourceString(res.getValues());
+        for (Map.Entry<String, RangerPolicyResource> e : policy.getResources().entrySet()) {
+            RangerPolicyResource res       = e.getValue();
+            String               resType   = e.getKey();
+            String               resString = getResourceString(res.getValues());
 
             if ("path".equalsIgnoreCase(resType)) {
                 ret.setResourceName(resString);
@@ -477,10 +478,10 @@ public class ServiceUtil {
                 ret.setHiveServices(resString);
             }
         }
+
         updateResourceName(ret);
 
         List<VXPermMap> vXPermMapList = getVXPermMapList(policy);
-
         List<VXPermObj> vXPermObjList = mapPermMapToPermObj(vXPermMapList);
 
         ret.setPermMapList(vXPermObjList);
@@ -489,16 +490,16 @@ public class ServiceUtil {
     }
 
     public List<VXPermMap> getVXPermMapList(RangerPolicy policy) {
+        List<VXPermMap> permMapList = new ArrayList<>();
+        int             permGroup   = 0;
 
-        List<VXPermMap> permMapList = new ArrayList<VXPermMap>();
-
-        int permGroup = 0;
-        for (RangerPolicy.RangerPolicyItem policyItem : policy.getPolicyItems()) {
+        for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
             String ipAddress = null;
 
-            for (RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
+            for (RangerPolicyItemCondition condition : policyItem.getConditions()) {
                 if ("ipaddress".equalsIgnoreCase(condition.getType())) {
                     List<String> values = condition.getValues();
+
                     if (CollectionUtils.isNotEmpty(values)) {
                         // TODO changes this to properly deal with collection for now just returning 1st item
                         ipAddress = values.get(0);
@@ -541,6 +542,7 @@ public class ServiceUtil {
                     permMapList.add(permMap);
                 }
             }
+
             permGroup++;
 
             for (String groupName : policyItem.getGroups()) {
@@ -574,36 +576,32 @@ public class ServiceUtil {
                     permMapList.add(permMap);
                 }
             }
+
             permGroup++;
         }
+
         return permMapList;
     }
 
     public List<VXPermObj> mapPermMapToPermObj(List<VXPermMap> permMapList) {
-
-        List<VXPermObj>                  permObjList  = new ArrayList<VXPermObj>();
-        HashMap<String, List<VXPermMap>> sortedPemMap = new HashMap<String, List<VXPermMap>>();
+        List<VXPermObj>                  permObjList  = new ArrayList<>();
+        HashMap<String, List<VXPermMap>> sortedPemMap = new HashMap<>();
 
         if (permMapList != null) {
             for (VXPermMap vXPermMap : permMapList) {
-
                 String          permGrp    = vXPermMap.getPermGroup();
-                List<VXPermMap> sortedList = sortedPemMap.get(permGrp);
-                if (sortedList == null) {
-                    sortedList = new ArrayList<VXPermMap>();
-                    sortedPemMap.put(permGrp, sortedList);
-                }
+                List<VXPermMap> sortedList = sortedPemMap.computeIfAbsent(permGrp, k -> new ArrayList<>());
+
                 sortedList.add(vXPermMap);
             }
         }
 
         for (Entry<String, List<VXPermMap>> entry : sortedPemMap.entrySet()) {
-            VXPermObj    vXPermObj = new VXPermObj();
-            List<String> userList  = new ArrayList<String>();
-            List<String> groupList = new ArrayList<String>();
-            List<String> permList  = new ArrayList<String>();
-            String       ipAddress = "";
-
+            VXPermObj       vXPermObj      = new VXPermObj();
+            List<String>    userList       = new ArrayList<>();
+            List<String>    groupList      = new ArrayList<>();
+            List<String>    permList       = new ArrayList<>();
+            String          ipAddress      = "";
             List<VXPermMap> permListForGrp = entry.getValue();
 
             for (VXPermMap permMap : permListForGrp) {
@@ -616,13 +614,16 @@ public class ServiceUtil {
                         groupList.add(permMap.getGroupName());
                     }
                 }
-                String perm = AppConstants.getLabelFor_XAPermType(permMap
-                        .getPermType());
+
+                String perm = AppConstants.getLabelFor_XAPermType(permMap.getPermType());
+
                 if (!permList.contains(perm)) {
                     permList.add(perm);
                 }
+
                 ipAddress = permMap.getIpAddress();
             }
+
             vXPermObj.setUserList(userList);
             vXPermObj.setGroupList(groupList);
             vXPermObj.setPermList(permList);
@@ -630,6 +631,7 @@ public class ServiceUtil {
 
             permObjList.add(vXPermObj);
         }
+
         return permObjList;
     }
 
@@ -648,19 +650,21 @@ public class ServiceUtil {
         ret.setIsEnabled(vXPolicy.getIsEnabled());
         ret.setIsAuditEnabled(vXPolicy.getIsAuditEnabled());
 
-        Integer assetType = toAssetType(service.getType());
-
+        Integer assetType   = toAssetType(service.getType());
         Boolean isRecursive = Boolean.FALSE;
+
         if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getIsRecursive() != null) {
             isRecursive = vXPolicy.getIsRecursive();
         }
 
         Boolean isTableExcludes = Boolean.FALSE;
+
         if (vXPolicy.getTableType() != null) {
             isTableExcludes = vXPolicy.getTableType().equals(RangerCommonEnums.getLabelFor_PolicyType(RangerCommonEnums.POLICY_EXCLUSION));
         }
 
         Boolean isColumnExcludes = Boolean.FALSE;
+
         if (vXPolicy.getColumnType() != null) {
             isColumnExcludes = vXPolicy.getColumnType().equals(RangerCommonEnums.getLabelFor_PolicyType(RangerCommonEnums.POLICY_EXCLUSION));
         }
@@ -705,9 +709,9 @@ public class ServiceUtil {
             List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
 
             for (VXPermObj vXPermObj : vXPermObjList) {
-                List<String>                 userList       = new ArrayList<String>();
-                List<String>                 groupList      = new ArrayList<String>();
-                List<RangerPolicyItemAccess> accessList     = new ArrayList<RangerPolicyItemAccess>();
+                List<String>                 userList       = new ArrayList<>();
+                List<String>                 groupList      = new ArrayList<>();
+                List<RangerPolicyItemAccess> accessList     = new ArrayList<>();
                 String                       ipAddress      = null;
                 boolean                      delegatedAdmin = false;
 
@@ -732,10 +736,12 @@ public class ServiceUtil {
                         if (AppConstants.getEnumFor_XAPermType(perm) != 0) {
                             if ("Admin".equalsIgnoreCase(perm)) {
                                 delegatedAdmin = true;
+
                                 if (assetType != RangerCommonEnums.ASSET_HBASE) {
                                     continue;
                                 }
                             }
+
                             accessList.add(new RangerPolicyItemAccess(perm));
                         }
                     }
@@ -745,7 +751,7 @@ public class ServiceUtil {
                     ipAddress = vXPermObj.getIpAddress();
                 }
 
-                RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+                RangerPolicyItem policyItem = new RangerPolicyItem();
 
                 policyItem.setUsers(userList);
                 policyItem.setGroups(groupList);
@@ -758,7 +764,7 @@ public class ServiceUtil {
                 }
 
                 if (ipAddress != null && !ipAddress.isEmpty()) {
-                    RangerPolicy.RangerPolicyItemCondition ipCondition = new RangerPolicy.RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
+                    RangerPolicyItemCondition ipCondition = new RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
 
                     policyItem.addCondition(ipCondition);
                 }
@@ -771,11 +777,10 @@ public class ServiceUtil {
     }
 
     public VXPolicyList rangerPolicyListToPublic(List<RangerPolicy> rangerPolicyList, SearchFilter filter) {
+        RangerService  service;
+        List<VXPolicy> vXPolicyList    = new ArrayList<>();
+        VXPolicyList   vXPolicyListObj = new VXPolicyList(new ArrayList<>());
 
-        RangerService  service      = null;
-        List<VXPolicy> vXPolicyList = new ArrayList<VXPolicy>();
-
-        VXPolicyList vXPolicyListObj = new VXPolicyList(new ArrayList<VXPolicy>());
         if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
             int    totalCount = rangerPolicyList.size();
             int    startIndex = filter.getStartIndex();
@@ -783,22 +788,29 @@ public class ServiceUtil {
             int    toIndex    = Math.min(startIndex + pageSize, totalCount);
             String sortType   = filter.getSortType();
             String sortBy     = filter.getSortBy();
+
             for (int i = startIndex; i < toIndex; i++) {
                 RangerPolicy policy = rangerPolicyList.get(i);
+
                 try {
                     service = svcStore.getServiceByName(policy.getService());
                 } catch (Exception excp) {
                     throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
                 }
+
                 if (service == null) {
                     throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(policy.getService()), true);
                 }
+
                 VXPolicy vXPolicy = toVXPolicy(policy, service);
+
                 if (vXPolicy != null) {
                     vXPolicyList.add(vXPolicy);
                 }
             }
+
             vXPolicyListObj = new VXPolicyList(vXPolicyList);
+
             vXPolicyListObj.setPageSize(pageSize);
             vXPolicyListObj.setResultSize(vXPolicyList.size());
             vXPolicyListObj.setStartIndex(startIndex);
@@ -806,67 +818,69 @@ public class ServiceUtil {
             vXPolicyListObj.setSortBy(sortBy);
             vXPolicyListObj.setSortType(sortType);
         }
+
         return vXPolicyListObj;
     }
 
     public GrantRevokeRequest toGrantRevokeRequest(VXPolicy vXPolicy) {
-        String             serviceType = null;
-        RangerService      service     = null;
-        GrantRevokeRequest ret         = new GrantRevokeRequest();
+        String             serviceType;
+        RangerService      service;
+        GrantRevokeRequest ret = new GrantRevokeRequest();
 
         if (vXPolicy != null) {
             String serviceName = vXPolicy.getRepositoryName();
+
             try {
                 service = svcStore.getServiceByName(serviceName);
             } catch (Exception e) {
-                LOG.error(HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName);
+                LOG.error("{} No Service Found for ServiceName: {}", HttpServletResponse.SC_BAD_REQUEST, serviceName);
+
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, e.getMessage() + serviceName, true);
             }
 
             if (service != null) {
                 serviceType = service.getType();
             } else {
-                LOG.error(HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName" + serviceName);
+                LOG.error("{} No Service Found for ServiceName {}", HttpServletResponse.SC_BAD_REQUEST, serviceName);
+
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "No Service Found for ServiceName" + serviceName, true);
             }
 
             if (vXPolicy.getGrantor() != null) {
                 ret.setGrantor(vXPolicy.getGrantor());
             }
+
             ret.setEnableAudit(Boolean.TRUE);
-
             ret.setIsRecursive(Boolean.FALSE);
-
             ret.setReplaceExistingPermissions(toBooleanReplacePerm(vXPolicy.isReplacePerm()));
 
             Integer assetType = toAssetType(serviceType);
 
             if (assetType == RangerCommonEnums.ASSET_HIVE) {
+                String              database    = StringUtils.isEmpty(vXPolicy.getDatabases()) ? "*" : vXPolicy.getDatabases();
+                String              table       = getTableOrUdf(vXPolicy);
+                String              column      = StringUtils.isEmpty(vXPolicy.getColumns()) ? "*" : vXPolicy.getColumns();
+                Map<String, String> mapResource = new HashMap<>();
 
-                String database = StringUtils.isEmpty(vXPolicy.getDatabases()) ? "*" : vXPolicy.getDatabases();
-                String table    = getTableOrUdf(vXPolicy);
-                String column   = StringUtils.isEmpty(vXPolicy.getColumns()) ? "*" : vXPolicy.getColumns();
-
-                Map<String, String> mapResource = new HashMap<String, String>();
                 mapResource.put("database", database);
                 mapResource.put("table", table);
                 mapResource.put("column", column);
+
                 ret.setResource(mapResource);
             } else if (assetType == RangerCommonEnums.ASSET_HBASE) {
+                String              tableName   = vXPolicy.getTables();
+                String              colFamily   = vXPolicy.getColumnFamilies();
+                String              qualifier   = vXPolicy.getColumns();
+                Map<String, String> mapResource = new HashMap<>();
 
-                String tableName = vXPolicy.getTables();
                 tableName = StringUtil.isEmpty(tableName) ? "*" : tableName;
-
-                String colFamily = vXPolicy.getColumnFamilies();
                 colFamily = StringUtil.isEmpty(colFamily) ? "*" : colFamily;
-
-                String qualifier = vXPolicy.getColumns();
                 qualifier = StringUtil.isEmpty(qualifier) ? "*" : qualifier;
 
-                Map<String, String> mapResource = new HashMap<String, String>();
                 mapResource.put("table", tableName);
                 mapResource.put("column-family", colFamily);
                 mapResource.put("column", qualifier);
+
                 ret.setResource(mapResource);
             }
 
@@ -897,10 +911,12 @@ public class ServiceUtil {
                             if (AppConstants.getEnumFor_XAPermType(perm) != 0) {
                                 if ("Admin".equalsIgnoreCase(perm)) {
                                     delegatedAdmin = true;
-                                    if (assetType != null && assetType.intValue() != RangerCommonEnums.ASSET_HBASE) {
+
+                                    if (assetType != null && assetType != RangerCommonEnums.ASSET_HBASE) {
                                         continue;
                                     }
                                 }
+
                                 ret.getAccessTypes().add(perm);
                             }
                         }
@@ -922,60 +938,66 @@ public class ServiceUtil {
         boolean           httpEnabled           = PropertiesUtil.getBooleanProperty("ranger.service.http.enabled", true);
         X509Certificate[] certchain             = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         String            ipAddress             = request.getHeader("X-FORWARDED-FOR");
+        boolean           isSecure              = request.isSecure();
+
         if (ipAddress == null) {
             ipAddress = request.getRemoteAddr();
         }
-        boolean isSecure = request.isSecure();
 
         if (serviceName == null || serviceName.isEmpty()) {
             LOG.error("ServiceName not provided");
-            throw restErrorUtil.createRESTException("Unauthorized access.",
-                    MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+
+            throw restErrorUtil.createRESTException("Unauthorized access.", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
         }
 
-        RangerService service = null;
+        RangerService service;
+
         try {
             service = svcStore.getServiceByName(serviceName);
         } catch (Exception e) {
-            LOG.error("Requested Service not found. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
-                    MessageEnums.DATA_NOT_FOUND);
+            LOG.error("Requested Service not found. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found", MessageEnums.DATA_NOT_FOUND);
         }
+
         if (service == null) {
-            LOG.error("Requested Service not found. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
-                    false);
+            LOG.error("Requested Service not found. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName), false);
         }
+
         if (!service.getIsEnabled()) {
-            LOG.error("Requested Service is disabled. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException("Unauthorized access.",
-                    MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+            LOG.error("Requested Service is disabled. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException("Unauthorized access.", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
         }
+
         if (!httpEnabled) {
             if (!isSecure) {
-                LOG.error("Unauthorized access. Only https is allowed. serviceName=" + serviceName);
-                throw restErrorUtil.createRESTException("Unauthorized access -"
-                                + " only https allowed",
-                        MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+                LOG.error("Unauthorized access. Only https is allowed. serviceName={}", serviceName);
+
+                throw restErrorUtil.createRESTException("Unauthorized access -" + " only https allowed", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
             }
+
             if (certchain == null || certchain.length == 0) {
-                LOG.error("Unauthorized access. Unable to get client certificate. serviceName=" + serviceName);
-                throw restErrorUtil.createRESTException("Unauthorized access -"
-                                + " unable to get client certificate",
-                        MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+                LOG.error("Unauthorized access. Unable to get client certificate. serviceName={}", serviceName);
+
+                throw restErrorUtil.createRESTException("Unauthorized access - unable to get client certificate", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
             }
 
             // Check if common name is found in service config
             Map<String, String> configMap    = service.getConfigs();
             String              cnFromConfig = configMap.get("commonNameForCertificate");
-            if (cnFromConfig == null || "".equals(cnFromConfig.trim())) {
+
+            if (cnFromConfig == null || cnFromConfig.trim().isEmpty()) {
                 LOG.error("Unauthorized access. No common name for certificate set. Please check your service config");
-                throw restErrorUtil.createRESTException("Unauthorized access. No common name for certificate set. Please check your service config",
-                        MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+
+                throw restErrorUtil.createRESTException("Unauthorized access. No common name for certificate set. Please check your service config", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
             }
 
             String  cnFromConfigForTest = cnFromConfig;
             boolean isRegEx             = cnFromConfig.toLowerCase().startsWith(REGEX_PREFIX_STR);
+
             if (isRegEx) {
                 cnFromConfigForTest = cnFromConfig.substring(REGEX_PREFIX_STR_LENGTH);
             }
@@ -983,15 +1005,16 @@ public class ServiceUtil {
             // Perform SAN validation
             try {
                 Collection<List<?>> subjectAltNames = certchain[0].getSubjectAlternativeNames();
+
                 if (subjectAltNames != null) {
                     for (List<?> sanItem : subjectAltNames) {
                         if (sanItem.size() == 2) {
                             Integer sanType  = (Integer) sanItem.get(0);
                             String  sanValue = (String) sanItem.get(1);
+
                             if ((sanType == 2 || sanType == 7) && (matchNames(sanValue, cnFromConfigForTest, isRegEx))) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Client Cert verification successful, matched SAN:" + sanValue);
-                                }
+                                LOG.debug("Client Cert verification successful, matched SAN:{}", sanValue);
+
                                 isValidAuthentication = true;
                                 break;
                             }
@@ -1000,71 +1023,72 @@ public class ServiceUtil {
                 }
             } catch (Throwable e) {
                 LOG.error("Unauthorized access. Error getting SAN from certificate", e);
+
                 throw restErrorUtil.createRESTException("Unauthorized access - Error getting SAN from client certificate", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
             }
 
             // Perform common name validation only if SAN validation did not succeed
             if (!isValidAuthentication) {
                 String commonName = null;
+
                 if (certchain != null) {
                     X509Certificate clientCert = certchain[0];
                     String          dn         = clientCert.getSubjectX500Principal().getName();
+
                     try {
                         LdapName ln = new LdapName(dn);
+
                         for (Rdn rdn : ln.getRdns()) {
                             if ("CN".equalsIgnoreCase(rdn.getType())) {
                                 commonName = rdn.getValue() + "";
                                 break;
                             }
                         }
+
                         if (commonName == null) {
-                            LOG.error("Unauthorized access. CName is null. serviceName=" + serviceName);
-                            throw restErrorUtil.createRESTException(
-                                    "Unauthorized access - Unable to find Common Name from ["
-                                            + dn + "]",
-                                    MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+                            LOG.error("Unauthorized access. CName is null. serviceName={}", serviceName);
+
+                            throw restErrorUtil.createRESTException("Unauthorized access - Unable to find Common Name from [" + dn + "]", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
                         }
                     } catch (InvalidNameException e) {
-                        LOG.error("Invalid Common Name. CName=" + commonName + ", serviceName=" + serviceName, e);
-                        throw restErrorUtil.createRESTException(
-                                "Unauthorized access - Invalid Common Name",
-                                MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+                        LOG.error("Invalid Common Name. CName={}, serviceName={}", commonName, serviceName, e);
+
+                        throw restErrorUtil.createRESTException("Unauthorized access - Invalid Common Name", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
                     }
                 }
+
                 if (commonName != null) {
                     if (matchNames(commonName, cnFromConfigForTest, isRegEx)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Client Cert verification successful, matched CN " + commonName + " with " + cnFromConfigForTest + ", wildcard match = " + isRegEx);
-                        }
+                        LOG.debug("Client Cert verification successful, matched CN {} with {}, wildcard match = {}", commonName, cnFromConfigForTest, isRegEx);
+
                         isValidAuthentication = true;
                     }
 
                     if (!isValidAuthentication) {
-                        LOG.error("Unauthorized access. expected [" + cnFromConfigForTest + "], found ["
-                                + commonName + "], serviceName=" + serviceName);
-                        throw restErrorUtil.createRESTException(
-                                "Unauthorized access. expected [" + cnFromConfigForTest
-                                        + "], found [" + commonName + "]",
-                                MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+                        LOG.error("Unauthorized access. expected [{}], found [{}], serviceName={}", cnFromConfigForTest, commonName, serviceName);
+
+                        throw restErrorUtil.createRESTException("Unauthorized access. expected [" + cnFromConfigForTest + "], found [" + commonName + "]", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
                     }
                 }
             }
         } else {
             isValidAuthentication = true;
         }
+
         return isValidAuthentication;
     }
 
     public boolean isValidService(String serviceName, HttpServletRequest request) {
         boolean isValid = true;
+
         if (serviceName == null || serviceName.isEmpty()) {
             LOG.error("ServiceName not provided");
-            isValid = false;
-            throw restErrorUtil.createRESTException("Unauthorized access.",
-                    MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+
+            throw restErrorUtil.createRESTException("Unauthorized access.", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
         }
 
-        RangerService service = null;
+        RangerService service;
+
         try {
             if (null != request.getAttribute("downloadPolicy") && StringUtils.equalsIgnoreCase(request.getAttribute("downloadPolicy").toString(), "secure")) {
                 service = svcStore.getServiceByNameForDP(serviceName);
@@ -1072,56 +1096,63 @@ public class ServiceUtil {
                 service = svcStore.getServiceByName(serviceName);
             }
         } catch (Exception e) {
-            isValid = false;
-            LOG.error("Requested Service not found. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
-                    MessageEnums.DATA_NOT_FOUND);
+            LOG.error("Requested Service not found. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found", MessageEnums.DATA_NOT_FOUND);
         }
+
         if (service == null) {
-            isValid = false;
-            LOG.error("Requested Service not found. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
-                    false);
+            LOG.error("Requested Service not found. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName), false);
         }
+
         if (!service.getIsEnabled()) {
-            isValid = false;
-            LOG.error("Requested Service is disabled. serviceName=" + serviceName);
-            throw restErrorUtil.createRESTException("Unauthorized access.",
-                    MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+            LOG.error("Requested Service is disabled. serviceName={}", serviceName);
+
+            throw restErrorUtil.createRESTException("Unauthorized access.", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
         }
+
         return isValid;
     }
 
-    public List<RangerPolicy> getMatchingPoliciesForResource(HttpServletRequest request,
-            List<RangerPolicy> policyLists) {
-        List<RangerPolicy> policies          = new ArrayList<RangerPolicy>();
+    public List<RangerPolicy> getMatchingPoliciesForResource(HttpServletRequest request, List<RangerPolicy> policyLists) {
+        List<RangerPolicy> policies          = new ArrayList<>();
         final String       serviceTypeForTag = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
+
         if (request != null) {
             String resource    = request.getParameter(SearchFilter.POL_RESOURCE);
             String serviceType = request.getParameter(SearchFilter.SERVICE_TYPE);
+
             if (!StringUtil.isEmpty(resource) && !StringUtil.isEmpty(serviceType)) {
-                List<String>                                   resourceList            = null;
-                Map<String, RangerPolicy.RangerPolicyResource> rangerPolicyResourceMap = null;
-                RangerPolicy.RangerPolicyResource              rangerPolicyResource    = null;
+                List<String>                      resourceList;
+                Map<String, RangerPolicyResource> rangerPolicyResourceMap;
+                RangerPolicyResource              rangerPolicyResource;
+
                 for (RangerPolicy rangerPolicy : policyLists) {
                     if (rangerPolicy != null) {
                         if (serviceTypeForTag.equals(rangerPolicy.getServiceType())) {
                             policies.add(rangerPolicy);
                         } else {
                             rangerPolicyResourceMap = rangerPolicy.getResources();
+
                             if (rangerPolicyResourceMap != null) {
                                 if (rangerPolicyResourceMap.containsKey("path")) {
                                     rangerPolicyResource = rangerPolicyResourceMap.get("path");
+
                                     if (rangerPolicyResource != null) {
                                         resourceList = rangerPolicyResource.getValues();
+
                                         if (CollectionUtils.isNotEmpty(resourceList) && resourceList.contains(resource)) {
                                             policies.add(rangerPolicy);
                                         }
                                     }
                                 } else if (rangerPolicyResourceMap.containsKey("database")) {
                                     rangerPolicyResource = rangerPolicyResourceMap.get("database");
+
                                     if (rangerPolicyResource != null) {
                                         resourceList = rangerPolicyResource.getValues();
+
                                         if (CollectionUtils.isNotEmpty(resourceList) && resourceList.contains(resource)) {
                                             policies.add(rangerPolicy);
                                         }
@@ -1131,17 +1162,19 @@ public class ServiceUtil {
                         }
                     }
                 }
+
                 policyLists.clear();
+
                 if (CollectionUtils.isNotEmpty(policies)) {
                     policyLists.addAll(policies);
                 }
             }
         }
+
         return policyLists;
     }
 
     protected VXDataObject publicDataObjectTovXDataObject(VXDataObject publicDataObject, VXDataObject vXDataObject) {
-
         VXDataObject ret = vXDataObject;
 
         ret.setId(publicDataObject.getId());
@@ -1155,10 +1188,11 @@ public class ServiceUtil {
 
     private void toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, RangerPolicy policy) {
         if (StringUtils.isNotBlank(resourceString)) {
-            RangerPolicy.RangerPolicyResource resource = policy.getResources().get(resourceType);
+            RangerPolicyResource resource = policy.getResources().get(resourceType);
 
             if (resource == null) {
-                resource = new RangerPolicy.RangerPolicyResource();
+                resource = new RangerPolicyResource();
+
                 resource.setIsExcludes(isExcludes);
                 resource.setIsRecursive(isRecursive);
 
@@ -1175,7 +1209,7 @@ public class ServiceUtil {
         String ret = null;
 
         for (Map.Entry<String, Integer> e : mapServiceTypeToAssetType.entrySet()) {
-            if (e.getValue().intValue() == assetType) {
+            if (e.getValue() == assetType) {
                 ret = e.getKey();
 
                 break;
@@ -1440,7 +1474,6 @@ public class ServiceUtil {
     }
 
     private VXDataObject vXDataObjectToPublicDataObject(VXDataObject publicDataObject, VXDataObject vXdataObject) {
-
         VXDataObject ret = publicDataObject;
 
         ret.setId(vXdataObject.getId());
@@ -1454,7 +1487,6 @@ public class ServiceUtil {
 
     private String getUserName(String userName) {
         if (userName == null || userName.isEmpty()) {
-
             XXUser xxUser = xaDaoMgr.getXXUser().findByUserName(userName);
 
             if (xxUser != null) {
@@ -1465,7 +1497,6 @@ public class ServiceUtil {
     }
 
     private String getGroupName(String groupName) {
-
         if (groupName == null || groupName.isEmpty()) {
             XXGroup xxGroup = xaDaoMgr.getXXGroup().findByGroupName(groupName);
 
@@ -1473,6 +1504,7 @@ public class ServiceUtil {
                 groupName = xxGroup.getName();
             }
         }
+
         return groupName;
     }
 
@@ -1486,49 +1518,47 @@ public class ServiceUtil {
         } else if (!StringUtils.isEmpty(udf)) {
             ret = udf;
         }
+
         return ret;
     }
 
     private boolean matchNames(String target, String source, boolean wildcardMatch) {
         boolean matched = false;
+
         if (target != null && source != null) {
             String[] names = (wildcardMatch ? new String[] {source} : source.split(","));
-            for (String n : names) {
 
+            for (String n : names) {
                 if (wildcardMatch) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Wildcard Matching [" + target + "] with [" + n + "]");
-                    }
+                    LOG.debug("Wildcard Matching [{}] with [{}]", target, n);
+
                     if (wildcardMatch(target, n)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Matched target:" + target + " with " + n);
-                        }
+                        LOG.debug("Matched target: {} with {}", target, n);
+
                         matched = true;
                         break;
                     }
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Matching [" + target + "] with [" + n + "]");
-                    }
+                    LOG.debug("Matching [{}] with [{}]", target, n);
+
                     if (target.equalsIgnoreCase(n)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Matched target:" + target + " with " + n);
-                        }
+                        LOG.debug("Matched target:{} with {}", target, n);
+
                         matched = true;
                         break;
                     }
                 }
             }
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("source=[" + source + "],target=[" + target + "], returning false.");
-            }
+            LOG.debug("source=[{}],target=[{}], returning false.", source, target);
         }
+
         return matched;
     }
 
     private boolean wildcardMatch(String target, String source) {
         boolean matched = false;
+
         if (target != null && source != null) {
             try {
                 matched = target.matches(source);
@@ -1536,15 +1566,13 @@ public class ServiceUtil {
                 LOG.error("Error doing wildcard match..", e);
             }
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("source=[" + source + "],target=[" + target + "], returning false.");
-            }
+            LOG.debug("source=[{}],target=[{}], returning false.", source, target);
         }
+
         return matched;
     }
 
     private Boolean toBooleanReplacePerm(boolean isReplacePermission) {
-
         Boolean ret;
 
         if (isReplacePermission) {
@@ -1552,6 +1580,7 @@ public class ServiceUtil {
         } else {
             ret = Boolean.FALSE;
         }
+
         return ret;
     }
 
@@ -1560,24 +1589,23 @@ public class ServiceUtil {
             try {
                 service = svcStore.getServiceByName(serviceName);
             } catch (Exception e) {
-                LOG.info(HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName);
+                LOG.info("{} No Service Found for ServiceName:{}", HttpServletResponse.SC_BAD_REQUEST, serviceName);
+
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, e.getMessage() + serviceName, true);
             }
         }
 
         String serviceType = service != null ? service.getType() : null;
 
-        Integer assetType = toAssetType(serviceType);
-
-        return assetType;
+        return toAssetType(serviceType);
     }
 
     static {
-        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME, Integer.valueOf(RangerCommonEnums.ASSET_HDFS));
-        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME, Integer.valueOf(RangerCommonEnums.ASSET_HBASE));
-        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME, Integer.valueOf(RangerCommonEnums.ASSET_HIVE));
-        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME, Integer.valueOf(RangerCommonEnums.ASSET_KNOX));
-        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_STORM_NAME, Integer.valueOf(RangerCommonEnums.ASSET_STORM));
+        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME, RangerCommonEnums.ASSET_HDFS);
+        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HBASE_NAME, RangerCommonEnums.ASSET_HBASE);
+        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME, RangerCommonEnums.ASSET_HIVE);
+        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KNOX_NAME, RangerCommonEnums.ASSET_KNOX);
+        mapServiceTypeToAssetType.put(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_STORM_NAME, RangerCommonEnums.ASSET_STORM);
 
         mapAccessTypeToPermType.put("Unknown", 0);
         mapAccessTypeToPermType.put("Reset", 1);
@@ -1622,4 +1650,3 @@ public class ServiceUtil {
         version = "0";
     }
 }
-	

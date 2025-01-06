@@ -34,9 +34,9 @@ public class SearchValue {
     static final Logger logger = LoggerFactory.getLogger(SearchValue.class);
 
     SearchField searchField;
-    Object      value     = null;
-    List<?>     valueList = null;
-    boolean     isNull    = false;
+    Object      value;
+    List<?>     valueList;
+    boolean     isNull;
 
     /**
      * @return the value
@@ -45,10 +45,13 @@ public class SearchValue {
         if (value != null) {
             return value;
         }
+
         if (valueList.size() == 1) {
             return valueList.get(0);
         }
+
         logger.error("getValue() called for null.", new Throwable());
+
         return value;
     }
 

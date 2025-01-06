@@ -34,20 +34,19 @@ import java.util.Set;
 public class SearchCriteria {
     Logger logger = LoggerFactory.getLogger(SearchCriteria.class);
 
-    int                     startIndex       = 0;
+    int                     startIndex;
     int                     maxRows          = Integer.MAX_VALUE;
-    String                  sortBy           = null;
-    String                  sortType         = null;
+    String                  sortBy;
+    String                  sortType;
     boolean                 getCount         = true;
-    Number                  ownerId          = null;
-    boolean                 familyOnly       = false;
-    boolean                 getChildren      = false;
-    boolean                 isDistinct       = false;
-    HashMap<String, Object> paramList        = new HashMap<String, Object>();
-    Set<String>             nullParamList    = new HashSet<String>();
-    Set<String>             notNullParamList = new HashSet<String>();
-
-    List<SearchGroup> searchGroups = new ArrayList<SearchGroup>();
+    Number                  ownerId;
+    boolean                 familyOnly;
+    boolean                 getChildren;
+    boolean                 isDistinct;
+    HashMap<String, Object> paramList        = new HashMap<>();
+    Set<String>             nullParamList    = new HashSet<>();
+    Set<String>             notNullParamList = new HashSet<>();
+    List<SearchGroup>       searchGroups     = new ArrayList<>();
 
     public SearchCriteria() {}
 
@@ -143,8 +142,8 @@ public class SearchCriteria {
     }
 
     /**
-     * @param string
-     * @param caId
+     * @param name
+     * @param value
      */
     public void addParam(String name, Object value) {
         paramList.put(name, value);
@@ -186,13 +185,12 @@ public class SearchCriteria {
      * @param isDistinct the isDistinct to set
      */
     public void setDistinct(boolean isDistinct) {
+//        int dbFlavor = RangerBizUtil.getDBFlavor();
+//        if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
+//            isDistinct = false;
+//            logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT clause from select statement.");
+//        }
 
-//		int dbFlavor = RangerBizUtil.getDBFlavor();
-//		if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-//			isDistinct = false;
-//			logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT "
-//					+ "clause from select statement.");
-//		}
         this.isDistinct = isDistinct;
     }
 }

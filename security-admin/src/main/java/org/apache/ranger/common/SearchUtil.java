@@ -39,7 +39,7 @@ import java.util.Map;
 
 @Component
 public class SearchUtil {
-    final static Logger logger = LoggerFactory.getLogger(SearchUtil.class);
+    static final Logger logger = LoggerFactory.getLogger(SearchUtil.class);
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -66,48 +66,36 @@ public class SearchUtil {
      * @param sortFields
      * @return
      */
-    public SearchCriteria extractCommonCriterias(HttpServletRequest request,
-            List<SortField> sortFields) {
+    public SearchCriteria extractCommonCriterias(HttpServletRequest request, List<SortField> sortFields) {
         SearchCriteria searchCriteria = new SearchCriteria();
+        int            startIndex     = restErrorUtil.parseInt(request.getParameter("startIndex"), 0, "Invalid value for parameter startIndex", MessageEnums.INVALID_INPUT_DATA, null, "startIndex");
 
-        int startIndex = restErrorUtil.parseInt(
-                request.getParameter("startIndex"), 0,
-                "Invalid value for parameter startIndex",
-                MessageEnums.INVALID_INPUT_DATA, null, "startIndex");
         startIndex = startIndex < 0 ? 0 : startIndex;
+
         searchCriteria.setStartIndex(startIndex);
 
-        int pageSize = restErrorUtil.parseInt(request.getParameter("pageSize"),
-                configUtil.getDefaultMaxRows(),
-                "Invalid value for parameter pageSize",
-                MessageEnums.INVALID_INPUT_DATA, null, "pageSize");
+        int pageSize = restErrorUtil.parseInt(request.getParameter("pageSize"), configUtil.getDefaultMaxRows(), "Invalid value for parameter pageSize", MessageEnums.INVALID_INPUT_DATA, null, "pageSize");
+
         searchCriteria.setMaxRows(pageSize);
 
         // is count needed
-        searchCriteria.setGetCount(restErrorUtil.parseBoolean(
-                request.getParameter("getCount"), true));
+        searchCriteria.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 
-        searchCriteria.setOwnerId(restErrorUtil.parseLong(
-                request.getParameter("ownerId"), null));
-        searchCriteria.setGetChildren(restErrorUtil.parseBoolean(
-                request.getParameter("getChildren"), false));
+        searchCriteria.setOwnerId(restErrorUtil.parseLong(request.getParameter("ownerId"), null));
+        searchCriteria.setGetChildren(restErrorUtil.parseBoolean(request.getParameter("getChildren"), false));
 
-        String sortBy = restErrorUtil.validateString(
-                request.getParameter("sortBy"), StringUtil.VALIDATION_ALPHA,
-                "Invalid value for parameter sortBy",
-                MessageEnums.INVALID_INPUT_DATA, null, "sortBy");
-
+        String  sortBy  = restErrorUtil.validateString(request.getParameter("sortBy"), StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortBy", MessageEnums.INVALID_INPUT_DATA, null, "sortBy");
         boolean sortSet = false;
+
         if (!stringUtil.isEmpty(sortBy)) {
             for (SortField sortField : sortFields) {
                 if (sortField.getParamName().equalsIgnoreCase(sortBy)) {
                     searchCriteria.setSortBy(sortField.getParamName());
-                    String sortType = restErrorUtil.validateString(
-                            request.getParameter("sortType"),
-                            StringUtil.VALIDATION_ALPHA,
-                            "Invalid value for parameter sortType",
-                            MessageEnums.INVALID_INPUT_DATA, null, "sortType");
+
+                    String sortType = restErrorUtil.validateString(request.getParameter("sortType"), StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortType", MessageEnums.INVALID_INPUT_DATA, null, "sortType");
+
                     searchCriteria.setSortType(sortType);
+
                     sortSet = true;
                     break;
                 }
@@ -115,46 +103,41 @@ public class SearchUtil {
         }
 
         if (!sortSet && !stringUtil.isEmpty(sortBy)) {
-            logger.info("Invalid or unsupported sortBy field passed. sortBy="
-                    + sortBy, new Throwable());
+            logger.info("Invalid or unsupported sortBy field passed. sortBy={}", sortBy, new Throwable());
         }
 
         return searchCriteria;
     }
 
-    public Long extractLong(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName) {
+    public Long extractLong(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName) {
         String[] values = getParamMultiValues(request, paramName, paramName);
+
         if (values != null && values.length > 1) {
-            List<Long> multiValues = extractLongList(request, searchCriteria,
-                    paramName, userFriendlyParamName, paramName);
+            List<Long> multiValues = extractLongList(request, searchCriteria, paramName, userFriendlyParamName, paramName);
+
             if (multiValues != null && !multiValues.isEmpty()) {
                 return multiValues.get(0);
             } else {
                 return null;
             }
         } else {
-            Long value = restErrorUtil.parseLong(
-                    request.getParameter(paramName), "Invalid value for "
-                            + userFriendlyParamName,
-                    MessageEnums.INVALID_INPUT_DATA, null, paramName);
+            Long value = restErrorUtil.parseLong(request.getParameter(paramName), "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
             if (value != null) {
                 searchCriteria.getParamList().put(paramName, value);
             }
+
             return value;
         }
     }
 
-    public Integer extractInt(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName) {
-        Integer value = restErrorUtil.parseInt(request.getParameter(paramName),
-                "Invalid value for " + userFriendlyParamName,
-                MessageEnums.INVALID_INPUT_DATA, null, paramName);
+    public Integer extractInt(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName) {
+        Integer value = restErrorUtil.parseInt(request.getParameter(paramName), "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
         if (value != null) {
             searchCriteria.getParamList().put(paramName, value);
         }
+
         return value;
     }
 
@@ -166,16 +149,13 @@ public class SearchUtil {
      * @param dateFormat
      * @return
      */
-    public Date extractDate(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String dateFormat) {
-        Date value = null;
+    public Date extractDate(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String dateFormat) {
         if (dateFormat == null || dateFormat.isEmpty()) {
             dateFormat = defaultDateFormat;
         }
-        value = restErrorUtil.parseDate(request.getParameter(paramName),
-                "Invalid value for " + userFriendlyParamName,
-                MessageEnums.INVALID_INPUT_DATA, null, paramName, dateFormat);
+
+        Date value = restErrorUtil.parseDate(request.getParameter(paramName), "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName, dateFormat);
+
         if (value != null) {
             searchCriteria.getParamList().put(paramName, value);
         }
@@ -183,95 +163,85 @@ public class SearchUtil {
         return value;
     }
 
-    public String extractString(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String regEx) {
+    public String extractString(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String regEx) {
         String value = request.getParameter(paramName);
+
         if (!stringUtil.isEmpty(value)) {
             value = value.trim();
-            // TODO need to handle this in more generic way
-            // 		so as to take care of all possible special
-            //		characters.
+
+            // TODO need to handle this in more generic way so as to take care of all possible special characters.
             if (value.contains("%")) {
                 value = value.replaceAll("%", "\\\\%");
             }
+
             if (!stringUtil.isEmpty(regEx)) {
-                restErrorUtil.validateString(value, regEx, "Invalid value for "
-                                + userFriendlyParamName,
-                        MessageEnums.INVALID_INPUT_DATA, null, paramName);
+                restErrorUtil.validateString(value, regEx, "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
             }
+
             searchCriteria.getParamList().put(paramName, value);
         }
+
         return value;
     }
 
-    public String extractRoleString(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String regEx) {
+    public String extractRoleString(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String regEx) {
         String value = extractString(request, searchCriteria, paramName, userFriendlyParamName, regEx);
+
         if (!RangerConstants.VALID_USER_ROLE_LIST.contains(value)) {
-            restErrorUtil.validateString(value, regEx, "Invalid value for "
-                            + userFriendlyParamName,
-                    MessageEnums.INVALID_INPUT_DATA, null, paramName);
+            restErrorUtil.validateString(value, regEx, "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
         }
+
         return value;
     }
 
-    public List<Integer> extractEnum(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String listName, int maxValue) {
-
-        ArrayList<Integer> valueList = new ArrayList<Integer>();
+    public List<Integer> extractEnum(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String listName, int maxValue) {
+        ArrayList<Integer> valueList = new ArrayList<>();
         String[]           values    = getParamMultiValues(request, paramName, listName);
-        for (int i = 0; values != null && i < values.length; i++) {
-            Integer value = restErrorUtil.parseInt(values[i],
-                    "Invalid value for " + userFriendlyParamName,
-                    MessageEnums.INVALID_INPUT_DATA, null, paramName);
 
-            restErrorUtil.validateMinMax(value == null ? Integer.valueOf(-1) : value, 0, maxValue,
-                    "Invalid value for " + userFriendlyParamName, null,
-                    paramName);
+        for (int i = 0; values != null && i < values.length; i++) {
+            Integer value = restErrorUtil.parseInt(values[i], "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
+            restErrorUtil.validateMinMax(value == null ? Integer.valueOf(-1) : value, 0, maxValue, "Invalid value for " + userFriendlyParamName, null, paramName);
+
             valueList.add(value);
         }
+
         if (!valueList.isEmpty()) {
             searchCriteria.getParamList().put(listName, valueList);
         }
+
         return valueList;
     }
 
-    public List<String> extractStringList(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String listName,
-            String[] validValues, String regEx) {
-        ArrayList<String> valueList = new ArrayList<String>();
+    public List<String> extractStringList(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String listName, String[] validValues, String regEx) {
+        ArrayList<String> valueList = new ArrayList<>();
         String[]          values    = getParamMultiValues(request, paramName, listName);
 
         for (int i = 0; values != null && i < values.length; i++) {
             if (!stringUtil.isEmpty(regEx)) {
-                restErrorUtil.validateString(values[i], regEx,
-                        "Invalid value for " + userFriendlyParamName,
-                        MessageEnums.INVALID_INPUT_DATA, null, paramName);
+                restErrorUtil.validateString(values[i], regEx, "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
             }
+
             valueList.add(values[i]);
         }
+
         searchCriteria.getParamList().put(listName, valueList);
+
         return valueList;
     }
 
-    public List<Long> extractLongList(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String listName) {
-        ArrayList<Long> valueList = new ArrayList<Long>();
+    public List<Long> extractLongList(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String listName) {
+        ArrayList<Long> valueList = new ArrayList<>();
         String[]        values    = getParamMultiValues(request, paramName, listName);
 
         for (int i = 0; values != null && i < values.length; i++) {
-            Long value = restErrorUtil.parseLong(
-                    values[i], "Invalid value for "
-                            + userFriendlyParamName,
-                    MessageEnums.INVALID_INPUT_DATA, null, paramName);
+            Long value = restErrorUtil.parseLong(values[i], "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
             valueList.add(value);
         }
+
         searchCriteria.getParamList().put(listName, valueList);
+
         return valueList;
     }
 
@@ -292,6 +262,7 @@ public class SearchUtil {
             // Use default max Records
             pageSize = configUtil.getDefaultMaxRows();
         }
+
         return pageSize;
     }
 
@@ -300,15 +271,17 @@ public class SearchUtil {
      * @param sortFields
      * @return
      */
-    public String constructSortClause(SearchCriteria searchCriteria,
-            List<SortField> sortFields) {
+    public String constructSortClause(SearchCriteria searchCriteria, List<SortField> sortFields) {
         String sortBy      = searchCriteria.getSortBy();
         String querySortBy = null;
+
         if (!stringUtil.isEmpty(sortBy)) {
             sortBy = sortBy.trim();
+
             for (SortField sortField : sortFields) {
                 if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the normalized value
                     searchCriteria.setSortBy(sortField.getParamName());
                     break;
@@ -320,10 +293,10 @@ public class SearchUtil {
             for (SortField sortField : sortFields) {
                 if (sortField.isDefault()) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the default value
                     searchCriteria.setSortBy(sortField.getParamName());
-                    searchCriteria.setSortType(sortField.getDefaultOrder()
-                            .name());
+                    searchCriteria.setSortType(sortField.getDefaultOrder().name());
                     break;
                 }
             }
@@ -333,33 +306,27 @@ public class SearchUtil {
             // Add sort type
             String sortType      = searchCriteria.getSortType();
             String querySortType = "asc";
+
             if (sortType != null) {
-                if ("asc".equalsIgnoreCase(sortType)
-                        || "desc".equalsIgnoreCase(sortType)) {
+                if ("asc".equalsIgnoreCase(sortType) || "desc".equalsIgnoreCase(sortType)) {
                     querySortType = sortType;
                 } else {
-                    logger.error("Invalid sortType. sortType=" + sortType);
+                    logger.error("Invalid sortType. sortType={}", sortType);
                 }
             }
-            // Override the sortType using the final value
-            if (querySortType != null) {
-                searchCriteria.setSortType(querySortType.toLowerCase());
-            }
-            String sortClause = " ORDER BY " + querySortBy + " "
-                    + querySortType;
 
-            return sortClause;
+            // Override the sortType using the final value
+            searchCriteria.setSortType(querySortType.toLowerCase());
+
+            return " ORDER BY " + querySortBy + " " + querySortType;
         }
+
         return null;
     }
 
-    public Query createSearchQuery(EntityManager em, String queryStr, String sortClause,
-            SearchCriteria searchCriteria, List<SearchField> searchFields,
-            boolean hasAttributes, boolean isCountQuery) {
-
+    public Query createSearchQuery(EntityManager em, String queryStr, String sortClause, SearchCriteria searchCriteria, List<SearchField> searchFields, boolean hasAttributes, boolean isCountQuery) {
         // [1] Build where clause
-        StringBuilder queryClause = buildWhereClause(searchCriteria,
-                searchFields);
+        StringBuilder queryClause = buildWhereClause(searchCriteria, searchFields);
 
         // [2] Add domain-object-security clause if needed
         // if (objectClassType != -1
@@ -371,8 +338,7 @@ public class SearchUtil {
         addOrderByClause(queryClause, sortClause);
 
         // [3] Create Query Object
-        Query query = em.createQuery(
-                queryStr + queryClause);
+        Query query = em.createQuery(queryStr + queryClause);
 
         // [4] Resolve query parameters with values
         resolveQueryParams(query, searchCriteria, searchFields);
@@ -391,33 +357,28 @@ public class SearchUtil {
         return query;
     }
 
-    public List<Integer> extractIntList(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName, String listName) {
-        ArrayList<Integer> valueList = new ArrayList<Integer>();
+    public List<Integer> extractIntList(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName, String listName) {
+        ArrayList<Integer> valueList = new ArrayList<>();
         String[]           values    = getParamMultiValues(request, paramName, listName);
 
         for (int i = 0; values != null && i < values.length; i++) {
-            Integer value = restErrorUtil.parseInt(
-                    values[i], "Invalid value for "
-                            + userFriendlyParamName,
-                    MessageEnums.INVALID_INPUT_DATA, null, paramName);
+            Integer value = restErrorUtil.parseInt(values[i], "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
             valueList.add(value);
         }
+
         searchCriteria.getParamList().put(listName, valueList);
+
         return valueList;
     }
 
-    public Boolean extractBoolean(HttpServletRequest request,
-            SearchCriteria searchCriteria, String paramName,
-            String userFriendlyParamName) {
-        Boolean value = restErrorUtil.parseBoolean(
-                request.getParameter(paramName), "Invalid value for "
-                        + userFriendlyParamName,
-                MessageEnums.INVALID_INPUT_DATA, null, paramName);
+    public Boolean extractBoolean(HttpServletRequest request, SearchCriteria searchCriteria, String paramName, String userFriendlyParamName) {
+        Boolean value = restErrorUtil.parseBoolean(request.getParameter(paramName), "Invalid value for " + userFriendlyParamName, MessageEnums.INVALID_INPUT_DATA, null, paramName);
+
         if (value != null) {
             searchCriteria.getParamList().put(paramName, value);
         }
+
         return value;
     }
 
@@ -458,46 +419,37 @@ public class SearchUtil {
         return ret;
     }
 
-    protected StringBuilder buildWhereClause(SearchCriteria searchCriteria,
-            List<SearchField> searchFields) {
+    protected StringBuilder buildWhereClause(SearchCriteria searchCriteria, List<SearchField> searchFields) {
         return buildWhereClause(searchCriteria, searchFields, false, false);
     }
 
     @SuppressWarnings("unchecked")
-    protected StringBuilder buildWhereClause(SearchCriteria searchCriteria,
-            List<SearchField> searchFields, boolean isNativeQuery,
-            boolean excludeWhereKeyword) {
+    protected StringBuilder buildWhereClause(SearchCriteria searchCriteria, List<SearchField> searchFields, boolean isNativeQuery, boolean excludeWhereKeyword) {
+        Map<String, Object> paramList        = searchCriteria.getParamList();
+        StringBuilder       whereClause      = new StringBuilder(excludeWhereKeyword ? "" : "WHERE 1 = 1 ");
+        List<String>        joinTableList    = new ArrayList<>();
+        String              addedByFieldName = isNativeQuery ? "added_by_id" : "addedByUserId";
+        Number              ownerId          = searchCriteria.getOwnerId();
 
-        Map<String, Object> paramList = searchCriteria.getParamList();
-
-        StringBuilder whereClause = new StringBuilder(excludeWhereKeyword ? ""
-                : "WHERE 1 = 1 ");
-
-        List<String> joinTableList = new ArrayList<String>();
-
-        String addedByFieldName = isNativeQuery ? "added_by_id"
-                : "addedByUserId";
-
-        Number ownerId = searchCriteria.getOwnerId();
         if (ownerId != null) {
-            whereClause.append(" and obj.").append(addedByFieldName)
-                    .append(" = :ownerId");
+            whereClause.append(" and obj.").append(addedByFieldName).append(" = :ownerId");
         }
 
         // Let's handle search groups first
         int groupCount = -1;
+
         for (SearchGroup searchGroup : searchCriteria.getSearchGroups()) {
             groupCount++;
+
             whereClause.append(" and ").append(
                     searchGroup.getWhereClause("" + groupCount));
-//			searchGroup.getJoinTableList(joinTableList, searchGroup);
+//            searchGroup.getJoinTableList(joinTableList, searchGroup);
         }
 
         for (SearchField searchField : searchFields) {
             int startWhereLen = whereClause.length();
 
-            if (searchField.getFieldName() == null
-                    && searchField.getCustomCondition() == null) { // this field
+            if (searchField.getFieldName() == null && searchField.getCustomCondition() == null) { // this field
                 // is used
                 // only for
                 // binding!
@@ -505,41 +457,39 @@ public class SearchUtil {
             }
 
             Object  paramValue  = paramList.get(searchField.getClientFieldName());
-            boolean isListValue = paramValue != null && paramValue instanceof Collection;
+            boolean isListValue = paramValue instanceof Collection;
 
-            if (searchCriteria.getNullParamList().contains(
-                    searchField.getClientFieldName())) {
-                whereClause.append(" and ").append(searchField.getFieldName())
-                        .append(" is null");
-            } else if (searchCriteria.getNotNullParamList().contains(
-                    searchField.getClientFieldName())) {
-                whereClause.append(" and ").append(searchField.getFieldName())
-                        .append(" is not null");
-            } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST
-                    || isListValue
-                    && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Collection<Number> intValueList = null;
-                if (paramValue != null
-                        && (paramValue instanceof Integer || paramValue instanceof Long)) {
-                    intValueList = new ArrayList<Number>();
+            if (searchCriteria.getNullParamList().contains(searchField.getClientFieldName())) {
+                whereClause.append(" and ").append(searchField.getFieldName()).append(" is null");
+            } else if (searchCriteria.getNotNullParamList().contains(searchField.getClientFieldName())) {
+                whereClause.append(" and ").append(searchField.getFieldName()).append(" is not null");
+            } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
+                Collection<Number> intValueList;
+
+                if ((paramValue instanceof Integer || paramValue instanceof Long)) {
+                    intValueList = new ArrayList<>();
+
                     intValueList.add((Number) paramValue);
                 } else {
                     intValueList = (Collection<Number>) paramValue;
                 }
 
-                if (intValueList != null && !intValueList.isEmpty()) {
+                if (!intValueList.isEmpty()) {
                     if (searchField.getCustomCondition() == null) {
                         if (intValueList.size() <= minInListLength) {
                             whereClause.append(" and ");
+
                             if (intValueList.size() > 1) {
                                 whereClause.append(" ( ");
                             }
+
                             for (int count = 0; count < intValueList.size(); count++) {
                                 if (count > 0) {
                                     whereClause.append(" or ");
                                 }
+
                                 whereClause.append(searchField.getFieldName())
-                                        .append("= :").append(searchField.getClientFieldName() + "_" + count);
+                                        .append("= :").append(searchField.getClientFieldName()).append("_").append(count);
                             }
 
                             if (intValueList.size() > 1) {
@@ -552,21 +502,19 @@ public class SearchUtil {
                                     .append(" (:").append(searchField.getClientFieldName()).append(")");
                         }
                     } else {
-                        whereClause.append(" and ").append(
-                                searchField.getCustomCondition());
+                        whereClause.append(" and ").append(searchField.getCustomCondition());
                     }
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
-                if (paramValue != null
-                        && (((Collection) paramValue).size()) >= 1) {
+                if (paramValue != null && !((Collection) paramValue).isEmpty()) {
                     whereClause.append(" and ")
                             .append(searchField.getFieldName())
                             .append(" in :")
                             .append(searchField.getClientFieldName());
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Number intFieldValue = (Number) paramList.get(searchField
-                        .getClientFieldName());
+                Number intFieldValue = (Number) paramList.get(searchField.getClientFieldName());
+
                 if (intFieldValue != null) {
                     if (searchField.getCustomCondition() == null) {
                         whereClause.append(" and ")
@@ -574,26 +522,24 @@ public class SearchUtil {
                                 .append(getSqlOperator(searchField.getSearchType()))
                                 .append(":").append(searchField.getClientFieldName());
                     } else {
-                        whereClause.append(" and ").append(
-                                searchField.getCustomCondition());
+                        whereClause.append(" and ").append(searchField.getCustomCondition());
                     }
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STRING) {
-                String strFieldValue = (String) paramList.get(searchField
-                        .getClientFieldName());
+                String strFieldValue = (String) paramList.get(searchField.getClientFieldName());
+
                 if (strFieldValue != null) {
                     if (searchField.getCustomCondition() == null) {
                         whereClause.append(" and ").append("LOWER(").append(searchField.getFieldName()).append(")")
                                 .append(getSqlOperator(searchField.getSearchType()))
                                 .append(":").append(searchField.getClientFieldName());
                     } else {
-                        whereClause.append(" and ").append(
-                                searchField.getCustomCondition());
+                        whereClause.append(" and ").append(searchField.getCustomCondition());
                     }
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.BOOLEAN) {
-                Boolean boolFieldValue = (Boolean) paramList.get(searchField
-                        .getClientFieldName());
+                Boolean boolFieldValue = (Boolean) paramList.get(searchField.getClientFieldName());
+
                 if (boolFieldValue != null) {
                     if (searchField.getCustomCondition() == null) {
                         whereClause.append(" and ")
@@ -601,35 +547,31 @@ public class SearchUtil {
                                 .append(getSqlOperator(searchField.getSearchType()))
                                 .append(":").append(searchField.getClientFieldName());
                     } else {
-                        whereClause.append(" and ").append(
-                                searchField.getCustomCondition());
+                        whereClause.append(" and ").append(searchField.getCustomCondition());
                     }
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-                Date fieldValue = (Date) paramList.get(searchField
-                        .getClientFieldName());
+                Date fieldValue = (Date) paramList.get(searchField.getClientFieldName());
+
                 if (fieldValue != null) {
                     if (searchField.getCustomCondition() == null) {
                         whereClause.append(" and ").append(searchField.getFieldName())
                                 .append(getSqlOperator(searchField.getSearchType()))
                                 .append(":").append(searchField.getClientFieldName());
                     } else {
-                        whereClause.append(" and ").append(
-                                searchField.getCustomCondition());
+                        whereClause.append(" and ").append(searchField.getCustomCondition());
                     }
                 }
             }
 
-            if (whereClause.length() > startWhereLen
-                    && searchField.getJoinTables() != null) {
+            if (whereClause.length() > startWhereLen && searchField.getJoinTables() != null) {
                 for (String table : searchField.getJoinTables()) {
                     if (!joinTableList.contains(table)) {
                         joinTableList.add(table);
                     }
                 }
 
-                whereClause.append(" and (")
-                        .append(searchField.getJoinCriteria()).append(")");
+                whereClause.append(" and (").append(searchField.getJoinCriteria()).append(")");
             }
         } // for
 
@@ -647,94 +589,82 @@ public class SearchUtil {
     }
 
     @SuppressWarnings("unchecked")
-    protected void resolveQueryParams(Query query, SearchCriteria searchCriteria,
-            List<SearchField> searchFields) {
-
+    protected void resolveQueryParams(Query query, SearchCriteria searchCriteria, List<SearchField> searchFields) {
         Map<String, Object> paramList = searchCriteria.getParamList();
+        Number              ownerId   = searchCriteria.getOwnerId();
 
-        Number ownerId = searchCriteria.getOwnerId();
         if (ownerId != null) {
             query.setParameter("ownerId", ownerId);
         }
 
         // Let's handle search groups first
         int groupCount = -1;
+
         for (SearchGroup searchGroup : searchCriteria.getSearchGroups()) {
             groupCount++;
+
             searchGroup.resolveValues(query, "" + groupCount);
         }
 
         for (SearchField searchField : searchFields) {
             Object  paramValue  = paramList.get(searchField.getClientFieldName());
-            boolean isListValue = paramValue != null && paramValue instanceof Collection;
+            boolean isListValue = paramValue instanceof Collection;
 
-            if (searchCriteria.getNullParamList().contains(
-                    searchField.getClientFieldName())
-                    || searchCriteria.getNotNullParamList().contains(
-                    searchField.getClientFieldName())) { //NOPMD
+            if (searchCriteria.getNullParamList().contains(searchField.getClientFieldName()) || searchCriteria.getNotNullParamList().contains(searchField.getClientFieldName())) { //NOPMD
                 // Already addressed while building where clause
-            } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST
-                    || isListValue
-                    && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Collection<Number> intValueList = null;
-                if (paramValue != null
-                        && (paramValue instanceof Integer || paramValue instanceof Long)) {
-                    intValueList = new ArrayList<Number>();
+            } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
+                Collection<Number> intValueList;
+
+                if ((paramValue instanceof Integer || paramValue instanceof Long)) {
+                    intValueList = new ArrayList<>();
+
                     intValueList.add((Number) paramValue);
                 } else {
                     intValueList = (Collection<Number>) paramValue;
                 }
 
-                if (intValueList != null && !intValueList.isEmpty()
-                        && intValueList.size() <= minInListLength) {
+                if (!intValueList.isEmpty() && intValueList.size() <= minInListLength) {
                     int count = -1;
+
                     for (Number value : intValueList) {
                         count++;
-                        query.setParameter(searchField.getClientFieldName()
-                                + "_" + count, value);
+
+                        query.setParameter(searchField.getClientFieldName() + "_" + count, value);
                     }
-                } else if (intValueList != null && intValueList.size() > 1) {
-                    query.setParameter(searchField.getClientFieldName(),
-                            intValueList);
+                } else if (intValueList.size() > 1) {
+                    query.setParameter(searchField.getClientFieldName(), intValueList);
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
-                if (paramValue != null
-                        && (((Collection) paramValue).size()) >= 1) {
-                    query.setParameter(searchField.getClientFieldName(),
-                            paramValue);
+                if (paramValue != null && !((Collection) paramValue).isEmpty()) {
+                    query.setParameter(searchField.getClientFieldName(), paramValue);
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Number intFieldValue = (Number) paramList.get(searchField
-                        .getClientFieldName());
+                Number intFieldValue = (Number) paramList.get(searchField.getClientFieldName());
+
                 if (intFieldValue != null) {
-                    query.setParameter(searchField.getClientFieldName(),
-                            intFieldValue);
+                    query.setParameter(searchField.getClientFieldName(), intFieldValue);
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STRING) {
-                String strFieldValue = (String) paramList.get(searchField
-                        .getClientFieldName());
+                String strFieldValue = (String) paramList.get(searchField.getClientFieldName());
+
                 if (strFieldValue != null) {
                     if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
-                        query.setParameter(searchField.getClientFieldName(),
-                                strFieldValue.trim().toLowerCase());
+                        query.setParameter(searchField.getClientFieldName(), strFieldValue.trim().toLowerCase());
                     } else {
-                        query.setParameter(searchField.getClientFieldName(),
-                                "%" + strFieldValue.trim().toLowerCase() + "%");
+                        query.setParameter(searchField.getClientFieldName(), "%" + strFieldValue.trim().toLowerCase() + "%");
                     }
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.BOOLEAN) {
-                Boolean boolFieldValue = (Boolean) paramList.get(searchField
-                        .getClientFieldName());
+                Boolean boolFieldValue = (Boolean) paramList.get(searchField.getClientFieldName());
+
                 if (boolFieldValue != null) {
-                    query.setParameter(searchField.getClientFieldName(),
-                            boolFieldValue);
+                    query.setParameter(searchField.getClientFieldName(), boolFieldValue);
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.DATE) {
-                Date fieldValue = (Date) paramList.get(searchField
-                        .getClientFieldName());
+                Date fieldValue = (Date) paramList.get(searchField.getClientFieldName());
+
                 if (fieldValue != null) {
-                    query.setParameter(searchField.getClientFieldName(),
-                            fieldValue);
+                    query.setParameter(searchField.getClientFieldName(), fieldValue);
                 }
             }
         } // for
@@ -746,19 +676,22 @@ public class SearchUtil {
      * @param listName
      * @return
      */
-    String[] getParamMultiValues(HttpServletRequest request, String paramName,
-            String listName) {
+    String[] getParamMultiValues(HttpServletRequest request, String paramName, String listName) {
         String[] values = request.getParameterValues(paramName);
+
         if (values == null || values.length == 0) {
             values = request.getParameterValues(paramName + "[]");
+
             if (listName != null && (values == null || values.length == 0)) {
                 values = request.getParameterValues(listName);
+
                 if (values == null || values.length == 0) {
                     // Let's try after appending []
                     values = request.getParameterValues(listName + "[]");
                 }
             }
         }
+
         return values;
     }
 }

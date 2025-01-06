@@ -31,7 +31,6 @@ import javax.xml.bind.JAXBContext;
  */
 @Provider
 public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
-
     private final JAXBContext context;
     private final Class<?>[]  types = {
             org.apache.ranger.view.VXAuthSessionList.class,
@@ -53,6 +52,7 @@ public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
 
     public RangerJAXBContextResolver() throws Exception {
         JSONConfiguration config = JSONConfiguration.natural().build();
+
         context = new JSONJAXBContext(config, types);
     }
 
@@ -64,7 +64,7 @@ public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
                 return context;
             }
         }
+
         return null;
     }
 }
-

@@ -28,9 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SearchGroup {
-    CONDITION condition = CONDITION.AND;
-    List<SearchValue> values       = new ArrayList<SearchValue>();
-    List<SearchGroup> searchGroups = new ArrayList<SearchGroup>();
+    CONDITION         condition;
+    List<SearchValue> values       = new ArrayList<>();
+    List<SearchGroup> searchGroups = new ArrayList<>();
+
     /**
      * @param condition
      */
@@ -46,8 +47,10 @@ public class SearchGroup {
         int           count       = -1;
         int           innerCount  = 0;
         StringBuilder whereClause = new StringBuilder("(");
+
         for (SearchValue value : values) {
             count++;
+
             if (count > 0) {
                 if (CONDITION.AND.equals(condition)) {
                     whereClause.append(" AND ");
@@ -55,33 +58,34 @@ public class SearchGroup {
                     whereClause.append(" OR ");
                 }
             }
+
             SearchField searchField = value.getSearchField();
+
             if (value.isList()) {
                 whereClause.append(" (");
+
                 int listCount = value.getValueList().size();
+
                 for (int i = 0; i < listCount; i++) {
                     if (i > 0) {
                         whereClause.append(" OR ");
                     }
-                    whereClause
-                            .append(searchField.getFieldName())
-                            .append(" = :")
-                            .append(searchField.getClientFieldName() + "_"
-                                    + prefix + "_" + count + "_" + innerCount);
+
+                    whereClause.append(searchField.getFieldName())
+                            .append(" = :").append(searchField.getClientFieldName()).append("_").append(prefix).append("_").append(count).append("_").append(innerCount);
+
                     innerCount++;
                 }
                 whereClause.append(") ");
             } else {
-                whereClause
-                        .append(searchField.getFieldName())
-                        .append(" = :")
-                        .append(searchField.getClientFieldName() + "_" + prefix
-                                + "_" + count);
+                whereClause.append(searchField.getFieldName())
+                        .append(" = :").append(searchField.getClientFieldName()).append("_").append(prefix).append("_").append(count);
             }
         }
 
         for (SearchGroup searchGroup : searchGroups) {
             count++;
+
             if (count > 0) {
                 if (CONDITION.AND.equals(condition)) {
                     whereClause.append(" AND ");
@@ -89,11 +93,14 @@ public class SearchGroup {
                     whereClause.append(" OR ");
                 }
             }
+
             whereClause.append(" ")
                     .append(searchGroup.getWhereClause(prefix + "_" + count))
                     .append(" ");
         }
+
         whereClause.append(") ");
+
         return whereClause.toString();
     }
 
@@ -101,33 +108,38 @@ public class SearchGroup {
      * @param query
      */
     public void resolveValues(Query query, String prefix) {
-        if ((values == null || values.isEmpty())
-                || (searchGroups == null || searchGroups.isEmpty())) {
+        if ((values == null || values.isEmpty()) || (searchGroups == null || searchGroups.isEmpty())) {
             return;
         }
 
         int count      = -1;
         int innerCount = 0;
+
         for (SearchValue value : values) {
             count++;
+
             SearchField searchField = value.getSearchField();
+
             if (value.isList()) {
                 int listCount = value.getValueList().size();
+
                 for (int i = 0; i < listCount; i++) {
-                    String paramName = searchField.getClientFieldName() + "_"
-                            + prefix + "_" + count + "_" + innerCount;
+                    String paramName = searchField.getClientFieldName() + "_" + prefix + "_" + count + "_" + innerCount;
+
                     query.setParameter(paramName, value.getValueList().get(i));
+
                     innerCount++;
                 }
             } else {
-                String paramName = searchField.getClientFieldName() + "_"
-                        + prefix + "_" + count;
+                String paramName = searchField.getClientFieldName() + "_" + prefix + "_" + count;
+
                 query.setParameter(paramName, value.getValue());
             }
         }
 
         for (SearchGroup searchGroup : searchGroups) {
             count++;
+
             searchGroup.resolveValues(query, prefix + "_" + count);
         }
     }

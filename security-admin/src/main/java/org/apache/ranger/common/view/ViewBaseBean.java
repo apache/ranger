@@ -27,7 +27,7 @@ public class ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @JsonIgnore
-    private XXDBBase mObj = null;
+    private XXDBBase mObj;
 
     /**
      * @return the gjObj

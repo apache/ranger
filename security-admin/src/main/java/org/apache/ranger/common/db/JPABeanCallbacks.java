@@ -36,32 +36,26 @@ public class JPABeanCallbacks {
     @PrePersist
     void onPrePersist(Object o) {
         try {
-            if (o != null && o instanceof XXDBBase) {
+            if (o instanceof XXDBBase) {
                 XXDBBase entity = (XXDBBase) o;
 
                 entity.setUpdateTime(DateUtil.getUTCDate());
                 if (entity.getAddedByUserId() == null || entity.getAddedByUserId() == 0) {
+                    logger.debug("AddedByUserId is null or 0 and hence getting it from userSession for {}", entity.getId());
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("AddedByUserId is null or 0 and hence getting it from userSession for " + entity.getId());
-                    }
-                    RangerSecurityContext context = RangerContextHolder
-                            .getSecurityContext();
+                    RangerSecurityContext context = RangerContextHolder.getSecurityContext();
+
                     if (context != null) {
                         UserSessionBase userSession = context.getUserSession();
+
                         if (userSession != null) {
                             entity.setAddedByUserId(userSession.getUserId());
-                            entity.setUpdatedByUserId(userSession
-                                    .getUserId());
+                            entity.setUpdatedByUserId(userSession.getUserId());
                         } else {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
-                            }
+                            logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
                         }
                     } else {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
-                        }
+                        logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
                     }
                 }
             }
@@ -87,8 +81,9 @@ public class JPABeanCallbacks {
     @PreUpdate
     void onPreUpdate(Object o) {
         try {
-            if (o != null && o instanceof XXDBBase) {
+            if (o instanceof XXDBBase) {
                 XXDBBase entity = (XXDBBase) o;
+
                 entity.setUpdateTime(DateUtil.getUTCDate());
             }
         } catch (Throwable t) {

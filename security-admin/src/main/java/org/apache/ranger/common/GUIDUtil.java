@@ -28,7 +28,6 @@ import java.util.UUID;
 @Service
 @Scope("singleton")
 public class GUIDUtil implements Serializable {
-
     private static final long serialVersionUID = -7284237762948427019L;
 
     public String genGUID() {

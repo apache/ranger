@@ -24,20 +24,19 @@ import org.apache.ranger.plugin.util.XMLUtils;
 import java.util.HashMap;
 
 public class RangerProperties extends HashMap<Object, Object> {
-
     private static final long serialVersionUID = -4094378755892810987L;
 
     private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
 
-    private String xmlConfigFileNames = null;
+    private String xmlConfigFileNames;
 
     public RangerProperties(String xmlConfigFileNames) {
         this.xmlConfigFileNames = xmlConfigFileNames;
+
         initProperties();
     }
 
     private void initProperties() {
-
         if (xmlConfigFileNames == null || xmlConfigFileNames.isEmpty()) {
             return;
         }

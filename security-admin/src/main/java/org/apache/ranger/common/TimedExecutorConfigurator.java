@@ -29,20 +29,16 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Scope("singleton")
 public class TimedExecutorConfigurator {
-
     // these two are important and hence are user configurable.
-    static final         String Property_MaxThreadPoolSize = "ranger.timed.executor.max.threadpool.size";
-    static final         String Property_QueueSize         = "ranger.timed.executor.queue.size";
+    static final         String PROPERTY_MAX_THREAD_POOL_SIZE = "ranger.timed.executor.max.threadpool.size";
+    static final         String PROPERTY_QUEUE_SIZE           = "ranger.timed.executor.queue.size";
     // We need these default-defaults since default-site.xml file isn't inside the jar, i.e. file itself may be missing or values in it might be messed up! :(
-    static final         int    _DefaultMaxThreadPoolSize  = 10;
-    static final private int    _DefaultBlockingQueueSize  = 100;
+    static final         int    DEFAULT_MAX_THREAD_POOL_SIZE  = 10;
+    private static final int    DEFAULT_BLOCKING_QUEUE_SIZE   = 100;
 
-    private int      _maxThreadPoolSize;
-    private       int  _blockingQueueSize;
-    // The following are hard-coded for now and can be exposed if there is a pressing need.
-    private final int  _coreThreadPoolSize = 1;
-    private final long _keepAliveTime      = 10;
-    private final TimeUnit _keepAliveTimeUnit  = TimeUnit.SECONDS;
+    private       int      maxThreadPoolSize;
+    private       int      blockingQueueSize;
+    private final TimeUnit keepAliveTimeUnit = TimeUnit.SECONDS;
 
     public TimedExecutorConfigurator() {
     }
@@ -54,45 +50,49 @@ public class TimedExecutorConfigurator {
      * @param blockingQueueSize
      */
     public TimedExecutorConfigurator(int maxThreadPoolSize, int blockingQueueSize) {
-        _maxThreadPoolSize = maxThreadPoolSize;
-        _blockingQueueSize = blockingQueueSize;
+        this.maxThreadPoolSize = maxThreadPoolSize;
+        this.blockingQueueSize = blockingQueueSize;
     }
 
     public int getCoreThreadPoolSize() {
-        return _coreThreadPoolSize;
+        // The following is hard-coded for now and can be exposed if there is a pressing need.
+        return 1;
     }
 
     public int getMaxThreadPoolSize() {
-        return _maxThreadPoolSize;
+        return maxThreadPoolSize;
     }
 
     public long getKeepAliveTime() {
-        return _keepAliveTime;
+        // The following is hard-coded for now and can be exposed if there is a pressing need.
+        return 10;
     }
 
     public TimeUnit getKeepAliveTimeUnit() {
-        return _keepAliveTimeUnit;
+        return keepAliveTimeUnit;
     }
 
     public int getBlockingQueueSize() {
-        return _blockingQueueSize;
+        return blockingQueueSize;
     }
 
     // Infrequently used class (once per lifetime of policy manager) hence, values read from property file aren't cached.
     @PostConstruct
     void initialize() {
-        Integer value = PropertiesUtil.getIntProperty(Property_MaxThreadPoolSize);
+        Integer value = PropertiesUtil.getIntProperty(PROPERTY_MAX_THREAD_POOL_SIZE);
+
         if (value == null) {
-            _maxThreadPoolSize = _DefaultMaxThreadPoolSize;
+            maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
         } else {
-            _maxThreadPoolSize = value;
+            maxThreadPoolSize = value;
         }
 
-        value = PropertiesUtil.getIntProperty(Property_QueueSize);
+        value = PropertiesUtil.getIntProperty(PROPERTY_QUEUE_SIZE);
+
         if (value == null) {
-            _blockingQueueSize = _DefaultBlockingQueueSize;
+            blockingQueueSize = DEFAULT_BLOCKING_QUEUE_SIZE;
         } else {
-            _blockingQueueSize = value;
+            blockingQueueSize = value;
         }
     }
 }

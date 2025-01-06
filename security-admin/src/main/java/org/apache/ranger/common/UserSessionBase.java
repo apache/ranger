@@ -28,26 +28,26 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class UserSessionBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
-    XXPortalUser  xXPortalUser;
-    XXAuthSession xXAuthSession;
-    int clientTimeOffsetInMinute = 0;
+    XXPortalUser                 xXPortalUser;
+    XXAuthSession                xXAuthSession;
+    int                          clientTimeOffsetInMinute;
     private boolean              userAdmin;
-    private boolean              userAuditAdmin = false;
-    private boolean              auditKeyAdmin  = false;
-    private boolean              keyAdmin       = false;
+    private boolean              userAuditAdmin;
+    private boolean              auditKeyAdmin;
+    private boolean              keyAdmin;
     private int                  authProvider   = RangerConstants.USER_APP;
-    private List<String>         userRoleList   = new ArrayList<String>();
+    private List<String>         userRoleList   = new ArrayList<>();
     private RangerUserPermission rangerUserPermission;
-    private Boolean isSSOEnabled;
-    private Boolean isSpnegoEnabled = false;
+    private Boolean              isSSOEnabled;
+    private Boolean              isSpnegoEnabled;
 
     public Long getUserId() {
         if (xXPortalUser != null) {
             return xXPortalUser.getId();
         }
+
         return null;
     }
 
@@ -55,6 +55,7 @@ public class UserSessionBase implements Serializable {
         if (xXPortalUser != null) {
             return xXPortalUser.getLoginId();
         }
+
         return null;
     }
 
@@ -62,6 +63,7 @@ public class UserSessionBase implements Serializable {
         if (xXAuthSession != null) {
             return xXAuthSession.getId();
         }
+
         return null;
     }
 

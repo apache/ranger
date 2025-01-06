@@ -48,32 +48,30 @@ import java.util.concurrent.TimeoutException;
 @Service
 @Scope("singleton")
 public class TimedExecutor {
-
     private static final Logger LOG = LoggerFactory.getLogger(TimedExecutor.class);
 
     @Autowired
-    TimedExecutorConfigurator _configurator;
+    TimedExecutorConfigurator configurator;
 
-    ExecutorService _executorService;
+    ExecutorService executorService;
 
     public TimedExecutor() {
     }
 
     public <T> T timedTask(Callable<T> callable, long time, TimeUnit unit) throws Exception {
         try {
-            Future<T> future = _executorService.submit(callable);
+            Future<T> future = executorService.submit(callable);
+
             if (LOG.isDebugEnabled()) {
                 if (future.isCancelled()) {
-                    LOG.debug("Got back a future that was cancelled already for callable[" + callable + "]!");
+                    LOG.debug("Got back a future that was cancelled already for callable[{}]!", callable);
                 }
             }
+
             try {
-                T result = future.get(time, unit);
-                return result;
+                return future.get(time, unit);
             } catch (CancellationException | ExecutionException | InterruptedException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("TimedExecutor: Caught exception[%s] for callable[%s]: detail[%s].  Re-throwing...", e.getClass().getName(), callable, e.getMessage()));
-                }
+                LOG.debug("TimedExecutor: Caught exception[{}] for callable[{}]: detail[{}].  Re-throwing...", e.getClass().getName(), callable, e.getMessage());
 
                 if (StringUtils.contains(e.getMessage(), RangerDefaultService.ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED)) {
                     throw e;
@@ -81,29 +79,29 @@ public class TimedExecutor {
                     throw generateHadoopException(e);
                 }
             } catch (TimeoutException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(String.format("TimedExecutor: Timed out waiting for callable[%s] to finish.  Cancelling the task.", callable));
-                }
+                LOG.debug("TimedExecutor: Timed out waiting for callable[{}] to finish.  Cancelling the task.", callable);
+
                 boolean interruptRunningTask = true;
+
                 future.cancel(interruptRunningTask);
+
                 throw e;
             }
         } catch (RejectedExecutionException e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Executor rejected callable[" + callable + "], due to resource exhaustion.  Rethrowing exception...");
-            }
+            LOG.debug("Executor rejected callable[{}], due to resource exhaustion.  Rethrowing exception...", callable);
+
             throw e;
         }
     }
 
     @PostConstruct
     void initialize() {
-        initialize(_configurator);
+        initialize(configurator);
     }
 
     // Not designed for public access - only for testability
     void initialize(TimedExecutorConfigurator configurator) {
-        final ThreadFactory _ThreadFactory = new ThreadFactoryBuilder()
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setDaemon(true)
                 .setNameFormat("timed-executor-pool-%d")
                 .setUncaughtExceptionHandler(new LocalUncaughtExceptionHandler())
@@ -111,16 +109,16 @@ public class TimedExecutor {
 
         final BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(configurator.getBlockingQueueSize());
 
-        _executorService = new LocalThreadPoolExecutor(configurator.getCoreThreadPoolSize(), configurator.getMaxThreadPoolSize(),
+        executorService = new LocalThreadPoolExecutor(configurator.getCoreThreadPoolSize(), configurator.getMaxThreadPoolSize(),
                 configurator.getKeepAliveTime(), configurator.getKeepAliveTimeUnit(),
-                blockingQueue, _ThreadFactory);
+                blockingQueue, threadFactory);
     }
 
     /**
      * Not designed for public access.  Non-private only for testability.  Expected to be called by tests to do proper cleanup.
      */
     void shutdown() {
-        _executorService.shutdownNow();
+        executorService.shutdownNow();
     }
 
     private HadoopException generateHadoopException(Exception e) {
@@ -134,17 +132,14 @@ public class TimedExecutor {
     }
 
     static class LocalUncaughtExceptionHandler implements UncaughtExceptionHandler {
-
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            String message = String.format("TimedExecutor: Uncaught exception hanlder received exception[%s] in thread[%s]", t.getClass().getName(), t.getName());
-            LOG.warn(message, e);
+            LOG.warn("TimedExecutor: Uncaught exception hanlder received exception[{}] in thread[{}]", t.getClass().getName(), t.getName(), e);
         }
     }
 
     static class LocalThreadPoolExecutor extends ThreadPoolExecutor {
-
-        private final ThreadLocal<Long> startNanoTime = new ThreadLocal<Long>();
+        private final ThreadLocal<Long> startNanoTime = new ThreadLocal<>();
 
         public LocalThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
             super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
@@ -156,21 +151,25 @@ public class TimedExecutor {
                 LOG.debug("TimedExecutor: Starting execution of a task.");
                 startNanoTime.set(System.nanoTime());
             }
+
             super.beforeExecute(t, r);
         }
 
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             super.afterExecute(r, t);
+
             if (LOG.isDebugEnabled()) {
                 long duration = System.nanoTime() - startNanoTime.get();
-                LOG.debug("TimedExecutor: Done execution of task. Duration[" + duration / 1000000 + " ms].");
+
+                LOG.debug("TimedExecutor: Done execution of task. Duration[{} ms].", duration / 1000000);
             }
         }
 
         @Override
         protected void terminated() {
             super.terminated();
+
             LOG.info("TimedExecutor: thread pool has terminated");
         }
     }

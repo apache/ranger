@@ -22,7 +22,6 @@ package org.apache.ranger.common;
 import org.apache.ranger.view.VXMessage;
 
 public enum MessageEnums {
-
     // Note: Please do not format this file. It messes up the indentations
 
     // Common Errors
@@ -43,8 +42,8 @@ public enum MessageEnums {
     NO_INPUT_DATA("xa.validation.no_input_data", "Input data is not provided"),
     INPUT_DATA_OUT_OF_BOUND("xa.validation.data_out_of_bound", "Input data if out of bound");
 
-    String rbKey;
-    String messageDesc;
+    final String rbKey;
+    final String messageDesc;
 
     MessageEnums(String rbKey, String messageDesc) {
         this.rbKey       = rbKey;

@@ -20,7 +20,6 @@
 package org.apache.ranger.common;
 
 public class AppConstants extends RangerCommonEnums {
-
     /***************************************************************
      * Enum values for AssetType
      **************************************************************/
@@ -663,7 +662,7 @@ public class AppConstants extends RangerCommonEnums {
 
     public static final String Masked_String = "*****";
 
-    static public String getLabelFor_AssetType(int elementValue) {
+    public static String getLabelFor_AssetType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //ASSET_UNKNOWN
         }
@@ -688,7 +687,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_PolicyType(int elementValue) {
+    public static String getLabelFor_PolicyType(int elementValue) {
         if (elementValue == 0) {
             return "Inclusion"; //POLICY_INCLUSION
         }
@@ -698,7 +697,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAAuditType(int elementValue) {
+    public static String getLabelFor_XAAuditType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_AUDIT_TYPE_UNKNOWN
         }
@@ -723,7 +722,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ResourceType(int elementValue) {
+    public static String getLabelFor_ResourceType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //RESOURCE_UNKNOWN
         }
@@ -760,7 +759,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAGroupType(int elementValue) {
+    public static String getLabelFor_XAGroupType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_GROUP_UNKNOWN
         }
@@ -776,7 +775,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAPermForType(int elementValue) {
+    public static String getLabelFor_XAPermForType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_PERM_FOR_UNKNOWN
         }
@@ -789,7 +788,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAPermType(int elementValue) {
+    public static String getLabelFor_XAPermType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_PERM_TYPE_UNKNOWN
         }
@@ -931,7 +930,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ClassTypes(int elementValue) {
+    public static String getLabelFor_ClassTypes(int elementValue) {
         if (elementValue == 1000) {
             return "Asset"; //CLASS_TYPE_XA_ASSET
         }
@@ -1068,7 +1067,7 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 
-    static public int getEnumFor_AssetType(String label) {
+    public static int getEnumFor_AssetType(String label) {
         if (label == null) {
             return 0;
         }
@@ -1093,7 +1092,7 @@ public class AppConstants extends RangerCommonEnums {
         return 0;
     }
 
-    static public int getEnumFor_BooleanValue(boolean label) {
+    public static int getEnumFor_BooleanValue(boolean label) {
         if (label) {
             return AppConstants.BOOL_TRUE;
         } else {
@@ -1101,7 +1100,7 @@ public class AppConstants extends RangerCommonEnums {
         }
     }
 
-    static public boolean getBooleanFor_BooleanValue(int elementValue) {
+    public static boolean getBooleanFor_BooleanValue(int elementValue) {
         if (elementValue == 1) {
             return true;
         }
@@ -1111,7 +1110,7 @@ public class AppConstants extends RangerCommonEnums {
         return false;
     }
 
-    static public int getEnumFor_ResourceType(String label) {
+    public static int getEnumFor_ResourceType(String label) {
         if (label == null) {
             return 0;
         }
@@ -1151,7 +1150,7 @@ public class AppConstants extends RangerCommonEnums {
         return 0;
     }
 
-    static public int getEnumFor_XAPermType(String label) {
+    public static int getEnumFor_XAPermType(String label) {
         if (label == null) {
             return 0;
         }
@@ -1275,7 +1274,7 @@ public class AppConstants extends RangerCommonEnums {
         return 0;
     }
 
-    static public int getEnumFor_PolicyType(String label) {
+    public static int getEnumFor_PolicyType(String label) {
         if (label == null) {
             return 0;
         }
@@ -1288,7 +1287,7 @@ public class AppConstants extends RangerCommonEnums {
         return 0;
     }
 
-    static public int getEnumFor_DatabaseFlavor(String label) {
+    public static int getEnumFor_DatabaseFlavor(String label) {
         if (label == null) {
             return DB_FLAVOR_UNKNOWN; // DB_FLAVOR_UNKNOWN
         }
@@ -1310,7 +1309,7 @@ public class AppConstants extends RangerCommonEnums {
         return DB_FLAVOR_UNKNOWN;
     }
 
-    static public String getLabelFor_DatabaseFlavor(int elementValue) {
+    public static String getLabelFor_DatabaseFlavor(int elementValue) {
         if (elementValue == DB_FLAVOR_UNKNOWN) {
             return "UNKNOWN"; // Unknown
         }
@@ -1332,4 +1331,3 @@ public class AppConstants extends RangerCommonEnums {
         return null;
     }
 }
-

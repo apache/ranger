@@ -31,21 +31,20 @@ public class RangerConfigUtil {
     private static final Logger logger = LoggerFactory.getLogger(RangerConfigUtil.class);
 
     String   webappRootURL;
-    int      defaultMaxRows      = 250;
+    int      defaultMaxRows = 250;
     String[] roles;
-    boolean  accessFilterEnabled = true;
-    boolean  isModerationEnabled = false;
-    boolean  isUserPrefEnabled   = false;
+    boolean  accessFilterEnabled;
+    boolean  isModerationEnabled;
+    boolean  isUserPrefEnabled;
 
     public RangerConfigUtil() {
-
         webappRootURL = PropertiesUtil.getProperty("ranger.externalurl");
-        if (webappRootURL == null || webappRootURL.trim().length() == 0) {
+
+        if (webappRootURL == null || webappRootURL.trim().isEmpty()) {
             logger.error("webapp URL is not set. Please ranger.externalurl property");
         }
 
-        defaultMaxRows = PropertiesUtil.getIntProperty(
-                "ranger.db.maxrows.default", defaultMaxRows);
+        defaultMaxRows = PropertiesUtil.getIntProperty("ranger.db.maxrows.default", defaultMaxRows);
         roles          = PropertiesUtil.getPropertyStringList("ranger.users.roles.list");
 
         accessFilterEnabled = PropertiesUtil.getBooleanProperty("ranger.db.access.filter.enable", true);

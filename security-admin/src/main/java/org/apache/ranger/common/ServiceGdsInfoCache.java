@@ -258,7 +258,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
                             ret.add(policy);
                         }
                     } catch (Exception excp) {
-                        LOG.error("getPolicies(): failed to get policy with id=" + policyId, excp);
+                        LOG.error("getPolicies(): failed to get policy with id={}", policyId, excp);
                     }
                 }
             }

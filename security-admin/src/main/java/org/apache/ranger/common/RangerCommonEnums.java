@@ -24,7 +24,6 @@ package org.apache.ranger.common;
  */
 
 public class RangerCommonEnums {
-
     /***************************************************************
      * Enum values for AllowedPermission
      **************************************************************/
@@ -880,7 +879,7 @@ public class RangerCommonEnums {
      */
     public static final int ClassTypes_MAX = 1012;
 
-    static public String getLabelFor_VisibilityStatus(int elementValue) {
+    public static String getLabelFor_VisibilityStatus(int elementValue) {
         if (elementValue == 0) {
             return "Hidden"; //IS_HIDDEN
         }
@@ -890,7 +889,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ActiveStatus(int elementValue) {
+    public static String getLabelFor_ActiveStatus(int elementValue) {
         if (elementValue == 0) {
             return "Disabled"; //STATUS_DISABLED
         }
@@ -903,7 +902,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ActivationStatus(int elementValue) {
+    public static String getLabelFor_ActivationStatus(int elementValue) {
         if (elementValue == 0) {
             return "Disabled"; //ACT_STATUS_DISABLED
         }
@@ -931,7 +930,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_BooleanValue(int elementValue) {
+    public static String getLabelFor_BooleanValue(int elementValue) {
         if (elementValue == 0) {
             return "None"; //BOOL_NONE
         }
@@ -944,7 +943,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_DataType(int elementValue) {
+    public static String getLabelFor_DataType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //DATA_TYPE_UNKNOWN
         }
@@ -975,7 +974,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_DeviceType(int elementValue) {
+    public static String getLabelFor_DeviceType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //DEVICE_UNKNOWN
         }
@@ -997,7 +996,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_DiffLevel(int elementValue) {
+    public static String getLabelFor_DiffLevel(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //DIFF_UNKNOWN
         }
@@ -1013,7 +1012,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_FileType(int elementValue) {
+    public static String getLabelFor_FileType(int elementValue) {
         if (elementValue == 0) {
             return "File"; //FILE_FILE
         }
@@ -1023,7 +1022,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_FreqType(int elementValue) {
+    public static String getLabelFor_FreqType(int elementValue) {
         if (elementValue == 0) {
             return "None"; //FREQ_NONE
         }
@@ -1048,7 +1047,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_MimeType(int elementValue) {
+    public static String getLabelFor_MimeType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //MIME_UNKNOWN
         }
@@ -1067,7 +1066,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_NumberFormat(int elementValue) {
+    public static String getLabelFor_NumberFormat(int elementValue) {
         if (elementValue == 0) {
             return "None"; //NUM_FORMAT_NONE
         }
@@ -1083,7 +1082,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ObjectStatus(int elementValue) {
+    public static String getLabelFor_ObjectStatus(int elementValue) {
         if (elementValue == 0) {
             return "Active"; //OBJ_STATUS_ACTIVE
         }
@@ -1096,7 +1095,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_PasswordResetStatus(int elementValue) {
+    public static String getLabelFor_PasswordResetStatus(int elementValue) {
         if (elementValue == 0) {
             return "Active"; //PWD_RESET_ACTIVE
         }
@@ -1112,7 +1111,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_PriorityType(int elementValue) {
+    public static String getLabelFor_PriorityType(int elementValue) {
         if (elementValue == 0) {
             return "Normal"; //PRIORITY_NORMAL
         }
@@ -1128,7 +1127,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ProgressStatus(int elementValue) {
+    public static String getLabelFor_ProgressStatus(int elementValue) {
         if (elementValue == 0) {
             return "Pending"; //PROGRESS_PENDING
         }
@@ -1147,7 +1146,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_RelationType(int elementValue) {
+    public static String getLabelFor_RelationType(int elementValue) {
         if (elementValue == 0) {
             return "None"; //REL_NONE
         }
@@ -1157,23 +1156,28 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_UserSource(int elementValue) {
+    public static String getLabelFor_UserSource(int elementValue) {
         if (elementValue == 0) {
             return "Application"; //USER_APP
         }
         if (elementValue == 1) {
             return "External"; //USER_EXTERNAL
         }
-		/*if( elementValue == 1 ) {
-			return "Google"; //USER_GOOGLE
-		}
-		if( elementValue == 2 ) {
-			return "FaceBook"; //USER_FB
-		}*/
+
+        /*
+        if (elementValue == 1) {
+            return "Google"; //USER_GOOGLE
+        }
+
+        if (elementValue == 2) {
+            return "FaceBook"; //USER_FB
+        }
+        */
+
         return null;
     }
 
-    static public String getLabelFor_AssetType(int elementValue) {
+    public static String getLabelFor_AssetType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //ASSET_UNKNOWN
         }
@@ -1198,7 +1202,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_AccessResult(int elementValue) {
+    public static String getLabelFor_AccessResult(int elementValue) {
         if (elementValue == 0) {
             return "Denied"; //ACCESS_RESULT_DENIED
         }
@@ -1208,7 +1212,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_PolicyType(int elementValue) {
+    public static String getLabelFor_PolicyType(int elementValue) {
         if (elementValue == 0) {
             return "Inclusion"; //POLICY_INCLUSION
         }
@@ -1218,7 +1222,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAAuditType(int elementValue) {
+    public static String getLabelFor_XAAuditType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_AUDIT_TYPE_UNKNOWN
         }
@@ -1243,7 +1247,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ResourceType(int elementValue) {
+    public static String getLabelFor_ResourceType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //RESOURCE_UNKNOWN
         }
@@ -1274,7 +1278,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAGroupType(int elementValue) {
+    public static String getLabelFor_XAGroupType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_GROUP_UNKNOWN
         }
@@ -1290,7 +1294,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAPermForType(int elementValue) {
+    public static String getLabelFor_XAPermForType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_PERM_FOR_UNKNOWN
         }
@@ -1303,7 +1307,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_XAPermType(int elementValue) {
+    public static String getLabelFor_XAPermType(int elementValue) {
         if (elementValue == 0) {
             return "Unknown"; //XA_PERM_TYPE_UNKNOWN
         }
@@ -1361,7 +1365,7 @@ public class RangerCommonEnums {
         return null;
     }
 
-    static public String getLabelFor_ClassTypes(int elementValue) {
+    public static String getLabelFor_ClassTypes(int elementValue) {
         if (elementValue == 0) {
             return "None"; //CLASS_TYPE_NONE
         }
@@ -1440,4 +1444,3 @@ public class RangerCommonEnums {
         return null;
     }
 }
-

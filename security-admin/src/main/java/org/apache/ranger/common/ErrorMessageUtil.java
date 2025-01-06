@@ -35,7 +35,6 @@ public class ErrorMessageUtil extends PropertyPlaceholderConfigurer {
     private static Map<String, String> messageMap;
 
     private ErrorMessageUtil() {
-
     }
 
     public static String getMessage(String key) {
@@ -43,16 +42,16 @@ public class ErrorMessageUtil extends PropertyPlaceholderConfigurer {
     }
 
     @Override
-    protected void processProperties(
-            ConfigurableListableBeanFactory beanFactory, Properties props)
-            throws BeansException {
+    protected void processProperties(ConfigurableListableBeanFactory beanFactory, Properties props) throws BeansException {
         super.processProperties(beanFactory, props);
 
-        messageMap = new HashMap<String, String>();
+        messageMap = new HashMap<>();
+
         Set<Object> keySet = props.keySet();
 
         for (Object key : keySet) {
             String keyStr = key.toString();
+
             messageMap.put(keyStr, props.getProperty(keyStr));
         }
     }

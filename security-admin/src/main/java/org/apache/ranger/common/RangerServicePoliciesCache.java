@@ -35,7 +35,6 @@ import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +49,7 @@ public class RangerServicePoliciesCache {
 
     private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-    public static volatile RangerServicePoliciesCache sInstance = null;
+    public static volatile RangerServicePoliciesCache sInstance;
 
     private final int                                 waitTimeInSeconds;
     private final boolean                             dedupStrings;
@@ -64,14 +63,20 @@ public class RangerServicePoliciesCache {
     }
 
     public static RangerServicePoliciesCache getInstance() {
-        if (sInstance == null) {
+        RangerServicePoliciesCache me = sInstance;
+
+        if (me == null) {
             synchronized (RangerServicePoliciesCache.class) {
-                if (sInstance == null) {
-                    sInstance = new RangerServicePoliciesCache();
+                me = sInstance;
+
+                if (me == null) {
+                    me        = new RangerServicePoliciesCache();
+                    sInstance = me;
                 }
             }
         }
-        return sInstance;
+
+        return me;
     }
 
     public void dump() {
@@ -82,28 +87,24 @@ public class RangerServicePoliciesCache {
         }
 
         if (CollectionUtils.isNotEmpty(serviceNames)) {
-
             for (String serviceName : serviceNames) {
                 final ServicePoliciesWrapper cachedServicePoliciesWrapper;
 
                 synchronized (this) {
                     cachedServicePoliciesWrapper = servicePoliciesMap.get(serviceName);
                 }
-                LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServicePoliciesWrapper);
+
+                LOG.debug("serviceName:{}, Cached-MetaData:{}", serviceName, cachedServicePoliciesWrapper);
             }
         }
     }
 
     public ServicePolicies getServicePolicies(String serviceName, Long serviceId, Long lastKnownVersion, boolean needsBackwardCompatibility, ServiceStore serviceStore) throws Exception {
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + ")");
-        }
+        LOG.debug("==> RangerServicePoliciesCache.getServicePolicies({}, {}, {}, {})", serviceName, serviceId, lastKnownVersion, needsBackwardCompatibility);
 
         ServicePolicies ret = null;
 
         if (StringUtils.isNotBlank(serviceName) && serviceId != null) {
-
             ServicePoliciesWrapper servicePoliciesWrapper;
 
             synchronized (this) {
@@ -112,17 +113,19 @@ public class RangerServicePoliciesCache {
                 if (servicePoliciesWrapper != null) {
                     if (!serviceId.equals(servicePoliciesWrapper.getServiceId())) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Service [" + serviceName + "] changed service-id from " + servicePoliciesWrapper.getServiceId()
-                                    + " to " + serviceId);
-                            LOG.debug("Recreating servicePoliciesWrapper for serviceName [" + serviceName + "]");
+                            LOG.debug("Service [{}] changed service-id from {} to {}", serviceName, servicePoliciesWrapper.getServiceId(), serviceId);
+                            LOG.debug("Recreating servicePoliciesWrapper for serviceName [{}]", serviceName);
                         }
+
                         servicePoliciesMap.remove(serviceName);
+
                         servicePoliciesWrapper = null;
                     }
                 }
 
                 if (servicePoliciesWrapper == null) {
                     servicePoliciesWrapper = new ServicePoliciesWrapper(serviceId);
+
                     servicePoliciesMap.put(serviceName, servicePoliciesWrapper);
                 }
             }
@@ -130,16 +133,15 @@ public class RangerServicePoliciesCache {
             if (serviceStore != null) {
                 ret = servicePoliciesWrapper.getLatestOrCached(serviceName, serviceStore, lastKnownVersion, needsBackwardCompatibility);
             } else {
-                LOG.error("getServicePolicies(" + serviceName + "): failed to get latest policies as service-store is null! Returning cached servicePolicies!");
+                LOG.error("getServicePolicies({}): failed to get latest policies as service-store is null! Returning cached servicePolicies!", serviceName);
+
                 ret = servicePoliciesWrapper.getServicePolicies();
             }
         } else {
             LOG.error("getServicePolicies() failed to get policies as serviceName is null or blank and/or serviceId is null!");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): ret:[" + ret + "]");
-        }
+        LOG.debug("<== RangerServicePoliciesCache.getServicePolicies({}, {}, {}, {}): ret:[{}]", serviceName, serviceId, lastKnownVersion, needsBackwardCompatibility, ret);
 
         return ret;
     }
@@ -152,27 +154,25 @@ public class RangerServicePoliciesCache {
      * @return true if was able to reset policy cache, false otherwise
      */
     public boolean resetCache(final String serviceName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServicePoliciesCache.resetCache({})", serviceName);
-        }
+        LOG.debug("==> RangerServicePoliciesCache.resetCache({})", serviceName);
 
         boolean ret = false;
+
         synchronized (this) {
             if (!servicePoliciesMap.isEmpty()) {
                 if (StringUtils.isBlank(serviceName)) {
                     servicePoliciesMap.clear();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for all services.");
-                    }
+
+                    LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for all services.");
+
                     ret = true;
                 } else {
                     ServicePoliciesWrapper removedServicePoliciesWrapper = servicePoliciesMap.remove(serviceName.trim()); // returns null if key not found
+
                     ret = removedServicePoliciesWrapper != null;
 
                     if (ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
-                        }
+                        LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
                     } else {
                         LOG.warn("RangerServicePoliciesCache.resetCache(): Caching for [{}] service not found, hence reset is skipped.", serviceName);
                     }
@@ -182,26 +182,23 @@ public class RangerServicePoliciesCache {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServicePoliciesCache.resetCache(): ret={}", ret);
-        }
+        LOG.debug("<== RangerServicePoliciesCache.resetCache(): ret={}", ret);
 
         return ret;
     }
 
     public void saveToCache(ServicePolicies policies) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServicePoliciesCache(serviceName=" + policies.getServiceName() + ").saveToCache()");
-        }
+        LOG.debug("==> RangerServicePoliciesCache(serviceName={}).saveToCache()", ((policies != null) ? policies.getServiceName() : "null"));
+
         if (policies != null) {
             RangerAdminConfig config                  = RangerAdminConfig.getInstance();
             boolean           doSaveToDisk            = config.getBoolean("ranger.admin.policy.save.to.disk", false);
             int               maxVersionsToSaveToDisk = config.getInt("ranger.admin.policy.max.versions.to.save.to.disk", 1);
 
             if (doSaveToDisk) {
-                File cacheFile = null;
+                File   cacheFile = null;
+                String cacheDir  = config.get("ranger.admin.policy.cache.dir");
 
-                String cacheDir = config.get("ranger.admin.policy.cache.dir");
                 if (cacheDir != null) {
                     String appId         = policies.getServiceDef().getName();
                     String serviceName   = policies.getServiceName();
@@ -213,11 +210,13 @@ public class RangerServicePoliciesCache {
 
                     // Create the cacheDir if it doesn't already exist
                     File cacheDirTmp = new File(cacheDir);
+
                     if (cacheDirTmp.exists()) {
                         cacheFile = new File(cacheDir + File.separator + cacheFileName);
                     } else {
                         try {
                             cacheDirTmp.mkdirs();
+
                             cacheFile = new File(cacheDir + File.separator + cacheFileName);
                         } catch (SecurityException ex) {
                             LOG.error("Cannot create cache directory", ex);
@@ -229,15 +228,16 @@ public class RangerServicePoliciesCache {
                     try (Writer writer = new FileWriter(cacheFile)) {
                         JsonUtils.objectToWriter(writer, policies);
                     } catch (Exception excp) {
-                        LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+                        LOG.error("failed to save policies to cache file '{}'", cacheFile.getAbsolutePath(), excp);
                     }
-                    String serviceDefName = policies.getServiceDef().getName();
-                    String serviceName    = policies.getServiceName();
 
+                    String     serviceDefName = policies.getServiceDef().getName();
+                    String     serviceName    = policies.getServiceName();
                     File       parentFile     = cacheFile.getParentFile();
                     FileFilter logFileFilter  = (file) -> file.getName().matches(serviceDefName + "_.+json_.+");
                     File[]     filesInParent  = parentFile.listFiles(logFileFilter);
                     List<Long> policyVersions = new ArrayList<>();
+
                     if (filesInParent != null && filesInParent.length > 0) {
                         for (File f : filesInParent) {
                             String fileName = f.getName();
@@ -245,20 +245,20 @@ public class RangerServicePoliciesCache {
                             int    policyVersionIdx = fileName.lastIndexOf("json_");
                             String policyVersionStr = fileName.substring(policyVersionIdx + 5);
                             Long   policyVersion    = Long.valueOf(policyVersionStr);
+
                             policyVersions.add(policyVersion);
                         }
                     } else {
-                        LOG.info("No files matching '" + serviceDefName + "_.+json_*' found");
+                        LOG.info("No files matching '{}_.+json_*' found", serviceDefName);
                     }
+
                     if (!policyVersions.isEmpty()) {
-                        policyVersions.sort(new Comparator<Long>() {
-                            @Override
-                            public int compare(Long o1, Long o2) {
-                                if (o1.equals(o2)) {
-                                    return 0;
-                                }
-                                return o1 < o2 ? -1 : 1;
+                        policyVersions.sort((o1, o2) -> {
+                            if (o1.equals(o2)) {
+                                return 0;
                             }
+
+                            return o1 < o2 ? -1 : 1;
                         });
                     }
 
@@ -266,12 +266,13 @@ public class RangerServicePoliciesCache {
                         String fileName = serviceDefName + "_" + serviceName + ".json_" + policyVersions.get(0);
                         String pathName = parentFile.getAbsolutePath() + File.separator + fileName;
                         File   toDelete = new File(pathName);
+
                         if (toDelete.exists()) {
                             //LOG.info("Deleting file :[" + pathName + "]");
                             boolean isDeleted = toDelete.delete();
                             //LOG.info("file :[" + pathName + "] is deleted");
                         } else {
-                            LOG.info("File: " + pathName + " does not exist!");
+                            LOG.info("File: {} does not exist!", pathName);
                         }
                     }
                 }
@@ -280,17 +281,15 @@ public class RangerServicePoliciesCache {
             LOG.error("ServicePolicies is null object!!");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServicePoliciesCache(serviceName=" + policies.getServiceName() + ").saveToCache()");
-        }
+        LOG.debug("<== RangerServicePoliciesCache(serviceName={}).saveToCache()", policies.getServiceName());
     }
 
     private class ServicePoliciesWrapper {
-        final Long serviceId;
-        final ReentrantLock lock = new ReentrantLock();
-        ServicePolicies servicePolicies;
-        Date            updateTime            = null;
-        long            longestDbLoadTimeInMs = -1;
+        final Long               serviceId;
+        final ReentrantLock      lock                  = new ReentrantLock();
+        ServicePolicies          servicePolicies;
+        Date                     updateTime;
+        long                     longestDbLoadTimeInMs = -1;
         ServicePolicyDeltasCache deltaCache;
 
         ServicePoliciesWrapper(Long serviceId) {
@@ -307,7 +306,9 @@ public class RangerServicePoliciesCache {
             return sb.toString();
         }
 
-        Long getServiceId() {return serviceId;}
+        Long getServiceId() {
+            return serviceId;
+        }
 
         ServicePolicies getServicePolicies() {
             return servicePolicies;
@@ -318,9 +319,8 @@ public class RangerServicePoliciesCache {
         }
 
         ServicePolicies getLatestOrCached(String serviceName, ServiceStore serviceStore, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerServicePoliciesCache.getLatestOrCached(lastKnownVersion=" + lastKnownVersion + ", " + needsBackwardCompatibility + ")");
-            }
+            LOG.debug("==> RangerServicePoliciesCache.getLatestOrCached(lastKnownVersion={}, {})", lastKnownVersion, needsBackwardCompatibility);
+
             ServicePolicies ret           = null;
             boolean         lockResult    = false;
             boolean         doSaveToCache = false;
@@ -335,20 +335,17 @@ public class RangerServicePoliciesCache {
 
                     if (this.servicePolicies != null) {
                         if (isCacheReloadedByDQEvent) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("ServicePolicies cache was completely loaded from database because of a disqualifying event - such as service-definition change!");
-                            }
+                            LOG.debug("ServicePolicies cache was completely loaded from database because of a disqualifying event - such as service-definition change!");
                         }
+
                         if (!lastKnownVersion.equals(servicePolicies.getPolicyVersion()) || isCacheReloadedByDQEvent) {
                             doSaveToCache = true;
                         }
 
-                        if (needsBackwardCompatibility || isCacheReloadedByDQEvent
-                                || lastKnownVersion == -1L || lastKnownVersion.equals(servicePolicies.getPolicyVersion())) {
+                        if (needsBackwardCompatibility || isCacheReloadedByDQEvent || lastKnownVersion == -1L || lastKnownVersion.equals(servicePolicies.getPolicyVersion())) {
                             // Looking for all policies, or Some disqualifying change encountered
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("All policies were requested, returning cached ServicePolicies");
-                            }
+                            LOG.debug("All policies were requested, returning cached ServicePolicies");
+
                             ret = this.servicePolicies;
                         } else {
                             boolean         isDeltaCacheReinitialized = false;
@@ -358,16 +355,17 @@ public class RangerServicePoliciesCache {
                                 servicePoliciesForDeltas  = serviceStore.getServicePolicyDeltas(serviceName, lastKnownVersion, servicePolicies.getPolicyVersion());
                                 isDeltaCacheReinitialized = true;
                             }
+
                             if (servicePoliciesForDeltas != null && servicePoliciesForDeltas.getPolicyDeltas() != null) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[" + lastKnownVersion + "]");
-                                }
+                                LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[{}]", lastKnownVersion);
+
                                 if (isDeltaCacheReinitialized) {
                                     this.deltaCache = new ServicePolicyDeltasCache(lastKnownVersion, servicePoliciesForDeltas);
                                 }
+
                                 ret = servicePoliciesForDeltas;
                             } else {
-                                LOG.warn("Deltas were requested for service:[" + serviceName + "], but could not get them!! lastKnownVersion:[" + lastKnownVersion + "]; Returning cached ServicePolicies:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
+                                LOG.warn("Deltas were requested for service:[{}], but could not get them!! lastKnownVersion:[{}]; Returning cached ServicePolicies:[{}]", serviceName, lastKnownVersion, servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L);
 
                                 this.deltaCache = null;
                                 ret             = this.servicePolicies;
@@ -377,7 +375,8 @@ public class RangerServicePoliciesCache {
                         LOG.error("ServicePolicies object is null!");
                     }
                 } else {
-                    LOG.error("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies and wait Queue Length:[" + lock.getQueueLength() + "], servicePolicies version:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
+                    LOG.error("Could not get lock in [{}] seconds, returning cached ServicePolicies and wait Queue Length:[{}], servicePolicies version:[{}]", waitTimeInSeconds, lock.getQueueLength(), servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L);
+
                     ret           = this.servicePolicies;
                     doSaveToCache = true;
                 }
@@ -388,39 +387,30 @@ public class RangerServicePoliciesCache {
                 if (doSaveToCache) {
                     saveToCache(this.servicePolicies);
                 }
+
                 if (lockResult) {
                     lock.unlock();
                 }
             }
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("RangerServicePoliciesCache.getLatestOrCached - Returns ServicePolicies:[" + ret + "]");
-            }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerServicePoliciesCache.getLatestOrCached(lastKnownVersion=" + lastKnownVersion + ", " + needsBackwardCompatibility + ") : " + ret);
-            }
+            LOG.trace("RangerServicePoliciesCache.getLatestOrCached - Returns ServicePolicies:[{}]", ret);
+            LOG.debug("<== RangerServicePoliciesCache.getLatestOrCached(lastKnownVersion={}, {}) : {}", lastKnownVersion, needsBackwardCompatibility, ret);
+
             return ret;
         }
 
         boolean getLatest(String serviceName, ServiceStore serviceStore, Long lastKnownVersion) throws Exception {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> ServicePoliciesWrapper.getLatest(serviceName=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ")");
-            }
+            LOG.debug("==> ServicePoliciesWrapper.getLatest(serviceName={}, lastKnownVersion={})", serviceName, lastKnownVersion);
 
             final Long servicePolicyVersionInDb     = serviceStore.getServicePolicyVersion(serviceName);
             final Long cachedServicePoliciesVersion = servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L;
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("ServicePolicies version in cache[" + cachedServicePoliciesVersion + "], ServicePolicies version in database[" + servicePolicyVersionInDb + "]");
-            }
+            LOG.debug("ServicePolicies version in cache[{}], ServicePolicies version in database[{}]", cachedServicePoliciesVersion, servicePolicyVersionInDb);
 
             boolean isCacheReloadedByDQEvent = false;
 
             if (servicePolicyVersionInDb == null || !servicePolicyVersionInDb.equals(cachedServicePoliciesVersion)) {
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("loading servicePolicies from database");
-                }
+                LOG.debug("loading servicePolicies from database");
 
                 final long            startTimeMs           = System.currentTimeMillis();
                 final ServicePolicies servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
@@ -433,34 +423,27 @@ public class RangerServicePoliciesCache {
                 updateTime = new Date();
 
                 if (servicePoliciesFromDb != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("loading servicePolicies from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
-                    }
+                    LOG.debug("loading servicePolicies from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTime));
 
                     if (dedupStrings) {
                         servicePoliciesFromDb.dedupStrings();
                     }
 
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Successfully loaded ServicePolicies from database: ServicePolicies:[" + servicePoliciesFromDb + "]");
-                    }
+                    LOG.debug("Successfully loaded ServicePolicies from database: ServicePolicies:[{}]", servicePoliciesFromDb);
+
                     if (servicePolicies == null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Initializing ServicePolicies cache for the first time");
-                        }
+                        LOG.debug("Initializing ServicePolicies cache for the first time");
+
                         servicePolicies = servicePoliciesFromDb;
                     } else if (servicePoliciesFromDb.getPolicyDeltas() == null) {
                         // service-policies are loaded because service/service-def changed
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Complete set of policies are loaded from database, because of some disqualifying event");
-                        }
+                        LOG.debug("Complete set of policies are loaded from database, because of some disqualifying event");
+
                         servicePolicies          = servicePoliciesFromDb;
                         isCacheReloadedByDQEvent = true;
                     } else { // Previously cached service policies are still valid - no service/service-def change
                         // Rebuild policies cache from original policies and deltas
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Retrieved policy-deltas from database. These will be applied on top of ServicePolicy version:[" + cachedServicePoliciesVersion + "], policy-deltas:[" + servicePoliciesFromDb.getPolicyDeltas() + "]");
-                        }
+                        LOG.debug("Retrieved policy-deltas from database. These will be applied on top of ServicePolicy version:[{}], policy-deltas:[{}]", cachedServicePoliciesVersion, servicePoliciesFromDb.getPolicyDeltas());
 
                         final List<RangerPolicy> policies    = servicePolicies.getPolicies() == null ? new ArrayList<>() : servicePolicies.getPolicies();
                         final List<RangerPolicy> newPolicies = RangerPolicyDeltaUtil.applyDeltas(policies, servicePoliciesFromDb.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
@@ -473,9 +456,8 @@ public class RangerServicePoliciesCache {
                         // Rebuild tag-policies from original tag-policies and deltas
                         if (servicePoliciesFromDb.getTagPolicies() != null) {
                             String tagServiceName = servicePoliciesFromDb.getTagPolicies().getServiceName();
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("This service has associated tag service:[" + tagServiceName + "]. Will compute tagPolicies from corresponding policy-deltas");
-                            }
+
+                            LOG.debug("This service has associated tag service:[{}]. Will compute tagPolicies from corresponding policy-deltas", tagServiceName);
 
                             final List<RangerPolicy> tagPolicies    = (servicePolicies.getTagPolicies() == null || CollectionUtils.isEmpty(servicePolicies.getTagPolicies().getPolicies())) ? new ArrayList<>() : servicePolicies.getTagPolicies().getPolicies();
                             final List<RangerPolicy> newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(tagPolicies, servicePoliciesFromDb.getPolicyDeltas(), servicePoliciesFromDb.getTagPolicies().getServiceDef().getName());
@@ -485,32 +467,25 @@ public class RangerServicePoliciesCache {
 
                             checkCacheSanity(servicePoliciesFromDb.getTagPolicies().getServiceName(), serviceStore, true);
                         } else {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("This service has no associated tag service");
-                            }
+                            LOG.debug("This service has no associated tag service");
                         }
                     }
+
                     pruneUnusedAttributes();
+
                     this.deltaCache = null;
                 } else {
-                    LOG.error("Could not get policies from database, from-version:[" + cachedServicePoliciesVersion + ")");
+                    LOG.error("Could not get policies from database, from-version:[{})", cachedServicePoliciesVersion);
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ServicePolicies old-version:[" + cachedServicePoliciesVersion + "], new-version:[" + servicePolicies.getPolicyVersion() + "]");
-                }
+
+                LOG.debug("ServicePolicies old-version:[{}], new-version:[{}]", cachedServicePoliciesVersion, servicePolicies.getPolicyVersion());
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ServicePolicies Cache already has the latest version, version:[" + servicePolicies.getPolicyVersion() + "]");
-                }
+                LOG.debug("ServicePolicies Cache already has the latest version, version:[{}]", servicePolicies.getPolicyVersion());
             }
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Latest Cached ServicePolicies:[" + servicePolicies + "]");
-            }
+            LOG.trace("Latest Cached ServicePolicies:[{}]", servicePolicies);
+            LOG.debug("<== ServicePoliciesWrapper.getLatest(serviceName={}, lastKnownVersion={}) : {}", serviceName, lastKnownVersion, isCacheReloadedByDQEvent);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== ServicePoliciesWrapper.getLatest(serviceName=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ") : " + isCacheReloadedByDQEvent);
-            }
             return isCacheReloadedByDQEvent;
         }
 
@@ -529,20 +504,19 @@ public class RangerServicePoliciesCache {
         }
 
         private void checkCacheSanity(String serviceName, ServiceStore serviceStore, boolean isTagService) {
-            final boolean result;
-            Long          dbPolicyVersion     = serviceStore.getServicePolicyVersion(serviceName);
-            Long          cachedPolicyVersion = isTagService ? servicePolicies.getTagPolicies().getPolicyVersion() : servicePolicies.getPolicyVersion();
-
-            result = Objects.equals(dbPolicyVersion, cachedPolicyVersion);
+            Long    dbPolicyVersion     = serviceStore.getServicePolicyVersion(serviceName);
+            Long    cachedPolicyVersion = isTagService ? servicePolicies.getTagPolicies().getPolicyVersion() : servicePolicies.getPolicyVersion();
+            boolean result              = Objects.equals(dbPolicyVersion, cachedPolicyVersion);
 
             if (!result && cachedPolicyVersion != null && dbPolicyVersion != null && cachedPolicyVersion < dbPolicyVersion) {
-                LOG.info("checkCacheSanity(serviceName=" + serviceName + "): policy cache has a different version than one in the database. However, changes from " + cachedPolicyVersion + " to " + dbPolicyVersion + " will be downloaded in the next download. policyVersionInDB=" + dbPolicyVersion + ", policyVersionInCache=" + cachedPolicyVersion);
+                LOG.info("checkCacheSanity(serviceName={}): policy cache has a different version than one in the database. However, changes from {} to {} will be downloaded in the next download. policyVersionInDB={}, policyVersionInCache={}", serviceName, cachedPolicyVersion, dbPolicyVersion, dbPolicyVersion, cachedPolicyVersion);
             }
         }
 
         private void pruneUnusedAttributes() {
             if (servicePolicies != null) {
                 pruneUnusedPolicyAttributes(servicePolicies.getPolicies());
+
                 if (servicePolicies.getTagPolicies() != null) {
                     pruneUnusedPolicyAttributes(servicePolicies.getTagPolicies().getPolicies());
                 }
@@ -550,7 +524,6 @@ public class RangerServicePoliciesCache {
         }
 
         private void pruneUnusedPolicyAttributes(List<RangerPolicy> policies) {
-
             // Null out attributes not required by plug-ins
             if (CollectionUtils.isNotEmpty(policies)) {
                 for (RangerPolicy policy : policies) {
@@ -582,4 +555,3 @@ public class RangerServicePoliciesCache {
         }
     }
 }
-

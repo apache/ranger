@@ -22,15 +22,16 @@ package org.apache.ranger.common;
 import java.io.Serializable;
 
 public class RequestContext implements Serializable {
-    private static final long    serialVersionUID         = -7083383106845193385L;
-    private              String  ipAddress                = null;
-    private              String  userAgent                = null;
-    private              String  requestURL               = null;
-    private              int     deviceType               = RangerCommonEnums.DEVICE_UNKNOWN;
-    private              String  serverRequestId          = null;
-    private              boolean isSync                   = true;
-    private              long    startTime                = System.currentTimeMillis();
-    private              int     clientTimeOffsetInMinute = 0;
+    private static final long serialVersionUID = -7083383106845193385L;
+
+    private String  ipAddress;
+    private String  userAgent;
+    private String  requestURL;
+    private String  serverRequestId;
+    private int     deviceType               = RangerCommonEnums.DEVICE_UNKNOWN;
+    private boolean isSync                   = true;
+    private long    startTime                = System.currentTimeMillis();
+    private int     clientTimeOffsetInMinute;
 
     /**
      * @return the ipAddress
