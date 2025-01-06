@@ -39,19 +39,20 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole> {
 
     public List<XXRoleRefRole> findByRoleId(Long roleId) {
         if (roleId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefRole.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<Long> findIdsByRoleId(Long roleId) {
-        List<Long> ret = Collections.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
 
         if (roleId != null) {
             try {
@@ -59,7 +60,7 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole> {
                         .createNamedQuery("XXRoleRefRole.findIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId).getResultList();
             } catch (NoResultException e) {
-                ret = Collections.EMPTY_LIST;
+                ret = Collections.emptyList();
             }
         }
 
@@ -68,26 +69,28 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole> {
 
     public List<XXRoleRefRole> findBySubRoleId(Long subRoleId) {
         if (subRoleId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefRole.findBySubRoleId", tClass)
                     .setParameter("subRoleId", subRoleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXRoleRefRole> findBySubRoleName(String subRoleName) {
         if (subRoleName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRoleRefRole.findBySubRoleName", tClass)
                     .setParameter("subRoleName", subRoleName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
@@ -98,23 +101,24 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole> {
             ret = getEntityManager().createNamedQuery("XXRoleRefRole.findRoleRefRoleCount", Long.class)
                     .setParameter("subRoleName", subRoleName).getSingleResult();
         } catch (Exception e) {
+            // ignore
         }
 
         return ret;
     }
 
     public Set<Long> getContainingRoles(Long subRoleId) {
-        Set<Long> ret;
-
+        Set<Long>           ret;
         List<XXRoleRefRole> roles = findBySubRoleId(subRoleId);
 
         if (CollectionUtils.isNotEmpty(roles)) {
             ret = new HashSet<>();
+
             for (XXRoleRefRole role : roles) {
                 ret.add(role.getRoleId());
             }
         } else {
-            ret = Collections.EMPTY_SET;
+            ret = Collections.emptySet();
         }
 
         return ret;

@@ -41,12 +41,12 @@ public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
     }
 
     public List<XXRMSNotification> getResource() {
-        List<XXRMSNotification> allResource = getAll();
-        return allResource;
+        return getAll();
     }
 
     public Long getMaxIdOfNotifications(long llServiceId, long hlServiceId) {
         Long lastNotificationId = 0L;
+
         try {
             lastNotificationId = getEntityManager()
                     .createNamedQuery("XXRMSNotification.getMaxIdOfNotifications", Long.class)
@@ -60,11 +60,13 @@ public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
                 lastNotificationId = 0L;
             }
         }
+
         return lastNotificationId;
     }
 
     public List<XXRMSNotification> getAllAfterNotificationId(long llServiceId, long hlServiceId, long notificationId) {
-        List<XXRMSNotification> notifications = new ArrayList<>();
+        List<XXRMSNotification> notifications;
+
         try {
             notifications = getEntityManager()
                     .createNamedQuery("XXRMSNotification.getAllAfterNotificationId", XXRMSNotification.class)
@@ -73,25 +75,31 @@ public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
                     .setParameter("notificationId", notificationId)
                     .getResultList();
         } catch (NoResultException e) {
-            LOG.debug("There are no relevant notifications after notification_id:[" + notificationId + "]");
+            LOG.debug("There are no relevant notifications after notification_id:[{}]", notificationId);
+
+            notifications = new ArrayList<>();
         }
+
         return notifications;
     }
 
     public Long findLatestInvalidNotificationId(long llServiceId, long hlServiceId, long lastKnownVersion) {
-        Long latestInvalidNotificationId = -1L;
-
         List<XXRMSNotification> notifications = getNotificationWithTypeAfterNotificationId(llServiceId, hlServiceId, "invalid", lastKnownVersion);
+
+        Long latestInvalidNotificationId;
 
         if (CollectionUtils.isNotEmpty(notifications)) {
             latestInvalidNotificationId = notifications.get(notifications.size() - 1).getNotificationId();
+        } else {
+            latestInvalidNotificationId = -1L;
         }
 
         return latestInvalidNotificationId;
     }
 
     public List<XXRMSNotification> getNotificationWithTypeAfterNotificationId(long llServiceId, long hlServiceId, String changeType, long notificationId) {
-        List<XXRMSNotification> notifications = new ArrayList<>();
+        List<XXRMSNotification> notifications;
+
         try {
             notifications = getEntityManager()
                     .createNamedQuery("XXRMSNotification.getNotificationWithTypeAfterNotificationId", XXRMSNotification.class)
@@ -101,13 +109,15 @@ public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
                     .setParameter("notificationId", notificationId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<>();
+            notifications = new ArrayList<>();
         }
+
         return notifications;
     }
 
     public List<XXRMSNotification> getDeletedNotificationsByHlResourceId(long hlResourceId, long lastKnownVersion) {
-        List<XXRMSNotification> notifications = new ArrayList<>();
+        List<XXRMSNotification> notifications;
+
         try {
             notifications = getEntityManager()
                     .createNamedQuery("XXRMSNotification.getDeletedNotificationsByHlResourceId", XXRMSNotification.class)
@@ -115,8 +125,9 @@ public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
                     .setParameter("lastKnownVersion", lastKnownVersion)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<>();
+            notifications = new ArrayList<>();
         }
+
         return notifications;
     }
 }

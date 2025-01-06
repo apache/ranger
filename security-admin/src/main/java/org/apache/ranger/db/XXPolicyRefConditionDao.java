@@ -39,73 +39,80 @@ public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition> {
 
     public List<XXPolicyRefCondition> findByPolicyId(Long polId) {
         if (polId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyRefCondition.findByPolicyId", tClass)
                     .setParameter("policyId", polId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXPolicyRefCondition> findByConditionName(String conditionName) {
         if (conditionName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionName", tClass)
                     .setParameter("conditionName", conditionName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXPolicyRefCondition> findByConditionDefId(Long conditionDefId) {
         if (conditionDefId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyRefCondition.findByConditionDefId", tClass)
                     .setParameter("conditionDefId", conditionDefId)
                     .getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedConditionNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (policyId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefCondition.findUpdatedConditionNamesByPolicy")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefCondition.findUpdatedConditionNamesByPolicy", Object[].class)
                     .setParameter("policy", policyId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 
-    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedConditionNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (serviceId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefCondition.findUpdatedConditionNamesByService")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefCondition.findUpdatedConditionNamesByService", Object[].class)
                     .setParameter("service", serviceId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 

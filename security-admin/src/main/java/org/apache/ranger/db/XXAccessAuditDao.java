@@ -49,7 +49,7 @@ public class XXAccessAuditDao extends BaseDao<XXAccessAudit> {
             logger.debug(e.getMessage());
         } finally {
             if (maxXXAccessAuditID == null) {
-                maxXXAccessAuditID = Long.valueOf(0L);
+                maxXXAccessAuditID = 0L;
             }
         }
 

@@ -47,18 +47,17 @@ public class XXGroupDao extends BaseDao<XXGroup> {
         super(daoManager);
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXGroup> findByUserId(Long userId) {
         if (userId == null) {
-            return new ArrayList<XXGroup>();
+            return new ArrayList<>();
         }
 
         List<XXGroup> groupList = (List<XXGroup>) getEntityManager()
-                .createNamedQuery("XXGroup.findByUserId")
+                .createNamedQuery("XXGroup.findByUserId", tClass)
                 .setParameter("userId", userId).getResultList();
 
         if (groupList == null) {
-            groupList = new ArrayList<XXGroup>();
+            groupList = new ArrayList<>();
         }
 
         return groupList;
@@ -68,6 +67,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
         if (groupName == null) {
             return null;
         }
+
         try {
             return (XXGroup) getEntityManager()
                     .createNamedQuery("XXGroup.findByGroupName")
@@ -79,17 +79,20 @@ public class XXGroupDao extends BaseDao<XXGroup> {
     }
 
     public Map<Long, String> getAllGroupIdNames() {
-        Map<Long, String> groups = new HashMap<Long, String>();
+        Map<Long, String> groups = new HashMap<>();
+
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroup.getAllGroupIdNames").getResultList();
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXGroup.getAllGroupIdNames", Object[].class).getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     groups.put((Long) row[0], (String) row[1]);
                 }
             }
         } catch (Exception ex) {
-            return new HashMap<Long, String>();
+            return new HashMap<>();
         }
+
         return groups;
     }
 
@@ -105,9 +108,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
                 }
             }
         } catch (NoResultException excp) {
-            if (logger.isDebugEnabled()) {
-                logger.debug(excp.getMessage());
-            }
+            logger.debug(excp.getMessage());
         }
 
         return ret;
@@ -119,7 +120,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
         String              attributes  = (String) row[2];
         String              syncSource  = (String) row[3];
         Number              groupSource = (Number) row[4];
-        Boolean             isInternal  = groupSource != null && groupSource.equals(RangerCommonEnums.GROUP_INTERNAL);
+        boolean             isInternal  = groupSource != null && groupSource.equals(RangerCommonEnums.GROUP_INTERNAL);
         Map<String, String> attrMap     = null;
 
         if (StringUtils.isNotBlank(attributes)) {
@@ -138,7 +139,7 @@ public class XXGroupDao extends BaseDao<XXGroup> {
             attrMap.put(SCRIPT_FIELD__SYNC_SOURCE, syncSource);
         }
 
-        attrMap.put(SCRIPT_FIELD__IS_INTERNAL, isInternal.toString());
+        attrMap.put(SCRIPT_FIELD__IS_INTERNAL, Boolean.toString(isInternal));
 
         return new GroupInfo(name, description, attrMap);
     }

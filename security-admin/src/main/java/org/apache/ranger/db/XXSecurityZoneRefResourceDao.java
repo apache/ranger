@@ -36,6 +36,7 @@ public class XXSecurityZoneRefResourceDao extends BaseDao<XXSecurityZoneRefResou
         if (zoneId == null) {
             return null;
         }
+
         try {
             return  getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefResource.findByZoneId", tClass)
@@ -50,6 +51,7 @@ public class XXSecurityZoneRefResourceDao extends BaseDao<XXSecurityZoneRefResou
         if (resourceDefId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefResource.findByResourceDefId", tClass)
                     .setParameter("resourceDefId", resourceDefId).getResultList();

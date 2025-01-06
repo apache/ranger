@@ -34,27 +34,29 @@ public class XXPolicyItemRowFilterInfoDao extends BaseDao<XXPolicyItemRowFilterI
 
     public List<XXPolicyItemRowFilterInfo> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyItemRowFilterInfo>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemRowFilterInfo.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemRowFilterInfo>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyItemRowFilterInfo> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyItemRowFilterInfo>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemRowFilterInfo.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemRowFilterInfo>();
+            return new ArrayList<>();
         }
     }
 
@@ -62,6 +64,7 @@ public class XXPolicyItemRowFilterInfoDao extends BaseDao<XXPolicyItemRowFilterI
         if (policyId == null) {
             return;
         }
+
         getEntityManager()
                 .createNamedQuery("XXPolicyItemRowFilterInfo.deleteByPolicyId", tClass)
                 .setParameter("policyId", policyId).executeUpdate();

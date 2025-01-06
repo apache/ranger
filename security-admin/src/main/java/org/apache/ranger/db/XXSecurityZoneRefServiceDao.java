@@ -39,12 +39,12 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
         if (zoneId == null) {
             return null;
         }
+
         try {
-            List<XXSecurityZoneRefService> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefService.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
@@ -54,6 +54,7 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
         if (serviceId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefService.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
@@ -66,6 +67,7 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
         if (serviceName == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefService.findByServiceName", tClass)
                     .setParameter("serviceName", serviceName).getResultList();
@@ -78,6 +80,7 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
         if (serviceName == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefService.findByServiceNameAndZoneId", tClass)
                     .setParameter("serviceName", serviceName).setParameter("zoneId", zoneId).getResultList();

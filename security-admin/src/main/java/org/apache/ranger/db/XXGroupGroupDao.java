@@ -42,15 +42,16 @@ public class XXGroupGroupDao extends BaseDao<XXGroupGroup> {
 
     public List<XXGroupGroup> findByGroupId(Long groupId) {
         if (groupId == null) {
-            return new ArrayList<XXGroupGroup>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXGroupGroup.findByGroupId", tClass)
                     .setParameter("groupId", groupId)
                     .setParameter("parentGroupId", groupId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXGroupGroup>();
+            return new ArrayList<>();
         }
     }
 
@@ -68,9 +69,9 @@ public class XXGroupGroupDao extends BaseDao<XXGroupGroup> {
         }
 
         if (groupList != null) {
-            return new HashSet<String>(groupList);
+            return new HashSet<>(groupList);
         }
 
-        return new HashSet<String>();
+        return new HashSet<>();
     }
 }

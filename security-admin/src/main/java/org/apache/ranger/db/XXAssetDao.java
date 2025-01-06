@@ -39,8 +39,10 @@ public class XXAssetDao extends BaseDao<XXAsset> {
     public XXAsset findByAssetName(String name) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
+
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXAsset.findByAssetName", XXAsset.class)
@@ -50,6 +52,7 @@ public class XXAssetDao extends BaseDao<XXAsset> {
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 }

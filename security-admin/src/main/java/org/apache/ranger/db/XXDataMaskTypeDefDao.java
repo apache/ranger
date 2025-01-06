@@ -35,15 +35,15 @@ public class XXDataMaskTypeDefDao extends BaseDao<XXDataMaskTypeDef> {
 
     public List<XXDataMaskTypeDef> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXDataMaskTypeDef>();
+            return new ArrayList<>();
         }
+
         try {
-            List<XXDataMaskTypeDef> retList = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXDataMaskTypeDef.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
-            return retList;
         } catch (NoResultException e) {
-            return new ArrayList<XXDataMaskTypeDef>();
+            return new ArrayList<>();
         }
     }
 
@@ -51,6 +51,7 @@ public class XXDataMaskTypeDefDao extends BaseDao<XXDataMaskTypeDef> {
         if (name == null || serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXDataMaskTypeDef.findByNameAndServiceId", tClass)

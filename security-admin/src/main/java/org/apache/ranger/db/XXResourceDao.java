@@ -43,13 +43,16 @@ public class XXResourceDao extends BaseDao<XXResource> {
     public XXResource findByResourceName(String name) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
+
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXResource.findByResourceName", XXResource.class).setParameter("name", name.trim()).getSingleResult();
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 
@@ -62,44 +65,54 @@ public class XXResourceDao extends BaseDao<XXResource> {
             }
         } else {
             logger.debug("AssetId not provided.");
-            return new ArrayList<XXResource>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
     public List<XXResource> findByAssetId(Long assetId) {
         List<XXResource> xResourceList = null;
+
         if (assetId != null) {
             try {
                 xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetId", XXResource.class).setParameter("assetId", assetId).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
+
             if (xResourceList == null) {
-                xResourceList = new ArrayList<XXResource>();
+                xResourceList = new ArrayList<>();
             }
         } else {
             logger.debug("AssetId not provided.");
-            xResourceList = new ArrayList<XXResource>();
+
+            xResourceList = new ArrayList<>();
         }
+
         return xResourceList;
     }
 
     public List<XXResource> findByAssetType(Integer assetType) {
         List<XXResource> xResourceList = null;
+
         if (assetType != null) {
             try {
                 xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetType", XXResource.class).setParameter("assetType", assetType).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
+
             if (xResourceList == null) {
-                xResourceList = new ArrayList<XXResource>();
+                xResourceList = new ArrayList<>();
             }
         } else {
             logger.debug("AssetType not provided.");
-            xResourceList = new ArrayList<XXResource>();
+
+            xResourceList = new ArrayList<>();
         }
+
         return xResourceList;
     }
 
@@ -107,8 +120,10 @@ public class XXResourceDao extends BaseDao<XXResource> {
         if (assetName == null) {
             return null;
         }
+
         try {
             Date date = (Date) getEntityManager().createNamedQuery("XXResource.getMaxUpdateTimeForAssetName").setParameter("assetName", assetName).getSingleResult();
+
             if (date != null) {
                 return new Timestamp(date.getTime());
             } else {
@@ -129,94 +144,117 @@ public class XXResourceDao extends BaseDao<XXResource> {
             }
         } else {
             logger.debug("Asset name not provided.");
-            return new ArrayList<XXResource>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
     public List<XXResource> findByResourceNameAndAssetIdAndRecursiveFlag(String name, Long assetId, int isRecursive) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
+
             return null;
         }
+
         if (assetId == null) {
             logger.debug("assetId is null");
+
             return null;
         }
+
         try {
-            String resourceName = name.trim();
-            resourceName = "%" + resourceName + "%";
+            String resourceName = "%" + name.trim() + "%";
+
             return getEntityManager().createNamedQuery("XXResource.findByResourceNameAndAssetIdAndRecursiveFlag", XXResource.class).setParameter("name", resourceName).setParameter("assetId", assetId).setParameter("isRecursive", isRecursive).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 
     public List<XXResource> findByResourceNameAndAssetIdAndResourceType(String name, Long assetId, int resourceType) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
+
             return null;
         }
+
         if (assetId == null) {
             logger.debug("assetId is null");
+
             return null;
         }
+
         try {
-            String resourceName = name.trim();
-            resourceName = "%" + resourceName + "%";
+            String resourceName = "%" + name.trim() + "%";
+
             return getEntityManager().createNamedQuery("XXResource.findByResourceNameAndAssetIdAndResourceType", XXResource.class).setParameter("name", resourceName).setParameter("assetId", assetId).setParameter("resourceType", resourceType).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXResource> findByAssetIdAndResourceTypes(Long assetId, List<Integer> resourceType) {
         if (assetId == null) {
             logger.debug("assetId is null");
+
             return null;
         }
+
         try {
-            StringBuilder query = new StringBuilder("SELECT obj FROM XXResource obj WHERE obj.assetId=" + assetId);
-            String whereClause = makeWhereClauseForResourceType(resourceType);
+            StringBuilder query       = new StringBuilder("SELECT obj FROM XXResource obj WHERE obj.assetId=" + assetId);
+            String        whereClause = makeWhereClauseForResourceType(resourceType);
+
             if (!whereClause.trim().isEmpty()) {
-                query.append(" and ( " + whereClause + " )");
+                query.append(" and ( ").append(whereClause).append(" )");
             }
-            return getEntityManager().createQuery(query.toString()).getResultList();
+
+            return getEntityManager().createQuery(query.toString(), tClass).getResultList();
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 
     public List<XXResource> findByAssetIdAndResourceStatus(Long assetId, int resourceStatus) {
         List<XXResource> xResourceList = null;
+
         if (assetId != null) {
             try {
                 xResourceList = getEntityManager().createNamedQuery("XXResource.findByAssetIdAndResourceStatus", XXResource.class).setParameter("assetId", assetId).setParameter("resourceStatus", resourceStatus).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
+
             if (xResourceList == null) {
-                xResourceList = new ArrayList<XXResource>();
+                xResourceList = new ArrayList<>();
             }
         } else {
             logger.debug("AssetId not provided.");
-            xResourceList = new ArrayList<XXResource>();
+
+            xResourceList = new ArrayList<>();
         }
+
         return xResourceList;
     }
 
     private String makeWhereClauseForResourceType(List<Integer> resourceTypes) {
         StringBuilder whereClause = new StringBuilder();
+
         if (resourceTypes != null && !resourceTypes.isEmpty()) {
             for (int i = 0; i < resourceTypes.size() - 1; i++) {
-                whereClause.append("obj.resourceType=" + resourceTypes.get(i) + " OR ");
+                whereClause.append("obj.resourceType=").append(resourceTypes.get(i)).append(" OR ");
             }
-            whereClause.append("obj.resourceType=" + resourceTypes.get(resourceTypes.size() - 1));
+
+            whereClause.append("obj.resourceType=").append(resourceTypes.get(resourceTypes.size() - 1));
         }
+
         return whereClause.toString();
     }
 }

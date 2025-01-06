@@ -34,14 +34,15 @@ public class XXEnumElementDefDao extends BaseDao<XXEnumElementDef> {
 
     public List<XXEnumElementDef> findByEnumDefId(Long enumDefId) {
         if (enumDefId == null) {
-            return new ArrayList<XXEnumElementDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXEnumElementDef.findByEnumDefId", tClass)
                     .setParameter("enumDefId", enumDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXEnumElementDef>();
+            return new ArrayList<>();
         }
     }
 }

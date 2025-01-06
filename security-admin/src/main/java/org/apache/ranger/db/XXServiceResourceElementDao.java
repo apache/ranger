@@ -36,40 +36,43 @@ public class XXServiceResourceElementDao extends BaseDao<XXServiceResourceElemen
 
     public List<XXServiceResourceElement> findByResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResourceElement.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXServiceResourceElement> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResourceElement.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXServiceResourceElement> findTaggedResourcesInServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResourceElement.findTaggedResourcesInServiceId", tClass)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElement>();
+            return new ArrayList<>();
         }
     }
 }

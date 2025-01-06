@@ -36,6 +36,7 @@ public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findByZoneId", tClass)
@@ -50,6 +51,7 @@ public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findUserTypeByZoneId", tClass)
@@ -65,6 +67,7 @@ public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findUserTypeByZoneId", tClass)
@@ -80,6 +83,7 @@ public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser> {
         if (userId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefUser.findByUserId", tClass)
                     .setParameter("userId", userId).getResultList();

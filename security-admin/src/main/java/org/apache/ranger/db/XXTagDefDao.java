@@ -64,17 +64,21 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
 
     public List<XXTagDef> findByServiceId(Long serviceId) {
         List<XXTagDef> ret = new ArrayList<>();
+
         if (serviceId != null) {
             List<Object[]> rows = null;
+
             try {
                 rows = getEntityManager().createNamedQuery("XXTagDef.findByServiceId", Object[].class)
                         .setParameter("serviceId", serviceId).getResultList();
             } catch (NoResultException e) {
                 // Nothing
             }
+
             if (CollectionUtils.isNotEmpty(rows)) {
                 for (Object[] row : rows) {
                     XXTagDef xxTagDef = new XXTagDef();
+
                     xxTagDef.setId((Long) row[0]);
                     xxTagDef.setGuid((String) row[1]);
                     xxTagDef.setVersion((Long) row[2]);
@@ -87,6 +91,7 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
                 }
             }
         }
+
         return ret;
     }
 
@@ -94,20 +99,20 @@ public class XXTagDefDao extends BaseDao<XXTagDef> {
         try {
             return getEntityManager().createNamedQuery("XXTagDef.getAllNames", String.class).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTagDef> findByResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXTagDef>();
+            return new ArrayList<>();
         }
 
         try {
             return getEntityManager().createNamedQuery("XXTagDef.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagDef>();
+            return new ArrayList<>();
         }
     }
 }

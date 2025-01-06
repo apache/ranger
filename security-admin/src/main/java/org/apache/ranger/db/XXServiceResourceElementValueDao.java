@@ -36,65 +36,66 @@ public class XXServiceResourceElementValueDao extends BaseDao<XXServiceResourceE
 
     public List<XXServiceResourceElementValue> findByResValueId(Long resElementId) {
         if (resElementId == null) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByResElementId", tClass)
                     .setParameter("resElementId", resElementId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findValuesByResElementId(Long resElementId) {
         if (resElementId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findValuesByResElementId")
+            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findValuesByResElementId", String.class)
                     .setParameter("resElementId", resElementId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXServiceResourceElementValue> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByServiceId")
+            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXServiceResourceElementValue> findTaggedResourcesInServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findTaggedResourcesInServiceId")
+            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findTaggedResourcesInServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXServiceResourceElementValue> findByResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByResourceId")
+            return getEntityManager().createNamedQuery("XXServiceResourceElementValue.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResourceElementValue>();
+            return new ArrayList<>();
         }
     }
 }

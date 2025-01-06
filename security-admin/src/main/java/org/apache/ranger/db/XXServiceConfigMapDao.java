@@ -38,15 +38,16 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
 
     public List<XXServiceConfigMap> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceConfigMap>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceConfigMap.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceConfigMap>();
+            return new ArrayList<>();
         }
     }
 
@@ -54,6 +55,7 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
         if (serviceId == null || configKey == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceConfigMap.findByServiceAndConfigKey", tClass)
@@ -68,6 +70,7 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
         if (serviceName == null || configKey == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceConfigMap.findByServiceNameAndConfigKey", tClass)
@@ -96,6 +99,7 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
         if (configKey == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceConfigMap.findByConfigKey", tClass)

@@ -38,6 +38,7 @@ public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTag
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefTagService.findByZoneId", tClass)
@@ -52,6 +53,7 @@ public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTag
         if (tagServiceName == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findByTagServiceNameAndZoneId", tClass)
                     .setParameter("tagServiceName", tagServiceName)

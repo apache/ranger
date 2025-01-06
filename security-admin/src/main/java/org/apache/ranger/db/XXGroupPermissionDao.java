@@ -43,14 +43,17 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
                 if (isUpdate) {
                     return getEntityManager().createNamedQuery("XXGroupPermissionUpdates.findByModuleId", XXGroupPermission.class).setParameter("moduleId", moduleId).getResultList();
                 }
+
                 return getEntityManager().createNamedQuery("XXGroupPermission.findByModuleId", XXGroupPermission.class).setParameter("moduleId", moduleId).setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         } else {
             logger.debug("ResourcegroupId not provided.");
-            return new ArrayList<XXGroupPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -63,8 +66,10 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
             }
         } else {
             logger.debug("ResourcegroupId not provided.");
-            return new ArrayList<XXGroupPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -77,8 +82,10 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
             }
         } else {
             logger.debug("ResourcegroupId not provided.");
-            return new ArrayList<XXGroupPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -92,6 +99,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
         } else {
             return null;
         }
+
         return null;
     }
 
@@ -117,6 +125,7 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
         } else {
             logger.debug("ModuleId not provided.");
         }
+
         return null;
     }
 }

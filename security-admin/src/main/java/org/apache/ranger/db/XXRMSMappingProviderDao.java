@@ -47,6 +47,7 @@ public class XXRMSMappingProviderDao extends BaseDao<XXRMSMappingProvider> {
         if (name == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRMSMappingProvider.findByName", tClass)

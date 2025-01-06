@@ -56,11 +56,11 @@ public class XXTrxLogV2Dao extends BaseDao<XXTrxLogV2> {
     public long deleteOlderThan(int olderThanInDays) {
         Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
 
-        logger.info("Deleting x_trx_log_v2 records that are older than " + olderThanInDays + " days, that is, older than " + since);
+        logger.info("Deleting x_trx_log_v2 records that are older than {} days, that is, older than {}", olderThanInDays, since);
 
         long ret = getEntityManager().createNamedQuery("XXTrxLogV2.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
 
-        logger.info("Deleted " + ret + " x_trx_log_v2 records");
+        logger.info("Deleted {} x_trx_log_v2 records", ret);
 
         return ret;
     }

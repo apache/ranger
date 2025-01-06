@@ -52,12 +52,14 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
 
     public List<XXTagChangeLog> findLaterThan(Long version, Long serviceId) {
         final List<XXTagChangeLog> ret;
+
         if (version != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXTagChangeLog.findSinceVersion", Object[].class)
                     .setParameter("version", version)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
+
             // Ensure that first record has the same version as the base-version from where the records are fetched
             if (CollectionUtils.isNotEmpty(logs)) {
                 Iterator<Object[]> iter            = logs.iterator();
@@ -66,6 +68,7 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
                 while (iter.hasNext()) {
                     Object[] record        = iter.next();
                     Long     recordVersion = (Long) record[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
+
                     if (version.equals(recordVersion)) {
                         iter.remove();
                         foundAndRemoved = true;
@@ -73,6 +76,7 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
                         break;
                     }
                 }
+
                 if (foundAndRemoved) {
                     ret = convert(logs);
                 } else {
@@ -91,9 +95,7 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
     public void deleteOlderThan(int olderThanInDays) {
         Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleting records from x_tag_change_log that are older than {} days, that is,  older than {}", olderThanInDays, since);
-        }
+        LOG.debug("Deleting records from x_tag_change_log that are older than {} days, that is,  older than {}", olderThanInDays, since);
 
         getEntityManager().createNamedQuery("XXTagChangeLog.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
     }

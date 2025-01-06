@@ -36,12 +36,12 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
         if (zoneId == null) {
             return null;
         }
+
         try {
-            List<XXSecurityZoneRefRole> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefRole.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
@@ -51,6 +51,7 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
         if (roleId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefRole.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
@@ -66,6 +67,7 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
             ret = getEntityManager().createNamedQuery("XXSecurityZoneRefRole.findRoleRefZoneCount", Long.class)
                     .setParameter("roleName", roleName).getSingleResult();
         } catch (Exception e) {
+            // ignore
         }
 
         return ret;
@@ -75,6 +77,7 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefRole.findRoleTypeByZoneId", tClass)
@@ -90,6 +93,7 @@ public class XXSecurityZoneRefRoleDao extends BaseDao<XXSecurityZoneRefRole> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefRole.findRoleTypeByZoneId", tClass)

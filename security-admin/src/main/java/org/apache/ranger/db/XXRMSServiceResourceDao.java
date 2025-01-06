@@ -43,6 +43,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 
     public XXRMSServiceResourceDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
+
         daoManagerBase = daoManager;
     }
 
@@ -53,17 +54,18 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 
         if (service != null) {
             ret = new RangerServiceResource();
+
             ret.setId(xxServiceResource.getId());
             ret.setCreateTime(xxServiceResource.getCreateTime());
             ret.setUpdateTime(xxServiceResource.getUpdateTime());
             ret.setGuid(xxServiceResource.getGuid());
             ret.setResourceSignature(xxServiceResource.getResourceSignature());
-
             ret.setServiceName(service.getName());
 
             if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
                 try {
                     StoredServiceResource storedServiceResource = JsonUtilsV2.jsonToObj(xxServiceResource.getServiceResourceElements(), StoredServiceResource.class);
+
                     ret.setResourceElements(storedServiceResource.getResourceElements());
                     ret.setOwnerUser(storedServiceResource.getOwnerName());
                     ret.setAdditionalInfo(storedServiceResource.getAdditionalInfo());
@@ -82,6 +84,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
         if (StringUtil.isEmpty(guid)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRMSServiceResource.findByGuid", tClass)
                     .setParameter("guid", guid).getSingleResult();
@@ -95,6 +98,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 
         if (serviceId != null) {
             List<Object[]> rows = null;
+
             try {
                 rows = getEntityManager()
                         .createNamedQuery("XXRMSServiceResource.findByServiceId", Object[].class)
@@ -124,6 +128,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
         if (StringUtils.isBlank(resourceSignature)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRMSServiceResource.findByServiceAndResourceSignature", tClass)
                     .setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
@@ -144,6 +149,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
                     XXRMSServiceResource xxServiceResource = getEntityManager().createNamedQuery("XXRMSServiceResource.findByServiceAndResourceSignature", tClass)
                             .setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
                             .getSingleResult();
+
                     ret = populateViewBean(xxServiceResource);
                 } catch (NoResultException e) {
                     return null;
@@ -176,8 +182,10 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
             ret.setServiceId(serviceId);
 
             StoredServiceResource storedServiceResource = new StoredServiceResource(serviceResource.getResourceElements(), serviceResource.getOwnerUser(), serviceResource.getAdditionalInfo());
+
             try {
                 String serviceResourceString = JsonUtilsV2.objToJson(storedServiceResource);
+
                 ret.setServiceResourceElements(serviceResourceString);
             } catch (Exception e) {
                 ret = null;
@@ -191,12 +199,15 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 
     public RangerServiceResource createServiceResource(RangerServiceResource viewObject) {
         XXRMSServiceResource dbObject = populateEntityBean(viewObject);
+
         if (dbObject != null) {
             dbObject = daoManager.getXXRMSServiceResource().create(dbObject);
+
             if (dbObject != null) {
                 return populateViewBean(dbObject);
             }
         }
+
         return null;
     }
 
@@ -213,20 +224,25 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 
     public List<RangerServiceResource> getLlResourceIdForHlResourceId(long hlResourceId, long lastKnownVersion) {
         List<RangerServiceResource> ret = new ArrayList<>();
+
         try {
             List<XXRMSServiceResource> list = getEntityManager().createNamedQuery("XXRMSServiceResource.getLlResourceIdForHlResourceId", tClass)
                     .setParameter("hlResourceId", hlResourceId)
                     .setParameter("lastKnownVersion", lastKnownVersion)
                     .getResultList();
+
             if (CollectionUtils.isNotEmpty(list)) {
                 //ret = list.stream().map(XXRMSServiceResourceDao::populateViewBean).collect(Collectors.toList());
                 for (XXRMSServiceResource entityBean : list) {
                     RangerServiceResource viewBean = populateViewBean(entityBean);
+
                     ret.add(viewBean);
                 }
             }
         } catch (NoResultException e) {
+            // ignore
         }
+
         return ret;
     }
 

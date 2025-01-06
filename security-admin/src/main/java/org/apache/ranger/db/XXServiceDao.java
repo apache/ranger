@@ -74,6 +74,7 @@ public class XXServiceDao extends BaseDao<XXService> {
         if (displayName == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXService.findByDisplayName", tClass)
@@ -93,25 +94,27 @@ public class XXServiceDao extends BaseDao<XXService> {
 
     public List<XXService> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXService>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXService.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXService>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXService> findByTagServiceId(Long tagServiceId) {
         if (tagServiceId == null) {
-            return new ArrayList<XXService>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXService.findByTagServiceId", tClass)
                     .setParameter("tagServiceId", tagServiceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXService>();
+            return new ArrayList<>();
         }
     }
 
@@ -142,7 +145,7 @@ public class XXServiceDao extends BaseDao<XXService> {
             return getEntityManager().createNamedQuery("XXService.getAllServicesWithTagService", tClass)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXService>();
+            return new ArrayList<>();
         }
     }
 

@@ -38,6 +38,7 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
         if (classType == null || objectId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectId", tClass)
@@ -53,10 +54,13 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
         if (eventTime == null || objId == null) {
             return null;
         }
+
         Date date = DateUtil.stringToDate(eventTime, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
         if (date == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXDataHist.findLatestByObjectClassTypeAndObjectIdAndEventTime", tClass)
@@ -69,16 +73,16 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<Integer> getVersionListOfObject(Long objId, int classType) {
         if (objId == null) {
-            return new ArrayList<Integer>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXDataHist.getVersionListOfObject")
+            return getEntityManager().createNamedQuery("XXDataHist.getVersionListOfObject", Integer.class)
                     .setParameter("objId", objId).setParameter("classType", classType).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<Integer>();
+            return new ArrayList<>();
         }
     }
 
@@ -86,6 +90,7 @@ public class XXDataHistDao extends BaseDao<XXDataHist> {
         if (objId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXDataHist.findObjectByVersionNumber", tClass)
                     .setParameter("objId", objId).setParameter("classType", classType)

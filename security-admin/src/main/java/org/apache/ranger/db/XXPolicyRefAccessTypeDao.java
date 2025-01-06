@@ -39,61 +39,67 @@ public class XXPolicyRefAccessTypeDao extends BaseDao<XXPolicyRefAccessType> {
 
     public List<XXPolicyRefAccessType> findByPolicyId(Long polId) {
         if (polId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyRefAccessType.findByPolicyId", tClass)
                     .setParameter("policyId", polId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXPolicyRefAccessType> findByAccessTypeDefId(Long accessTypeDefId) {
         if (accessTypeDefId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyRefAccessType.findByAccessTypeDefId", tClass)
                     .setParameter("accessDefId", accessTypeDefId)
                     .getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedAccessNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (policyId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefAccessType.findUpdatedAccessNamesByPolicy")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefAccessType.findUpdatedAccessNamesByPolicy", Object[].class)
                     .setParameter("policy", policyId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 
-    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedAccessNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (serviceId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefAccessType.findUpdatedAccessNamesByService")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefAccessType.findUpdatedAccessNamesByService", Object[].class)
                     .setParameter("service", serviceId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 

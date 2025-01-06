@@ -40,10 +40,9 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
         super(daoManager);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object[]> getUserLoggedIn() {
         return getEntityManager()
-                .createNamedQuery("XXAuthSession.getUserLoggedIn")
+                .createNamedQuery("XXAuthSession.getUserLoggedIn", Object[].class)
                 .getResultList();
     }
 
@@ -58,11 +57,10 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXAuthSession> getAuthSessionByUserId(Long userId) {
         try {
             return getEntityManager()
-                    .createNamedQuery("XXAuthSession.getAuthSessionByUserId")
+                    .createNamedQuery("XXAuthSession.getAuthSessionByUserId", tClass)
                     .setParameter("userId", userId)
                     .getResultList();
         } catch (NoResultException ignoreNoResultFound) {

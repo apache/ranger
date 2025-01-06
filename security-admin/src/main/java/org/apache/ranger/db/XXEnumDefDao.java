@@ -34,14 +34,15 @@ public class XXEnumDefDao extends BaseDao<XXEnumDef> {
 
     public List<XXEnumDef> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXEnumDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXEnumDef.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXEnumDef>();
+            return new ArrayList<>();
         }
     }
 }

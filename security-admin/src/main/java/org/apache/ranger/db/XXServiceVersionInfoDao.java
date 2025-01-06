@@ -48,6 +48,7 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
         if (serviceName == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceVersionInfo.findByServiceName", tClass)
@@ -61,6 +62,7 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
         if (serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getSingleResult();
@@ -69,16 +71,16 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object[]> getAllWithServiceNames() {
         return getEntityManager()
-                .createNamedQuery("XXServiceVersionInfo.getAllWithServiceNames")
+                .createNamedQuery("XXServiceVersionInfo.getAllWithServiceNames", Object[].class)
                 .getResultList();
     }
 
     public void updateServiceVersionInfoForTagResourceMapCreate(Long resourceId, Long tagId) {
         if (resourceId == null || tagId == null) {
             LOG.warn("Unexpected null value for resourceId and/or tagId");
+
             return;
         }
 
@@ -87,12 +89,14 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
             updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
         } catch (NoResultException e) {
+            // ignore
         }
     }
 
     public void updateServiceVersionInfoForTagResourceMapDelete(Long resourceId, Long tagId) {
         if (resourceId == null || tagId == null) {
             LOG.warn("Unexpected null value for resourceId and/or tagId");
+
             return;
         }
 
@@ -101,12 +105,14 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
             updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
         } catch (NoResultException e) {
+            // ignore
         }
     }
 
     public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId) {
         if (resourceId == null) {
             LOG.warn("Unexpected null value for resourceId");
+
             return;
         }
 
@@ -117,21 +123,25 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
             updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
         } catch (NoResultException e) {
+            // ignore
         }
     }
 
     public void updateServiceVersionInfoForTagUpdate(Long tagId) {
         if (tagId == null) {
             LOG.warn("Unexpected null value for tagId");
+
             return;
         }
 
         Long resourceId = null;
+
         try {
             List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByTagId", tClass).setParameter("tagId", tagId).getResultList();
 
             updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
         } catch (NoResultException e) {
+            // ignore
         }
     }
 

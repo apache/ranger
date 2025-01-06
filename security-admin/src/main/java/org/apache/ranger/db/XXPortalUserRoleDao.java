@@ -34,12 +34,12 @@ public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
         super(daoManager);
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXPortalUserRole> findByUserId(Long userId) {
         if (userId == null) {
-            return new ArrayList<XXPortalUserRole>();
+            return new ArrayList<>();
         }
-        return getEntityManager().createNamedQuery("XXPortalUserRole.findByUserId")
+
+        return getEntityManager().createNamedQuery("XXPortalUserRole.findByUserId", tClass)
                 .setParameter("userId", userId).getResultList();
     }
 
@@ -47,27 +47,29 @@ public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
         if (userId == null || role == null || role.isEmpty()) {
             return null;
         }
+
         try {
-            return (XXPortalUserRole) getEntityManager().createNamedQuery("XXPortalUserRole.findByRoleUserId")
+            return getEntityManager().createNamedQuery("XXPortalUserRole.findByRoleUserId", tClass)
                     .setParameter("userId", userId)
                     .setParameter("userRole", role).getSingleResult();
         } catch (NoResultException e) {
             //doNothing;
         }
+
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findXPortalUserRolebyXPortalUserId(Long userId) {
         if (userId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
-                    .createNamedQuery("XXPortalUserRole.findXPortalUserRolebyXPortalUserId")
+                    .createNamedQuery("XXPortalUserRole.findXPortalUserRolebyXPortalUserId", String.class)
                     .setParameter("userId", userId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 }

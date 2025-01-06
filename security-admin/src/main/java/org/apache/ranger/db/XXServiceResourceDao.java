@@ -41,6 +41,7 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
         if (StringUtil.isEmpty(guid)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.findByGuid", tClass)
                     .setParameter("guid", guid).getSingleResult();
@@ -51,13 +52,14 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 
     public List<XXServiceResource> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResource>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResource>();
+            return new ArrayList<>();
         }
     }
 
@@ -65,6 +67,7 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
         if (StringUtils.isBlank(resourceSignature)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.findByServiceAndResourceSignature", tClass)
                     .setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
@@ -76,17 +79,21 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 
     public List<XXServiceResource> findTaggedResourcesInServiceId(Long serviceId) {
         List<XXServiceResource> ret = new ArrayList<>();
+
         if (serviceId != null) {
             List<Object[]> rows = null;
+
             try {
                 rows = getEntityManager().createNamedQuery("XXServiceResource.findTaggedResourcesInServiceId", Object[].class)
                         .setParameter("serviceId", serviceId).getResultList();
             } catch (NoResultException e) {
                 // Nothing
             }
+
             if (CollectionUtils.isNotEmpty(rows)) {
                 for (Object[] row : rows) {
                     XXServiceResource xxServiceResource = new XXServiceResource();
+
                     xxServiceResource.setId((Long) row[0]);
                     xxServiceResource.setGuid((String) row[1]);
                     xxServiceResource.setVersion((Long) row[2]);
@@ -100,6 +107,7 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
                 }
             }
         }
+
         return ret;
     }
 
@@ -107,6 +115,7 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
         if (serviceId == null) {
             return -1;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.countTaggedResourcesInServiceId", Long.class)
                     .setParameter("serviceId", serviceId).getSingleResult();
@@ -117,25 +126,27 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
 
     public List<XXServiceResource> findForServicePlugin(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXServiceResource>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.findForServicePlugin", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXServiceResource>();
+            return new ArrayList<>();
         }
     }
 
     public List<String> findServiceResourceGuidsInServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXServiceResource.findServiceResourceGuidsInServiceId", String.class)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 }

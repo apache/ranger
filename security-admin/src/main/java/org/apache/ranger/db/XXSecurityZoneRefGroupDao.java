@@ -36,6 +36,7 @@ public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findByZoneId", tClass)
@@ -50,6 +51,7 @@ public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup> {
         if (groupId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZoneRefGroup.findByGroupId", tClass)
                     .setParameter("groupId", groupId).getResultList();
@@ -62,6 +64,7 @@ public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findGroupTypeByZoneId", tClass)
@@ -77,6 +80,7 @@ public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup> {
         if (zoneId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findGroupTypeByZoneId", tClass)

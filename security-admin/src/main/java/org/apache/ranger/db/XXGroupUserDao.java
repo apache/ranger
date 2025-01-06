@@ -56,8 +56,10 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
             }
         } else {
             logger.debug("ResourceId not provided.");
-            return new ArrayList<XXGroupUser>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -65,18 +67,19 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
      * @param xUserId -- Id of X_USER table
      * @return
      */
-    @SuppressWarnings("unchecked")
     public List<Long> findGroupIdListByUserId(Long xUserId) {
         if (xUserId != null) {
             try {
-                return getEntityManager().createNamedQuery("XXGroupUser.findGroupIdListByUserId").setParameter("xUserId", xUserId).getResultList();
+                return getEntityManager().createNamedQuery("XXGroupUser.findGroupIdListByUserId", Long.class).setParameter("xUserId", xUserId).getResultList();
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         } else {
             logger.debug("UserId not provided.");
-            return new ArrayList<Long>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -94,20 +97,21 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
         }
 
         if (groupList != null) {
-            return new HashSet<String>(groupList);
+            return new HashSet<>(groupList);
         }
 
-        return new HashSet<String>();
+        return new HashSet<>();
     }
 
     public List<XXGroupUser> findByGroupId(Long groupId) {
         if (groupId == null) {
-            return new ArrayList<XXGroupUser>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXGroupUser.findByGroupId", tClass).setParameter("groupId", groupId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXGroupUser>();
+            return new ArrayList<>();
         }
     }
 
@@ -120,8 +124,10 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
             }
         } else {
             logger.debug("userId and/or groupId not provided.");
+
             return new XXGroupUser();
         }
+
         return null;
     }
 
@@ -129,7 +135,7 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
         Map<String, Set<String>> groupUsers = new HashMap<>();
 
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupIds").getResultList();
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupIds", Object[].class).getResultList();
 
             if (rows != null) {
                 for (Object[] row : rows) {
@@ -137,6 +143,7 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
                         groupUsers.get((String) row[0]).add((String) row[1]);
                     } else {
                         Set<String> users = new HashSet<>();
+
                         users.add((String) row[1]);
                         groupUsers.put((String) row[0], users);
                     }
@@ -145,6 +152,7 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
         } catch (NoResultException e) {
             //Ignore
         }
+
         return groupUsers;
     }
 
@@ -153,7 +161,8 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 
         if (StringUtils.isNotBlank(groupName)) {
             try {
-                List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupName").setParameter("groupName", groupName).getResultList();
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupName", Object[].class).setParameter("groupName", groupName).getResultList();
+
                 if (rows != null) {
                     for (Object[] row : rows) {
                         users.put((String) row[0], (XXGroupUser) row[1]);

@@ -32,7 +32,7 @@ import java.util.List;
 
 @Service
 public class XXAuditMapDao extends BaseDao<XXAuditMap> {
-    private static final Logger logger = LoggerFactory.getLogger(XXAssetDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXAuditMapDao.class);
 
     public XXAuditMapDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
@@ -50,8 +50,10 @@ public class XXAuditMapDao extends BaseDao<XXAuditMap> {
             }
         } else {
             logger.debug("ResourceId not provided.");
-            return new ArrayList<XXAuditMap>();
+
+            return new ArrayList<>();
         }
-        return new ArrayList<XXAuditMap>();
+
+        return new ArrayList<>();
     }
 }

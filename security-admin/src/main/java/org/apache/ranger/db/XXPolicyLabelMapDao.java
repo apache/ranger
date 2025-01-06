@@ -35,6 +35,7 @@ public class XXPolicyLabelMapDao extends BaseDao<XXPolicyLabelMap> {
         if (policyId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyLabelMap.findByPolicyId", tClass)
@@ -48,6 +49,7 @@ public class XXPolicyLabelMapDao extends BaseDao<XXPolicyLabelMap> {
         if (policyLabelId == null) {
             return null;
         }
+
         try {
             return (XXPolicyLabelMap) getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyLabelId", tClass)
                     .setParameter("policyLabelId", policyLabelId).getResultList();
@@ -60,6 +62,7 @@ public class XXPolicyLabelMapDao extends BaseDao<XXPolicyLabelMap> {
         if (serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();

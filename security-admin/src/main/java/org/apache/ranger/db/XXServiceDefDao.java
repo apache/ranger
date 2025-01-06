@@ -43,6 +43,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
         if (name == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceDef.findByName", tClass)
@@ -56,6 +57,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
         if (Objects.isNull(displayName)) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXServiceDef.findByDisplayName", tClass)
@@ -85,6 +87,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
 
     public String findServiceDefTypeByServiceName(String serviceName) {
         String serviceType = null;
+
         if (StringUtils.isNotBlank(serviceName)) {
             try {
                 serviceType = getEntityManager()
@@ -95,11 +98,13 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
                 return null;
             }
         }
+
         return serviceType;
     }
 
     public String findServiceDefTypeByServiceId(Long serviceId) {
-        String serviceType = null;
+        String serviceType;
+
         try {
             serviceType = getEntityManager()
                     .createNamedQuery("XXServiceDef.findServiceDefNameByServiceId", String.class)
@@ -108,6 +113,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
         } catch (NoResultException e) {
             return null;
         }
+
         return serviceType;
     }
 
@@ -127,9 +133,11 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
      */
     public Map<String, Long> getServiceCount() {
         Map<String, Long> ret  = Collections.emptyMap();
-        List<Object[]>    rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getServiceCount").getResultList();
+        List<Object[]>    rows = getEntityManager().createNamedQuery("XXServiceDef.getServiceCount", Object[].class).getResultList();
+
         if (rows != null) {
             ret = new HashMap<>();
+
             for (Object[] row : rows) {
                 if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
                     // since group by query will not return empty count field, no need to check
@@ -137,6 +145,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
                 }
             }
         }
+
         return ret;
     }
 
@@ -146,12 +155,14 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
      * @return {@link java.util.Map map} representing service type/ def as key and their respective policy count as value
      */
     public Map<String, Long> getPolicyCountByType(int policyType) {
-        Map<String, Long> ret = Collections.emptyMap();
-        List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByType")
+        Map<String, Long> ret  = Collections.emptyMap();
+        List<Object[]>    rows = getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByType", Object[].class)
                 .setParameter("policyType", policyType)
                 .getResultList();
+
         if (rows != null) {
             ret = new HashMap<>();
+
             for (Object[] row : rows) {
                 if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
                     // since group by query will not return empty count field, no need to check
@@ -159,6 +170,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
                 }
             }
         }
+
         return ret;
     }
 
@@ -169,9 +181,11 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
      */
     public Map<String, Long> getPolicyCountByDenyItems() {
         Map<String, Long> ret  = Collections.emptyMap();
-        List<Object[]>    rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByDenyItems").getResultList();
+        List<Object[]>    rows = getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByDenyItems", Object[].class).getResultList();
+
         if (rows != null) {
             ret = new HashMap<>();
+
             for (Object[] row : rows) {
                 if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
                     // since group by query will not return empty count field, no need to check
@@ -179,6 +193,7 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
                 }
             }
         }
+
         return ret;
     }
 }

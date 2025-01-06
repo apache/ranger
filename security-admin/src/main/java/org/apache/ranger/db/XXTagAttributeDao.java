@@ -36,51 +36,55 @@ public class XXTagAttributeDao extends BaseDao<XXTagAttribute> {
 
     public List<XXTagAttribute> findByTagId(Long tagId) {
         if (tagId == null) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagAttribute.findByTagId", tClass)
                     .setParameter("tagId", tagId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTagAttribute> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagAttribute.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTagAttribute> findByServiceIdAndOwner(Long serviceId, Short owner) {
         if (serviceId == null) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagAttribute.findByServiceIdAndOwner", tClass)
                     .setParameter("serviceId", serviceId)
                     .setParameter("owner", owner)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTagAttribute> findByResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagAttribute.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagAttribute>();
+            return new ArrayList<>();
         }
     }
 }

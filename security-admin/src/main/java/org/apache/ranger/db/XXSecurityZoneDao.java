@@ -43,12 +43,12 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (zoneId == null) {
             return null;
         }
+
         try {
-            XXSecurityZone xxRangerSecurityZone = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZone.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getSingleResult();
-            return xxRangerSecurityZone;
         } catch (NoResultException e) {
             return null;
         }
@@ -58,12 +58,12 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (StringUtils.isBlank(zoneName)) {
             return null;
         }
+
         try {
-            XXSecurityZone xxRangerSecurityZone = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZone.findByZoneName", tClass)
                     .setParameter("zoneName", zoneName)
                     .getSingleResult();
-            return xxRangerSecurityZone;
         } catch (NoResultException e) {
             return null;
         }
@@ -73,6 +73,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (serviceName == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZone.findByServiceName", String.class)
                     .setParameter("serviceName", serviceName).getResultList();
@@ -85,6 +86,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (tagServiceName == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZone.findByTagServiceName", String.class)
                     .setParameter("tagServiceName", tagServiceName).getResultList();
@@ -97,6 +99,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (userId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByUserId", String.class)
                     .setParameter("userId", userId).getResultList();
@@ -109,6 +112,7 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (groupId == null) {
             return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXSecurityZone.findZoneNamesByGroupId", String.class)
                     .setParameter("groupId", groupId).getResultList();
@@ -118,10 +122,10 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
     }
 
     public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfos() {
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfos").setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID).getResultList();
+        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfos", Object[].class).setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID).getResultList();
 
-        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<RangerSecurityZoneHeaderInfo>(results.size());
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
         for (Object[] result : results) {
             securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
         }
@@ -133,18 +137,21 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         if (serviceId == null) {
             return Collections.emptyList();
         }
-        List<Object[]> results = null;
+
+        List<Object[]> results;
+
         if (isTagService) {
-            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByTagServiceId")
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByTagServiceId", Object[].class)
                     .setParameter("tagServiceId", serviceId)
                     .getResultList();
         } else {
-            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByServiceId")
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByServiceId", Object[].class)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         }
 
-        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<RangerSecurityZoneHeaderInfo>(results.size());
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
         for (Object[] result : results) {
             securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
         }

@@ -38,9 +38,10 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef> {
         if (moduleName == null) {
             return null;
         }
+
         try {
-            return (XXModuleDef) getEntityManager()
-                    .createNamedQuery("XXModuleDef.findByModuleName")
+            return getEntityManager()
+                    .createNamedQuery("XXModuleDef.findByModuleName", tClass)
                     .setParameter("moduleName", moduleName)
                     .getSingleResult();
         } catch (Exception e) {
@@ -52,6 +53,7 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef> {
         if (id == null) {
             return new XXModuleDef();
         }
+
         try {
             List<XXModuleDef> xxModuelDefs = getEntityManager()
                     .createNamedQuery("XXModuleDef.findByModuleId", tClass)
@@ -66,6 +68,7 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef> {
     public List<String> findModuleURLOfPemittedModules(Long userId) {
         try {
             String query = "select";
+
             query += " url";
             query += " FROM";
             query += "   x_modules_master";
@@ -97,23 +100,24 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef> {
                     .getResultList();
         } catch (Exception e) {
             e.printStackTrace();
+
             return null;
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findAccessibleModulesByGroupIdList(List<Long> grpIdList) {
         if (CollectionUtils.isEmpty(grpIdList)) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
-                    .createNamedQuery("XXModuleDef.findAccessibleModulesByGroupId")
+                    .createNamedQuery("XXModuleDef.findAccessibleModulesByGroupId", String.class)
                     .setParameter("grpIdList", grpIdList)
                     .setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
@@ -122,18 +126,18 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef> {
      * @param xUserId
      * @return This function will return all the modules accessible for particular user, considering all the groups as well in which that user belongs
      */
-    @SuppressWarnings("unchecked")
     public List<String> findAccessibleModulesByUserId(Long portalUserId, Long xUserId) {
         if (portalUserId == null || xUserId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXModuleDef.findAllAccessibleModulesByUserId")
+            return getEntityManager().createNamedQuery("XXModuleDef.findAllAccessibleModulesByUserId", String.class)
                     .setParameter("portalUserId", portalUserId)
                     .setParameter("xUserId", xUserId).setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 }

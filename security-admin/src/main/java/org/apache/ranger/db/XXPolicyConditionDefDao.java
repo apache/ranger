@@ -34,14 +34,15 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
 
     public List<XXPolicyConditionDef> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXPolicyConditionDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyConditionDef.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyConditionDef>();
+            return new ArrayList<>();
         }
     }
 
@@ -49,6 +50,7 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
         if (serviceDefId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndName", tClass)

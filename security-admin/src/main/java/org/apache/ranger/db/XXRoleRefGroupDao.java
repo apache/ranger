@@ -37,32 +37,34 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
 
     public List<XXRoleRefGroup> findByRoleId(Long roleId) {
         if (roleId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefGroup.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXRoleRefGroup> findByGroupId(Long groupId) {
         if (groupId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefGroup.findByGroupId", tClass)
                     .setParameter("groupId", groupId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<Long> findIdsByRoleId(Long roleId) {
-        List<Long> ret = Collections.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
 
         if (roleId != null) {
             try {
@@ -70,7 +72,7 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
                         .createNamedQuery("XXRoleRefGroup.findIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId).getResultList();
             } catch (NoResultException e) {
-                ret = Collections.EMPTY_LIST;
+                // ignore
             }
         }
 
@@ -79,13 +81,14 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
 
     public List<XXRoleRefGroup> findByGroupName(String groupName) {
         if (groupName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRoleRefGroup.findByGroupName", tClass)
                     .setParameter("groupName", groupName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

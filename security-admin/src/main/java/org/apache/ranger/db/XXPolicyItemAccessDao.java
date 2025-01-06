@@ -34,27 +34,29 @@ public class XXPolicyItemAccessDao extends BaseDao<XXPolicyItemAccess> {
 
     public List<XXPolicyItemAccess> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyItemAccess>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemAccess.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemAccess>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyItemAccess> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyItemAccess>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemAccess.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemAccess>();
+            return new ArrayList<>();
         }
     }
 

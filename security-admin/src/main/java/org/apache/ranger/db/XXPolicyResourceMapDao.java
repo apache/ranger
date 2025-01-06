@@ -34,27 +34,29 @@ public class XXPolicyResourceMapDao extends BaseDao<XXPolicyResourceMap> {
 
     public List<XXPolicyResourceMap> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyResourceMap>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyResourceMap.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyResourceMap>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyResourceMap> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyResourceMap>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyResourceMap.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyResourceMap>();
+            return new ArrayList<>();
         }
     }
 
@@ -62,6 +64,7 @@ public class XXPolicyResourceMapDao extends BaseDao<XXPolicyResourceMap> {
         if (policyId == null) {
             return;
         }
+
         getEntityManager()
                 .createNamedQuery("XXPolicyResourceMap.deleteByPolicyId", tClass)
                 .setParameter("policyId", policyId).executeUpdate();

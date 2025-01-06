@@ -19,7 +19,6 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -34,6 +33,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,13 +55,16 @@ public class XXUserDao extends BaseDao<XXUser> {
     public XXUser findByUserName(String name) {
         if (daoManager.getStringUtil().isEmpty(name)) {
             logger.debug("name is empty");
+
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXUser.findByUserName", XXUser.class).setParameter("name", name.trim()).getSingleResult();
         } catch (NoResultException e) {
             // ignore
         }
+
         return null;
     }
 
@@ -69,6 +72,7 @@ public class XXUserDao extends BaseDao<XXUser> {
         if (portalUserId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXUser.findByPortalUserId", tClass).setParameter("portalUserId", portalUserId).getSingleResult();
         } catch (NoResultException e) {
@@ -80,13 +84,15 @@ public class XXUserDao extends BaseDao<XXUser> {
         Map<String, Set<String>> userGroups = new HashMap<>();
 
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.findGroupsByUserIds").getResultList();
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXUser.findGroupsByUserIds", Object[].class).getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     if (userGroups.containsKey((String) row[0])) {
                         userGroups.get((String) row[0]).add((String) row[1]);
                     } else {
                         Set<String> groups = new HashSet<>();
+
                         groups.add((String) row[1]);
                         userGroups.put((String) row[0], groups);
                     }
@@ -95,13 +101,16 @@ public class XXUserDao extends BaseDao<XXUser> {
         } catch (NoResultException e) {
             //Ignore
         }
+
         return userGroups;
     }
 
     public Map<String, Long> getAllUserIds() {
         Map<String, Long> users = new HashMap<>();
+
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIds").getResultList();
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXUser.getAllUserIds", Object[].class).getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     users.put((String) row[0], (Long) row[1]);
@@ -114,12 +123,16 @@ public class XXUserDao extends BaseDao<XXUser> {
     }
 
     public List<Object[]> getAllUserIdNames() {
-        List<Object[]> users = new ArrayList<Object[]>();
+        List<Object[]> users;
+
         try {
-            users = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIdNames").getResultList();
+            users = getEntityManager().createNamedQuery("XXUser.getAllUserIdNames", Object[].class).getResultList();
         } catch (NoResultException e) {
             logger.debug(e.getMessage());
+
+            users = new ArrayList<>();
         }
+
         return users;
     }
 
@@ -148,8 +161,9 @@ public class XXUserDao extends BaseDao<XXUser> {
                 }
             }
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
+
         return ret;
     }
 
@@ -178,7 +192,7 @@ public class XXUserDao extends BaseDao<XXUser> {
         String              syncSource   = (String) row[3];
         Number              userSource   = (Number) row[4];
         String              emailAddress = (String) row[5];
-        Boolean             isInternal   = userSource != null && userSource.equals(RangerCommonEnums.USER_APP);
+        boolean             isInternal   = userSource != null && userSource.equals(RangerCommonEnums.USER_APP);
         Map<String, String> attrMap      = null;
 
         if (StringUtils.isNotBlank(attributes)) {
@@ -197,7 +211,7 @@ public class XXUserDao extends BaseDao<XXUser> {
             attrMap.put(SCRIPT_FIELD__EMAIL_ADDRESS, emailAddress);
         }
 
-        attrMap.put(SCRIPT_FIELD__IS_INTERNAL, isInternal.toString());
+        attrMap.put(SCRIPT_FIELD__IS_INTERNAL, Boolean.toString(isInternal));
 
         return new UserInfo(name, description, attrMap);
     }

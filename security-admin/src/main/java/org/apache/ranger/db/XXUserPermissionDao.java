@@ -56,17 +56,18 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
             }
         } else {
             logger.debug("ResourceUserId not provided.");
-            return new ArrayList<XXUserPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXUserPermission> findByUserPermissionIdAndIsAllowed(Long userId) {
         if (userId != null) {
             try {
                 return getEntityManager()
-                        .createNamedQuery("XXUserPermission.findByUserPermissionIdAndIsAllowed")
+                        .createNamedQuery("XXUserPermission.findByUserPermissionIdAndIsAllowed", tClass)
                         .setParameter("userId", userId)
                         .setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
                         .getResultList();
@@ -75,8 +76,10 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
             }
         } else {
             logger.debug("ResourceUserId not provided.");
-            return new ArrayList<XXUserPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -92,8 +95,10 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
             }
         } else {
             logger.debug("ResourceUserId not provided.");
-            return new ArrayList<XXUserPermission>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 
@@ -109,8 +114,10 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
             }
         } else {
             logger.debug("ResourceUserId not provided.");
+
             return null;
         }
+
         return null;
     }
 
@@ -129,7 +136,6 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findModuleUsersByModuleId(Long moduleId) {
         if (moduleId != null) {
             try {
@@ -143,6 +149,7 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission> {
         } else {
             logger.debug("ModuleId not provided.");
         }
+
         return null;
     }
 }

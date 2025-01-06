@@ -34,27 +34,29 @@ public class XXPolicyItemDataMaskInfoDao extends BaseDao<XXPolicyItemDataMaskInf
 
     public List<XXPolicyItemDataMaskInfo> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyItemDataMaskInfo>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemDataMaskInfo.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemDataMaskInfo>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyItemDataMaskInfo> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyItemDataMaskInfo>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemDataMaskInfo.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemDataMaskInfo>();
+            return new ArrayList<>();
         }
     }
 
@@ -62,6 +64,7 @@ public class XXPolicyItemDataMaskInfoDao extends BaseDao<XXPolicyItemDataMaskInf
         if (policyId == null) {
             return;
         }
+
         getEntityManager()
                 .createNamedQuery("XXPolicyItemDataMaskInfo.deleteByPolicyId", tClass)
                 .setParameter("policyId", policyId).executeUpdate();

@@ -37,19 +37,20 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
 
     public List<XXRoleRefUser> findByRoleId(Long roleId) {
         if (roleId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefUser.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<Long> findIdsByRoleId(Long roleId) {
-        List<Long> ret = Collections.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
 
         if (roleId != null) {
             try {
@@ -57,7 +58,7 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
                         .createNamedQuery("XXRoleRefUser.findIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId).getResultList();
             } catch (NoResultException e) {
-                ret = Collections.EMPTY_LIST;
+                // ignore
             }
         }
 
@@ -66,26 +67,28 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
 
     public List<XXRoleRefUser> findByUserId(Long userId) {
         if (userId == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefUser.findByUserId", tClass)
                     .setParameter("userId", userId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXRoleRefUser> findByUserName(String userName) {
         if (userName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRoleRefUser.findByUserName", tClass)
                     .setParameter("userName", userName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

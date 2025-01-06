@@ -38,26 +38,27 @@ public class XXTagDao extends BaseDao<XXTag> {
 
     public List<XXTag> findByResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findTagTypesByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
-            return getEntityManager().createNamedQuery("XXTag.findTagTypesByServiceId")
+            return getEntityManager().createNamedQuery("XXTag.findTagTypesByServiceId", String.class)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
@@ -65,6 +66,7 @@ public class XXTagDao extends BaseDao<XXTag> {
         if (StringUtil.isEmpty(guid)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTag.findByGuid", tClass)
                     .setParameter("guid", guid).getSingleResult();
@@ -75,59 +77,59 @@ public class XXTagDao extends BaseDao<XXTag> {
 
     public List<XXTag> findByName(String name) {
         if (StringUtils.isEmpty(name)) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
 
         try {
             return getEntityManager().createNamedQuery("XXTag.findByName", tClass)
                     .setParameter("name", name).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTag> findForResourceId(Long resourceId) {
         if (resourceId == null) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
 
         try {
             return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTag> findForResourceGuid(String resourceGuid) {
         if (StringUtils.isEmpty(resourceGuid)) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
 
         try {
             return getEntityManager().createNamedQuery("XXTag.findByResourceGuid", tClass)
                     .setParameter("resourceGuid", resourceGuid).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTag> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
 
         try {
             return getEntityManager().createNamedQuery("XXTag.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTag> findByServiceIdAndOwner(Long serviceId, Short owner) {
         if (serviceId == null) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
 
         try {
@@ -136,7 +138,7 @@ public class XXTagDao extends BaseDao<XXTag> {
                     .setParameter("owner", owner)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTag>();
+            return new ArrayList<>();
         }
     }
 }

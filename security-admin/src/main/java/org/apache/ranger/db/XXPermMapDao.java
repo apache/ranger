@@ -32,7 +32,7 @@ import java.util.List;
 
 @Service
 public class XXPermMapDao extends BaseDao<XXPermMap> {
-    private static final Logger logger = LoggerFactory.getLogger(XXResourceDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXPermMapDao.class);
 
     public XXPermMapDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
@@ -50,8 +50,10 @@ public class XXPermMapDao extends BaseDao<XXPermMap> {
             }
         } else {
             logger.debug("ResourceId not provided.");
-            return new ArrayList<XXPermMap>();
+
+            return new ArrayList<>();
         }
+
         return null;
     }
 }

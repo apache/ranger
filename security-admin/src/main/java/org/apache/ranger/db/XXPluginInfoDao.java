@@ -42,12 +42,14 @@ public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
     public XXPluginInfo create(XXPluginInfo obj) {
         obj.setCreateTime(DateUtil.getUTCDate());
         obj.setUpdateTime(DateUtil.getUTCDate());
+
         return super.create(obj);
     }
 
     @Override
     public XXPluginInfo update(XXPluginInfo obj) {
         obj.setUpdateTime(DateUtil.getUTCDate());
+
         return super.update(obj);
     }
 
@@ -55,6 +57,7 @@ public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
         if (serviceName == null || hostName == null || appType == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPluginInfo.find", tClass)
@@ -71,6 +74,7 @@ public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
         if (serviceName == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPluginInfo.findByServiceName", tClass)
@@ -84,6 +88,7 @@ public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
         if (serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPluginInfo.findByServiceId", tClass)
@@ -97,6 +102,7 @@ public class XXPluginInfoDao extends BaseDao<XXPluginInfo> {
         if (serviceName == null || hostName == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPluginInfo.findByServiceAndHostName", tClass)

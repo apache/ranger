@@ -36,9 +36,9 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
         if (name == null || defId == null) {
             return null;
         }
+
         try {
-            return getEntityManager().createNamedQuery(
-                            "XXResourceDef.findByNameAndDefId", tClass)
+            return getEntityManager().createNamedQuery("XXResourceDef.findByNameAndDefId", tClass)
                     .setParameter("name", name).setParameter("defId", defId)
                     .getSingleResult();
         } catch (NoResultException e) {
@@ -48,28 +48,29 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
 
     public List<XXResourceDef> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
+
         try {
-            List<XXResourceDef> retList = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXResourceDef.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
-            return retList;
         } catch (NoResultException e) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXResourceDef> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXResourceDef.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
     }
 
@@ -77,6 +78,7 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
         if (policyId == null || name == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXResourceDef.findByNameAndPolicyId", tClass)
@@ -89,13 +91,14 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
 
     public List<XXResourceDef> findByParentResId(Long parentId) {
         if (parentId == null) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXResourceDef.findByParentResId", tClass)
                     .setParameter("parentId", parentId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXResourceDef>();
+            return new ArrayList<>();
         }
     }
 }

@@ -17,7 +17,6 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
@@ -25,7 +24,6 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
-import javax.persistence.Query;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,10 +78,10 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
         if (polName == null) {
             return null;
         }
+
         try {
-            XXPolicy xPol = getEntityManager().createNamedQuery("XXPolicy.findByPolicyName", tClass)
+            return getEntityManager().createNamedQuery("XXPolicy.findByPolicyName", tClass)
                     .setParameter("polName", polName).getSingleResult();
-            return xPol;
         } catch (NoResultException e) {
             return null;
         }
@@ -91,25 +89,29 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 
     public List<XXPolicy> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<Long> findPolicyIdsByServiceId(Long serviceId) {
-        List<Long> ret = new ArrayList<Long>();
+        List<Long> ret;
+
         try {
             ret = getEntityManager()
                     .createNamedQuery("XXPolicy.findPolicyIdsByServiceId", Long.class)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (Exception e) {
+            ret = new ArrayList<>();
         }
+
         return ret;
     }
 
@@ -123,8 +125,9 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 
     public List<XXPolicy> findByResourceSignatureByPolicyStatus(String serviceName, String policySignature, Boolean isPolicyEnabled) {
         if (policySignature == null || serviceName == null || isPolicyEnabled == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicy.findByResourceSignatureByPolicyStatus", tClass)
                     .setParameter("resSignature", policySignature)
@@ -132,33 +135,35 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
                     .setParameter("isPolicyEnabled", isPolicyEnabled)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicy> findByResourceSignature(String serviceName, String policySignature) {
         if (policySignature == null || serviceName == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicy.findByResourceSignature", tClass)
                     .setParameter("resSignature", policySignature)
                     .setParameter("serviceName", serviceName)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicy> findByServiceDefId(Long serviceDefId) {
         if (serviceDefId == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicy.findByServiceDefId", tClass)
                     .setParameter("serviceDefId", serviceDefId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
@@ -173,33 +178,36 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
     }
 
     public List<XXPolicy> findByUserId(Long userId) {
-        if (userId == null || userId.equals(Long.valueOf(0L))) {
-            return new ArrayList<XXPolicy>();
+        if (userId == null || userId.equals(0L)) {
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.findByUserId", tClass)
                     .setParameter("userId", userId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicy> findByGroupId(Long groupId) {
-        if (groupId == null || groupId.equals(Long.valueOf(0L))) {
-            return new ArrayList<XXPolicy>();
+        if (groupId == null || groupId.equals(0L)) {
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.findByGroupId", tClass)
                     .setParameter("groupId", groupId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<Long> findPolicyIdsByServiceNameAndZoneId(String serviceName, Long zoneId) {
-        List<Long> ret = new ArrayList<Long>();
+        List<Long> ret;
+
         try {
             ret = getEntityManager()
                     .createNamedQuery("XXPolicy.findPolicyIdsByServiceNameAndZoneId", Long.class)
@@ -207,57 +215,67 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
                     .setParameter("zoneId", zoneId)
                     .getResultList();
         } catch (Exception e) {
+            ret = new ArrayList<>();
         }
+
         return ret;
     }
 
     public List<XXPolicy> findByRoleId(Long roleId) {
-        List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+        List<XXPolicy> ret = Collections.emptyList();
+
         if (roleId != null) {
             try {
                 ret = getEntityManager().createNamedQuery("XXPolicy.findByRoleId", tClass)
                         .setParameter("roleId", roleId)
                         .getResultList();
             } catch (NoResultException excp) {
+                // ignore
             }
         }
+
         return ret;
     }
 
     public List<Long> findServiceIdsByRoleId(Long roleId) {
-        List<Long> ret = ListUtils.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
+
         if (roleId != null) {
             try {
                 ret = getEntityManager().createNamedQuery("XXPolicy.findServiceIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId)
                         .getResultList();
             } catch (NoResultException excp) {
+                // ignore
             }
         }
+
         return ret;
     }
 
     public long findRoleRefPolicyCount(String roleName, Long serviceId) {
-        long ret = -1;
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.findRoleRefPolicyCount", Long.class)
                     .setParameter("serviceId", serviceId)
                     .setParameter("roleName", roleName).getSingleResult();
         } catch (Exception e) {
+            // ignore
         }
-        return ret;
+
+        return -1;
     }
 
     public long getPoliciesCount(String serviceName) {
-        long ret = 0L;
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.getPoliciesCount", Long.class)
                     .setParameter("serviceName", serviceName).getSingleResult();
         } catch (Exception e) {
+            // ignore
         }
-        return ret;
+
+        return 0L;
     }
 
     public XXPolicy findPolicy(String policyName, String serviceName, String zoneName) {
@@ -283,12 +301,15 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
     }
 
     public List<XXPolicy> getAllByPolicyItem() {
-        List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+        List<XXPolicy> ret;
+
         try {
             ret = getEntityManager().createNamedQuery("XXPolicy.getAllByPolicyItem", tClass)
                     .getResultList();
         } catch (NoResultException excp) {
+            ret = Collections.emptyList();
         }
+
         return ret;
     }
 
@@ -335,37 +356,44 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 
     public List<XXPolicy> findByPolicyStatus(Boolean isPolicyEnabled) {
         if (isPolicyEnabled == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicy.findByPolicyStatus", tClass)
                     .setParameter("isPolicyEnabled", isPolicyEnabled)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<String> findDuplicateGUIDByServiceIdAndZoneId(Long serviceId, Long zoneId) {
-        List<String> ret = ListUtils.EMPTY_LIST;
+        List<String> ret = Collections.emptyList();
+
         if (serviceId == null || zoneId == null) {
             return ret;
         }
+
         try {
             ret = getEntityManager().createNamedQuery("XXPolicy.findDuplicateGUIDByServiceIdAndZoneId", String.class)
                     .setParameter("serviceId", serviceId)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
         } catch (Exception e) {
+            // ignore
         }
+
         return ret;
     }
 
     public List<XXPolicy> findPolicyByGUIDAndServiceIdAndZoneId(String guid, Long serviceId, Long zoneId) {
-        List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+        List<XXPolicy> ret = Collections.emptyList();
+
         if (guid == null || serviceId == null || zoneId == null) {
             return ret;
         }
+
         try {
             ret = getEntityManager().createNamedQuery("XXPolicy.findPolicyByGUIDAndServiceIdAndZoneId", tClass)
                     .setParameter("guid", guid)
@@ -373,14 +401,18 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
                     .setParameter("zoneId", zoneId)
                     .getResultList();
         } catch (NoResultException excp) {
+            // ignore
         }
+
         return ret;
     }
 
     public Map<String, Long> findDuplicatePoliciesByServiceAndResourceSignature() {
-        Map<String, Long> policies = new HashMap<String, Long>();
+        Map<String, Long> policies = new HashMap<>();
+
         try {
-            List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature").getResultList();
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature", Object[].class).getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
                     policies.put((String) row[0], (Long) row[1]);
@@ -389,34 +421,38 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
         } catch (NoResultException e) {
             return null;
         } catch (Exception ex) {
+            // ignore
         }
+
         return policies;
     }
 
     public List<XXPolicy> findByServiceIdAndResourceSignature(Long serviceId, String policySignature) {
         if (policySignature == null || serviceId == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicy.findByServiceIdAndResourceSignature", tClass)
                     .setParameter("serviceId", serviceId)
                     .setParameter("resSignature", policySignature)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicy> findByZoneId(Long zoneId) {
         if (zoneId == null) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicy.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicy>();
+            return new ArrayList<>();
         }
     }
 
@@ -458,10 +494,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
             return Collections.emptyList();
         }
 
-        Query query = getEntityManager().createNamedQuery("XXPolicy.getMetaAttributesForPolicies", tClass);
-        query.setParameter("policyIds", policyIds);
-
-        return query.getResultList();
+        return getEntityManager().createNamedQuery("XXPolicy.getMetaAttributesForPolicies", Object[].class).setParameter("policyIds", policyIds).getResultList();
     }
 
     public List<XXPolicy> getProjectPolicies(Long projectId) {

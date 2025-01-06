@@ -35,9 +35,8 @@ public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
         super(daoManager);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object[]> getResourceMappings() {
-        return getEntityManager().createNamedQuery("XXRMSResourceMapping.getResourceMapping").getResultList();
+        return getEntityManager().createNamedQuery("XXRMSResourceMapping.getResourceMapping", Object[].class).getResultList();
     }
 
     public void deleteByHlResourceId(Long resourceId) {
@@ -70,7 +69,9 @@ public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
                     .setParameter("llResourceId", llResourceId)
                     .getSingleResult();
         } catch (NoResultException e) {
+            // ignore
         }
+
         return null;
     }
 
@@ -100,6 +101,7 @@ public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
         List<RangerServiceResource> ret = new ArrayList<>();
 
         List<Object[]> rows = null;
+
         try {
             rows = getEntityManager()
                     .createNamedQuery("XXRMSResourceMapping.getServiceResourcesByLlResourceId", Object[].class)
@@ -112,6 +114,7 @@ public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
         if (CollectionUtils.isNotEmpty(rows)) {
             for (Object[] row : rows) {
                 XXRMSServiceResource xxServiceResource = new XXRMSServiceResource();
+
                 xxServiceResource.setId((Long) row[0]);
                 xxServiceResource.setGuid((String) row[1]);
                 xxServiceResource.setVersion((Long) row[2]);
@@ -119,9 +122,11 @@ public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
                 xxServiceResource.setResourceSignature((String) row[4]);
                 xxServiceResource.setServiceId((Long) row[5]);
                 xxServiceResource.setServiceResourceElements((String) row[6]);
+
                 ret.add(XXRMSServiceResourceDao.populateViewBean(xxServiceResource));
             }
         }
+
         return ret;
     }
 }

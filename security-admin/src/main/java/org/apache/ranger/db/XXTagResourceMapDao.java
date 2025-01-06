@@ -40,6 +40,7 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
         if (StringUtil.isEmpty(resourceGuid)) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagResourceMap.findByGuid", tClass)
                     .setParameter("guid", resourceGuid).getSingleResult();
@@ -49,7 +50,7 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
     }
 
     public List<XXTagResourceMap> findByResourceId(Long resourceId) {
-        List<XXTagResourceMap> ret = null;
+        List<XXTagResourceMap> ret;
 
         if (resourceId == null) {
             ret = new ArrayList<>();
@@ -68,7 +69,7 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
     }
 
     public List<XXTagResourceMap> findByResourceGuid(String resourceGuid) {
-        List<XXTagResourceMap> ret = null;
+        List<XXTagResourceMap> ret;
 
         if (resourceGuid == null) {
             ret = new ArrayList<>();
@@ -91,12 +92,12 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
             return getEntityManager().createNamedQuery("XXTagResourceMap.getTagIdsForResourceId", Long.class)
                     .setParameter("resourceId", resourceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<Long>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXTagResourceMap> findByTagId(Long tagId) {
-        List<XXTagResourceMap> ret = null;
+        List<XXTagResourceMap> ret;
 
         if (tagId == null) {
             ret = new ArrayList<>();
@@ -116,13 +117,13 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 
     public List<XXTagResourceMap> findByTagGuid(String tagGuid) {
         if (StringUtil.isEmpty(tagGuid)) {
-            return new ArrayList<XXTagResourceMap>();
+            return new ArrayList<>();
         }
         try {
             return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagGuid", tClass)
                     .setParameter("tagGuid", tagGuid).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagResourceMap>();
+            return new ArrayList<>();
         }
     }
 
@@ -130,6 +131,7 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
         if (tagId == null || resourceId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceId", tClass)
                     .setParameter("tagId", tagId)
@@ -143,6 +145,7 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
         if (tagGuid == null || resourceGuid == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceGuid", tClass)
                     .setParameter("tagGuid", tagGuid)
@@ -154,13 +157,14 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 
     public List<XXTagResourceMap> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXTagResourceMap>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXTagResourceMap.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXTagResourceMap>();
+            return new ArrayList<>();
         }
     }
 

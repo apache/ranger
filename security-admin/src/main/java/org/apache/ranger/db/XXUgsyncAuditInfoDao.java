@@ -42,6 +42,7 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
     @Override
     public XXUgsyncAuditInfo create(XXUgsyncAuditInfo obj) {
         obj.setEventTime(DateUtil.getUTCDate());
+
         return super.create(obj);
     }
 
@@ -49,6 +50,7 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
         if (sessionId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySessionId", tClass).setParameter("sessionId", sessionId).getSingleResult();
         } catch (NoResultException e) {
@@ -60,6 +62,7 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
         if (syncSource == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass).setParameter("syncSource", syncSource).getResultList();
         } catch (NoResultException e) {

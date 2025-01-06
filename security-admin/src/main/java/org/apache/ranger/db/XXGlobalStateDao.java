@@ -36,11 +36,12 @@ import java.util.Map;
 
 @Service
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
+    private static final Logger logger = LoggerFactory.getLogger(XXGlobalStateDao.class);
+
     public static final String RANGER_GLOBAL_STATE_NAME_GDS        = "RangerGDS";
     public static final String RANGER_GLOBAL_STATE_NAME_ROLE       = "RangerRole";
     public static final String RANGER_GLOBAL_STATE_NAME_USER_GROUP = "RangerUserStore";
     public static final String APP_DATA_ENTRY_VERSION              = "Version";
-    private static final Logger logger = LoggerFactory.getLogger(XXGlobalStateDao.class);
 
     /**
      * Default Constructor
@@ -52,25 +53,32 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     public void onGlobalStateChange(String stateName) throws Exception {
         if (StringUtils.isBlank(stateName)) {
             logger.error("Invalid name for state:[{}]", stateName);
+
             throw new Exception("Invalid name for state:[" + stateName + "]");
         } else {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
+
                 if (globalState == null) {
                     globalState = new XXGlobalState();
+
                     globalState.setStateName(stateName);
+
                     create(globalState);
                 } else {
                     Date date = DateUtil.getUTCDate();
+
                     if (date == null) {
                         date = new Date();
                     }
+
                     globalState.setAppData(date.toString());
 
                     update(globalState);
                 }
             } catch (Exception exception) {
                 logger.error("Cannot create/update GlobalState for state:[{}]", stateName, exception);
+
                 throw exception;
             }
         }
@@ -79,10 +87,12 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     public void onGlobalAppDataChange(String stateName) throws Exception {
         if (StringUtils.isBlank(stateName)) {
             logger.error("Invalid name for state:[{}]", stateName);
+
             throw new Exception("Invalid name for state:[" + stateName + "]");
         } else {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
+
                 if (globalState == null) {
                     createGlobalStateForAppDataVersion(stateName);
                 } else {
@@ -98,10 +108,13 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
 
     public Long getAppDataVersion(String stateName) {
         Long ret = null;
+
         try {
             XXGlobalState globalState = findByStateName(stateName);
+
             if (globalState != null) {
                 Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+
                 if (MapUtils.isNotEmpty(appDataVersionJson)) {
                     ret = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION));
                 } else {
@@ -109,10 +122,9 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
                 }
             }
         } catch (Exception exception) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Unable to find the version for {} in Ranger Database", stateName, exception);
-            }
+            logger.debug("Unable to find the version for {} in Ranger Database", stateName, exception);
         }
+
         return ret;
     }
 
@@ -120,6 +132,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         if (stateId == null) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXGlobalState.findByStateId", tClass)
@@ -134,6 +147,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         if (StringUtils.isBlank(stateName)) {
             return null;
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXGlobalState.findByStateName", tClass)
@@ -146,19 +160,28 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
 
     private void createGlobalStateForAppDataVersion(String stateName) {
         XXGlobalState globalState = new XXGlobalState();
+
         globalState.setStateName(stateName);
+
         Map<String, String> appDataVersion = new HashMap<>();
+
         appDataVersion.put(APP_DATA_ENTRY_VERSION, Long.toString(1L));
+
         globalState.setAppData(new Gson().toJson(appDataVersion));
+
         create(globalState);
     }
 
     private void updateGlobalStateForAppDataVersion(XXGlobalState globalState, String stateName) {
         Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+
         if (MapUtils.isNotEmpty(appDataVersionJson)) {
             Long appDataVersion = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION)) + 1L;
+
             appDataVersionJson.put(APP_DATA_ENTRY_VERSION, Long.toString(appDataVersion));
+
             globalState.setAppData(new Gson().toJson(appDataVersionJson));
+
             update(globalState);
         } else {
             //if not present create Global State for state name Version.

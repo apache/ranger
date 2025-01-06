@@ -34,17 +34,17 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
         super(daoManager);
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findImpliedGrantsByATDId(Long atdId) {
         if (atdId == null) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
-                    .createNamedQuery("XXAccessTypeDefGrants.findImpliedGrantsByATDId")
+                    .createNamedQuery("XXAccessTypeDefGrants.findImpliedGrantsByATDId", String.class)
                     .setParameter("atdId", atdId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
@@ -52,9 +52,8 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
         final Map<String, List<String>> ret = new HashMap<>();
 
         if (serviceDefId != null) {
-            @SuppressWarnings("unchecked")
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXAccessTypeDefGrants.findByServiceDefId")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXAccessTypeDefGrants.findByServiceDefId", Object[].class)
                     .setParameter("serviceDefId", serviceDefId)
                     .getResultList();
 
@@ -62,13 +61,7 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
                 for (Object[] row : rows) {
                     String       accessType    = (String) row[0];
                     String       impliedGrant  = (String) row[1];
-                    List<String> impliedGrants = ret.get(accessType);
-
-                    if (impliedGrants == null) {
-                        impliedGrants = new ArrayList<>();
-
-                        ret.put(accessType, impliedGrants);
-                    }
+                    List<String> impliedGrants = ret.computeIfAbsent(accessType, k -> new ArrayList<>());
 
                     impliedGrants.add(impliedGrant);
                 }
@@ -82,6 +75,7 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
         if (atdId == null || name == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByNameAndATDId", tClass)
                     .setParameter("atdId", atdId).setParameter("name", name).getSingleResult();
@@ -92,13 +86,14 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
 
     public List<XXAccessTypeDefGrants> findByATDId(Long atdId) {
         if (atdId == null) {
-            return new ArrayList<XXAccessTypeDefGrants>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXAccessTypeDefGrants.findByATDId", tClass)
                     .setParameter("atdId", atdId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXAccessTypeDefGrants>();
+            return new ArrayList<>();
         }
     }
 }

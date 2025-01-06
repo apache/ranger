@@ -44,13 +44,14 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
             return null;
         }
 
-        @SuppressWarnings("rawtypes")
-        List resultList = getEntityManager()
-                .createNamedQuery("XXPortalUser.findByLoginId")
+        List<XXPortalUser> resultList = getEntityManager()
+                .createNamedQuery("XXPortalUser.findByLoginId", tClass)
                 .setParameter("loginId", loginId).getResultList();
+
         if (!resultList.isEmpty()) {
-            return (XXPortalUser) resultList.get(0);
+            return resultList.get(0);
         }
+
         return null;
     }
 
@@ -59,28 +60,27 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
             return null;
         }
 
-        @SuppressWarnings("rawtypes")
-        List resultList = getEntityManager()
-                .createNamedQuery("XXPortalUser.findByEmailAddress")
+        List<XXPortalUser> resultList = getEntityManager()
+                .createNamedQuery("XXPortalUser.findByEmailAddress", tClass)
                 .setParameter("emailAddress", emailAddress)
                 .getResultList();
+
         if (!resultList.isEmpty()) {
-            return (XXPortalUser) resultList.get(0);
+            return resultList.get(0);
         }
+
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXPortalUser> findByRole(String userRole) {
-        return getEntityManager().createNamedQuery("XXPortalUser.findByRole")
+        return getEntityManager().createNamedQuery("XXPortalUser.findByRole", tClass)
                 .setParameter("userRole", userRole.toUpperCase())
                 .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object[]> getUserAddedReport() {
         return getEntityManager()
-                .createNamedQuery("XXPortalUser.getUserAddedReport")
+                .createNamedQuery("XXPortalUser.getUserAddedReport", Object[].class)
                 .getResultList();
     }
 
@@ -88,6 +88,7 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
         if (xUserId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPortalUser.findByXUserId", tClass)
                     .setParameter("id", xUserId).getSingleResult();
@@ -96,16 +97,14 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<XXPortalUser> findAllXPortalUser() {
         try {
-            return getEntityManager().createNamedQuery("XXPortalUser.findAllXPortalUser").getResultList();
+            return getEntityManager().createNamedQuery("XXPortalUser.findAllXPortalUser", tClass).getResultList();
         } catch (Exception e) {
             return null;
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> getNonUserRoleExternalUsers() {
         try {
             return getEntityManager().createNamedQuery("XXPortalUser.getNonUserRoleExternalUsers", String.class)
@@ -130,30 +129,38 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 
     public XXPortalUser findById(Long id) {
         XXPortalUser xXPortalUser;
+
         if (id == null) {
             return null;
         }
+
         try {
             xXPortalUser = new XXPortalUser();
-            Object[] row = (Object[]) getEntityManager().createNamedQuery("XXPortalUser.findById").setParameter("id", id).getSingleResult();
+
+            Object[] row = getEntityManager().createNamedQuery("XXPortalUser.findById", Object[].class).setParameter("id", id).getSingleResult();
+
             if (row != null) {
                 xXPortalUser.setFirstName((String) row[0]);
                 xXPortalUser.setLastName((String) row[1]);
                 xXPortalUser.setPublicScreenName((String) row[2]);
                 xXPortalUser.setLoginId((String) row[3]);
+
                 return xXPortalUser;
             }
         } catch (NoResultException e) {
             return null;
         }
+
         return xXPortalUser;
     }
 
     public Map<String, Long> getCountByUserRole() {
         Map<String, Long> ret  = Collections.emptyMap();
-        List<Object[]>    rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPortalUser.getCountByUserRole").getResultList();
+        List<Object[]>    rows = getEntityManager().createNamedQuery("XXPortalUser.getCountByUserRole", Object[].class).getResultList();
+
         if (rows != null) {
             ret = new HashMap<>();
+
             for (Object[] row : rows) {
                 if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
                     // since group by query will not return empty count field, no need to check
@@ -161,6 +168,7 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
                 }
             }
         }
+
         return ret;
     }
 }

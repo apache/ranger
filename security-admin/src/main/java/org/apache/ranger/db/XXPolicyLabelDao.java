@@ -37,7 +37,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
             return getEntityManager().createNamedQuery("XXPolicyLabel.getAllPolicyLabels", tClass)
                     .getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyLabel>();
+            return new ArrayList<>();
         }
     }
 
@@ -45,6 +45,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
         if (policyLabel == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabel.findByName", tClass)
                     .setParameter("policyLabel", policyLabel).getSingleResult();
@@ -57,6 +58,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
         if (policyLabel == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabel.findByName", tClass)
                     .setParameter("policyLabel", policyLabel).getResultList();
@@ -69,6 +71,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
         if (policyLabelId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabel.findByPolicyLabelId", tClass)
                     .setParameter("policyLabelId", policyLabelId).getSingleResult();
@@ -81,6 +84,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
         if (serviceId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabel.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
@@ -93,6 +97,7 @@ public class XXPolicyLabelDao extends BaseDao<XXPolicyLabel> {
         if (policyId == null) {
             return null;
         }
+
         try {
             return getEntityManager().createNamedQuery("XXPolicyLabel.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();

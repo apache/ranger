@@ -34,27 +34,29 @@ public class XXPolicyItemUserPermDao extends BaseDao<XXPolicyItemUserPerm> {
 
     public List<XXPolicyItemUserPerm> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyItemUserPerm>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemUserPerm.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemUserPerm>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyItemUserPerm> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyItemUserPerm>();
+            return new ArrayList<>();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyItemUserPerm.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItemUserPerm>();
+            return new ArrayList<>();
         }
     }
 
@@ -62,6 +64,7 @@ public class XXPolicyItemUserPermDao extends BaseDao<XXPolicyItemUserPerm> {
         if (policyId == null) {
             return;
         }
+
         getEntityManager()
                 .createNamedQuery("XXPolicyItemUserPerm.deleteByPolicyId", tClass)
                 .setParameter("policyId", policyId).executeUpdate();

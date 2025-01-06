@@ -41,35 +41,41 @@ public class XXPolicyItemDao extends BaseDao<XXPolicyItem> {
 
     public List<XXPolicyItem> findByPolicyId(Long policyId) {
         if (policyId == null) {
-            return new ArrayList<XXPolicyItem>();
+            return new ArrayList<>();
         }
+
         try {
             List<XXPolicyItem> returnList = getEntityManager()
                     .createNamedQuery("XXPolicyItem.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
+
             if (returnList == null) {
-                return new ArrayList<XXPolicyItem>();
+                return new ArrayList<>();
             }
+
             return returnList;
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItem>();
+            return new ArrayList<>();
         }
     }
 
     public List<XXPolicyItem> findByServiceId(Long serviceId) {
         if (serviceId == null) {
-            return new ArrayList<XXPolicyItem>();
+            return new ArrayList<>();
         }
+
         try {
             List<XXPolicyItem> returnList = getEntityManager()
                     .createNamedQuery("XXPolicyItem.findByServiceId", tClass)
                     .setParameter("serviceId", serviceId).getResultList();
+
             if (returnList == null) {
-                return new ArrayList<XXPolicyItem>();
+                return new ArrayList<>();
             }
+
             return returnList;
         } catch (NoResultException e) {
-            return new ArrayList<XXPolicyItem>();
+            return new ArrayList<>();
         }
     }
 
@@ -77,6 +83,7 @@ public class XXPolicyItemDao extends BaseDao<XXPolicyItem> {
         if (policyId == null) {
             return;
         }
+
         getEntityManager()
                 .createNamedQuery("XXPolicyItem.deleteByPolicyId", tClass)
                 .setParameter("policyId", policyId).executeUpdate();
