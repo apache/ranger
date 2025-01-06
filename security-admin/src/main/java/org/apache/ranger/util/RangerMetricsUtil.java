@@ -42,10 +42,10 @@ public class RangerMetricsUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
 
     private static final OperatingSystemMXBean OS;
-    private static final MemoryMXBean MEM_BEAN;
+    private static final MemoryMXBean          MEM_BEAN;
 
     static {
-        OS = ManagementFactory.getOperatingSystemMXBean();
+        OS       = ManagementFactory.getOperatingSystemMXBean();
         MEM_BEAN = ManagementFactory.getMemoryMXBean();
     }
 
@@ -70,6 +70,7 @@ public class RangerMetricsUtil {
         LOG.debug("==> RangerMetricsUtil.getPoolDivision()");
 
         Map<String, Object> poolDivisionValues = new LinkedHashMap<>();
+
         for (MemoryPoolMXBean mpBean : ManagementFactory.getMemoryPoolMXBeans()) {
             if (mpBean.getType() == MemoryType.HEAP) {
                 poolDivisionValues.put(mpBean.getName(), mpBean.getUsage());
