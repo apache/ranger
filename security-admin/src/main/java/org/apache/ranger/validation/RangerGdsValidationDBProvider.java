@@ -206,9 +206,8 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
 
     public Set<String> getMaskTypes(String serviceName) {
         List<String> maskTypes = daoMgr.getXXDataMaskTypeDef().getNamesByServiceName(serviceName);
-        Set<String>  ret       = new HashSet<>(maskTypes);
 
-        return ret;
+        return new HashSet<>(maskTypes);
     }
 
     public RangerDataset getDataset(Long id) {
@@ -258,15 +257,11 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
     }
 
     public Long getSharedResourceId(Long dataShareId, String name) {
-        Long ret = daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndName(dataShareId, name);
-
-        return ret;
+        return daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndName(dataShareId, name);
     }
 
     public Long getSharedResourceId(Long dataShareId, RangerPolicyResourceSignature signature) {
-        Long ret = daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndResourceSignature(dataShareId, signature.getSignature());
-
-        return ret;
+        return daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndResourceSignature(dataShareId, signature.getSignature());
     }
 
     private RangerRolesUtil initGetRolesUtil() {
