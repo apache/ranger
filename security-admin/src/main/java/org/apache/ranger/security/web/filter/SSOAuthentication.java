@@ -29,46 +29,45 @@ import java.util.Collection;
  * Internal token which describes JWT authentication
  */
 public class SSOAuthentication implements Authentication {
+    private final SignedJWT token;
+    private       boolean   authenticated;
 
-  private SignedJWT token;
-  private boolean authenticated = false;
+    public SSOAuthentication(SignedJWT token) {
+        this.token = token;
+    }
 
-  public SSOAuthentication(SignedJWT token) {
-    this.token = token;
-  }
+    @Override
+    public String getName() {
+        return null;
+    }
 
-  @Override
-  public SignedJWT getCredentials() {
-    return token;
-  }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
 
-  @Override
-  public Object getDetails() {
-    return null;
-  }
+    @Override
+    public SignedJWT getCredentials() {
+        return token;
+    }
 
-  @Override
-  public boolean isAuthenticated() {
-    return authenticated;
-  }
+    @Override
+    public Object getDetails() {
+        return null;
+    }
 
-  @Override
-  public void setAuthenticated(boolean authenticated) throws IllegalArgumentException {
-    this.authenticated = authenticated;
-  }
+    @Override
+    public Object getPrincipal() {
+        return null;
+    }
 
-  @Override
-  public String getName() {	
-	  return null;
-  }
+    @Override
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
 
-  @Override
-  public Collection<? extends GrantedAuthority> getAuthorities() {
-	  return null;
-  }
-
-  @Override
-  public Object getPrincipal() {
-	  return null;
-  }
+    @Override
+    public void setAuthenticated(boolean authenticated) throws IllegalArgumentException {
+        this.authenticated = authenticated;
+    }
 }
