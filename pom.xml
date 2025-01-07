@@ -207,7 +207,7 @@
         <sonar.language>java</sonar.language>
         <spotbugs.failOnViolation>false</spotbugs.failOnViolation>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
-        <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
+        <spring-ldap-core.version>2.4.4</spring-ldap-core.version>
         <springframework.security.version>5.7.12</springframework.security.version>
         <springframework.test.version>5.3.39</springframework.test.version>
         <springframework.version>5.3.39</springframework.version>
