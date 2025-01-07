@@ -255,7 +255,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
 		// object security
 		if (!objectSecurityHandler.hasAccess(resource,
-				Permission.permissionType.CREATE)) {
+				Permission.PermissionType.CREATE)) {
 			throw restErrorUtil.create403RESTException(getResourceName()
 					+ " access denied. classType=" + resource.getMyClassType()
 					+ ", className=" + resource.getClass().getName()
@@ -304,7 +304,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 	private V readResource(T resource) {
 		// object security
 		if (!objectSecurityHandler.hasAccess(resource,
-				Permission.permissionType.READ)) {
+				Permission.PermissionType.READ)) {
 
 			throw restErrorUtil.create403RESTException(getResourceName()
 					+ " access denied. classType=" + resource.getMyClassType()
@@ -352,7 +352,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
 		// object security
 		if (!objectSecurityHandler.hasAccess(resource,
-				Permission.permissionType.UPDATE)) {
+				Permission.PermissionType.UPDATE)) {
 			throw restErrorUtil.create403RESTException(getResourceName()
 					+ " access denied. classType=" + resource.getMyClassType()
 					+ ", className=" + resource.getClass().getName()
@@ -393,7 +393,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
 		// object security
 		if (!objectSecurityHandler.hasAccess(resource,
-				Permission.permissionType.DELETE)) {
+				Permission.PermissionType.DELETE)) {
 			// throw 401
 			logger.debug("OBJECT SECURITY");
 		}

@@ -17,54 +17,52 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.context;
 
 public class RangerContextHolder {
+    private static final ThreadLocal<RangerSecurityContext> securityContextThreadLocal = new ThreadLocal<>();
 
-    private static final ThreadLocal<RangerSecurityContext> securityContextThreadLocal = new ThreadLocal<RangerSecurityContext>();
-
-    private static final ThreadLocal<RangerAdminOpContext> operationContextThreadLocal = new ThreadLocal<RangerAdminOpContext>();
+    private static final ThreadLocal<RangerAdminOpContext> operationContextThreadLocal = new ThreadLocal<>();
 
     private RangerContextHolder() {
-
     }
 
-    public static RangerSecurityContext getSecurityContext(){
-	return securityContextThreadLocal.get();
+    public static RangerSecurityContext getSecurityContext() {
+        return securityContextThreadLocal.get();
     }
 
-    public static void setSecurityContext(RangerSecurityContext context){
-	securityContextThreadLocal.set(context);
+    public static void setSecurityContext(RangerSecurityContext context) {
+        securityContextThreadLocal.set(context);
     }
 
-    public static void resetSecurityContext(){
-	securityContextThreadLocal.remove();
+    public static void resetSecurityContext() {
+        securityContextThreadLocal.remove();
     }
 
-	public static RangerAdminOpContext getOpContext() {
-		return operationContextThreadLocal.get();
-	}
+    public static RangerAdminOpContext getOpContext() {
+        return operationContextThreadLocal.get();
+    }
 
-	public static RangerAdminOpContext getOrCreateOpContext() {
-		RangerAdminOpContext ret = operationContextThreadLocal.get();
+    public static void setOpContext(RangerAdminOpContext context) {
+        operationContextThreadLocal.set(context);
+    }
 
-		if (ret == null) {
-			ret = new RangerAdminOpContext();
+    public static RangerAdminOpContext getOrCreateOpContext() {
+        RangerAdminOpContext ret = operationContextThreadLocal.get();
 
-			operationContextThreadLocal.set(ret);
-		}
+        if (ret == null) {
+            ret = new RangerAdminOpContext();
 
-		return ret;
-	}
+            operationContextThreadLocal.set(ret);
+        }
 
-	public static void setOpContext(RangerAdminOpContext context) {
-		operationContextThreadLocal.set(context);
-	}
+        return ret;
+    }
 
-	public static void resetOpContext() {
-		operationContextThreadLocal.remove();
-	}
+    public static void resetOpContext() {
+        operationContextThreadLocal.remove();
+    }
 }

@@ -17,16 +17,10 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.web.authentication;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -41,15 +35,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
 /**
  *
- *
  */
-public class RangerAuthSuccessHandler extends
-SavedRequestAwareAuthenticationSuccessHandler {
+public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuthSuccessHandler.class);
 
-    String ajaxLoginSuccessPage = null;
+    String ajaxLoginSuccessPage;
 
     @Autowired
     SessionMgr sessionMgr;
@@ -57,14 +54,15 @@ SavedRequestAwareAuthenticationSuccessHandler {
     @Autowired
     JSONUtil jsonUtil;
 
-	@Autowired
-	XUserMgr xUserMgr;
+    @Autowired
+    XUserMgr xUserMgr;
 
     public RangerAuthSuccessHandler() {
-	super();
-	if (ajaxLoginSuccessPage == null) {
-		ajaxLoginSuccessPage = PropertiesUtil.getProperty("ranger.ajax.auth.success.page", "/ajax_success.html");
-	}
+        super();
+
+        if (ajaxLoginSuccessPage == null) {
+            ajaxLoginSuccessPage = PropertiesUtil.getProperty("ranger.ajax.auth.success.page", "/ajax_success.html");
+        }
     }
 
     /*
@@ -77,95 +75,91 @@ SavedRequestAwareAuthenticationSuccessHandler {
      * org.springframework.security.core.Authentication)
      */
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request,
-	    HttpServletResponse response, Authentication authentication)
-    throws ServletException, IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+        RangerSessionFixationProtectionStrategy rangerSessionFixationProtectionStrategy = new RangerSessionFixationProtectionStrategy();
 
-	RangerSessionFixationProtectionStrategy rangerSessionFixationProtectionStrategy=new RangerSessionFixationProtectionStrategy();
-	rangerSessionFixationProtectionStrategy.onAuthentication(authentication, request, response);
-    	WebAuthenticationDetails details = (WebAuthenticationDetails) authentication
-    		.getDetails();
-    	String remoteAddress = details != null ? details.getRemoteAddress()
-    		: "";
-    	String sessionId = details != null ? details.getSessionId() : "";
-		String userAgent = request.getHeader("User-Agent");
+        rangerSessionFixationProtectionStrategy.onAuthentication(authentication, request, response);
 
-    	boolean isValidUser = sessionMgr.isValidXAUser(authentication.getName());
-    	String rangerAuthenticationMethod=PropertiesUtil.getProperty("ranger.authentication.method","NONE");
-    	if(!isValidUser && !"NONE".equalsIgnoreCase(rangerAuthenticationMethod)){
-    		xUserMgr.createServiceConfigUser(authentication.getName());
-    		isValidUser = sessionMgr.isValidXAUser(authentication.getName());
-    	}
+        WebAuthenticationDetails details       = (WebAuthenticationDetails) authentication.getDetails();
+        String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+        String                   sessionId     = details != null ? details.getSessionId() : "";
+        String                   userAgent     = request.getHeader("User-Agent");
 
-    	response.setContentType("application/json;charset=UTF-8");
-		response.setHeader("Cache-Control", "no-cache");
-		response.setHeader("X-Frame-Options", "DENY");
-		VXResponse vXResponse = new VXResponse();
+        boolean isValidUser                = sessionMgr.isValidXAUser(authentication.getName());
+        String  rangerAuthenticationMethod = PropertiesUtil.getProperty("ranger.authentication.method", "NONE");
 
-    	if(!isValidUser) {
-    		sessionMgr.processFailureLogin(
-    				XXAuthSession.AUTH_STATUS_USER_NOT_FOUND,
-    				XXAuthSession.AUTH_TYPE_PASSWORD, authentication.getName(),
-					remoteAddress, sessionId, userAgent);
-    		authentication.setAuthenticated(false);
+        if (!isValidUser && !"NONE".equalsIgnoreCase(rangerAuthenticationMethod)) {
+            xUserMgr.createServiceConfigUser(authentication.getName());
 
-			vXResponse.setStatusCode(HttpServletResponse.SC_PRECONDITION_FAILED);
-			vXResponse.setMsgDesc("Auth Succeeded but user is not synced yet or federated-user for " + authentication.getName());
+            isValidUser = sessionMgr.isValidXAUser(authentication.getName());
+        }
 
-			response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-			response.getWriter().write(jsonUtil.writeObjectAsString(vXResponse));
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("X-Frame-Options", "DENY");
 
-			// response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
-			LOG.info("Auth Succeeded but user is not synced yet for "
-					+ authentication.getName());
+        VXResponse vXResponse = new VXResponse();
 
-    	} else {
+        if (!isValidUser) {
+            sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_USER_NOT_FOUND, XXAuthSession.AUTH_TYPE_PASSWORD, authentication.getName(), remoteAddress, sessionId, userAgent);
+            authentication.setAuthenticated(false);
 
-			String ajaxRequestHeader = request.getHeader("X-Requested-With");
-			if (LOG.isDebugEnabled()) {
-			    LOG.debug("commence() X-Requested-With=" + ajaxRequestHeader);
-			}
-			if (ajaxRequestHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
-				// if (logger.isDebugEnabled()) {
-				// logger.debug("Forwarding AJAX login request success to "
-				// + ajaxLoginSuccessPage + " for user "
-				// + authentication.getName());
-				// }
-				// request.getRequestDispatcher(ajaxLoginSuccessPage).forward(request,
-				// response);
+            vXResponse.setStatusCode(HttpServletResponse.SC_PRECONDITION_FAILED);
+            vXResponse.setMsgDesc("Auth Succeeded but user is not synced yet or federated-user for " + authentication.getName());
 
-				String jsonResp = "";
-				try {
-					vXResponse.setStatusCode(HttpServletResponse.SC_OK);
-					vXResponse.setMsgDesc("Login Successful");
+            response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+            response.getWriter().write(jsonUtil.writeObjectAsString(vXResponse));
 
-					response.setStatus(HttpServletResponse.SC_OK);
-					jsonResp = jsonUtil.writeObjectAsString(vXResponse);
-					response.getWriter().write(jsonResp);
-				} catch (IOException e) {
-					LOG.info("Error while writing JSON in HttpServletResponse");
-				}
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Sending login success response : " + jsonResp);
-				}
-			    clearAuthenticationAttributes(request);
-			} else {
-				String jsonResp = "";
-				try {
-					vXResponse.setStatusCode(HttpServletResponse.SC_OK);
-					vXResponse.setMsgDesc("Login Successful");
+            // response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
+            LOG.info("Auth Succeeded but user is not synced yet for {}", authentication.getName());
+        } else {
+            String ajaxRequestHeader = request.getHeader("X-Requested-With");
 
-					response.setStatus(HttpServletResponse.SC_OK);
-					jsonResp = jsonUtil.writeObjectAsString(vXResponse);
-					response.getWriter().write(jsonResp);
-				} catch (IOException e) {
-					LOG.info("Error while writing JSON in HttpServletResponse");
-				}
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Sending login success response : " + jsonResp);
-				}
-			}
-    	}
+            LOG.debug("commence() X-Requested-With={}", ajaxRequestHeader);
+
+            if ("XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
+                // logger.debug("Forwarding AJAX login request success to "
+                // + ajaxLoginSuccessPage + " for user "
+                // + authentication.getName());
+                // }
+                // request.getRequestDispatcher(ajaxLoginSuccessPage).forward(request,
+                // response);
+
+                String jsonResp = "";
+
+                try {
+                    vXResponse.setStatusCode(HttpServletResponse.SC_OK);
+                    vXResponse.setMsgDesc("Login Successful");
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+
+                    jsonResp = jsonUtil.writeObjectAsString(vXResponse);
+
+                    response.getWriter().write(jsonResp);
+                } catch (IOException e) {
+                    LOG.info("Error while writing JSON in HttpServletResponse");
+                }
+
+                LOG.debug("Sending login success response : {}", jsonResp);
+
+                clearAuthenticationAttributes(request);
+            } else {
+                String jsonResp = "";
+
+                try {
+                    vXResponse.setStatusCode(HttpServletResponse.SC_OK);
+                    vXResponse.setMsgDesc("Login Successful");
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+
+                    jsonResp = jsonUtil.writeObjectAsString(vXResponse);
+
+                    response.getWriter().write(jsonResp);
+                } catch (IOException e) {
+                    LOG.info("Error while writing JSON in HttpServletResponse");
+                }
+                LOG.debug("Sending login success response : {}", jsonResp);
+            }
+        }
     }
-
 }

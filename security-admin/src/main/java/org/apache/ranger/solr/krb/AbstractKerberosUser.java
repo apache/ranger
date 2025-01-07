@@ -27,6 +27,7 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -36,11 +37,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractKerberosUser implements KerberosUser {
-
     private static final Logger LOG = LoggerFactory.getLogger(AbstractKerberosUser.class);
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-
     /**
      * Percentage of the ticket window to use before we renew the TGT.
      */
@@ -48,7 +47,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
 
     protected final AtomicBoolean loggedIn = new AtomicBoolean(false);
 
-    protected Subject subject;
+    protected Subject      subject;
     protected LoginContext loginContext;
 
     public AbstractKerberosUser() {
@@ -68,28 +67,29 @@ public abstract class AbstractKerberosUser implements KerberosUser {
         try {
             // If it's the first time ever calling login then we need to initialize a new context
             if (loginContext == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Initializing new login context...");
-                }
+                LOG.debug("Initializing new login context...");
+
                 if (this.subject == null) {
                     // only create a new subject if a current one does not exist
                     // other classes may be referencing an existing subject and replacing it may break functionality of those other classes after relogin
                     this.subject = new Subject();
                 }
+
                 this.loginContext = createLoginContext(subject);
             }
 
             loginContext.login();
             loggedIn.set(true);
-            LOG.info("Successful login for {}", new Object[]{getPrincipal()});
+
+            LOG.info("Successful login for {}", getPrincipal());
         } catch (LoginException le) {
             LoginException loginException = new LoginException("Unable to login with " + getPrincipal() + " due to: " + le.getMessage());
+
             loginException.setStackTrace(le.getStackTrace());
+
             throw loginException;
         }
     }
-
-    protected abstract LoginContext createLoginContext(final Subject subject) throws LoginException;
 
     /**
      * Performs a logout of the current user.
@@ -105,11 +105,12 @@ public abstract class AbstractKerberosUser implements KerberosUser {
         try {
             loginContext.logout();
             loggedIn.set(false);
-            LOG.info("Successful logout for {}", new Object[]{getPrincipal()});
+
+            LOG.info("Successful logout for {}", getPrincipal());
 
             loginContext = null;
         } catch (LoginException e) {
-            LOG.warn("Logout failed due to: " + e.getMessage());
+            LOG.warn("Logout failed due to: {}", e.getMessage());
             throw e;
         }
     }
@@ -141,8 +142,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
      * @throws PrivilegedActionException if an exception is thrown from the action
      */
     @Override
-    public <T> T doAs(final PrivilegedExceptionAction<T> action)
-            throws IllegalStateException, PrivilegedActionException {
+    public <T> T doAs(final PrivilegedExceptionAction<T> action) throws IllegalStateException, PrivilegedActionException {
         if (!isLoggedIn()) {
             throw new IllegalStateException("Must login before executing actions");
         }
@@ -158,24 +158,39 @@ public abstract class AbstractKerberosUser implements KerberosUser {
     @Override
     public synchronized boolean checkTGTAndRelogin() throws LoginException {
         final KerberosTicket tgt = getTGT();
+
         if (tgt == null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("TGT was not found");
-            }
+            LOG.debug("TGT was not found");
         }
 
         if (tgt != null && System.currentTimeMillis() < getRefreshTime(tgt)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("TGT was found, but has not reached expiration window");
-            }
+            LOG.debug("TGT was found, but has not reached expiration window");
+
             return false;
         }
 
-        LOG.info("Performing relogin for {}", new Object[]{getPrincipal()});
+        LOG.info("Performing relogin for {}", getPrincipal());
+
         logout();
         login();
+
         return true;
     }
+
+    /**
+     * @return true if this user is currently logged in, false otherwise
+     */
+    @Override
+    public boolean isLoggedIn() {
+        return loggedIn.get();
+    }
+
+    @Override
+    public String toString() {
+        return "KerberosUser{" + "principal='" + getPrincipal() + '\'' + ", loggedIn=" + loggedIn + '}';
+    }
+
+    protected abstract LoginContext createLoginContext(Subject subject) throws LoginException;
 
     /**
      * Get the Kerberos TGT.
@@ -206,9 +221,8 @@ public abstract class AbstractKerberosUser implements KerberosUser {
         }
 
         if (principal.getName().equals("krbtgt/" + principal.getRealm() + "@" + principal.getRealm())) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Found TGT principal: " + principal.getName());
-            }
+            LOG.trace("Found TGT principal: {}", principal.getName());
+
             return true;
         }
 
@@ -217,33 +231,17 @@ public abstract class AbstractKerberosUser implements KerberosUser {
 
     private long getRefreshTime(final KerberosTicket tgt) {
         long start = tgt.getStartTime().getTime();
-        long end = tgt.getEndTime().getTime();
+        long end   = tgt.getEndTime().getTime();
 
         if (LOG.isTraceEnabled()) {
             final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-            final String startDate = dateFormat.format(new Date(start));
-            final String endDate = dateFormat.format(new Date(end));
-            LOG.trace("TGT valid starting at: " + startDate);
-            LOG.trace("TGT expires at: " + endDate);
+            final String           startDate  = dateFormat.format(new Date(start));
+            final String           endDate    = dateFormat.format(new Date(end));
+
+            LOG.trace("TGT valid starting at: {}", startDate);
+            LOG.trace("TGT expires at: {}", endDate);
         }
 
         return start + (long) ((end - start) * TICKET_RENEW_WINDOW);
     }
-
-    /**
-     * @return true if this user is currently logged in, false otherwise
-     */
-    @Override
-    public boolean isLoggedIn() {
-        return loggedIn.get();
-    }
-
-    @Override
-    public String toString() {
-        return "KerberosUser{" +
-                "principal='" + getPrincipal() + '\'' +
-                ", loggedIn=" + loggedIn +
-                '}';
-    }
 }
-

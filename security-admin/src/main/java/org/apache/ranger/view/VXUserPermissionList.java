@@ -17,58 +17,57 @@
 
 package org.apache.ranger.view;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUserPermissionList extends VList {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    List<VXUserPermission> vXUserPermission = new ArrayList<>();
 
-	List<VXUserPermission> vXUserPermission = new ArrayList<VXUserPermission>();
+    public VXUserPermissionList() {
+        super();
+    }
 
-	public VXUserPermissionList() {
-		super();
-	}
+    public VXUserPermissionList(List<VXUserPermission> objList) {
+        super(objList);
+        this.vXUserPermission = objList;
+    }
 
-	public VXUserPermissionList(List<VXUserPermission> objList) {
-		super(objList);
-		this.vXUserPermission = objList;
-	}
+    /**
+     * @return the vXModuleDef
+     */
+    @JsonProperty("vXUserPermission")
+    public List<VXUserPermission> getvXModuleDef() {
+        return vXUserPermission;
+    }
 
-	/**
-	 * @return the vXModuleDef
-	 */
-	@JsonProperty("vXUserPermission")
-	public List<VXUserPermission> getvXModuleDef() {
-		return vXUserPermission;
-	}
+    /**
+     * @param vXModuleDef the vXModuleDef to set
+     */
+    @JsonProperty("vXUserPermission")
+    public void setvXModuleDef(List<VXUserPermission> vXModuleDef) {
+        this.vXUserPermission = vXModuleDef;
+    }
 
-	/**
-	 * @param vXModuleDef the vXModuleDef to set
-	 */
-	@JsonProperty("vXUserPermission")
-	public void setvXModuleDef(List<VXUserPermission> vXModuleDef) {
-		this.vXUserPermission = vXModuleDef;
-	}
+    @Override
+    public int getListSize() {
+        if (vXUserPermission != null) {
+            return vXUserPermission.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public int getListSize() {
-		if (vXUserPermission != null) {
-			return vXUserPermission.size();
-		}
-		return 0;
-	}
-
-	@Override
-	public List<VXUserPermission> getList() {
-		return vXUserPermission;
-	}
+    @Override
+    public List<VXUserPermission> getList() {
+        return vXUserPermission;
+    }
 }
