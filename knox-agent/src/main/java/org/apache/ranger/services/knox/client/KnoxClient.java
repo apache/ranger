@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,18 @@
 
 package org.apache.ranger.services.knox.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import org.apache.ranger.plugin.client.BaseClient;
+import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,405 +38,372 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.ranger.plugin.client.BaseClient;
-import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.apache.ranger.plugin.util.PasswordUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-
 public class KnoxClient {
+    private static final String EXPECTED_MIME_TYPE = "application/json";
+    private static final Logger LOG                = LoggerFactory.getLogger(KnoxClient.class);
 
-	private static final String EXPECTED_MIME_TYPE = "application/json";
-	private static final Logger LOG = LoggerFactory.getLogger(KnoxClient.class);
-
-	private String knoxUrl;
-	private String userName;
-	private String password;
-	
-	/*
+    private String knoxUrl;
+    private String userName;
+    private String password;
+    /*
    Sample curl calls to Knox to discover topologies
-         curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies
-         curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies/admin
-	*/
-	
-	public KnoxClient(String knoxUrl, String userName, String password) {
-		LOG.debug("Constructed KnoxClient with knoxUrl: " + knoxUrl +
-				", userName: " + userName);
-		this.knoxUrl = knoxUrl;
-		this.userName = userName;
-		this.password = password;
-	}
+   curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies
+   curl -ivk -u <user-name>:<user-password> https://localhost:8443/gateway/admin/api/v1/topologies/admin
+   */
 
-	public List<String> getTopologyList(String topologyNameMatching,List<String> knoxTopologyList) {
-		
-		// sample URI: https://hdp.example.com:8443/gateway/admin/api/v1/topologies
-		LOG.debug("Getting Knox topology list for topologyNameMatching : " +
-				topologyNameMatching);
-		List<String> topologyList = new ArrayList<String>();
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
-		if (topologyNameMatching == null ||  topologyNameMatching.trim().isEmpty()) {
-			topologyNameMatching = "";
-		}
-		String decryptedPwd=null;
-		try {
-			decryptedPwd=PasswordUtils.decryptPassword(password);
-		} catch(Exception ex) {
-			LOG.info("Password decryption failed; trying knox connection with received password string");
-			decryptedPwd=null;
-		} finally {
-			if (decryptedPwd==null) {
-				decryptedPwd=password;
-			}
-		}
-		try {
+    public KnoxClient(String knoxUrl, String userName, String password) {
+        LOG.debug("Constructed KnoxClient with knoxUrl: " + knoxUrl +
+                ", userName: " + userName);
+        this.knoxUrl  = knoxUrl;
+        this.userName = userName;
+        this.password = password;
+    }
 
-			Client client = null;
-			ClientResponse response = null;
+    public static void main(String[] args) {
+        KnoxClient knoxClient = null;
 
-			try {
-				client = Client.create();
-				
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-				WebResource webResource = client.resource(knoxUrl);
-				response = webResource.accept(EXPECTED_MIME_TYPE)
-					    .get(ClientResponse.class);
-				LOG.debug("Knox topology list response: " + response);
-				if (response != null) {
+        if (args.length != 3) {
+            System.err.println("USAGE: java " + KnoxClient.class.getName()
+                    + " knoxUrl userName password [sslConfigFileName]");
+            System.exit(1);
+        }
 
-					if (response.getStatus() == 200) {
-						String jsonString = response.getEntity(String.class);
-						LOG.debug("Knox topology list response JSON string: "+ jsonString);
+        knoxClient = new KnoxClient(args[0], args[1], args[2]);
+        List<String> topologyList = knoxClient.getTopologyList("", null);
+        if ((topologyList == null) || topologyList.isEmpty()) {
+            System.out.println("No knox topologies found");
+        } else {
+            List<String> serviceList = knoxClient.getServiceList(topologyList, "*", null);
+            if ((serviceList == null) || serviceList.isEmpty()) {
+                System.out.println("No services found for knox topology: ");
+            } else {
+                for (String service : serviceList) {
+                    System.out.println("Found service for topology: " + service);
+                }
+            }
+        }
+    }
 
-						JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
-						JsonNode topologyNode = rootNode.findValue("topology");
-						if (topologyNode == null) {
-							return topologyList;
-						}
-						Iterator<JsonNode> elements = topologyNode.elements();
-						while (elements.hasNext()) {
-							JsonNode element = elements.next();
-							JsonNode nameElement = element.get("name");
-							if (nameElement != null) {
-								String topologyName = nameElement.asText();
-								LOG.debug("Found Knox topologyName: " + topologyName);
-								if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
-									continue;
-								}
-								if (topologyName != null && ( "*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
-									topologyList.add(topologyName);
-								}
-							}
+    public static Map<String, Object> connectionTest(String serviceName,
+            Map<String, String> configs) {
+        String errMsg = " You can still save the repository and start creating "
+                + "policies, but you would not be able to use autocomplete for "
+                + "resource names. Check ranger_admin.log for more info.";
+        boolean             connectivityStatus = false;
+        Map<String, Object> responseData       = new HashMap<String, Object>();
 
-						}
-					} else {
-						LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatus());
-					}
+        KnoxClient   knoxClient = getKnoxClient(serviceName, configs);
+        List<String> strList    = getKnoxResources(knoxClient, "", null, null, null);
 
-				} else {
-					String msgDesc = "Unable to get a valid response for "
-							+ "getTopologyList() call for KnoxUrl : [" + knoxUrl
-							+ "] - got null response.";
-					LOG.error(msgDesc);
-					HadoopException hdpException = new HadoopException(msgDesc);
-					hdpException.generateResponseDataMap(false, msgDesc,
-							msgDesc + errMsg, null, null);
-					throw hdpException;
-				}
+        if (strList != null && (strList.size() != 0)) {
+            connectivityStatus = true;
+        }
 
-			} finally {
-				if (response != null) {
-					response.close();
-				}
-				if (client != null) {
-					client.destroy();
-				}
-			}
-		} catch (HadoopException he) {
-			throw he;
-		} catch (Throwable t) {
-			String msgDesc = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
-			HadoopException hdpException = new HadoopException(msgDesc, t);
-			LOG.error(msgDesc, t);
+        if (connectivityStatus) {
+            String successMsg = "ConnectionTest Successful";
+            BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg,
+                    null, null, responseData);
+        } else {
+            String failureMsg = "Unable to retrieve any topologies/services using given parameters.";
+            BaseClient.generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
+                    null, null, responseData);
+        }
 
-			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-			throw hdpException;
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== KnoxClient.getTopologyList() Topology Matching: " + topologyNameMatching + " Result : " + topologyList.toString());
-		}
-		return topologyList;
-	}
+        return responseData;
+    }
 
-	
-	public List<String> getServiceList(List<String> knoxTopologyList, String serviceNameMatching, List<String> knoxServiceList) {
-		
-		// sample URI: .../admin/api/v1/topologies/<topologyName>
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> KnoxClient.getServiceList() Service Name: " + serviceNameMatching );
-		}
-		List<String> serviceList = new ArrayList<String>();
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
-		if (serviceNameMatching == null ||  serviceNameMatching.trim().isEmpty()) {
-			serviceNameMatching = "";
-		}
-		String decryptedPwd=null;
-		try {
-			decryptedPwd=PasswordUtils.decryptPassword(password);
-		} catch(Exception ex) {
-			LOG.info("Password decryption failed; trying knox connection with received password string");
-			decryptedPwd=null;
-		} finally {
-			if (decryptedPwd==null) {
-				decryptedPwd=password;
-			}
-		}
-		try {
+    public static KnoxClient getKnoxClient(String serviceName,
+            Map<String, String> configs) {
+        KnoxClient knoxClient = null;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Getting knoxClient for ServiceName: " + serviceName);
+            LOG.debug("configMap: " + configs);
+        }
+        String errMsg = " You can still save the repository and start creating "
+                + "policies, but you would not be able to use autocomplete for "
+                + "resource names. Check ranger_admin.log for more info.";
+        if (configs != null && !configs.isEmpty()) {
+            String knoxUrl           = configs.get("knox.url");
+            String knoxAdminUser     = configs.get("username");
+            String knoxAdminPassword = configs.get("password");
+            knoxClient = new KnoxClient(knoxUrl, knoxAdminUser,
+                    knoxAdminPassword);
+        } else {
+            String msgDesc = "Could not connect as Connection ConfigMap is empty.";
+            LOG.error(msgDesc);
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null,
+                    null);
+            throw hdpException;
+        }
+        return knoxClient;
+    }
 
-			Client client = null;
-			ClientResponse response = null;
+    public static List<String> getKnoxResources(final KnoxClient knoxClient,
+            String topologyName, String serviceName, List<String> knoxTopologyList, List<String> knoxServiceList) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> KnoxClient.getKnoxResource " + "topology: " + topologyName + "Service Name: " + serviceName);
+        }
 
-			try {
-				client = Client.create();
+        List<String> resultList = new ArrayList<String>();
+        String errMsg = " You can still save the repository and start creating "
+                + "policies, but you would not be able to use autocomplete for "
+                + "resource names. Check ranger_admin.log for more info.";
 
-				client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
+        try {
+            if (knoxClient == null) {
+                // LOG.error("Unable to get knox resources: knoxClient is null");
+                // return new ArrayList<String>();
+                String msgDesc = "Unable to get knox resources: knoxClient is null.";
+                LOG.error(msgDesc);
+                HadoopException hdpException = new HadoopException(msgDesc);
+                hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg,
+                        null, null);
+                throw hdpException;
+            }
 
-				for (String topologyName : knoxTopologyList) {
+            final Callable<List<String>> callableObj;
+            if (serviceName != null) {
+                final String       finalServiceNameMatching = serviceName.trim();
+                final List<String> finalknoxServiceList     = knoxServiceList;
+                final List<String> finalTopologyList        = knoxTopologyList;
+                callableObj = new Callable<List<String>>() {
+                    @Override
+                    public List<String> call() {
+                        return knoxClient.getServiceList(finalTopologyList,
+                                finalServiceNameMatching, finalknoxServiceList);
+                    }
+                };
+            } else {
+                final String finalTopologyNameMatching = (topologyName == null) ? ""
+                        : topologyName.trim();
+                final List<String> finalknoxTopologyList = knoxTopologyList;
+                callableObj = new Callable<List<String>>() {
+                    @Override
+                    public List<String> call() {
+                        return knoxClient
+                                .getTopologyList(finalTopologyNameMatching, finalknoxTopologyList);
+                    }
+                };
+            }
+            resultList = timedTask(callableObj, 5, TimeUnit.SECONDS);
+        } catch (HadoopException he) {
+            throw he;
+        } catch (Exception e) {
+            String msgDesc = "Unable to get knox resources.";
+            LOG.error(msgDesc, e);
+            HadoopException hdpException = new HadoopException(msgDesc);
 
-					WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
+            hdpException.generateResponseDataMap(false,
+                    BaseClient.getMessage(e), msgDesc + errMsg, null, null);
+            throw hdpException;
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== KnoxClient.getKnoxResources() Result : " + resultList);
+        }
+        return resultList;
+    }
 
-					response = webResource.accept(EXPECTED_MIME_TYPE)
-							.get(ClientResponse.class);
-					LOG.debug("Knox service lookup response: " + response);
-					if (response != null) {
+    public static <T> T timedTask(Callable<T> callableObj, long timeout,
+            TimeUnit timeUnit) throws Exception {
+        return callableObj.call();
+    }
 
-						if (response.getStatus() == 200) {
-							String jsonString = response.getEntity(String.class);
-							LOG.debug("Knox service lookup response JSON string: " + jsonString);
+    public List<String> getTopologyList(String topologyNameMatching, List<String> knoxTopologyList) {
+        // sample URI: https://hdp.example.com:8443/gateway/admin/api/v1/topologies
+        LOG.debug("Getting Knox topology list for topologyNameMatching : " +
+                topologyNameMatching);
+        List<String> topologyList = new ArrayList<String>();
+        String errMsg = " You can still save the repository and start creating "
+                + "policies, but you would not be able to use autocomplete for "
+                + "resource names. Check ranger_admin.log for more info.";
+        if (topologyNameMatching == null || topologyNameMatching.trim().isEmpty()) {
+            topologyNameMatching = "";
+        }
+        String decryptedPwd = null;
+        try {
+            decryptedPwd = PasswordUtils.decryptPassword(password);
+        } catch (Exception ex) {
+            LOG.info("Password decryption failed; trying knox connection with received password string");
+            decryptedPwd = null;
+        } finally {
+            if (decryptedPwd == null) {
+                decryptedPwd = password;
+            }
+        }
+        try {
+            Client         client   = null;
+            ClientResponse response = null;
 
-							JsonNode rootNode = JsonUtilsV2.getMapper().readTree(jsonString);
-							JsonNode topologyNode = rootNode.findValue("topology");
-							if (topologyNode != null) {
-								JsonNode servicesNode = topologyNode.get("service");
-								if (servicesNode != null) {
-									Iterator<JsonNode> services = servicesNode.elements();
-									while (services.hasNext()) {
-										JsonNode service = services.next();
-										JsonNode serviceElement = service.get("role");
-										if (serviceElement != null) {
-											String serviceName = serviceElement.asText();
-											LOG.debug("Knox serviceName: " + serviceName);
-											if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))){
-												continue;
-											}
-											if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
-												serviceList.add(serviceName);
-											}
-										}
-									}
-								}
-							}
-						} else {
-							LOG.error("Got invalid  REST response from: " + knoxUrl + ", responsStatus: " + response.getStatus());
-						}
+            try {
+                client = Client.create();
 
-					} else {
-						String msgDesc = "Unable to get a valid response for "
-								+ "getServiceList() call for KnoxUrl : [" + knoxUrl
-								+ "] - got null response.";
-						LOG.error(msgDesc);
-						HadoopException hdpException = new HadoopException(msgDesc);
-						hdpException.generateResponseDataMap(false, msgDesc,
-								msgDesc + errMsg, null, null);
-						throw hdpException;
-					}
-				}
-			} finally{
-				if (response != null) {
-					response.close();
-				}
-				if (client != null) {
-					client.destroy();
-				}
-			}
-		} catch (HadoopException he) {
-			throw he;
-		} catch (Throwable t) {
-			String msgDesc = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
-			HadoopException hdpException = new HadoopException(msgDesc, t);
-			LOG.error(msgDesc, t);
+                client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
+                WebResource webResource = client.resource(knoxUrl);
+                response = webResource.accept(EXPECTED_MIME_TYPE)
+                        .get(ClientResponse.class);
+                LOG.debug("Knox topology list response: " + response);
+                if (response != null) {
+                    if (response.getStatus() == 200) {
+                        String jsonString = response.getEntity(String.class);
+                        LOG.debug("Knox topology list response JSON string: " + jsonString);
 
-			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-			throw hdpException;
-		}
-		return serviceList;
-	}
+                        JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
+                        JsonNode topologyNode = rootNode.findValue("topology");
+                        if (topologyNode == null) {
+                            return topologyList;
+                        }
+                        Iterator<JsonNode> elements = topologyNode.elements();
+                        while (elements.hasNext()) {
+                            JsonNode element     = elements.next();
+                            JsonNode nameElement = element.get("name");
+                            if (nameElement != null) {
+                                String topologyName = nameElement.asText();
+                                LOG.debug("Found Knox topologyName: " + topologyName);
+                                if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
+                                    continue;
+                                }
+                                if (topologyName != null && ("*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
+                                    topologyList.add(topologyName);
+                                }
+                            }
+                        }
+                    } else {
+                        LOG.error("Got invalid REST response from: " + knoxUrl + ", responseStatus: " + response.getStatus());
+                    }
+                } else {
+                    String msgDesc = "Unable to get a valid response for "
+                            + "getTopologyList() call for KnoxUrl : [" + knoxUrl
+                            + "] - got null response.";
+                    LOG.error(msgDesc);
+                    HadoopException hdpException = new HadoopException(msgDesc);
+                    hdpException.generateResponseDataMap(false, msgDesc,
+                            msgDesc + errMsg, null, null);
+                    throw hdpException;
+                }
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
+                if (client != null) {
+                    client.destroy();
+                }
+            }
+        } catch (HadoopException he) {
+            throw he;
+        } catch (Throwable t) {
+            String          msgDesc      = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
+            HadoopException hdpException = new HadoopException(msgDesc, t);
+            LOG.error(msgDesc, t);
 
-	public static void main(String[] args) {
+            hdpException.generateResponseDataMap(false,
+                    BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+            throw hdpException;
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== KnoxClient.getTopologyList() Topology Matching: " + topologyNameMatching + " Result : " + topologyList.toString());
+        }
+        return topologyList;
+    }
 
-		KnoxClient knoxClient = null;
+    public List<String> getServiceList(List<String> knoxTopologyList, String serviceNameMatching, List<String> knoxServiceList) {
+        // sample URI: .../admin/api/v1/topologies/<topologyName>
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> KnoxClient.getServiceList() Service Name: " + serviceNameMatching);
+        }
+        List<String> serviceList = new ArrayList<String>();
+        String errMsg = " You can still save the repository and start creating "
+                + "policies, but you would not be able to use autocomplete for "
+                + "resource names. Check ranger_admin.log for more info.";
+        if (serviceNameMatching == null || serviceNameMatching.trim().isEmpty()) {
+            serviceNameMatching = "";
+        }
+        String decryptedPwd = null;
+        try {
+            decryptedPwd = PasswordUtils.decryptPassword(password);
+        } catch (Exception ex) {
+            LOG.info("Password decryption failed; trying knox connection with received password string");
+            decryptedPwd = null;
+        } finally {
+            if (decryptedPwd == null) {
+                decryptedPwd = password;
+            }
+        }
+        try {
+            Client         client   = null;
+            ClientResponse response = null;
 
-		if (args.length != 3) {
-			System.err.println("USAGE: java " + KnoxClient.class.getName()
-					+ " knoxUrl userName password [sslConfigFileName]");
-			System.exit(1);
-		}
+            try {
+                client = Client.create();
 
-		knoxClient = new KnoxClient(args[0], args[1], args[2]);
-		List<String> topologyList = knoxClient.getTopologyList("",null);
-		if ((topologyList == null) || topologyList.isEmpty()) {
-			System.out.println("No knox topologies found");
-		} else {
-			List<String> serviceList = knoxClient.getServiceList(topologyList,"*",null);
-			if ((serviceList == null) || serviceList.isEmpty()) {
-				System.out.println("No services found for knox topology: ");
-			} else {
-				for (String service : serviceList) {
-					System.out.println("	Found service for topology: " + service );
-				}
-			}
-		}
-	}
-	
-	public static Map<String, Object> connectionTest(String serviceName,
-										  		Map<String, String> configs) {
+                client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
 
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
-		boolean connectivityStatus = false;
-		Map<String, Object> responseData = new HashMap<String, Object>();
+                for (String topologyName : knoxTopologyList) {
+                    WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
 
-		KnoxClient knoxClient = getKnoxClient(serviceName, configs);
-		List<String> strList = getKnoxResources(knoxClient, "", null,null,null);
+                    response = webResource.accept(EXPECTED_MIME_TYPE)
+                            .get(ClientResponse.class);
+                    LOG.debug("Knox service lookup response: " + response);
+                    if (response != null) {
+                        if (response.getStatus() == 200) {
+                            String jsonString = response.getEntity(String.class);
+                            LOG.debug("Knox service lookup response JSON string: " + jsonString);
 
-		if (strList != null && (strList.size() != 0)) {
-			connectivityStatus = true;
-		}
-		
-		if (connectivityStatus) {
-			String successMsg = "ConnectionTest Successful";
-			BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg,
-					null, null, responseData);
-		} else {
-			String failureMsg = "Unable to retrieve any topologies/services using given parameters.";
-			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + errMsg,
-					null, null, responseData);
-		}
-		
-		return responseData;
-	}
+                            JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
+                            JsonNode topologyNode = rootNode.findValue("topology");
+                            if (topologyNode != null) {
+                                JsonNode servicesNode = topologyNode.get("service");
+                                if (servicesNode != null) {
+                                    Iterator<JsonNode> services = servicesNode.elements();
+                                    while (services.hasNext()) {
+                                        JsonNode service        = services.next();
+                                        JsonNode serviceElement = service.get("role");
+                                        if (serviceElement != null) {
+                                            String serviceName = serviceElement.asText();
+                                            LOG.debug("Knox serviceName: " + serviceName);
+                                            if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))) {
+                                                continue;
+                                            }
+                                            if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
+                                                serviceList.add(serviceName);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            LOG.error("Got invalid  REST response from: " + knoxUrl + ", responsStatus: " + response.getStatus());
+                        }
+                    } else {
+                        String msgDesc = "Unable to get a valid response for "
+                                + "getServiceList() call for KnoxUrl : [" + knoxUrl
+                                + "] - got null response.";
+                        LOG.error(msgDesc);
+                        HadoopException hdpException = new HadoopException(msgDesc);
+                        hdpException.generateResponseDataMap(false, msgDesc,
+                                msgDesc + errMsg, null, null);
+                        throw hdpException;
+                    }
+                }
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
+                if (client != null) {
+                    client.destroy();
+                }
+            }
+        } catch (HadoopException he) {
+            throw he;
+        } catch (Throwable t) {
+            String          msgDesc      = "Exception on REST call to KnoxUrl : " + knoxUrl + ".";
+            HadoopException hdpException = new HadoopException(msgDesc, t);
+            LOG.error(msgDesc, t);
 
-	public static KnoxClient getKnoxClient(String serviceName,
-										   Map<String, String> configs) {
-		KnoxClient knoxClient = null;
-		if(LOG.isDebugEnabled()){
-			LOG.debug("Getting knoxClient for ServiceName: " + serviceName);
-			LOG.debug("configMap: " + configs);
-		}
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
-		if ( configs != null && !configs.isEmpty()) {
-			String knoxUrl = configs.get("knox.url");
-			String knoxAdminUser = configs.get("username");
-			String knoxAdminPassword = configs.get("password");
-			knoxClient = new KnoxClient(knoxUrl, knoxAdminUser,
-										knoxAdminPassword);
-		} else {
-			String msgDesc = "Could not connect as Connection ConfigMap is empty.";
-			LOG.error(msgDesc);
-			HadoopException hdpException = new HadoopException(msgDesc);
-			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null,
-					null);
-			throw hdpException;
-		}
-		return knoxClient;
-	}
-
-	public static List<String> getKnoxResources(final KnoxClient knoxClient,
-			String topologyName, String serviceName, List<String> knoxTopologyList, List<String> knoxServiceList) {
-
-		if (LOG.isDebugEnabled() ) {
-			LOG.debug("==> KnoxClient.getKnoxResource " + "topology: " + topologyName + "Service Name: " + serviceName);
-		}
-
-		List<String> resultList = new ArrayList<String>();
-		String errMsg = " You can still save the repository and start creating "
-				+ "policies, but you would not be able to use autocomplete for "
-				+ "resource names. Check ranger_admin.log for more info.";
-
-		try {
-			if (knoxClient == null) {
-				// LOG.error("Unable to get knox resources: knoxClient is null");
-				// return new ArrayList<String>();
-				String msgDesc = "Unable to get knox resources: knoxClient is null.";
-				LOG.error(msgDesc);
-				HadoopException hdpException = new HadoopException(msgDesc);
-				hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg,
-						null, null);
-				throw hdpException;
-			}
-
-			final Callable<List<String>> callableObj;
-			if (serviceName != null) {
-				final String 	   finalServiceNameMatching = serviceName.trim();
-				final List<String> finalknoxServiceList		= knoxServiceList;
-				final List<String> finalTopologyList 		= knoxTopologyList;
-				callableObj = new Callable<List<String>>() {
-					@Override
-					public List<String> call() {
-						return knoxClient.getServiceList(finalTopologyList,
-								finalServiceNameMatching,finalknoxServiceList);
-					}
-				};
-
-			} else {
-				final String finalTopologyNameMatching  = (topologyName == null) ? ""
-						: topologyName.trim();
-				final List<String> finalknoxTopologyList = knoxTopologyList;
-				callableObj = new Callable<List<String>>() {
-					@Override
-					public List<String> call() {
-						return knoxClient
-								.getTopologyList(finalTopologyNameMatching,finalknoxTopologyList);
-					}
-				};
-			}
-			resultList = timedTask(callableObj, 5, TimeUnit.SECONDS);
-
-		} catch (HadoopException he) {
-			throw he;
-		} catch (Exception e) {
-			String msgDesc = "Unable to get knox resources.";
-			LOG.error(msgDesc, e);
-			HadoopException hdpException = new HadoopException(msgDesc);
-
-			hdpException.generateResponseDataMap(false,
-					BaseClient.getMessage(e), msgDesc + errMsg, null, null);
-			throw hdpException;
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== KnoxClient.getKnoxResources() Result : "+ resultList  );
-		}
-		return resultList;
-	}
-
-	public static <T> T timedTask(Callable<T> callableObj, long timeout,
-			TimeUnit timeUnit) throws Exception {
-		return callableObj.call();
-	}
-
+            hdpException.generateResponseDataMap(false,
+                    BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+            throw hdpException;
+        }
+        return serviceList;
+    }
 }
