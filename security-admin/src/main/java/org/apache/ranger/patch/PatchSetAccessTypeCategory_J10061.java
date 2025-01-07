@@ -108,7 +108,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader {
                 continue;
             }
 
-            RangerServiceDef embeddedServiceDef = null;
+            RangerServiceDef embeddedServiceDef;
 
             try {
                 embeddedServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDef.getName());

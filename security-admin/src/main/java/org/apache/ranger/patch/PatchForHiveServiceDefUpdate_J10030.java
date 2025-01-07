@@ -43,9 +43,11 @@ import java.util.Map;
 
 @Component
 public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
-    private static final Logger logger                                    = LoggerFactory.getLogger(PatchForHiveServiceDefUpdate_J10030.class);
-    public static final  String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME = "hive";
-    public static final  String HIVE_URL_MATCHER                          = "RangerURLResourceMatcher";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForHiveServiceDefUpdate_J10030.class);
+
+    public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME = "hive";
+    public static final String HIVE_URL_MATCHER                          = "RangerURLResourceMatcher";
+
     @Autowired
     RangerDaoManager daoMgr;
 
@@ -78,16 +80,22 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForHiveServiceDefUpdate_J10030 loader = (PatchForHiveServiceDefUpdate_J10030) CLIUtil.getBean(PatchForHiveServiceDefUpdate_J10030.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -105,25 +113,26 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForHiveServiceDefUpdateForURLTypeResourceUpdate.execLoad()");
+
         try {
             updateHiveServiceDef();
         } catch (Exception e) {
             logger.error("Error whille updateHiveServiceDef()data.", e);
         }
+
         logger.info("<== PatchForHiveServiceDefUpdateForURLTypeResourceUpdate.execLoad()");
     }
 
     private void updateHiveServiceDef() {
-        RangerServiceDef embeddedHiveServiceDef = null;
-        RangerServiceDef dbHiveServiceDef       = null;
-        XXServiceDef     xXServiceDefObj        = null;
         try {
-            embeddedHiveServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+            RangerServiceDef embeddedHiveServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
 
             if (embeddedHiveServiceDef != null) {
-                xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+                XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+
                 if (xXServiceDefObj == null) {
                     logger.error("Service def for {} is not found!!", SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+
                     return;
                 }
 
@@ -131,7 +140,7 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
                 Map<String, String> serviceDefOptionsPreUpdate = jsonUtil.jsonToMap(jsonStrPreUpdate);
                 String              valueBeforeUpdate          = serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
 
-                dbHiveServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+                RangerServiceDef dbHiveServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
 
                 if (dbHiveServiceDef != null) {
                     boolean isServiceDefUpdated = updateServiceDef(dbHiveServiceDef, embeddedHiveServiceDef);
@@ -150,7 +159,9 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
                                 } else {
                                     serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, valueBeforeUpdate);
                                 }
+
                                 xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
                                 daoMgr.getXXServiceDef().update(xXServiceDefObj);
                             }
                         }
@@ -163,22 +174,22 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
     }
 
     private boolean updateServiceDef(RangerServiceDef serviceDef, RangerServiceDef embeddedHiveServiceDef) throws Exception {
-        boolean ret = false;
-
-        List<RangerServiceDef.RangerResourceDef> embeddedHiveResourceDefs = null;
-
-        embeddedHiveResourceDefs = embeddedHiveServiceDef.getResources();
+        boolean                                  ret                      = false;
+        List<RangerServiceDef.RangerResourceDef> embeddedHiveResourceDefs = embeddedHiveServiceDef.getResources();
 
         if (checkHiveURLResourceMatcherPresent(embeddedHiveResourceDefs)) {
             // This is to check if URL resource matcher is added to the resource definition, if so update the resource def
             if (embeddedHiveResourceDefs != null) {
                 serviceDef.setResources(embeddedHiveResourceDefs);
             }
+
             ret = true;
         }
 
         RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
         validator.validate(serviceDef, Action.UPDATE);
+
         svcStore.updateServiceDef(serviceDef);
 
         return ret;
@@ -186,18 +197,22 @@ public class PatchForHiveServiceDefUpdate_J10030 extends BaseLoader {
 
     private boolean checkHiveURLResourceMatcherPresent(List<RangerServiceDef.RangerResourceDef> resourceDefs) {
         boolean ret = false;
+
         for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
             String urlResourceMatcher = resourceDef.getMatcher();
+
             if (StringUtils.isNotEmpty(urlResourceMatcher) && urlResourceMatcher.endsWith(HIVE_URL_MATCHER)) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 
-    private String mapToJsonString(Map<String, String> map) throws Exception {
+    private String mapToJsonString(Map<String, String> map) {
         String ret = null;
+
         if (map != null) {
             ret = jsonUtil.readMapToString(map);
         }

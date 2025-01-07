@@ -75,16 +75,22 @@ public class PatchForOzoneServiceDefConfigUpdate_J10051 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForOzoneServiceDefConfigUpdate_J10051 loader = (PatchForOzoneServiceDefConfigUpdate_J10051) CLIUtil.getBean(PatchForOzoneServiceDefConfigUpdate_J10051.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting.");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -102,20 +108,25 @@ public class PatchForOzoneServiceDefConfigUpdate_J10051 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForOzoneServiceDefConfigUpdate.execLoad()");
+
         try {
             if (!updateOzoneServiceDef()) {
                 logger.error("Failed to apply the patch.");
+
                 System.exit(1);
             }
         } catch (Exception e) {
             logger.error("Error while updateOzoneServiceDef()data.", e);
+
             System.exit(1);
         }
+
         logger.info("<== PatchForOzoneServiceDefConfigUpdate.execLoad()");
     }
 
     protected Map<String, String> jsonStringToMap(String jsonStr) {
         Map<String, String> ret = null;
+
         if (!StringUtils.isEmpty(jsonStr)) {
             try {
                 ret = jsonUtil.jsonToMap(jsonStr);
@@ -125,15 +136,19 @@ public class PatchForOzoneServiceDefConfigUpdate_J10051 extends BaseLoader {
                     if (StringUtils.isEmpty(optionString)) {
                         continue;
                     }
+
                     String[] nvArr = optionString.split("=");
-                    String   name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-                    String   value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+                    String   name  = nvArr.length > 0 ? nvArr[0].trim() : null;
+                    String   value = nvArr.length > 1 ? nvArr[1].trim() : null;
+
                     if (StringUtils.isEmpty(name)) {
                         continue;
                     }
+
                     if (ret == null) {
-                        ret = new HashMap<String, String>();
+                        ret = new HashMap<>();
                     }
+
                     ret.put(name, value);
                 }
             }
@@ -142,78 +157,85 @@ public class PatchForOzoneServiceDefConfigUpdate_J10051 extends BaseLoader {
     }
 
     private boolean updateOzoneServiceDef() throws Exception {
-        RangerServiceDef                              ret;
-        RangerServiceDef                              embeddedOzoneServiceDef;
-        RangerServiceDef                              dbOzoneServiceDef;
-        List<RangerServiceDef.RangerServiceConfigDef> embeddedOzoneConfigDefs;
-        XXServiceDef                                  xXServiceDefObj;
-
-        embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+        RangerServiceDef embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
         if (embeddedOzoneServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
-            Map<String, String> serviceDefOptionsPreUpdate;
-            String              jsonPreUpdate;
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
-            if (xXServiceDefObj != null) {
-                jsonPreUpdate              = xXServiceDefObj.getDefOptions();
-                serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
-            } else {
+            if (xXServiceDefObj == null) {
                 logger.error("Ozone service-definition does not exist in the Ranger DAO. No patching is needed!!");
                 return true;
             }
-            dbOzoneServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+            String              jsonPreUpdate              = xXServiceDefObj.getDefOptions();
+            Map<String, String> serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
+            RangerServiceDef    dbOzoneServiceDef          = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
             if (dbOzoneServiceDef != null) {
                 // Update old Ozone configs
-                embeddedOzoneConfigDefs = embeddedOzoneServiceDef.getConfigs();
+                List<RangerServiceDef.RangerServiceConfigDef> embeddedOzoneConfigDefs = embeddedOzoneServiceDef.getConfigs();
+
                 for (RangerServiceDef.RangerServiceConfigDef configDef : embeddedOzoneConfigDefs) {
                     if (StringUtils.equalsIgnoreCase(configDef.getName(), "hadoop.security.authorization")) {
                         configDef.setMandatory(false);
                         break;
                     }
                 }
+
                 dbOzoneServiceDef.setConfigs(embeddedOzoneConfigDefs);
             } else {
                 logger.error("Ozone service-definition does not exist in the db store.");
+
                 return false;
             }
             RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcDBStore);
+
             validator.validate(dbOzoneServiceDef, RangerValidator.Action.UPDATE);
 
-            ret = svcDBStore.updateServiceDef(dbOzoneServiceDef);
+            RangerServiceDef ret = svcDBStore.updateServiceDef(dbOzoneServiceDef);
+
             if (ret == null) {
                 throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME + " service-def");
             }
+
             xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
             if (xXServiceDefObj != null) {
                 String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
                 Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
+
                 if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
                     if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
                         String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+
                         if (preUpdateValue == null) {
                             serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
                         } else {
                             serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
                         }
+
                         xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
                         daoMgr.getXXServiceDef().update(xXServiceDefObj);
                     }
                 }
             } else {
                 logger.error("Ozone service-definition does not exist in the Ranger DAO.");
+
                 return false;
             }
         } else {
             logger.error("The embedded Ozone service-definition does not exist.");
+
             return false;
         }
+
         return true;
     }
 
     private String mapToJsonString(Map<String, String> map) {
         String ret = null;
+
         if (map != null) {
             try {
                 ret = jsonUtil.readMapToString(map);
@@ -221,6 +243,7 @@ public class PatchForOzoneServiceDefConfigUpdate_J10051 extends BaseLoader {
                 logger.warn("mapToJsonString() failed to convert map: {}", map, ex);
             }
         }
+
         return ret;
     }
 }

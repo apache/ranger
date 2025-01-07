@@ -48,6 +48,7 @@ import java.util.List;
 @Component
 public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
+
     @Autowired
     RangerDaoManager daoMgr;
 
@@ -71,16 +72,22 @@ public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForNifiResourceUpdateExclude_J10011 loader = (PatchForNifiResourceUpdateExclude_J10011) CLIUtil.getBean(PatchForNifiResourceUpdateExclude_J10011.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -98,22 +105,23 @@ public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForNifiResourceUpdateExclude.execLoad()");
+
         try {
             updateNifiServiceDef();
         } catch (Exception e) {
             logger.error("Error whille updateNifiServiceDef()data.", e);
         }
+
         logger.info("<== PatchForNifiResourceUpdateExclude.execLoad()");
     }
 
     private void updateNifiServiceDef() {
-        RangerServiceDef ret              = null;
-        RangerServiceDef dbNifiServiceDef = null;
         try {
-            dbNifiServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+            RangerServiceDef dbNifiServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+
             if (dbNifiServiceDef != null) {
-                List<RangerResourceDef> rRDefList = null;
-                rRDefList = dbNifiServiceDef.getResources();
+                List<RangerResourceDef> rRDefList = dbNifiServiceDef.getResources();
+
                 if (CollectionUtils.isNotEmpty(rRDefList)) {
                     for (RangerResourceDef rRDef : rRDefList) {
                         if (rRDef.getExcludesSupported()) {
@@ -123,23 +131,30 @@ public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
                         XXResourceDef          sdf                      = daoMgr.getXXResourceDef().findByNameAndServiceDefId(rRDef.getName(), dbNifiServiceDef.getId());
                         long                   resourceDefId            = sdf.getId();
                         List<XXPolicyResource> rangerPolicyResourceList = daoMgr.getXXPolicyResource().findByResDefId(resourceDefId);
+
                         if (CollectionUtils.isNotEmpty(rangerPolicyResourceList)) {
                             for (XXPolicyResource rangerPolicyResource : rangerPolicyResourceList) {
                                 if (rangerPolicyResource.getIsexcludes()) {
                                     RangerPolicy rPolicy = svcDBStore.getPolicy(rangerPolicyResource.getPolicyid());
+
                                     rPolicy.setIsEnabled(false);
+
                                     svcStore.updatePolicy(rPolicy);
                                 }
                             }
                         }
                     }
                 }
+
                 RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
                 validator.validate(dbNifiServiceDef, Action.UPDATE);
-                ret = svcStore.updateServiceDef(dbNifiServiceDef);
-            }
-            if (ret == null) {
-                logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+
+                RangerServiceDef ret = svcStore.updateServiceDef(dbNifiServiceDef);
+
+                if (ret == null) {
+                    logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME);
+                }
             }
         } catch (Exception e) {
             logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NIFI_NAME, e);

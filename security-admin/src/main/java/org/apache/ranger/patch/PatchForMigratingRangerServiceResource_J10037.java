@@ -41,8 +41,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
@@ -63,6 +61,7 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main() starts");
+
         try {
             PatchForMigratingRangerServiceResource_J10037 loader = (PatchForMigratingRangerServiceResource_J10037) CLIUtil.getBean(PatchForMigratingRangerServiceResource_J10037.class);
 
@@ -77,6 +76,7 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -99,6 +99,7 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
             updateRangerServiceResourceSignature();
         } catch (Exception e) {
             logger.error("Error while updateRangerServiceResourceSignature()", e);
+
             System.exit(1);
         }
 
@@ -123,11 +124,9 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
                     int numOfChunks = (serviceResourceGuids.size() / chunkSize) + 1;
 
                     for (int chunkIndex = 0; chunkIndex < numOfChunks; chunkIndex++) {
-                        List<String> chunk = serviceResourceGuids.subList(chunkIndex * chunkSize, (chunkIndex == numOfChunks - 1 ? serviceResourceGuids.size() : (chunkIndex + 1) * chunkSize));
-
+                        List<String>                 chunk         = serviceResourceGuids.subList(chunkIndex * chunkSize, (chunkIndex == numOfChunks - 1 ? serviceResourceGuids.size() : (chunkIndex + 1) * chunkSize));
                         ServiceResourceUpdaterThread updaterThread = new ServiceResourceUpdaterThread(txTemplate, chunk);
-
-                        String errorMsg = runThread(updaterThread);
+                        String                       errorMsg      = runThread(updaterThread);
 
                         if (StringUtils.isNotEmpty(errorMsg)) {
                             throw new Exception(errorMsg);
@@ -148,13 +147,14 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
         updaterThread.setDaemon(true);
         updaterThread.start();
         updaterThread.join();
+
         return updaterThread.getErrorMsg();
     }
 
     private class ServiceResourceUpdaterThread extends Thread {
         final TransactionTemplate txTemplate;
         final List<String>        entityGuids;
-        String errorMsg;
+        String                    errorMsg;
 
         ServiceResourceUpdaterThread(TransactionTemplate txTemplate, final List<String> entityGuids) {
             this.txTemplate  = txTemplate;
@@ -170,28 +170,27 @@ public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
         public void run() {
             txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-            errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-                @Override
-                public String doInTransaction(TransactionStatus status) {
-                    String ret = null;
-                    try {
-                        if (CollectionUtils.isNotEmpty(entityGuids)) {
-                            for (String entityGuid : entityGuids) {
-                                XXServiceResource              entityObject = daoMgr.getXXServiceResource().findByGuid(entityGuid);
-                                RangerServiceResource          viewObject   = serviceResourceService.getPopulatedViewObject(entityObject);
-                                RangerServiceResourceSignature serializer   = new RangerServiceResourceSignature(viewObject);
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
+                try {
+                    if (CollectionUtils.isNotEmpty(entityGuids)) {
+                        for (String entityGuid : entityGuids) {
+                            XXServiceResource              entityObject = daoMgr.getXXServiceResource().findByGuid(entityGuid);
+                            RangerServiceResource          viewObject   = serviceResourceService.getPopulatedViewObject(entityObject);
+                            RangerServiceResourceSignature serializer   = new RangerServiceResourceSignature(viewObject);
 
-                                entityObject.setResourceSignature(serializer.getSignature());
+                            entityObject.setResourceSignature(serializer.getSignature());
 
-                                daoMgr.getXXServiceResource().update(entityObject);
-                            }
+                            daoMgr.getXXServiceResource().update(entityObject);
                         }
-                    } catch (Throwable e) {
-                        logger.error("signature update  failed :[rangerServiceResource={}", entityGuids, e);
-                        ret = e.toString();
                     }
-                    return ret;
+                } catch (Throwable e) {
+                    logger.error("signature update  failed :[rangerServiceResource={}", entityGuids, e);
+
+                    ret = e.toString();
                 }
+
+                return ret;
             });
         }
     }

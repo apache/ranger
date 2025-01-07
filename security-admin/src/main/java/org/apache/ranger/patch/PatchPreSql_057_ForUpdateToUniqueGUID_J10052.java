@@ -58,6 +58,7 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchPreSql_057_ForUpdateToUniqueGUID_J10052 loader = (PatchPreSql_057_ForUpdateToUniqueGUID_J10052) CLIUtil.getBean(PatchPreSql_057_ForUpdateToUniqueGUID_J10052.class);
 
@@ -72,6 +73,7 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -88,49 +90,58 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 
     @Override
     public void execLoad() {
+        logger.info("==> updatePolicyGUIDToUniqueValue()");
+
         try {
-            logger.info("==> updatePolicyGUIDToUniqueValue()");
             updatePolicyGUIDToUniqueValue();
         } catch (Exception e) {
             logger.error("Error while updatePolicyGUIDToUniqueValue()", e);
+
             System.exit(1);
         }
 
         logger.info("<== updatePolicyGUIDToUniqueValue.execLoad()");
     }
 
-    private void updatePolicyGUIDToUniqueValue() throws Exception {
+    private void updatePolicyGUIDToUniqueValue() {
         logger.info("==> updatePolicyGUIDToUniqueValue() ");
 
-        List<XXSecurityZone> allXXZones   = null;
-        List<XXService>      allXXService = null;
-
-        allXXZones   = daoMgr.getXXSecurityZoneDao().getAll();
-        allXXService = daoMgr.getXXService().getAll();
+        List<XXSecurityZone> allXXZones   = daoMgr.getXXSecurityZoneDao().getAll();
+        List<XXService>      allXXService = daoMgr.getXXService().getAll();
 
         if (CollectionUtils.isNotEmpty(allXXZones) && CollectionUtils.isNotEmpty(allXXService)) {
             logger.info("Total number of zones {}, services :{}", allXXZones.size(), allXXService.size());
+
             for (XXSecurityZone xSecurityZone : allXXZones) {
                 for (XXService xService : allXXService) {
                     logger.info("serching duplicate guid policies for service :{} zone:{}", xService.getName(), xSecurityZone.getName());
+
                     List<String> duplicateGuidList = daoMgr.getXXPolicy().findDuplicateGUIDByServiceIdAndZoneId(xService.getId(), xSecurityZone.getId());
+
                     if (CollectionUtils.isNotEmpty(duplicateGuidList)) {
                         logger.info("Total number of duplicate GUIDs:{} for service:{} and zone:{}", duplicateGuidList.size(), xService.getName(), xSecurityZone.getName());
+
                         for (String guid : duplicateGuidList) {
                             List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceIdAndZoneId(guid, xService.getId(), xSecurityZone.getId());
-                            boolean isFirstElement = false;
+
                             if (CollectionUtils.isNotEmpty(xxPolicyList)) {
-                                isFirstElement = true;
+                                boolean isFirstElement = true;
+
                                 for (XXPolicy xxPolicy : xxPolicyList) {
                                     if (isFirstElement) {
                                         isFirstElement = false;
                                         continue;
                                     }
+
                                     RangerPolicy policy = getPolicy(xxPolicy);
+
                                     if (policy != null) {
                                         guid = guidUtil.genGUID();
+
                                         xxPolicy.setGuid(guid);
+
                                         policy.setGuid(guid);
+
                                         xxPolicy.setPolicyText(JsonUtils.objectToJson(policy));
 
                                         daoMgr.getXXPolicy().update(xxPolicy);
@@ -155,7 +166,9 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 
         if (xPolicy != null) {
             String policyText = xPolicy.getPolicyText();
+
             logger.debug("Ranger Policy text:[{}]", policyText);
+
             ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
 
             if (ret != null) {
@@ -165,7 +178,9 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
                 ret.setUpdateTime(xPolicy.getUpdateTime());
                 ret.setVersion(xPolicy.getVersion());
                 ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
+
                 XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+
                 if (xSecurityZone != null) {
                     ret.setZoneName(xSecurityZone.getName());
                 }
@@ -173,6 +188,7 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
         } else {
             ret = null;
         }
+
         return ret;
     }
 }

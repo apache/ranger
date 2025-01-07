@@ -31,6 +31,7 @@ import java.util.List;
 @Component
 public class PatchPasswordEncryption_J10001 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchPasswordEncryption_J10001.class);
+
     int lineCount;
 
     @Autowired
@@ -47,16 +48,21 @@ public class PatchPasswordEncryption_J10001 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchPasswordEncryption_J10001 loader = (PatchPasswordEncryption_J10001) CLIUtil.getBean(PatchPasswordEncryption_J10001.class);
+
             //loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -64,6 +70,7 @@ public class PatchPasswordEncryption_J10001 extends BaseLoader {
     @Override
     public void printStats() {
         logger.info("Time taken so far:{}, moreToProcess={}", timeTakenSoFar(lineCount), isMoreToProcess());
+
         print(lineCount, "Processed lines");
     }
 
@@ -74,21 +81,27 @@ public class PatchPasswordEncryption_J10001 extends BaseLoader {
 
     private void encryptLookupUserPassword() {
         List<XXAsset> xAssetList = xaDaoManager.getXXAsset().getAll();
-        String        oldConfig  = null;
-        String        newConfig  = null;
+        String        oldConfig;
+        String        newConfig;
+
         for (XXAsset xAsset : xAssetList) {
-            oldConfig = null;
-            newConfig = null;
             oldConfig = xAsset.getConfig();
+            newConfig = null;
+
             if (!stringUtil.isEmpty(oldConfig)) {
                 newConfig = xAssetService.getConfigWithEncryptedPassword(oldConfig, false);
+
                 xAsset.setConfig(newConfig);
+
                 xaDaoManager.getXXAsset().update(xAsset);
             }
+
             lineCount++;
+
             logger.info("Lookup Password updated for Asset : {}", xAsset.getName());
             logger.info("oldconfig : {}", oldConfig);
             logger.info("newConfig : {}", newConfig);
+
             print(lineCount, "Total updated assets count : ");
         }
     }

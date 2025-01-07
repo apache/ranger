@@ -247,7 +247,6 @@ public class PatchForHBaseServiceDefUpdate_J10035 extends BaseLoader {
             if (REFRESH_ACCESS_TYPE_NAME.equals(accessTypeDef.getName())) {
                 ret = true;
                 break;
-
             }
         }
 

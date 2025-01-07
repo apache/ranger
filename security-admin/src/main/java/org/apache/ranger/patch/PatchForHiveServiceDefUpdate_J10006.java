@@ -45,8 +45,10 @@ import java.util.Map;
 
 @Component
 public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
-    private static final Logger logger                                    = LoggerFactory.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
-    public static final  String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME = "hive";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
+
+    public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME = "hive";
+
     @Autowired
     RangerDaoManager daoMgr;
 
@@ -79,13 +81,18 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForHiveServiceDefUpdate_J10006 loader = (PatchForHiveServiceDefUpdate_J10006) CLIUtil.getBean(PatchForHiveServiceDefUpdate_J10006.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
@@ -106,16 +113,19 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForHiveServiceDefUpdate.execLoad()");
+
         try {
             updateHiveServiceDef();
         } catch (Exception e) {
             logger.error("Error whille updateHiveServiceDef()data.", e);
         }
+
         logger.info("<== PatchForHiveServiceDefUpdate.execLoad()");
     }
 
     protected Map<String, String> jsonStringToMap(String jsonStr) {
         Map<String, String> ret = null;
+
         if (!StringUtils.isEmpty(jsonStr)) {
             try {
                 ret = jsonUtil.jsonToMap(jsonStr);
@@ -125,15 +135,19 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
                     if (StringUtils.isEmpty(optionString)) {
                         continue;
                     }
+
                     String[] nvArr = optionString.split("=");
-                    String   name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-                    String   value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+                    String   name  = nvArr.length > 0 ? nvArr[0].trim() : null;
+                    String   value = nvArr.length > 1 ? nvArr[1].trim() : null;
+
                     if (StringUtils.isEmpty(name)) {
                         continue;
                     }
+
                     if (ret == null) {
-                        ret = new HashMap<String, String>();
+                        ret = new HashMap<>();
                     }
+
                     ret.put(name, value);
                 }
             }
@@ -142,56 +156,62 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
     }
 
     private void updateHiveServiceDef() {
-        RangerServiceDef   ret                    = null;
-        RangerServiceDef   embeddedHiveServiceDef = null;
-        RangerServiceDef   dbHiveServiceDef       = null;
-        RangerDataMaskDef  dataMaskDef            = null;
-        RangerRowFilterDef rowFilterDef           = null;
-        XXServiceDef       xXServiceDefObj        = null;
         try {
-            embeddedHiveServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
-            if (embeddedHiveServiceDef != null) {
-                xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
-                Map<String, String> serviceDefOptionsPreUpdate = null;
-                String              jsonStrPreUpdate           = null;
-                if (xXServiceDefObj != null) {
-                    jsonStrPreUpdate           = xXServiceDefObj.getDefOptions();
-                    serviceDefOptionsPreUpdate = jsonStringToMap(jsonStrPreUpdate);
-                    xXServiceDefObj            = null;
-                }
-                dataMaskDef  = embeddedHiveServiceDef.getDataMaskDef();
-                rowFilterDef = embeddedHiveServiceDef.getRowFilterDef();
+            RangerServiceDef embeddedHiveServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
 
-                dbHiveServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+            if (embeddedHiveServiceDef != null) {
+                XXServiceDef        xXServiceDefObj            = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+                Map<String, String> serviceDefOptionsPreUpdate = null;
+
+                if (xXServiceDefObj != null) {
+                    String jsonStrPreUpdate = xXServiceDefObj.getDefOptions();
+
+                    serviceDefOptionsPreUpdate = jsonStringToMap(jsonStrPreUpdate);
+                }
+
+                RangerServiceDef   dbHiveServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+                RangerDataMaskDef  dataMaskDef      = embeddedHiveServiceDef.getDataMaskDef();
+                RangerRowFilterDef rowFilterDef     = embeddedHiveServiceDef.getRowFilterDef();
 
                 if (dbHiveServiceDef != null) {
                     if (dataMaskDef != null) {
                         dbHiveServiceDef.setDataMaskDef(dataMaskDef);
                     }
+
                     if (rowFilterDef != null) {
                         dbHiveServiceDef.setRowFilterDef(rowFilterDef);
                     }
+
                     RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
                     validator.validate(dbHiveServiceDef, Action.UPDATE);
 
-                    ret = svcStore.updateServiceDef(dbHiveServiceDef);
+                    RangerServiceDef ret = svcStore.updateServiceDef(dbHiveServiceDef);
+
                     if (ret == null) {
                         logger.error("Error while updating {} service-def", SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+
                         System.exit(1);
                     }
+
                     xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME);
+
                     if (xXServiceDefObj != null) {
                         String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
                         Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
+
                         if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
                             if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
                                 String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+
                                 if (preUpdateValue == null) {
                                     serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
                                 } else {
                                     serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
                                 }
+
                                 xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
                                 daoMgr.getXXServiceDef().update(xXServiceDefObj);
                             }
                         }
@@ -205,6 +225,7 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
 
     private String mapToJsonString(Map<String, String> map) {
         String ret = null;
+
         if (map != null) {
             try {
                 ret = jsonUtil.readMapToString(map);
@@ -212,6 +233,7 @@ public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
                 logger.warn("mapToJsonString() failed to convert map: {}", map, excp);
             }
         }
+
         return ret;
     }
 }

@@ -66,38 +66,54 @@ import java.util.Set;
 @Component
 public class PatchMigration_J10002 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchMigration_J10002.class);
-    static Set<String> unsupportedLegacyPermTypes = new HashSet<String>();
+
+    static Set<String> unsupportedLegacyPermTypes = new HashSet<>();
+
     private static int policyCounter;
     private static int serviceCounter;
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     ServiceDBStore svcDBStore;
+
     @Autowired
     JSONUtil jsonUtil;
+
     @Autowired
     RangerPolicyService policyService;
+
     @Autowired
     StringUtil stringUtil;
+
     @Autowired
     XPolicyService xPolService;
+
     @Autowired
     XPermMapService xPermMapService;
+
     @Autowired
     RangerBizUtil bizUtil;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchMigration_J10002 loader = (PatchMigration_J10002) CLIUtil.getBean(PatchMigration_J10002.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -116,13 +132,15 @@ public class PatchMigration_J10002 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> MigrationPatch.execLoad()");
+
         try {
             migrateServicesToNewSchema();
             migratePoliciesToNewSchema();
             updateSequences();
         } catch (Exception e) {
-            logger.error("Error whille migrating data.", e);
+            logger.error("Error while migrating data.", e);
         }
+
         logger.info("<== MigrationPatch.execLoad()");
     }
 
@@ -135,34 +153,37 @@ public class PatchMigration_J10002 extends BaseLoader {
             if (repoList.isEmpty()) {
                 return;
             }
-            if (!repoList.isEmpty()) {
-                EmbeddedServiceDefsUtil.instance().init(svcDBStore);
-            }
+
+            EmbeddedServiceDefsUtil.instance().init(svcDBStore);
 
             svcDBStore.setPopulateExistingBaseFields(true);
+
             for (XXAsset xAsset : repoList) {
                 if (xAsset.getActiveStatus() == AppConstants.STATUS_DELETED) {
                     continue;
                 }
 
                 RangerService existing = svcDBStore.getServiceByName(xAsset.getName());
+
                 if (existing != null) {
                     logger.info("Repository/Service already exists. Ignoring migration of repo: {}", xAsset.getName());
                     continue;
                 }
 
                 RangerService service = new RangerService();
-                service = mapXAssetToService(service, xAsset);
 
+                service = mapXAssetToService(service, xAsset);
                 service = svcDBStore.createService(service);
 
                 serviceCounter++;
+
                 logger.info("New Service created. ServiceName: {}", service.getName());
             }
             svcDBStore.setPopulateExistingBaseFields(false);
         } catch (Exception e) {
             throw new Exception("Error while migrating data to new Plugin Schema.", e);
         }
+
         logger.info("<== MigrationPatch.migrateServicesToNewSchema()");
     }
 
@@ -171,17 +192,20 @@ public class PatchMigration_J10002 extends BaseLoader {
 
         try {
             List<XXResource> resList = daoMgr.getXXResource().getAll();
+
             if (resList.isEmpty()) {
                 return;
             }
 
             svcDBStore.setPopulateExistingBaseFields(true);
+
             for (XXResource xRes : resList) {
                 if (xRes.getResourceStatus() == AppConstants.STATUS_DELETED) {
                     continue;
                 }
 
                 XXAsset xAsset = daoMgr.getXXAsset().getById(xRes.getAssetId());
+
                 if (xAsset == null) {
                     logger.error("No Repository found for policyName: {}", xRes.getPolicyName());
                     continue;
@@ -195,55 +219,60 @@ public class PatchMigration_J10002 extends BaseLoader {
                 }
 
                 XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceId(xRes.getPolicyName(), service.getId());
+
                 if (existing != null) {
                     logger.info("Policy already exists. Ignoring migration of policy: {}", existing.getName());
                     continue;
                 }
 
                 RangerPolicy policy = new RangerPolicy();
+
                 policy = mapXResourceToPolicy(policy, xRes, service);
 
                 if (policy != null) {
                     policy = svcDBStore.createPolicy(policy);
 
                     policyCounter++;
-                    logger.info("New policy created. policyName: {]", policy.getName());
+
+                    logger.info("New policy created. policyName: {}", policy.getName());
                 }
             }
+
             svcDBStore.setPopulateExistingBaseFields(false);
         } catch (Exception e) {
             throw new Exception("Error while migrating data to new Plugin Schema.", e);
         }
+
         logger.info("<== MigrationPatch.migratePoliciesToNewSchema()");
     }
 
     private RangerService mapXAssetToService(RangerService service, XXAsset xAsset) throws Exception {
-        String              type        = "";
-        String              name        = xAsset.getName();
-        String              description = xAsset.getDescription();
-        Map<String, String> configs     = null;
-
-        int          typeInt    = xAsset.getAssetType();
-        XXServiceDef serviceDef = daoMgr.getXXServiceDef().findByName(AppConstants.getLabelFor_AssetType(typeInt).toLowerCase());
+        String       name        = xAsset.getName();
+        String       description = xAsset.getDescription();
+        int          typeInt     = xAsset.getAssetType();
+        XXServiceDef serviceDef  = daoMgr.getXXServiceDef().findByName(AppConstants.getLabelFor_AssetType(typeInt).toLowerCase());
 
         if (serviceDef == null) {
             throw new Exception("No ServiceDefinition found for repository: " + name);
         }
-        type    = serviceDef.getName();
-        configs = jsonUtil.jsonToMap(xAsset.getConfig());
 
+        String                   type             = serviceDef.getName();
+        Map<String, String>      configs          = jsonUtil.jsonToMap(xAsset.getConfig());
         List<XXServiceConfigDef> mandatoryConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefName(type);
+
         for (XXServiceConfigDef serviceConf : mandatoryConfigs) {
             if (serviceConf.getIsMandatory()) {
                 if (!stringUtil.isEmpty(configs.get(serviceConf.getName()))) {
                     continue;
                 }
+
                 String dataType     = serviceConf.getType();
                 String defaultValue = serviceConf.getDefaultvalue();
 
                 if (stringUtil.isEmpty(defaultValue)) {
                     defaultValue = getDefaultValueForDataType(dataType);
                 }
+
                 configs.put(serviceConf.getName(), defaultValue);
             }
         }
@@ -252,7 +281,6 @@ public class PatchMigration_J10002 extends BaseLoader {
         service.setName(name);
         service.setDescription(description);
         service.setConfigs(configs);
-
         service.setCreateTime(xAsset.getCreateTime());
         service.setUpdateTime(xAsset.getUpdateTime());
 
@@ -262,9 +290,11 @@ public class PatchMigration_J10002 extends BaseLoader {
         if (createdByUser != null) {
             service.setCreatedBy(createdByUser.getLoginId());
         }
+
         if (updByUser != null) {
             service.setUpdatedBy(updByUser.getLoginId());
         }
+
         service.setId(xAsset.getId());
 
         return service;
@@ -272,6 +302,7 @@ public class PatchMigration_J10002 extends BaseLoader {
 
     private String getDefaultValueForDataType(String dataType) {
         String defaultValue = "";
+
         switch (dataType) {
             case "int":
                 defaultValue = "0";
@@ -291,20 +322,18 @@ public class PatchMigration_J10002 extends BaseLoader {
             default:
                 break;
         }
+
         return defaultValue;
     }
 
     private RangerPolicy mapXResourceToPolicy(RangerPolicy policy, XXResource xRes, RangerService service) {
-        String                            serviceName    = service.getName();
-        String                            serviceType    = service.getType();
-        String                            name           = xRes.getPolicyName();
-        String                            description    = xRes.getDescription();
-        Boolean                           isAuditEnabled = true;
-        Boolean                           isEnabled      = true;
-        Map<String, RangerPolicyResource> resources      = new HashMap<String, RangerPolicyResource>();
-        List<RangerPolicyItem>            policyItems    = new ArrayList<RangerPolicyItem>();
-
-        XXServiceDef svcDef = daoMgr.getXXServiceDef().findByName(serviceType);
+        String       serviceName    = service.getName();
+        String       serviceType    = service.getType();
+        String       name           = xRes.getPolicyName();
+        String       description    = xRes.getDescription();
+        boolean      isAuditEnabled = true;
+        boolean      isEnabled      = true;
+        XXServiceDef svcDef         = daoMgr.getXXServiceDef().findByName(serviceType);
 
         if (svcDef == null) {
             logger.error("{} service-def not found. Skipping policy {}", serviceType, name);
@@ -313,9 +342,11 @@ public class PatchMigration_J10002 extends BaseLoader {
         }
 
         List<XXAuditMap> auditMapList = daoMgr.getXXAuditMap().findByResourceId(xRes.getId());
+
         if (stringUtil.isEmpty(auditMapList)) {
             isAuditEnabled = false;
         }
+
         if (xRes.getResourceStatus() == AppConstants.STATUS_DISABLED) {
             isEnabled = false;
         }
@@ -323,6 +354,8 @@ public class PatchMigration_J10002 extends BaseLoader {
         Boolean isPathRecursive  = xRes.getIsRecursive() == RangerCommonEnums.BOOL_TRUE;
         Boolean isTableExcludes  = xRes.getTableType() == RangerCommonEnums.POLICY_EXCLUSION;
         Boolean isColumnExcludes = xRes.getColumnType() == RangerCommonEnums.POLICY_EXCLUSION;
+
+        Map<String, RangerPolicyResource> resources = new HashMap<>();
 
         if (StringUtils.equalsIgnoreCase(serviceType, "hdfs")) {
             toRangerResourceList(xRes.getName(), "path", Boolean.FALSE, isPathRecursive, resources);
@@ -342,7 +375,7 @@ public class PatchMigration_J10002 extends BaseLoader {
             toRangerResourceList(xRes.getTopologies(), "topology", Boolean.FALSE, Boolean.FALSE, resources);
         }
 
-        policyItems = getPolicyItemListForRes(xRes, svcDef);
+        List<RangerPolicyItem> policyItems = getPolicyItemListForRes(xRes, svcDef);
 
         policy.setService(serviceName);
         policy.setName(name);
@@ -351,7 +384,6 @@ public class PatchMigration_J10002 extends BaseLoader {
         policy.setIsEnabled(isEnabled);
         policy.setResources(resources);
         policy.setPolicyItems(policyItems);
-
         policy.setCreateTime(xRes.getCreateTime());
         policy.setUpdateTime(xRes.getUpdateTime());
 
@@ -361,6 +393,7 @@ public class PatchMigration_J10002 extends BaseLoader {
         if (createdByUser != null) {
             policy.setCreatedBy(createdByUser.getLoginId());
         }
+
         if (updByUser != null) {
             policy.setUpdatedBy(updByUser.getLoginId());
         }
@@ -371,13 +404,14 @@ public class PatchMigration_J10002 extends BaseLoader {
     }
 
     private Map<String, RangerPolicy.RangerPolicyResource> toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, Map<String, RangerPolicy.RangerPolicyResource> resources) {
-        Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resources;
+        Map<String, RangerPolicy.RangerPolicyResource> ret = resources == null ? new HashMap<>() : resources;
 
         if (StringUtils.isNotBlank(resourceString)) {
             RangerPolicy.RangerPolicyResource resource = ret.get(resourceType);
 
             if (resource == null) {
                 resource = new RangerPolicy.RangerPolicyResource();
+
                 resource.setIsExcludes(isExcludes);
                 resource.setIsRecursive(isRecursive);
 
@@ -391,36 +425,30 @@ public class PatchMigration_J10002 extends BaseLoader {
     }
 
     private List<RangerPolicyItem> getPolicyItemListForRes(XXResource xRes, XXServiceDef svcDef) {
-        List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-
-        SearchCriteria sc = new SearchCriteria();
+        List<RangerPolicyItem> policyItems = new ArrayList<>();
+        SearchCriteria         sc          = new SearchCriteria();
 
         sc.addParam("resourceId", xRes.getId());
+
         List<VXPermMap> permMapList = xPermMapService.searchXPermMaps(sc).getVXPermMaps();
 
-        HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<String, List<VXPermMap>>();
+        HashMap<String, List<VXPermMap>> sortedPermMap = new HashMap<>();
 
         // re-group the list with permGroup as the key
         if (permMapList != null) {
             for (VXPermMap permMap : permMapList) {
                 String          permGrp    = permMap.getPermGroup();
-                List<VXPermMap> sortedList = sortedPermMap.get(permGrp);
-
-                if (sortedList == null) {
-                    sortedList = new ArrayList<VXPermMap>();
-                    sortedPermMap.put(permGrp, sortedList);
-                }
+                List<VXPermMap> sortedList = sortedPermMap.computeIfAbsent(permGrp, k -> new ArrayList<>());
 
                 sortedList.add(permMap);
             }
         }
 
         for (Entry<String, List<VXPermMap>> entry : sortedPermMap.entrySet()) {
-            List<String>                 userList   = new ArrayList<String>();
-            List<String>                 groupList  = new ArrayList<String>();
-            List<RangerPolicyItemAccess> accessList = new ArrayList<RangerPolicyItemAccess>();
-            String                       ipAddress  = null;
-
+            List<String>                  userList   = new ArrayList<>();
+            List<String>                  groupList  = new ArrayList<>();
+            List<RangerPolicyItemAccess>  accessList = new ArrayList<>();
+            String                        ipAddress  = null;
             RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
             for (VXPermMap permMap : entry.getValue()) {
@@ -439,13 +467,16 @@ public class PatchMigration_J10002 extends BaseLoader {
                 }
 
                 String accessType = ServiceUtil.toAccessType(permMap.getPermType());
+
                 if (StringUtils.isBlank(accessType) || unsupportedLegacyPermTypes.contains(accessType)) {
                     logger.info("{}: is not a valid access-type, ignoring access-type for policy: {}", accessType, xRes.getPolicyName());
+
                     continue;
                 }
 
                 if (StringUtils.equalsIgnoreCase(accessType, "Admin")) {
                     policyItem.setDelegateAdmin(Boolean.TRUE);
+
                     if (svcDef.getId() == EmbeddedServiceDefsUtil.instance().getHBaseServiceDefId()) {
                         addAccessType(accessType, accessList);
                     }
@@ -458,11 +489,13 @@ public class PatchMigration_J10002 extends BaseLoader {
 
             if (CollectionUtils.isEmpty(accessList)) {
                 logger.info("no access specified. ignoring policyItem for policy: {}", xRes.getPolicyName());
+
                 continue;
             }
 
             if (CollectionUtils.isEmpty(userList) && CollectionUtils.isEmpty(groupList)) {
                 logger.info("no user or group specified. ignoring policyItem for policy: {}", xRes.getPolicyName());
+
                 continue;
             }
 

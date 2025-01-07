@@ -42,13 +42,17 @@ public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
             PatchForServiceVersionInfo_J10004 loader = (PatchForServiceVersionInfo_J10004) CLIUtil.getBean(PatchForServiceVersionInfo_J10004.class);
 
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -65,7 +69,9 @@ public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> ServiceVersionInfoPatch.execLoad()");
+
         copyVersionsFromServiceToServiceVersionInfo();
+
         logger.info("<== ServiceVersionInfoPatch.execLoad()");
     }
 
@@ -80,8 +86,10 @@ public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
             if (serviceVersionInfoDbObj == null) {
                 needToCreateServiceVersionInfo = true;
                 serviceVersionInfoDbObj        = new XXServiceVersionInfo();
+
                 serviceVersionInfoDbObj.setServiceId(xService.getId());
             }
+
             serviceVersionInfoDbObj.setPolicyVersion(xService.getPolicyVersion() == null ? 1L : xService.getPolicyVersion());
             serviceVersionInfoDbObj.setTagVersion(xService.getTagVersion());
             serviceVersionInfoDbObj.setPolicyUpdateTime(xService.getPolicyUpdateTime());
@@ -89,9 +97,11 @@ public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
 
             if (needToCreateServiceVersionInfo) {
                 daoManager.getXXServiceVersionInfo().create(serviceVersionInfoDbObj);
+
                 logger.info("Created serviceVesionInfo for serviceName [{}]", xService.getName());
             } else {
                 daoManager.getXXServiceVersionInfo().update(serviceVersionInfoDbObj);
+
                 logger.info("Updated serviceVesionInfo for serviceName [{}]", xService.getName());
             }
 
@@ -108,11 +118,11 @@ public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
 
             xService.setPolicyVersion(xService.getPolicyVersion() == null ? 2L : xService.getPolicyVersion() + 1);
             xService.setTagVersion(xService.getTagVersion() + 1);
-
             xService.setPolicyUpdateTime(now);
             xService.setTagUpdateTime(now);
 
             daoManager.getXXService().update(xService);
+
             logger.info("Incremented policy and tag versions for serviceName [{}]", xService.getName());
         }
     }

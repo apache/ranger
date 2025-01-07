@@ -43,18 +43,24 @@ import java.util.List;
 @Component
 public class PatchPermissionModel_J10003 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchPermissionModel_J10003.class);
-    private static final Charset ENCODING          = StandardCharsets.UTF_8;
-    private static       boolean grantAllUsers;
-    private static       String  usersListFileName;
+
+    private static final Charset ENCODING = StandardCharsets.UTF_8;
+
+    private static boolean grantAllUsers;
+    private static String  usersListFileName;
+
     @Autowired
     XUserMgr xUserMgr;
+
     @Autowired
     XPortalUserService xPortalUserService;
+
     @Autowired
     RangerDaoManager daoManager;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             if (args != null && args.length > 0) {
                 if (StringUtils.equalsIgnoreCase("ALL", args[0])) {
@@ -63,16 +69,21 @@ public class PatchPermissionModel_J10003 extends BaseLoader {
                     usersListFileName = args[0];
                 }
             }
+
             PatchPermissionModel_J10003 loader = (PatchPermissionModel_J10003) CLIUtil.getBean(PatchPermissionModel_J10003.class);
 
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -89,99 +100,126 @@ public class PatchPermissionModel_J10003 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PermissionPatch.execLoad()");
+
         assignPermissionToExistingUsers();
+
         logger.info("<== PermissionPatch.execLoad()");
     }
 
     public void assignPermissionToExistingUsers() {
-        int                countUserPermissionUpdated = 0;
-        Long               userCount                  = daoManager.getXXPortalUser().getAllCount();
-        List<XXPortalUser> xXPortalUsers              = null;
-        Long               patchModeMaxLimit          = Long.valueOf(500L);
+        Long userCount         = daoManager.getXXPortalUser().getAllCount();
+        Long patchModeMaxLimit = 500L;
+
         try {
             if (userCount != null && userCount > 0) {
                 List<String> loginIdList = readUserNamesFromFile(usersListFileName);
+
                 if (!CollectionUtils.isEmpty(loginIdList)) {
-                    xXPortalUsers = new ArrayList<XXPortalUser>();
-                    XXPortalUser xXPortalUser = null;
+                    List<XXPortalUser> xXPortalUsers = new ArrayList<>();
+
                     for (String loginId : loginIdList) {
                         try {
-                            xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+                            XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+
                             if (xXPortalUser != null) {
                                 xXPortalUsers.add(xXPortalUser);
                             } else {
                                 logger.info("User {} doesn't exist!", loginId);
                             }
                         } catch (Exception ex) {
+                            // ignore
                         }
                     }
-                    countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+
+                    int countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+
                     logger.info("Permissions assigned to {} of {}", countUserPermissionUpdated, loginIdList.size());
                 } else if (userCount.compareTo(patchModeMaxLimit) < 0 || grantAllUsers) {
-                    xXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
+                    List<XXPortalUser> xXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
+
                     if (!CollectionUtils.isEmpty(xXPortalUsers)) {
-                        countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+                        int countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+
                         logger.info("Permissions assigned to {} of {}", countUserPermissionUpdated, xXPortalUsers.size());
                     }
                 } else {
                     //if total no. of users are more than 500 then process ADMIN and KEY_ADMIN users only to avoid timeout
-                    xXPortalUsers = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_SYS_ADMIN);
+                    List<XXPortalUser> xXPortalUsers = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_SYS_ADMIN);
+
                     if (!CollectionUtils.isEmpty(xXPortalUsers)) {
-                        countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+                        int  countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+
                         logger.info("Permissions assigned to users having role:{}. Processed:{} of total {}",  RangerConstants.ROLE_SYS_ADMIN, countUserPermissionUpdated, xXPortalUsers.size());
                     }
+
                     xXPortalUsers = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN);
+
                     if (!CollectionUtils.isEmpty(xXPortalUsers)) {
-                        countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+                        int  countUserPermissionUpdated = assignPermissions(xXPortalUsers);
+
                         logger.info("Permissions assigned to users having role:{}. Processed:{} of total {}",  RangerConstants.ROLE_SYS_ADMIN, countUserPermissionUpdated, xXPortalUsers.size());
                     }
+
                     logger.info("Please execute this patch separately with argument 'ALL' to assign permission to remaining users ");
                     System.out.println("Please execute this patch separately with argument 'ALL' to assign module permissions to remaining users!!");
                 }
             }
         } catch (Exception ex) {
+            // ignore
         }
     }
 
     private int assignPermissions(List<XXPortalUser> xXPortalUsers) {
         int countUserPermissionUpdated = 0;
+
         if (!CollectionUtils.isEmpty(xXPortalUsers)) {
             for (XXPortalUser xPortalUser : xXPortalUsers) {
                 try {
                     if (xPortalUser != null) {
                         VXPortalUser vPortalUser = xPortalUserService.populateViewBean(xPortalUser);
+
                         if (vPortalUser != null) {
                             vPortalUser.setUserRoleList(daoManager.getXXPortalUserRole().findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
+
                             xUserMgr.assignPermissionToUser(vPortalUser, false);
+
                             countUserPermissionUpdated += 1;
+
                             logger.info("Permissions assigned/updated on base of User's Role, UserId [{}]", xPortalUser.getId());
                         }
                     }
                 } catch (Exception ex) {
+                    // ignore
                 }
             }
         }
+
         return countUserPermissionUpdated;
     }
 
     private List<String> readUserNamesFromFile(String aFileName) throws IOException {
-        List<String> userNames = new ArrayList<String>();
+        List<String> userNames = new ArrayList<>();
+
         if (!StringUtils.isEmpty(aFileName)) {
             Path path = Paths.get(aFileName);
+
             if (Files.exists(path) && Files.isRegularFile(path)) {
                 List<String> fileContents = Files.readAllLines(path, ENCODING);
+
                 if (fileContents != null && !fileContents.isEmpty()) {
                     for (String line : fileContents) {
                         if (!StringUtils.isEmpty(line) && !userNames.contains(line)) {
                             try {
                                 userNames.add(line.trim());
                             } catch (Exception ex) {
+                                // ignore
                             }
                         }
                     }
                 }
             }
         }
+
         return userNames;
     }
 }

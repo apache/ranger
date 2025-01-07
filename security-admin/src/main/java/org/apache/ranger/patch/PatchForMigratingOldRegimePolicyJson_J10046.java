@@ -63,8 +63,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashMap;
@@ -82,26 +80,33 @@ import java.util.Set;
 @Component
 public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForMigratingOldRegimePolicyJson_J10046.class);
+
     private final Map<String, Long>              groupIdMap         = new HashMap<>();
     private final Map<String, Long>              userIdMap          = new HashMap<>();
     private final Map<String, Map<String, Long>> resourceNameIdMap  = new HashMap<>();
     private final Map<String, Map<String, Long>> accessTypeIdMap    = new HashMap<>();
     private final Map<String, Map<String, Long>> conditionNameIdMap = new HashMap<>();
     private final Map<String, Map<String, Long>> dataMaskTypeIdMap  = new HashMap<>();
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     ServiceDBStore svcStore;
+
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
+
     @Autowired
     PolicyRefUpdater policyRefUpdater;
+
     @Autowired
     XUserMgr xUserMgr;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForMigratingOldRegimePolicyJson_J10046 loader = (PatchForMigratingOldRegimePolicyJson_J10046) CLIUtil.getBean(PatchForMigratingOldRegimePolicyJson_J10046.class);
 
@@ -116,6 +121,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -138,6 +144,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             migrateRangerPolicyTableWithPolicyJson();
         } catch (Exception e) {
             logger.error("Error while PatchForMigratingOldRegimePolicyJson()", e);
+
             System.exit(1);
         }
 
@@ -150,7 +157,9 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
         if (policyId == null) {
             return false;
         }
+
         logger.info("==> cleanupOldRefTables() ");
+
         daoMgr.getXXPolicyItemGroupPerm().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyItemUserPerm().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyItemAccess().deleteByPolicyId(policyId);
@@ -160,25 +169,34 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
         daoMgr.getXXPolicyItem().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyResourceMap().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyResource().deleteByPolicyId(policyId);
+
         logger.info("<== cleanupOldRefTables() ");
+
         return true;
     }
 
     private void migrateRangerPolicyTableWithPolicyJson() throws Exception {
         logger.info("==> updateRangerPolicyTableWithPolicyJson() ");
+
         List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().getAllByPolicyItem();
+
         if (CollectionUtils.isNotEmpty(xxPolicyList)) {
             for (XXPolicy xxPolicy : xxPolicyList) {
                 logger.info("XXPolicy : {}", xxPolicy);
+
                 RangerPolicy policy = svcStore.getPolicy(xxPolicy.getId());
+
                 if (policy != null) {
                     TransactionTemplate txTemplate    = new TransactionTemplate(txManager);
                     RangerService       service       = svcStore.getServiceByName(policy.getService());
                     PolicyUpdaterThread updaterThread = new PolicyUpdaterThread(txTemplate, service, policy);
+
                     updaterThread.setDaemon(true);
                     updaterThread.start();
                     updaterThread.join();
+
                     String errorMsg = updaterThread.getErrorMsg();
+
                     if (StringUtils.isNotEmpty(errorMsg)) {
                         throw new Exception(errorMsg);
                     }
@@ -187,6 +205,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
         } else {
             logger.info("no old XXPolicyItems found ");
         }
+
         logger.info("<== updateRangerPolicyTableWithPolicyJson() ");
     }
 
@@ -230,7 +249,8 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
         } catch (Exception e) {
             logger.error("portPolicy(id={}) failed!!", policy.getId());
-            logger.error("Offending policy:", policyText);
+            logger.error("Offending policy:{}", policyText);
+
             throw e;
         }
 
@@ -248,6 +268,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
@@ -283,7 +304,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
     }
 
     private void addUserNameRef(Long policyId, Set<String> users) throws Exception {
-        logger.info("==> addUserNameRef(id=)", policyId);
+        logger.info("==> addUserNameRef(id={})", policyId);
 
         XXPolicyRefUserDao policyRefUserDao = daoMgr.getXXPolicyRefUser();
         XXUserDao          userDao          = daoMgr.getXXUser();
@@ -297,26 +318,30 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 
                 if (userObject == null) {
                     logger.info("user is not found, adding user: {}", user);
+
                     TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
                     txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
                     try {
-                        txTemplate.execute(new TransactionCallback<Object>() {
-                            @Override
-                            public Object doInTransaction(TransactionStatus status) {
-                                xUserMgr.createServiceConfigUserSynchronously(user);
-                                return null;
-                            }
+                        txTemplate.execute(status -> {
+                            xUserMgr.createServiceConfigUserSynchronously(user);
+
+                            return null;
                         });
                     } catch (Exception exception) {
                         logger.error("Cannot create ServiceConfigUser({})", user, exception);
                     }
+
                     userObject = userDao.findByUserName(user);
+
                     if (userObject == null) {
                         throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
                     }
                 }
 
                 userId = userObject.getId();
+
                 logger.info("userId:{}", userId);
 
                 userIdMap.put(user, userId);
@@ -380,6 +405,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
@@ -420,6 +446,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
@@ -461,6 +488,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
             dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
@@ -514,7 +542,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
         final TransactionTemplate txTemplate;
         final RangerService       service;
         final RangerPolicy        policy;
-        String errorMsg;
+        String                    errorMsg;
 
         PolicyUpdaterThread(TransactionTemplate txTemplate, final RangerService service, final RangerPolicy policy) {
             this.txTemplate = txTemplate;
@@ -529,20 +557,22 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 
         @Override
         public void run() {
-            errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-                @Override
-                public String doInTransaction(TransactionStatus status) {
-                    String ret = null;
-                    try {
-                        policyRefUpdater.cleanupRefTables(policy);
-                        portPolicy(service.getType(), policy);
-                        cleanupOldRefTables(policy);
-                    } catch (Throwable e) {
-                        logger.error("PortPolicy failed for policy:[{}]", policy, e);
-                        ret = e.toString();
-                    }
-                    return ret;
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
+
+                try {
+                    policyRefUpdater.cleanupRefTables(policy);
+
+                    portPolicy(service.getType(), policy);
+
+                    cleanupOldRefTables(policy);
+                } catch (Throwable e) {
+                    logger.error("PortPolicy failed for policy:[{}]", policy, e);
+
+                    ret = e.toString();
                 }
+
+                return ret;
             });
         }
     }

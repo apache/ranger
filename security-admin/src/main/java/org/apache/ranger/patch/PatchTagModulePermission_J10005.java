@@ -50,17 +50,22 @@ public class PatchTagModulePermission_J10005 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchTagModulePermission_J10005 loader = (PatchTagModulePermission_J10005) CLIUtil.getBean(PatchTagModulePermission_J10005.class);
 
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -77,49 +82,63 @@ public class PatchTagModulePermission_J10005 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PermissionPatch.execLoad()");
+
         assignPermissionOnTagModuleToAdminUsers();
+
         trimPolicyName();
+
         logger.info("<== PermissionPatch.execLoad()");
     }
 
     public void assignPermissionOnTagModuleToAdminUsers() {
         int         countUserPermissionUpdated = 0;
         XXModuleDef xModDef                    = daoManager.getXXModuleDef().findByModuleName(RangerConstants.MODULE_TAG_BASED_POLICIES);
+
         if (xModDef == null) {
             return;
         }
+
         List<XXPortalUser> allAdminUsers = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_SYS_ADMIN);
+
         if (!CollectionUtils.isEmpty(allAdminUsers)) {
             for (XXPortalUser xPortalUser : allAdminUsers) {
                 VXPortalUser vPortalUser = xPortalUserService.populateViewBean(xPortalUser);
+
                 if (vPortalUser != null) {
                     vPortalUser.setUserRoleList(daoManager.getXXPortalUserRole().findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
+
                     xUserMgr.createOrUpdateUserPermisson(vPortalUser, xModDef.getId(), false);
+
                     countUserPermissionUpdated += 1;
+
                     logger.info("Added {} permission to user {}", xModDef.getModule(), xPortalUser.getLoginId());
                 }
             }
         }
+
         logger.info("{} permissions were assigned", countUserPermissionUpdated);
     }
 
     private void trimPolicyName() {
         List<XXPolicy> policies = daoManager.getXXPolicy().getAll();
+
         if (!CollectionUtils.isEmpty(policies)) {
-            String policyName = null;
             for (XXPolicy xXPolicy : policies) {
                 try {
                     if (xXPolicy != null) {
-                        policyName = xXPolicy.getName();
+                        String policyName = xXPolicy.getName();
+
                         if (!StringUtils.isEmpty(policyName)) {
                             if (policyName.startsWith(" ") || policyName.endsWith(" ")) {
                                 xXPolicy.setName(StringUtils.trim(policyName));
+
                                 daoManager.getXXPolicy().update(xXPolicy);
                             }
                         }
                     }
                 } catch (Exception ex) {
                     logger.info("Error during policy update:{}", xXPolicy);
+
                     logger.error("", ex);
                 }
             }

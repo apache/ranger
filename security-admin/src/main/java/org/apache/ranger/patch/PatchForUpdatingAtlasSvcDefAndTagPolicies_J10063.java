@@ -60,16 +60,22 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 loader = (PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063) CLIUtil.getBean(PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting.");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -87,35 +93,40 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
     @Override
     public void execLoad() {
         logger.info("==> PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.execLoad()");
+
         try {
             if (updateAtlasServiceDef()) {
                 disableAtlasAccessForTagPolicies();
             }
         } catch (Exception e) {
             logger.error("Error while updateTagServiceDef()data.", e);
+
             System.exit(1);
         }
+
         logger.info("<== PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.execLoad()");
     }
 
     private boolean updateAtlasServiceDef() throws Exception {
         logger.info("==> PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.updateAtlasServiceDef()");
-        RangerServiceDef embeddedAtlasServiceDef;
-        XXServiceDef     xXServiceDefObj;
 
-        embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+        RangerServiceDef embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
         if (embeddedAtlasServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
             if (xXServiceDefObj != null) {
                 String              jsonStrUpdate           = xXServiceDefObj.getDefOptions();
                 Map<String, String> serviceDefOptionsUpdate = jsonStringToMap(jsonStrUpdate);
+
                 if (serviceDefOptionsUpdate == null) {
                     serviceDefOptionsUpdate = new HashMap<>();
                 }
+
                 serviceDefOptionsUpdate.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "false");
+
                 xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsUpdate));
+
                 daoMgr.getXXServiceDef().update(xXServiceDefObj);
             } else {
                 logger.error("Atlas service-definition does not exist in the Ranger DAO.");
@@ -123,25 +134,33 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
             }
         } else {
             logger.error("The embedded Atlas service-definition does not exist.");
+
             return false;
         }
+
         logger.info("<== PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.updateAtlasServiceDef()");
+
         return true;
     }
 
     private void disableAtlasAccessForTagPolicies() throws Exception {
         logger.info("==> PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.disableAtlasAccessForTagPolicies()");
+
         RangerServiceDef embeddedTagServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
         if (embeddedTagServiceDef != null) {
             List<XXPolicy> xxPolicies = daoMgr.getXXPolicy().findByServiceDefId(embeddedTagServiceDef.getId());
+
             if (CollectionUtils.isNotEmpty(xxPolicies)) {
                 for (XXPolicy xxPolicy : xxPolicies) {
                     RangerPolicy rPolicy = svcStore.getPolicy(xxPolicy.getId());
+
                     if (CollectionUtils.isNotEmpty(rPolicy.getPolicyItems()) || CollectionUtils.isNotEmpty(rPolicy.getAllowExceptions()) || CollectionUtils.isNotEmpty(rPolicy.getDenyPolicyItems()) || CollectionUtils.isNotEmpty(rPolicy.getDenyExceptions())) {
                         updateAccessTypeForTagPolicies(rPolicy.getPolicyItems());
                         updateAccessTypeForTagPolicies(rPolicy.getAllowExceptions());
                         updateAccessTypeForTagPolicies(rPolicy.getDenyPolicyItems());
                         updateAccessTypeForTagPolicies(rPolicy.getDenyExceptions());
+
                         svcStore.updatePolicy(rPolicy);
                     }
                 }
@@ -152,45 +171,56 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
 
         // delete XXAccessTypeDef records of tagDef where name startWith Atlas
         List<XXAccessTypeDef> xxAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(embeddedTagServiceDef.getId());
+
         for (XXAccessTypeDef xAccess : xxAccessTypes) {
             if (xAccess != null && xAccess.getName().startsWith(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME)) {
                 svcStore.deleteXXAccessTypeDef(xAccess);
             }
         }
+
         logger.info("<== PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.disableAtlasAccessForTagPolicies()");
     }
 
     private void updateAccessTypeForTagPolicies(List<RangerPolicyItem> policyItems) throws Exception {
         logger.info("==> PatchForDisableAccessTypeForTagPolicies_J10063.updateAccessTypeForTagPolicies() {}", policyItems);
+
         if (CollectionUtils.isEmpty(policyItems)) {
             logger.info("==> PatchForDisableAccessTypeForTagPolicies_J10063.updateAccessTypeForTagPolicies() policy items collection was null/empty");
         } else {
-            List<RangerPolicy.RangerPolicyItem> removePolicyItem = new ArrayList<RangerPolicy.RangerPolicyItem>();
+            List<RangerPolicy.RangerPolicyItem> removePolicyItem = new ArrayList<>();
+
             for (RangerPolicyItem policyItem : policyItems) {
                 if (policyItem != null && policyItem.getAccesses() != null) {
-                    List<RangerPolicy.RangerPolicyItemAccess> accessesToRemove = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+                    List<RangerPolicy.RangerPolicyItemAccess> accessesToRemove = new ArrayList<>();
+
                     for (RangerPolicyItemAccess access : policyItem.getAccesses()) {
                         if (access != null) {
                             String[] svcDefAccType  = access.getType().split(":");
                             String   serviceDefName = svcDefAccType.length > 0 ? svcDefAccType[0] : null;
+
                             if (serviceDefName != null && serviceDefName.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME)) {
                                 accessesToRemove.add(access);
                             }
                         }
                     }
+
                     policyItem.getAccesses().removeAll(accessesToRemove);
                 }
+
                 if (policyItem != null && CollectionUtils.isEmpty(policyItem.getAccesses())) {
                     removePolicyItem.add(policyItem);
                 }
             }
+
             policyItems.removeAll(removePolicyItem);
         }
+
         logger.info("<== PatchForDisableAccessTypeForTagPolicies_J10063.updateAccessTypeForTagPolicies() {}", policyItems);
     }
 
     private String mapToJsonString(Map<String, String> map) {
         String ret = null;
+
         if (map != null) {
             try {
                 ret = jsonUtil.readMapToString(map);
@@ -198,11 +228,13 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
                 logger.warn("mapToJsonString() failed to convert map: {}", map, ex);
             }
         }
+
         return ret;
     }
 
     private Map<String, String> jsonStringToMap(String jsonStr) {
         Map<String, String> ret = null;
+
         if (!StringUtils.isEmpty(jsonStr)) {
             try {
                 ret = jsonUtil.jsonToMap(jsonStr);
@@ -212,15 +244,19 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
                     if (StringUtils.isEmpty(optionString)) {
                         continue;
                     }
+
                     String[] nvArr = optionString.split("=");
                     String   name  = (nvArr.length > 0) ? nvArr[0].trim() : null;
                     String   value = (nvArr.length > 1) ? nvArr[1].trim() : null;
+
                     if (StringUtils.isEmpty(name)) {
                         continue;
                     }
+
                     if (ret == null) {
                         ret = new HashMap<>();
                     }
+
                     ret.put(name, value);
                 }
             }

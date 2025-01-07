@@ -48,17 +48,22 @@ public class PatchGrantAuditPermissionToKeyRoleUser_J10014 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchGrantAuditPermissionToKeyRoleUser_J10014 loader = (PatchGrantAuditPermissionToKeyRoleUser_J10014) CLIUtil.getBean(PatchGrantAuditPermissionToKeyRoleUser_J10014.class);
 
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -75,6 +80,7 @@ public class PatchGrantAuditPermissionToKeyRoleUser_J10014 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==>Starting : PatchGrantAuditPermissionToKeyRoleUser.execLoad()");
+
         assignAuditAndUserGroupPermissionToKeyAdminRoleUser();
 
         logger.info("<==Completed : PatchGrantAuditPermissionToKeyRoleUser.execLoad()");
@@ -82,32 +88,45 @@ public class PatchGrantAuditPermissionToKeyRoleUser_J10014 extends BaseLoader {
 
     private void assignAuditAndUserGroupPermissionToKeyAdminRoleUser() {
         try {
-            int countUserPermissionUpdated = 0;
-            XXModuleDef xAuditModDef = daoManager.getXXModuleDef().findByModuleName(RangerConstants.MODULE_AUDIT);
-            XXModuleDef xUserGrpModDef = daoManager.getXXModuleDef().findByModuleName(RangerConstants.MODULE_USER_GROUPS);
+            int         countUserPermissionUpdated = 0;
+            XXModuleDef xAuditModDef               = daoManager.getXXModuleDef().findByModuleName(RangerConstants.MODULE_AUDIT);
+            XXModuleDef xUserGrpModDef             = daoManager.getXXModuleDef().findByModuleName(RangerConstants.MODULE_USER_GROUPS);
+
             logger.warn("Audit Module Object : {}", xAuditModDef);
             logger.warn("USer Group Module Object : {}", xUserGrpModDef);
+
             if (xAuditModDef == null && xUserGrpModDef == null) {
                 logger.warn("Audit Module and User Group module not found");
+
                 return;
             }
+
             List<XXPortalUser> allKeyAdminUsers = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN);
+
             if (!CollectionUtils.isEmpty(allKeyAdminUsers)) {
                 for (XXPortalUser xPortalUser : allKeyAdminUsers) {
-                    boolean isUserUpdated = false;
-                    VXPortalUser vPortalUser = xPortalUserService.populateViewBean(xPortalUser);
+                    boolean      isUserUpdated = false;
+                    VXPortalUser vPortalUser   = xPortalUserService.populateViewBean(xPortalUser);
+
                     if (vPortalUser != null) {
                         vPortalUser.setUserRoleList(daoManager.getXXPortalUserRole().findXPortalUserRolebyXPortalUserId(vPortalUser.getId()));
+
                         if (xAuditModDef != null) {
                             xUserMgr.createOrUpdateUserPermisson(vPortalUser, xAuditModDef.getId(), true);
+
                             isUserUpdated = true;
+
                             logger.info("Added {} permission to user {}", xAuditModDef.getModule(), xPortalUser.getLoginId());
                         }
+
                         if (xUserGrpModDef != null) {
                             xUserMgr.createOrUpdateUserPermisson(vPortalUser, xUserGrpModDef.getId(), true);
+
                             isUserUpdated = true;
+
                             logger.info("Added {} permission to user {}", xUserGrpModDef.getModule(), xPortalUser.getLoginId());
                         }
+
                         if (isUserUpdated) {
                             countUserPermissionUpdated += 1;
                         }

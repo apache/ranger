@@ -86,8 +86,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
@@ -107,28 +105,36 @@ import java.util.Set;
 @Component
 public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForUpdatingPolicyJson_J10019.class);
+
     private final Map<String, Long>              groupIdMap         = new HashMap<>();
     private final Map<String, Long>              userIdMap          = new HashMap<>();
     private final Map<String, Map<String, Long>> resourceNameIdMap  = new HashMap<>();
     private final Map<String, Map<String, Long>> accessTypeIdMap    = new HashMap<>();
     private final Map<String, Map<String, Long>> conditionNameIdMap = new HashMap<>();
     private final Map<String, Map<String, Long>> dataMaskTypeIdMap  = new HashMap<>();
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
     ServiceDBStore svcStore;
+
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
+
     @Autowired
     PolicyRefUpdater policyRefUpdater;
+
     @Autowired
     XUserMgr xUserMgr;
+
     @Autowired
     RangerDataHistService dataHistService;
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForUpdatingPolicyJson_J10019 loader = (PatchForUpdatingPolicyJson_J10019) CLIUtil.getBean(PatchForUpdatingPolicyJson_J10019.class);
 
@@ -143,6 +149,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -165,6 +172,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             updateRangerPolicyTableWithPolicyJson();
         } catch (Exception e) {
             logger.error("Error while updateRangerPolicyTableWithPolicyJson()", e);
+
             System.exit(1);
         }
 
@@ -193,11 +201,13 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
                         XXPolicy xPolicy = daoMgr.getXXPolicy().getById(policy.getId());
                         if (xPolicy != null && StringUtil.isEmpty(xPolicy.getPolicyText())) {
                             PolicyUpdaterThread updaterThread = new PolicyUpdaterThread(txTemplate, service, policy);
+
                             updaterThread.setDaemon(true);
                             updaterThread.start();
                             updaterThread.join();
 
                             String errorMsg = updaterThread.getErrorMsg();
+
                             if (StringUtils.isNotEmpty(errorMsg)) {
                                 throw new Exception(errorMsg);
                             }
@@ -248,10 +258,12 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             addAccessDefRef(serviceType, policy.getId(), accesses);
             addPolicyConditionDefRef(serviceType, policy.getId(), conditions);
             addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
+
             dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_UPDATE);
         } catch (Exception e) {
             logger.error("portPolicy(id={}) failed!!", policy.getId());
             logger.error("Offending policy:{}", policyText);
+
             throw e;
         }
 
@@ -269,6 +281,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
@@ -318,26 +331,30 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
                 if (userObject == null) {
                     logger.info("user is not found, adding user: {}", user);
+
                     TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
                     txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
                     try {
-                        txTemplate.execute(new TransactionCallback<Object>() {
-                            @Override
-                            public Object doInTransaction(TransactionStatus status) {
-                                xUserMgr.createServiceConfigUserSynchronously(user);
-                                return null;
-                            }
+                        txTemplate.execute(status -> {
+                            xUserMgr.createServiceConfigUserSynchronously(user);
+
+                            return null;
                         });
                     } catch (Exception exception) {
                         logger.error("Cannot create ServiceConfigUser({})", user, exception);
                     }
+
                     userObject = userDao.findByUserName(user);
+
                     if (userObject == null) {
                         throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
                     }
                 }
 
                 userId = userObject.getId();
+
                 logger.info("userId:{}", userId);
 
                 userIdMap.put(user, userId);
@@ -401,6 +418,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
@@ -441,6 +459,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
@@ -482,6 +501,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
 
             XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
             if (dbServiceDef != null) {
                 for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
                     serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
@@ -535,18 +555,15 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
         static final Logger LOG      = LoggerFactory.getLogger(RangerPolicyRetriever.class);
         static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
 
-        private final RangerDaoManager daoMgr;
-        private final LookupCache      lookupCache = new LookupCache();
-
-        private final PlatformTransactionManager txManager;
-        private final TransactionTemplate        txTemplate;
+        private final RangerDaoManager    daoMgr;
+        private final LookupCache         lookupCache = new LookupCache();
+        private final TransactionTemplate txTemplate;
 
         RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
-            this.daoMgr    = daoMgr;
-            this.txManager = txManager;
+            this.daoMgr = daoMgr;
 
-            if (this.txManager != null) {
-                this.txTemplate = new TransactionTemplate(this.txManager);
+            if (txManager != null) {
+                this.txTemplate = new TransactionTemplate(txManager);
 
                 this.txTemplate.setReadOnly(true);
             } else {
@@ -555,7 +572,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
         }
 
         static List<XXPolicy> asList(XXPolicy policy) {
-            List<XXPolicy> ret = new ArrayList<XXPolicy>();
+            List<XXPolicy> ret = new ArrayList<>();
 
             if (policy != null) {
                 ret.add(policy);
@@ -590,6 +607,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
                     PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
                     t.start();
                     t.join();
+
                     ret = t.getPolicies();
                 }
             } else {
@@ -598,7 +616,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
             RangerPerfTracer.log(perf);
 
-            LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}): policyCount=" + (ret == null ? 0 : ret.size()), serviceName, serviceId);
+            LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}): policyCount={}", (ret == null ? 0 : ret.size()), serviceName, serviceId);
 
             return ret;
         }
@@ -606,7 +624,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
         private class PolicyLoaderThread extends Thread {
             final TransactionTemplate txTemplate;
             final XXService           xService;
-            List<RangerPolicy> policies;
+            List<RangerPolicy>        policies;
 
             PolicyLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
                 this.txTemplate = txTemplate;
@@ -620,25 +638,23 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             @Override
             public void run() {
                 txTemplate.setReadOnly(true);
-                policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
-                    @Override
-                    public List<RangerPolicy> doInTransaction(TransactionStatus status) {
-                        RetrieverContext ctx = new RetrieverContext(xService);
-                        return ctx.getAllPolicies();
-                    }
+                policies = txTemplate.execute(status -> {
+                    RetrieverContext ctx = new RetrieverContext(xService);
+
+                    return ctx.getAllPolicies();
                 });
             }
         }
 
         class LookupCache {
-            final Map<Long, String> userNames       = new HashMap<Long, String>();
-            final Map<Long, String> userScreenNames = new HashMap<Long, String>();
-            final Map<Long, String> groupNames      = new HashMap<Long, String>();
-            final Map<Long, String> accessTypes     = new HashMap<Long, String>();
-            final Map<Long, String> conditions      = new HashMap<Long, String>();
-            final Map<Long, String> resourceDefs    = new HashMap<Long, String>();
-            final Map<Long, String> dataMasks       = new HashMap<Long, String>();
-            final Map<Long, String> policyLabels    = new HashMap<Long, String>();
+            final Map<Long, String> userNames       = new HashMap<>();
+            final Map<Long, String> userScreenNames = new HashMap<>();
+            final Map<Long, String> groupNames      = new HashMap<>();
+            final Map<Long, String> accessTypes     = new HashMap<>();
+            final Map<Long, String> conditions      = new HashMap<>();
+            final Map<Long, String> resourceDefs    = new HashMap<>();
+            final Map<Long, String> dataMasks       = new HashMap<>();
+            final Map<Long, String> policyLabels    = new HashMap<>();
 
             String getUserName(Long userId) {
                 String ret = null;
@@ -938,7 +954,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             }
 
             List<RangerPolicy> getAllPolicies() {
-                List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+                List<RangerPolicy> ret = new ArrayList<>();
 
                 while (iterPolicy.hasNext()) {
                     RangerPolicy policy = getNextPolicy();
@@ -964,12 +980,11 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
                     List<XXPolicy> xPolicies = daoMgr.getXXPolicy().findByServiceId(service.getId());
 
                     if (CollectionUtils.isNotEmpty(xPolicies)) {
-                        ret = new ArrayList<RangerPolicy>(xPolicies.size());
+                        ret = new ArrayList<>(xPolicies.size());
 
                         for (XXPolicy xPolicy : xPolicies) {
-                            RetrieverContext ctx = new RetrieverContext(xPolicy, service);
-
-                            RangerPolicy policy = ctx.getNextPolicy();
+                            RetrieverContext ctx    = new RetrieverContext(xPolicy, service);
+                            RangerPolicy     policy = ctx.getNextPolicy();
 
                             if (policy != null) {
                                 ret.add(policy);
@@ -982,19 +997,24 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             }
 
             private void getPolicyLabels(RangerPolicy ret) {
-                List<String> xPolicyLabels = new ArrayList<String>();
+                List<String> xPolicyLabels = new ArrayList<>();
+
                 while (iterPolicyLabels.hasNext()) {
                     XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
+
                     if (xPolicyLabel.getPolicyId().equals(ret.getId())) {
                         String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
+
                         if (policyLabel != null) {
                             xPolicyLabels.add(policyLabel);
                         }
+
                         ret.setPolicyLabels(xPolicyLabels);
                     } else {
                         if (iterPolicyLabels.hasPrevious()) {
                             iterPolicyLabels.previous();
                         }
+
                         break;
                     }
                 }
@@ -1209,7 +1229,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
         final TransactionTemplate txTemplate;
         final RangerService       service;
         final RangerPolicy        policy;
-        String errorMsg;
+        String                    errorMsg;
 
         PolicyUpdaterThread(TransactionTemplate txTemplate, final RangerService service, final RangerPolicy policy) {
             this.txTemplate = txTemplate;
@@ -1224,19 +1244,20 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
         @Override
         public void run() {
-            errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-                @Override
-                public String doInTransaction(TransactionStatus status) {
-                    String ret = null;
-                    try {
-                        policyRefUpdater.cleanupRefTables(policy);
-                        portPolicy(service.getType(), policy);
-                    } catch (Throwable e) {
-                        logger.error("PortPolicy failed for policy:[{}]", policy, e);
-                        ret = e.toString();
-                    }
-                    return ret;
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
+
+                try {
+                    policyRefUpdater.cleanupRefTables(policy);
+
+                    portPolicy(service.getType(), policy);
+                } catch (Throwable e) {
+                    logger.error("PortPolicy failed for policy:[{}]", policy, e);
+
+                    ret = e.toString();
                 }
+
+                return ret;
             });
         }
     }

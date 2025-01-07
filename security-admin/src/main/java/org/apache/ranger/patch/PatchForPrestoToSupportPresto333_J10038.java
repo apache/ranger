@@ -75,16 +75,22 @@ public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
             PatchForPrestoToSupportPresto333_J10038 loader = (PatchForPrestoToSupportPresto333_J10038) CLIUtil.getBean(PatchForPrestoToSupportPresto333_J10038.class);
+
             loader.init();
+
             while (loader.isMoreToProcess()) {
                 loader.load();
             }
+
             logger.info("Load complete. Exiting!!!");
+
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -102,47 +108,49 @@ public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
     @Override
     public void execLoad() {
         logger.info("==> PatchForPrestoToSupportPresto333.execLoad()");
+
         try {
             addPresto333Support();
         } catch (Exception e) {
             throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME + " service-def");
         }
+
         logger.info("<== PatchForPrestoToSupportPresto333.execLoad()");
     }
 
     private void addPresto333Support() throws Exception {
-        RangerServiceDef                           ret                        = null;
-        RangerServiceDef                           embeddedPrestoServiceDef   = null;
-        XXServiceDef                               xXServiceDefObj            = null;
-        RangerServiceDef                           dbPrestoServiceDef         = null;
-        List<RangerServiceDef.RangerResourceDef>   embeddedPrestoResourceDefs = null;
-        List<RangerServiceDef.RangerAccessTypeDef> embeddedPrestoAccessTypes  = null;
-
-        embeddedPrestoServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+        RangerServiceDef embeddedPrestoServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
 
         if (embeddedPrestoServiceDef != null) {
-            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+
             if (xXServiceDefObj == null) {
                 logger.info("service-def not found. No patching is needed");
+
                 return;
             }
 
-            dbPrestoServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+            RangerServiceDef                           dbPrestoServiceDef         = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+            List<RangerServiceDef.RangerResourceDef>   embeddedPrestoResourceDefs = embeddedPrestoServiceDef.getResources();
+            List<RangerServiceDef.RangerAccessTypeDef> embeddedPrestoAccessTypes  = embeddedPrestoServiceDef.getAccessTypes();
 
-            embeddedPrestoResourceDefs = embeddedPrestoServiceDef.getResources();
-            embeddedPrestoAccessTypes  = embeddedPrestoServiceDef.getAccessTypes();
             if (checkResourcePresent(PRESTO_RESOURCES, embeddedPrestoResourceDefs)) {
                 dbPrestoServiceDef.setResources(embeddedPrestoResourceDefs);
+
                 if (checkAccessPresent(PRESTO_ACCESS_TYPES, embeddedPrestoAccessTypes)) {
                     dbPrestoServiceDef.setAccessTypes(embeddedPrestoAccessTypes);
                 }
             }
 
             RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
             validator.validate(dbPrestoServiceDef, RangerValidator.Action.UPDATE);
-            ret = svcStore.updateServiceDef(dbPrestoServiceDef);
+
+            RangerServiceDef ret = svcStore.updateServiceDef(dbPrestoServiceDef);
+
             if (ret == null) {
                 logger.error("Error while updating {} service-def", EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME);
+
                 throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME + " service-def");
             }
         }
@@ -150,23 +158,27 @@ public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
 
     private boolean checkResourcePresent(List<String> resources, List<RangerServiceDef.RangerResourceDef> resourceDefs) {
         boolean ret = false;
+
         for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
             if (resources.contains(resourceDef.getName())) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 
     private boolean checkAccessPresent(List<String> accesses, List<RangerServiceDef.RangerAccessTypeDef> embeddedAtlasAccessTypes) {
         boolean ret = false;
+
         for (RangerServiceDef.RangerAccessTypeDef accessDef : embeddedAtlasAccessTypes) {
             if (accesses.contains(accessDef.getName())) {
                 ret = true;
                 break;
             }
         }
+
         return ret;
     }
 }
