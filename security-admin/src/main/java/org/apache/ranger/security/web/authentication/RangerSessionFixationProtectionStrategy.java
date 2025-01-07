@@ -19,15 +19,15 @@
 
 package org.apache.ranger.security.web.authentication;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy;
 
-public class RangerSessionFixationProtectionStrategy extends SessionFixationProtectionStrategy {
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+public class RangerSessionFixationProtectionStrategy extends SessionFixationProtectionStrategy {
     @Override
-    public void onAuthentication(Authentication authentication, HttpServletRequest request, HttpServletResponse response){
-    	super.onAuthentication(authentication, request, response);
+    public void onAuthentication(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
+        super.onAuthentication(authentication, request, response);
     }
 }

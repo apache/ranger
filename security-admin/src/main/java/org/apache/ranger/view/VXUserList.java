@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXUser
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUserList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXUser> vXUsers = new ArrayList<VXUser>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXUser> vXUsers = new ArrayList<>();
 
     public VXUserList() {
-	super();
+        super();
     }
 
     public VXUserList(List<VXUser> objList) {
-	super(objList);
-	this.vXUsers = objList;
+        super(objList);
+        this.vXUsers = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXUserList extends VList {
      */
     @JsonProperty("vXUsers")
     public List<VXUser> getVXUsers() {
-	return vXUsers;
+        return vXUsers;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXUserList extends VList {
      */
     @JsonProperty("vXUsers")
     public void setVXUsers(List<VXUser> vXUsers) {
-	this.vXUsers = vXUsers;
+        this.vXUsers = vXUsers;
     }
 
     @Override
     public int getListSize() {
-	if (vXUsers != null) {
-	    return vXUsers.size();
-	}
-	return 0;
+        if (vXUsers != null) {
+            return vXUsers.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXUser> getList() {
-	return vXUsers;
+        return vXUsers;
     }
-
 }
