@@ -40,6 +40,7 @@ public class RangerCustomPasswordEncoder implements PasswordEncoder {
         try {
             String        saltedPassword = mergeTextAndSalt(rawPassword, this.salt, false);
             MessageDigest digest         = MessageDigest.getInstance(this.algorithm);
+
             return new String(Hex.encode(digest.digest(saltedPassword.getBytes(StandardCharsets.UTF_8))));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Algorithm " + algorithm + " not supported");
@@ -63,6 +64,7 @@ public class RangerCustomPasswordEncoder implements PasswordEncoder {
         if ((salt == null) || ("".equals(salt))) {
             return text.toString();
         }
+
         return text + "{" + salt + "}";
     }
 }

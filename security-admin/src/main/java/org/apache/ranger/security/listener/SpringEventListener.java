@@ -68,6 +68,7 @@ public class SpringEventListener implements ApplicationListener<AbstractAuthenti
         String                   sessionId     = details != null ? details.getSessionId() : "";
 
         Calendar cal = Calendar.getInstance();
+
         logger.info("Login Successful:{} | Ip Address:{} sessionId={} | Epoch={}", auth.getName(), remoteAddress, sessionId, cal.getTimeInMillis());
         // success logins are processed further in
         // AKASecurityContextFormationFilter
@@ -79,7 +80,9 @@ public class SpringEventListener implements ApplicationListener<AbstractAuthenti
         String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
         String                   sessionId     = details != null ? details.getSessionId() : "";
         String                   userAgent     = getUserAgent();
+
         logger.info("Login Unsuccessful:{} | Ip Address:{} | Bad Credentials", auth.getName(), remoteAddress);
+
         sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_WRONG_PASSWORD, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId, userAgent);
     }
 
@@ -109,7 +112,7 @@ public class SpringEventListener implements ApplicationListener<AbstractAuthenti
 
     protected String getUserAgent() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        String                   userAgent  = attributes.getRequest().getHeader("User-Agent");
-        return userAgent;
+
+        return attributes.getRequest().getHeader("User-Agent");
     }
 }

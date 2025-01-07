@@ -40,7 +40,10 @@ public class RangerUsernamePasswordAuthenticationFilter extends UsernamePassword
      */
     @Override
     public void setRememberMeServices(RememberMeServices rememberMeServices) {
-        LOG.debug("setRememberMeServices() enter: rememberMeServices={}", rememberMeServices.toString());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("setRememberMeServices() enter: rememberMeServices={}", rememberMeServices.toString());
+        }
+
         super.setRememberMeServices(rememberMeServices);
     }
 }

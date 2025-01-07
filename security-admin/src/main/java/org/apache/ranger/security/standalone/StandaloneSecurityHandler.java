@@ -54,13 +54,16 @@ public class StandaloneSecurityHandler {
 
         // [2] Authenticate User
         AuthenticationManager am = (AuthenticationManager) context.getBean(AUTH_MANAGER_BEAN_NAME);
+
         token = am.authenticate(token);
 
         // [3] Check User Access
         AffirmativeBased            accessDecisionManager = (AffirmativeBased) context.getBean(ACCESS_DECISION_MANAGER_BEAN_NAME);
         Collection<ConfigAttribute> list                  = new ArrayList<>();
         SecurityConfig              config                = new SecurityConfig(RangerConstants.ROLE_SYS_ADMIN);
+
         list.add(config);
+
         accessDecisionManager.decide(token, null, list);
 
         // [4] set token in spring context
@@ -68,6 +71,7 @@ public class StandaloneSecurityHandler {
 
         // [5] Process Success login
         InetAddress thisIp = InetAddress.getLocalHost();
+
         sessionMgr.processStandaloneSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, thisIp.getHostAddress());
     }
 }

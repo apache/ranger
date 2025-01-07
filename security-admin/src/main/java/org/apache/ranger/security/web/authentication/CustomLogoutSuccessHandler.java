@@ -43,17 +43,21 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler im
         response.setContentType("application/json;charset=UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("X-Frame-Options", "DENY");
-        String jsonStr = "";
+
         try {
             VXResponse vXResponse = new VXResponse();
+
             vXResponse.setStatusCode(HttpServletResponse.SC_OK);
             vXResponse.setMsgDesc("Logout Successful");
-            jsonStr = jsonUtil.writeObjectAsString(vXResponse);
+
+            String jsonStr = jsonUtil.writeObjectAsString(vXResponse);
 
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write(jsonStr);
 
-            logger.debug("Log-out Successfully done. Returning Json :" + jsonStr);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Log-out Successfully done. Returning Json :" + jsonStr);
+            }
         } catch (IOException e) {
             logger.info("Error while writing JSON in HttpServletResponse");
         }

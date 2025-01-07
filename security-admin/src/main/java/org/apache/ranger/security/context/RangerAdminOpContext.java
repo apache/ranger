@@ -22,9 +22,10 @@ package org.apache.ranger.security.context;
 import java.io.Serializable;
 
 public class RangerAdminOpContext implements Serializable {
-    private static final long    serialVersionUID = 1L;
-    private              boolean bulkModeContext;
-    private              Boolean createPrincipalsIfAbsent;
+    private static final long serialVersionUID = 1L;
+
+    private boolean bulkModeContext;
+    private Boolean createPrincipalsIfAbsent;
 
     public boolean isBulkModeContext() {
         return bulkModeContext;

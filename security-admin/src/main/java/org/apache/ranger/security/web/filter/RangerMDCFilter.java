@@ -40,9 +40,10 @@ import java.io.IOException;
  */
 
 public class RangerMDCFilter implements Filter {
+    private static final Logger log = LoggerFactory.getLogger(RangerMDCFilter.class);
+
     public static final  String  DEFAULT_MDC_KEY                        = "REQUEST_ID";
     public static final  String  DEFAULT_REQUEST_ID_HEADER_NAME         = "request-id";
-    private static final Logger  log                                    = LoggerFactory.getLogger(RangerMDCFilter.class);
     private static final boolean DEFAULT_MDC_FILTER_ENABLED             = false;
     private static final String  PROP_MDC_FILTER_MDC_KEY                = "ranger.admin.mdc-filter.mdcKey";
     private static final String  PROP_MDC_FILTER_REQUEST_ID_HEADER_NAME = "ranger.admin.mdc-filter.requestHeader.name";
@@ -90,6 +91,7 @@ public class RangerMDCFilter implements Filter {
         } else {
             chain.doFilter(request, response);
         }
+
         log.debug("<== RangerMDCFilter.doFilter()");
     }
 

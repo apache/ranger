@@ -68,7 +68,6 @@ import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,37 +75,40 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
-    public static final  String         LOGOUT_URL            = "/logout";
-    static final         String         NAME_RULES            = "hadoop.security.auth_to_local";
-    static final         String         TOKEN_VALID           = "ranger.admin.kerberos.token.valid.seconds";
-    static final         String         COOKIE_DOMAIN         = "ranger.admin.kerberos.cookie.domain";
-    static final         String         COOKIE_PATH           = "ranger.admin.kerberos.cookie.path";
-    static final         String         PRINCIPAL             = "ranger.spnego.kerberos.principal";
-    static final         String         KEYTAB                = "ranger.spnego.kerberos.keytab";
-    static final         String         NAME_RULES_PARAM      = "kerberos.name.rules";
-    static final         String         TOKEN_VALID_PARAM     = "token.validity";
-    static final         String         COOKIE_DOMAIN_PARAM   = "cookie.domain";
-    static final         String         COOKIE_PATH_PARAM     = "cookie.path";
-    static final         String         PRINCIPAL_PARAM       = "kerberos.principal";
-    static final         String         KEYTAB_PARAM          = "kerberos.keytab";
-    static final         String         AUTH_TYPE             = "type";
-    static final         String         RANGER_AUTH_TYPE      = "hadoop.security.authentication";
-    static final         String         AUTH_COOKIE_NAME      = "hadoop.auth";
-    static final         String         HOST_NAME             = "ranger.service.host";
-    static final         String         ALLOW_TRUSTED_PROXY   = "ranger.authentication.allow.trustedproxy";
-    static final         String         PROXY_PREFIX          = "ranger.proxyuser.";
-    static final         String         RULES_MECHANISM       = "hadoop.security.rules.mechanism";
-    static final         String         RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
-    private static final Logger         LOG                   = LoggerFactory.getLogger(RangerKRBAuthenticationFilter.class);
-    private static final String         KERBEROS_TYPE         = "kerberos";
-    private static final String         S_USER                = "suser";
-    protected static     ServletContext noContext             = new ServletContext() {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKRBAuthenticationFilter.class);
+
+    public static final String LOGOUT_URL = "/logout";
+
+    static final String NAME_RULES            = "hadoop.security.auth_to_local";
+    static final String TOKEN_VALID           = "ranger.admin.kerberos.token.valid.seconds";
+    static final String COOKIE_DOMAIN         = "ranger.admin.kerberos.cookie.domain";
+    static final String COOKIE_PATH           = "ranger.admin.kerberos.cookie.path";
+    static final String PRINCIPAL             = "ranger.spnego.kerberos.principal";
+    static final String KEYTAB                = "ranger.spnego.kerberos.keytab";
+    static final String NAME_RULES_PARAM      = "kerberos.name.rules";
+    static final String TOKEN_VALID_PARAM     = "token.validity";
+    static final String COOKIE_DOMAIN_PARAM   = "cookie.domain";
+    static final String COOKIE_PATH_PARAM     = "cookie.path";
+    static final String PRINCIPAL_PARAM       = "kerberos.principal";
+    static final String KEYTAB_PARAM          = "kerberos.keytab";
+    static final String AUTH_TYPE             = "type";
+    static final String RANGER_AUTH_TYPE      = "hadoop.security.authentication";
+    static final String AUTH_COOKIE_NAME      = "hadoop.auth";
+    static final String HOST_NAME             = "ranger.service.host";
+    static final String ALLOW_TRUSTED_PROXY   = "ranger.authentication.allow.trustedproxy";
+    static final String PROXY_PREFIX          = "ranger.proxyuser.";
+    static final String RULES_MECHANISM       = "hadoop.security.rules.mechanism";
+    static final String RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
+
+    private static final String KERBEROS_TYPE = "kerberos";
+    private static final String S_USER        = "suser";
+
+    protected static ServletContext noContext = new ServletContext() {
         @Override
         public String getContextPath() {
             return null;
@@ -148,7 +150,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
-        public URL getResource(String path) throws MalformedURLException {
+        public URL getResource(String path) {
             return null;
         }
 
@@ -168,7 +170,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
-        public Servlet getServlet(String name) throws ServletException {
+        public Servlet getServlet(String name) {
             return null;
         }
 
@@ -258,7 +260,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
-        public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
+        public <T extends Servlet> T createServlet(Class<T> clazz) {
             return null;
         }
 
@@ -288,7 +290,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
-        public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
+        public <T extends Filter> T createFilter(Class<T> clazz) {
             return null;
         }
 
@@ -334,7 +336,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
-        public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
+        public <T extends EventListener> T createListener(Class<T> clazz) {
             return null;
         }
 
@@ -357,9 +359,12 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
             return null;
         }
     };
+
     private final String originalUrlQueryParam = "originalUrl";
+
     @Autowired
-    UserMgr       userMgr;
+    UserMgr userMgr;
+
     @Autowired
     RESTErrorUtil restErrorUtil;
 
@@ -375,6 +380,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
     public void init(FilterConfig conf) throws ServletException {
         final FilterConfig        globalConf = conf;
         final Map<String, String> params     = new HashMap<>();
+
         params.put(AUTH_TYPE, PropertiesUtil.getProperty(RANGER_AUTH_TYPE, "simple"));
         params.put(NAME_RULES_PARAM, PropertiesUtil.getProperty(NAME_RULES, "DEFAULT"));
         params.put(TOKEN_VALID_PARAM, PropertiesUtil.getProperty(TOKEN_VALID, "30"));
@@ -382,11 +388,13 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         params.put(COOKIE_PATH_PARAM, PropertiesUtil.getProperty(COOKIE_PATH, "/"));
         params.put(ALLOW_TRUSTED_PROXY, PropertiesUtil.getProperty(ALLOW_TRUSTED_PROXY, "false"));
         params.put(RULES_MECHANISM_PARAM, PropertiesUtil.getProperty(RULES_MECHANISM, "hadoop"));
+
         try {
             params.put(PRINCIPAL_PARAM, SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL, ""), PropertiesUtil.getProperty(HOST_NAME)));
         } catch (IOException ignored) {
             // do nothing
         }
+
         params.put(KEYTAB_PARAM, PropertiesUtil.getProperty(KEYTAB, ""));
 
         FilterConfig myConf = new FilterConfig() {
@@ -415,8 +423,11 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                 return new IteratorEnumeration(params.keySet().iterator());
             }
         };
+
         super.init(myConf);
+
         Configuration conf1 = this.getProxyuserConfiguration();
+
         ProxyUsers.refreshSuperUserGroupsConfiguration(conf1, PROXY_PREFIX);
     }
 
@@ -425,11 +436,14 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         String             authtype     = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
         HttpServletRequest httpRequest  = (HttpServletRequest) request;
         Authentication     existingAuth = SecurityContextHolder.getContext().getAuthentication();
+
         if (isSpnegoEnable(authtype) && (existingAuth == null || !existingAuth.isAuthenticated())) {
             KerberosName.setRules(PropertiesUtil.getProperty(NAME_RULES, "DEFAULT"));
 
             String userName = null;
+
             LOG.debug("isSpnegoEnable = {}, userName = {}, request URL = {}", isSpnegoEnable(authtype), userName, getRequestURL(httpRequest));
+
             if (existingAuth != null) {
                 LOG.debug("isAuthenticated: {}", existingAuth.isAuthenticated());
             }
@@ -446,6 +460,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         } else {
             String action   = httpRequest.getParameter("action");
             String doAsUser = request.getParameter("doAs");
+
             LOG.debug("RangerKRBAuthenticationFilter: request URL = {}", httpRequest.getRequestURI());
 
             boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
@@ -457,6 +472,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 
             if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth != null && existingAuth.isAuthenticated() && StringUtils.equals(action, RestUtil.TIMEOUT_ACTION)) {
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
+
                 handleTimeoutRequest(httpRequest, httpResponse);
             } else {
                 filterChain.doFilter(request, response);
@@ -470,27 +486,28 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         String  userName          = null;
         boolean checkCookie       = response.containsHeader("Set-Cookie");
         boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
+
         if (checkCookie) {
             Collection<String> authUserName = response.getHeaders("Set-Cookie");
+
             if (authUserName != null) {
-                Iterator<String> i = authUserName.iterator();
-                while (i.hasNext()) {
-                    String cookie = i.next();
+                for (String cookie : authUserName) {
                     if (!StringUtils.isEmpty(cookie)) {
                         if (cookie.toLowerCase().startsWith(AUTH_COOKIE_NAME.toLowerCase()) && cookie.contains("u=")) {
                             String[] split = cookie.split(";");
-                            if (split != null) {
-                                for (String s : split) {
-                                    if (!StringUtils.isEmpty(s) && s.toLowerCase().startsWith(AUTH_COOKIE_NAME.toLowerCase())) {
-                                        int ustr = s.indexOf("u=");
-                                        if (ustr != -1) {
-                                            int andStr = s.indexOf("&", ustr);
-                                            if (andStr != -1) {
-                                                try {
-                                                    userName = s.substring(ustr + 2, andStr);
-                                                } catch (Exception e) {
-                                                    userName = null;
-                                                }
+
+                            for (String s : split) {
+                                if (!StringUtils.isEmpty(s) && s.toLowerCase().startsWith(AUTH_COOKIE_NAME.toLowerCase())) {
+                                    int ustr = s.indexOf("u=");
+
+                                    if (ustr != -1) {
+                                        int andStr = s.indexOf("&", ustr);
+
+                                        if (andStr != -1) {
+                                            try {
+                                                userName = s.substring(ustr + 2, andStr);
+                                            } catch (Exception e) {
+                                                userName = null;
                                             }
                                         }
                                     }
@@ -501,16 +518,21 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                 }
             }
         }
+
         String sessionUserName = request.getParameter(S_USER);
         String pathInfo        = request.getPathInfo();
+
         if (!StringUtils.isEmpty(sessionUserName) && "keyadmin".equalsIgnoreCase(sessionUserName) && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")) {
             LOG.info("Session will be created by : {}", sessionUserName);
+
             userName = sessionUserName;
         }
+
         LOG.debug("Remote user from request = {}", request.getRemoteUser());
 
         if ((isSpnegoEnable(authType) && (!StringUtils.isEmpty(userName)))) {
             Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+
             if (existingAuth == null || !existingAuth.isAuthenticated()) {
                 //--------------------------- To Create Ranger Session --------------------------------------
                 String rangerLdapDefaultRole = PropertiesUtil.getProperty("ranger.ldap.default.role", "ROLE_USER");
@@ -523,47 +545,65 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                     LOG.debug("userPrincipal from request = {} request parameters = {}", request.getUserPrincipal(), request.getParameterMap().keySet());
 
                     AuthenticationToken authToken = (AuthenticationToken) request.getUserPrincipal();
+
                     if (authToken != null && authToken != AuthenticationToken.ANONYMOUS) {
                         LOG.debug("remote user from authtoken = {}", authToken.getUserName());
 
                         UserGroupInformation ugi = UserGroupInformation.createRemoteUser(authToken.getUserName(), SaslRpcServer.AuthMethod.KERBEROS);
+
                         if (ugi != null) {
                             ugi = UserGroupInformation.createProxyUser(doAsUser, ugi);
+
                             LOG.debug("Real user from UGI = {}", ugi.getRealUser().getShortUserName());
 
                             try {
                                 ProxyUsers.authorize(ugi, request.getRemoteAddr());
                             } catch (AuthorizationException ex) {
                                 HttpExceptionUtils.createServletExceptionResponse(response, 403, ex);
+
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug("Authentication exception: {}", ex.getMessage(), ex);
                                 } else {
                                     LOG.warn("Authentication exception: {}", ex.getMessage());
                                 }
+
                                 return;
                             }
+
                             final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
                             grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
+
                             final UserDetails        principal      = new User(doAsUser, "", grantedAuths);
                             Authentication           authentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
                             WebAuthenticationDetails webDetails     = new WebAuthenticationDetails(request);
+
                             ((AbstractAuthenticationToken) authentication).setDetails(webDetails);
+
                             authentication = getGrantedAuthority(authentication);
+
                             SecurityContextHolder.getContext().setAuthentication(authentication);
+
                             request.setAttribute("spnegoEnabled", true);
                             request.setAttribute("trustedProxyEnabled", true);
+
                             LOG.info("Logged into Ranger as doAsUser = {}, by authenticatedUser = {}", doAsUser, authToken.getUserName());
                         }
                     }
                 } else {
                     //if we get the userName from the token then log into ranger using the same user
                     final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
                     grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
-                    final UserDetails        principal           = new User(userName, "", grantedAuths);
-                    final Authentication     finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-                    WebAuthenticationDetails webDetails          = new WebAuthenticationDetails(request);
-                    ((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+
+                    final UserDetails                 principal           = new User(userName, "", grantedAuths);
+                    final AbstractAuthenticationToken finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+                    WebAuthenticationDetails          webDetails          = new WebAuthenticationDetails(request);
+
+                    finalAuthentication.setDetails(webDetails);
+
                     Authentication authentication = getGrantedAuthority(finalAuthentication);
+
                     if (authentication != null && authentication.isAuthenticated()) {
                         if (request.getParameterMap().containsKey("doAs")) {
                             if (!response.isCommitted()) {
@@ -584,8 +624,11 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                             }
                         }
                     }
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+
                     request.setAttribute("spnegoEnabled", true);
+
                     LOG.debug("Logged into Ranger as = {}", userName);
                 }
                 filterChain.doFilter(request, response);
@@ -604,31 +647,40 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
     protected Configuration getProxyuserConfiguration() {
         Configuration       conf          = new Configuration(false);
         Map<String, String> propertiesMap = PropertiesUtil.getPropertiesMap();
+
         for (String key : propertiesMap.keySet()) {
             if (!key.startsWith(PROXY_PREFIX)) {
                 continue;
             }
+
             conf.set(key, propertiesMap.get(key));
         }
+
         return conf;
     }
 
     private void handleTimeoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
         String xForwardedURL = RestUtil.constructForwardableURL(httpRequest);
+
         LOG.debug("xForwardedURL = {}", xForwardedURL);
 
         String logoutUrl = xForwardedURL;
+
         logoutUrl = StringUtils.replace(logoutUrl, httpRequest.getRequestURI(), LOGOUT_URL);
+
         LOG.debug("logoutUrl value is {}", logoutUrl);
 
         String redirectUrl = RestUtil.constructRedirectURL(httpRequest, logoutUrl, xForwardedURL, originalUrlQueryParam);
+
         LOG.debug("Redirect URL = {}", redirectUrl);
         LOG.debug("session id = {}", httpRequest.getRequestedSessionId());
 
         HttpSession httpSession = httpRequest.getSession(false);
+
         if (httpSession != null) {
             httpSession.invalidate();
         }
+
         httpResponse.setHeader("Content-Type", "application/x-http-headers");
         httpResponse.sendRedirect(redirectUrl);
     }
@@ -636,27 +688,35 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
     private boolean isSpnegoEnable(String authType) {
         String principal  = PropertiesUtil.getProperty(PRINCIPAL);
         String keytabPath = PropertiesUtil.getProperty(KEYTAB);
+
         return ((!StringUtils.isEmpty(authType)) && KERBEROS_TYPE.equalsIgnoreCase(authType) && SecureClientLogin.isKerberosCredentialExists(principal, keytabPath));
     }
 
     private Authentication getGrantedAuthority(Authentication authentication) {
         UsernamePasswordAuthenticationToken result;
+
         if (authentication != null && authentication.isAuthenticated()) {
             final List<GrantedAuthority> grantedAuths = getAuthorities(authentication.getName());
             final UserDetails            userDetails  = new User(authentication.getName(), authentication.getCredentials().toString(), grantedAuths);
+
             result = new UsernamePasswordAuthenticationToken(userDetails, authentication.getCredentials(), grantedAuths);
+
             result.setDetails(authentication.getDetails());
+
             return result;
         }
+
         return authentication;
     }
 
     private List<GrantedAuthority> getAuthorities(String username) {
         Collection<String>           roleList     = userMgr.getRolesByLoginId(username);
         final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
         for (String role : roleList) {
             grantedAuths.add(new SimpleGrantedAuthority(role));
         }
+
         return grantedAuths;
     }
 }

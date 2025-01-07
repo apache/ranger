@@ -52,81 +52,105 @@ public class RangerPreAuthSecurityHandler {
     @Autowired
     SessionMgr sessionMgr;
 
-    public boolean isAPIAccessible(String methodName) throws Exception {
+    public boolean isAPIAccessible(String methodName) {
         if (methodName == null) {
             return false;
         }
 
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
         if (userSession == null) {
             logger.warn("WARNING: UserSession found null. Some non-authorized user might be trying to access the API.");
+
             return false;
         }
 
         if (userSession.isUserAdmin()) {
             logger.debug("WARNING: Logged in user is System Admin, System Admin is allowed to access all the tabs except Key Manager. Reason for returning true is, In few cases system admin needs to have access on Key Manager tabs as well.");
+
             return true;
         }
 
         Set<String> associatedTabs = rangerAPIMapping.getAssociatedTabsWithAPI(methodName);
+
         if (CollectionUtils.isEmpty(associatedTabs)) {
             return true;
         }
+
         if (associatedTabs.contains(RangerAPIMapping.TAB_PERMISSIONS) && userSession.isAuditUserAdmin()) {
             return true;
         }
+
         return isAPIAccessible(associatedTabs);
     }
 
-    public boolean isAPIAccessible(Set<String> associatedTabs) throws Exception {
+    public boolean isAPIAccessible(Set<String> associatedTabs) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
         if (userSession != null) {
             sessionMgr.refreshPermissionsIfNeeded(userSession);
+
             if (userSession.getRangerUserPermission() != null) {
                 CopyOnWriteArraySet<String> accessibleModules = userSession.getRangerUserPermission().getUserPermissions();
+
                 if (CollectionUtils.containsAny(accessibleModules, associatedTabs)) {
                     return true;
                 }
             }
         }
+
         VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
         gjResponse.setMsgDesc("User is not allowed to access the API");
+
         throw restErrorUtil.generateRESTException(gjResponse);
     }
 
     public boolean isAPISpnegoAccessible() {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
         if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin() || userSession.isAuditUserAdmin())) {
             return true;
         } else if (userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin() || userSession.isAuditKeyAdmin())) {
             return true;
         }
+
         VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
         gjResponse.setMsgDesc("User is not allowed to access the API");
+
         throw restErrorUtil.generateRESTException(gjResponse);
     }
 
     public boolean isAdminOrKeyAdminRole() {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
         if (userSession != null && (userSession.isKeyAdmin() || userSession.isUserAdmin())) {
             return true;
         }
+
         VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
         gjResponse.setMsgDesc("User is not allowed to access the API");
+
         throw restErrorUtil.generateRESTException(gjResponse);
     }
 
     public boolean isAdminRole() {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
         if (userSession != null && userSession.isUserAdmin()) {
             return true;
         }
+
         VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
         gjResponse.setMsgDesc("User is not allowed to access the API");
+
         throw restErrorUtil.generateRESTException(gjResponse);
     }
 }

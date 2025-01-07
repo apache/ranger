@@ -44,9 +44,10 @@ import java.io.IOException;
  *
  */
 public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryPoint {
-    public static final  int    SC_AUTHENTICATION_TIMEOUT = 419;
-    private static final Logger logger                    = LoggerFactory.getLogger(RangerAuthenticationEntryPoint.class);
-    static               int    ajaxReturnCode            = -1;
+    private static final Logger logger = LoggerFactory.getLogger(RangerAuthenticationEntryPoint.class);
+
+    public static final int SC_AUTHENTICATION_TIMEOUT = 419;
+    static              int ajaxReturnCode            = -1;
 
     @Autowired
     RangerConfigUtil configUtil;
@@ -59,7 +60,9 @@ public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryP
 
     public RangerAuthenticationEntryPoint(String loginFormUrl) {
         super(loginFormUrl);
+
         logger.debug("AjaxAwareAuthenticationEntryPoint(): constructor");
+
         if (ajaxReturnCode < 0) {
             ajaxReturnCode = PropertiesUtil.getIntProperty("ranger.ajax.auth.required.code", 401);
         }
@@ -68,11 +71,14 @@ public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryP
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         String ajaxRequestHeader = request.getHeader("X-Requested-With");
+
         response.setHeader("X-Frame-Options", "DENY");
+
         logger.debug("commence() X-Requested-With={}", ajaxRequestHeader);
 
         String requestURI  = (request.getRequestURI() != null) ? request.getRequestURI() : "";
         String servletPath = PropertiesUtil.getProperty("ranger.servlet.mapping.url.pattern", "service");
+
         logger.debug("===> RangerAuthenticationEntryPoint.commence() servletPath[{}] requestURI [{}]", servletPath, requestURI);
 
         if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
@@ -87,6 +93,7 @@ public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryP
             } catch (IOException e) {
                 logger.info("Error while writing JSON in HttpServletResponse");
             }
+
             return;
         } else {
             try {
@@ -113,6 +120,7 @@ public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryP
                     request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");
                 }
             }
+
             super.commence(request, response, authException);
         }
     }

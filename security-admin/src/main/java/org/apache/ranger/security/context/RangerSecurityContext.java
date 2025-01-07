@@ -28,9 +28,10 @@ import org.apache.ranger.common.UserSessionBase;
 import java.io.Serializable;
 
 public class RangerSecurityContext implements Serializable {
-    private static final long            serialVersionUID = 1L;
-    private              UserSessionBase userSession;
-    private              RequestContext  requestContext;
+    private static final long serialVersionUID = 1L;
+
+    private UserSessionBase userSession;
+    private RequestContext  requestContext;
 
     public UserSessionBase getUserSession() {
         return userSession;

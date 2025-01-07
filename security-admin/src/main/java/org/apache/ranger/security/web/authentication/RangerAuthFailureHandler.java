@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,6 +50,7 @@ public class RangerAuthFailureHandler extends ExceptionMappingAuthenticationFail
 
     public RangerAuthFailureHandler() {
         super();
+
         if (ajaxLoginfailurePage == null) {
             ajaxLoginfailurePage = PropertiesUtil.getProperty("ranger.ajax.auth.failure.page", "/ajax_failure.jsp");
         }
@@ -66,21 +66,26 @@ public class RangerAuthFailureHandler extends ExceptionMappingAuthenticationFail
      * org.springframework.security.core.AuthenticationException)
      */
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) {
         String ajaxRequestHeader = request.getHeader("X-Requested-With");
+
         LOG.debug("commence() X-Requested-With={}", ajaxRequestHeader);
 
         response.setContentType("application/json;charset=UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("X-Frame-Options", "DENY");
+
         String jsonResp = "";
+
         try {
             String     msg        = exception.getMessage();
             VXResponse vXResponse = new VXResponse();
+
             if (msg != null && !msg.isEmpty()) {
                 if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", request).equalsIgnoreCase(msg)) {
                     vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
                     vXResponse.setMsgDesc("The username or password you entered is incorrect.");
+
                     LOG.info("Error Message : {}", msg);
                 } else if (msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")) {
                     vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
@@ -96,7 +101,9 @@ public class RangerAuthFailureHandler extends ExceptionMappingAuthenticationFail
                     vXResponse.setMsgDesc("The user account is locked.");
                 }
             }
+
             jsonResp = jsonUtil.writeObjectAsString(vXResponse);
+
             response.getWriter().write(jsonResp);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         } catch (IOException e) {

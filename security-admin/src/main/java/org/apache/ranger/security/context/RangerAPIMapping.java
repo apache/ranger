@@ -60,8 +60,7 @@ public class RangerAPIMapping {
      * RangerAPIList and should be mapped properly with UI tabs in the current class.
      */
     public Set<String> getAssociatedTabsWithAPI(String apiName) {
-        Set<String> associatedTabs = mapApiToTabs.get(apiName);
-        return associatedTabs;
+        return mapApiToTabs.get(apiName);
     }
 
     private void init() {
@@ -146,10 +145,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_REPORTS, apiAssociatedWithReports);
 
         for (String api : apiAssociatedWithReports) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_REPORTS);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_REPORTS);
         }
     }
 
@@ -227,10 +225,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_TAG_BASED_POLICIES, apiAssociatedWithTagBasedPolicy);
 
         for (String api : apiAssociatedWithTagBasedPolicy) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_TAG_BASED_POLICIES);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_TAG_BASED_POLICIES);
         }
     }
 
@@ -274,10 +271,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_KEY_MANAGER, apiAssociatedWithKeyManager);
 
         for (String api : apiAssociatedWithKeyManager) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_KEY_MANAGER);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_KEY_MANAGER);
         }
     }
 
@@ -306,10 +302,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_PERMISSIONS, apiAssociatedWithPermissions);
 
         for (String api : apiAssociatedWithPermissions) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_PERMISSIONS);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_PERMISSIONS);
         }
     }
 
@@ -363,10 +358,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_USERS_GROUPS, apiAssociatedWithUserAndGroups);
 
         for (String api : apiAssociatedWithUserAndGroups) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_USERS_GROUPS);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_USERS_GROUPS);
         }
     }
 
@@ -434,10 +428,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_AUDIT, apiAssociatedWithAudit);
 
         for (String api : apiAssociatedWithAudit) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_AUDIT);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_AUDIT);
         }
     }
 
@@ -517,10 +510,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_RESOURCE_BASED_POLICIES, apiAssociatedWithRBPolicies);
 
         for (String api : apiAssociatedWithRBPolicies) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_RESOURCE_BASED_POLICIES);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_RESOURCE_BASED_POLICIES);
         }
     }
 
@@ -579,10 +571,9 @@ public class RangerAPIMapping {
         rangerAPIMappingWithUI.put(TAB_GDS, apiAssociatedWithGDS);
 
         for (String api : apiAssociatedWithGDS) {
-            if (mapApiToTabs.get(api) == null) {
-                mapApiToTabs.put(api, new HashSet<>());
-            }
-            mapApiToTabs.get(api).add(TAB_GDS);
+            Set<String> tabs = mapApiToTabs.computeIfAbsent(api, k -> new HashSet<>());
+
+            tabs.add(TAB_GDS);
         }
     }
 }

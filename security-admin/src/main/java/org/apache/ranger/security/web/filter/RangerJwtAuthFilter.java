@@ -52,7 +52,8 @@ import java.util.Properties;
 @Lazy(true)
 @Component
 public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements Filter {
-    private static final Logger LOG                 = Logger.getLogger(RangerJwtAuthFilter.class);
+    private static final Logger LOG = Logger.getLogger(RangerJwtAuthFilter.class);
+
     private static final String DEFAULT_RANGER_ROLE = "ROLE_USER";
 
     @PostConstruct
@@ -76,6 +77,7 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         } catch (Exception e) {
             LOG.error("Failed to initialize Ranger Admin JWT Auth Filter.", e);
         }
+
         LOG.debug("<<<=== RangerJwtAuthFilter.initialize()");
     }
 
@@ -89,22 +91,26 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         LOG.debug("===>>> RangerJwtAuthFilter.doFilter()");
 
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-
-        RangerAuth rangerAuth = authenticate(httpServletRequest);
+        RangerAuth         rangerAuth         = authenticate(httpServletRequest);
 
         if (rangerAuth != null) {
-            final List<GrantedAuthority>   grantedAuths        = Collections.singletonList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
-            final UserDetails              principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
-            final Authentication           finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-            final WebAuthenticationDetails webDetails          = new WebAuthenticationDetails(httpServletRequest);
-            ((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+            final List<GrantedAuthority>      grantedAuths        = Collections.singletonList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
+            final UserDetails                 principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
+            final AbstractAuthenticationToken finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+            final WebAuthenticationDetails    webDetails          = new WebAuthenticationDetails(httpServletRequest);
+
+            finalAuthentication.setDetails(webDetails);
+
             SecurityContextHolder.getContext().setAuthentication(finalAuthentication);
         }
 
         // Log final status of request.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (auth != null) {
-            LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[" + auth.getPrincipal() + "], isUserAuthenticated? [" + auth.isAuthenticated() + "]");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[" + auth.getPrincipal() + "], isUserAuthenticated? [" + auth.isAuthenticated() + "]");
+            }
         } else {
             LOG.warn("<<<=== RangerJwtAuthFilter.doFilter() - Failed to authenticate request using Ranger JWT authentication framework.");
         }

@@ -40,16 +40,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RangerCSRFPreventionFilter implements Filter {
-    public static final  String  BROWSER_USER_AGENT_PARAM       = "ranger.rest-csrf.browser-useragents-regex";
-    public static final  String  BROWSER_USER_AGENTS_DEFAULT    = "Mozilla,Opera,Chrome";
-    public static final  String  CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
-    public static final  String  METHODS_TO_IGNORE_DEFAULT      = "GET,OPTIONS,HEAD,TRACE";
-    public static final  String  CUSTOM_HEADER_PARAM            = "ranger.rest-csrf.custom-header";
-    public static final  String  HEADER_DEFAULT                 = "X-XSRF-HEADER";
-    public static final  String  HEADER_USER_AGENT              = "User-Agent";
-    public static final  String  CSRF_TOKEN                     = "_csrfToken";
-    private static final Logger  LOG                            = LoggerFactory.getLogger(RangerCSRFPreventionFilter.class);
-    private static final boolean IS_CSRF_ENABLED                = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerCSRFPreventionFilter.class);
+
+    public static final String BROWSER_USER_AGENT_PARAM       = "ranger.rest-csrf.browser-useragents-regex";
+    public static final String BROWSER_USER_AGENTS_DEFAULT    = "Mozilla,Opera,Chrome";
+    public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
+    public static final String METHODS_TO_IGNORE_DEFAULT      = "GET,OPTIONS,HEAD,TRACE";
+    public static final String CUSTOM_HEADER_PARAM            = "ranger.rest-csrf.custom-header";
+    public static final String HEADER_DEFAULT                 = "X-XSRF-HEADER";
+    public static final String HEADER_USER_AGENT              = "User-Agent";
+    public static final String CSRF_TOKEN                     = "_csrfToken";
+
+    private static final boolean IS_CSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 
     private String      headerName = HEADER_DEFAULT;
     private Set<String> methodsToIgnore;
@@ -67,21 +69,27 @@ public class RangerCSRFPreventionFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
         String customHeader = PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM, HEADER_DEFAULT);
+
         if (customHeader != null) {
             headerName = customHeader;
         }
 
         String customMethodsToIgnore = PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM, METHODS_TO_IGNORE_DEFAULT);
+
         if (customMethodsToIgnore != null) {
             parseMethodsToIgnore(customMethodsToIgnore);
         } else {
             parseMethodsToIgnore(METHODS_TO_IGNORE_DEFAULT);
         }
+
         String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, BROWSER_USER_AGENTS_DEFAULT);
+
         if (agents == null) {
             agents = BROWSER_USER_AGENTS_DEFAULT;
         }
+
         parseBrowserUserAgents(agents);
+
         LOG.info("Adding cross-site request forgery (CSRF) protection");
     }
 
@@ -89,8 +97,9 @@ public class RangerCSRFPreventionFilter implements Filter {
         if (IS_CSRF_ENABLED) {
             final HttpServletRequest  httpRequest         = (HttpServletRequest) request;
             final HttpServletResponse httpResponse        = (HttpServletResponse) response;
-            Boolean                   spnegoEnabled       = httpRequest.getAttribute("spnegoEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("spnegoEnabled"))) : false;
-            Boolean                   trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled"))) : false;
+            boolean                   spnegoEnabled       = httpRequest.getAttribute("spnegoEnabled") != null && Boolean.parseBoolean(String.valueOf(httpRequest.getAttribute("spnegoEnabled")));
+            boolean                   trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null && Boolean.parseBoolean(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled")));
+
             handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain), spnegoEnabled, trustedProxyEnabled);
         } else {
             chain.doFilter(request, response);
@@ -120,12 +129,14 @@ public class RangerCSRFPreventionFilter implements Filter {
             httpInteraction.proceed();
         } else {
             LOG.error("Missing header or invalid Header value for CSRF Vulnerability Protection");
+
             httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing header or invalid Header value for CSRF Vulnerability Protection");
         }
     }
 
     protected boolean isBrowser(String userAgent) {
         boolean isWeb = false;
+
         if (browserUserAgents != null && browserUserAgents.length > 0 && userAgent != null) {
             for (String ua : browserUserAgents) {
                 if (userAgent.toLowerCase().startsWith(ua.toLowerCase())) {
@@ -134,12 +145,15 @@ public class RangerCSRFPreventionFilter implements Filter {
                 }
             }
         }
+
         return isWeb;
     }
 
     void parseMethodsToIgnore(String mti) {
         String[] methods = mti.split(",");
+
         methodsToIgnore = new HashSet<>();
+
         Collections.addAll(methodsToIgnore, methods);
     }
 

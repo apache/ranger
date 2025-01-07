@@ -61,6 +61,8 @@ import static org.apache.hadoop.thirdparty.com.google.common.io.ByteStreams.skip
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class RangerKrbFilter implements Filter {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKrbFilter.class);
+
     /**
      * Constant for the property that specifies the configuration prefix.
      */
@@ -103,12 +105,10 @@ public class RangerKrbFilter implements Filter {
      */
     public static final  String SIGNER_SECRET_PROVIDER_ATTRIBUTE         = "signer.secret.provider.object";
     static final         String ALLOW_TRUSTED_PROXY                      = "ranger.authentication.allow.trustedproxy";
-    private static final Logger LOG                                      = LoggerFactory.getLogger(RangerKrbFilter.class);
     private static final String BROWSER_USER_AGENT_PARAM                 = "ranger.krb.browser-useragents-regex";
     private static final String supportKerberosAuthForBrowserLoginConfig = "ranger.allow.kerberos.auth.login.browser";
 
-    private String[] browserUserAgents;
-
+    private String[]              browserUserAgents;
     private Properties            config;
     private Signer                signer;
     private SignerSecretProvider  secretProvider;
@@ -121,9 +121,9 @@ public class RangerKrbFilter implements Filter {
     private boolean               supportKerberosAuthForBrowserLogin;
 
     public static SignerSecretProvider constructSecretProvider(ServletContext ctx, Properties config, boolean disallowFallbackToRandomSecretProvider) throws Exception {
-        long validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY, "36000")) * 1000;
+        long   validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY, "36000")) * 1000;
+        String name     = config.getProperty(SIGNER_SECRET_PROVIDER);
 
-        String name = config.getProperty(SIGNER_SECRET_PROVIDER);
         if (StringUtils.isEmpty(name)) {
             if (!disallowFallbackToRandomSecretProvider) {
                 name = "random";
@@ -133,29 +133,42 @@ public class RangerKrbFilter implements Filter {
         }
 
         SignerSecretProvider provider;
-        if ("file".equals(name)) {
-            provider = new FileSignerSecretProvider();
-            try {
-                provider.init(config, ctx, validity);
-            } catch (Exception e) {
-                if (!disallowFallbackToRandomSecretProvider) {
-                    LOG.info("Unable to initialize FileSignerSecretProvider, falling back to use random secrets.");
-                    provider = new RandomSignerSecretProvider();
+
+        switch (name) {
+            case "file":
+                provider = new FileSignerSecretProvider();
+
+                try {
                     provider.init(config, ctx, validity);
-                } else {
-                    throw e;
+                } catch (Exception e) {
+                    if (!disallowFallbackToRandomSecretProvider) {
+                        LOG.info("Unable to initialize FileSignerSecretProvider, falling back to use random secrets.");
+
+                        provider = new RandomSignerSecretProvider();
+
+                        provider.init(config, ctx, validity);
+                    } else {
+                        throw e;
+                    }
                 }
-            }
-        } else if ("random".equals(name)) {
-            provider = new RandomSignerSecretProvider();
-            provider.init(config, ctx, validity);
-        } else if ("zookeeper".equals(name)) {
-            provider = new ZKSignerSecretProvider();
-            provider.init(config, ctx, validity);
-        } else {
-            provider = (SignerSecretProvider) Thread.currentThread().getContextClassLoader().loadClass(name).newInstance();
-            provider.init(config, ctx, validity);
+                break;
+            case "random":
+                provider = new RandomSignerSecretProvider();
+
+                provider.init(config, ctx, validity);
+                break;
+            case "zookeeper":
+                provider = new ZKSignerSecretProvider();
+
+                provider.init(config, ctx, validity);
+                break;
+            default:
+                provider = (SignerSecretProvider) Thread.currentThread().getContextClassLoader().loadClass(name).newInstance();
+
+                provider.init(config, ctx, validity);
+                break;
         }
+
         return provider;
     }
 
@@ -172,7 +185,8 @@ public class RangerKrbFilter implements Filter {
      */
     public static void createAuthCookie(HttpServletResponse resp, String token, String domain, String path, long expires, boolean isSecure) {
         StringBuilder sb = new StringBuilder(AuthenticatedURL.AUTH_COOKIE).append("=");
-        if (token != null && token.length() > 0) {
+
+        if (token != null && !token.isEmpty()) {
             sb.append("\"").append(token).append("\"");
         }
 
@@ -187,7 +201,9 @@ public class RangerKrbFilter implements Filter {
         if (expires >= 0) {
             Date             date = new Date(expires);
             SimpleDateFormat df   = new SimpleDateFormat("EEE, " + "dd-MMM-yyyy HH:mm:ss zzz");
+
             df.setTimeZone(TimeZone.getTimeZone("GMT"));
+
             sb.append("; Expires=").append(df.format(date));
         }
 
@@ -210,13 +226,17 @@ public class RangerKrbFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         String configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
+
         configPrefix = (configPrefix != null) ? configPrefix + "." : "";
         config       = getConfiguration(configPrefix, filterConfig);
+
         String authHandlerName = config.getProperty(AUTH_TYPE, null);
         String authHandlerClassName;
+
         if (authHandlerName == null) {
             throw new ServletException("Authentication type must be specified: " + PseudoAuthenticationHandler.TYPE + "|" + KerberosAuthenticationHandler.TYPE + "|<class>");
         }
+
         if (StringUtils.equalsIgnoreCase(authHandlerName, PseudoAuthenticationHandler.TYPE)) {
             authHandlerClassName = PseudoAuthenticationHandler.class.getName();
         } else if (StringUtils.equalsIgnoreCase(authHandlerName, KerberosAuthenticationHandler.TYPE)) {
@@ -226,8 +246,8 @@ public class RangerKrbFilter implements Filter {
         }
 
         validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY, "36000")) * 1000; //10 hours
-        initializeSecretProvider(filterConfig);
 
+        initializeSecretProvider(filterConfig);
         initializeAuthHandler(authHandlerClassName, filterConfig);
 
         cookieDomain                       = config.getProperty(COOKIE_DOMAIN, null);
@@ -261,11 +281,14 @@ public class RangerKrbFilter implements Filter {
         try {
             boolean             newToken = false;
             AuthenticationToken token;
+
             try {
                 token = getToken(httpRequest);
             } catch (AuthenticationException ex) {
                 ex.printStackTrace();
+
                 LOG.warn("AuthenticationToken ignored: {}", ex.getMessage());
+
                 // will be sent back in a 401 unless filter authenticates
                 authenticationEx = ex;
                 token            = null;
@@ -273,18 +296,27 @@ public class RangerKrbFilter implements Filter {
 
             if (authHandler.managementOperation(token, httpRequest, httpResponse)) {
                 if (token == null) {
-                    LOG.debug("Request [{}] triggering authentication", getRequestURL(httpRequest));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request [{}] triggering authentication", getRequestURL(httpRequest));
+                    }
+
                     token = authHandler.authenticate(httpRequest, httpResponse);
+
                     if (token != null && token.getExpires() != 0 && token != AuthenticationToken.ANONYMOUS) {
                         token.setExpires(System.currentTimeMillis() + getValidity() * 1000);
                     }
+
                     newToken = true;
                 }
                 if (token != null) {
                     unauthorizedResponse = false;
-                    LOG.debug("Request [{}] user [{}] authenticated", getRequestURL(httpRequest), token.getUserName());
+
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request [{}] user [{}] authenticated", getRequestURL(httpRequest), token.getUserName());
+                    }
 
                     final AuthenticationToken authToken = token;
+
                     httpRequest = new HttpServletRequestWrapper(httpRequest) {
                         @Override
                         public String getAuthType() {
@@ -301,10 +333,13 @@ public class RangerKrbFilter implements Filter {
                             return (authToken != AuthenticationToken.ANONYMOUS) ? authToken : null;
                         }
                     };
+
                     if ((newToken || allowTrustedProxy) && !token.isExpired() && token != AuthenticationToken.ANONYMOUS) {
                         String signedToken = signer.sign(token.toString());
+
                         createAuthCookie(httpResponse, signedToken, getCookieDomain(), getCookiePath(), token.getExpires(), isHttps);
                     }
+
                     doFilter(filterChain, httpRequest, httpResponse);
                 }
             } else {
@@ -313,29 +348,39 @@ public class RangerKrbFilter implements Filter {
         } catch (AuthenticationException ex) {
             // exception from the filter itself is fatal
             ex.printStackTrace();
+
             errCode          = HttpServletResponse.SC_FORBIDDEN;
             authenticationEx = ex;
+
             LOG.warn("Authentication exception: {}", ex.getMessage(), ex);
         }
+
         if (unauthorizedResponse) {
             String doAsUser = request.getParameter("doAs");
+
             if (!httpResponse.isCommitted()) {
                 LOG.debug("create auth cookie");
 
                 createAuthCookie(httpResponse, "", getCookieDomain(), getCookiePath(), 0, isHttps);
+
                 // If response code is 401. Then WWW-Authenticate Header should be
                 // present.. reset to 403 if not found..
                 if ((errCode == HttpServletResponse.SC_UNAUTHORIZED) && (!httpResponse.containsHeader(KerberosAuthenticator.WWW_AUTHENTICATE) && !isKerberosEnabled && !supportKerberosAuthForBrowserLogin)) {
                     errCode = HttpServletResponse.SC_FORBIDDEN;
                 }
+
                 if (authenticationEx == null) {
                     String agents = PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT);
+
                     if (agents == null) {
                         agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
                     }
+
                     parseBrowserUserAgents(agents);
-                    if (isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && (!allowTrustedProxy || (allowTrustedProxy && StringUtils.isEmpty(doAsUser))) && !supportKerberosAuthForBrowserLogin) {
+
+                    if (isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && (!allowTrustedProxy || StringUtils.isEmpty(doAsUser)) && !supportKerberosAuthForBrowserLogin) {
                         ((HttpServletResponse) response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
+
                         filterChain.doFilter(request, response);
                     } else {
                         if (isKerberosEnabled && isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && supportKerberosAuthForBrowserLogin) {
@@ -343,16 +388,19 @@ public class RangerKrbFilter implements Filter {
 
                             ((HttpServletResponse) response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, KerberosAuthenticator.NEGOTIATE);
                         }
+
                         if (allowTrustedProxy) {
                             String expectHeader = httpRequest.getHeader("Expect");
+
                             LOG.debug("expect header in request = {}", expectHeader);
                             LOG.debug("http response code = {}", httpResponse.getStatus());
+
                             if (expectHeader != null && expectHeader.startsWith("100")) {
                                 LOG.debug("skipping 100 continue!!");
 
                                 if (contentLength <= 0) {
-                                    Integer maxContentLen = Integer.MAX_VALUE;
-                                    contentLength = maxContentLen.longValue();
+                                    contentLength = Integer.MAX_VALUE;
+
                                     try {
                                         LOG.debug("Skipping content length of {}", contentLength);
 
@@ -363,18 +411,23 @@ public class RangerKrbFilter implements Filter {
                                 }
                             }
                         }
+
                         boolean            chk         = true;
                         Collection<String> headerNames = httpResponse.getHeaderNames();
+
                         LOG.debug("response header names = {}", headerNames);
 
                         for (String headerName : headerNames) {
                             String value = httpResponse.getHeader(headerName);
+
                             if ("Set-Cookie".equalsIgnoreCase(headerName) && value.startsWith(cookieName)) {
                                 chk = false;
                                 break;
                             }
                         }
+
                         String authHeader = httpRequest.getHeader("Authorization");
+
                         if (authHeader == null && chk) {
                             filterChain.doFilter(request, response);
                         } else if (authHeader != null && authHeader.startsWith("Basic")) {
@@ -397,6 +450,7 @@ public class RangerKrbFilter implements Filter {
     public void destroy() {
         if (authHandler != null) {
             authHandler.destroy();
+
             authHandler = null;
         }
     }
@@ -404,7 +458,9 @@ public class RangerKrbFilter implements Filter {
     protected void initializeAuthHandler(String authHandlerClassName, FilterConfig filterConfig) throws ServletException {
         try {
             Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(authHandlerClassName);
+
             authHandler = (AuthenticationHandler) klass.newInstance();
+
             authHandler.init(config);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new ServletException(ex);
@@ -413,6 +469,7 @@ public class RangerKrbFilter implements Filter {
 
     protected void initializeSecretProvider(FilterConfig filterConfig) throws ServletException {
         secretProvider = (SignerSecretProvider) filterConfig.getServletContext().getAttribute(SIGNER_SECRET_PROVIDER_ATTRIBUTE);
+
         if (secretProvider == null) {
             // As tomcat cannot specify the provider object in the configuration.
             // It'll go into this path
@@ -422,6 +479,7 @@ public class RangerKrbFilter implements Filter {
                 throw new ServletException(ex);
             }
         }
+
         signer = new Signer(secretProvider);
     }
 
@@ -461,6 +519,7 @@ public class RangerKrbFilter implements Filter {
      */
     protected boolean isCustomSignerSecretProvider() {
         Class<?> clazz = secretProvider != null ? secretProvider.getClass() : null;
+
         return clazz != FileSignerSecretProvider.class && clazz != RandomSignerSecretProvider.class && clazz != ZKSignerSecretProvider.class;
     }
 
@@ -506,18 +565,23 @@ public class RangerKrbFilter implements Filter {
      */
     protected Properties getConfiguration(String configPrefix, FilterConfig filterConfig) throws ServletException {
         Properties props = new Properties();
+
         if (filterConfig != null) {
             Enumeration<?> names = filterConfig.getInitParameterNames();
+
             if (names != null) {
                 while (names.hasMoreElements()) {
                     String name = (String) names.nextElement();
+
                     if (name != null && configPrefix != null && name.startsWith(configPrefix)) {
                         String value = filterConfig.getInitParameter(name);
+
                         props.put(name.substring(configPrefix.length()), value);
                     }
                 }
             }
         }
+
         return props;
     }
 
@@ -529,11 +593,13 @@ public class RangerKrbFilter implements Filter {
      * @param request the request object.
      * @return the full URL of the request including the query string.
      */
-    protected String getRequestURL(HttpServletRequest request) {
+    protected String getRequestURL(HttpServletRequest request) throws IOException {
         StringBuffer sb = request.getRequestURL();
+
         if (request.getQueryString() != null) {
             sb.append("?").append(request.getQueryString());
         }
+
         return sb.toString();
     }
 
@@ -556,30 +622,36 @@ public class RangerKrbFilter implements Filter {
         AuthenticationToken token    = null;
         String              tokenStr = null;
         Cookie[]            cookies  = request.getCookies();
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (AuthenticatedURL.AUTH_COOKIE.equals(cookie.getName())) {
                     tokenStr = cookie.getValue();
+
                     try {
                         tokenStr = signer.verifyAndExtract(tokenStr);
                     } catch (SignerException ex) {
                         throw new AuthenticationException(ex);
                     }
+
                     break;
                 }
             }
         }
         if (tokenStr != null) {
             token = AuthenticationToken.parse(tokenStr);
+
             if (token != null) {
                 if (!token.getType().equals(authHandler.getType())) {
                     throw new AuthenticationException("Invalid AuthenticationToken type");
                 }
+
                 if (token.isExpired()) {
                     throw new AuthenticationException("AuthenticationToken expired");
                 }
             }
         }
+
         return token;
     }
 
@@ -593,6 +665,7 @@ public class RangerKrbFilter implements Filter {
 
     protected boolean isBrowser(String userAgent) {
         boolean isWeb = false;
+
         if (browserUserAgents != null && browserUserAgents.length > 0 && userAgent != null) {
             for (String ua : browserUserAgents) {
                 if (userAgent.toLowerCase().startsWith(ua.toLowerCase())) {
@@ -601,6 +674,7 @@ public class RangerKrbFilter implements Filter {
                 }
             }
         }
+
         return isWeb;
     }
 

@@ -45,9 +45,11 @@ import java.io.IOException;
 @Component
 public class RangerJwtAuthWrapper extends GenericFilterBean {
     private static final Logger LOG = Logger.getLogger(RangerJwtAuthWrapper.class);
+
     @Lazy(true)
     @Autowired
     RangerJwtAuthFilter rangerJwtAuthFilter;
+
     private String[] browserUserAgents = new String[] {""}; //Initialize with empty
 
     @PostConstruct
@@ -67,7 +69,9 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        LOG.debug("===>>> RangerJwtAuthWrapper.doFilter(" + request + ", " + response + ", " + filterChain + ")");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("===>>> RangerJwtAuthWrapper.doFilter(" + request + ", " + response + ", " + filterChain + ")");
+        }
 
         RangerSecurityContext context             = RangerContextHolder.getSecurityContext();
         UserSessionBase       session             = context != null ? context.getUserSession() : null;
@@ -79,8 +83,10 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
 
             if (!isRequestAuthenticated()) {
                 String userAgent = ((HttpServletRequest) request).getHeader("User-Agent");
+
                 if (isBrowserAgent(userAgent)) {
                     LOG.debug("Redirecting to login page as request does not have valid JWT auth details.");
+
                     ((HttpServletResponse) response).sendRedirect("/login.jsp");
                 }
             }
@@ -89,6 +95,7 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
         }
 
         filterChain.doFilter(request, response); // proceed with filter chain
+
         LOG.debug("<<<=== RangerJwtAuthWrapper.doFilter()");
     }
 
@@ -109,6 +116,7 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
 
     private boolean isRequestAuthenticated() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         return auth != null && auth.isAuthenticated();
     }
 }

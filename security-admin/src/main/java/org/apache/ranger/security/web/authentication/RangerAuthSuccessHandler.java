@@ -35,7 +35,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -60,6 +59,7 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
 
     public RangerAuthSuccessHandler() {
         super();
+
         if (ajaxLoginSuccessPage == null) {
             ajaxLoginSuccessPage = PropertiesUtil.getProperty("ranger.ajax.auth.success.page", "/ajax_success.html");
         }
@@ -75,9 +75,11 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
      * org.springframework.security.core.Authentication)
      */
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         RangerSessionFixationProtectionStrategy rangerSessionFixationProtectionStrategy = new RangerSessionFixationProtectionStrategy();
+
         rangerSessionFixationProtectionStrategy.onAuthentication(authentication, request, response);
+
         WebAuthenticationDetails details       = (WebAuthenticationDetails) authentication.getDetails();
         String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
         String                   sessionId     = details != null ? details.getSessionId() : "";
@@ -85,14 +87,17 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
 
         boolean isValidUser                = sessionMgr.isValidXAUser(authentication.getName());
         String  rangerAuthenticationMethod = PropertiesUtil.getProperty("ranger.authentication.method", "NONE");
+
         if (!isValidUser && !"NONE".equalsIgnoreCase(rangerAuthenticationMethod)) {
             xUserMgr.createServiceConfigUser(authentication.getName());
+
             isValidUser = sessionMgr.isValidXAUser(authentication.getName());
         }
 
         response.setContentType("application/json;charset=UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("X-Frame-Options", "DENY");
+
         VXResponse vXResponse = new VXResponse();
 
         if (!isValidUser) {
@@ -109,7 +114,9 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
             LOG.info("Auth Succeeded but user is not synced yet for {}", authentication.getName());
         } else {
             String ajaxRequestHeader = request.getHeader("X-Requested-With");
+
             LOG.debug("commence() X-Requested-With={}", ajaxRequestHeader);
+
             if ("XMLHttpRequest".equalsIgnoreCase(ajaxRequestHeader)) {
                 // logger.debug("Forwarding AJAX login request success to "
                 // + ajaxLoginSuccessPage + " for user "
@@ -119,12 +126,15 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
                 // response);
 
                 String jsonResp = "";
+
                 try {
                     vXResponse.setStatusCode(HttpServletResponse.SC_OK);
                     vXResponse.setMsgDesc("Login Successful");
 
                     response.setStatus(HttpServletResponse.SC_OK);
+
                     jsonResp = jsonUtil.writeObjectAsString(vXResponse);
+
                     response.getWriter().write(jsonResp);
                 } catch (IOException e) {
                     LOG.info("Error while writing JSON in HttpServletResponse");
@@ -135,12 +145,15 @@ public class RangerAuthSuccessHandler extends SavedRequestAwareAuthenticationSuc
                 clearAuthenticationAttributes(request);
             } else {
                 String jsonResp = "";
+
                 try {
                     vXResponse.setStatusCode(HttpServletResponse.SC_OK);
                     vXResponse.setMsgDesc("Login Successful");
 
                     response.setStatus(HttpServletResponse.SC_OK);
+
                     jsonResp = jsonUtil.writeObjectAsString(vXResponse);
+
                     response.getWriter().write(jsonResp);
                 } catch (IOException e) {
                     LOG.info("Error while writing JSON in HttpServletResponse");

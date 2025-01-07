@@ -68,6 +68,7 @@ public class RangerDomainObjectSecurityHandler {
         try {
             Class<?>                  clazz   = Class.forName(targetType);
             Class<? extends XXDBBase> gjClazz = clazz.asSubclass(XXDBBase.class);
+
             return hasAccess(gjClazz, targetId, permission);
         } catch (ClassNotFoundException cfe) {
             logger.error("class not found:{}", targetType, cfe);
@@ -82,6 +83,7 @@ public class RangerDomainObjectSecurityHandler {
         try {
             Class<? extends XXDBBase> gjClazz = targetClass.asSubclass(XXDBBase.class);
             XXDBBase                  base    = getDaoManager().getEntityManager().find(gjClazz, targetId);
+
             return hasAccess(base, permission);
         } catch (Exception e) {
             logger.error("Exception targetType:{}, targetId:{}", targetClass, targetId, e);
@@ -92,6 +94,7 @@ public class RangerDomainObjectSecurityHandler {
 
     public boolean hasModeratorPermission() {
         UserSessionBase sess = ContextUtil.getCurrentUserSession();
+
         return sess != null && sess.isUserAdmin();
     }
 }
