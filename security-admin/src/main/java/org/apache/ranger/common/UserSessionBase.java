@@ -41,7 +41,7 @@ public class UserSessionBase implements Serializable {
     private List<String>         userRoleList   = new ArrayList<>();
     private RangerUserPermission rangerUserPermission;
     private Boolean              isSSOEnabled;
-    private Boolean              isSpnegoEnabled;
+    private Boolean              isSpnegoEnabled = Boolean.FALSE;
 
     public Long getUserId() {
         if (xXPortalUser != null) {
