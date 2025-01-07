@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXKmsKeyList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXKmsKey> vXKeys = new ArrayList<VXKmsKey>();
+
+    List<VXKmsKey> vXKeys = new ArrayList<>();
 
     public VXKmsKeyList() {
         super();

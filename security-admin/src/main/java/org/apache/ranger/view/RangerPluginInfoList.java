@@ -31,7 +31,7 @@ import java.util.List;
 public class RangerPluginInfoList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerPluginInfo> pluginInfoList = new ArrayList<RangerPluginInfo>();
+    List<RangerPluginInfo> pluginInfoList = new ArrayList<>();
 
     public RangerPluginInfoList() {
         super();

@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXCredentialStoreList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXCredentialStore> vXCredentialStores = new ArrayList<VXCredentialStore>();
+
+    List<VXCredentialStore> vXCredentialStores = new ArrayList<>();
 
     public VXCredentialStoreList() {
         super();

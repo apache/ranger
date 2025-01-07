@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPolicyExportAuditList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXPolicyExportAudit> vXPolicyExportAudits = new ArrayList<VXPolicyExportAudit>();
+
+    List<VXPolicyExportAudit> vXPolicyExportAudits = new ArrayList<>();
 
     public VXPolicyExportAuditList() {
         super();

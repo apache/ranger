@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuditMapList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXAuditMap> vXAuditMaps = new ArrayList<VXAuditMap>();
+
+    List<VXAuditMap> vXAuditMaps = new ArrayList<>();
 
     public VXAuditMapList() {
         super();

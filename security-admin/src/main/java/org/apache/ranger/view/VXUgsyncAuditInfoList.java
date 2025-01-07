@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUgsyncAuditInfoList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
+
+    List<VXUgsyncAuditInfo> vxUgsyncAuditInfoList = new ArrayList<>();
 
     public VXUgsyncAuditInfoList() {
         super();

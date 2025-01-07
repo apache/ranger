@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAccessAuditList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXAccessAudit> vXAccessAudits = new ArrayList<VXAccessAudit>();
+
+    List<VXAccessAudit> vXAccessAudits = new ArrayList<>();
 
     public VXAccessAuditList() {
         super();

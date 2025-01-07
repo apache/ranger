@@ -31,7 +31,7 @@ import java.util.List;
 public class RangerSecurityZoneList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerSecurityZone> securityZones = new ArrayList<RangerSecurityZone>();
+    List<RangerSecurityZone> securityZones = new ArrayList<>();
 
     public RangerSecurityZoneList() {
         super();

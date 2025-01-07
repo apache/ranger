@@ -31,7 +31,7 @@ import java.util.List;
 public class VXModulePermissionList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<VXModulePermission> vXModulePermissionList = new ArrayList<VXModulePermission>();
+    List<VXModulePermission> vXModulePermissionList = new ArrayList<>();
 
     public VXModulePermissionList() {
         super();

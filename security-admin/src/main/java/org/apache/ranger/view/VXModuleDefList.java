@@ -31,7 +31,7 @@ import java.util.List;
 public class VXModuleDefList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<VXModuleDef> vXModuleDef = new ArrayList<VXModuleDef>();
+    List<VXModuleDef> vXModuleDef = new ArrayList<>();
 
     public VXModuleDefList() {
         super();

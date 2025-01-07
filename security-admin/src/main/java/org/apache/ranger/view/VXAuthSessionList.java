@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuthSessionList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXAuthSession> vXAuthSessions = new ArrayList<VXAuthSession>();
+
+    List<VXAuthSession> vXAuthSessions = new ArrayList<>();
 
     public VXAuthSessionList() {
         super();

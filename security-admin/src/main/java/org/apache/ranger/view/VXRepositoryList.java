@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXRepositoryList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXRepository> vXRepositories = new ArrayList<VXRepository>();
+
+    List<VXRepository> vXRepositories = new ArrayList<>();
 
     public VXRepositoryList() {
         super();

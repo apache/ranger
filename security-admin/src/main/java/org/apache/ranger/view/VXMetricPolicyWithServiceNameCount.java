@@ -28,7 +28,7 @@ import java.util.Map;
 public class VXMetricPolicyWithServiceNameCount implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    protected Map<String, VXMetricServiceNameCount> policyCountList = new HashMap<String, VXMetricServiceNameCount>();
+    protected Map<String, VXMetricServiceNameCount> policyCountList = new HashMap<>();
     protected long                                  totalCount;
 
     /**

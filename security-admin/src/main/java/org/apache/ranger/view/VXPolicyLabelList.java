@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPolicyLabelList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXPolicyLabel> vxPolicyLabels = new ArrayList<VXPolicyLabel>();
+
+    List<VXPolicyLabel> vxPolicyLabels = new ArrayList<>();
 
     public VXPolicyLabelList() {
         super();

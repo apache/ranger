@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXGroupGroupList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXGroupGroup> vXGroupGroups = new ArrayList<VXGroupGroup>();
+
+    List<VXGroupGroup> vXGroupGroups = new ArrayList<>();
 
     public VXGroupGroupList() {
         super();

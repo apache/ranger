@@ -31,7 +31,7 @@ import java.util.List;
 public class RangerPolicyList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+    List<RangerPolicy> policies = new ArrayList<>();
 
     public RangerPolicyList() {
         super();

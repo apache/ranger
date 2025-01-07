@@ -29,7 +29,7 @@ import java.util.Map;
 public class RangerExportRoleList extends RangerRoleList implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+    Map<String, Object> metaDataInfo = new LinkedHashMap<>();
 
     public Map<String, Object> getMetaDataInfo() {
         return metaDataInfo;

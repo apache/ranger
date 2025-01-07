@@ -151,6 +151,6 @@ public class VXUgsyncAuditInfo extends VXDataObject implements java.io.Serializa
     }
 
     public void setSyncSourceInfo(Map<String, String> syncSourceInfo) {
-        this.syncSourceInfo = syncSourceInfo == null ? new HashMap<String, String>() : syncSourceInfo;
+        this.syncSourceInfo = syncSourceInfo == null ? new HashMap<>() : syncSourceInfo;
     }
 }

@@ -31,11 +31,9 @@ import java.util.List;
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuditRecordList extends VList {
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
-    List<VXAuditRecord> vXAuditRecords = new ArrayList<VXAuditRecord>();
+
+    List<VXAuditRecord> vXAuditRecords = new ArrayList<>();
 
     public VXAuditRecordList() {
         super();

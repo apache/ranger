@@ -28,7 +28,7 @@ import java.util.Map;
 public class VXMetricServiceNameCount implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    protected Map<String, Map<String, Long>> serviceBasedCountList = new HashMap<String, Map<String, Long>>();
+    protected Map<String, Map<String, Long>> serviceBasedCountList = new HashMap<>();
     protected Long                           totalCount;
 
     /**

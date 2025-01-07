@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXUserList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXUser> vXUsers = new ArrayList<VXUser>();
+
+    List<VXUser> vXUsers = new ArrayList<>();
 
     public VXUserList() {
         super();

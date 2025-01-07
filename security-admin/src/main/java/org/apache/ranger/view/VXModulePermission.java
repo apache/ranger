@@ -32,8 +32,8 @@ import java.util.List;
 public class VXModulePermission extends VXDataObject implements Serializable {
     private static final long         serialVersionUID = 1L;
     protected            String       module;
-    protected            List<String> userNameList     = new ArrayList<String>();
-    protected            List<String> groupNameList    = new ArrayList<String>();
+    protected            List<String> userNameList     = new ArrayList<>();
+    protected            List<String> groupNameList    = new ArrayList<>();
 
     public String getModule() {
         return module;

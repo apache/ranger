@@ -31,7 +31,7 @@ import java.util.List;
 public class RangerServiceDefList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerServiceDef> serviceDefs = new ArrayList<RangerServiceDef>();
+    List<RangerServiceDef> serviceDefs = new ArrayList<>();
 
     public RangerServiceDefList() {
         super();

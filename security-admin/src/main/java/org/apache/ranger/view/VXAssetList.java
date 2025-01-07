@@ -36,7 +36,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAssetList extends VList {
     private static final long serialVersionUID = 1L;
-    List<VXAsset> vXAssets = new ArrayList<VXAsset>();
+
+    List<VXAsset> vXAssets = new ArrayList<>();
 
     public VXAssetList() {
         super();

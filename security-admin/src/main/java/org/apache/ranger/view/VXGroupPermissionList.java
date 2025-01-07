@@ -31,7 +31,7 @@ import java.util.List;
 public class VXGroupPermissionList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<VXGroupPermission> vXGroupPermission = new ArrayList<VXGroupPermission>();
+    List<VXGroupPermission> vXGroupPermission = new ArrayList<>();
 
     public VXGroupPermissionList() {
         super();

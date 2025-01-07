@@ -31,7 +31,7 @@ import java.util.List;
 public class RangerRoleList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerRole> roles = new ArrayList<RangerRole>();
+    List<RangerRole> roles = new ArrayList<>();
 
     public RangerRoleList() {
         super();
