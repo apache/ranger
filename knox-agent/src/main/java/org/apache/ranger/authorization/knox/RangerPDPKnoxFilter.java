@@ -48,8 +48,7 @@ import java.util.List;
 import java.util.Set;
 
 public class RangerPDPKnoxFilter implements Filter {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
-
+    private static final Logger LOG                       = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
     private static final Logger PERF_KNOXAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("knoxauth.request");
 
     private static final    String           KNOX_GATEWAY_JASS_CONFIG_SECTION = "com.sun.security.jgss.initiate";
@@ -69,7 +68,7 @@ public class RangerPDPKnoxFilter implements Filter {
                 if (me == null) {
                     try {
                         MiscUtil.setUGIFromJAASConfig(KNOX_GATEWAY_JASS_CONFIG_SECTION);
-                        LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
+                        LOG.info("LoginUser = {}", MiscUtil.getUGILoginUser());
                     } catch (Throwable t) {
                         LOG.error("Error while setting UGI for Knox Plugin...", t);
                     }
@@ -82,10 +81,8 @@ public class RangerPDPKnoxFilter implements Filter {
         }
     }
 
-    public void doFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
-        String sourceUrl = (String) request
-                .getAttribute(AbstractGatewayFilter.SOURCE_REQUEST_CONTEXT_URL_ATTRIBUTE_NAME);
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String sourceUrl    = (String) request.getAttribute(AbstractGatewayFilter.SOURCE_REQUEST_CONTEXT_URL_ATTRIBUTE_NAME);
         String topologyName = getTopologyName(sourceUrl);
         String serviceName  = getServiceName();
 
@@ -97,26 +94,20 @@ public class RangerPDPKnoxFilter implements Filter {
 
         Subject subject = Subject.getSubject(AccessController.getContext());
 
-        Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(
-                PrimaryPrincipal.class);
+        Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(PrimaryPrincipal.class);
         String primaryUser = null;
         if (primaryPrincipals != null && primaryPrincipals.size() > 0) {
             primaryUser = primaryPrincipals.stream().findFirst().get().getName();
         }
 
         String impersonatedUser = null;
-        Set<ImpersonatedPrincipal> impersonations = subject.getPrincipals(
-                ImpersonatedPrincipal.class);
+        Set<ImpersonatedPrincipal> impersonations = subject.getPrincipals(ImpersonatedPrincipal.class);
         if (impersonations != null && impersonations.size() > 0) {
             impersonatedUser = impersonations.stream().findFirst().get().getName();
         }
 
-        String user = (impersonatedUser != null) ? impersonatedUser
-                : primaryUser;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Checking access primaryUser: " + primaryUser + ", impersonatedUser: "
-                    + impersonatedUser + ", effectiveUser: " + user);
-        }
+        String user = (impersonatedUser != null) ? impersonatedUser : primaryUser;
+        LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}", primaryUser, impersonatedUser, user);
 
         Set<GroupPrincipal> groupObjects = subject.getPrincipals(GroupPrincipal.class);
         Set<String>         groups       = new HashSet<String>();
@@ -127,22 +118,9 @@ public class RangerPDPKnoxFilter implements Filter {
         String       clientIp           = request.getRemoteAddr();
         List<String> forwardedAddresses = getForwardedAddresses(request);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Checking access primaryUser: " + primaryUser
-                    + ", impersonatedUser: " + impersonatedUser
-                    + ", effectiveUser: " + user + ", groups: " + groups
-                    + ", clientIp: " + clientIp + ", remoteIp: " + clientIp + ", forwardedAddresses: " + forwardedAddresses);
-        }
+        LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}, groups: {}, clientIp: {}, remoteIp: {}, forwardedAddresses: {}", primaryUser, impersonatedUser, user, groups, clientIp, clientIp, forwardedAddresses);
 
-        RangerAccessRequest accessRequest = new RequestBuilder()
-                .service(serviceName)
-                .topology(topologyName)
-                .user(user)
-                .groups(groups)
-                .clientIp(clientIp)
-                .remoteIp(clientIp)
-                .forwardedAddresses(forwardedAddresses)
-                .build();
+        RangerAccessRequest accessRequest = new RequestBuilder().service(serviceName).topology(topologyName).user(user).groups(groups).clientIp(clientIp).remoteIp(clientIp).forwardedAddresses(forwardedAddresses).build();
 
         boolean accessAllowed = false;
 
@@ -152,9 +130,7 @@ public class RangerPDPKnoxFilter implements Filter {
             accessAllowed = result != null && result.getIsAllowed();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Access allowed: " + accessAllowed);
-        }
+        LOG.debug("Access allowed: {}", accessAllowed);
 
         RangerPerfTracer.log(perf);
 
@@ -174,6 +150,7 @@ public class RangerPDPKnoxFilter implements Filter {
 
     private List<String> getForwardedAddresses(ServletRequest request) {
         List<String> forwardedAddresses = null;
+
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest   = (HttpServletRequest) request;
             String             xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
@@ -181,6 +158,7 @@ public class RangerPDPKnoxFilter implements Filter {
                 forwardedAddresses = Arrays.asList(xForwardedFor.split(","));
             }
         }
+
         return forwardedAddresses;
     }
 
@@ -192,7 +170,7 @@ public class RangerPDPKnoxFilter implements Filter {
         try {
             res.sendError(code);
         } catch (IOException e) {
-            LOG.error("Error while redirecting:", e);
+            LOG.error("Error while redirecting: ", e);
         }
     }
 
@@ -200,8 +178,10 @@ public class RangerPDPKnoxFilter implements Filter {
         if (requestUrl == null) {
             return null;
         }
+
         String   url    = requestUrl.trim();
         String[] tokens = url.split("/");
+
         if (tokens.length > 2) {
             return tokens[2];
         } else {
