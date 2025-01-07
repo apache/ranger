@@ -37,8 +37,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerServiceKnox extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKnox.class);
+
     public static final  String ACCESS_TYPE_ALLOW = "allow";
-    private static final Logger LOG               = LoggerFactory.getLogger(RangerServiceKnox.class);
 
     public RangerServiceKnox() {
         super();
@@ -50,68 +51,70 @@ public class RangerServiceKnox extends RangerBaseService {
     }
 
     @Override
-    public Map<String, Object> validateConfig() throws Exception {
-        Map<String, Object> ret         = new HashMap<String, Object>();
+    public Map<String, Object> validateConfig() {
+        Map<String, Object> ret         = new HashMap<>();
         String              serviceName = getServiceName();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceKnox.validateConfig Service: (" + serviceName + " )");
-        }
+
+        LOG.debug("==> RangerServiceKnox.validateConfig Service: ({})", serviceName);
+
         if (configs != null) {
             try {
                 ret = KnoxResourceMgr.validateConfig(serviceName, configs);
             } catch (Exception e) {
-                LOG.error("<== RangerServiceKnox.validateConfig Error:" + e);
+                LOG.error("<== RangerServiceKnox.validateConfig Error:{}", String.valueOf(e));
+
                 throw e;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceKnox.validateConfig Response : (" + ret + " )");
-        }
+
+        LOG.debug("<== RangerServiceKnox.validateConfig Response : ({})", ret);
+
         return ret;
     }
 
     @Override
-    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String>        ret         = new ArrayList<String>();
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
         String              serviceName = getServiceName();
         Map<String, String> configs     = getConfigs();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceKnox.lookupResource Context: (" + context + ")");
-        }
+
+        LOG.debug("==> RangerServiceKnox.lookupResource Context: ({})", context);
+
         if (context != null) {
             try {
                 ret = KnoxResourceMgr.getKnoxResources(serviceName, configs, context);
             } catch (Exception e) {
-                LOG.error("<== RangerServiceKnox.lookupResource Error : " + e);
+                LOG.error("<== RangerServiceKnox.lookupResource Error : {}", String.valueOf(e));
+
                 throw e;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceKnox.lookupResource Response: (" + ret + ")");
-        }
+
+        LOG.debug("<== RangerServiceKnox.lookupResource Response: ({})", ret);
+
         return ret;
     }
 
     @Override
     public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceKnox.getDefaultRangerPolicies()");
-        }
+        LOG.debug("==> RangerServiceKnox.getDefaultRangerPolicies()");
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
         for (RangerPolicy defaultPolicy : ret) {
             if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
                 RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+
                 policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
                 policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALLOW)));
                 policyItemForLookupUser.setDelegateAdmin(false);
+
                 defaultPolicy.addPolicyItem(policyItemForLookupUser);
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceKnox.getDefaultRangerPolicies()");
-        }
+        LOG.debug("<== RangerServiceKnox.getDefaultRangerPolicies()");
+
         return ret;
     }
 }

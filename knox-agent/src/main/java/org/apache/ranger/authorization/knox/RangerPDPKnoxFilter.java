@@ -53,10 +53,11 @@ public class RangerPDPKnoxFilter implements Filter {
 
     private static final    String           KNOX_GATEWAY_JASS_CONFIG_SECTION = "com.sun.security.jgss.initiate";
     private static volatile KnoxRangerPlugin plugin;
-    private                 String           resourceRole;
+
+    private String resourceRole;
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         resourceRole = getInitParameter(filterConfig, "resource.role");
 
         KnoxRangerPlugin me = plugin;
@@ -68,13 +69,16 @@ public class RangerPDPKnoxFilter implements Filter {
                 if (me == null) {
                     try {
                         MiscUtil.setUGIFromJAASConfig(KNOX_GATEWAY_JASS_CONFIG_SECTION);
+
                         LOG.info("LoginUser = {}", MiscUtil.getUGILoginUser());
                     } catch (Throwable t) {
                         LOG.error("Error while setting UGI for Knox Plugin...", t);
                     }
 
                     LOG.info("Creating KnoxRangerPlugin");
+
                     plugin = new KnoxRangerPlugin();
+
                     plugin.init();
                 }
             }
@@ -92,25 +96,28 @@ public class RangerPDPKnoxFilter implements Filter {
             perf = RangerPerfTracer.getPerfTracer(PERF_KNOXAUTH_REQUEST_LOG, "RangerPDPKnoxFilter.doFilter(url=" + sourceUrl + ", topologyName=" + topologyName + ")");
         }
 
-        Subject subject = Subject.getSubject(AccessController.getContext());
-
+        Subject               subject           = Subject.getSubject(AccessController.getContext());
         Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(PrimaryPrincipal.class);
-        String primaryUser = null;
-        if (primaryPrincipals != null && primaryPrincipals.size() > 0) {
+        String                primaryUser       = null;
+
+        if (!primaryPrincipals.isEmpty()) {
             primaryUser = primaryPrincipals.stream().findFirst().get().getName();
         }
 
-        String impersonatedUser = null;
-        Set<ImpersonatedPrincipal> impersonations = subject.getPrincipals(ImpersonatedPrincipal.class);
-        if (impersonations != null && impersonations.size() > 0) {
+        String                     impersonatedUser = null;
+        Set<ImpersonatedPrincipal> impersonations   = subject.getPrincipals(ImpersonatedPrincipal.class);
+
+        if (!impersonations.isEmpty()) {
             impersonatedUser = impersonations.stream().findFirst().get().getName();
         }
 
         String user = (impersonatedUser != null) ? impersonatedUser : primaryUser;
+
         LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}", primaryUser, impersonatedUser, user);
 
         Set<GroupPrincipal> groupObjects = subject.getPrincipals(GroupPrincipal.class);
-        Set<String>         groups       = new HashSet<String>();
+        Set<String>         groups       = new HashSet<>();
+
         for (GroupPrincipal obj : groupObjects) {
             groups.add(obj.getName());
         }
@@ -121,8 +128,7 @@ public class RangerPDPKnoxFilter implements Filter {
         LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}, groups: {}, clientIp: {}, remoteIp: {}, forwardedAddresses: {}", primaryUser, impersonatedUser, user, groups, clientIp, clientIp, forwardedAddresses);
 
         RangerAccessRequest accessRequest = new RequestBuilder().service(serviceName).topology(topologyName).user(user).groups(groups).clientIp(clientIp).remoteIp(clientIp).forwardedAddresses(forwardedAddresses).build();
-
-        boolean accessAllowed = false;
+        boolean             accessAllowed = false;
 
         if (plugin != null) {
             RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
@@ -154,6 +160,7 @@ public class RangerPDPKnoxFilter implements Filter {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest   = (HttpServletRequest) request;
             String             xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
+
             if (xForwardedFor != null) {
                 forwardedAddresses = Arrays.asList(xForwardedFor.split(","));
             }

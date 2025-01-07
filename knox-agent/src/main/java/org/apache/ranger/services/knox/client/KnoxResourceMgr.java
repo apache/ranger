@@ -36,25 +36,25 @@ public class KnoxResourceMgr {
         // to block instantiation
     }
 
-    public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-        Map<String, Object> ret = null;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: " + serviceName + "Configs" + configs);
-        }
+    public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) {
+        LOG.debug("==> KnoxResourceMgr.testConnection ServiceName: {} Configs{}", serviceName, configs);
+
+        Map<String, Object> ret;
+
         try {
             ret = KnoxClient.connectionTest(serviceName, configs);
         } catch (Exception e) {
-            LOG.error("<== KnoxResourceMgr.connectionTest Error: " + e);
+            LOG.error("<== KnoxResourceMgr.connectionTest Error: {}", String.valueOf(e));
+
             throw e;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== KnoxResourceMgr.HdfsResourceMgr Result : " + ret);
-        }
+        LOG.debug("<== KnoxResourceMgr.HdfsResourceMgr Result : {}", ret);
+
         return ret;
     }
 
-    public static List<String> getKnoxResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) throws Exception {
+    public static List<String> getKnoxResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) {
         String                    userInput        = context.getUserInput();
         String                    resource         = context.getResourceName();
         Map<String, List<String>> resourceMap      = context.getResources();
@@ -69,6 +69,7 @@ public class KnoxResourceMgr {
                 knoxTopologyList = resourceMap.get(TOPOLOGY);
                 knoxServiceList  = resourceMap.get(SERVICE);
             }
+
             switch (resource.trim().toLowerCase()) {
                 case TOPOLOGY:
                     knoxTopologyName = userInput;
@@ -87,25 +88,28 @@ public class KnoxResourceMgr {
 
         if (knoxUrl == null || knoxUrl.isEmpty()) {
             LOG.error("Unable to get knox resources: knoxUrl is empty");
+
             return resultList;
         } else if (knoxAdminUser == null || knoxAdminUser.isEmpty()) {
             LOG.error("Unable to get knox resources: knoxAdminUser is empty");
+
             return resultList;
         } else if (knoxAdminPassword == null || knoxAdminPassword.isEmpty()) {
             LOG.error("Unable to get knox resources: knoxAdminPassword is empty");
+
             return resultList;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== KnoxResourceMgr.getKnoxResources()  knoxUrl: " + knoxUrl + " knoxAdminUser: " + knoxAdminUser + " topologyName: " + knoxTopologyName + " KnoxServiceName: " + knoxServiceName);
-        }
+        LOG.debug("<== KnoxResourceMgr.getKnoxResources()  knoxUrl: {} knoxAdminUser: {} topologyName: {} KnoxServiceName: {}", knoxUrl, knoxAdminUser, knoxTopologyName, knoxServiceName);
 
         final KnoxClient knoxClient = new KnoxConnectionMgr().getKnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
+
         if (knoxClient != null) {
             synchronized (knoxClient) {
                 resultList = KnoxClient.getKnoxResources(knoxClient, knoxTopologyName, knoxServiceName, knoxTopologyList, knoxServiceList);
             }
         }
+
         return resultList;
     }
 }

@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -73,11 +72,15 @@ import java.util.Set;
 
 public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
     // none of the members are public -- this is only for testability.  None of these is meant to be accessible
-    private static final Logger LOG                = LoggerFactory.getLogger(RangerAdminJersey2RESTClient.class);
-    private static final int    MAX_PLUGIN_ID_LEN  = 255;
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminJersey2RESTClient.class);
+
+    private static final int MAX_PLUGIN_ID_LEN  = 255;
+
     private final String pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
-    boolean isSSL;
+
     volatile Client client;
+
+    boolean          isSSL;
     SSLContext       sslContext;
     HostnameVerifier hv;
     String           sslConfigFileName;
@@ -91,6 +94,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
     int              restClientReadTimeOutMs;
     int              restClientMaxRetryAttempts;
     int              restClientRetryIntervalMs;
+
     private int          lastKnownActiveUrlIndex;
     private List<String> configURLs;
     private boolean      isRangerCookieEnabled;
@@ -104,15 +108,15 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.init({})", configPropertyPrefix);
 
         super.init(serviceName, appId, configPropertyPrefix, config);
 
         this.serviceName = serviceName;
-        pluginId    = getPluginId(serviceName, appId);
+        pluginId         = getPluginId(serviceName, appId);
+
         String tmpUrl = config.get(configPropertyPrefix + ".policy.rest.url");
+
         sslConfigFileName          = config.get(configPropertyPrefix + ".policy.rest.ssl.config.file");
         restClientConnTimeOutMs    = config.getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
         restClientReadTimeOutMs    = config.getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
@@ -120,41 +124,44 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         restClientRetryIntervalMs  = config.getInt(configPropertyPrefix + ".policy.rest.client.retry.interval.ms", 1 * 1000);
 
         clusterName = config.get(configPropertyPrefix + ".access.cluster.name", "");
+
         if (StringUtil.isEmpty(clusterName)) {
             clusterName = config.get(configPropertyPrefix + ".ambari.cluster.name", "");
         }
-        supportsPolicyDeltas = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA_DEFAULT);
-        supportsTagDeltas    = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA_DEFAULT);
+
+        supportsPolicyDeltas  = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA_DEFAULT);
+        supportsTagDeltas     = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA_DEFAULT);
         isRangerCookieEnabled = config.getBoolean(configPropertyPrefix + ".policy.rest.client.cookie.enabled", RangerCommonConstants.POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED);
         rangerAdminCookieName = config.get(configPropertyPrefix + ".policy.rest.client.session.cookie.name", RangerCommonConstants.DEFAULT_COOKIE_NAME);
 
         configURLs                   = StringUtil.getURLs(tmpUrl);
         this.lastKnownActiveUrlIndex = new Random().nextInt(configURLs.size());
+
         String url = configURLs.get(this.lastKnownActiveUrlIndex);
+
         isSSL = isSsl(url);
-        LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", url, sslConfigFileName, this.serviceName, supportsPolicyDeltas, supportsTagDeltas, configURLs));
+
+        LOG.info("Init params: Base URL[{}], SSL Config filename[{}], ServiceName=[{}], SupportsPolicyDeltas=[{}], SupportsTagDeltas=[{}], ConfigURLs=[{}]", url, sslConfigFileName, this.serviceName, supportsPolicyDeltas, supportsTagDeltas, configURLs);
 
         client = getClient();
+
         client.property(ClientProperties.CONNECT_TIMEOUT, restClientConnTimeOutMs);
         client.property(ClientProperties.READ_TIMEOUT, restClientReadTimeOutMs);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + "): " + client.toString());
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.init({}): {}", configPropertyPrefix, client);
 
         try {
             this.serviceNameUrlParam = URLEncoderUtil.encodeURIParam(serviceName);
         } catch (UnsupportedEncodingException e) {
-            LOG.warn("Unsupported encoding, serviceName=" + serviceName);
+            LOG.warn("Unsupported encoding, serviceName={}", serviceName);
+
             this.serviceNameUrlParam = serviceName;
         }
     }
 
     @Override
     public ServicePolicies getServicePoliciesIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServicePolicies servicePolicies;
 
@@ -164,17 +171,14 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             servicePolicies = getServicePoliciesIfUpdatedWithCred(lastKnownVersion, lastActivationTimeInMillis);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + servicePolicies);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesIfUpdated({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, servicePolicies);
+
         return servicePolicies;
     }
 
     @Override
     public RangerRoles getRolesIfUpdated(final long lastKnowRoleVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getRolesIfUpdated(" + lastKnowRoleVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getRolesIfUpdated({}, {})", lastKnowRoleVersion, lastActivationTimeInMillis);
 
         final RangerRoles rangerRoles;
 
@@ -184,87 +188,80 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             rangerRoles = getRangerRolesIfUpdatedWithCred(lastKnowRoleVersion, lastActivationTimeInMillis);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getRolesIfUpdated(" + lastKnowRoleVersion + ", " + lastActivationTimeInMillis + "): " + rangerRoles);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getRolesIfUpdated({}, {}): {}", lastKnowRoleVersion, lastActivationTimeInMillis, rangerRoles);
+
         return rangerRoles;
     }
 
     @Override
     public void grantAccess(GrantRevokeRequest request) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
-        }
+        LOG.debug("==> RangerAdminRESTClient.grantAccess({})", request);
 
-        Map<String, String> queryParams = new HashMap<String, String>();
+        Map<String, String> queryParams = new HashMap<>();
+
         queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 
-        String   relativeURL = RangerRESTUtils.REST_URL_SERVICE_GRANT_ACCESS + serviceName;
-        Response response    = get(queryParams, relativeURL);
-
-        int httpResponseCode = response == null ? -1 : response.getStatus();
+        String   relativeURL      = RangerRESTUtils.REST_URL_SERVICE_GRANT_ACCESS + serviceName;
+        Response response         = get(queryParams, relativeURL);
+        int      httpResponseCode = response == null ? -1 : response.getStatus();
 
         switch (httpResponseCode) {
             case -1:
                 LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
+
                 throw new Exception("unknown error!");
             case 200:
-                LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);
+                LOG.debug("grantAccess() suceeded: HTTP status={}", httpResponseCode);
                 break;
             case 401:
                 throw new AccessControlException();
             default:
                 String body = response.readEntity(String.class);
-                String message = String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, relativeURL);
-                LOG.warn(message);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, relativeURL);
+
                 throw new Exception("HTTP status: " + httpResponseCode);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
-        }
+        LOG.debug("<== RangerAdminRESTClient.grantAccess({})", request);
     }
 
     @Override
     public void revokeAccess(GrantRevokeRequest request) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminRESTClient.grantAccess(" + request + ")");
-        }
+        LOG.debug("==> RangerAdminRESTClient.grantAccess({})", request);
 
-        Map<String, String> queryParams = new HashMap<String, String>();
+        Map<String, String> queryParams = new HashMap<>();
+
         queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
 
-        String   relativeURL = RangerRESTUtils.REST_URL_SERVICE_REVOKE_ACCESS + serviceName;
-        Response response    = get(queryParams, relativeURL);
-
-        int httpResponseCode = response == null ? -1 : response.getStatus();
+        String   relativeURL      = RangerRESTUtils.REST_URL_SERVICE_REVOKE_ACCESS + serviceName;
+        Response response         = get(queryParams, relativeURL);
+        int      httpResponseCode = response == null ? -1 : response.getStatus();
 
         switch (httpResponseCode) {
             case -1:
                 LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
+
                 throw new Exception("unknown error!");
             case 200:
-                LOG.debug("grantAccess() suceeded: HTTP status=" + httpResponseCode);
+                LOG.debug("grantAccess() suceeded: HTTP status={}", httpResponseCode);
                 break;
             case 401:
                 throw new AccessControlException();
             default:
                 String body = response.readEntity(String.class);
-                String message = String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, relativeURL);
-                LOG.warn(message);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, relativeURL);
+
                 throw new Exception("HTTP status: " + httpResponseCode);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminRESTClient.grantAccess(" + request + ")");
-        }
+        LOG.debug("<== RangerAdminRESTClient.grantAccess({})", request);
     }
 
     @Override
     public ServiceTags getServiceTagsIfUpdated(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdated({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServiceTags serviceTags;
 
@@ -274,9 +271,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             serviceTags = getServiceTagsIfUpdatedWithCred(lastKnownVersion, lastActivationTimeInMillis);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdated(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + serviceTags);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdated({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, serviceTags);
+
         return serviceTags;
     }
 
@@ -287,16 +283,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     @Override
     public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={})", lastKnownUserStoreVersion, lastActivationTimeInMillis);
-        }
+        LOG.debug("==> RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={})", lastKnownUserStoreVersion, lastActivationTimeInMillis);
 
         final RangerUserStore      ret;
+        final Response             response;
         final UserGroupInformation user         = MiscUtil.getUGILoginUser();
         final boolean              isSecureMode = isKerberosEnabled(user);
-        final Response             response;
-
-        Map<String, String> queryParams = new HashMap<String, String>();
+        Map<String, String>        queryParams  = new HashMap<>();
 
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
@@ -305,9 +298,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
         if (isSecureMode) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking UserStore updated as user: {}", user);
-            }
+            LOG.debug("Checking UserStore updated as user: {}", user);
 
             response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                 try {
@@ -321,9 +312,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 return null;
             });
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking UserStore updated as user: {}", user);
-            }
+            LOG.debug("Checking UserStore updated as user: {}", user);
 
             String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + serviceNameUrlParam;
 
@@ -336,10 +325,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             } else {
                 String resp = response.hasEntity() ? response.readEntity(String.class) : null;
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("No change in UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
-                            isSecureMode, user, resp, serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
-                }
+                LOG.debug("No change in UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+                        isSecureMode, user, resp, serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
             }
 
             ret = null;
@@ -367,15 +354,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             ret = null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}): ret={}", lastKnownUserStoreVersion, lastActivationTimeInMillis, ret);
-        }
+        LOG.debug("<== RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}): ret={}", lastKnownUserStoreVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     protected boolean shouldRetry(String currentUrl, int index, int retryAttemptCount, ProcessingException ex) {
-        LOG.warn("Failed to communicate with Ranger Admin. URL: " + currentUrl + ". Error: " + ex.getMessage());
+        LOG.warn("Failed to communicate with Ranger Admin. URL: {}. Error: {}", currentUrl, ex.getMessage());
 
         boolean isLastUrl = index == (configURLs.size() - 1);
 
@@ -383,7 +368,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         boolean ret = isLastUrl && (retryAttemptCount < restClientMaxRetryAttempts);
 
         if (ret) {
-            LOG.warn("Waiting for " + restClientRetryIntervalMs + "ms before retry attempt #" + (retryAttemptCount + 1));
+            LOG.warn("Waiting for {}ms before retry attempt #{}", restClientRetryIntervalMs, retryAttemptCount + 1);
 
             try {
                 Thread.sleep(restClientRetryIntervalMs);
@@ -391,7 +376,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 LOG.error("Failed while waiting to retry", excp);
             }
         } else if (isLastUrl) {
-            LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]");
+            LOG.error("Failed to communicate with all Ranger Admin's URL's : [ {} ]", configURLs);
 
             throw new ProcessingException("Failed to communicate with all Ranger Admin's URL : [ " + configURLs + " ]", ex);
         }
@@ -410,9 +395,11 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     Client getClient() {
         Client result = client;
+
         if (result == null) {
             synchronized (this) {
                 result = client;
+
                 if (result == null) {
                     result = buildClient();
                     client = result;
@@ -427,15 +414,14 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         if (isSSL) {
             if (sslContext == null) {
                 RangerSslHelper sslHelper = new RangerSslHelper(sslConfigFileName);
+
                 sslContext = sslHelper.createContext();
             }
+
             if (hv == null) {
-                hv = new HostnameVerifier() {
-                    public boolean verify(String urlHostName, SSLSession session) {
-                        return session.getPeerHost().equals(urlHostName);
-                    }
-                };
+                hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
             }
+
             client = ClientBuilder.newBuilder()
                     .sslContext(sslContext)
                     .hostnameVerifier(hv)
@@ -460,7 +446,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 currentIndex = (startIndex + index) % configURLs.size();
 
                 WebTarget target = client.target(configURLs.get(currentIndex) + relativeURL);
+
                 response = setQueryParams(target, queyParams).request(MediaType.APPLICATION_JSON_TYPE).get();
+
                 if (response != null) {
                     setLastKnownActiveUrlIndex(currentIndex);
                     break;
@@ -473,6 +461,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 }
             }
         }
+
         return response;
     }
 
@@ -487,9 +476,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 currentIndex = (startIndex + index) % configURLs.size();
 
                 WebTarget target = client.target(configURLs.get(currentIndex) + relativeURL);
+
                 target = setQueryParams(target, queyParams);
+
                 Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE).cookie(sessionId);
+
                 response = invocationBuilder.get();
+
                 if (response != null) {
                     setLastKnownActiveUrlIndex(currentIndex);
                     break;
@@ -507,12 +500,15 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     private static WebTarget setQueryParams(WebTarget target, Map<String, String> params) {
         WebTarget ret = target;
+
         if (target != null && params != null) {
             Set<Map.Entry<String, String>> entrySet = params.entrySet();
+
             for (Map.Entry<String, String> entry : entrySet) {
                 ret = ret.queryParam(entry.getKey(), entry.getValue());
             }
         }
+
         return ret;
     }
 
@@ -525,12 +521,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
     }
 
     private String getPluginId(String serviceName, String appId) {
-        String hostName = null;
+        String hostName;
 
         try {
             hostName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
             LOG.error("ERROR: Unable to find hostname for the agent ", e);
+
             hostName = "unknownHost";
         }
 
@@ -549,144 +546,140 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     /* Policies Download from Ranger admin */
     private ServicePolicies getServicePoliciesIfUpdatedWithCred(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesWithCred(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesWithCred({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServicePolicies ret;
-
-        final Response response = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response        response         = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
+        int                   httpResponseCode = response == null ? -1 : response.getStatus();
+        String                body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, ServicePolicies.class);
+
                 setCookieReceivedFromCredSession(response);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 setCookieReceivedFromCredSession(response);
+
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
+                ret                     = null;
                 policyDownloadSessionId = null;
+
                 LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
                 break;
             case 404:
-                ret = null;
+                ret                     = null;
                 policyDownloadSessionId = null;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
+                ret                     = null;
                 policyDownloadSessionId = null;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isSecureMode())));
+                body                    = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, getRelativeURL(isSecureMode()));
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesWithCred(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesWithCred({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private ServicePolicies getServicePoliciesIfUpdatedWithCookie(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesWithCookie(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServicePoliciesWithCookie({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServicePolicies ret;
-
-        final Response response = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response        response         = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
+        int                   httpResponseCode = response == null ? -1 : response.getStatus();
+        String                body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, ServicePolicies.class);
+
                 checkAndResetSessionCookie(response);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 checkAndResetSessionCookie(response);
+
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
-                policyDownloadSessionId = null;
+                ret                                = null;
+                policyDownloadSessionId            = null;
                 isValidPolicyDownloadSessionCookie = false;
+
                 LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
                 break;
             case 404:
-                ret = null;
-                policyDownloadSessionId = null;
+                ret                                = null;
+                policyDownloadSessionId            = null;
                 isValidPolicyDownloadSessionCookie = false;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
-                policyDownloadSessionId = null;
+                ret                                = null;
+                policyDownloadSessionId            = null;
                 isValidPolicyDownloadSessionCookie = false;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isSecureMode())));
+                body                               = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, getRelativeURL(isSecureMode()));
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesWithCookie(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServicePoliciesWithCookie({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private Response getRangerAdminPolicyDownloadResponse(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getRangerAdminPolicyDownloadResponse(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getRangerAdminPolicyDownloadResponse({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
-        final Response ret;
+        final Response      ret;
+        Map<String, String> queryParams = new HashMap<>();
 
-        Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion));
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
         queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
@@ -696,36 +689,37 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
         if (isSecureMode()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Service policy if updated as user : " + MiscUtil.getUGILoginUser());
+                LOG.debug("Checking Service policy if updated as user : {}", MiscUtil.getUGILoginUser());
             }
+
             ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURL(true), policyDownloadSessionId));
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Service policy if updated with old api call");
-            }
+            LOG.debug("Checking Service policy if updated with old api call");
+
             ret = get(queryParams, getRelativeURL(false), policyDownloadSessionId);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getRangerAdminPolicyDownloadResponse(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getRangerAdminPolicyDownloadResponse({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private String getRelativeURL(final boolean isSecureMode) {
         final String ret;
+
         if (isSecureMode) {
             ret = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
         } else {
             ret = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName;
         }
+
         return ret;
     }
 
     private void checkAndResetSessionCookie(Response response) {
         Map<String, NewCookie> cookieMap   = response.getCookies();
         Set<String>            cookieNames = cookieMap.keySet();
+
         for (String cookieName : cookieNames) {
             if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                 policyDownloadSessionId            = cookieMap.get(cookieName);
@@ -739,14 +733,17 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         if (isRangerCookieEnabled) {
             Cookie                 sessionCookie = null;
             Map<String, NewCookie> cookieMap     = response.getCookies();
+
             // save cookie received from credentials session login
             Set<String> cookieNames = cookieMap.keySet();
+
             for (String cookieName : cookieNames) {
                 if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                     sessionCookie = cookieMap.get(cookieName);
                     break;
                 }
             }
+
             policyDownloadSessionId            = sessionCookie;
             isValidPolicyDownloadSessionCookie = (policyDownloadSessionId != null);
         }
@@ -754,144 +751,140 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     /* Tags Download from Ranger admin */
     private ServiceTags getServiceTagsIfUpdatedWithCred(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCred(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCred({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServiceTags ret;
-
-        final Response response = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response    response         = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
+        int               httpResponseCode = response == null ? -1 : response.getStatus();
+        String            body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, ServiceTags.class);
+
                 setCookieReceivedFromTagDownloadSession(response);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 setCookieReceivedFromTagDownloadSession(response);
+
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
+                ret                  = null;
                 tagDownloadSessionId = null;
+
                 LOG.warn("Unexpected: Null response from tag server while trying to get tags! Returning null!");
                 break;
             case 404:
-                ret = null;
+                ret                  = null;
                 tagDownloadSessionId = null;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
+                ret                  = null;
                 tagDownloadSessionId = null;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForTagDownload(isSecureMode())));
+                body                 = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, getRelativeURLForTagDownload(isSecureMode()));
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCred(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCred({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private ServiceTags getServiceTagsIfUpdatedWithCookie(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCookie(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCookie({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
         final ServiceTags ret;
-
-        final Response response = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response response         = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis);
+        int            httpResponseCode = response == null ? -1 : response.getStatus();
+        String         body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, ServiceTags.class);
+
                 checkAndResetTagDownloadSessionCookie(response);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 checkAndResetTagDownloadSessionCookie(response);
+
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
-                tagDownloadSessionId = null;
+                ret                             = null;
+                tagDownloadSessionId            = null;
                 isValidTagDownloadSessionCookie = false;
+
                 LOG.warn("Unexpected: Null response from tag server while trying to get tags! Returning null!");
                 break;
             case 404:
-                ret = null;
-                tagDownloadSessionId = null;
+                ret                             = null;
+                tagDownloadSessionId            = null;
                 isValidTagDownloadSessionCookie = false;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
-                tagDownloadSessionId = null;
+                ret                             = null;
+                tagDownloadSessionId            = null;
                 isValidTagDownloadSessionCookie = false;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, ret));
+                body                            = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, ret);
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCookie(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getServiceTagsIfUpdatedWithCookie({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private Response getTagsDownloadResponse(final long lastKnownVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getTagsDownloadResponse(" + lastKnownVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getTagsDownloadResponse({}, {})", lastKnownVersion, lastActivationTimeInMillis);
 
-        final Response ret;
+        final Response      ret;
+        Map<String, String> queryParams = new HashMap<>();
 
-        Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(RangerRESTUtils.LAST_KNOWN_TAG_VERSION_PARAM, Long.toString(lastKnownVersion));
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
         queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
@@ -900,36 +893,37 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
         if (isSecureMode()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Service tags if updated as user : " + MiscUtil.getUGILoginUser());
+                LOG.debug("Checking Service tags if updated as user : {}", MiscUtil.getUGILoginUser());
             }
+
             ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURLForTagDownload(true), tagDownloadSessionId));
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Service tags if updated with old api call");
-            }
+            LOG.debug("Checking Service tags if updated with old api call");
+
             ret = get(queryParams, getRelativeURLForTagDownload(false), tagDownloadSessionId);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getTagsDownloadResponse(" + lastKnownVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getTagsDownloadResponse({}, {}): {}", lastKnownVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private String getRelativeURLForTagDownload(final boolean isSecureMode) {
         final String ret;
+
         if (isSecureMode) {
             ret = RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceName;
         } else {
             ret = RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName;
         }
+
         return ret;
     }
 
     private void checkAndResetTagDownloadSessionCookie(Response response) {
         Map<String, NewCookie> cookieMap   = response.getCookies();
         Set<String>            cookieNames = cookieMap.keySet();
+
         for (String cookieName : cookieNames) {
             if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                 tagDownloadSessionId            = cookieMap.get(cookieName);
@@ -943,13 +937,16 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         if (isRangerCookieEnabled) {
             Cookie                 sessionCookie = null;
             Map<String, NewCookie> cookieMap     = response.getCookies();
+
             // save cookie received from credentials session login
             Set<String> cookieNames = cookieMap.keySet();
+
             for (String cookieName : cookieNames) {
                 if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                     sessionCookie = cookieMap.get(cookieName);
                 }
             }
+
             tagDownloadSessionId            = sessionCookie;
             isValidTagDownloadSessionCookie = (tagDownloadSessionId != null);
         }
@@ -957,143 +954,141 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
     /* Role Download from Ranger Admin */
     private RangerRoles getRangerRolesIfUpdatedWithCred(final long lastKnownRoleVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCred(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCred({}, {})", lastKnownRoleVersion, lastActivationTimeInMillis);
 
         final RangerRoles ret;
-
-        final Response response = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response    response         = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis);
+        int               httpResponseCode = response == null ? -1 : response.getStatus();
+        String            body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, RangerRoles.class);
+
                 setCookieReceivedFromRoleDownloadSession(response);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 setCookieReceivedFromRoleDownloadSession(response);
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
+                ret                   = null;
                 roleDownloadSessionId = null;
+
                 LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
                 break;
             case 404:
-                ret = null;
+                ret                   = null;
                 roleDownloadSessionId = null;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
+                ret                   = null;
                 roleDownloadSessionId = null;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode())));
+                body                  = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode()));
+
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCred(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCred({}, {}): {}", lastKnownRoleVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private RangerRoles getRangerRolesIfUpdatedWithCookie(final long lastKnownRoleVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCookie(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCookie({}, {})", lastKnownRoleVersion, lastActivationTimeInMillis);
 
         final RangerRoles ret;
-
-        final Response response = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis);
-
-        int    httpResponseCode = response == null ? -1 : response.getStatus();
-        String body             = null;
+        final Response    response         = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis);
+        int               httpResponseCode = response == null ? -1 : response.getStatus();
+        String            body             = null;
 
         switch (httpResponseCode) {
             case 200:
                 body = response.readEntity(String.class);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response from 200 server: " + body);
-                }
+                LOG.debug("Response from 200 server: {}", body);
 
                 Gson gson = getGson();
+
                 ret = gson.fromJson(body, RangerRoles.class);
+
                 checkAndResetRoleDownloadSessionCookie(response);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Deserialized response to: " + ret);
-                }
+
+                LOG.debug("Deserialized response to: {}", ret);
                 break;
             case 304:
                 ret = null;
+
                 checkAndResetRoleDownloadSessionCookie(response);
+
                 LOG.debug("Got response: 304. Ok. Returning null");
                 break;
             case -1:
-                ret = null;
-                roleDownloadSessionId = null;
+                ret                              = null;
+                roleDownloadSessionId            = null;
                 isValidRoleDownloadSessionCookie = false;
+
                 LOG.warn("Unexpected: Null response from policy server while trying to get policies! Returning null!");
                 break;
             case 404:
-                ret = null;
-                roleDownloadSessionId = null;
+                ret                              = null;
+                roleDownloadSessionId            = null;
                 isValidRoleDownloadSessionCookie = false;
+
                 if (response.hasEntity()) {
                     body = response.readEntity(String.class);
+
                     if (StringUtils.isNotBlank(body)) {
                         RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, body);
                     }
                 }
-                LOG.warn("Received 404 error code with body:[" + body + "], Ignoring");
+
+                LOG.warn("Received 404 error code with body:[{}], Ignoring", body);
                 break;
             default:
-                ret = null;
-                roleDownloadSessionId = null;
+                ret                              = null;
+                roleDownloadSessionId            = null;
                 isValidRoleDownloadSessionCookie = false;
-                body = response.readEntity(String.class);
-                LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode())));
+                body                             = response.readEntity(String.class);
+
+                LOG.warn("Unexpected: Received status[{}] with body[{}] form url[{}]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode()));
+
                 break;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCookie(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getRangerRolesIfUpdatedWithCookie({}, {}): {}", lastKnownRoleVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private Response getRoleDownloadResponse(final long lastKnownRoleVersion, final long lastActivationTimeInMillis) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminJersey2RESTClient.getRoleDownloadResponse(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + ")");
-        }
+        LOG.debug("==> RangerAdminJersey2RESTClient.getRoleDownloadResponse({}, {})", lastKnownRoleVersion, lastActivationTimeInMillis);
 
-        final Response ret;
+        final Response      ret;
+        Map<String, String> queryParams = new HashMap<>();
 
-        Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_ROLE_VERSION, Long.toString(lastKnownRoleVersion));
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
         queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
@@ -1101,36 +1096,37 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
         if (isSecureMode()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Roles if updated as user : " + MiscUtil.getUGILoginUser());
+                LOG.debug("Checking Roles if updated as user : {}", MiscUtil.getUGILoginUser());
             }
+
             ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURLForRoleDownload(true), roleDownloadSessionId));
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Checking Roles if updated with old api call");
-            }
+            LOG.debug("Checking Roles if updated with old api call");
+
             ret = get(queryParams, getRelativeURLForRoleDownload(false), roleDownloadSessionId);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminJersey2RESTClient.getRoleDownloadResponse(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + "): " + ret);
-        }
+        LOG.debug("<== RangerAdminJersey2RESTClient.getRoleDownloadResponse({}, {}): {}", lastKnownRoleVersion, lastActivationTimeInMillis, ret);
 
         return ret;
     }
 
     private String getRelativeURLForRoleDownload(final boolean isSecureMode) {
         final String ret;
+
         if (isSecureMode) {
             ret = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + serviceName;
         } else {
             ret = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + serviceName;
         }
+
         return ret;
     }
 
     private void checkAndResetRoleDownloadSessionCookie(Response response) {
         Map<String, NewCookie> cookieMap   = response.getCookies();
         Set<String>            cookieNames = cookieMap.keySet();
+
         for (String cookieName : cookieNames) {
             if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                 roleDownloadSessionId            = cookieMap.get(cookieName);
@@ -1144,14 +1140,17 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
         if (isRangerCookieEnabled) {
             Cookie                 sessionCookie = null;
             Map<String, NewCookie> cookieMap     = response.getCookies();
+
             // save cookie received from credentials session login
             Set<String> cookieNames = cookieMap.keySet();
+
             for (String cookieName : cookieNames) {
                 if (cookieName.equalsIgnoreCase(rangerAdminCookieName)) {
                     sessionCookie = cookieMap.get(cookieName);
                     break;
                 }
             }
+
             roleDownloadSessionId            = sessionCookie;
             isValidRoleDownloadSessionCookie = (roleDownloadSessionId != null);
         }

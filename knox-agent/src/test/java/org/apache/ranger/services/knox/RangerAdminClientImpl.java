@@ -35,6 +35,7 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
@@ -45,11 +46,11 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
         return gson.fromJson(new String(cacheBytes, Charsets.UTF_8), ServicePolicies.class);
     }
 
-    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) {
         return null;
     }
 
-    public List<String> getTagTypes(String tagTypePattern) throws Exception {
+    public List<String> getTagTypes(String tagTypePattern) {
         return null;
     }
 }

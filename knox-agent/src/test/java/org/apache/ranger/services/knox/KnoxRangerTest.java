@@ -41,13 +41,15 @@ import static org.hamcrest.CoreMatchers.is;
  * Test Apache Knox secured by Apache Ranger.
  */
 public class KnoxRangerTest {
-    private static GatewayTestDriver driver = new GatewayTestDriver();
+    private static final GatewayTestDriver driver = new GatewayTestDriver();
 
     @BeforeClass
     public static void setupSuite() throws Exception {
         driver.setResourceBase(KnoxRangerTest.class);
         driver.setupLdap(0);
+
         GatewayTestConfig config = new GatewayTestConfig();
+
         driver.setupService("WEBHDFS", "http://localhost:50070/webhdfs", "/cluster/webhdfs", true);
         driver.setupService("STORM", "http://localhost:8477", "/cluster/storm", true);
         driver.setupService("SOLR", "http://localhost:8983", "/cluster/solr", true);
@@ -93,12 +95,12 @@ public class KnoxRangerTest {
     }
 
     @Test
-    public void testKafkaAllowed() throws IOException {
+    public void testKafkaAllowed() {
         makeKafkaInvocation(HttpStatus.SC_OK, "alice", "password");
     }
 
     @Test
-    public void testKafkaNotAllowed() throws IOException {
+    public void testKafkaNotAllowed() {
         makeKafkaInvocation(HttpStatus.SC_FORBIDDEN, "bob", "password");
     }
 
@@ -119,7 +121,7 @@ public class KnoxRangerTest {
      * @return A populated XML structure for a topology file.
      */
     private static XMLTag createTopology() {
-        XMLTag xml = XMLDoc.newDocument(true)
+        return XMLDoc.newDocument(true)
                 .addRoot("topology")
                 .addTag("gateway")
                 .addTag("provider")
@@ -173,14 +175,15 @@ public class KnoxRangerTest {
                 .addTag("role").addText("SOLR")
                 .addTag("url").addText(driver.getRealUrl("SOLR")).gotoParent()
                 .gotoRoot();
-        return xml;
     }
 
     private void makeWebHDFSInvocation(int statusCode, String user, String password) throws IOException {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/webhdfs-liststatus-test.json");
 
         driver.getMock("WEBHDFS")
@@ -211,9 +214,11 @@ public class KnoxRangerTest {
 
     private void makeStormUIInvocation(int statusCode, String user, String password) throws IOException {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/cluster-configuration.json");
 
         driver.getMock("STORM")
@@ -237,9 +242,11 @@ public class KnoxRangerTest {
 
     private void makeHBaseInvocation(int statusCode, String user, String password) throws IOException {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/webhbase-table-list.xml");
 
         driver.getMock("WEBHBASE")
@@ -263,7 +270,7 @@ public class KnoxRangerTest {
                 .log().body();
     }
 
-    private void makeKafkaInvocation(int statusCode, String user, String password) throws IOException {
+    private void makeKafkaInvocation(int statusCode, String user, String password) {
         driver.getMock("KAFKA")
                 .expect()
                 .method("GET")
@@ -284,9 +291,11 @@ public class KnoxRangerTest {
 
     private void makeSolrInvocation(int statusCode, String user, String password) throws IOException {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
+
         Path path = FileSystems.getDefault().getPath(basedir, "/src/test/resources/query_response.xml");
 
         driver.getMock("SOLR")
