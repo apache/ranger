@@ -19,76 +19,76 @@
 
 package org.apache.ranger.services.knox.client;
 
-import java.util.Map;
-
 import org.apache.ranger.plugin.model.RangerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import java.util.Map;
 
 public class KnoxConnectionMgr {
+    private static final Logger LOG = LoggerFactory.getLogger(KnoxConnectionMgr.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(KnoxConnectionMgr.class);
-	
-	public KnoxClient getKnoxClientbyService(RangerService service) {
-		KnoxClient 		   knoxClient = null;
-		Map<String,String> configs 	  = null;
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("Getting knoxClient for ServiceName: " + service.toString());
-		}
-		
-		if (service != null) {
-			configs = service.getConfigs();
-			knoxClient = getKnoxClientByConfig(configs);
-		}
-		return knoxClient;
-	}
-	
-	public KnoxClient getKnoxClientByConfig( final Map<String,String> configs) {
-		KnoxClient knoxClient = null;
-		if (configs == null) {
-			LOG.error("Connection Config is empty");
-				
-		} else {
-			
-			String knoxUrl = configs.get("knox.url");
-			String knoxAdminUser = configs.get("username");
-			String knoxAdminPassword = configs.get("password");
-			knoxClient =  new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
-		}
-		return knoxClient;
-	}
+    public KnoxClient getKnoxClientbyService(RangerService service) {
+        LOG.debug("Getting knoxClient for ServiceName: {}", service);
 
-	public KnoxClient getKnoxClient(String serviceName,
-			Map<String, String> configs) {
-		KnoxClient knoxClient = null;
-		LOG.debug("Getting knoxClient for datasource: " + serviceName +
-				"configMap: " + configs);
-		if (configs == null) {
-			LOG.error("Connection ConfigMap is empty");
-		} else {
-			String knoxUrl = configs.get("knox.url");
-			String knoxAdminUser = configs.get("username");
-			String knoxAdminPassword = configs.get("password");
-			knoxClient =  new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
-		}
-		return knoxClient;
-	}
-	
-	
-	public KnoxClient getKnoxClient(final String knoxUrl, String knoxAdminUser, String knoxAdminPassword) {
-		KnoxClient knoxClient = null;
-		if (knoxUrl == null || knoxUrl.isEmpty()) {
-			LOG.error("Can not create KnoxClient: knoxUrl is empty");
-		} else if (knoxAdminUser == null || knoxAdminUser.isEmpty()) {
-			LOG.error("Can not create KnoxClient: knoxAdminUser is empty");
-		} else if (knoxAdminPassword == null || knoxAdminPassword.isEmpty()) {
-			LOG.error("Can not create KnoxClient: knoxAdminPassword is empty");
-		} else {
-			knoxClient =  new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
-		}
-		return knoxClient;
-	}	
+        KnoxClient knoxClient = null;
+
+        if (service != null) {
+            Map<String, String> configs = service.getConfigs();
+
+            knoxClient = getKnoxClientByConfig(configs);
+        }
+
+        return knoxClient;
+    }
+
+    public KnoxClient getKnoxClientByConfig(final Map<String, String> configs) {
+        KnoxClient knoxClient = null;
+
+        if (configs == null) {
+            LOG.error("Connection Config is empty");
+        } else {
+            String knoxUrl           = configs.get("knox.url");
+            String knoxAdminUser     = configs.get("username");
+            String knoxAdminPassword = configs.get("password");
+
+            knoxClient = new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
+        }
+
+        return knoxClient;
+    }
+
+    public KnoxClient getKnoxClient(String serviceName, Map<String, String> configs) {
+        KnoxClient knoxClient = null;
+
+        LOG.debug("Getting knoxClient for datasource: {} configMap: {}", serviceName, configs);
+
+        if (configs == null) {
+            LOG.error("Connection ConfigMap is empty");
+        } else {
+            String knoxUrl           = configs.get("knox.url");
+            String knoxAdminUser     = configs.get("username");
+            String knoxAdminPassword = configs.get("password");
+
+            knoxClient = new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
+        }
+
+        return knoxClient;
+    }
+
+    public KnoxClient getKnoxClient(final String knoxUrl, String knoxAdminUser, String knoxAdminPassword) {
+        KnoxClient knoxClient = null;
+
+        if (knoxUrl == null || knoxUrl.isEmpty()) {
+            LOG.error("Can not create KnoxClient: knoxUrl is empty");
+        } else if (knoxAdminUser == null || knoxAdminUser.isEmpty()) {
+            LOG.error("Can not create KnoxClient: knoxAdminUser is empty");
+        } else if (knoxAdminPassword == null || knoxAdminPassword.isEmpty()) {
+            LOG.error("Can not create KnoxClient: knoxAdminPassword is empty");
+        } else {
+            knoxClient = new KnoxClient(knoxUrl, knoxAdminUser, knoxAdminPassword);
+        }
+
+        return knoxClient;
+    }
 }
