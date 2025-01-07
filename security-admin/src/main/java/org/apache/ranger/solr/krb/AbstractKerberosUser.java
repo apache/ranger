@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractKerberosUser implements KerberosUser {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractKerberosUser.class);
+
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     /**
      * Percentage of the ticket window to use before we renew the TGT.
@@ -67,20 +68,25 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             // If it's the first time ever calling login then we need to initialize a new context
             if (loginContext == null) {
                 LOG.debug("Initializing new login context...");
+
                 if (this.subject == null) {
                     // only create a new subject if a current one does not exist
                     // other classes may be referencing an existing subject and replacing it may break functionality of those other classes after relogin
                     this.subject = new Subject();
                 }
+
                 this.loginContext = createLoginContext(subject);
             }
 
             loginContext.login();
             loggedIn.set(true);
+
             LOG.info("Successful login for {}", getPrincipal());
         } catch (LoginException le) {
             LoginException loginException = new LoginException("Unable to login with " + getPrincipal() + " due to: " + le.getMessage());
+
             loginException.setStackTrace(le.getStackTrace());
+
             throw loginException;
         }
     }
@@ -99,6 +105,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
         try {
             loginContext.logout();
             loggedIn.set(false);
+
             LOG.info("Successful logout for {}", getPrincipal());
 
             loginContext = null;
@@ -151,18 +158,22 @@ public abstract class AbstractKerberosUser implements KerberosUser {
     @Override
     public synchronized boolean checkTGTAndRelogin() throws LoginException {
         final KerberosTicket tgt = getTGT();
+
         if (tgt == null) {
             LOG.debug("TGT was not found");
         }
 
         if (tgt != null && System.currentTimeMillis() < getRefreshTime(tgt)) {
             LOG.debug("TGT was found, but has not reached expiration window");
+
             return false;
         }
 
         LOG.info("Performing relogin for {}", getPrincipal());
+
         logout();
         login();
+
         return true;
     }
 
@@ -211,6 +222,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
 
         if (principal.getName().equals("krbtgt/" + principal.getRealm() + "@" + principal.getRealm())) {
             LOG.trace("Found TGT principal: {}", principal.getName());
+
             return true;
         }
 
@@ -225,6 +237,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
             final String           startDate  = dateFormat.format(new Date(start));
             final String           endDate    = dateFormat.format(new Date(end));
+
             LOG.trace("TGT valid starting at: {}", startDate);
             LOG.trace("TGT expires at: {}", endDate);
         }

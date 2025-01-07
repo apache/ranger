@@ -62,8 +62,10 @@ public class SolrUtil {
 
     public SolrUtil() {
         String timeZone = PropertiesUtil.getProperty("xa.solr.timezone");
+
         if (timeZone != null) {
             logger.info("Setting timezone to {}", timeZone);
+
             try {
                 dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
             } catch (Throwable t) {
@@ -78,6 +80,7 @@ public class SolrUtil {
                 QueryRequest req      = new QueryRequest(solrQuery, METHOD.POST);
                 String       username = PropertiesUtil.getProperty("ranger.solr.audit.user");
                 String       password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
+
                 if (username != null && password != null) {
                     req.setBasicAuthCredentials(username, password);
                 }
@@ -88,12 +91,15 @@ public class SolrUtil {
                 throw e;
             }
         }
+
         return null;
     }
 
     public QueryResponse searchResources(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFieldList, SolrClient solrClient) {
         SolrQuery query = new SolrQuery();
+
         query.setQuery("*:*");
+
         if (searchCriteria.getParamList() != null) {
             // For now assuming there is only date field where range query will
             // be done. If we there are more than one, then we should create a
@@ -104,12 +110,16 @@ public class SolrUtil {
 
             for (SearchField searchField : searchFields) {
                 Object paramValue = searchCriteria.getParamValue(searchField.getClientFieldName());
+
                 if (paramValue == null || paramValue.toString().isEmpty()) {
                     continue;
                 }
+
                 String fieldName = searchField.getFieldName();
+
                 if (paramValue instanceof Collection) {
                     String fq = orList(fieldName, (Collection<?>) paramValue);
+
                     if (fq != null) {
                         query.addFilterQuery(fq);
                     }
@@ -139,8 +149,10 @@ public class SolrUtil {
                     }
                 }
             }
+
             if (fromDate != null || toDate != null) {
                 String fq = setDateRange(dateFieldName, fromDate, toDate);
+
                 if (fq != null) {
                     query.addFilterQuery(fq);
                 }
@@ -148,42 +160,53 @@ public class SolrUtil {
         }
 
         setSortClause(searchCriteria, sortFieldList, query);
+
         query.setStart(searchCriteria.getStartIndex());
         query.setRows(searchCriteria.getMaxRows());
 
         // Fields to get
         // query.setFields("myClassType", "id", "score", "globalId");
         logger.debug("SOLR QUERY = {}", query);
+
         QueryResponse response = null;
+
         try {
             response = runQuery(solrClient, query);
         } catch (Throwable e) {
             logger.error("Error running solr query. Query = {}, response = {}", query, response);
+
             throw restErrorUtil.createRESTException("Error running solr query, please check solr configs. " + e.getMessage(), MessageEnums.ERROR_SYSTEM);
         }
+
         if (response == null || response.getStatus() != 0) {
             logger.error("Error running solr query. Query = {}, response = {}", query, response);
+
             throw restErrorUtil.createRESTException("Unable to connect to Audit store !!", MessageEnums.ERROR_SYSTEM);
         }
+
         return response;
     }
 
     public String setField(String fieldName, Object value) {
-        if (value == null || value.toString().trim().length() == 0) {
+        if (value == null || value.toString().trim().isEmpty()) {
             return null;
         }
+
         return fieldName + ":" + ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase());
     }
 
     public String setDateRange(String fieldName, Date fromDate, Date toDate) {
         String fromStr = "*";
         String toStr   = "NOW";
+
         if (fromDate != null) {
             fromStr = dateFormat.format(fromDate);
         }
+
         if (toDate != null) {
             toStr = dateFormat.format(toDate);
         }
+
         return fieldName + ":[" + fromStr + " TO " + toStr + "]";
     }
 
@@ -191,15 +214,20 @@ public class SolrUtil {
         if (valueList == null || valueList.isEmpty()) {
             return null;
         }
+
         String expr  = "";
         int    count = -1;
+
         for (Object value : valueList) {
             count++;
+
             if (count > 0) {
                 expr += " OR ";
             }
+
             expr += fieldName + ":" + ClientUtils.escapeQueryChars(value.toString().toLowerCase());
         }
+
         if (valueList.isEmpty()) {
             return expr;
         } else {
@@ -211,15 +239,20 @@ public class SolrUtil {
         if (valueList == null || valueList.isEmpty()) {
             return null;
         }
+
         String expr  = "";
         int    count = -1;
+
         for (Object value : valueList) {
             count++;
+
             if (count > 0) {
                 expr += " AND ";
             }
+
             expr += fieldName + ":" + ClientUtils.escapeQueryChars(value.toString().toLowerCase());
         }
+
         if (valueList.isEmpty()) {
             return expr;
         } else {
@@ -231,11 +264,14 @@ public class SolrUtil {
         // TODO: We are supporting single sort field only for now
         String sortBy      = searchCriteria.getSortBy();
         String querySortBy = null;
+
         if (!stringUtil.isEmpty(sortBy)) {
             sortBy = sortBy.trim();
+
             for (SortField sortField : sortFields) {
                 if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the normalized value
                     searchCriteria.setSortBy(sortField.getParamName());
                     break;
@@ -247,6 +283,7 @@ public class SolrUtil {
             for (SortField sortField : sortFields) {
                 if (sortField.isDefault()) {
                     querySortBy = sortField.getFieldName();
+
                     // Override the sortBy using the default value
                     searchCriteria.setSortBy(sortField.getParamName());
                     searchCriteria.setSortType(sortField.getDefaultOrder().name());
@@ -259,17 +296,20 @@ public class SolrUtil {
             // Add sort type
             String sortType = searchCriteria.getSortType();
             ORDER  order    = ORDER.asc;
+
             if ("desc".equalsIgnoreCase(sortType)) {
                 order = ORDER.desc;
             }
+
             query.addSort(querySortBy, order);
         }
     }
 
     private String setFieldForPartialSearch(String fieldName, Object value) {
-        if (value == null || value.toString().trim().length() == 0) {
+        if (value == null || value.toString().trim().isEmpty()) {
             return null;
         }
+
         return fieldName + ":*" + ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase()) + "*";
     }
 }

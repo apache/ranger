@@ -57,8 +57,10 @@ import java.util.Properties;
 @Component
 public class SolrMgr {
     private static final Logger logger = LoggerFactory.getLogger(SolrMgr.class);
+
     public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
-    static final Object lock = new Object();
+
+    static final Object lock                                 = new Object();
     static final String SOLR_URLS_PROP                       = "ranger.audit.solr.urls";
     static final String SOLR_ZK_HOSTS                        = "ranger.audit.solr.zookeepers";
     static final String SOLR_COLLECTION_NAME                 = "ranger.audit.solr.collection.name";
@@ -66,8 +68,10 @@ public class SolrMgr {
 
     @Autowired
     RangerBizUtil rangerBizUtil;
+
     SolrClient solrClient;
     Date       lastConnectTime;
+
     volatile         boolean      initDone;
     private volatile KerberosUser kerberosUser;
 
@@ -76,14 +80,17 @@ public class SolrMgr {
     }
 
     public SolrClient getSolrClient() {
-        if (solrClient != null) {
-            return solrClient;
+        SolrClient me = solrClient;
+
+        if (me != null) {
+            return me;
         } else {
             synchronized (this) {
-                connect();
+                me = connect();
             }
         }
-        return solrClient;
+
+        return me;
     }
 
     @PreDestroy
@@ -119,7 +126,7 @@ public class SolrMgr {
 
             if (kerberosUser != null) {
                 // execute the privileged action as the given keytab user
-                final KerberosAction<QueryResponse> kerberosAction = new KerberosAction<QueryResponse>(kerberosUser, action, logger);
+                final KerberosAction<QueryResponse> kerberosAction = new KerberosAction<>(kerberosUser, action, logger);
 
                 ret = kerberosAction.execute();
             } else {
@@ -132,15 +139,17 @@ public class SolrMgr {
         return ret;
     }
 
-    void connect() {
+    SolrClient connect() {
         if (!initDone) {
             synchronized (lock) {
                 if (!initDone) {
                     if ("solr".equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
                         String zkHosts = PropertiesUtil.getProperty(SOLR_ZK_HOSTS);
+
                         if (zkHosts == null) {
                             zkHosts = PropertiesUtil.getProperty("ranger.audit.solr.zookeeper");
                         }
+
                         if (zkHosts == null) {
                             zkHosts = PropertiesUtil.getProperty("ranger.solr.zookeeper");
                         }
@@ -151,14 +160,17 @@ public class SolrMgr {
                             // Try with url
                             solrURL = PropertiesUtil.getProperty("ranger.audit.solr.url");
                         }
+
                         if (solrURL == null) {
                             // Let's try older property name
                             solrURL = PropertiesUtil.getProperty("ranger.solr.url");
                         }
 
-                        if (zkHosts != null && !"".equals(zkHosts.trim()) && !"none".equalsIgnoreCase(zkHosts.trim())) {
+                        if (zkHosts != null && !zkHosts.trim().isEmpty() && !"none".equalsIgnoreCase(zkHosts.trim())) {
                             zkHosts = zkHosts.trim();
+
                             String collectionName = PropertiesUtil.getProperty(SOLR_COLLECTION_NAME);
+
                             if (collectionName == null || "none".equalsIgnoreCase(collectionName)) {
                                 collectionName = DEFAULT_COLLECTION_NAME;
                             }
@@ -168,10 +180,14 @@ public class SolrMgr {
                             try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
                                 // Instantiate
                                 SolrHttpClientBuilder kb = krbBuild.getBuilder();
+
                                 HttpClientUtil.setHttpClientBuilder(kb);
-                                final List<String> zkhosts         = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
+
+                                final List<String> zkhosts         = new ArrayList<>(Arrays.asList(zkHosts.split(",")));
                                 CloudSolrClient    solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
+
                                 solrCloudClient.setDefaultCollection(collectionName);
+
                                 solrClient = solrCloudClient;
                             } catch (Throwable t) {
                                 logger.error("Can't connect to Solr server. ZooKeepers={}, collection={}", zkHosts, collectionName, t);
@@ -182,13 +198,18 @@ public class SolrMgr {
                             } else {
                                 try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
                                     SolrHttpClientBuilder kb = krbBuild.getBuilder();
+
                                     HttpClientUtil.setHttpClientBuilder(kb);
+
                                     HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+
                                     builder.withBaseSolrUrl(solrURL);
                                     builder.allowCompression(true);
                                     builder.withConnectionTimeout(1000);
+
                                     HttpSolrClient httpSolrClient = builder.build();
                                     httpSolrClient.setRequestWriter(new BinaryRequestWriter());
+
                                     solrClient = httpSolrClient;
                                     initDone   = true;
                                 } catch (Throwable t) {
@@ -200,11 +221,15 @@ public class SolrMgr {
                 }
             }
         }
+
+        return solrClient;
     }
 
     private void init() {
         logger.info("==>SolrMgr.init()");
+
         Properties props = PropertiesUtil.getProps();
+
         try {
             // SolrJ requires "java.security.auth.login.config"  property to be set to identify itself that it is kerberized. So using a dummy property for it
             // Acutal solrclient JAAS configs are read from the ranger-admin-site.xml in ranger admin config folder and set by InMemoryJAASConfiguration
@@ -212,10 +237,11 @@ public class SolrMgr {
             if (System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null) {
                 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
             }
-            logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-            InMemoryJAASConfiguration conf = InMemoryJAASConfiguration.init(props);
 
-            KerberosUser kerberosUser = new KerberosJAASConfigUser("Client", conf);
+            logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
+
+            InMemoryJAASConfiguration conf         = InMemoryJAASConfiguration.init(props);
+            KerberosUser              kerberosUser = new KerberosJAASConfigUser("Client", conf);
 
             if (kerberosUser.getPrincipal() != null) {
                 this.kerberosUser = kerberosUser;

@@ -60,26 +60,29 @@ public class SolrAccessAuditsService extends AccessAuditsService {
         // Make call to Solr
         SolrClient    solrClient          = solrMgr.getSolrClient();
         final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
+
         if (solrClient == null) {
             LOGGER.warn("Solr client is null, so not running the query.");
+
             throw restErrorUtil.createRESTException("Error connecting to search engine", MessageEnums.ERROR_SYSTEM);
         }
-        List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
-        Map<String, Object> paramList = searchCriteria.getParamList();
+        List<VXAccessAudit> xAccessAuditList = new ArrayList<>();
+        Map<String, Object> paramList        = searchCriteria.getParamList();
+        Object              eventIdObj       = paramList.get("eventId");
 
-        Object eventIdObj = paramList.get("eventId");
         if (eventIdObj != null) {
             paramList.put("id", eventIdObj.toString());
         }
 
         updateUserExclusion(paramList);
 
-        QueryResponse response = solrUtil.searchResources(searchCriteria, searchFields, sortFields, solrClient);
-        SolrDocumentList docs = response.getResults();
-        for (int i = 0; i < docs.size(); i++) {
-            SolrDocument  doc           = docs.get(i);
+        QueryResponse    response = solrUtil.searchResources(searchCriteria, searchFields, sortFields, solrClient);
+        SolrDocumentList docs     = response.getResults();
+
+        for (SolrDocument doc : docs) {
             VXAccessAudit vXAccessAudit = populateViewBean(doc);
+
             if (vXAccessAudit != null) {
                 if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
                     vXAccessAudit.setRequestData(null);
@@ -95,15 +98,18 @@ public class SolrAccessAuditsService extends AccessAuditsService {
                     }
                 }
             }
+
             xAccessAuditList.add(vXAccessAudit);
         }
 
         VXAccessAuditList returnList = new VXAccessAuditList();
+
         returnList.setPageSize(searchCriteria.getMaxRows());
         returnList.setResultSize(docs.size());
         returnList.setTotalCount((int) docs.getNumFound());
         returnList.setStartIndex((int) docs.getStart());
         returnList.setVXAccessAudits(xAccessAuditList);
+
         return returnList;
     }
 
@@ -112,10 +118,11 @@ public class SolrAccessAuditsService extends AccessAuditsService {
      * @return
      */
     public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-        long count = 100;
-
+        long   count  = 100;
         VXLong vXLong = new VXLong();
+
         vXLong.setValue(count);
+
         return vXLong;
     }
 
@@ -124,12 +131,11 @@ public class SolrAccessAuditsService extends AccessAuditsService {
      * @return
      */
     private VXAccessAudit populateViewBean(SolrDocument doc) {
+        LOGGER.debug("doc={}", doc);
+
         VXAccessAudit accessAudit = new VXAccessAudit();
 
-        Object value = null;
-        LOGGER.debug("doc=", doc.toString());
-
-        value = doc.getFieldValue("id");
+        Object value = doc.getFieldValue("id");
         if (value != null) {
             // TODO: Converting ID to hashcode for now
             accessAudit.setId((long) value.hashCode());
@@ -165,10 +171,12 @@ public class SolrAccessAuditsService extends AccessAuditsService {
         if (value != null) {
             accessAudit.setAclEnforcer(value.toString());
         }
+
         value = doc.getFieldValue("agent");
         if (value != null) {
             accessAudit.setAgentId(value.toString());
         }
+
         value = doc.getFieldValue("repo");
         if (value != null) {
             accessAudit.setRepoName(value.toString());
@@ -178,80 +186,100 @@ public class SolrAccessAuditsService extends AccessAuditsService {
                 accessAudit.setRepoDisplayName(xxService.getDisplayName());
             }
         }
+
         value = doc.getFieldValue("sess");
         if (value != null) {
             accessAudit.setSessionId(value.toString());
         }
+
         value = doc.getFieldValue("reqUser");
         if (value != null) {
             accessAudit.setRequestUser(value.toString());
         }
+
         value = doc.getFieldValue("reqData");
         if (value != null) {
             accessAudit.setRequestData(value.toString());
         }
+
         value = doc.getFieldValue("resource");
         if (value != null) {
             accessAudit.setResourcePath(value.toString());
         }
+
         value = doc.getFieldValue("cliIP");
         if (value != null) {
             accessAudit.setClientIP(value.toString());
         }
+
         value = doc.getFieldValue("logType");
         //if (value != null) {
         //    TODO: Need to see what logType maps to in UI
         //    accessAudit.setAuditType(solrUtil.toInt(value));
         //}
+
         value = doc.getFieldValue("result");
         if (value != null) {
             accessAudit.setAccessResult(MiscUtil.toInt(value));
         }
+
         value = doc.getFieldValue("policy");
         if (value != null) {
             accessAudit.setPolicyId(MiscUtil.toLong(value));
         }
+
         value = doc.getFieldValue("repoType");
         if (value != null) {
             accessAudit.setRepoType(MiscUtil.toInt(value));
+
             XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
+
             if (xServiceDef != null) {
                 accessAudit.setServiceType(xServiceDef.getName());
                 accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
             }
         }
+
         value = doc.getFieldValue("resType");
         if (value != null) {
             accessAudit.setResourceType(value.toString());
         }
+
         value = doc.getFieldValue("reason");
         if (value != null) {
             accessAudit.setResultReason(value.toString());
         }
+
         value = doc.getFieldValue("action");
         if (value != null) {
             accessAudit.setAction(value.toString());
         }
+
         value = doc.getFieldValue("evtTime");
         if (value != null) {
             accessAudit.setEventTime(MiscUtil.toLocalDate(value));
         }
+
         value = doc.getFieldValue("seq_num");
         if (value != null) {
             accessAudit.setSequenceNumber(MiscUtil.toLong(value));
         }
+
         value = doc.getFieldValue("event_count");
         if (value != null) {
             accessAudit.setEventCount(MiscUtil.toLong(value));
         }
+
         value = doc.getFieldValue("event_dur_ms");
         if (value != null) {
             accessAudit.setEventDuration(MiscUtil.toLong(value));
         }
+
         value = doc.getFieldValue("tags");
         if (value != null) {
             accessAudit.setTags(value.toString());
         }
+
         value = doc.getFieldValue("datasets");
         if (value != null) {
             try {
@@ -260,6 +288,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
                 LOGGER.warn("Failed to convert datasets to json", e);
             }
         }
+
         value = doc.getFieldValue("projects");
         if (value != null) {
             try {
@@ -268,6 +297,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
                 LOGGER.warn("Failed to convert projects to json", e);
             }
         }
+
         return accessAudit;
     }
 }

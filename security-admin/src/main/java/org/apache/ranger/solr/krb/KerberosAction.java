@@ -39,6 +39,7 @@ public class KerberosAction<T> {
         this.kerberosUser = kerberosUser;
         this.action       = action;
         this.logger       = logger;
+
         Validate.notNull(this.kerberosUser);
         Validate.notNull(this.action);
         Validate.notNull(this.logger);
@@ -46,10 +47,12 @@ public class KerberosAction<T> {
 
     public T execute() throws Exception {
         T result;
+
         // lazily login the first time the processor executes
         if (!kerberosUser.isLoggedIn()) {
             try {
                 kerberosUser.login();
+
                 if (logger != null) {
                     logger.info("Successful login for {}", kerberosUser.getPrincipal());
                 }
@@ -77,12 +80,14 @@ public class KerberosAction<T> {
             try {
                 kerberosUser.logout();
                 kerberosUser.login();
+
                 result = kerberosUser.doAs(action);
             } catch (Exception e) {
                 throw new Exception("Retrying privileged action failed due to: " + e.getMessage(), e);
             }
         } catch (PrivilegedActionException pae) {
             final Exception cause = pae.getException();
+
             throw new Exception("Privileged action failed due to: " + cause.getMessage(), cause);
         }
 
