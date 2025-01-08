@@ -79,7 +79,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
         if (logger.isDebugEnabled()) {
             logger.debug("==>> createOrDeleteXGroupUsers for {}", groupUserInfo.getGroupName());
             Long mb = 1024L * 1024L;
-            logger.debug("==>> createOrDeleteXGroupUsers: Max memory = " + Runtime.getRuntime().maxMemory() / mb + " Free memory = " + Runtime.getRuntime().freeMemory() / mb + " Total memory = " + Runtime.getRuntime().totalMemory() / mb);
+            logger.debug("==>> createOrDeleteXGroupUsers: Max memory = {} Free memory = {} Total memory = {}", Runtime.getRuntime().maxMemory() / mb, Runtime.getRuntime().freeMemory() / mb, Runtime.getRuntime().totalMemory() / mb);
         }
         String groupName = groupUserInfo.getGroupName();
         if (CollectionUtils.isEmpty(groupUserInfo.getAddUsers()) && CollectionUtils.isEmpty(groupUserInfo.getDelUsers())) {
@@ -123,7 +123,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
         if (logger.isDebugEnabled()) {
             logger.debug("<<== createOrDeleteXGroupUsers for {}", groupUserInfo.getGroupName());
             Long mb = 1024L * 1024L;
-            logger.debug("<<== createOrDeleteXGroupUsers: Max memory = " + Runtime.getRuntime().maxMemory() / mb + " Free memory = " + Runtime.getRuntime().freeMemory() / mb + " Total memory = " + Runtime.getRuntime().totalMemory() / mb);
+            logger.debug("<<== createOrDeleteXGroupUsers: Max memory = {} Free memory = {} Total memory = {}", Runtime.getRuntime().maxMemory() / mb, Runtime.getRuntime().freeMemory() / mb, Runtime.getRuntime().totalMemory() / mb);
         }
     }
 
@@ -140,12 +140,10 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
 
     @Override
     protected void validateForCreate(VXGroupUser vObj) {
-        // TODO Auto-generated method stub
     }
 
     @Override
     protected void validateForUpdate(VXGroupUser vObj, XXGroupUser mObj) {
-        // TODO Auto-generated method stub
     }
 
     private class GroupUserMappingUpdator implements Runnable {
