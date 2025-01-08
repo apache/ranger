@@ -57,9 +57,12 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
     public static final  int               OPERATION_DELETE_CONTEXT        = 3;
     public static final  int               OPERATION_IMPORT_CREATE_CONTEXT = 4;
     public static final  int               OPERATION_IMPORT_DELETE_CONTEXT = 5;
+
     private static final Logger            LOG                             = LoggerFactory.getLogger(RangerBaseModelService.class);
+
     public final         List<SortField>   sortFields                      = new ArrayList<>();
     public final         List<SearchField> searchFields                    = new ArrayList<>();
+
     protected final      Class<T>          tEntityClass;
     protected final      Class<V>          tViewClass;
     protected final      String            tClassName;
@@ -67,6 +70,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
     protected final      String            distinctCountQueryStr;
     protected final      String            queryStr;
     protected final      String            distinctQueryStr;
+
     @Autowired
     protected            RangerDaoManager  daoMgr;
     @Autowired
